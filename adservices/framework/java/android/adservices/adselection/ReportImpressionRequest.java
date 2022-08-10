@@ -17,6 +17,7 @@
 package android.adservices.adselection;
 
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 
 import com.android.internal.util.Preconditions;
 
@@ -24,8 +25,6 @@ import java.util.Objects;
 
 /**
  * Represent input parameters to the reportImpression API.
- *
- * <p>Hiding for future implementation and review for public exposure.
  */
 public class ReportImpressionRequest {
     private static final long UNSET = 0;
@@ -57,7 +56,7 @@ public class ReportImpressionRequest {
         // Initializing mAdSelectionId to start as -1, to differentiate it from the default
         // initialization of 0.
         private long mAdSelectionId = UNSET;
-        private AdSelectionConfig mAdSelectionConfig;
+        @Nullable private AdSelectionConfig mAdSelectionConfig;
 
         public Builder() {}
 

@@ -18,13 +18,14 @@ package com.android.adservices.service.measurement;
 
 import android.net.Uri;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
+import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
+import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.Arrays;
+import java.math.BigInteger;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public final class TriggerFixture {
     private TriggerFixture() { }
@@ -33,33 +34,32 @@ public final class TriggerFixture {
     // {@link ValidTriggerParams}
     public static Trigger.Builder getValidTriggerBuilder() {
         return new Trigger.Builder()
-            .setAttributionDestination(ValidTriggerParams.sAttributionDestination)
-            .setAdTechDomain(ValidTriggerParams.sAdTechDomain)
-            .setRegistrant(ValidTriggerParams.sRegistrant);
+            .setAttributionDestination(ValidTriggerParams.ATTRIBUTION_DESTINATION)
+            .setAdTechDomain(ValidTriggerParams.AD_TECH_DOMAIN)
+            .setRegistrant(ValidTriggerParams.REGISTRANT);
     }
 
     // Assume the field values in this Trigger have no relation to the field values in
     // {@link ValidTriggerParams}
     public static Trigger getValidTrigger() {
         return new Trigger.Builder()
-                .setAttributionDestination(ValidTriggerParams.sAttributionDestination)
-                .setAdTechDomain(ValidTriggerParams.sAdTechDomain)
-                .setRegistrant(ValidTriggerParams.sRegistrant)
+                .setAttributionDestination(ValidTriggerParams.ATTRIBUTION_DESTINATION)
+                .setAdTechDomain(ValidTriggerParams.AD_TECH_DOMAIN)
+                .setRegistrant(ValidTriggerParams.REGISTRANT)
                 .setTriggerTime(ValidTriggerParams.TRIGGER_TIME)
                 .setEventTriggers(ValidTriggerParams.EVENT_TRIGGERS)
-                .setAggregateTriggerData(ValidTriggerParams.buildAggregateTriggerData())
-                .setAggregateValues(ValidTriggerParams.buildAggregateValues())
+                .setAggregateTriggerData(ValidTriggerParams.AGGREGATE_TRIGGER_DATA)
+                .setAggregateValues(ValidTriggerParams.AGGREGATE_VALUES)
                 .setFilters(ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING)
                 .build();
     }
 
     public static class ValidTriggerParams {
         public static final Long TRIGGER_TIME = 8640000000L;
-        public static final Long TRIGGER_DATA = 3L;
-        public static final Uri sAttributionDestination =
+        public static final Uri ATTRIBUTION_DESTINATION =
                 Uri.parse("android-app://com.destination");
-        public static final Uri sRegistrant = Uri.parse("android-app://com.registrant");
-        public static final Uri sAdTechDomain = Uri.parse("https://com.example");
+        public static final Uri REGISTRANT = Uri.parse("android-app://com.registrant");
+        public static final Uri AD_TECH_DOMAIN = Uri.parse("https://com.example");
         public static final String TOP_LEVEL_FILTERS_JSON_STRING =
                 "{\n"
                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
@@ -86,30 +86,42 @@ public final class TriggerFixture {
                         + "}\n"
                         + "]\n";
 
-        public static String buildAggregateTriggerData() {
-            try {
-                JSONArray triggerData = new JSONArray();
-                JSONObject jsonObject = new JSONObject();
-                jsonObject.put("key_piece", "0xA80");
-                jsonObject.put("source_keys", new JSONArray(Arrays.asList("geoValue", "noMatch")));
-                triggerData.put(jsonObject);
-                return triggerData.toString();
-            } catch (JSONException e) {
-                LogUtil.e("JSONException when building aggregate trigger data.");
-            }
-            return null;
-        }
+        public static final String AGGREGATE_TRIGGER_DATA =
+                "["
+                    + "{"
+                        + "\"key_piece\":\"0xA80\","
+                        + "\"source_keys\":[\"geoValue\",\"noMatch\"]"
+                    + "}"
+                + "]";
 
-        public static String buildAggregateValues() {
-            try {
-                JSONObject values = new JSONObject();
-                values.put("campaignCounts", 32768);
-                values.put("geoValue", 1664);
-                return values.toString();
-            } catch (JSONException e) {
-                LogUtil.e("JSONException when building aggregate values.");
-            }
-            return null;
+        public static final String AGGREGATE_VALUES =
+                "{"
+                    + "\"campaignCounts\":32768,"
+                    + "\"geoValue\":1664"
+                + "}";
+
+        public static final Long DEBUG_KEY = 27836L;
+
+        public static final AggregatableAttributionTrigger buildAggregatableAttributionTrigger() {
+            final AggregateFilterData filter =
+                    new AggregateFilterData.Builder()
+                            .setAttributionFilterMap(
+                                    Map.of(
+                                            "product",
+                                            List.of("1234", "4321"),
+                                            "conversion_subdomain",
+                                            List.of("electronics.megastore")))
+                            .build();
+            return new AggregatableAttributionTrigger.Builder()
+                    .setValues(Map.of("x", 1))
+                    .setTriggerData(
+                            List.of(
+                                    new AggregateTriggerData.Builder()
+                                            .setKey(BigInteger.ONE)
+                                            .setSourceKeys(Set.of("sourceKey"))
+                                            .setFilter(filter)
+                                            .build()))
+                    .build();
         }
     }
 }

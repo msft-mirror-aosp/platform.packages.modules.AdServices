@@ -120,7 +120,7 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
 
     /** Callback for binding sandbox. Provides blocking interface {@link #isSuccessful()}. */
     private class LatchSandboxServiceConnectionCallback
-            implements SdkSandboxManagerService.SandboxServiceConnection.Callback {
+            implements SdkSandboxManagerService.SandboxBindingCallback {
 
         private final CountDownLatch mLatch = new CountDownLatch(1);
         private boolean mSuccess = false;

@@ -17,13 +17,6 @@ package {
 }
 
 java_test_host {
-    name: "SdkSandboxHostTest",
-    srcs: ["src/**/SdkSandboxHostTest.java"],
-    libs: ["tradefed"],
-    test_suites: ["general-tests"],
-}
-
-java_test_host {
     name: "SdkSandboxLifecycleHostTest",
     srcs: [
         "src/**/SdkSandboxLifecycleHostTest.java",
@@ -53,6 +46,7 @@ java_test_host {
     test_suites: ["general-tests"],
     data: [
         ":TestCodeProvider",
+        ":TestCodeProvider2",
         ":SdkSandboxTestApp",
         ":SdkSandboxTestDebuggableApp"
     ],

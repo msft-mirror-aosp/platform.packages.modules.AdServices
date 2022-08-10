@@ -18,12 +18,15 @@ package com.android.adservices.service.measurement;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import android.net.Uri;
 
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
+import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -32,7 +35,9 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 public class TriggerTest {
     private static final String TOP_LEVEL_FILTERS_JSON_STRING =
@@ -59,6 +64,8 @@ public class TriggerTest {
                     + "   }\n"
                     + "}"
                     + "]\n";
+
+    private static final Long DEBUG_KEY = 2367372L;
 
     @Test
     public void testEqualsPass() throws JSONException {
@@ -88,6 +95,10 @@ public class TriggerTest {
                         .setAggregateTriggerData(aggregateTriggerDatas.toString())
                         .setAggregateValues(values.toString())
                         .setFilters(TOP_LEVEL_FILTERS_JSON_STRING)
+                        .setDebugKey(DEBUG_KEY)
+                        .setAggregatableAttributionTrigger(
+                                TriggerFixture.getValidTrigger()
+                                        .getAggregatableAttributionTrigger())
                         .build(),
                 TriggerFixture.getValidTriggerBuilder()
                         .setAdTechDomain(Uri.parse("https://example.com"))
@@ -100,6 +111,10 @@ public class TriggerTest {
                         .setAggregateTriggerData(aggregateTriggerDatas.toString())
                         .setAggregateValues(values.toString())
                         .setFilters(TOP_LEVEL_FILTERS_JSON_STRING)
+                        .setDebugKey(DEBUG_KEY)
+                        .setAggregatableAttributionTrigger(
+                                TriggerFixture.getValidTrigger()
+                                        .getAggregatableAttributionTrigger())
                         .build());
     }
 
@@ -165,6 +180,122 @@ public class TriggerTest {
                         .setFilters(TOP_LEVEL_FILTERS_JSON_STRING).build(),
                 TriggerFixture.getValidTriggerBuilder()
                         .setFilters(TOP_LEVEL_FILTERS_JSON_STRING_X).build());
+    }
+
+    @Test
+    public void testHashCode_equals() {
+        final Trigger trigger1 = TriggerFixture.getValidTriggerBuilder().build();
+        final Trigger trigger2 = TriggerFixture.getValidTriggerBuilder().build();
+        final Set<Trigger> triggerSet1 = Set.of(trigger1);
+        final Set<Trigger> triggerSet2 = Set.of(trigger2);
+        assertEquals(trigger1.hashCode(), trigger2.hashCode());
+        assertEquals(trigger1, trigger2);
+        assertEquals(triggerSet1, triggerSet2);
+    }
+
+    @Test
+    public void testHashCode_notEquals() {
+        final Trigger trigger1 = TriggerFixture.getValidTriggerBuilder().build();
+        final Trigger trigger2 = TriggerFixture.getValidTriggerBuilder().setId("100").build();
+        final Set<Trigger> triggerSet1 = Set.of(trigger1);
+        final Set<Trigger> triggerSet2 = Set.of(trigger2);
+        assertNotEquals(trigger1.hashCode(), trigger2.hashCode());
+        assertNotEquals(trigger1, trigger2);
+        assertNotEquals(triggerSet1, triggerSet2);
+    }
+
+    @Test
+    public void testTriggerBuilder_validateArgumentAttributionDestination() {
+        assertInvalidTriggerArguments(
+                null,
+                TriggerFixture.ValidTriggerParams.AD_TECH_DOMAIN,
+                TriggerFixture.ValidTriggerParams.REGISTRANT,
+                TriggerFixture.ValidTriggerParams.TRIGGER_TIME,
+                TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS,
+                TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
+                TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
+                TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
+                TriggerFixture.ValidTriggerParams.DEBUG_KEY);
+        assertInvalidTriggerArguments(
+                Uri.parse("com.destination"),
+                TriggerFixture.ValidTriggerParams.AD_TECH_DOMAIN,
+                TriggerFixture.ValidTriggerParams.REGISTRANT,
+                TriggerFixture.ValidTriggerParams.TRIGGER_TIME,
+                TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS,
+                TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
+                TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
+                TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
+                TriggerFixture.ValidTriggerParams.DEBUG_KEY);
+    }
+
+    @Test
+    public void testTriggerBuilder_validateArgumentAdTechDomain() {
+        assertInvalidTriggerArguments(
+                TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION,
+                null,
+                TriggerFixture.ValidTriggerParams.REGISTRANT,
+                TriggerFixture.ValidTriggerParams.TRIGGER_TIME,
+                TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS,
+                TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
+                TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
+                TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
+                TriggerFixture.ValidTriggerParams.DEBUG_KEY);
+        assertInvalidTriggerArguments(
+                TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION,
+                Uri.parse("com.adTechDomain"),
+                TriggerFixture.ValidTriggerParams.REGISTRANT,
+                TriggerFixture.ValidTriggerParams.TRIGGER_TIME,
+                TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS,
+                TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
+                TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
+                TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
+                TriggerFixture.ValidTriggerParams.DEBUG_KEY);
+    }
+
+    @Test
+    public void testTriggerBuilder_validateArgumentRegistrant() {
+        assertInvalidTriggerArguments(
+                TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION,
+                TriggerFixture.ValidTriggerParams.AD_TECH_DOMAIN,
+                null,
+                TriggerFixture.ValidTriggerParams.TRIGGER_TIME,
+                TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS,
+                TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
+                TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
+                TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
+                TriggerFixture.ValidTriggerParams.DEBUG_KEY);
+        assertInvalidTriggerArguments(
+                TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION,
+                TriggerFixture.ValidTriggerParams.AD_TECH_DOMAIN,
+                Uri.parse("com.registrant"),
+                TriggerFixture.ValidTriggerParams.TRIGGER_TIME,
+                TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS,
+                TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
+                TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
+                TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
+                TriggerFixture.ValidTriggerParams.DEBUG_KEY);
+    }
+
+    @Test
+    public void testAggregatableAttributionTrigger() throws Exception {
+        final Map<String, Integer> values = Map.of("foo", 93);
+        final List<AggregateTriggerData> triggerData =
+                List.of(new AggregateTriggerData.Builder().build());
+        final AggregatableAttributionTrigger attributionTrigger =
+                new AggregatableAttributionTrigger.Builder()
+                        .setValues(values)
+                        .setTriggerData(triggerData)
+                        .build();
+
+        final Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAggregatableAttributionTrigger(attributionTrigger)
+                        .build();
+
+        assertNotNull(trigger.getAggregatableAttributionTrigger());
+        assertNotNull(trigger.getAggregatableAttributionTrigger().getTriggerData());
+        assertEquals(values, trigger.getAggregatableAttributionTrigger().getValues());
+        assertEquals(triggerData, trigger.getAggregatableAttributionTrigger().getTriggerData());
     }
 
     @Test
@@ -291,6 +422,50 @@ public class TriggerTest {
 
         // Assertion
         assertEquals(Arrays.asList(eventTrigger1, eventTrigger2), actualEventTriggers);
+    }
+
+    @Test
+    public void getDestinationType_success() {
+        // Setup
+        Trigger appTrigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAttributionDestination(Uri.parse("android-app://com.example.abc"))
+                        .build();
+
+        Trigger webTrigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAttributionDestination(Uri.parse("https://example.com"))
+                        .build();
+
+        // Assertion
+        assertEquals(DestinationType.APP, appTrigger.getDestinationType());
+        assertEquals(DestinationType.WEB, webTrigger.getDestinationType());
+    }
+
+    private void assertInvalidTriggerArguments(
+            Uri attributionDestination,
+            Uri adTechDomain,
+            Uri registrant,
+            Long triggerTime,
+            String eventTriggers,
+            String aggregateTriggerData,
+            String aggregateValues,
+            String filters,
+            Long debugKey) {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new Trigger.Builder()
+                                .setAttributionDestination(attributionDestination)
+                                .setAdTechDomain(adTechDomain)
+                                .setRegistrant(registrant)
+                                .setTriggerTime(triggerTime)
+                                .setEventTriggers(eventTriggers)
+                                .setAggregateTriggerData(aggregateTriggerData)
+                                .setAggregateValues(aggregateValues)
+                                .setFilters(filters)
+                                .setDebugKey(debugKey)
+                                .build());
     }
 
     private JSONObject createFilterJSONObject() throws JSONException {

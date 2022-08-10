@@ -17,6 +17,7 @@
 package com.android.adservices.service.measurement.aggregation;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -25,6 +26,7 @@ import androidx.test.filters.SmallTest;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Set;
 
 /** Unit tests for {@link AggregateAttributionData} */
 @SmallTest
@@ -48,6 +50,32 @@ public final class AggregateAttributionDataTest {
         AggregateAttributionData data = new AggregateAttributionData.Builder().build();
         assertEquals(0, data.getContributions().size());
         assertNull(data.getId());
+    }
+
+    @Test
+    public void testHashCode_equals() throws Exception {
+        final AggregateAttributionData data1 = createExample();
+        final AggregateAttributionData data2 = createExample();
+        final Set<AggregateAttributionData> dataSet1 = Set.of(data1);
+        final Set<AggregateAttributionData> dataSet2 = Set.of(data2);
+        assertEquals(data1.hashCode(), data2.hashCode());
+        assertEquals(data1, data2);
+        assertEquals(dataSet1, dataSet2);
+    }
+
+    @Test
+    public void testHashCode_notEquals() throws Exception {
+        final AggregateAttributionData data1 = createExample();
+        final AggregateAttributionData data2 =
+                new AggregateAttributionData.Builder()
+                        .setContributions(new ArrayList<>())
+                        .setId(2L)
+                        .build();
+        final Set<AggregateAttributionData> dataSet1 = Set.of(data1);
+        final Set<AggregateAttributionData> dataSet2 = Set.of(data2);
+        assertNotEquals(data1.hashCode(), data2.hashCode());
+        assertNotEquals(data1, data2);
+        assertNotEquals(dataSet1, dataSet2);
     }
 }
 

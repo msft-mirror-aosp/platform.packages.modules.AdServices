@@ -22,30 +22,528 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="1644434244130657749">"Қолданбаға AdServices Attribution API-ларын пайдалануға мүмкіндік береді."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="2766614780488510189">"AdServices Custom Audience API-ын пайдалану"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"Қолданбаға AdServices Custom Audience API-ын пайдалануға мүмкіндік береді."</string>
-    <!-- no translation found for permlab_accessAdServicesConsent (3203633397142568707) -->
+    <!-- no translation found for permlab_accessAdServicesAdId (2754825914769538156) -->
     <skip />
-    <!-- no translation found for permdesc_accessAdServicesConsent (8440334072391708453) -->
+    <!-- no translation found for permdesc_accessAdServicesAdId (7717770480967762044) -->
     <skip />
+    <string name="permlab_accessAdServicesConsent" msgid="3203633397142568707">"AdServices Consent API-ын пайдалану"</string>
+    <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Қолданбаға AdServices Consent API-ын пайдалануға мүмкіндік береді."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID API-ын пайдалану"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Қолданбаға Ad ID API-ын пайдалануға мүмкіндік береді."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"App Set ID API-ын пайдалану"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Қолданбаға App Set ID API-ын пайдалануға мүмкіндік береді."</string>
-    <!-- no translation found for permlab_adServicesAccessConsentService (5994709782267864205) -->
-    <skip />
-    <!-- no translation found for permdesc_adServicesAccessConsentService (4587727715580124241) -->
-    <skip />
+    <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service API-ын пайдалану"</string>
+    <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"Қолданбаға Consent Service API-ын пайдалануға мүмкіндік береді."</string>
+    <string name="app_label" msgid="5985320129629013968">"Android жүйесі"</string>
     <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"Privacy Sandbox-тың бета нұсқасы"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_key" msgid="5571900954219004269">"privacy_sandbox_beta_switch"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"Privacy Sandbox-тың бета нұсқасы"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"Privacy Sandbox-тың бета нұсқасын ауыстыру"</string>
-    <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
-    <string name="settingsUI_topics_title" msgid="4024683469932819788">"Жалпы қызығушылықтарыңыз"</string>
-    <string name="settingsUI_topics_summary" msgid="3146101472984434355">"Жалпы қызығушылықтарды басқарыңыз."</string>
+    <string name="settingsUI_main_view_title" msgid="255982490790282252">"Android-тың жарнама құпиялылығы (бета нұсқасы)"</string>
+    <string name="settingsUI_main_view_subtitle" msgid="3380585883687237827">"Қолданбалар арасында қадағалауды шектейтін жаңа Privacy Sandbox жүйесін тексеріп көріңіз."</string>
+    <string name="settingsUI_main_view_info_text1" msgid="8353580266621706164">"Privacy Sandbox қалай жұмыс істейді?"</string>
+    <string name="settingsUI_main_view_info_text2" msgid="5144888171043725329">"Сізге ұнауы мүмкін жарнамаларды көрсету үшін деректер Privacy Sandbox-қа жиналады, бірақ жеке басыңызды немесе құрылғыңызды анықтамай жіберіледі."</string>
+    <string name="settingsUI_main_view_info_text3" msgid="9106658161862318732">"Privacy Sandbox-та қандай деректер сақталады?"</string>
+    <string name="settingsUI_main_view_info_text4" msgid="5819359066240454954">"•  Жалпы қызығушылықтар"</string>
+    <string name="settingsUI_main_view_info_text5" msgid="6064832868440367397">"Android жинайтын деректер пайдаланатын қолданбаларыңызға негізделеді және Privacy Sandbox-қа қосылады. Мысалы, жалпы қызығушылықтарыңыздың бірі \"Спорт\" болуы мүмкін. \n\nҚұпиялылық параметрлерінде қызығушылықтар тізімін көріп, ұнамайтынын бөгеуге болады."</string>
+    <string name="settingsUI_main_view_info_text6" msgid="3406976290919982143">"•  Ерекше қызығушылықтар"</string>
+    <string name="settingsUI_main_view_info_text7" msgid="210269084665708892">"Қолданбалар жинайтын деректер оларды қалай пайдаланатыныңызға негізделеді және ол деректер Privacy Sandbox-қа қосылады. Мысалы, сіз кроссовка сатып алуға пайдаланатын қолданба sport_running белгісін қосуы мүмкін.\n\nҚұпиялылық параметрлерінде осылай істейтін қолданбалар тізімін көріп, Privacy Sandbox-қа кез келген қолданбаның деректерді жіберуін бөгеуге болады."</string>
+    <string name="settingsUI_topics_view_title" msgid="7437641813424176118">"Қызығушылықтарды басқару"</string>
+    <string name="settingsUI_topics_view_subtitle" msgid="5347912133908026725">"Android-тың Privacy Sandbox технологиясы қолданбалар арасында қадағалауды шектесе де, қолданбалардың сізге ұнауы мүмкін жарнамаларды көрсетуіне рұқсат береді. Android бұл деректерді жеке басыңызды немесе құрылғыңызды анықтамай жарнама берушілермен бөліседі.\n\nПайдаланатын қолданбаларыңызға қарай отырып, Android жарнамаларда пайдаланылатын жалпы қызығушылықтар тізімін жасайды және жаңартады. Қызығушылықты бөгесеңіз, өзіңіз бөгеуін алмайынша, тізімге қайта қосылмайды. Қызығушылықтарға қатысты кейбір жарнамалар көрсетіле беруі мүмкін."</string>
+    <string name="settingsUI_topics_view_info_text1" msgid="6729245512525985403">"Жарнамаларда пайдаланылатын жалпы қызығушылықтар"</string>
+    <string name="settingsUI_topics_view_info_text2" msgid="8355913397424818046">"Android-тағы қызығушылықтар пайдаланатын қолданбаларыңызға негізделеді.\n\nМысалы, құрылғыңызда бірнеше спорт қолданбасы бар болса, Android \"Спорт\" қызығушылығын Privacy Sandbox-қа қосуы мүмкін.\n\nКейін бұл деректер жарнама берушілерге жеке басыңызды немесе құрылғыңызды анықтамай жіберіледі."</string>
     <string name="settingsUI_apps_key" msgid="5279102708260885695">"apps_preference"</string>
     <string name="settingsUI_apps_title" msgid="2177966577556486280">"Ерекше қызығушылық тудыратын қолданбалар"</string>
     <string name="settingsUI_apps_summary" msgid="2382082513059909726">"Ерекше қызығушылық тудыратын қолданбаларды басқарыңыз."</string>
+    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Сіз бөгеген қолданбалар"</string>
+    <string name="settingsUI_apps_view_title" msgid="3615627092403761282">"Қолданбаларды басқару"</string>
+    <string name="settingsUI_apps_view_subtitle" msgid="5257332567222983503">"Кейбір қолданбаларды қалай пайдаланатыныңызға қарай олар Privacy Sandbox үшін жарнамаларға қатысты нақты қызығушылықтарыңыз туралы деректерді жасайды. Android осы қолданбалар тізімін жаңартып отырады, осылайша оларды көруге не өңдеуге болады.\n\nҚолданбаны бөгесеңіз, тізім бұдан былай нақты қызығушылықтарыңыз туралы мәліметтерді қоспайтын болады. Өзіңіз бөгеуді алмайынша, қолданба бұл тізімге қайта қосылмайды. Бұл қолданба қосып қойған қызығушылықтар туралы деректер жойылғанымен, оларға қатысты кейбір жарнамалар көрсетіле беруі мүмкін."</string>
+    <string name="settingsUI_apps_view_no_apps_text" msgid="1056905761942948495">"Ешқандай қолданба жоқ."</string>
+    <string name="settingsUI_reset_apps_title" msgid="3308597019425923552">"Қолданбалар жасаған деректерді нөлдеу"</string>
+    <string name="settingsUI_apps_view_info_text1" msgid="503353133396835755">"Жарнамаға қатысты ерекше қызығушылықтар"</string>
+    <string name="settingsUI_apps_view_info_text2" msgid="6562781312486257254">"Сіз пайдаланатын кейбір қолданба жарнамаға қатысты ерекше қызығушылықтарыңыз туралы дерек жасап, оны Privacy Sandbox-қа қосады.\n\nМысалы, сіз кроссовка сатып алуға пайдаланған қолданба sport_running деген белгі қосуы мүмкін.\n\nКейін Privacy Sandbox-та сақталған деректер жарнама берушілерге жіберіледі. Онда жеке басыңыз да, құрылғыңыз да анықтамайды. Яғни сізге ұнайды деген жарнамалар көрсетіле береді, бірақ құпиялылығыңыз жақсырақ қорғалады."</string>
+    <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="5700261138344146462">"Ешқандай қолданбаға тыйым салынбаған."</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Дәл қазір көрсететін қызығушылық жоқ."</string>
+    <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
+    <string name="settingsUI_topics_title" msgid="4024683469932819788">"Жалпы қызығушылықтарыңыз"</string>
+    <string name="settingsUI_topics_summary" msgid="3146101472984434355">"Жалпы қызығушылықтарды басқарыңыз."</string>
     <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"Жарнамаларға қатысты жалпы қызығушылықтарыңызды басқарыңыз"</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Бөгеу"</string>
-    <string name="settingsUI_blocked_topics_title" msgid="8563397445730522086">"Сіз тыйым салған қызығушылықтар"</string>
+    <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Бөгеуді алу"</string>
+    <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Сіз бөгеген қызығушылықтар"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Барлық қызығушылықты қалпына келтіру"</string>
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="5717377146633882375">"Ешқандай қызығушылық түріне тыйым салынбаған."</string>
+    <string name="notificationUI_notification_content_eu" msgid="7419441022808120101">"Қолданбалар арасында қадағалауды шектейтін жаңа функцияларды сынаңыз"</string>
+    <string name="notificationUI_header_title_eu" msgid="6822288197367284058">"Жарнамалар құпиялылығы бағдарламасының бета нұсқасына қосылыңыз"</string>
+    <string name="notificationUI_container3_title_eu" msgid="3157854074121291065">"Не істеуге болады?"</string>
+    <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Жоқ, рақмет"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="7294736040084958697">"Иә, қолданып көремін"</string>
+    <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Қатысқаныңызға рақмет!"</string>
+    <string name="notificationUI_confirmation_accept_subtitle" msgid="722290263168711051">"Енді Privacy Sandbox бета нұсқасын пайдаланатын қатысушысыз. \n\nҚұпиялылық параметрлерінде кез келген уақытта толық ақпарат алуға немесе бета нұсқадан шығуға болады."</string>
+    <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Қатысудан бас тарттыңыз"</string>
+    <string name="notificationUI_confirmation_decline_subtitle" msgid="1869322730722065768">"Жауабыңызға рақмет! Privacy Sandbox бета нұсқасына қосылмадыңыз.\n\nОйыңыздан айнып қалсаңыз немесе толық ақпарат алғыңыз келсе, құпиялылық параметрлеріне өтіңіз."</string>
+    <string name="notificationUI_notification_content" msgid="2096372976024736172">"Қолданбалар арасында қадағалауды шектейтін жаңа функцияларды сынап жатырсыз."</string>
+    <string name="notificationUI_header_title" msgid="857744302422337933">"Android-қа қолданбалар арасында қадағалауды шектеуіне көмектесіп жатырсыз"</string>
+    <string name="notificationUI_header_subtitle" msgid="522289584167376388">"Android жарнама берішулердің қолданбалар арасында қадағалауын шектейтін жаңа функцияларды тексеріп жатыр."</string>
+    <string name="notificationUI_container1_title" msgid="3837529978480615552">"Қолданбалар арасында қадағалау дегеніміз не?"</string>
+    <string name="notificationUI_container1_body_text" msgid="2564452110982505130">"Бүгінгі таңда құрылғыңызды қолданбаны пайдалану туралы деректеріңізбен оңай байланыстыруға, содан кейін жарнамалау мақсатында оларды бөлісуге болады."</string>
+    <string name="notificationUI_container2_title" msgid="4796199061758878885">"Android не істеп жатыр?"</string>
+    <string name="notificationUI_container2_body_text" msgid="7717896223210525953">"Android жеке басыңызды немесе құрылғыңызды анықтамастан жарнама деректерін қауіпсіз сақтайтын және бөлісетін жаңа Privacy Sandbox технологиясын тексеріп жатыр. \n\nБұл жаңа жүйе деректердің басқа қолданбаларға тікелей өтіп кетпеуінің алдын алуға көмектеседі. Бірақ сізге ұнайтын жарнамалар көрсетіле береді."</string>
+    <string name="notificationUI_container2_control_text" msgid="3031227311095645064">"Бұл қалай жұмыс істейді?"</string>
+    <string name="notificationUI_container3_title" msgid="1283794406634157611">"Сіз беретін көмек"</string>
+    <string name="notificationUI_container3_body_text" msgid="2636703086913037594">"Көрсетілетін жарнамаларда еш өзгеріс байқамауыңыз мүмкін, бірақ бета нұсқаға қатысу нәтижесінде Android уақыт өте қолданбалар арасындағы қадағалауды шектейді. Кез келген уақытта құпиялылық параметрлеріне өтіп, бета нұсқадан шығып кетуге болады."</string>
+    <string name="notificationUI_left_control_button_text" msgid="6459461402253858770">"Құпиялылық параметрлері"</string>
+    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Түсінікті"</string>
+    <string name="notificationUI_how_it_works_expanded_text1" msgid="1753701052925879129">"Privacy Sandbox қалай жұмыс істейді?"</string>
+    <string name="notificationUI_how_it_works_expanded_text2" msgid="3117263986288195274">"Сізге ұнауы мүмкін жарнамаларды көрсету үшін деректер Privacy Sandbox-қа жиналады, бірақ жеке басыңызды немесе құрылғыңызды анықтамай жіберіледі."</string>
+    <string name="notificationUI_how_it_works_expanded_text3" msgid="7270822532577167752">"Privacy Sandbox дерекқорында қандай деректер жиналады?"</string>
+    <string name="notificationUI_how_it_works_expanded_text4" msgid="5609475052636889205">"•  Жалпы қызығушылықтар"</string>
+    <string name="notificationUI_how_it_works_expanded_text5" msgid="6757375506547548599">"Android жинайтын деректер пайдаланатын қолданбаларыңызға негізделеді және Privacy Sandbox-қа қосылады. Мысалы, жалпы қызығушылықтарыңыздың бірі \"Спорт\" болуы мүмкін. \n\nҚұпиялылық параметрлерінде қызығушылықтар тізімін көріп, ұнамайтынын бөгеуге болады."</string>
+    <string name="notificationUI_how_it_works_expanded_text6" msgid="2863877874268072458">"•  Ерекше қызығушылықтар"</string>
+    <string name="notificationUI_how_it_works_expanded_text7" msgid="2140515900209351523">"Қолданбалар деректерді сіздің оларды қалай пайдаланатыныңызға қарай жинап, Privacy Sandbox-қа қосып отырады. Мысалы, сіз кроссовка сатып алуға пайдаланатын қолданба sport_running белгісін қосуы мүмкін.\n\nҚұпиялылық параметрлерінде осылай істейтін қолданбалар тізімін көріп, Privacy Sandbox-қа дерек жіберуін бөгеуге болады."</string>
+    <string name="topic10001" msgid="1636806320891333775">"Өнер және ойын-сауық"</string>
+    <string name="topic10002" msgid="1226367977754287428">"Актерлік өнер және театр"</string>
+    <string name="topic10003" msgid="6949890838957814881">"Аниме және манга"</string>
+    <string name="topic10004" msgid="5397903150832181233">"Мультфильмдер"</string>
+    <string name="topic10005" msgid="6316179809581237302">"Комикс"</string>
+    <string name="topic10006" msgid="7442330644172139790">"Концерттер мен музыкалық фестивальдар"</string>
+    <string name="topic10007" msgid="5537896091418145164">"Би"</string>
+    <string name="topic10008" msgid="2737343278307552521">"Ойын-сауық саласы"</string>
+    <string name="topic10009" msgid="3252367380340240453">"Қызықтар мен викториналар"</string>
+    <string name="topic10010" msgid="932301479153552725">"Күлкілі сынақтар мен сауалнамалар"</string>
+    <string name="topic10011" msgid="3123553390567261985">"Әзіл"</string>
+    <string name="topic10012" msgid="8756486271154511326">"Күлкілі суреттер мен бейнелер"</string>
+    <string name="topic10013" msgid="1242353161202448753">"Тікелей эфирдегі комедия"</string>
+    <string name="topic10014" msgid="6086156236112755291">"Тікелей эфирдегі спорттық іс-шаралар"</string>
+    <string name="topic10015" msgid="9196350141359833832">"Сиқыр"</string>
+    <string name="topic10016" msgid="202419376638900745">"Кино мен театр афишалары"</string>
+    <string name="topic10017" msgid="6737229918787540100">"Фильмдер"</string>
+    <string name="topic10018" msgid="6823676154109177487">"Экшн және шытырман оқиғалы фильмдер"</string>
+    <string name="topic10019" msgid="6875960630918973127">"Анимациялық фильмдер"</string>
+    <string name="topic10020" msgid="4323870300602151489">"Комедиялық фильмдер"</string>
+    <string name="topic10021" msgid="446758643774468418">"Культ және инди фильмдері"</string>
+    <string name="topic10022" msgid="3671929742155787005">"Деректі фильмдер"</string>
+    <string name="topic10023" msgid="3547616830531182863">"Драма жанрындағы фильмдер"</string>
+    <string name="topic10024" msgid="1044853632986202120">"Отбасына арналған фильмдер"</string>
+    <string name="topic10025" msgid="5958629223443279316">"Қорқынышты фильмдер"</string>
+    <string name="topic10026" msgid="5685515125614860029">"Романтикалық фильмдер"</string>
+    <string name="topic10027" msgid="8846353713171614854">"Триллер"</string>
+    <string name="topic10028" msgid="170404703980174756">"Музыка және аудио"</string>
+    <string name="topic10029" msgid="4634600135545614665">"Блюз"</string>
+    <string name="topic10030" msgid="7226438392540805771">"Классикалық музыка"</string>
+    <string name="topic10031" msgid="1488013446112025676">"Кантри"</string>
+    <string name="topic10032" msgid="9053666244854789632">"Би және электрондық музыка"</string>
+    <string name="topic10033" msgid="440063573197454181">"Фолк және дәстүрлі музыка"</string>
+    <string name="topic10034" msgid="8296307244554241197">"Джаз"</string>
+    <string name="topic10035" msgid="9171752741499923310">"Музыка трансляциясы және жүктеп алу"</string>
+    <string name="topic10036" msgid="2490236112725457376">"Музыкалық бейнелер"</string>
+    <string name="topic10037" msgid="1923690469725883551">"Музыкалық аспаптар"</string>
+    <string name="topic10038" msgid="2817492732688549631">"Пианино және пернелі аспаптар"</string>
+    <string name="topic10039" msgid="8970033643570782019">"Поп-музыка"</string>
+    <string name="topic10040" msgid="7478395512712452137">"Радио"</string>
+    <string name="topic10041" msgid="3319379117705411886">"Ток-радио"</string>
+    <string name="topic10042" msgid="8830471038440654640">"Рэп және хип-хоп"</string>
+    <string name="topic10043" msgid="8585450284346207691">"Рок"</string>
+    <string name="topic10044" msgid="3710011249220779842">"Классикалық рок және ескі әндер"</string>
+    <string name="topic10045" msgid="7593443421067822441">"Хард-рок және прогрессивтік музыка"</string>
+    <string name="topic10046" msgid="8715621227472631784">"Инди және балама музыка"</string>
+    <string name="topic10047" msgid="3518038303049899798">"Үлгілер мен дыбыс жинақтары"</string>
+    <string name="topic10048" msgid="3063505369500799094">"Соул және R&amp;B"</string>
+    <string name="topic10049" msgid="8061992014977840818">"Саундтректер"</string>
+    <string name="topic10050" msgid="3540229495848506229">"Әлемдік музыка"</string>
+    <string name="topic10051" msgid="6132468331924347995">"Регги және Кариб музыкасы"</string>
+    <string name="topic10052" msgid="8213269199807045473">"Онлайн кескін галереялары"</string>
+    <string name="topic10053" msgid="1378192203082454197">"Онлайн бейне"</string>
+    <string name="topic10054" msgid="3727401645405134505">"Тікелей трансляция"</string>
+    <string name="topic10055" msgid="4943174831732192854">"Фильм және телетрансляция"</string>
+    <string name="topic10056" msgid="3066058636154255073">"Опера"</string>
+    <string name="topic10057" msgid="387445514677222034">"Телегидтер мен анықтамалар"</string>
+    <string name="topic10058" msgid="9149178644022969766">"Телевизия желілері мен станциялары"</string>
+    <string name="topic10059" msgid="6300562669238320524">"Телешоулар мен бағдарламалар"</string>
+    <string name="topic10060" msgid="3901256055064835246">"Телекомедиялар"</string>
+    <string name="topic10061" msgid="8343924749123326062">"Деректі телефильмдер мен ғылыми бағдарламалар"</string>
+    <string name="topic10062" msgid="9183355218976951211">"Теледрамалар"</string>
+    <string name="topic10063" msgid="644340831620792432">"Телесериалдар"</string>
+    <string name="topic10064" msgid="5961885645457010998">"Отбасына арналған телебағдарламалар"</string>
+    <string name="topic10065" msgid="7916343612028608044">"Теледидардағы реалити шоулар"</string>
+    <string name="topic10066" msgid="5984396525358003559">"Ғылыми фантастика және фэнтези жанрындағы телесериалдар"</string>
+    <string name="topic10067" msgid="6404637729885733437">"Көрнекі өнер және дизайн"</string>
+    <string name="topic10068" msgid="4589856961950168493">"Дизайн"</string>
+    <string name="topic10069" msgid="3129378082034151991">"Сурет"</string>
+    <string name="topic10070" msgid="2570256568661324147">"Фотография және цифрлық өнер"</string>
+    <string name="topic10071" msgid="1288722040962471254">"Автокөліктер мен көлік құралдары"</string>
+    <string name="topic10072" msgid="9155509766616567261">"Жүк көліктері мен трейлерлер"</string>
+    <string name="topic10073" msgid="3748676231341513738">"Классикалық көліктер"</string>
+    <string name="topic10074" msgid="2040911547161463227">"Кастомдық және өнімділігі жоғары көліктер"</string>
+    <string name="topic10075" msgid="1242538698445713796">"Бензин бағасы мен көлікке жанармай құю"</string>
+    <string name="topic10076" msgid="8674225812339579627">"Автокөліктер (түріне қарай)"</string>
+    <string name="topic10077" msgid="3577709810751953433">"Автономдық көлік құралдары"</string>
+    <string name="topic10078" msgid="5493263845129910125">"Кабриолеттер"</string>
+    <string name="topic10079" msgid="3466838852836498580">"Купелер"</string>
+    <string name="topic10080" msgid="3515647285637163190">"Хэтчбектер"</string>
+    <string name="topic10081" msgid="4135085035401158860">"Гибрид және балама көліктер"</string>
+    <string name="topic10082" msgid="7168659489029594320">"Люкс көліктер"</string>
+    <string name="topic10083" msgid="1532745144715857802">"Шағын автокөліктер"</string>
+    <string name="topic10084" msgid="1984231414410381476">"Мотоциклдер"</string>
+    <string name="topic10085" msgid="5235555028227554661">"Жол талғамайтын көліктер"</string>
+    <string name="topic10086" msgid="8360336602646460411">"Пикаптар"</string>
+    <string name="topic10087" msgid="6566900167002195406">"Скутерлер мен мопедтер"</string>
+    <string name="topic10088" msgid="2899313082601001223">"Седандар"</string>
+    <string name="topic10089" msgid="1053630346809973163">"Әмбебап автомобильдер"</string>
+    <string name="topic10090" msgid="4478565601243447368">"Жол талғамайтын көліктер мен кроссоверлер"</string>
+    <string name="topic10091" msgid="3812668311830832874">"Кроссоверлер"</string>
+    <string name="topic10092" msgid="524130833813249539">"Микроавтобустар мен минивэндер"</string>
+    <string name="topic10093" msgid="8900143351472824542">"Буксирмен тарту және жолдағы көліктерге көмек көрсету"</string>
+    <string name="topic10094" msgid="6205146188176216038">"Көлік құралдары және көлік қозғалысының қауіпсіздігі"</string>
+    <string name="topic10095" msgid="7983070264654477553">"Көлік бөлшектері мен аксессуарлары"</string>
+    <string name="topic10096" msgid="8148747014459050804">"Көлік жөндеу және техникалық күтім жасау"</string>
+    <string name="topic10097" msgid="4716536434833425748">"Көлік сатып алу"</string>
+    <string name="topic10098" msgid="6401980112135995019">"Айдалған көліктер"</string>
+    <string name="topic10099" msgid="8018714209926584445">"Көлік көрмелері"</string>
+    <string name="topic10100" msgid="2481422464734249871">"Сұлулық және фитнес"</string>
+    <string name="topic10101" msgid="7889144198021629053">"Денені безендіру өнері"</string>
+    <string name="topic10102" msgid="577637051755692238">"Бет пен денеге күтім жасау"</string>
+    <string name="topic10103" msgid="6618157344631408510">"Антиперспиранттар"</string>
+    <string name="topic10104" msgid="6043649669944382784">"Жуынуға және денеге күтім жасауға арналған өнімдер"</string>
+    <string name="topic10105" msgid="3248569527339253661">"Таза сұлулық"</string>
+    <string name="topic10106" msgid="1291481249483309832">"Опа-далап және косметика"</string>
+    <string name="topic10107" msgid="1335060201249279923">"Тырнақ күтіміне арналған өнімдер"</string>
+    <string name="topic10108" msgid="4996884435711154930">"Парфюм және хош иістер"</string>
+    <string name="topic10109" msgid="7298403319989686251">"Қырыну құралдары"</string>
+    <string name="topic10110" msgid="5954355866247248022">"Сән және стиль"</string>
+    <string name="topic10111" msgid="4447710938881368413">"Фитнес"</string>
+    <string name="topic10112" msgid="8816530137921714131">"Бодибилдинг"</string>
+    <string name="topic10113" msgid="8138889299405853557">"Фитнес инструкторлары және жеке жаттығулар"</string>
+    <string name="topic10114" msgid="2172821400279346865">"Технологиялық фитнес өнімдері"</string>
+    <string name="topic10115" msgid="9060244278068231494">"Шаш күтімі"</string>
+    <string name="topic10116" msgid="116242880964485085">"Кітаптар және әдебиет"</string>
+    <string name="topic10117" msgid="8933734721100160863">"Балалар әдебиеті"</string>
+    <string name="topic10118" msgid="4368531903547695191">"Электрондық кітаптар"</string>
+    <string name="topic10119" msgid="2781095265741115471">"Журналдар"</string>
+    <string name="topic10120" msgid="3099507102655270527">"Поэзия"</string>
+    <string name="topic10121" msgid="4466592180799340837">"Бизнес және өнеркәсіп"</string>
+    <string name="topic10122" msgid="2375136741125920744">"Жарнама және маркетинг"</string>
+    <string name="topic10123" msgid="6974082907852347979">"Сауда"</string>
+    <string name="topic10124" msgid="44474598156972786">"Ауыл және орман шаруашылығы"</string>
+    <string name="topic10125" msgid="9170394261421539760">"Тамақ өндірісі"</string>
+    <string name="topic10126" msgid="2210146434071038904">"Автомобиль өнеркәсібі"</string>
+    <string name="topic10127" msgid="5503077037318678029">"Авиация саласы"</string>
+    <string name="topic10128" msgid="285525650692719959">"Бизнес операциялар"</string>
+    <string name="topic10129" msgid="3094691551566702427">"Икемді жұмыс кестесі"</string>
+    <string name="topic10130" msgid="1922351409757117764">"Еңбек ресурстары"</string>
+    <string name="topic10131" msgid="8598763405951029782">"Коммерциялық несие беру"</string>
+    <string name="topic10132" msgid="1476352626208153907">"Құрылыс және жөндеу жұмыстары"</string>
+    <string name="topic10133" msgid="7089177624979453528">"Азаматтық құрылыс"</string>
+    <string name="topic10134" msgid="3833032373311037601">"Қорғаныс саласы"</string>
+    <string name="topic10135" msgid="2478808072377000440">"Қуат және коммуналдық қызметтер"</string>
+    <string name="topic10136" msgid="9083992436834044162">"Су жеткізу және тазарту"</string>
+    <string name="topic10137" msgid="1912599316814246824">"Қонақжайлық индустриясы"</string>
+    <string name="topic10138" msgid="7428346836350671895">"Өндіріс"</string>
+    <string name="topic10139" msgid="1396685812404869953">"Металдар мен тау-кен өндірісі"</string>
+    <string name="topic10140" msgid="5264212052238781441">"MLM және бизнес мүмкіндіктері"</string>
+    <string name="topic10141" msgid="860058416683118730">"Фармацевтика және биотехнологиялар"</string>
+    <string name="topic10142" msgid="2912550934111655896">"Баспалар"</string>
+    <string name="topic10143" msgid="5690610408227078117">"Бөлшек сауда"</string>
+    <string name="topic10144" msgid="3341052306953106368">"Венчурлық капитал"</string>
+    <string name="topic10145" msgid="6886608911083388041">"Компьютерлер және электроника"</string>
+    <string name="topic10146" msgid="8202145175139144216">"Компьютердің перифериялық құрылғылары"</string>
+    <string name="topic10147" msgid="4687964705548995437">"Принтерлер"</string>
+    <string name="topic10148" msgid="8861628145647459323">"Компьютер қауіпсіздігі"</string>
+    <string name="topic10149" msgid="1719988773455991739">"Антивирус және зиянды бағдарламалар"</string>
+    <string name="topic10150" msgid="1482205464872465298">"Желі қауіпсіздігі"</string>
+    <string name="topic10151" msgid="1772262905623388968">"Тұрмыстық электроника"</string>
+    <string name="topic10152" msgid="651152740021127086">"Камералар мен бейне жазу құрылғылары"</string>
+    <string name="topic10153" msgid="8741504768717646372">"GPS және навигация"</string>
+    <string name="topic10154" msgid="5382029798409496090">"Үй құрылғыларын автоматтандыру"</string>
+    <string name="topic10155" msgid="5243817792730496258">"Үй кинотеатры жүйелері"</string>
+    <string name="topic10156" msgid="2497791567138856030">"MP3 және тасымалданатын медиаплеерлер"</string>
+    <string name="topic10157" msgid="4723439422860510190">"Денеге тағылатын құрылғылар"</string>
+    <string name="topic10158" msgid="5345830001295028513">"Деректердің сақтық көшірмесін жасау және қалпына келтіру"</string>
+    <string name="topic10159" msgid="6146958285117174314">"Компьютерлер"</string>
+    <string name="topic10160" msgid="6624820395549466426">"Ноутбуктар"</string>
+    <string name="topic10161" msgid="912458758908978530">"Нетворкинг"</string>
+    <string name="topic10162" msgid="6717352131379507693">"Деректерді үлестіру және бұлтта өңдеу"</string>
+    <string name="topic10163" msgid="6344926622025055321">"Бағдарлама құру"</string>
+    <string name="topic10164" msgid="4228888249078845459">"Бағдарламалық құрал"</string>
+    <string name="topic10165" msgid="5507908999219967161">"Аудио мен музыкаға арналған бағдарламалық құралдар"</string>
+    <string name="topic10166" msgid="4768106492755849560">"Бизнеске және өнімділікті арттыруға арналған бағдарламалық құралдар"</string>
+    <string name="topic10167" msgid="8556935769754922871">"Күнтізбе мен жоспарлауға арналған бағдарламалық құралдар"</string>
+    <string name="topic10168" msgid="7730134961167790334">"Конференция мен бірлесе жұмыс істеуге арналған бағдарламалық құралдар"</string>
+    <string name="topic10169" msgid="5655084106378890454">"Презентация жасауға арналған бағдарламалық құралдар"</string>
+    <string name="topic10170" msgid="4638281897205909919">"Электрондық кесте жасауға арналған бағдарламалық құралдар"</string>
+    <string name="topic10171" msgid="7910183120486541228">"Сөз өңдеуге арналған бағдарламалық құралдар"</string>
+    <string name="topic10172" msgid="3626573644414074730">"Беттеу"</string>
+    <string name="topic10173" msgid="7320053835183057144">"Қаріптер"</string>
+    <string name="topic10174" msgid="5770469447869586710">"Жүктеп алу менеджерлері"</string>
+    <string name="topic10175" msgid="3475235810022334041">"Тегін және бөлісуге болатын бағдарламалық құралдар"</string>
+    <string name="topic10176" msgid="6881704501596479881">"Графика мен анимацияға арналған бағдарламалық құралдар"</string>
+    <string name="topic10177" msgid="6740430730079682579">"Ақылды жеке көмекшілер"</string>
+    <string name="topic10178" msgid="7261811053741593091">"Мультимедиа ойнатқыштары"</string>
+    <string name="topic10179" msgid="2967001567120854492">"Бақылауға арналған бағдарламалық құралдар"</string>
+    <string name="topic10180" msgid="4197420326455130102">"Операциялық жүйелер"</string>
+    <string name="topic10181" msgid="3537573129132698830">"Фотосурет пен бейне өңдеуге арналған бағдарламалық құралдар"</string>
+    <string name="topic10182" msgid="7688631285131229981">"Фотосурет өңдеуге арналған бағдарламалық құралдар"</string>
+    <string name="topic10183" msgid="5994974566140272512">"Бейне өңдеуге арналған бағдарламалық құралдар"</string>
+    <string name="topic10184" msgid="8685817335076871509">"Бағдарламалық утилиталар"</string>
+    <string name="topic10185" msgid="308314128178285390">"Веб-браузерлер"</string>
+    <string name="topic10186" msgid="3147859503481018245">"Қаржы"</string>
+    <string name="topic10187" msgid="7077128721410871032">"Бухгалтерия және аудит"</string>
+    <string name="topic10188" msgid="2206138708659457910">"Салықтарды есептеу және жоспарлау"</string>
+    <string name="topic10189" msgid="4001795553008246784">"Банкинг"</string>
+    <string name="topic10190" msgid="2988430661381243083">"Ақша аудару қызметтері"</string>
+    <string name="topic10191" msgid="6196081825838237614">"Несие және қарыз"</string>
+    <string name="topic10192" msgid="3290123244833047307">"Несиелік карталар"</string>
+    <string name="topic10193" msgid="294407043381146861">"Тұрғын үйді қаржыландыру"</string>
+    <string name="topic10194" msgid="2834543407440890272">"Тұтынушылық несиелер"</string>
+    <string name="topic10195" msgid="7650553060132394782">"Студенттік несиелер және білім алуды қаржыландыру"</string>
+    <string name="topic10196" msgid="5395035781876507254">"Қаржыны жоспарлау және басқару"</string>
+    <string name="topic10197" msgid="1287138667488226463">"Зейнет"</string>
+    <string name="topic10198" msgid="2523256186943366779">"Гранттар"</string>
+    <string name="topic10199" msgid="3746711537661530183">"Гранттар"</string>
+    <string name="topic10200" msgid="2394864891391267841">"Сақтандыру"</string>
+    <string name="topic10201" msgid="4301879117376963742">"Көлік сақтандыру"</string>
+    <string name="topic10202" msgid="739808503036239379">"Денсаулық сақтандыру"</string>
+    <string name="topic10203" msgid="838786942776142290">"Үй сақтандыру"</string>
+    <string name="topic10204" msgid="6591131759521321677">"Өмір сақтандыру"</string>
+    <string name="topic10205" msgid="3294946723815021478">"Туристік сақтандыру"</string>
+    <string name="topic10206" msgid="6166888350685752683">"Инвестиция"</string>
+    <string name="topic10207" msgid="2296385804039743999">"Тауарлар мен фьючерс саудасы"</string>
+    <string name="topic10208" msgid="2717498987483479091">"Валюталар және шетелдік валюта бағамы"</string>
+    <string name="topic10209" msgid="5204948738662951962">"Хедж қорлары"</string>
+    <string name="topic10210" msgid="4607225697024266227">"Инвестициялық пай қорлары"</string>
+    <string name="topic10211" msgid="7475381839877166080">"Акциялар мен облигациялар"</string>
+    <string name="topic10212" msgid="3988751035952286047">"Азық-түлік және сусындар"</string>
+    <string name="topic10213" msgid="1358963098339995471">"Тамақ пісіру және рецептілер"</string>
+    <string name="topic10214" msgid="8463864389138867811">"Гриль және барбекю"</string>
+    <string name="topic10215" msgid="3085467051491069648">"Ұлттық тағамдар"</string>
+    <string name="topic10216" msgid="6043130649326166680">"Вегетариандық тағамдар"</string>
+    <string name="topic10217" msgid="7173870057669247536">"Веган тағамдары"</string>
+    <string name="topic10218" msgid="5570240643247064951">"Дұрыс тамақтану"</string>
+    <string name="topic10219" msgid="5896715206025463732">"Азық-түлік дүкендері"</string>
+    <string name="topic10220" msgid="3894580611467039658">"Ойындар"</string>
+    <string name="topic10221" msgid="14471057764591805">"Аркада және ойын автоматтары"</string>
+    <string name="topic10222" msgid="2704894577954508861">"Бильярд"</string>
+    <string name="topic10223" msgid="202900267060220170">"Үстел ойындары"</string>
+    <string name="topic10224" msgid="6572627325588452785">"Шахмат және абстрактілі стратегия ойындары"</string>
+    <string name="topic10225" msgid="8056906319560292131">"Карта ойындары"</string>
+    <string name="topic10226" msgid="714463563336281099">"Коллекциялық карта ойындары"</string>
+    <string name="topic10227" msgid="218768654597520683">"Компьютерлік және бейне ойындар"</string>
+    <string name="topic10228" msgid="850597136074192489">"Экшн ойындар және платформерлер"</string>
+    <string name="topic10229" msgid="4284501233897149886">"Шытырман ойындар"</string>
+    <string name="topic10230" msgid="7156822286576815181">"Қарапайым ойындар"</string>
+    <string name="topic10231" msgid="7620407218897744361">"Сайысатын бейне ойындар"</string>
+    <string name="topic10232" msgid="3029734447275709941">"Көлік жүргізу және жарыс ойындары"</string>
+    <string name="topic10233" msgid="8318075279868138231">"Төбелес ойындары"</string>
+    <string name="topic10234" msgid="3899847414436099153">"Ойын анықтамалары және пікірлер"</string>
+    <string name="topic10235" msgid="5851356242523630529">"Бейне ойындағы читтер мен көмекші құралдар"</string>
+    <string name="topic10236" msgid="1986665634014804954">"Көп ойыншыға арналған ойындар"</string>
+    <string name="topic10237" msgid="5569920221620447713">"Музыка және би ойындары"</string>
+    <string name="topic10238" msgid="7431087331656772530">"Sandbox ойындары"</string>
+    <string name="topic10239" msgid="8667462879554115515">"Атыс ойындары"</string>
+    <string name="topic10240" msgid="1618985302446756520">"Симуляциялық ойындар"</string>
+    <string name="topic10241" msgid="8450778411063723262">"Бизнес және магнат ойындары"</string>
+    <string name="topic10242" msgid="8860812940320018907">"Қала салу ойындары"</string>
+    <string name="topic10243" msgid="1764694148721971512">"Өмірді симуляциялау ойындары"</string>
+    <string name="topic10244" msgid="4308588210397969087">"Көлік симуляторлары"</string>
+    <string name="topic10245" msgid="6904368410919496658">"Спорттық ойындар"</string>
+    <string name="topic10246" msgid="3381244806751528148">"Спорт менеджменті туралы ойындар"</string>
+    <string name="topic10247" msgid="5927502688389762068">"Стратегиялық ойындар"</string>
+    <string name="topic10248" msgid="8471339627212674032">"Бейне ойын модификациялары мен қосымшалары"</string>
+    <string name="topic10249" msgid="5076706536204559962">"Білім беру ойындары"</string>
+    <string name="topic10250" msgid="6083030595195401083">"Отбасына арналған ойындар мен жаттығулар"</string>
+    <string name="topic10251" msgid="99237306730665104">"Сурет салу және бояу"</string>
+    <string name="topic10252" msgid="6543039575961394064">"Киім және сән ойындары"</string>
+    <string name="topic10253" msgid="566596668186874227">"Басқатырғыштар"</string>
+    <string name="topic10254" msgid="5732147617072023634">"Рөлдік ойындар"</string>
+    <string name="topic10255" msgid="2890655077164103057">"Үстел теннисі"</string>
+    <string name="topic10256" msgid="3302096971402751679">"Бөлшектерді құрастыру ойындары"</string>
+    <string name="topic10257" msgid="4238531589193902619">"Сөз ойындары"</string>
+    <string name="topic10258" msgid="6995329540076529056">"Бос уақыт және хобби"</string>
+    <string name="topic10259" msgid="8649688885811560410">"Мерейтойлар"</string>
+    <string name="topic10260" msgid="487999213495640080">"Туған күндер мен атаулы күндер"</string>
+    <string name="topic10261" msgid="8970668366745952094">"Дайвинг және суға сүңгу"</string>
+    <string name="topic10262" msgid="6644046161469353448">"Мата және тоқыма өнері"</string>
+    <string name="topic10263" msgid="848165976917542929">"Таза ауада демалу"</string>
+    <string name="topic10264" msgid="6274985117752637104">"Балық аулау"</string>
+    <string name="topic10265" msgid="4134876488948695674">"Аңшылық пен мылтық ату"</string>
+    <string name="topic10266" msgid="6617785039128074351">"Пейнтбол"</string>
+    <string name="topic10267" msgid="488093331618885003">"Радио арқылы басқару және үлгілеу"</string>
+    <string name="topic10268" msgid="277932389492046264">"Үйлену тойлары"</string>
+    <string name="topic10269" msgid="8572041514147955202">"Үй және бақша"</string>
+    <string name="topic10270" msgid="2646715182474030951">"Бау-бақша"</string>
+    <string name="topic10271" msgid="1308931236810509881">"Үй және интерьер декорациясы"</string>
+    <string name="topic10272" msgid="8746698707390628887">"Тұрмыстық техника"</string>
+    <string name="topic10273" msgid="344442071339164852">"Үй жөндеу"</string>
+    <string name="topic10274" msgid="8982330028561451429">"Үй қауіпсіздігі"</string>
+    <string name="topic10275" msgid="8280198018937968735">"Үйге арналған тауарлар"</string>
+    <string name="topic10276" msgid="1651598271798609235">"Ландшафт дизайны"</string>
+    <string name="topic10277" msgid="7675195736886448994">"Интернет және телекоммуникация"</string>
+    <string name="topic10278" msgid="873251714192341707">"Электрондық пошта және хабар алмасу"</string>
+    <string name="topic10279" msgid="6514296374139842600">"Электрондық пошта"</string>
+    <string name="topic10280" msgid="7976787187115018267">"Мәтін және лездік хабар алмасу"</string>
+    <string name="topic10281" msgid="4013341162811169339">"Дауыстық чат және бейнечат"</string>
+    <string name="topic10282" msgid="7810462611906257564">"Интернет провайдерлері"</string>
+    <string name="topic10283" msgid="3958287780718485172">"Телефон қызметін көрсетушілер"</string>
+    <string name="topic10284" msgid="2415044270290467935">"Рингтондар мен мобильдік тақырыптар"</string>
+    <string name="topic10285" msgid="7056449544316408821">"Іздеу жүйелері"</string>
+    <string name="topic10286" msgid="3458688996478472971">"Смартфондар"</string>
+    <string name="topic10287" msgid="6766203044518402938">"Телеконференция"</string>
+    <string name="topic10288" msgid="3883137694557636622">"Веб-қолданбалар мен онлайн құралдар"</string>
+    <string name="topic10289" msgid="3392995633794787676">"Веб-қызметтер"</string>
+    <string name="topic10290" msgid="3118880486702986341">"Бұлт жады"</string>
+    <string name="topic10291" msgid="6025855926350955094">"Веб-дизайн және әзірлеу"</string>
+    <string name="topic10292" msgid="3069720659823056935">"Веб-хостинг"</string>
+    <string name="topic10293" msgid="2489957780009828409">"Жұмыс және білім"</string>
+    <string name="topic10294" msgid="474839431177892843">"Білім"</string>
+    <string name="topic10295" msgid="2215489196192620880">"Ғылыми конференциялар мен мақалалар"</string>
+    <string name="topic10296" msgid="4494362881225210483">"Жоғарғы оқу орындары"</string>
+    <string name="topic10297" msgid="8596946591674128749">"Қашықтан білім алу"</string>
+    <string name="topic10298" msgid="6669181180128620422">"Мектепке дейінгі білім"</string>
+    <string name="topic10299" msgid="989138215800115613">"Балабақша"</string>
+    <string name="topic10300" msgid="8281464235308602670">"Үйде оқыту"</string>
+    <string name="topic10301" msgid="9156890858635333460">"Стандартталған емтихандар және оқуға түсу тестері"</string>
+    <string name="topic10302" msgid="1325835179421990876">"Оқыту және сабаққа арналған ресурстар"</string>
+    <string name="topic10303" msgid="3103839978894155537">"Кәсіби және үздіксіз білім беру"</string>
+    <string name="topic10304" msgid="8831682558788062486">"Жұмыс"</string>
+    <string name="topic10305" msgid="8415203095484493106">"Мансапты жоспарлау және ресурстар"</string>
+    <string name="topic10306" msgid="7426556527349374835">"Вакансиялар"</string>
+    <string name="topic10307" msgid="1187762846826735256">"Заң және үкімет"</string>
+    <string name="topic10308" msgid="3346756665358311386">"Қылмыс пен әділет"</string>
+    <string name="topic10309" msgid="2041175328931014735">"Заң"</string>
+    <string name="topic10310" msgid="7079570344976872062">"Заң қызметтері"</string>
+    <string name="topic10311" msgid="2095095138677585525">"Жаңалықтар"</string>
+    <string name="topic10312" msgid="939721674816307639">"Экономика жаңалықтары"</string>
+    <string name="topic10313" msgid="4159611985538361632">"Жергілікті жаңалықтар"</string>
+    <string name="topic10314" msgid="93219947859117151">"Сатып алу және бірігу"</string>
+    <string name="topic10315" msgid="5046321177148647481">"Газеттер"</string>
+    <string name="topic10316" msgid="8592980844674525307">"Саясат"</string>
+    <string name="topic10317" msgid="2412259096368647866">"Спорт жаңалықтары"</string>
+    <string name="topic10318" msgid="1508449672941031904">"Ауа райы"</string>
+    <string name="topic10319" msgid="3973645291178509390">"Әлем жаңалықтары"</string>
+    <string name="topic10320" msgid="5279440074507438174">"Онлайн қауымдастықтар"</string>
+    <string name="topic10321" msgid="7018890132742820265">"Клипарт және анимациялық GIF-тер"</string>
+    <string name="topic10322" msgid="1585737438943011532">"Танысу және жеке өмір"</string>
+    <string name="topic10323" msgid="962863497957179646">"Фидтерді топтастыру және әлеуметтік бетбелгілер"</string>
+    <string name="topic10324" msgid="1425257460381023853">"Ортақ каталог және хостинг"</string>
+    <string name="topic10325" msgid="8698912164970408378">"Форум және чат провайдерлері"</string>
+    <string name="topic10326" msgid="2425798096705921796">"Микроблог"</string>
+    <string name="topic10327" msgid="8518822987595111212">"Фотосурет пен бейне бөлісу"</string>
+    <string name="topic10328" msgid="8932708475346340912">"Фотосурет пен кескін бөлісу"</string>
+    <string name="topic10329" msgid="223933889758324282">"Бейне бөлісу"</string>
+    <string name="topic10330" msgid="188028553492626282">"Скиндер"</string>
+    <string name="topic10331" msgid="426844238985651925">"Әлеуметтік желі қолданбалары мен қосымшалары"</string>
+    <string name="topic10332" msgid="291747325781232456">"Әлеуметтік желілер"</string>
+    <string name="topic10333" msgid="7950152600374846488">"Адам мен қоғам"</string>
+    <string name="topic10334" msgid="8671262583721706509">"Отбасы және қарым-қатынас"</string>
+    <string name="topic10335" msgid="1526523762163185819">"Ата-тек және генеалогия"</string>
+    <string name="topic10336" msgid="4551233571090493177">"Неке"</string>
+    <string name="topic10337" msgid="8436172065188964882">"Бала тәрбиесі"</string>
+    <string name="topic10338" msgid="8896269734682970">"Бала асырап алу"</string>
+    <string name="topic10339" msgid="781900237993621300">"Нәрестелер мен сәбилер"</string>
+    <string name="topic10340" msgid="6538182603360796294">"Баланың интернеттегі қауіпсіздігі"</string>
+    <string name="topic10341" msgid="3586543243312398568">"Романтика"</string>
+    <string name="topic10342" msgid="3695176378281477573">"Ғылыми фантастика және фэнтези"</string>
+    <string name="topic10343" msgid="2318169062960263837">"Үй жануарлары мен аңдар"</string>
+    <string name="topic10344" msgid="2005534117977874327">"Үй жануарларының тағамы мен күтімі"</string>
+    <string name="topic10345" msgid="2397329020706244200">"Үй жануарлары"</string>
+    <string name="topic10346" msgid="1323702748723563694">"Құстар"</string>
+    <string name="topic10347" msgid="3301879823396773413">"Мысықтар"</string>
+    <string name="topic10348" msgid="8066686305498410222">"Иттер"</string>
+    <string name="topic10349" msgid="5253723822905761195">"Балықтар мен су жануарлары"</string>
+    <string name="topic10350" msgid="6164036369108076590">"Бауырымен жорғалаушылар мен қосмекенділер"</string>
+    <string name="topic10351" msgid="1132984519083501363">"Ветеринарлар"</string>
+    <string name="topic10352" msgid="6310110390516037997">"Жылжымайтын мүлік"</string>
+    <string name="topic10353" msgid="5114390804081576684">"Жер телімдері"</string>
+    <string name="topic10354" msgid="7980778954791504082">"Демалыс үйлері және оларды ортақ жалдау"</string>
+    <string name="topic10355" msgid="7720717354548642600">"Анықтамалар"</string>
+    <string name="topic10356" msgid="8366981308613661935">"Ұйымдар мен адамдар туралы мәлімет"</string>
+    <string name="topic10357" msgid="3185598234676097975">"Жалпы анықтама"</string>
+    <string name="topic10358" msgid="6732669037513504019">"Калькуляторлар мен анықтамалық құралдар"</string>
+    <string name="topic10359" msgid="8901932349008990500">"Сөздіктер мен энциклопедиялар"</string>
+    <string name="topic10360" msgid="6113408769992775754">"Оқу материалдары"</string>
+    <string name="topic10361" msgid="364838820459183817">"Нұсқаулықтар"</string>
+    <string name="topic10362" msgid="3760998790588600032">"Уақытты бақылау құралдары және күнтізбелер"</string>
+    <string name="topic10363" msgid="5464708619861040861">"Тіл ресурстары"</string>
+    <string name="topic10364" msgid="4685400848805560054">"Шет тілін үйрену"</string>
+    <string name="topic10365" msgid="5196231842716190887">"Аударма құралдары мен ресурстары"</string>
+    <string name="topic10366" msgid="7460927054539097025">"Карталар"</string>
+    <string name="topic10367" msgid="3900361839783743700">"Ғылым"</string>
+    <string name="topic10368" msgid="2069447039109930660">"Толықтырылған және виртуалдық шындық"</string>
+    <string name="topic10369" msgid="5747888306428024793">"Биология ғылымдары"</string>
+    <string name="topic10370" msgid="4860829940151353583">"Генетика"</string>
+    <string name="topic10371" msgid="8229818210867472466">"Химия"</string>
+    <string name="topic10372" msgid="6400467418954574231">"Экология және қоршаған орта"</string>
+    <string name="topic10373" msgid="6990757247198163741">"Геология"</string>
+    <string name="topic10374" msgid="8057983193031950119">"Машинаны үйрету және жасанды зейін"</string>
+    <string name="topic10375" msgid="8511185098682306025">"Математика"</string>
+    <string name="topic10376" msgid="6387800251638760737">"Физика"</string>
+    <string name="topic10377" msgid="7834619927563362042">"Робототехника"</string>
+    <string name="topic10378" msgid="242496862821758873">"Сауда-саттық"</string>
+    <string name="topic10379" msgid="5505228335012447165">"Антиквариат және коллекциялық бұйымдар"</string>
+    <string name="topic10380" msgid="4989560205486143927">"Киім-кешек"</string>
+    <string name="topic10381" msgid="7585496746485093505">"Балалар киімі"</string>
+    <string name="topic10382" msgid="5088060295126473451">"Костюмдер"</string>
+    <string name="topic10383" msgid="4947104586590538143">"Ерлер киімі"</string>
+    <string name="topic10384" msgid="3752472493887374077">"Әйелдер киімі"</string>
+    <string name="topic10385" msgid="5275843140794803595">"Жарнамалар"</string>
+    <string name="topic10386" msgid="5887032952574801982">"Тұтыну ресурстары"</string>
+    <string name="topic10387" msgid="8474154360410317897">"Купондар мен жеңілдік ұсыныстары"</string>
+    <string name="topic10388" msgid="3650307363028796765">"Тұрақты клиент карталары мен бағдарламалары"</string>
+    <string name="topic10389" msgid="1542336508240183221">"Техникалық қолдау көрсету және жөндеу"</string>
+    <string name="topic10390" msgid="831225961168954292">"Гүлдер"</string>
+    <string name="topic10391" msgid="6810540242154911762">"Құттықтау хаттары"</string>
+    <string name="topic10392" msgid="2431377771302967625">"Сауық кештері мен мерекелерге арналған тауарлар"</string>
+    <string name="topic10393" msgid="2671274205988136926">"Шопинг порталдары"</string>
+    <string name="topic10394" msgid="1530096364743244151">"Спорт"</string>
+    <string name="topic10395" msgid="316192616624062917">"Америкалық футбол"</string>
+    <string name="topic10396" msgid="8042120651878490689">"Аустралиялық футбол"</string>
+    <string name="topic10397" msgid="492901976344700942">"Автокөлік жарысы"</string>
+    <string name="topic10398" msgid="3471795015226090296">"Бейсбол"</string>
+    <string name="topic10399" msgid="2126280752064021308">"Баскетбол"</string>
+    <string name="topic10400" msgid="5440499529264277027">"Боулинг"</string>
+    <string name="topic10401" msgid="166689951236922024">"Бокс"</string>
+    <string name="topic10402" msgid="2451339788231007479">"Чирлидинг"</string>
+    <string name="topic10403" msgid="6455478521804717635">"Студенттік спорт"</string>
+    <string name="topic10404" msgid="5261583496913118024">"Крикет"</string>
+    <string name="topic10405" msgid="482477447879117820">"Велосипед тебу"</string>
+    <string name="topic10406" msgid="8167644332387528703">"Ат спорты"</string>
+    <string name="topic10407" msgid="3237734582719584272">"Экстремалдық спорт"</string>
+    <string name="topic10408" msgid="3859749534843254349">"Альпинизм және құзға өрмелеу"</string>
+    <string name="topic10409" msgid="7485614115639267976">"Фэнтези-спорт"</string>
+    <string name="topic10410" msgid="5996939009229881074">"Гольф"</string>
+    <string name="topic10411" msgid="2513997418184786648">"Гимнастика"</string>
+    <string name="topic10412" msgid="5411755341358248299">"Хоккей"</string>
+    <string name="topic10413" msgid="3319233613448963890">"Мұзда коньки тебу"</string>
+    <string name="topic10414" msgid="1797840816328584660">"Жекпе-жек спорт түрі"</string>
+    <string name="topic10415" msgid="2886043330316735719">"Мотоцикл жарысы"</string>
+    <string name="topic10416" msgid="3436682172863605224">"Олимпиада"</string>
+    <string name="topic10417" msgid="8296644015663416236">"Регби"</string>
+    <string name="topic10418" msgid="8276736633218488127">"Жүгіру және жүру"</string>
+    <string name="topic10419" msgid="5663062924928275215">"Шаңғы және сноуборд тебу"</string>
+    <string name="topic10420" msgid="2509320683543423424">"Футбол"</string>
+    <string name="topic10421" msgid="6512889128030030686">"Серфинг"</string>
+    <string name="topic10422" msgid="8342986282852879750">"Жүзу"</string>
+    <string name="topic10423" msgid="6333426807705188459">"Теннис"</string>
+    <string name="topic10424" msgid="5495511215629567375">"Жеңіл атлетика"</string>
+    <string name="topic10425" msgid="4009138228283995179">"Волейбол"</string>
+    <string name="topic10426" msgid="7998590461761852196">"Күрес"</string>
+    <string name="topic10427" msgid="6711468161729797769">"Саяхат және жолаушы тасымалы"</string>
+    <string name="topic10428" msgid="661919563628063196">"Шытырман саяхат"</string>
+    <string name="topic10429" msgid="408270392813634227">"Әуе саяхаты"</string>
+    <string name="topic10430" msgid="3046485339481297656">"Іссапар"</string>
+    <string name="topic10431" msgid="7439352609169583150">"Көлік жалдау"</string>
+    <string name="topic10432" msgid="5034961318884376752">"Круиздер мен чартерлер"</string>
+    <string name="topic10433" msgid="6354590445323135986">"Отбасылық саяхат"</string>
+    <string name="topic10434" msgid="7081309045291255264">"Бал айы және романтикалық орындар"</string>
+    <string name="topic10435" msgid="1064605516265819020">"Қонақ үйлер мен үй-жайлар"</string>
+    <string name="topic10436" msgid="9050375924140897722">"Автобуспен және пойызбен алыс жол жүру"</string>
+    <string name="topic10437" msgid="2655664900730187701">"Арзан және күйіп бара жатқан саяхаттар"</string>
+    <string name="topic10438" msgid="7944023251845122923">"Жолжүк және сапар керек-жарақтары"</string>
+    <string name="topic10439" msgid="7845433008088931971">"Туристік бағыттар"</string>
+    <string name="topic10440" msgid="485118071443976808">"Жағажайлар мен аралдар"</string>
+    <string name="topic10441" msgid="518643446480879895">"Өңірлік саябақтар мен гүлзарлар"</string>
+    <string name="topic10442" msgid="6534536077484540292">"Аттракцион парктері"</string>
+    <string name="topic10443" msgid="8787722062991478596">"Хайуанаттар бағы"</string>
+    <string name="topic10444" msgid="2075863187654728611">"Жол және бағыт жоспарлау құралдары"</string>
+    <string name="topic10445" msgid="3460421948068980869">"Саяхат агенттіктері мен қызметтері"</string>
+    <string name="topic10446" msgid="5333138740720504195">"Саяхат гидтері мен каталогтері"</string>
 </resources>

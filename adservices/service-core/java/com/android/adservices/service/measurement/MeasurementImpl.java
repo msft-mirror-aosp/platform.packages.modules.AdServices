@@ -16,30 +16,49 @@
 
 package com.android.adservices.service.measurement;
 
-import static com.android.adservices.service.measurement.attribution.BaseUriExtractor.getBaseUri;
-import static com.android.adservices.service.measurement.attribution.TriggerContentProvider.TRIGGER_URI;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_IO_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
-import android.adservices.measurement.DeletionRequest;
-import android.adservices.measurement.IMeasurementCallback;
+import static com.android.adservices.service.measurement.attribution.TriggerContentProvider.TRIGGER_URI;
+import static com.android.adservices.service.measurement.util.BaseUriExtractor.getBaseUri;
+
+import android.adservices.common.AdServicesStatusUtils;
+import android.adservices.measurement.DeletionParam;
+import android.adservices.measurement.MeasurementManager;
 import android.adservices.measurement.RegistrationRequest;
+import android.adservices.measurement.WebSourceRegistrationRequest;
+import android.adservices.measurement.WebSourceRegistrationRequestInternal;
+import android.adservices.measurement.WebTriggerRegistrationRequest;
+import android.adservices.measurement.WebTriggerRegistrationRequestInternal;
 import android.annotation.NonNull;
 import android.annotation.WorkerThread;
-import android.content.AttributionSource;
+import android.content.ComponentName;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.RemoteException;
+import android.view.InputEvent;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.registration.SourceFetcher;
 import com.android.adservices.service.measurement.registration.SourceRegistration;
 import com.android.adservices.service.measurement.registration.TriggerFetcher;
 import com.android.adservices.service.measurement.registration.TriggerRegistration;
+import com.android.adservices.service.measurement.util.Web;
 import com.android.internal.annotations.VisibleForTesting;
 
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -50,36 +69,49 @@ import java.util.stream.Collectors;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
+ * This class is thread safe.
  *
- * <p>This class is thread safe.
  * @hide
  */
 @ThreadSafe
 @WorkerThread
 public final class MeasurementImpl {
-    private final ReadWriteLock mReadWriteLock = new ReentrantReadWriteLock();
+    private static final String ANDROID_APP_SCHEME = "android-app";
     private static volatile MeasurementImpl sMeasurementImpl;
+    private final Context mContext;
+    private final ReadWriteLock mReadWriteLock = new ReentrantReadWriteLock();
     private final DatastoreManager mDatastoreManager;
     private final SourceFetcher mSourceFetcher;
     private final TriggerFetcher mTriggerFetcher;
     private final ContentResolver mContentResolver;
-
-    private static final String ANDROID_APP_SCHEME = "android-app://";
+    private final ClickVerifier mClickVerifier;
+    private final Flags mFlags;
 
     private MeasurementImpl(Context context) {
+        mContext = context;
         mContentResolver = context.getContentResolver();
         mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
         mSourceFetcher = new SourceFetcher();
         mTriggerFetcher = new TriggerFetcher();
+        mClickVerifier = new ClickVerifier(context);
+        mFlags = FlagsFactory.getFlags();
     }
 
     @VisibleForTesting
-    MeasurementImpl(ContentResolver contentResolver, DatastoreManager datastoreManager,
-            SourceFetcher sourceFetcher, TriggerFetcher triggerFetcher) {
+    MeasurementImpl(
+            Context context,
+            ContentResolver contentResolver,
+            DatastoreManager datastoreManager,
+            SourceFetcher sourceFetcher,
+            TriggerFetcher triggerFetcher,
+            ClickVerifier clickVerifier) {
+        mContext = context;
         mContentResolver = contentResolver;
         mDatastoreManager = datastoreManager;
         mSourceFetcher = sourceFetcher;
         mTriggerFetcher = triggerFetcher;
+        mClickVerifier = clickVerifier;
+        mFlags = FlagsFactory.getFlagsForTest();
     }
 
     /**
@@ -118,38 +150,20 @@ public final class MeasurementImpl {
         }
     }
 
-    /**
-     * Implement a registration request, returning a result code.
-     */
+    /** Implement a registration request, returning a {@link AdServicesStatusUtils.StatusCode}. */
+    @AdServicesStatusUtils.StatusCode
     int register(@NonNull RegistrationRequest request, long requestTime) {
         mReadWriteLock.readLock().lock();
         try {
             switch (request.getRegistrationType()) {
-                case RegistrationRequest.REGISTER_SOURCE: {
-                    Optional<List<SourceRegistration>> fetch = mSourceFetcher.fetchSource(request);
-                    LogUtil.d("MeasurementImpl: register: success=" + fetch.isPresent());
-                    if (fetch.isPresent()) {
-                        insertSources(request, fetch.get(), requestTime);
-                        return IMeasurementCallback.RESULT_OK;
-                    } else {
-                        return IMeasurementCallback.RESULT_IO_ERROR;
-                    }
-                }
+                case RegistrationRequest.REGISTER_SOURCE:
+                    return fetchAndInsertSources(request, requestTime);
 
-                case RegistrationRequest.REGISTER_TRIGGER: {
-                    Optional<List<TriggerRegistration>> fetch =
-                            mTriggerFetcher.fetchTrigger(request);
-                    LogUtil.d("MeasurementImpl: register: success=" + fetch.isPresent());
-                    if (fetch.isPresent()) {
-                        insertTriggers(request, fetch.get(), requestTime);
-                        return IMeasurementCallback.RESULT_OK;
-                    } else {
-                        return IMeasurementCallback.RESULT_IO_ERROR;
-                    }
-                }
+                case RegistrationRequest.REGISTER_TRIGGER:
+                    return fetchAndInsertTriggers(request, requestTime);
 
                 default:
-                    return IMeasurementCallback.RESULT_INVALID_ARGUMENT;
+                    return STATUS_INVALID_ARGUMENT;
             }
         } finally {
             mReadWriteLock.readLock().unlock();
@@ -157,26 +171,109 @@ public final class MeasurementImpl {
     }
 
     /**
-     * Implement a deleteRegistrations request, returning a result code.
+     * Processes a source registration request delegated to OS from the caller, e.g. Chrome,
+     * returning a status code.
      */
-    int deleteRegistrations(@NonNull DeletionRequest request) {
+    int registerWebSource(@NonNull WebSourceRegistrationRequestInternal request, long requestTime) {
+        WebSourceRegistrationRequest sourceRegistrationRequest =
+                request.getSourceRegistrationRequest();
+        if (!isValid(sourceRegistrationRequest)) {
+            LogUtil.e("registerWebSource received invalid parameters");
+            return STATUS_INVALID_ARGUMENT;
+        }
         mReadWriteLock.readLock().lock();
         try {
-            final boolean deleteResult = mDatastoreManager.runInTransaction((dao) ->
-                    dao.deleteMeasurementData(
-                            getRegistrant(request.getAttributionSource()),
-                            request.getOriginUri(),
-                            request.getStart(),
-                            request.getEnd()
-                    )
-            );
-            return deleteResult
-                    ? IMeasurementCallback.RESULT_OK : IMeasurementCallback.RESULT_INTERNAL_ERROR;
-        } catch (NullPointerException | IllegalArgumentException e) {
-            LogUtil.e(e, "Delete registration received invalid parameters");
-            return IMeasurementCallback.RESULT_INVALID_ARGUMENT;
+            Optional<List<SourceRegistration>> fetch =
+                    mSourceFetcher.fetchWebSources(sourceRegistrationRequest);
+            LogUtil.d("MeasurementImpl: registerWebSource: success=" + fetch.isPresent());
+            if (fetch.isPresent()) {
+                insertSources(
+                        fetch.get(),
+                        requestTime,
+                        sourceRegistrationRequest.getTopOriginUri(),
+                        getRegistrant(request.getPackageName()),
+                        getSourceType(
+                                sourceRegistrationRequest.getInputEvent(),
+                                request.getRequestTime()));
+                return STATUS_SUCCESS;
+            } else {
+                return STATUS_IO_ERROR;
+            }
         } finally {
             mReadWriteLock.readLock().unlock();
+        }
+    }
+
+    /**
+     * Processes a trigger registration request delegated to OS from the caller, e.g. Chrome,
+     * returning a status code.
+     */
+    int registerWebTrigger(
+            @NonNull WebTriggerRegistrationRequestInternal request, long requestTime) {
+        WebTriggerRegistrationRequest triggerRegistrationRequest =
+                request.getTriggerRegistrationRequest();
+        if (!isValid(triggerRegistrationRequest)) {
+            LogUtil.e("registerWebTrigger received invalid parameters");
+            return STATUS_INVALID_ARGUMENT;
+        }
+        mReadWriteLock.readLock().lock();
+        try {
+            Optional<List<TriggerRegistration>> fetch =
+                    mTriggerFetcher.fetchWebTriggers(triggerRegistrationRequest);
+            LogUtil.d("MeasurementImpl: registerWebTrigger: success=" + fetch.isPresent());
+            if (fetch.isPresent()) {
+                insertTriggers(
+                        fetch.get(),
+                        requestTime,
+                        triggerRegistrationRequest.getDestination(),
+                        getRegistrant(request.getPackageName()));
+                return STATUS_SUCCESS;
+            } else {
+                return STATUS_IO_ERROR;
+            }
+        } finally {
+            mReadWriteLock.readLock().unlock();
+        }
+    }
+
+    /**
+     * Implement a deleteRegistrations request, returning a r{@link
+     * AdServicesStatusUtils.StatusCode}.
+     */
+    @AdServicesStatusUtils.StatusCode
+    int deleteRegistrations(@NonNull DeletionParam request) {
+        mReadWriteLock.readLock().lock();
+        try {
+            final boolean deleteResult =
+                    mDatastoreManager.runInTransaction(
+                            (dao) ->
+                                    dao.deleteMeasurementData(
+                                            getRegistrant(request.getPackageName()),
+                                            request.getStart(),
+                                            request.getEnd(),
+                                            request.getOriginUris(),
+                                            request.getDomainUris(),
+                                            request.getMatchBehavior(),
+                                            request.getDeletionMode()));
+            return deleteResult ? STATUS_SUCCESS : STATUS_INTERNAL_ERROR;
+        } catch (NullPointerException | IllegalArgumentException e) {
+            LogUtil.e(e, "Delete registration received invalid parameters");
+            return STATUS_INVALID_ARGUMENT;
+        } finally {
+            mReadWriteLock.readLock().unlock();
+        }
+    }
+
+    /**
+     * Implement a getMeasurementApiStatus request, returning a result code.
+     */
+    @MeasurementManager.MeasurementApiState int getMeasurementApiStatus() {
+        AdServicesApiConsent consent =
+                ConsentManager.getInstance(mContext).getConsent(mContext.getPackageManager());
+        if (consent.isGiven()) {
+            return MeasurementManager.MEASUREMENT_API_STATE_ENABLED;
+        } else {
+            return MeasurementManager.MEASUREMENT_API_STATE_DISABLED;
         }
     }
 
@@ -185,7 +282,7 @@ public final class MeasurementImpl {
      */
     public void deletePackageRecords(Uri packageUri) {
         Uri appUri = getAppUri(packageUri);
-        LogUtil.i("Deleting records for " + appUri);
+        LogUtil.d("Deleting records for " + appUri);
         mReadWriteLock.writeLock().lock();
         try {
             mDatastoreManager.runInTransaction((dao) -> {
@@ -199,42 +296,118 @@ public final class MeasurementImpl {
         }
     }
 
-    private void insertSources(
-            @NonNull RegistrationRequest request,
-            List<SourceRegistration> responseBasedRegistrations,
-            long sourceEventTime) {
-        for (SourceRegistration registration : responseBasedRegistrations) {
-            Source source = new Source.Builder()
-                    .setEventId(registration.getSourceEventId())
-                    .setPublisher(request.getTopOriginUri())
-                    // Only first destination to avoid AdTechs change this
-                    .setAttributionDestination(responseBasedRegistrations.get(0)
-                            .getDestination())
-                    .setAdTechDomain(getBaseUri(registration.getReportingOrigin()))
-                    .setRegistrant(getRegistrant(request.getAttributionSource()))
-                    .setSourceType(getSourceType(request))
-                    .setPriority(registration.getSourcePriority())
-                    .setEventTime(sourceEventTime)
-                    .setExpiryTime(sourceEventTime
-                            + TimeUnit.SECONDS.toMillis(registration.getExpiry()))
-                    .setInstallAttributionWindow(
-                            TimeUnit.SECONDS.toMillis(registration.getInstallAttributionWindow()))
-                    .setInstallCooldownWindow(
-                            TimeUnit.SECONDS.toMillis(registration.getInstallCooldownWindow()))
-                    // Setting as TRUTHFULLY as default value for tests.
-                    // This will be overwritten by getSourceEventReports.
-                    .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
-                    .setAggregateSource(registration.getAggregateSource())
-                    .setAggregateFilterData(registration.getAggregateFilterData())
-                    .build();
-            List<EventReport> eventReports = getSourceEventReports(source);
-            mDatastoreManager.runInTransaction((dao) -> {
-                dao.insertSource(source);
-                for (EventReport report : eventReports) {
-                    dao.insertEventReport(report);
-                }
-            });
+    /**
+     * Delete all data generated by Measurement API, except for tables in the exclusion list.
+     *
+     * @param tablesToExclude a {@link List} of tables that won't be deleted.
+     */
+    public void deleteAllMeasurementData(@NonNull List<String> tablesToExclude) {
+        mReadWriteLock.writeLock().lock();
+        try {
+            mDatastoreManager.runInTransaction(
+                    (dao) -> dao.deleteAllMeasurementData(tablesToExclude));
+            LogUtil.v(
+                    "All data is cleared for Measurement API except: %s",
+                    tablesToExclude.toString());
+        } finally {
+            mReadWriteLock.writeLock().unlock();
         }
+    }
+
+    private int fetchAndInsertTriggers(RegistrationRequest request, long requestTime) {
+        Optional<List<TriggerRegistration>> fetch = mTriggerFetcher.fetchTrigger(request);
+        LogUtil.d("MeasurementImpl: register: success=" + fetch.isPresent());
+        if (fetch.isPresent()) {
+            insertTriggers(
+                    fetch.get(),
+                    requestTime,
+                    request.getTopOriginUri(),
+                    getRegistrant(request.getPackageName()));
+            return STATUS_SUCCESS;
+        } else {
+            return STATUS_IO_ERROR;
+        }
+    }
+
+    private int fetchAndInsertSources(RegistrationRequest request, long requestTime) {
+        Optional<List<SourceRegistration>> fetch = mSourceFetcher.fetchSource(request);
+        LogUtil.d("MeasurementImpl: register: success=" + fetch.isPresent());
+        if (fetch.isPresent()) {
+            insertSources(
+                    fetch.get(),
+                    requestTime,
+                    request.getTopOriginUri(),
+                    getRegistrant(request.getPackageName()),
+                    getSourceType(request.getInputEvent(), request.getRequestTime()));
+            return STATUS_SUCCESS;
+        } else {
+            return STATUS_IO_ERROR;
+        }
+    }
+
+    private void insertSources(
+            List<SourceRegistration> sourceRegistrations,
+            long sourceEventTime,
+            Uri topOriginUri,
+            Uri registrant,
+            Source.SourceType sourceType) {
+        for (SourceRegistration registration : sourceRegistrations) {
+            Source source =
+                    createSource(
+                            sourceEventTime,
+                            registration,
+                            topOriginUri,
+                            registrant,
+                            sourceType,
+                            // Only first destination to avoid AdTechs change this
+                            sourceRegistrations.get(0).getAppDestination(),
+                            sourceRegistrations.get(0).getWebDestination());
+            insertSource(source);
+        }
+    }
+
+    private Source createSource(
+            long sourceEventTime,
+            SourceRegistration registration,
+            Uri topOriginUri,
+            Uri registrant,
+            Source.SourceType sourceType,
+            Uri destination,
+            Uri webDestination) {
+        return new Source.Builder()
+                .setEventId(registration.getSourceEventId())
+                .setPublisher(getBaseUri(topOriginUri))
+                .setAppDestination(destination)
+                .setWebDestination(webDestination)
+                .setAdTechDomain(getBaseUri(registration.getReportingOrigin()))
+                .setRegistrant(registrant)
+                .setSourceType(sourceType)
+                .setPriority(registration.getSourcePriority())
+                .setEventTime(sourceEventTime)
+                .setExpiryTime(
+                        sourceEventTime + TimeUnit.SECONDS.toMillis(registration.getExpiry()))
+                .setInstallAttributionWindow(
+                        TimeUnit.SECONDS.toMillis(registration.getInstallAttributionWindow()))
+                .setInstallCooldownWindow(
+                        TimeUnit.SECONDS.toMillis(registration.getInstallCooldownWindow()))
+                // Setting as TRUTHFULLY as default value for tests.
+                // This will be overwritten by getSourceEventReports.
+                .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                .setAggregateSource(registration.getAggregateSource())
+                .setAggregateFilterData(registration.getAggregateFilterData())
+                .setDebugKey(registration.getDebugKey())
+                .build();
+    }
+
+    private void insertSource(Source source) {
+        List<EventReport> eventReports = getSourceEventReports(source);
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    dao.insertSource(source);
+                    for (EventReport report : eventReports) {
+                        dao.insertEventReport(report);
+                    }
+                });
     }
 
     @VisibleForTesting
@@ -247,8 +420,7 @@ public final class MeasurementImpl {
                                         .setSourceId(source.getEventId())
                                         .setReportTime(fakeReport.getReportingTime())
                                         .setTriggerData(fakeReport.getTriggerData())
-                                        .setAttributionDestination(
-                                                source.getAttributionDestination())
+                                        .setAttributionDestination(source.getAppDestination())
                                         .setAdTechDomain(source.getAdTechDomain())
                                         .setTriggerTime(0)
                                         .setTriggerPriority(0L)
@@ -261,28 +433,32 @@ public final class MeasurementImpl {
                 .collect(Collectors.toList());
     }
 
-    private Source.SourceType getSourceType(RegistrationRequest request) {
-        return request.getInputEvent() == null
-                ? Source.SourceType.EVENT : Source.SourceType.NAVIGATION;
+    @VisibleForTesting
+    Source.SourceType getSourceType(InputEvent inputEvent, long requestTime) {
+        // If click verification is enabled and the InputEvent is not null, but it cannot be
+        // verified, then the SourceType is demoted to EVENT.
+        if (mFlags.getMeasurementIsClickVerificationEnabled()
+                && inputEvent != null
+                && !mClickVerifier.isInputEventVerifiable(inputEvent, requestTime)) {
+            return Source.SourceType.EVENT;
+        } else {
+            return inputEvent == null ? Source.SourceType.EVENT : Source.SourceType.NAVIGATION;
+        }
     }
 
     private void insertTriggers(
-            @NonNull RegistrationRequest request,
             List<TriggerRegistration> responseBasedRegistrations,
-            long triggerTime) {
+            long triggerTime,
+            Uri topOrigin,
+            Uri registrant) {
         for (TriggerRegistration registration : responseBasedRegistrations) {
-            Trigger trigger = new Trigger.Builder()
-                    .setAttributionDestination(request.getTopOriginUri())
-                    .setAdTechDomain(getBaseUri(registration.getReportingOrigin()))
-                    .setRegistrant(getRegistrant(request.getAttributionSource()))
-                    .setTriggerTime(triggerTime)
-                    .setEventTriggers(registration.getEventTriggers())
-                    .setAggregateTriggerData(registration.getAggregateTriggerData())
-                    .setAggregateValues(registration.getAggregateValues())
-                    .setFilters(registration.getFilters())
-                    .build();
+            Trigger trigger = createTrigger(registration, triggerTime, topOrigin, registrant);
             mDatastoreManager.runInTransaction((dao) -> dao.insertTrigger(trigger));
         }
+        notifyTriggerContentProvider();
+    }
+
+    private void notifyTriggerContentProvider() {
         try (ContentProviderClient contentProviderClient =
                      mContentResolver.acquireContentProviderClient(TRIGGER_URI)) {
             if (contentProviderClient != null) {
@@ -293,12 +469,107 @@ public final class MeasurementImpl {
         }
     }
 
-    private Uri getRegistrant(AttributionSource attributionSource) {
-        return Uri.parse(
-                ANDROID_APP_SCHEME + attributionSource.getPackageName());
+    private Trigger createTrigger(
+            TriggerRegistration registration, long triggerTime, Uri topOrigin, Uri registrant) {
+        return new Trigger.Builder()
+                .setAttributionDestination(topOrigin)
+                .setAdTechDomain(getBaseUri(registration.getReportingOrigin()))
+                .setRegistrant(registrant)
+                .setTriggerTime(triggerTime)
+                .setEventTriggers(registration.getEventTriggers())
+                .setAggregateTriggerData(registration.getAggregateTriggerData())
+                .setAggregateValues(registration.getAggregateValues())
+                .setFilters(registration.getFilters())
+                .setDebugKey(registration.getDebugKey())
+                .build();
+    }
+
+    private Uri getRegistrant(String packageName) {
+        return Uri.parse(ANDROID_APP_SCHEME + "://" + packageName);
     }
 
     private Uri getAppUri(Uri packageUri) {
-        return Uri.parse(ANDROID_APP_SCHEME + packageUri.getEncodedSchemeSpecificPart());
+        return Uri.parse(ANDROID_APP_SCHEME + "://" + packageUri.getEncodedSchemeSpecificPart());
+    }
+
+    private boolean isValid(WebSourceRegistrationRequest sourceRegistrationRequest) {
+        Uri verifiedDestination = sourceRegistrationRequest.getVerifiedDestination();
+        Uri webDestination = sourceRegistrationRequest.getWebDestination();
+
+        if (verifiedDestination == null) {
+            return webDestination == null
+                    ? true
+                    : Web.topPrivateDomainAndScheme(webDestination).isPresent();
+        }
+
+        return isVerifiedDestination(
+                verifiedDestination, webDestination, sourceRegistrationRequest.getAppDestination());
+    }
+
+    private boolean isVerifiedDestination(
+            Uri verifiedDestination, Uri webDestination, Uri appDestination) {
+        String destinationPackage = null;
+        if (appDestination != null) {
+            destinationPackage = appDestination.getHost();
+        }
+        String verifiedScheme = verifiedDestination.getScheme();
+        String verifiedHost = verifiedDestination.getHost();
+
+        // Verified destination matches appDestination value
+        if (destinationPackage != null
+                && verifiedHost != null
+                && (verifiedScheme == null || verifiedScheme.equals(ANDROID_APP_SCHEME))
+                && verifiedHost.equals(destinationPackage)) {
+            return true;
+        }
+
+        try {
+            Intent intent = Intent.parseUri(verifiedDestination.toString(), 0);
+            ComponentName componentName = intent.resolveActivity(mContext.getPackageManager());
+            if (componentName == null) {
+                return false;
+            }
+
+            // (ComponentName::getPackageName cannot be null)
+            String verifiedPackage = componentName.getPackageName();
+
+            // Try to match an app vendor store and extract a target package
+            if (destinationPackage != null
+                    && verifiedPackage.equals(AppVendorPackages.PLAY_STORE)) {
+                String targetPackage = getTargetPackageFromPlayStoreUri(verifiedDestination);
+                return targetPackage != null && targetPackage.equals(destinationPackage);
+
+            // Try to match web destination
+            } else if (webDestination == null) {
+                return false;
+            } else {
+                Optional<Uri> webDestinationTopPrivateDomainAndScheme =
+                        Web.topPrivateDomainAndScheme(webDestination);
+                Optional<Uri> verifiedDestinationTopPrivateDomainAndScheme =
+                        Web.topPrivateDomainAndScheme(verifiedDestination);
+                return webDestinationTopPrivateDomainAndScheme.isPresent()
+                        && verifiedDestinationTopPrivateDomainAndScheme.isPresent()
+                        && webDestinationTopPrivateDomainAndScheme.get().equals(
+                                verifiedDestinationTopPrivateDomainAndScheme.get());
+            }
+        } catch (URISyntaxException e) {
+            LogUtil.e(e,
+                    "MeasurementImpl::handleVerifiedDestination: failed to parse intent URI: %s",
+                    verifiedDestination.toString());
+            return false;
+        }
+    }
+
+    private static boolean isValid(WebTriggerRegistrationRequest triggerRegistrationRequest) {
+        Uri destination = triggerRegistrationRequest.getDestination();
+        return Web.topPrivateDomainAndScheme(destination).isPresent();
+    }
+
+    private static String getTargetPackageFromPlayStoreUri(Uri uri) {
+        return uri.getQueryParameter("id");
+    }
+
+    private interface AppVendorPackages {
+        String PLAY_STORE = "com.android.vending";
     }
 }

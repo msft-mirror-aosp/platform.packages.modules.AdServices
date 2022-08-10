@@ -22,30 +22,526 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="1644434244130657749">"Geeft een app toegang tot AdServices Attribution API\'s."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="2766614780488510189">"toegang tot de AdServices Custom Audience API"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"Geeft een app toegang tot de AdServices Custom Audience API."</string>
-    <!-- no translation found for permlab_accessAdServicesConsent (3203633397142568707) -->
-    <skip />
-    <!-- no translation found for permdesc_accessAdServicesConsent (8440334072391708453) -->
-    <skip />
+    <string name="permlab_accessAdServicesAdId" msgid="2754825914769538156">"Toegang tot de AdId API"</string>
+    <string name="permdesc_accessAdServicesAdId" msgid="7717770480967762044">"Geeft een app toegang tot de AdId API."</string>
+    <string name="permlab_accessAdServicesConsent" msgid="3203633397142568707">"Toegang tot de AdServices Consent API"</string>
+    <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Geeft een app toegang tot de AdServices Consent API."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Toegang tot de Ad ID API"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Geeft een app toegang tot de Ad ID API."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Toegang tot de App Set ID API"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Geeft een app toegang tot de App Set ID API."</string>
-    <!-- no translation found for permlab_adServicesAccessConsentService (5994709782267864205) -->
-    <skip />
-    <!-- no translation found for permdesc_adServicesAccessConsentService (4587727715580124241) -->
-    <skip />
+    <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Toegang tot de Consent Service API"</string>
+    <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"Geeft een app toegang tot de Consent Service API."</string>
+    <string name="app_label" msgid="5985320129629013968">"Android-systeem"</string>
     <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"Privacy Sandbox (bèta)"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_key" msgid="5571900954219004269">"privacy_sandbox_beta_switch"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"Privacy Sandbox (bèta)"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"Privacy Sandbox (bèta) schakelen"</string>
-    <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
-    <string name="settingsUI_topics_title" msgid="4024683469932819788">"Je algemene interesses"</string>
-    <string name="settingsUI_topics_summary" msgid="3146101472984434355">"Beheer je algemene interesses"</string>
+    <string name="settingsUI_main_view_title" msgid="255982490790282252">"Advertentieprivacy van Android (bèta)"</string>
+    <string name="settingsUI_main_view_subtitle" msgid="3380585883687237827">"Test het nieuwe Privacy Sandbox-systeem dat tracking tussen apps beperkt"</string>
+    <string name="settingsUI_main_view_info_text1" msgid="8353580266621706164">"Hoe de Privacy Sandbox werkt"</string>
+    <string name="settingsUI_main_view_info_text2" msgid="5144888171043725329">"Er worden gegevens verzameld in de Privacy Sandbox om advertenties te laten zien die je misschien leuk vindt, maar de gegevens worden gedeeld zonder jou of je apparaat te identificeren."</string>
+    <string name="settingsUI_main_view_info_text3" msgid="9106658161862318732">"Welk soort gegevens wordt opgeslagen in de Privacy Sandbox?"</string>
+    <string name="settingsUI_main_view_info_text4" msgid="5819359066240454954">"• Algemene interesses"</string>
+    <string name="settingsUI_main_view_info_text5" msgid="6064832868440367397">"Android genereert deze gegevens op basis van de apps die je gebruikt en voegt de gegevens toe aan de Privacy Sandbox. Een van je algemene interesses kan bijvoorbeeld Sport zijn. \n\nJe kunt de lijst met je interesses bekijken in je privacyinstellingen en interesses blokkeren die je niet leuk vindt."</string>
+    <string name="settingsUI_main_view_info_text6" msgid="3406976290919982143">"• Specifieke interesses"</string>
+    <string name="settingsUI_main_view_info_text7" msgid="210269084665708892">"Je apps genereren deze gegevens op basis van hoe je ze gebruikt en voegen de gegevens toe aan de Privacy Sandbox. Een app die je gebruikt om hardloopschoenen te kopen, kan bijvoorbeeld het label sport_running toevoegen.\n\nIn je privacyinstellingen kun je de lijst bekijken met apps die dit doen en apps blokkeren die geen gegevens mogen bijdragen aan de Privacy Sandbox."</string>
+    <string name="settingsUI_topics_view_title" msgid="7437641813424176118">"Interesses beheren"</string>
+    <string name="settingsUI_topics_view_subtitle" msgid="5347912133908026725">"De Privacy Sandbox van Android beperkt tracking tussen apps, terwijl apps je nog steeds advertenties kunnen laten zien die je misschien leuk vindt. Android deelt deze gegevens met adverteerders zonder jou of je apparaat te identificeren.\n\nOp basis van de apps die je gebruikt, genereert en updatet Android deze lijst met je algemene advertentie-interesses. Als je een interesse blokkeert, wordt deze niet weer aan de lijst toegevoegd, tenzij je de blokkering opheft. Je ziet misschien nog steeds bepaalde gerelateerde advertenties."</string>
+    <string name="settingsUI_topics_view_info_text1" msgid="6729245512525985403">"Algemene advertentie-interesses"</string>
+    <string name="settingsUI_topics_view_info_text2" msgid="8355913397424818046">"Android genereert deze interesses op basis van de apps die je gebruikt.\n\nAls je bijvoorbeeld verschillende sport-apps op je apparaat hebt, kan Android de interesse Sport aan de Privacy Sandbox toevoegen.\n\nLater worden deze gegevens met adverteerders gedeeld zonder jou of je apparaat te identificeren."</string>
     <string name="settingsUI_apps_key" msgid="5279102708260885695">"apps_preference"</string>
     <string name="settingsUI_apps_title" msgid="2177966577556486280">"Je apps die specifieke interesses genereren"</string>
     <string name="settingsUI_apps_summary" msgid="2382082513059909726">"Beheer je apps die specifieke interesses genereren"</string>
+    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Apps die je hebt geblokkeerd"</string>
+    <string name="settingsUI_apps_view_title" msgid="3615627092403761282">"Apps beheren"</string>
+    <string name="settingsUI_apps_view_subtitle" msgid="5257332567222983503">"Op basis van hoe je apps gebruikt, genereren sommige apps gegevens over je specifieke advertentie-interesses voor de Privacy Sandbox. Android updatet deze lijst met apps zodat je deze kunt bekijken of bewerken.\n\nAls je een app blokkeert, voegt die geen specifieke interesses meer toe. De app wordt niet meer aan deze lijst toegevoegd, tenzij je de blokkering opheft. Interesses die al door de app zijn gegenereerd, worden verwijderd, maar je kunt nog wel een aantal gerelateerde advertenties te zien krijgen."</string>
+    <string name="settingsUI_apps_view_no_apps_text" msgid="1056905761942948495">"Geen apps om nu te laten zien"</string>
+    <string name="settingsUI_reset_apps_title" msgid="3308597019425923552">"Gegevens gegenereerd door apps resetten"</string>
+    <string name="settingsUI_apps_view_info_text1" msgid="503353133396835755">"Specifieke advertentie-interesses"</string>
+    <string name="settingsUI_apps_view_info_text2" msgid="6562781312486257254">"Sommige apps die je gebruikt, genereren gegevens over je specifieke interesses voor advertenties en voegen deze toe aan de Privacy Sandbox.\n\nEen app die je gebruikt om hardloopschoenen te kopen, kan bijvoorbeeld het label sport_running toevoegen.\n\nLater worden gegevens die in de Privacy Sandbox zijn verzameld, gedeeld met adverteerders zonder dat jij of je apparaat wordt geïdentificeerd. Je ziet dus nog steeds advertenties die je misschien leuk vindt, maar met meer privacybescherming."</string>
+    <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="5700261138344146462">"Geen geblokkeerde apps om nu te laten zien"</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Geen interesses om momenteel te tonen"</string>
+    <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
+    <string name="settingsUI_topics_title" msgid="4024683469932819788">"Je algemene interesses"</string>
+    <string name="settingsUI_topics_summary" msgid="3146101472984434355">"Beheer je algemene interesses"</string>
     <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"Je algemene interesses voor advertenties beheren"</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Blokkeren"</string>
-    <string name="settingsUI_blocked_topics_title" msgid="8563397445730522086">"Interesses die je hebt geblokkeerd"</string>
+    <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Niet meer blokkeren"</string>
+    <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Interesses die je hebt geblokkeerd"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Alle interesses resetten"</string>
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="5717377146633882375">"Geen geblokkeerde interesses om nu te laten zien"</string>
+    <string name="notificationUI_notification_content_eu" msgid="7419441022808120101">"Test nieuwe functies die tracking tussen apps beperken"</string>
+    <string name="notificationUI_header_title_eu" msgid="6822288197367284058">"Doe mee aan de bèta voor advertentieprivacy"</string>
+    <string name="notificationUI_container3_title_eu" msgid="3157854074121291065">"Wat je kunt doen"</string>
+    <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Nee"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="7294736040084958697">"Ja, ik wil het proberen"</string>
+    <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Bedankt voor je deelname"</string>
+    <string name="notificationUI_confirmation_accept_subtitle" msgid="722290263168711051">"Je doet nu mee aan de bèta voor de Privacy Sandbox. \n\nJe kunt via je privacyinstellingen meer informatie bekijken of de bèta verlaten wanneer je wilt."</string>
+    <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Je hebt ervoor gekozen om niet mee te doen"</string>
+    <string name="notificationUI_confirmation_decline_subtitle" msgid="1869322730722065768">"Bedankt voor je reactie. Je bent niet toegevoegd aan de bèta voor de Privacy Sandbox.\n\nAls je van gedachten verandert of meer informatie wilt, ga je naar je privacyinstellingen."</string>
+    <string name="notificationUI_notification_content" msgid="2096372976024736172">"Je test nieuwe functies die tracking tussen apps beperken"</string>
+    <string name="notificationUI_header_title" msgid="857744302422337933">"Je helpt Android tracking tussen apps te beperken"</string>
+    <string name="notificationUI_header_subtitle" msgid="522289584167376388">"Android test nieuwe functies die tracking tussen apps door adverteerders beperken"</string>
+    <string name="notificationUI_container1_title" msgid="3837529978480615552">"Wat is tracking tussen apps?"</string>
+    <string name="notificationUI_container1_body_text" msgid="2564452110982505130">"Tegenwoordig kunnen gegevens over je app-gebruik makkelijk aan je apparaat worden gekoppeld en dan worden gedeeld tussen apps voor advertentiedoeleinden."</string>
+    <string name="notificationUI_container2_title" msgid="4796199061758878885">"Wat Android doet"</string>
+    <string name="notificationUI_container2_body_text" msgid="7717896223210525953">"Android test een nieuwe Privacy Sandbox die advertentiegegevens beveiligd opslaat en deelt zonder jou of je apparaat te identificeren. \n\nMet dit nieuwe systeem wordt voorkomen dat apps gegevens rechtstreeks doorgeven aan andere apps, maar kunnen ze je nog steeds advertenties laten zien die je misschien leuk vindt."</string>
+    <string name="notificationUI_container2_control_text" msgid="3031227311095645064">"Hoe het werkt"</string>
+    <string name="notificationUI_container3_title" msgid="1283794406634157611">"Hoe je bijdraagt"</string>
+    <string name="notificationUI_container3_body_text" msgid="2636703086913037594">"Je merkt misschien geen veranderingen op in de advertenties die je te zien krijgt, maar omdat je meedoet aan de bètaversie van Android, help je tracking tussen apps in de loop van de tijd te beperken. Je kunt het bètaprogramma op elk moment verlaten door naar je privacyinstellingen te gaan."</string>
+    <string name="notificationUI_left_control_button_text" msgid="6459461402253858770">"Privacyinstellingen"</string>
+    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"OK"</string>
+    <string name="notificationUI_how_it_works_expanded_text1" msgid="1753701052925879129">"Hoe de Privacy Sandbox werkt"</string>
+    <string name="notificationUI_how_it_works_expanded_text2" msgid="3117263986288195274">"Er worden gegevens verzameld in de Privacy Sandbox om advertenties te laten zien die je misschien leuk vindt, maar de gegevens worden gedeeld zonder jou of je apparaat te identificeren."</string>
+    <string name="notificationUI_how_it_works_expanded_text3" msgid="7270822532577167752">"Wat voor gegevens worden opgeslagen in de Privacy Sandbox?"</string>
+    <string name="notificationUI_how_it_works_expanded_text4" msgid="5609475052636889205">"• Algemene interesses"</string>
+    <string name="notificationUI_how_it_works_expanded_text5" msgid="6757375506547548599">"Android genereert deze gegevens op basis van de apps die je gebruikt en voegt de gegevens toe aan de Privacy Sandbox. Een van je algemene interesses kan bijvoorbeeld Sport zijn.\n\nJe kunt de lijst met je interesses bekijken in je privacyinstellingen en interesses blokkeren die je niet leuk vindt."</string>
+    <string name="notificationUI_how_it_works_expanded_text6" msgid="2863877874268072458">"• Specifieke interesses"</string>
+    <string name="notificationUI_how_it_works_expanded_text7" msgid="2140515900209351523">"Je apps genereren deze gegevens op basis van hoe je ze gebruikt en voegen de gegevens toe aan de Privacy Sandbox. Een app die je gebruikt om hardloopschoenen te kopen, kan bijvoorbeeld het label sport_running toevoegen.\n\nIn je privacyinstellingen kun je de lijst bekijken met apps die dit doen en apps blokkeren die geen gegevens mogen bijdragen aan de Privacy Sandbox."</string>
+    <string name="topic10001" msgid="1636806320891333775">"Kunst en entertainment"</string>
+    <string name="topic10002" msgid="1226367977754287428">"Acteren en theater"</string>
+    <string name="topic10003" msgid="6949890838957814881">"Animatie en manga"</string>
+    <string name="topic10004" msgid="5397903150832181233">"Cartoons"</string>
+    <string name="topic10005" msgid="6316179809581237302">"Strips"</string>
+    <string name="topic10006" msgid="7442330644172139790">"Concerten en muziekfestivals"</string>
+    <string name="topic10007" msgid="5537896091418145164">"Dansen"</string>
+    <string name="topic10008" msgid="2737343278307552521">"Entertainmentindustrie"</string>
+    <string name="topic10009" msgid="3252367380340240453">"Entertainment en trivia"</string>
+    <string name="topic10010" msgid="932301479153552725">"Grappige testen en onderzoeken"</string>
+    <string name="topic10011" msgid="3123553390567261985">"Humor"</string>
+    <string name="topic10012" msgid="8756486271154511326">"Grappige foto\'s en video\'s"</string>
+    <string name="topic10013" msgid="1242353161202448753">"Stand-up comedy"</string>
+    <string name="topic10014" msgid="6086156236112755291">"Live sportevenementen"</string>
+    <string name="topic10015" msgid="9196350141359833832">"Magie"</string>
+    <string name="topic10016" msgid="202419376638900745">"Filmladder en bioscoopagenda"</string>
+    <string name="topic10017" msgid="6737229918787540100">"Films"</string>
+    <string name="topic10018" msgid="6823676154109177487">"Actie- en avonturenfilms"</string>
+    <string name="topic10019" msgid="6875960630918973127">"Tekenfilms"</string>
+    <string name="topic10020" msgid="4323870300602151489">"Komische films"</string>
+    <string name="topic10021" msgid="446758643774468418">"Cult- en indie-films"</string>
+    <string name="topic10022" msgid="3671929742155787005">"Documentaires"</string>
+    <string name="topic10023" msgid="3547616830531182863">"Dramafilms"</string>
+    <string name="topic10024" msgid="1044853632986202120">"Familiefilms"</string>
+    <string name="topic10025" msgid="5958629223443279316">"Horrorfilms"</string>
+    <string name="topic10026" msgid="5685515125614860029">"Romantische films"</string>
+    <string name="topic10027" msgid="8846353713171614854">"Thriller"</string>
+    <string name="topic10028" msgid="170404703980174756">"Muziek en audio"</string>
+    <string name="topic10029" msgid="4634600135545614665">"Blues"</string>
+    <string name="topic10030" msgid="7226438392540805771">"Klassieke muziek"</string>
+    <string name="topic10031" msgid="1488013446112025676">"Country"</string>
+    <string name="topic10032" msgid="9053666244854789632">"Dance en elektronische muziek"</string>
+    <string name="topic10033" msgid="440063573197454181">"Folk- en traditionele muziek"</string>
+    <string name="topic10034" msgid="8296307244554241197">"Jazz"</string>
+    <string name="topic10035" msgid="9171752741499923310">"Online muziek en downloads"</string>
+    <string name="topic10036" msgid="2490236112725457376">"Muziekvideo\'s"</string>
+    <string name="topic10037" msgid="1923690469725883551">"Muziekinstrumenten"</string>
+    <string name="topic10038" msgid="2817492732688549631">"Piano\'s en toetsenborden"</string>
+    <string name="topic10039" msgid="8970033643570782019">"Pop"</string>
+    <string name="topic10040" msgid="7478395512712452137">"Radio"</string>
+    <string name="topic10041" msgid="3319379117705411886">"Talkradio"</string>
+    <string name="topic10042" msgid="8830471038440654640">"Rap en hiphop"</string>
+    <string name="topic10043" msgid="8585450284346207691">"Rock"</string>
+    <string name="topic10044" msgid="3710011249220779842">"Classic Rock en oldies"</string>
+    <string name="topic10045" msgid="7593443421067822441">"Hardrock en progressive rock"</string>
+    <string name="topic10046" msgid="8715621227472631784">"Indie- en alternatieve muziek"</string>
+    <string name="topic10047" msgid="3518038303049899798">"Geluidsfragmenten en geluidsbibliotheken"</string>
+    <string name="topic10048" msgid="3063505369500799094">"Soul en R&amp;B"</string>
+    <string name="topic10049" msgid="8061992014977840818">"Soundtracks"</string>
+    <string name="topic10050" msgid="3540229495848506229">"Wereldmuziek"</string>
+    <string name="topic10051" msgid="6132468331924347995">"Reggae en Caribische muziek"</string>
+    <string name="topic10052" msgid="8213269199807045473">"Online fotogalerijen"</string>
+    <string name="topic10053" msgid="1378192203082454197">"Online video"</string>
+    <string name="topic10054" msgid="3727401645405134505">"Live videostreaming"</string>
+    <string name="topic10055" msgid="4943174831732192854">"Film- en tv-streaming"</string>
+    <string name="topic10056" msgid="3066058636154255073">"Opera"</string>
+    <string name="topic10057" msgid="387445514677222034">"Tv-gidsen en naslagwerken"</string>
+    <string name="topic10058" msgid="9149178644022969766">"Tv-omroepen en -zenders"</string>
+    <string name="topic10059" msgid="6300562669238320524">"Tv-programma\'s"</string>
+    <string name="topic10060" msgid="3901256055064835246">"Tv-comedy\'s"</string>
+    <string name="topic10061" msgid="8343924749123326062">"Tv-documentaires en -non-fictie"</string>
+    <string name="topic10062" msgid="9183355218976951211">"Tv-drama\'s"</string>
+    <string name="topic10063" msgid="644340831620792432">"Tv-soapseries"</string>
+    <string name="topic10064" msgid="5961885645457010998">"Tv-programma\'s voor het hele gezin"</string>
+    <string name="topic10065" msgid="7916343612028608044">"Tv-realityseries"</string>
+    <string name="topic10066" msgid="5984396525358003559">"Sciencefiction- en fantasyseries"</string>
+    <string name="topic10067" msgid="6404637729885733437">"Visuele kunst en visueel ontwerp"</string>
+    <string name="topic10068" msgid="4589856961950168493">"Ontwerp"</string>
+    <string name="topic10069" msgid="3129378082034151991">"Schilderen"</string>
+    <string name="topic10070" msgid="2570256568661324147">"Fotografie en digitale kunst"</string>
+    <string name="topic10071" msgid="1288722040962471254">"Auto\'s en voertuigen"</string>
+    <string name="topic10072" msgid="9155509766616567261">"Vrachtwagens en opleggers"</string>
+    <string name="topic10073" msgid="3748676231341513738">"Oldtimers"</string>
+    <string name="topic10074" msgid="2040911547161463227">"Aangepaste en bijzondere voertuigen"</string>
+    <string name="topic10075" msgid="1242538698445713796">"Brandstofprijzen en tanken"</string>
+    <string name="topic10076" msgid="8674225812339579627">"Motorvoertuigen (op type)"</string>
+    <string name="topic10077" msgid="3577709810751953433">"Zelfrijdende voertuigen"</string>
+    <string name="topic10078" msgid="5493263845129910125">"Convertibles"</string>
+    <string name="topic10079" msgid="3466838852836498580">"Coupés"</string>
+    <string name="topic10080" msgid="3515647285637163190">"Hatchbacks"</string>
+    <string name="topic10081" msgid="4135085035401158860">"Hybride en alternatieve voertuigen"</string>
+    <string name="topic10082" msgid="7168659489029594320">"Luxe voertuigen"</string>
+    <string name="topic10083" msgid="1532745144715857802">"Brommobielen en kleine wagens"</string>
+    <string name="topic10084" msgid="1984231414410381476">"Motorfietsen"</string>
+    <string name="topic10085" msgid="5235555028227554661">"Terreinvoertuigen"</string>
+    <string name="topic10086" msgid="8360336602646460411">"Pick-ups"</string>
+    <string name="topic10087" msgid="6566900167002195406">"Scooters en bromfietsen"</string>
+    <string name="topic10088" msgid="2899313082601001223">"Sedans"</string>
+    <string name="topic10089" msgid="1053630346809973163">"Stationcars"</string>
+    <string name="topic10090" msgid="4478565601243447368">"SUV\'s en crossovers"</string>
+    <string name="topic10091" msgid="3812668311830832874">"Crossovers"</string>
+    <string name="topic10092" msgid="524130833813249539">"Bestelauto\'s en minibestelauto\'s"</string>
+    <string name="topic10093" msgid="8900143351472824542">"Sleepdiensten en wegenwacht"</string>
+    <string name="topic10094" msgid="6205146188176216038">"Voertuig- en verkeersveiligheid"</string>
+    <string name="topic10095" msgid="7983070264654477553">"Voertuigonderdelen en -accessoires"</string>
+    <string name="topic10096" msgid="8148747014459050804">"Voertuigreparatie en -onderhoud"</string>
+    <string name="topic10097" msgid="4716536434833425748">"Voertuigen kopen"</string>
+    <string name="topic10098" msgid="6401980112135995019">"Tweedehands voertuigen"</string>
+    <string name="topic10099" msgid="8018714209926584445">"Autobeurzen"</string>
+    <string name="topic10100" msgid="2481422464734249871">"Beauty en fitness"</string>
+    <string name="topic10101" msgid="7889144198021629053">"Body art"</string>
+    <string name="topic10102" msgid="577637051755692238">"Gezichts- en lichaamsverzorging"</string>
+    <string name="topic10103" msgid="6618157344631408510">"Anti-transpiratiemiddelen"</string>
+    <string name="topic10104" msgid="6043649669944382784">"Bad- en lichaamsproducten"</string>
+    <string name="topic10105" msgid="3248569527339253661">"Natuurlijke cosmetica"</string>
+    <string name="topic10106" msgid="1291481249483309832">"Make-up en cosmetica"</string>
+    <string name="topic10107" msgid="1335060201249279923">"Nagelverzorgingsproducten"</string>
+    <string name="topic10108" msgid="4996884435711154930">"Parfums en geuren"</string>
+    <string name="topic10109" msgid="7298403319989686251">"Scheermessen en scheerapparaten"</string>
+    <string name="topic10110" msgid="5954355866247248022">"Mode en stijl"</string>
+    <string name="topic10111" msgid="4447710938881368413">"Fitness"</string>
+    <string name="topic10112" msgid="8816530137921714131">"Bodybuilding"</string>
+    <string name="topic10113" msgid="8138889299405853557">"Fitnessinstructie en personal training"</string>
+    <string name="topic10114" msgid="2172821400279346865">"Technologieproducten voor fitness"</string>
+    <string name="topic10115" msgid="9060244278068231494">"Haarverzorging"</string>
+    <string name="topic10116" msgid="116242880964485085">"Boeken en literatuur"</string>
+    <string name="topic10117" msgid="8933734721100160863">"Kinderboeken"</string>
+    <string name="topic10118" msgid="4368531903547695191">"Elektronische boeken"</string>
+    <string name="topic10119" msgid="2781095265741115471">"Tijdschriften"</string>
+    <string name="topic10120" msgid="3099507102655270527">"Poëzie"</string>
+    <string name="topic10121" msgid="4466592180799340837">"Bedrijven en industrie"</string>
+    <string name="topic10122" msgid="2375136741125920744">"Adverteren en marketing"</string>
+    <string name="topic10123" msgid="6974082907852347979">"Sales"</string>
+    <string name="topic10124" msgid="44474598156972786">"Landbouw en bosbouw"</string>
+    <string name="topic10125" msgid="9170394261421539760">"Levensmiddelenindustrie"</string>
+    <string name="topic10126" msgid="2210146434071038904">"Automobielindustrie"</string>
+    <string name="topic10127" msgid="5503077037318678029">"Luchtvaartindustrie"</string>
+    <string name="topic10128" msgid="285525650692719959">"Bedrijfsvoering"</string>
+    <string name="topic10129" msgid="3094691551566702427">"Flexibele werkopties"</string>
+    <string name="topic10130" msgid="1922351409757117764">"Human Resources"</string>
+    <string name="topic10131" msgid="8598763405951029782">"Commerciële leningen"</string>
+    <string name="topic10132" msgid="1476352626208153907">"Bouw en onderhoud"</string>
+    <string name="topic10133" msgid="7089177624979453528">"Civiele techniek"</string>
+    <string name="topic10134" msgid="3833032373311037601">"Wapenindustrie"</string>
+    <string name="topic10135" msgid="2478808072377000440">"Energie en nutsvoorzieningen"</string>
+    <string name="topic10136" msgid="9083992436834044162">"Watervoorziening en -behandeling"</string>
+    <string name="topic10137" msgid="1912599316814246824">"Horecasector"</string>
+    <string name="topic10138" msgid="7428346836350671895">"Productie"</string>
+    <string name="topic10139" msgid="1396685812404869953">"Metalen en mijnbouw"</string>
+    <string name="topic10140" msgid="5264212052238781441">"MLM en zakelijke mogelijkheden"</string>
+    <string name="topic10141" msgid="860058416683118730">"Geneesmiddelen en biotechnologie"</string>
+    <string name="topic10142" msgid="2912550934111655896">"Afdrukken en publiceren"</string>
+    <string name="topic10143" msgid="5690610408227078117">"Detailhandel"</string>
+    <string name="topic10144" msgid="3341052306953106368">"Durfkapitaal"</string>
+    <string name="topic10145" msgid="6886608911083388041">"Computers en elektronica"</string>
+    <string name="topic10146" msgid="8202145175139144216">"Randapparatuur voor computers"</string>
+    <string name="topic10147" msgid="4687964705548995437">"Printers"</string>
+    <string name="topic10148" msgid="8861628145647459323">"Computerbeveiliging"</string>
+    <string name="topic10149" msgid="1719988773455991739">"Antivirus en malware"</string>
+    <string name="topic10150" msgid="1482205464872465298">"Netwerkbeveiliging"</string>
+    <string name="topic10151" msgid="1772262905623388968">"Consumentenelektronica"</string>
+    <string name="topic10152" msgid="651152740021127086">"Camera\'s en camcorders"</string>
+    <string name="topic10153" msgid="8741504768717646372">"Gps en navigatie"</string>
+    <string name="topic10154" msgid="5382029798409496090">"Automatisering in huis"</string>
+    <string name="topic10155" msgid="5243817792730496258">"Thuisbioscoopsystemen"</string>
+    <string name="topic10156" msgid="2497791567138856030">"MP3- en draagbare mediaspelers"</string>
+    <string name="topic10157" msgid="4723439422860510190">"Wearables"</string>
+    <string name="topic10158" msgid="5345830001295028513">"Gegevensback-up en -herstel"</string>
+    <string name="topic10159" msgid="6146958285117174314">"Desktopcomputers"</string>
+    <string name="topic10160" msgid="6624820395549466426">"Laptops en notebooks"</string>
+    <string name="topic10161" msgid="912458758908978530">"Netwerken"</string>
+    <string name="topic10162" msgid="6717352131379507693">"Gedistribueerde systemen en cloudcomputing"</string>
+    <string name="topic10163" msgid="6344926622025055321">"Programmeren"</string>
+    <string name="topic10164" msgid="4228888249078845459">"Software"</string>
+    <string name="topic10165" msgid="5507908999219967161">"Audio- en muzieksoftware"</string>
+    <string name="topic10166" msgid="4768106492755849560">"Bedrijfs- en productiviteitssoftware"</string>
+    <string name="topic10167" msgid="8556935769754922871">"Agenda- en planningssoftware"</string>
+    <string name="topic10168" msgid="7730134961167790334">"Samenwerkings- en vergadersoftware"</string>
+    <string name="topic10169" msgid="5655084106378890454">"Presentatiesoftware"</string>
+    <string name="topic10170" msgid="4638281897205909919">"Spreadsheetsoftware"</string>
+    <string name="topic10171" msgid="7910183120486541228">"Tekstverwerkingssoftware"</string>
+    <string name="topic10172" msgid="3626573644414074730">"Desktoppublishing"</string>
+    <string name="topic10173" msgid="7320053835183057144">"Lettertypen"</string>
+    <string name="topic10174" msgid="5770469447869586710">"Downloadmanagers"</string>
+    <string name="topic10175" msgid="3475235810022334041">"Freeware en shareware"</string>
+    <string name="topic10176" msgid="6881704501596479881">"Grafische en animatiesoftware"</string>
+    <string name="topic10177" msgid="6740430730079682579">"Intelligente persoonlijke assistenten"</string>
+    <string name="topic10178" msgid="7261811053741593091">"Mediaspelers"</string>
+    <string name="topic10179" msgid="2967001567120854492">"Monitoringsoftware"</string>
+    <string name="topic10180" msgid="4197420326455130102">"Besturingssystemen"</string>
+    <string name="topic10181" msgid="3537573129132698830">"Foto- en videosoftware"</string>
+    <string name="topic10182" msgid="7688631285131229981">"Fotosoftware"</string>
+    <string name="topic10183" msgid="5994974566140272512">"Videosoftware"</string>
+    <string name="topic10184" msgid="8685817335076871509">"Hulpprogramma\'s voor computers"</string>
+    <string name="topic10185" msgid="308314128178285390">"Webbrowsers"</string>
+    <string name="topic10186" msgid="3147859503481018245">"Financieel"</string>
+    <string name="topic10187" msgid="7077128721410871032">"Boekhouding en auditing"</string>
+    <string name="topic10188" msgid="2206138708659457910">"Belastingvoorbereiding en -planning"</string>
+    <string name="topic10189" msgid="4001795553008246784">"Bankieren"</string>
+    <string name="topic10190" msgid="2988430661381243083">"Elektronische geldoverboekingen"</string>
+    <string name="topic10191" msgid="6196081825838237614">"Kredietverlening"</string>
+    <string name="topic10192" msgid="3290123244833047307">"Creditcards"</string>
+    <string name="topic10193" msgid="294407043381146861">"Woningfinanciering"</string>
+    <string name="topic10194" msgid="2834543407440890272">"Persoonlijke leningen"</string>
+    <string name="topic10195" msgid="7650553060132394782">"Studieleningen en studiefinanciering"</string>
+    <string name="topic10196" msgid="5395035781876507254">"Financiële planning en beheer"</string>
+    <string name="topic10197" msgid="1287138667488226463">"Pensioen en pensionering"</string>
+    <string name="topic10198" msgid="2523256186943366779">"Beurzen"</string>
+    <string name="topic10199" msgid="3746711537661530183">"Beurzen"</string>
+    <string name="topic10200" msgid="2394864891391267841">"Verzekeringen"</string>
+    <string name="topic10201" msgid="4301879117376963742">"Autoverzekering"</string>
+    <string name="topic10202" msgid="739808503036239379">"Ziektekostenverzekering"</string>
+    <string name="topic10203" msgid="838786942776142290">"Woningverzekering"</string>
+    <string name="topic10204" msgid="6591131759521321677">"Levensverzekering"</string>
+    <string name="topic10205" msgid="3294946723815021478">"Reisverzekering"</string>
+    <string name="topic10206" msgid="6166888350685752683">"Beleggen"</string>
+    <string name="topic10207" msgid="2296385804039743999">"Handel in grondstoffen en futures"</string>
+    <string name="topic10208" msgid="2717498987483479091">"Valuta\'s en wisselkoersen"</string>
+    <string name="topic10209" msgid="5204948738662951962">"Hedgefondsen"</string>
+    <string name="topic10210" msgid="4607225697024266227">"Beleggingsfondsen"</string>
+    <string name="topic10211" msgid="7475381839877166080">"Aandelen en obligaties"</string>
+    <string name="topic10212" msgid="3988751035952286047">"Eten en drinken"</string>
+    <string name="topic10213" msgid="1358963098339995471">"Koken en recepten"</string>
+    <string name="topic10214" msgid="8463864389138867811">"Barbecue en grillen"</string>
+    <string name="topic10215" msgid="3085467051491069648">"Kookstijlen"</string>
+    <string name="topic10216" msgid="6043130649326166680">"Vegetarische keuken"</string>
+    <string name="topic10217" msgid="7173870057669247536">"Veganistische keuken"</string>
+    <string name="topic10218" msgid="5570240643247064951">"Gezond eten"</string>
+    <string name="topic10219" msgid="5896715206025463732">"Supermarkten"</string>
+    <string name="topic10220" msgid="3894580611467039658">"Games"</string>
+    <string name="topic10221" msgid="14471057764591805">"Arcadegames en spelkasten"</string>
+    <string name="topic10222" msgid="2704894577954508861">"Biljart"</string>
+    <string name="topic10223" msgid="202900267060220170">"Bordspellen"</string>
+    <string name="topic10224" msgid="6572627325588452785">"Schaken en abstracte strategiespellen"</string>
+    <string name="topic10225" msgid="8056906319560292131">"Kaartgames"</string>
+    <string name="topic10226" msgid="714463563336281099">"Verzamelkaartspellen"</string>
+    <string name="topic10227" msgid="218768654597520683">"Computer- en videogames"</string>
+    <string name="topic10228" msgid="850597136074192489">"Actie- en platformgames"</string>
+    <string name="topic10229" msgid="4284501233897149886">"Avonturengames"</string>
+    <string name="topic10230" msgid="7156822286576815181">"Casual games"</string>
+    <string name="topic10231" msgid="7620407218897744361">"Competitief videogamen"</string>
+    <string name="topic10232" msgid="3029734447275709941">"Racegames"</string>
+    <string name="topic10233" msgid="8318075279868138231">"Vechtgames"</string>
+    <string name="topic10234" msgid="3899847414436099153">"Gaming-documentatie en -reviews"</string>
+    <string name="topic10235" msgid="5851356242523630529">"Cheats en hints voor videogames"</string>
+    <string name="topic10236" msgid="1986665634014804954">"Massive multiplayer games"</string>
+    <string name="topic10237" msgid="5569920221620447713">"Muziek- en dansgames"</string>
+    <string name="topic10238" msgid="7431087331656772530">"Sandboxgames"</string>
+    <string name="topic10239" msgid="8667462879554115515">"Schietgames"</string>
+    <string name="topic10240" msgid="1618985302446756520">"Simulatiegames"</string>
+    <string name="topic10241" msgid="8450778411063723262">"Zakelijke en tycoongames"</string>
+    <string name="topic10242" msgid="8860812940320018907">"Bouwgames"</string>
+    <string name="topic10243" msgid="1764694148721971512">"Levenssimulatiegames"</string>
+    <string name="topic10244" msgid="4308588210397969087">"Voertuigsimulators"</string>
+    <string name="topic10245" msgid="6904368410919496658">"Sportgames"</string>
+    <string name="topic10246" msgid="3381244806751528148">"Sportmanagementgames"</string>
+    <string name="topic10247" msgid="5927502688389762068">"Strategiegames"</string>
+    <string name="topic10248" msgid="8471339627212674032">"Mods en add-ons voor videogames"</string>
+    <string name="topic10249" msgid="5076706536204559962">"Educatieve games"</string>
+    <string name="topic10250" msgid="6083030595195401083">"Activiteiten en spellen voor het hele gezin"</string>
+    <string name="topic10251" msgid="99237306730665104">"Tekenen en kleuren"</string>
+    <string name="topic10252" msgid="6543039575961394064">"Verkleed- en modegames"</string>
+    <string name="topic10253" msgid="566596668186874227">"Puzzels en breinbrekers"</string>
+    <string name="topic10254" msgid="5732147617072023634">"Roleplaying-games"</string>
+    <string name="topic10255" msgid="2890655077164103057">"Tafeltennis"</string>
+    <string name="topic10256" msgid="3302096971402751679">"Schuifpuzzels"</string>
+    <string name="topic10257" msgid="4238531589193902619">"Woordgames"</string>
+    <string name="topic10258" msgid="6995329540076529056">"Hobby\'s en ontspanning"</string>
+    <string name="topic10259" msgid="8649688885811560410">"Speciale dagen"</string>
+    <string name="topic10260" msgid="487999213495640080">"Verjaardagen en naamdagen"</string>
+    <string name="topic10261" msgid="8970668366745952094">"Duiken en onderwateractiviteiten"</string>
+    <string name="topic10262" msgid="6644046161469353448">"Textielkunst"</string>
+    <string name="topic10263" msgid="848165976917542929">"Buitenactiviteiten"</string>
+    <string name="topic10264" msgid="6274985117752637104">"Vissen"</string>
+    <string name="topic10265" msgid="4134876488948695674">"Jagen en schieten"</string>
+    <string name="topic10266" msgid="6617785039128074351">"Paintball"</string>
+    <string name="topic10267" msgid="488093331618885003">"Radiobesturing en modellering"</string>
+    <string name="topic10268" msgid="277932389492046264">"Bruiloften"</string>
+    <string name="topic10269" msgid="8572041514147955202">"Huis en tuin"</string>
+    <string name="topic10270" msgid="2646715182474030951">"Tuinieren"</string>
+    <string name="topic10271" msgid="1308931236810509881">"Huisinrichting en interieurdesign"</string>
+    <string name="topic10272" msgid="8746698707390628887">"Huishoudelijke apparatuur"</string>
+    <string name="topic10273" msgid="344442071339164852">"Klussen"</string>
+    <string name="topic10274" msgid="8982330028561451429">"Veiligheid in huis en huisbeveiliging"</string>
+    <string name="topic10275" msgid="8280198018937968735">"Huishoudelijke benodigdheden"</string>
+    <string name="topic10276" msgid="1651598271798609235">"Landschapsontwerp"</string>
+    <string name="topic10277" msgid="7675195736886448994">"Internet en telecom"</string>
+    <string name="topic10278" msgid="873251714192341707">"E-mail en sms"</string>
+    <string name="topic10279" msgid="6514296374139842600">"E-mail"</string>
+    <string name="topic10280" msgid="7976787187115018267">"Sms en chatten"</string>
+    <string name="topic10281" msgid="4013341162811169339">"Voice- en videochat"</string>
+    <string name="topic10282" msgid="7810462611906257564">"Internetproviders"</string>
+    <string name="topic10283" msgid="3958287780718485172">"Telefoondienstenaanbieders"</string>
+    <string name="topic10284" msgid="2415044270290467935">"Ringtones en mobiele thema\'s"</string>
+    <string name="topic10285" msgid="7056449544316408821">"Zoekmachines"</string>
+    <string name="topic10286" msgid="3458688996478472971">"Smartphones"</string>
+    <string name="topic10287" msgid="6766203044518402938">"Telefonisch vergaderen"</string>
+    <string name="topic10288" msgid="3883137694557636622">"Web-apps en online tools"</string>
+    <string name="topic10289" msgid="3392995633794787676">"Webservices"</string>
+    <string name="topic10290" msgid="3118880486702986341">"Cloudopslag"</string>
+    <string name="topic10291" msgid="6025855926350955094">"Websiteontwerp en -ontwikkeling"</string>
+    <string name="topic10292" msgid="3069720659823056935">"Webhosting"</string>
+    <string name="topic10293" msgid="2489957780009828409">"Vacatures en opleidingen"</string>
+    <string name="topic10294" msgid="474839431177892843">"Onderwijs"</string>
+    <string name="topic10295" msgid="2215489196192620880">"Academische conferenties en publicaties"</string>
+    <string name="topic10296" msgid="4494362881225210483">"Hogescholen en universiteiten"</string>
+    <string name="topic10297" msgid="8596946591674128749">"Onderwijs op afstand"</string>
+    <string name="topic10298" msgid="6669181180128620422">"Peuteronderwijs"</string>
+    <string name="topic10299" msgid="989138215800115613">"Peuterspeelzalen"</string>
+    <string name="topic10300" msgid="8281464235308602670">"Thuisonderwijs"</string>
+    <string name="topic10301" msgid="9156890858635333460">"Gestandaardiseerde tests en toelatingsexamens"</string>
+    <string name="topic10302" msgid="1325835179421990876">"Hulpbronnen voor onderwijs en klaslokalen"</string>
+    <string name="topic10303" msgid="3103839978894155537">"Beroeps- en vervolgonderwijs"</string>
+    <string name="topic10304" msgid="8831682558788062486">"Vacatures"</string>
+    <string name="topic10305" msgid="8415203095484493106">"Loopbaanbronnen en -planning"</string>
+    <string name="topic10306" msgid="7426556527349374835">"Vacatures"</string>
+    <string name="topic10307" msgid="1187762846826735256">"Wetgeving en overheid"</string>
+    <string name="topic10308" msgid="3346756665358311386">"Misdaad en justitie"</string>
+    <string name="topic10309" msgid="2041175328931014735">"Juridisch"</string>
+    <string name="topic10310" msgid="7079570344976872062">"Juridische dienstverlening"</string>
+    <string name="topic10311" msgid="2095095138677585525">"Nieuws"</string>
+    <string name="topic10312" msgid="939721674816307639">"Economisch nieuws"</string>
+    <string name="topic10313" msgid="4159611985538361632">"Lokaal nieuws"</string>
+    <string name="topic10314" msgid="93219947859117151">"Fusies en overnames"</string>
+    <string name="topic10315" msgid="5046321177148647481">"Kranten"</string>
+    <string name="topic10316" msgid="8592980844674525307">"Politiek"</string>
+    <string name="topic10317" msgid="2412259096368647866">"Sportnieuws"</string>
+    <string name="topic10318" msgid="1508449672941031904">"Weer"</string>
+    <string name="topic10319" msgid="3973645291178509390">"Wereldnieuws"</string>
+    <string name="topic10320" msgid="5279440074507438174">"Online community\'s"</string>
+    <string name="topic10321" msgid="7018890132742820265">"Clipart en geanimeerde gif\'s"</string>
+    <string name="topic10322" msgid="1585737438943011532">"Daten en contactadvertenties"</string>
+    <string name="topic10323" msgid="962863497957179646">"Feedsamenstelling en social bookmarking"</string>
+    <string name="topic10324" msgid="1425257460381023853">"Bestanden delen en hosten"</string>
+    <string name="topic10325" msgid="8698912164970408378">"Forum- en chatproviders"</string>
+    <string name="topic10326" msgid="2425798096705921796">"Microbloggen"</string>
+    <string name="topic10327" msgid="8518822987595111212">"Foto\'s en video\'s delen"</string>
+    <string name="topic10328" msgid="8932708475346340912">"Foto\'s en afbeeldingen delen"</string>
+    <string name="topic10329" msgid="223933889758324282">"Video\'s delen"</string>
+    <string name="topic10330" msgid="188028553492626282">"Skins"</string>
+    <string name="topic10331" msgid="426844238985651925">"Apps en add-ons voor sociale netwerken"</string>
+    <string name="topic10332" msgid="291747325781232456">"Sociale netwerken"</string>
+    <string name="topic10333" msgid="7950152600374846488">"Mensen en samenleving"</string>
+    <string name="topic10334" msgid="8671262583721706509">"Familie en relaties"</string>
+    <string name="topic10335" msgid="1526523762163185819">"Stamboom en genealogie"</string>
+    <string name="topic10336" msgid="4551233571090493177">"Huwelijk"</string>
+    <string name="topic10337" msgid="8436172065188964882">"Ouderschap"</string>
+    <string name="topic10338" msgid="8896269734682970">"Adoptie"</string>
+    <string name="topic10339" msgid="781900237993621300">"Baby\'s en peuters"</string>
+    <string name="topic10340" msgid="6538182603360796294">"Internetveiligheid van kinderen"</string>
+    <string name="topic10341" msgid="3586543243312398568">"Romantiek"</string>
+    <string name="topic10342" msgid="3695176378281477573">"Sciencefiction en fantasy"</string>
+    <string name="topic10343" msgid="2318169062960263837">"Huisdieren en dieren"</string>
+    <string name="topic10344" msgid="2005534117977874327">"Dierenvoeding en benodigdheden voor dierenverzorging"</string>
+    <string name="topic10345" msgid="2397329020706244200">"Huisdieren"</string>
+    <string name="topic10346" msgid="1323702748723563694">"Vogels"</string>
+    <string name="topic10347" msgid="3301879823396773413">"Katten"</string>
+    <string name="topic10348" msgid="8066686305498410222">"Honden"</string>
+    <string name="topic10349" msgid="5253723822905761195">"Vissen en aquariums"</string>
+    <string name="topic10350" msgid="6164036369108076590">"Reptielen en amfibieën"</string>
+    <string name="topic10351" msgid="1132984519083501363">"Dierenartsen"</string>
+    <string name="topic10352" msgid="6310110390516037997">"Onroerend goed"</string>
+    <string name="topic10353" msgid="5114390804081576684">"Percelen en land"</string>
+    <string name="topic10354" msgid="7980778954791504082">"Timesharing en vakantiehuizen"</string>
+    <string name="topic10355" msgid="7720717354548642600">"Naslag"</string>
+    <string name="topic10356" msgid="8366981308613661935">"Persoonlijke en bedrijfsvermeldingen"</string>
+    <string name="topic10357" msgid="3185598234676097975">"Algemene naslagwerken"</string>
+    <string name="topic10358" msgid="6732669037513504019">"Rekenmachines en opzoekhulpmiddelen"</string>
+    <string name="topic10359" msgid="8901932349008990500">"Woordenboeken en encyclopedieën"</string>
+    <string name="topic10360" msgid="6113408769992775754">"Onderwijsinformatie"</string>
+    <string name="topic10361" msgid="364838820459183817">"Instructies"</string>
+    <string name="topic10362" msgid="3760998790588600032">"Tijd en kalenders"</string>
+    <string name="topic10363" msgid="5464708619861040861">"Taalbronnen"</string>
+    <string name="topic10364" msgid="4685400848805560054">"Studie vreemde talen"</string>
+    <string name="topic10365" msgid="5196231842716190887">"Vertaaltools en -hulpbronnen"</string>
+    <string name="topic10366" msgid="7460927054539097025">"Kaarten"</string>
+    <string name="topic10367" msgid="3900361839783743700">"Wetenschap"</string>
+    <string name="topic10368" msgid="2069447039109930660">"Augmented en virtual reality"</string>
+    <string name="topic10369" msgid="5747888306428024793">"Biologie"</string>
+    <string name="topic10370" msgid="4860829940151353583">"Genetica"</string>
+    <string name="topic10371" msgid="8229818210867472466">"Scheikunde"</string>
+    <string name="topic10372" msgid="6400467418954574231">"Ecologie en milieu"</string>
+    <string name="topic10373" msgid="6990757247198163741">"Geologie"</string>
+    <string name="topic10374" msgid="8057983193031950119">"Machine learning en artificial intelligence"</string>
+    <string name="topic10375" msgid="8511185098682306025">"Wiskunde"</string>
+    <string name="topic10376" msgid="6387800251638760737">"Natuurkunde"</string>
+    <string name="topic10377" msgid="7834619927563362042">"Robotica"</string>
+    <string name="topic10378" msgid="242496862821758873">"Winkelen"</string>
+    <string name="topic10379" msgid="5505228335012447165">"Antiek en verzamelobjecten"</string>
+    <string name="topic10380" msgid="4989560205486143927">"Kleding"</string>
+    <string name="topic10381" msgid="7585496746485093505">"Kinderkleding"</string>
+    <string name="topic10382" msgid="5088060295126473451">"Kostuums"</string>
+    <string name="topic10383" msgid="4947104586590538143">"Herenkleding"</string>
+    <string name="topic10384" msgid="3752472493887374077">"Dameskleding"</string>
+    <string name="topic10385" msgid="5275843140794803595">"Kleine advertenties"</string>
+    <string name="topic10386" msgid="5887032952574801982">"Hulpbronnen voor consumenten"</string>
+    <string name="topic10387" msgid="8474154360410317897">"Kortingsbonnen en kortingen"</string>
+    <string name="topic10388" msgid="3650307363028796765">"Klantenkaarten en loyaliteitsprogramma\'s"</string>
+    <string name="topic10389" msgid="1542336508240183221">"Technische support en reparaties"</string>
+    <string name="topic10390" msgid="831225961168954292">"Bloemen"</string>
+    <string name="topic10391" msgid="6810540242154911762">"Wenskaarten"</string>
+    <string name="topic10392" msgid="2431377771302967625">"Feest- en feestdagartikelen"</string>
+    <string name="topic10393" msgid="2671274205988136926">"Winkelportals"</string>
+    <string name="topic10394" msgid="1530096364743244151">"Sport"</string>
+    <string name="topic10395" msgid="316192616624062917">"American football"</string>
+    <string name="topic10396" msgid="8042120651878490689">"Australian football"</string>
+    <string name="topic10397" msgid="492901976344700942">"Autoraces"</string>
+    <string name="topic10398" msgid="3471795015226090296">"Honkbal"</string>
+    <string name="topic10399" msgid="2126280752064021308">"Basketbal"</string>
+    <string name="topic10400" msgid="5440499529264277027">"Bowlen"</string>
+    <string name="topic10401" msgid="166689951236922024">"Boksen"</string>
+    <string name="topic10402" msgid="2451339788231007479">"Cheerleaden"</string>
+    <string name="topic10403" msgid="6455478521804717635">"Schoolsporten"</string>
+    <string name="topic10404" msgid="5261583496913118024">"Cricket"</string>
+    <string name="topic10405" msgid="482477447879117820">"Fietsen"</string>
+    <string name="topic10406" msgid="8167644332387528703">"Paardensport"</string>
+    <string name="topic10407" msgid="3237734582719584272">"Extreme sporten"</string>
+    <string name="topic10408" msgid="3859749534843254349">"Klimmen en alpinisme"</string>
+    <string name="topic10409" msgid="7485614115639267976">"Fantasy-sporten"</string>
+    <string name="topic10410" msgid="5996939009229881074">"Golf"</string>
+    <string name="topic10411" msgid="2513997418184786648">"Turnen"</string>
+    <string name="topic10412" msgid="5411755341358248299">"IJshockey"</string>
+    <string name="topic10413" msgid="3319233613448963890">"Schaatsen"</string>
+    <string name="topic10414" msgid="1797840816328584660">"Vechtsporten"</string>
+    <string name="topic10415" msgid="2886043330316735719">"Motorraces"</string>
+    <string name="topic10416" msgid="3436682172863605224">"Olympische Spelen"</string>
+    <string name="topic10417" msgid="8296644015663416236">"Rugby"</string>
+    <string name="topic10418" msgid="8276736633218488127">"Hardlopen en wandelen"</string>
+    <string name="topic10419" msgid="5663062924928275215">"Skiën en snowboarden"</string>
+    <string name="topic10420" msgid="2509320683543423424">"Voetbal"</string>
+    <string name="topic10421" msgid="6512889128030030686">"Surfen"</string>
+    <string name="topic10422" msgid="8342986282852879750">"Zwemmen"</string>
+    <string name="topic10423" msgid="6333426807705188459">"Tennis"</string>
+    <string name="topic10424" msgid="5495511215629567375">"Atletiek"</string>
+    <string name="topic10425" msgid="4009138228283995179">"Volleybal"</string>
+    <string name="topic10426" msgid="7998590461761852196">"Worstelen"</string>
+    <string name="topic10427" msgid="6711468161729797769">"Reizen en vervoer"</string>
+    <string name="topic10428" msgid="661919563628063196">"Avontuurlijke reizen"</string>
+    <string name="topic10429" msgid="408270392813634227">"Vliegreizen"</string>
+    <string name="topic10430" msgid="3046485339481297656">"Zakenreizen"</string>
+    <string name="topic10431" msgid="7439352609169583150">"Autoverhuur"</string>
+    <string name="topic10432" msgid="5034961318884376752">"Cruises en charters"</string>
+    <string name="topic10433" msgid="6354590445323135986">"Gezinsreizen"</string>
+    <string name="topic10434" msgid="7081309045291255264">"Huwelijksreizen en romantische uitjes"</string>
+    <string name="topic10435" msgid="1064605516265819020">"Hotels en accommodatie"</string>
+    <string name="topic10436" msgid="9050375924140897722">"Lange bus- en treinreizen"</string>
+    <string name="topic10437" msgid="2655664900730187701">"Budget- en lastminute reizen"</string>
+    <string name="topic10438" msgid="7944023251845122923">"Bagage en reisaccessoires"</string>
+    <string name="topic10439" msgid="7845433008088931971">"Toeristische bestemmingen"</string>
+    <string name="topic10440" msgid="485118071443976808">"Stranden en eilanden"</string>
+    <string name="topic10441" msgid="518643446480879895">"Natuurparken en tuinen"</string>
+    <string name="topic10442" msgid="6534536077484540292">"Attractieparken"</string>
+    <string name="topic10443" msgid="8787722062991478596">"Dierentuinen"</string>
+    <string name="topic10444" msgid="2075863187654728611">"Verkeers- en routeplanners"</string>
+    <string name="topic10445" msgid="3460421948068980869">"Reisbureaus en -agentschappen"</string>
+    <string name="topic10446" msgid="5333138740720504195">"Reisgidsen en reisverslagen"</string>
 </resources>

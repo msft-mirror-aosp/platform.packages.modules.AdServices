@@ -16,17 +16,23 @@
 
 package com.android.adservices.service.measurement;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import android.net.Uri;
 
-import com.android.adservices.data.measurement.DatastoreException;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.RegisterSource;
 import com.android.adservices.service.measurement.actions.RegisterTrigger;
+import com.android.adservices.service.measurement.actions.RegisterWebSource;
+import com.android.adservices.service.measurement.actions.RegisterWebTrigger;
 import com.android.adservices.service.measurement.actions.ReportObjects;
 import com.android.adservices.service.measurement.actions.ReportingJob;
+import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.registration.SourceFetcher;
 import com.android.adservices.service.measurement.registration.TriggerFetcher;
 import com.android.adservices.service.measurement.reporting.AggregateReportingJobHandlerWrapper;
@@ -36,12 +42,14 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -49,21 +57,32 @@ import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import co.nstant.in.cbor.CborDecoder;
+import co.nstant.in.cbor.CborException;
+import co.nstant.in.cbor.model.Array;
+import co.nstant.in.cbor.model.ByteString;
+import co.nstant.in.cbor.model.DataItem;
+import co.nstant.in.cbor.model.UnicodeString;
+
 /**
  * End-to-end test from source and trigger registration to attribution reporting, using mocked HTTP
  * requests.
  *
- * Consider @RunWith(Parameterized.class)
+ * <p>Consider @RunWith(Parameterized.class)
  */
 public abstract class E2EMockTest extends E2ETest {
     SourceFetcher mSourceFetcher;
     TriggerFetcher mTriggerFetcher;
+    ClickVerifier mClickVerifier;
+    Flags mFlags;
 
-    E2EMockTest(Collection<Action> actions, ReportObjects expectedOutput,
-            String name) throws DatastoreException {
+    E2EMockTest(Collection<Action> actions, ReportObjects expectedOutput, String name) {
         super(actions, expectedOutput, name);
         mSourceFetcher = Mockito.spy(new SourceFetcher());
         mTriggerFetcher = Mockito.spy(new TriggerFetcher());
+        mClickVerifier = Mockito.mock(ClickVerifier.class);
+        mFlags = FlagsFactory.getFlagsForTest();
+        when(mClickVerifier.isInputEventVerifiable(any(), anyLong())).thenReturn(true);
     }
 
     @Override
@@ -71,12 +90,10 @@ public abstract class E2EMockTest extends E2ETest {
         for (String uri : sourceRegistration.mUriToResponseHeadersMap.keySet()) {
             HttpsURLConnection urlConnection = mock(HttpsURLConnection.class);
             when(urlConnection.getResponseCode()).thenReturn(200);
-            Mockito.doAnswer(new Answer<Map<String, List<String>>>() {
-                public Map<String, List<String>> answer(InvocationOnMock invocation) {
-                    return sourceRegistration.getNextResponse(uri);
-                }
-            }).when(urlConnection).getHeaderFields();
-            when(mSourceFetcher.openUrl(new URL(uri))).thenReturn(urlConnection);
+            Answer<Map<String, List<String>>> headerFieldsMockAnswer =
+                    invocation -> getNextResponse(sourceRegistration.mUriToResponseHeadersMap, uri);
+            Mockito.doAnswer(headerFieldsMockAnswer).when(urlConnection).getHeaderFields();
+            Mockito.doReturn(urlConnection).when(mSourceFetcher).openUrl(new URL(uri));
         }
     }
 
@@ -86,12 +103,36 @@ public abstract class E2EMockTest extends E2ETest {
         for (String uri : triggerRegistration.mUriToResponseHeadersMap.keySet()) {
             HttpsURLConnection urlConnection = mock(HttpsURLConnection.class);
             when(urlConnection.getResponseCode()).thenReturn(200);
-            Mockito.doAnswer(new Answer<Map<String, List<String>>>() {
-                public Map<String, List<String>> answer(InvocationOnMock invocation) {
-                    return triggerRegistration.getNextResponse(uri);
-                }
-            }).when(urlConnection).getHeaderFields();
-            when(mTriggerFetcher.openUrl(new URL(uri))).thenReturn(urlConnection);
+            Answer<Map<String, List<String>>> headerFieldsMockAnswer =
+                    invocation ->
+                            getNextResponse(triggerRegistration.mUriToResponseHeadersMap, uri);
+            Mockito.doAnswer(headerFieldsMockAnswer).when(urlConnection).getHeaderFields();
+            Mockito.doReturn(urlConnection).when(mTriggerFetcher).openUrl(new URL(uri));
+        }
+    }
+
+    @Override
+    void prepareRegistrationServer(RegisterWebSource sourceRegistration) throws IOException {
+        for (String uri : sourceRegistration.mUriToResponseHeadersMap.keySet()) {
+            HttpsURLConnection urlConnection = mock(HttpsURLConnection.class);
+            when(urlConnection.getResponseCode()).thenReturn(200);
+            Answer<Map<String, List<String>>> headerFieldsMockAnswer =
+                    invocation -> getNextResponse(sourceRegistration.mUriToResponseHeadersMap, uri);
+            Mockito.doAnswer(headerFieldsMockAnswer).when(urlConnection).getHeaderFields();
+            Mockito.doReturn(urlConnection).when(mSourceFetcher).openUrl(new URL(uri));
+        }
+    }
+
+    @Override
+    void prepareRegistrationServer(RegisterWebTrigger triggerRegistration) throws IOException {
+        for (String uri : triggerRegistration.mUriToResponseHeadersMap.keySet()) {
+            HttpsURLConnection urlConnection = mock(HttpsURLConnection.class);
+            when(urlConnection.getResponseCode()).thenReturn(200);
+            Answer<Map<String, List<String>>> headerFieldsMockAnswer =
+                    invocation ->
+                            getNextResponse(triggerRegistration.mUriToResponseHeadersMap, uri);
+            Mockito.doAnswer(headerFieldsMockAnswer).when(urlConnection).getHeaderFields();
+            Mockito.doReturn(urlConnection).when(mTriggerFetcher).openUrl(new URL(uri));
         }
     }
 
@@ -159,31 +200,67 @@ public abstract class E2EMockTest extends E2ETest {
                             sharedInfo.getLong("scheduled_report_time") * 1000)
                     .put(TestFormatJsonMapping.REPORT_TO_KEY, destinations.get(i).toString())
                     .put(TestFormatJsonMapping.PAYLOAD_KEY,
-                            getAggregatablePayloadForTest(payloads.get(i))));
+                            getAggregatablePayloadForTest(sharedInfo, payloads.get(i))));
         }
         return result;
     }
 
-    private static JSONObject getAggregatablePayloadForTest(JSONObject data) throws JSONException {
-        String payloadJson = data.getJSONArray("aggregation_service_payloads")
-                .getJSONObject(0)
-                .getString("debug_cleartext_payload");
-        JSONArray histograms = new JSONObject(payloadJson).getJSONArray("data");
+    private static JSONObject getAggregatablePayloadForTest(
+            JSONObject sharedInfo, JSONObject data) throws JSONException {
+        String payload =
+                data.getJSONArray("aggregation_service_payloads")
+                        .getJSONObject(0)
+                        .getString("debug_cleartext_payload");
         return new JSONObject()
-                .put(AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION,
-                        data.getString("attribution_destination"))
-                .put(AggregateReportPayloadKeys.SOURCE_SITE, data.getString("source_site"))
-                .put(AggregateReportPayloadKeys.HISTOGRAMS, getAggregateHistograms(histograms));
+                .put(
+                        AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION,
+                        sharedInfo.getString("attribution_destination"))
+                .put(AggregateReportPayloadKeys.HISTOGRAMS, getAggregateHistograms(payload));
     }
 
-    private static JSONArray getAggregateHistograms(JSONArray histograms) throws JSONException {
+    private static JSONArray getAggregateHistograms(String payloadJsonBase64) throws JSONException {
         List<JSONObject> result = new ArrayList<>();
-        for (int i = 0; i < histograms.length(); i++) {
-            JSONObject obj = histograms.getJSONObject(i);
-            result.add(new JSONObject()
-                    .put(AggregateHistogramKeys.BUCKET, obj.getString("bucket"))
-                    .put(AggregateHistogramKeys.VALUE, obj.getInt("value")));
+
+        try {
+            final byte[] payloadJson = Base64.getDecoder().decode(payloadJsonBase64);
+            final List<DataItem> dataItems =
+                    new CborDecoder(new ByteArrayInputStream(payloadJson)).decode();
+            final co.nstant.in.cbor.model.Map payload =
+                    (co.nstant.in.cbor.model.Map) dataItems.get(0);
+            final Array payloadArray = (Array) payload.get(new UnicodeString("data"));
+            for (DataItem i : payloadArray.getDataItems()) {
+                co.nstant.in.cbor.model.Map m = (co.nstant.in.cbor.model.Map) i;
+                result.add(
+                        new JSONObject()
+                                .put(
+                                        AggregateHistogramKeys.BUCKET,
+                                        new BigInteger(
+                                                        ((ByteString)
+                                                                        m.get(
+                                                                                new UnicodeString(
+                                                                                        "bucket")))
+                                                                .getBytes())
+                                                .toString())
+                                .put(
+                                        AggregateHistogramKeys.VALUE,
+                                        new BigInteger(
+                                                        ((ByteString)
+                                                                        m.get(
+                                                                                new UnicodeString(
+                                                                                        "value")))
+                                                                .getBytes())
+                                                .toString()));
+            }
+        } catch (CborException e) {
+            throw new JSONException(e);
         }
+
         return new JSONArray(result);
+    }
+
+    private static Map<String, List<String>> getNextResponse(
+            Map<String, List<Map<String, List<String>>>> uriToResponseHeadersMap, String uri) {
+        List<Map<String, List<String>>> responseList = uriToResponseHeadersMap.get(uri);
+        return responseList.remove(0);
     }
 }

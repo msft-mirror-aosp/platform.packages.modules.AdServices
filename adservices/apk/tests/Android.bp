@@ -16,11 +16,13 @@ package {
 }
 
 android_test {
-    name: "AdServicesSettingsUITests",
+    name: "AdServicesApkUITests",
     srcs: [
         "src/**/*.java",
         ":adservicesapk-filegroup",
     ],
+    certificate: "platform",
+    privileged: true,
     defaults: ["modules-utils-testable-device-config-defaults"],
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
@@ -33,7 +35,13 @@ android_test {
         "androidx.test.ext.junit",
         "androidx.test.rules",
         "mockito-target-extended-minus-junit4",
+        "androidx.room_room-runtime",
+        "androidx.room_room-testing",
         "truth-prebuilt",
+        "SettingsLibActionBarShadow",
+        "SettingsLibSettingsTheme",
+        "SettingsLibCollapsingToolbarBaseActivity",
+        "SettingsLibMainSwitchPreference",
     ],
     libs: [
         "android.test.base",
@@ -42,6 +50,9 @@ android_test {
     ],
     test_suites: [
         "general-tests",
+        "mts-adservices",
     ],
+    required: ["privapp_allowlist_com.android.adservices.api.xml"],
+    test_mainline_modules: ["com.google.android.adservices.apex"],
     instrumentation_for: "AdServicesApk",
 }

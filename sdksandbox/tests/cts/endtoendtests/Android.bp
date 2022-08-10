@@ -33,10 +33,12 @@ android_test {
     ],
     data: [
       ":LoadSdkSuccessfullySdkProvider",
-      ":RetryLoadSameSdkShouldFailSdkProvider",
+      ":GetLoadedSdkLibInfoSuccessfully",
+      ":LoadSdkSuccessfullySdkProviderTwo",
       ":LoadSdkWithInternalErrorSdkProvider",
       ":RequestSurfacePackageSuccessfullySdkProvider",
       ":RequestSurfacePackageWithInternalErrorSdkProvider",
+      ":SendDataSdkProvider",
       ":CodeProviderWithResources",
     ],
     min_sdk_version: "Tiramisu",

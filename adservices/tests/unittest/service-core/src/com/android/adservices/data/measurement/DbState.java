@@ -23,6 +23,8 @@ import android.net.Uri;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
+import com.android.adservices.service.measurement.aggregation.AggregateReport;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -40,51 +42,81 @@ import java.util.concurrent.TimeUnit;
 public class DbState {
     List<Source> mSourceList;
     List<Trigger> mTriggerList;
-    List<EventReport> mReportList;
+    List<EventReport> mEventReportList;
     List<AttributionRateLimit> mAttrRateLimitList;
+    List<AggregateEncryptionKey> mAggregateEncryptionKeyList;
+    List<AggregateReport> mAggregateReportList;
 
     public DbState() {
         mSourceList = new ArrayList<>();
         mTriggerList = new ArrayList<>();
-        mReportList = new ArrayList<>();
+        mEventReportList = new ArrayList<>();
         mAttrRateLimitList = new ArrayList<>();
+        mAggregateEncryptionKeyList = new ArrayList<>();
+        mAggregateReportList = new ArrayList<>();
     }
 
-    // TODO: consider extracting business logic in these
-    // constructors to avoid side effects in the DbState class.
     public DbState(JSONObject testInput) throws JSONException {
         this();
 
         // Sources
-        JSONArray sources = testInput.getJSONArray("sources");
-        for (int i = 0; i < sources.length(); i++) {
-            JSONObject sJSON = sources.getJSONObject(i);
-            Source source = getSourceFrom(sJSON);
-            mSourceList.add(source);
+        if (testInput.has("sources")) {
+            JSONArray sources = testInput.getJSONArray("sources");
+            for (int i = 0; i < sources.length(); i++) {
+                JSONObject sJSON = sources.getJSONObject(i);
+                Source source = getSourceFrom(sJSON);
+                mSourceList.add(source);
+            }
         }
 
         // Triggers
-        JSONArray triggers = testInput.getJSONArray("triggers");
-        for (int i = 0; i < triggers.length(); i++) {
-            JSONObject tJSON = triggers.getJSONObject(i);
-            Trigger trigger = getTriggerFrom(tJSON);
-            mTriggerList.add(trigger);
+        if (testInput.has("triggers")) {
+            JSONArray triggers = testInput.getJSONArray("triggers");
+            for (int i = 0; i < triggers.length(); i++) {
+                JSONObject tJSON = triggers.getJSONObject(i);
+                Trigger trigger = getTriggerFrom(tJSON);
+                mTriggerList.add(trigger);
+            }
         }
 
         // EventReports
-        JSONArray reports = testInput.getJSONArray("event_reports");
-        for (int i = 0; i < reports.length(); i++) {
-            JSONObject rJSON = reports.getJSONObject(i);
-            EventReport eventReport = getEventReportFrom(rJSON);
-            mReportList.add(eventReport);
+        if (testInput.has("event_reports")) {
+            JSONArray eventReports = testInput.getJSONArray("event_reports");
+            for (int i = 0; i < eventReports.length(); i++) {
+                JSONObject rJSON = eventReports.getJSONObject(i);
+                EventReport eventReport = getEventReportFrom(rJSON);
+                mEventReportList.add(eventReport);
+            }
         }
 
         // AttributionRateLimits
-        JSONArray attrs = testInput.getJSONArray("attribution_rate_limits");
-        for (int i = 0; i < attrs.length(); i++) {
-            JSONObject attrJSON = attrs.getJSONObject(i);
-            AttributionRateLimit attrRateLimit = getAttributionRateLimitFrom(attrJSON);
-            mAttrRateLimitList.add(attrRateLimit);
+        if (testInput.has("attribution_rate_limits")) {
+            JSONArray attrs = testInput.getJSONArray("attribution_rate_limits");
+            for (int i = 0; i < attrs.length(); i++) {
+                JSONObject attrJSON = attrs.getJSONObject(i);
+                AttributionRateLimit attrRateLimit = getAttributionRateLimitFrom(attrJSON);
+                mAttrRateLimitList.add(attrRateLimit);
+            }
+        }
+
+        // AggregateEncryptionKeys
+        if (testInput.has("aggregate_encryption_keys")) {
+            JSONArray keys = testInput.getJSONArray("aggregate_encryption_keys");
+            for (int i = 0; i < keys.length(); i++) {
+                JSONObject keyJSON = keys.getJSONObject(i);
+                AggregateEncryptionKey key = getAggregateEncryptionKeyFrom(keyJSON);
+                mAggregateEncryptionKeyList.add(key);
+            }
+        }
+
+        if (testInput.has("aggregate_reports")) {
+            // AggregateReports
+            JSONArray aggregateReports = testInput.getJSONArray("aggregate_reports");
+            for (int i = 0; i < aggregateReports.length(); i++) {
+                JSONObject rJSON = aggregateReports.getJSONObject(i);
+                AggregateReport aggregateReport = getAggregateReportFrom(rJSON);
+                mAggregateReportList.add(aggregateReport);
+            }
         }
     }
 
@@ -108,12 +140,20 @@ public class DbState {
         triggerCursor.close();
 
         // Read EventReport table
-        Cursor reportCursor = readerDB.query(MeasurementTables.EventReportContract.TABLE,
-                null, null, null, null, null, MeasurementTables.EventReportContract.ID);
-        while (reportCursor.moveToNext()) {
-            mReportList.add(SqliteObjectMapper.constructEventReportFromCursor(reportCursor));
+        Cursor eventReportCursor =
+                readerDB.query(
+                        MeasurementTables.EventReportContract.TABLE,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        MeasurementTables.EventReportContract.ID);
+        while (eventReportCursor.moveToNext()) {
+            mEventReportList.add(
+                    SqliteObjectMapper.constructEventReportFromCursor(eventReportCursor));
         }
-        reportCursor.close();
+        eventReportCursor.close();
 
         // Read AttributionRateLimit table
         Cursor attrCursor = readerDB.query(MeasurementTables.AttributionRateLimitContract.TABLE,
@@ -122,18 +162,57 @@ public class DbState {
             mAttrRateLimitList.add(getAttributionRateLimitFrom(attrCursor));
         }
         attrCursor.close();
+
+        // Read AggregateReport table
+        Cursor aggregateReportCursor =
+                readerDB.query(
+                        MeasurementTables.AggregateReport.TABLE,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        MeasurementTables.AggregateReport.ID);
+        while (aggregateReportCursor.moveToNext()) {
+            mAggregateReportList.add(
+                    SqliteObjectMapper.constructAggregateReport(aggregateReportCursor));
+        }
+        aggregateReportCursor.close();
+
+        // Read AggregateEncryptionKey table
+        Cursor keyCursor = readerDB.query(MeasurementTables.AggregateEncryptionKey.TABLE,
+                null, null, null, null, null, MeasurementTables.AggregateEncryptionKey.ID);
+        while (keyCursor.moveToNext()) {
+            mAggregateEncryptionKeyList.add(
+                    SqliteObjectMapper.constructAggregateEncryptionKeyFromCursor(keyCursor));
+        }
+        keyCursor.close();
     }
 
     public void sortAll() {
         mSourceList.sort(
                 Comparator.comparing(Source::getEventTime)
                         .thenComparing(Source::getPriority));
+
         mTriggerList.sort(Comparator.comparing(Trigger::getTriggerTime));
-        mReportList.sort(
+
+        mEventReportList.sort(
                 Comparator.comparing(EventReport::getReportTime)
                         .thenComparing(EventReport::getTriggerTime));
+
         mAttrRateLimitList.sort(
                 Comparator.comparing(AttributionRateLimit::getTriggerTime));
+
+        mAggregateEncryptionKeyList.sort(
+                Comparator.comparing(AggregateEncryptionKey::getKeyId));
+
+        mAggregateReportList.sort(
+                Comparator.comparing(AggregateReport::getScheduledReportTime)
+                        .thenComparing(AggregateReport::getSourceRegistrationTime));
+    }
+
+    public List<AggregateEncryptionKey> getAggregateEncryptionKeyList() {
+        return mAggregateEncryptionKeyList;
     }
 
     private Source getSourceFrom(JSONObject sJSON) throws JSONException {
@@ -141,23 +220,23 @@ public class DbState {
                 .setId(sJSON.getString("id"))
                 .setEventId(sJSON.getLong("eventId"))
                 .setSourceType(
-                        Source.SourceType.valueOf(sJSON.getString("sourceType").toUpperCase(
-                                Locale.ENGLISH)))
+                        Source.SourceType.valueOf(
+                                sJSON.getString("sourceType").toUpperCase(Locale.ENGLISH)))
                 .setPublisher(Uri.parse(sJSON.getString("publisher")))
-                .setAttributionDestination(Uri.parse(sJSON.getString("attributionDestination")))
+                .setAppDestination(Uri.parse(sJSON.getString("appDestination")))
                 .setAdTechDomain(Uri.parse(sJSON.getString("adTechDomain")))
                 .setEventTime(sJSON.getLong("eventTime"))
                 .setExpiryTime(sJSON.getLong("expiryTime"))
                 .setPriority(sJSON.getLong("priority"))
                 .setStatus(sJSON.getInt("status"))
                 .setRegistrant(Uri.parse(sJSON.getString("registrant")))
-                .setInstallAttributionWindow(sJSON.optLong("installAttributionWindow",
-                        TimeUnit.DAYS.toMillis(30)))
-                .setInstallCooldownWindow(sJSON.optLong("installCooldownWindow",
-                        0))
+                .setInstallAttributionWindow(
+                        sJSON.optLong("installAttributionWindow", TimeUnit.DAYS.toMillis(30)))
+                .setInstallCooldownWindow(sJSON.optLong("installCooldownWindow", 0))
                 .setInstallAttributed(sJSON.optBoolean("installAttributed", false))
-                .setAttributionMode(sJSON.optInt("attribution_mode",
-                        Source.AttributionMode.TRUTHFULLY))
+                .setAttributionMode(
+                        sJSON.optInt("attribution_mode", Source.AttributionMode.TRUTHFULLY))
+                .setAggregateFilterData(sJSON.optString("aggregateFilterData", null))
                 .build();
     }
 
@@ -170,6 +249,7 @@ public class DbState {
                 .setTriggerTime(tJSON.getLong("triggerTime"))
                 .setStatus(tJSON.getInt("status"))
                 .setRegistrant(Uri.parse(tJSON.getString("registrant")))
+                .setFilters(tJSON.optString("filters", null))
                 .build();
     }
 
@@ -177,19 +257,17 @@ public class DbState {
         return new EventReport.Builder()
                 .setId(rJSON.getString("id"))
                 .setSourceId(rJSON.getLong("sourceId"))
-                .setAttributionDestination(
-                        Uri.parse(rJSON.getString("attributionDestination")))
+                .setAttributionDestination(Uri.parse(rJSON.getString("attributionDestination")))
                 .setAdTechDomain(Uri.parse(rJSON.getString("adTechDomain")))
                 .setTriggerData(rJSON.getLong("triggerData"))
                 .setTriggerTime(rJSON.getLong("triggerTime"))
                 .setReportTime(rJSON.getLong("reportTime"))
                 .setTriggerPriority(rJSON.getLong("triggerPriority"))
                 .setStatus(rJSON.getInt("status"))
-                .setRandomizedTriggerRate(rJSON.optDouble("randomizedTriggerRate",
-                        0.0D))
+                .setRandomizedTriggerRate(rJSON.optDouble("randomizedTriggerRate", 0.0D))
                 .setSourceType(
-                Source.SourceType.valueOf(rJSON.getString("sourceType").toUpperCase(
-                        Locale.ENGLISH)))
+                        Source.SourceType.valueOf(
+                                rJSON.getString("sourceType").toUpperCase(Locale.ENGLISH)))
                 .build();
     }
 
@@ -198,10 +276,22 @@ public class DbState {
         return new AttributionRateLimit.Builder()
                 .setId(attrJSON.getString("id"))
                 .setSourceSite(attrJSON.getString("sourceSite"))
+                .setSourceOrigin(attrJSON.getString("sourceOrigin"))
                 .setDestinationSite(attrJSON.getString("destinationSite"))
+                .setDestinationOrigin(attrJSON.getString("destinationOrigin"))
                 .setAdTechDomain(attrJSON.getString("adTechDomain"))
                 .setTriggerTime(attrJSON.getLong("triggerTime"))
                 .setRegistrant(attrJSON.getString("registrant"))
+                .build();
+    }
+
+    private AggregateEncryptionKey getAggregateEncryptionKeyFrom(JSONObject keyJSON)
+            throws JSONException {
+        return new AggregateEncryptionKey.Builder()
+                .setId(keyJSON.getString("id"))
+                .setKeyId(keyJSON.getString("keyId"))
+                .setPublicKey(keyJSON.getString("publicKey"))
+                .setExpiry(keyJSON.getLong("expiry"))
                 .build();
     }
 
@@ -211,14 +301,32 @@ public class DbState {
                         MeasurementTables.AttributionRateLimitContract.ID)))
                 .setSourceSite(cursor.getString(cursor.getColumnIndex(
                         MeasurementTables.AttributionRateLimitContract.SOURCE_SITE)))
+                .setSourceOrigin(cursor.getString(cursor.getColumnIndex(
+                        MeasurementTables.AttributionRateLimitContract.SOURCE_ORIGIN)))
                 .setDestinationSite(cursor.getString(cursor.getColumnIndex(
                         MeasurementTables.AttributionRateLimitContract.DESTINATION_SITE)))
+                .setDestinationOrigin(cursor.getString(cursor.getColumnIndex(
+                        MeasurementTables.AttributionRateLimitContract.DESTINATION_ORIGIN)))
                 .setAdTechDomain(cursor.getString(cursor.getColumnIndex(
                         MeasurementTables.AttributionRateLimitContract.AD_TECH_DOMAIN)))
                 .setTriggerTime(cursor.getLong(cursor.getColumnIndex(
                         MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME)))
                 .setRegistrant(cursor.getString(cursor.getColumnIndex(
                         MeasurementTables.AttributionRateLimitContract.REGISTRANT)))
+                .build();
+    }
+
+    private AggregateReport getAggregateReportFrom(JSONObject rJSON)
+            throws JSONException {
+        return new AggregateReport.Builder()
+                .setId(rJSON.getString("id"))
+                .setPublisher(Uri.parse(rJSON.getString("publisher")))
+                .setAttributionDestination(Uri.parse(rJSON.getString("attributionDestination")))
+                .setSourceRegistrationTime(rJSON.getLong("sourceRegistrationTime"))
+                .setScheduledReportTime(rJSON.getLong("scheduledReportTime"))
+                .setReportingOrigin(Uri.parse(rJSON.getString("reportingOrigin")))
+                .setDebugCleartextPayload(rJSON.getString("debugCleartextPayload"))
+                .setStatus(rJSON.getInt("status"))
                 .build();
     }
 }

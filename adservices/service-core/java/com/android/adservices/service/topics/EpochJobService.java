@@ -20,6 +20,7 @@ import static com.android.adservices.service.AdServicesConfig.TOPICS_EPOCH_JOB_I
 
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 
+import android.annotation.NonNull;
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
@@ -28,7 +29,7 @@ import android.content.ComponentName;
 import android.content.Context;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.service.AdServicesExecutors;
+import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.FlagsFactory;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -43,6 +44,12 @@ public final class EpochJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
+        if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
+            LogUtil.e("Topics API is disabled");
+            // Returning false means that this job has completed its work.
+            return false;
+        }
+
         LogUtil.d("EpochJobService.onStartJob");
 
         // This service executes each incoming job on a Handler running on the application's
@@ -60,14 +67,14 @@ public final class EpochJobService extends JobService {
                     @Override
                     public void onSuccess(Void result) {
                         LogUtil.d("Epoch Computation succeeded!");
-                        // Tell the JobScheduler that the job has completed and does not needs to be
+                        // Tell the JobScheduler that the job has completed and does not need to be
                         // rescheduled.
                         jobFinished(params, /* wantsReschedule = */ false);
                     }
 
                     @Override
                     public void onFailure(Throwable t) {
-                        LogUtil.e("Failed to handle JobService: " + params.getJobId(), t);
+                        LogUtil.e(t, "Failed to handle JobService: " + params.getJobId());
                         //  When failure, also tell the JobScheduler that the job has completed and
                         // does not need to be rescheduled.
                         // TODO(b/225909845): Revisit this. We need a retry policy.
@@ -85,16 +92,57 @@ public final class EpochJobService extends JobService {
         return false;
     }
 
-    /** Schedule the Job */
-    public static void schedule(Context context) {
-        final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
-        final JobInfo job = new JobInfo.Builder(TOPICS_EPOCH_JOB_ID,
-                new ComponentName(context, EpochJobService.class))
-                .setRequiresCharging(true)
-                .setPeriodic(FlagsFactory.getFlags().getTopicsEpochJobPeriodMs(),
-                        FlagsFactory.getFlags().getTopicsEpochJobFlexMs())
-                .build();
+    private static void schedule(
+            Context context,
+            @NonNull JobScheduler jobScheduler,
+            long epochJobPeriodMs,
+            long epochJobFlexMs) {
+        final JobInfo job =
+                new JobInfo.Builder(
+                                TOPICS_EPOCH_JOB_ID,
+                                new ComponentName(context, EpochJobService.class))
+                        .setRequiresCharging(true)
+                        .setPeriodic(epochJobPeriodMs, epochJobFlexMs)
+                        .build();
+
         jobScheduler.schedule(job);
         LogUtil.d("Scheduling Epoch job ...");
+    }
+
+    // TODO(b/241866524): Support Killswitch in scheduling
+    /**
+     * Schedule Epoch Job Service if needed: there is no scheduled job with same job parameters.
+     *
+     * @param context the context
+     * @param forceSchedule a flag to indicate whether to force rescheduling the job.
+     * @return a {@code boolean} to indicate if the service job is actually scheduled.
+     */
+    public static boolean scheduleIfNeeded(Context context, boolean forceSchedule) {
+        final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
+        if (jobScheduler == null) {
+            LogUtil.e("Cannot fetch Job Scheduler!");
+            return false;
+        }
+
+        long flagsEpochJobPeriodMs = FlagsFactory.getFlags().getTopicsEpochJobPeriodMs();
+        long flagsEpochJobFlexMs = FlagsFactory.getFlags().getTopicsEpochJobFlexMs();
+
+        JobInfo job = jobScheduler.getPendingJob(TOPICS_EPOCH_JOB_ID);
+        // Skip to reschedule the job if there is same scheduled job with same parameters.
+        if (job != null && !forceSchedule) {
+            long epochJobPeriodMs = job.getIntervalMillis();
+            long epochJobFlexMs = job.getFlexMillis();
+
+            if (flagsEpochJobPeriodMs == epochJobPeriodMs
+                    && flagsEpochJobFlexMs == epochJobFlexMs) {
+                LogUtil.i(
+                        "Epoch Job Service has been scheduled with same parameters, skip"
+                                + " rescheduling!");
+                return false;
+            }
+        }
+
+        schedule(context, jobScheduler, flagsEpochJobPeriodMs, flagsEpochJobFlexMs);
+        return true;
     }
 }
