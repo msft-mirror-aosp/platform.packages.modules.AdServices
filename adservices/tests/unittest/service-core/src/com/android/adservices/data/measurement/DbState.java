@@ -223,6 +223,7 @@ public class DbState {
                         Source.SourceType.valueOf(
                                 sJSON.getString("sourceType").toUpperCase(Locale.ENGLISH)))
                 .setPublisher(Uri.parse(sJSON.getString("publisher")))
+                .setPublisherType(sJSON.optInt("publisherType"))
                 .setAppDestination(Uri.parse(sJSON.getString("appDestination")))
                 .setAdTechDomain(Uri.parse(sJSON.getString("adTechDomain")))
                 .setEventTime(sJSON.getLong("eventTime"))
@@ -244,6 +245,7 @@ public class DbState {
         return new Trigger.Builder()
                 .setId(tJSON.getString("id"))
                 .setAttributionDestination(Uri.parse(tJSON.getString("attributionDestination")))
+                .setDestinationType(tJSON.optInt("destinationType"))
                 .setAdTechDomain(Uri.parse(tJSON.getString("adTechDomain")))
                 .setEventTriggers(tJSON.getString("eventTriggers"))
                 .setTriggerTime(tJSON.getLong("triggerTime"))
