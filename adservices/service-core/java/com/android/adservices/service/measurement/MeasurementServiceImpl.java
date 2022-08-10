@@ -34,13 +34,20 @@ import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.Throttler;
-import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.measurement.access.IAccessResolver;
+import com.android.adservices.service.measurement.access.UserConsentAccessResolver;
+import com.android.adservices.service.measurement.access.WebRegistrationByPackageAccessResolver;
 import com.android.internal.annotations.VisibleForTesting;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 
@@ -52,30 +59,36 @@ import java.util.function.Consumer;
 public class MeasurementServiceImpl extends IMeasurementService.Stub {
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
     private final MeasurementImpl mMeasurementImpl;
+    private final Flags mFlags;
     private final ConsentManager mConsentManager;
     private final Context mContext;
     private final Throttler mThrottler;
-    private static final String UNAUTHORIZED_ERROR_MESSAGE =
-            "Caller is not authorized to call this API.";
     private static final String RATE_LIMIT_REACHED = "Rate limit reached to call this API.";
 
-    public MeasurementServiceImpl(Context context, ConsentManager consentManager) {
-        mContext = context;
-        mMeasurementImpl = MeasurementImpl.getInstance(context);
-        mConsentManager = consentManager;
-        mThrottler = Throttler.getInstance(FlagsFactory.getFlags().getSdkRequestPermitsPerSecond());
+    public MeasurementServiceImpl(
+            @NonNull Context context,
+            @NonNull ConsentManager consentManager,
+            @NonNull Flags flags) {
+        this(
+                MeasurementImpl.getInstance(context),
+                context,
+                consentManager,
+                Throttler.getInstance(FlagsFactory.getFlags().getSdkRequestPermitsPerSecond()),
+                flags);
     }
 
     @VisibleForTesting
     MeasurementServiceImpl(
-            MeasurementImpl measurementImpl,
-            Context context,
-            ConsentManager consentManager,
-            Throttler throttler) {
+            @NonNull MeasurementImpl measurementImpl,
+            @NonNull Context context,
+            @NonNull ConsentManager consentManager,
+            @NonNull Throttler throttler,
+            @NonNull Flags flags) {
         mContext = context;
         mMeasurementImpl = measurementImpl;
         mConsentManager = consentManager;
         mThrottler = throttler;
+        mFlags = flags;
     }
 
     @Override
@@ -98,6 +111,8 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                     performWorkIfAllowed(
                             (mMeasurementImpl) ->
                                     mMeasurementImpl.register(request, System.currentTimeMillis()),
+                            Collections.singletonList(
+                                    new UserConsentAccessResolver(mConsentManager)),
                             callback);
                 });
     }
@@ -120,6 +135,11 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                             (mMeasurementImpl) ->
                                     mMeasurementImpl.registerWebSource(
                                             request, System.currentTimeMillis()),
+                            Arrays.asList(
+                                    new UserConsentAccessResolver(mConsentManager),
+                                    new WebRegistrationByPackageAccessResolver(
+                                            mFlags.getWebContextRegistrationClientAppAllowList(),
+                                            request.getPackageName())),
                             callback);
                 });
     }
@@ -142,6 +162,11 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                             (measurementImpl) ->
                                     measurementImpl.registerWebTrigger(
                                             request, System.currentTimeMillis()),
+                            Arrays.asList(
+                                    new UserConsentAccessResolver(mConsentManager),
+                                    new WebRegistrationByPackageAccessResolver(
+                                            mFlags.getWebContextRegistrationClientAppAllowList(),
+                                            request.getPackageName())),
                             callback);
                 });
     }
@@ -184,28 +209,34 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         Objects.requireNonNull(callback);
 
         try {
-            callback.onResult(Integer.valueOf(mMeasurementImpl.getMeasurementApiStatus()));
+            callback.onResult(mMeasurementImpl.getMeasurementApiStatus());
         } catch (RemoteException e) {
             LogUtil.e(e, "Unable to send result to the callback");
         }
     }
 
     private void performWorkIfAllowed(
-            Consumer<MeasurementImpl> execute, IMeasurementCallback callback) {
+            Consumer<MeasurementImpl> execute,
+            List<IAccessResolver> permissionResolvers,
+            IMeasurementCallback callback) {
         try {
-            AdServicesApiConsent userConsent =
-                    mConsentManager.getConsent(mContext.getPackageManager());
+            Optional<IAccessResolver> accessDenier =
+                    permissionResolvers.stream()
+                            .filter(accessResolver -> !accessResolver.isAllowed(mContext))
+                            .findFirst();
 
-            if (!userConsent.isGiven()) {
+            if (accessDenier.isPresent()) {
                 callback.onFailure(
                         new MeasurementErrorResponse.Builder()
                                 .setStatusCode(STATUS_USER_CONSENT_REVOKED)
-                                .setErrorMessage(UNAUTHORIZED_ERROR_MESSAGE)
+                                .setErrorMessage(accessDenier.get().getErrorMessage())
                                 .build());
-            } else {
-                execute.accept(mMeasurementImpl);
-                callback.onResult();
+                return;
             }
+
+            execute.accept(mMeasurementImpl);
+            callback.onResult();
+
         } catch (RemoteException e) {
             LogUtil.e(e, "Unable to send result to the callback");
         }

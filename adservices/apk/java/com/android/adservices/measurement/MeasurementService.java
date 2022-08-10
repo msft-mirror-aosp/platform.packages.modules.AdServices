@@ -20,6 +20,7 @@ import android.content.Intent;
 import android.os.IBinder;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
@@ -41,13 +42,14 @@ public class MeasurementService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        if (FlagsFactory.getFlags().getMeasurementKillSwitch()) {
+        Flags flags = FlagsFactory.getFlags();
+        if (flags.getMeasurementKillSwitch()) {
             LogUtil.e("Measurement API is disabled");
             return;
         }
         if (mMeasurementService == null) {
             mMeasurementService =
-                    new MeasurementServiceImpl(this, ConsentManager.getInstance(this));
+                    new MeasurementServiceImpl(this, ConsentManager.getInstance(this), flags);
         }
         schedulePeriodicJobs();
     }
