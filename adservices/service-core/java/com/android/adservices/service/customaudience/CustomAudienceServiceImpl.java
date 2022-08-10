@@ -45,6 +45,7 @@ import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.SdkRuntimeUtil;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.CustomAudienceOverrider;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
@@ -57,9 +58,10 @@ import java.util.concurrent.ExecutorService;
 
 /** Implementation of the Custom Audience service. */
 public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
-
+    @NonNull private final Context mContext;
     @NonNull private final CustomAudienceImpl mCustomAudienceImpl;
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
+    @NonNull private final ConsentManager mConsentManager;
     @NonNull private final ExecutorService mExecutorService;
     @NonNull private final DevContextFilter mDevContextFilter;
     @NonNull private final AdServicesLogger mAdServicesLogger;
@@ -75,6 +77,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 context,
                 CustomAudienceImpl.getInstance(context),
                 FledgeAuthorizationFilter.create(context, AdServicesLoggerImpl.getInstance()),
+                ConsentManager.getInstance(context),
                 DevContextFilter.create(context),
                 AdServicesExecutors.getBackgroundExecutor(),
                 AdServicesLoggerImpl.getInstance(),
@@ -90,6 +93,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             @NonNull Context context,
             @NonNull CustomAudienceImpl customAudienceImpl,
             @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter,
+            @NonNull ConsentManager consentManager,
             @NonNull DevContextFilter devContextFilter,
             @NonNull ExecutorService executorService,
             @NonNull AdServicesLogger adServicesLogger,
@@ -98,11 +102,14 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceImpl);
         Objects.requireNonNull(fledgeAuthorizationFilter);
+        Objects.requireNonNull(consentManager);
         Objects.requireNonNull(executorService);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(appImportanceFilter);
+        mContext = context;
         mCustomAudienceImpl = customAudienceImpl;
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
+        mConsentManager = consentManager;
         mDevContextFilter = devContextFilter;
         mExecutorService = executorService;
         mAdServicesLogger = adServicesLogger;
@@ -133,46 +140,60 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 customAudience.getOwnerPackageName(),
                 AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
 
-        mExecutorService.execute(
-                () -> {
-                    int resultCode = AdServicesStatusUtils.STATUS_UNSET;
-                    try {
-                        try {
-                            if (mFlags.getEnforceForegroundStatusForFledgeCustomAudience()) {
-                                mAppImportanceFilter.assertCallerIsInForeground(
-                                        customAudience.getOwnerPackageName(),
-                                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
-                                        null);
-                            }
+        mExecutorService.execute(() -> doJoinCustomAudience(customAudience, callback));
+    }
 
-                            mCustomAudienceImpl.joinCustomAudience(customAudience);
-                            callback.onSuccess();
-                            // TODO(b/233681870): Investigate implementation of actual failures in
-                            //  logs/metrics
-                            resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
-                        } catch (NullPointerException | IllegalArgumentException exception) {
-                            // TODO(b/230783716): We may not want catch NPE or IAE for this case.
-                            resultCode = AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
-                            notifyFailure(callback, resultCode, exception);
-                        } catch (WrongCallingApplicationStateException backgorundCaller) {
-                            resultCode = AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
-                            notifyFailure(callback, resultCode, backgorundCaller);
-                        } catch (IllegalStateException illegalStateException) {
-                            resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
-                            notifyFailure(callback, resultCode, illegalStateException);
-                        } catch (Exception exception) {
-                            LogUtil.e(exception, "Exception joining CA: ");
-                            resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
-                            notifyFailure(callback, resultCode, exception);
-                        }
-                    } catch (Exception exception) {
-                        LogUtil.e(exception, "Unable to send result to the callback");
-                        resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
-                    } finally {
-                        mAdServicesLogger.logFledgeApiCallStats(
-                                AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE, resultCode);
-                    }
-                });
+    /** Try to join the custom audience and signal back to the caller using the callback. */
+    private void doJoinCustomAudience(
+            @NonNull CustomAudience customAudience, @NonNull ICustomAudienceCallback callback) {
+        Objects.requireNonNull(customAudience);
+        Objects.requireNonNull(callback);
+
+        int resultCode = AdServicesStatusUtils.STATUS_UNSET;
+        try {
+            try {
+                if (mFlags.getEnforceForegroundStatusForFledgeCustomAudience()) {
+                    mAppImportanceFilter.assertCallerIsInForeground(
+                            customAudience.getOwnerPackageName(),
+                            AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
+                            null);
+                }
+
+                // Fail silently for revoked user consent
+                if (!mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
+                        mContext.getPackageManager(), customAudience.getOwnerPackageName())) {
+                    mCustomAudienceImpl.joinCustomAudience(customAudience);
+                    BackgroundFetchJobService.scheduleIfNeeded(mContext, mFlags, false);
+                    // TODO(b/233681870): Investigate implementation of actual failures
+                    //  in logs/metrics
+                    resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
+                } else {
+                    resultCode = AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
+                }
+
+                callback.onSuccess();
+            } catch (NullPointerException | IllegalArgumentException exception) {
+                // TODO(b/230783716): We may not want catch NPE or IAE for this case.
+                resultCode = AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+                notifyFailure(callback, resultCode, exception);
+            } catch (WrongCallingApplicationStateException backgorundCaller) {
+                resultCode = AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
+                notifyFailure(callback, resultCode, backgorundCaller);
+            } catch (IllegalStateException illegalStateException) {
+                resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+                notifyFailure(callback, resultCode, illegalStateException);
+            } catch (Exception exception) {
+                LogUtil.e(exception, "Exception joining CA: ");
+                resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+                notifyFailure(callback, resultCode, exception);
+            }
+        } catch (Exception exception) {
+            LogUtil.e(exception, "Unable to send result to the callback");
+            resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+        } finally {
+            mAdServicesLogger.logFledgeApiCallStats(
+                    AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE, resultCode);
+        }
     }
 
     private void notifyFailure(
@@ -211,48 +232,64 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
         assertCallingPackageName(owner, AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
 
-        mExecutorService.execute(
-                () -> {
-                    int resultCode = AdServicesStatusUtils.STATUS_UNSET;
-                    try {
-                        try {
-                            if (mFlags.getEnforceForegroundStatusForFledgeCustomAudience()) {
-                                mAppImportanceFilter.assertCallerIsInForeground(
-                                        owner,
-                                        AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
-                                        null);
-                            }
-                            mCustomAudienceImpl.leaveCustomAudience(owner, buyer, name);
-                            resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
-                        } catch (WrongCallingApplicationStateException exception) {
-                            resultCode = AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
-                            callback.onFailure(
-                                    new FledgeErrorResponse.Builder()
-                                            .setErrorMessage(exception.getMessage())
-                                            .setStatusCode(resultCode)
-                                            .build());
-                        } catch (Exception exception) {
-                            LogUtil.e(
-                                    exception,
-                                    "Unexpected error leave custom audience: "
-                                            + exception.getMessage());
-                            resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
-                        }
+        mExecutorService.execute(() -> doLeaveCustomAudience(owner, buyer, name, callback));
+    }
 
-                        if (resultCode != AdServicesStatusUtils.STATUS_BACKGROUND_CALLER) {
-                            callback.onSuccess();
-                        }
-                        // TODO(b/233681870): Investigate implementation of actual failures in
-                        //  logs/metrics
-                    } catch (Exception exception) {
-                        LogUtil.e(exception, "Unable to send result to the callback");
-                        resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
-                    } finally {
-                        mAdServicesLogger.logFledgeApiCallStats(
-                                AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
-                                resultCode);
-                    }
-                });
+    /** Try to leave the custom audience and signal back to the caller using the callback. */
+    private void doLeaveCustomAudience(
+            @NonNull String owner,
+            @NonNull AdTechIdentifier buyer,
+            @NonNull String name,
+            @NonNull ICustomAudienceCallback callback) {
+        Objects.requireNonNull(owner);
+        Objects.requireNonNull(buyer);
+        Objects.requireNonNull(name);
+        Objects.requireNonNull(callback);
+
+        int resultCode = AdServicesStatusUtils.STATUS_UNSET;
+        try {
+            try {
+                if (mFlags.getEnforceForegroundStatusForFledgeCustomAudience()) {
+                    mAppImportanceFilter.assertCallerIsInForeground(
+                            owner, AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE, null);
+                }
+
+                // Fail silently for revoked user consent
+                if (!mConsentManager.isFledgeConsentRevokedForApp(
+                        mContext.getPackageManager(), owner)) {
+                    // TODO(b/233681870): Investigate implementation of actual failures
+                    //  in logs/metrics
+                    mCustomAudienceImpl.leaveCustomAudience(owner, buyer, name);
+                    resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
+                } else {
+                    resultCode = AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
+                }
+            } catch (WrongCallingApplicationStateException exception) {
+                resultCode = AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
+                callback.onFailure(
+                        new FledgeErrorResponse.Builder()
+                                .setErrorMessage(exception.getMessage())
+                                .setStatusCode(resultCode)
+                                .build());
+            } catch (Exception exception) {
+                LogUtil.e(
+                        exception,
+                        "Unexpected error leave custom audience: " + exception.getMessage());
+                resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+            }
+
+            if (resultCode != AdServicesStatusUtils.STATUS_BACKGROUND_CALLER) {
+                callback.onSuccess();
+            }
+            // TODO(b/233681870): Investigate implementation of actual failures in
+            //  logs/metrics
+        } catch (Exception exception) {
+            LogUtil.e(exception, "Unable to send result to the callback");
+            resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+        } finally {
+            mAdServicesLogger.logFledgeApiCallStats(
+                    AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE, resultCode);
+        }
     }
 
     /**
@@ -299,6 +336,8 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                         devContext,
                         customAudienceDao,
                         mExecutorService,
+                        mContext.getPackageManager(),
+                        mConsentManager,
                         mAdServicesLogger,
                         mAppImportanceFilter,
                         mFlags);
@@ -346,6 +385,8 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                         devContext,
                         customAudienceDao,
                         mExecutorService,
+                        mContext.getPackageManager(),
+                        mConsentManager,
                         mAdServicesLogger,
                         mAppImportanceFilter,
                         mFlags);
@@ -385,6 +426,8 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                         devContext,
                         customAudienceDao,
                         mExecutorService,
+                        mContext.getPackageManager(),
+                        mConsentManager,
                         mAdServicesLogger,
                         mAppImportanceFilter,
                         mFlags);

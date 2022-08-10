@@ -73,8 +73,8 @@ public class TopicsService extends Service {
     }
 
     private void schedulePeriodicJobs() {
-        MaintenanceJobService.schedule(this);
-        EpochJobService.schedule(this);
+        MaintenanceJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
+        EpochJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
 
         // TODO(b/238674236): Schedule this after the boot complete.
         MddJobService.schedule(this);

@@ -16,16 +16,18 @@
 
 package com.android.adservices.service.adselection;
 
+import static com.android.adservices.service.adselection.AdSelectionRunner.AD_SELECTION_TIMED_OUT;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_AD_SELECTION_FAILURE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_CA_AVAILABLE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_VALID_BIDS_FOR_SCORING;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_WINNING_AD_FOUND;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION;
 import static com.android.adservices.stats.FledgeApiCallStatsMatcher.aCallStatForFledgeApiWithStatus;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyZeroInteractions;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
@@ -47,6 +49,7 @@ import android.adservices.common.FledgeErrorResponse;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.exceptions.AdServicesException;
 import android.content.Context;
+import android.net.Uri;
 import android.os.RemoteException;
 
 import androidx.room.Room;
@@ -63,9 +66,10 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.util.concurrent.FluentFuture;
@@ -76,7 +80,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.Spy;
 import org.mockito.internal.stubbing.answers.AnswersWithDelay;
@@ -114,6 +117,7 @@ public class AdSelectionRunnerTest {
     @Mock private AdSelectionIdGenerator mMockAdSelectionIdGenerator;
     @Mock private AppImportanceFilter mAppImportanceFilter;
     @Mock private Clock mClock;
+    @Mock private ConsentManager mConsentManagerMock;
     private Flags mFlags;
 
     private Context mContext;
@@ -190,8 +194,6 @@ public class AdSelectionRunnerTest {
                         return 300;
                     }
                 };
-
-        when(mClock.instant()).thenReturn(Clock.systemUTC().instant());
     }
 
     private DBCustomAudience createDBCustomAudience(final AdTechIdentifier buyer) {
@@ -205,7 +207,9 @@ public class AdSelectionRunnerTest {
 
     @Test
     public void testRunAdSelectionSuccess() throws AdServicesException {
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        when(mClock.instant()).thenReturn(Clock.systemUTC().instant());
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
         // Creating ad selection config for happy case with all the buyers in place
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -279,6 +283,7 @@ public class AdSelectionRunnerTest {
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
                         mExecutorService,
+                        mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
                         mMockAdSelectionIdGenerator,
@@ -293,7 +298,7 @@ public class AdSelectionRunnerTest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig);
 
-        Mockito.verify(mMockAdBidGenerator)
+        verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer1,
                         adSelectionConfig.getAdSelectionSignals(),
@@ -302,7 +307,7 @@ public class AdSelectionRunnerTest {
                                 .get(mDBCustomAudienceForBuyer1.getBuyer()),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
-        Mockito.verify(mMockAdBidGenerator)
+        verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer2,
                         adSelectionConfig.getAdSelectionSignals(),
@@ -311,8 +316,7 @@ public class AdSelectionRunnerTest {
                                 .get(mDBCustomAudienceForBuyer2.getBuyer()),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
-        Mockito.verify(mMockAdsScoreGenerator)
-                .runAdScoring(mAdBiddingOutcomeList, adSelectionConfig);
+        verify(mMockAdsScoreGenerator).runAdScoring(mAdBiddingOutcomeList, adSelectionConfig);
 
         assertTrue(resultsCallback.mIsSuccess);
         assertEquals(
@@ -328,18 +332,80 @@ public class AdSelectionRunnerTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                        AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
                         AdServicesStatusUtils.STATUS_SUCCESS);
         verify(mAdServicesLoggerSpy)
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                                AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
                                 AdServicesStatusUtils.STATUS_SUCCESS));
     }
 
     @Test
+    public void testRunAdSelectionWithRevokedUserConsentSuccess() throws AdServicesException {
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent(any());
+
+        // Creating ad selection config for happy case with all the buyers in place
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        // Populating the Custom Audience DB
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                mDBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                mDBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+
+        when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
+
+        mAdSelectionRunner =
+                new AdSelectionRunner(
+                        mContext,
+                        mCustomAudienceDao,
+                        mAdSelectionEntryDao,
+                        mExecutorService,
+                        mConsentManagerMock,
+                        mMockAdsScoreGenerator,
+                        mMockAdBidGenerator,
+                        mMockAdSelectionIdGenerator,
+                        mClock,
+                        mAdServicesLoggerSpy,
+                        mAppImportanceFilter,
+                        mFlags,
+                        CALLER_UID);
+
+        assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
+
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig);
+
+        verify(mMockAdBidGenerator, never()).runAdBiddingPerCA(any(), any(), any(), any(), any());
+        verify(mMockAdsScoreGenerator, never()).runAdScoring(any(), any());
+
+        assertTrue(resultsCallback.mIsSuccess);
+        assertFalse(
+                mAdSelectionEntryDao.doesAdSelectionIdExist(
+                        resultsCallback.mAdSelectionResponse.getAdSelectionId()));
+        assertEquals(Uri.EMPTY, resultsCallback.mAdSelectionResponse.getRenderUri());
+        assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
+
+        verify(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(
+                        AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                        AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED);
+        verify(mAdServicesLoggerSpy)
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                                AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED));
+    }
+
+    @Test
     public void testRunAdSelectionMissingBuyerSignals() throws AdServicesException {
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        when(mClock.instant()).thenReturn(Clock.systemUTC().instant());
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
         // Creating ad selection config with missing Buyer signals to test the fallback
         AdSelectionConfig adSelectionConfig =
@@ -406,6 +472,7 @@ public class AdSelectionRunnerTest {
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
                         mExecutorService,
+                        mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
                         mMockAdSelectionIdGenerator,
@@ -420,22 +487,21 @@ public class AdSelectionRunnerTest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig);
 
-        Mockito.verify(mMockAdBidGenerator)
+        verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer1,
                         adSelectionConfig.getAdSelectionSignals(),
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
-        Mockito.verify(mMockAdBidGenerator)
+        verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer2,
                         adSelectionConfig.getAdSelectionSignals(),
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
-        Mockito.verify(mMockAdsScoreGenerator)
-                .runAdScoring(mAdBiddingOutcomeList, adSelectionConfig);
+        verify(mMockAdsScoreGenerator).runAdScoring(mAdBiddingOutcomeList, adSelectionConfig);
 
         assertTrue(resultsCallback.mIsSuccess);
         assertEquals(
@@ -448,17 +514,19 @@ public class AdSelectionRunnerTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                        AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
                         AdServicesStatusUtils.STATUS_SUCCESS);
         verify(mAdServicesLoggerSpy)
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                                AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
                                 AdServicesStatusUtils.STATUS_SUCCESS));
     }
 
     @Test
     public void testRunAdSelectionNoCAs() {
+        when(mClock.instant()).thenReturn(Clock.systemUTC().instant());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
         // Creating ad selection config for happy case with all the buyers in place
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -476,6 +544,7 @@ public class AdSelectionRunnerTest {
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
                         mExecutorService,
+                        mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
                         mMockAdSelectionIdGenerator,
@@ -493,17 +562,18 @@ public class AdSelectionRunnerTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                        AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
                         AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
         verify(mAdServicesLoggerSpy)
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                                AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
                                 AdServicesStatusUtils.STATUS_INTERNAL_ERROR));
     }
 
     @Test
     public void testRunAdSelectionCallerNotInForeground_fails() {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
         // Creating ad selection config for happy case with all the buyers in place
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -512,9 +582,7 @@ public class AdSelectionRunnerTest {
         doThrow(new IllegalStateException(validationFailure))
                 .when(mAppImportanceFilter)
                 .assertCallerIsInForeground(
-                        CALLER_UID,
-                        AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
-                        null);
+                        CALLER_UID, AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION, null);
 
         mAdSelectionRunner =
                 new AdSelectionRunner(
@@ -522,6 +590,7 @@ public class AdSelectionRunnerTest {
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
                         mExecutorService,
+                        mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
                         mMockAdSelectionIdGenerator,
@@ -540,6 +609,7 @@ public class AdSelectionRunnerTest {
 
     @Test
     public void testRunAdSelectionCallerNotInForegroundFlagDisabled_doesNotFailValidation() {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
         mFlags =
                 new Flags() {
                     @Override
@@ -557,6 +627,7 @@ public class AdSelectionRunnerTest {
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
                         mExecutorService,
+                        mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
                         mMockAdSelectionIdGenerator,
@@ -579,7 +650,9 @@ public class AdSelectionRunnerTest {
 
     @Test
     public void testRunAdSelectionPartialBidding() throws AdServicesException {
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        when(mClock.instant()).thenReturn(Clock.systemUTC().instant());
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
         // Creating ad selection config for happy case with all the buyers in place
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -632,6 +705,7 @@ public class AdSelectionRunnerTest {
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
                         mExecutorService,
+                        mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
                         mMockAdSelectionIdGenerator,
@@ -669,7 +743,7 @@ public class AdSelectionRunnerTest {
                         .setContextualSignals("{}")
                         .build();
 
-        Mockito.verify(mMockAdBidGenerator)
+        verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer1,
                         adSelectionConfig.getAdSelectionSignals(),
@@ -678,7 +752,7 @@ public class AdSelectionRunnerTest {
                                 .get(mDBCustomAudienceForBuyer1.getBuyer()),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
-        Mockito.verify(mMockAdBidGenerator)
+        verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer2,
                         adSelectionConfig.getAdSelectionSignals(),
@@ -687,8 +761,7 @@ public class AdSelectionRunnerTest {
                                 .get(mDBCustomAudienceForBuyer2.getBuyer()),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
-        Mockito.verify(mMockAdsScoreGenerator)
-                .runAdScoring(partialBiddingOutcome, adSelectionConfig);
+        verify(mMockAdsScoreGenerator).runAdScoring(partialBiddingOutcome, adSelectionConfig);
 
         assertTrue(resultsCallback.mIsSuccess);
         assertEquals(
@@ -701,18 +774,20 @@ public class AdSelectionRunnerTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                        AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
                         AdServicesStatusUtils.STATUS_SUCCESS);
         verify(mAdServicesLoggerSpy)
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                                AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
                                 AdServicesStatusUtils.STATUS_SUCCESS));
     }
 
     @Test
     public void testRunAdSelectionBiddingFailure() {
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        when(mClock.instant()).thenReturn(Clock.systemUTC().instant());
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
         // Creating ad selection config for happy case with all the buyers in place
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -757,6 +832,7 @@ public class AdSelectionRunnerTest {
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
                         mExecutorService,
+                        mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
                         mMockAdSelectionIdGenerator,
@@ -769,7 +845,7 @@ public class AdSelectionRunnerTest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig);
 
-        Mockito.verify(mMockAdBidGenerator)
+        verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer1,
                         adSelectionConfig.getAdSelectionSignals(),
@@ -778,7 +854,7 @@ public class AdSelectionRunnerTest {
                                 .get(mDBCustomAudienceForBuyer1.getBuyer()),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
-        Mockito.verify(mMockAdBidGenerator)
+        verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer2,
                         adSelectionConfig.getAdSelectionSignals(),
@@ -795,18 +871,20 @@ public class AdSelectionRunnerTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                        AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
                         AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
         verify(mAdServicesLoggerSpy)
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                                AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
                                 AdServicesStatusUtils.STATUS_INTERNAL_ERROR));
     }
 
     @Test
     public void testRunAdSelectionScoringFailure() throws AdServicesException {
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        when(mClock.instant()).thenReturn(Clock.systemUTC().instant());
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
         // Creating ad selection config for happy case with all the buyers in place
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -852,6 +930,7 @@ public class AdSelectionRunnerTest {
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
                         mExecutorService,
+                        mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
                         mMockAdSelectionIdGenerator,
@@ -864,7 +943,7 @@ public class AdSelectionRunnerTest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig);
 
-        Mockito.verify(mMockAdBidGenerator)
+        verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer1,
                         adSelectionConfig.getAdSelectionSignals(),
@@ -873,7 +952,7 @@ public class AdSelectionRunnerTest {
                                 .get(mDBCustomAudienceForBuyer1.getBuyer()),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
-        Mockito.verify(mMockAdBidGenerator)
+        verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer2,
                         adSelectionConfig.getAdSelectionSignals(),
@@ -882,8 +961,7 @@ public class AdSelectionRunnerTest {
                                 .get(mDBCustomAudienceForBuyer2.getBuyer()),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
-        Mockito.verify(mMockAdsScoreGenerator)
-                .runAdScoring(mAdBiddingOutcomeList, adSelectionConfig);
+        verify(mMockAdsScoreGenerator).runAdScoring(mAdBiddingOutcomeList, adSelectionConfig);
 
         assertFalse(resultsCallback.mIsSuccess);
         verifyErrorMessageIsCorrect(
@@ -891,18 +969,20 @@ public class AdSelectionRunnerTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                        AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
                         AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
         verify(mAdServicesLoggerSpy)
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                                AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
                                 AdServicesStatusUtils.STATUS_INTERNAL_ERROR));
     }
 
     @Test
     public void testRunAdSelectionNegativeScoring() throws AdServicesException {
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        when(mClock.instant()).thenReturn(Clock.systemUTC().instant());
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
         // Creating ad selection config for happy case with all the buyers in place
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -955,6 +1035,7 @@ public class AdSelectionRunnerTest {
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
                         mExecutorService,
+                        mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
                         mMockAdSelectionIdGenerator,
@@ -967,7 +1048,7 @@ public class AdSelectionRunnerTest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig);
 
-        Mockito.verify(mMockAdBidGenerator)
+        verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer1,
                         adSelectionConfig.getAdSelectionSignals(),
@@ -976,7 +1057,7 @@ public class AdSelectionRunnerTest {
                                 .get(mDBCustomAudienceForBuyer1.getBuyer()),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
-        Mockito.verify(mMockAdBidGenerator)
+        verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer2,
                         adSelectionConfig.getAdSelectionSignals(),
@@ -985,8 +1066,7 @@ public class AdSelectionRunnerTest {
                                 .get(mDBCustomAudienceForBuyer2.getBuyer()),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
-        Mockito.verify(mMockAdsScoreGenerator)
-                .runAdScoring(mAdBiddingOutcomeList, adSelectionConfig);
+        verify(mMockAdsScoreGenerator).runAdScoring(mAdBiddingOutcomeList, adSelectionConfig);
 
         assertFalse(resultsCallback.mIsSuccess);
         verifyErrorMessageIsCorrect(
@@ -994,18 +1074,20 @@ public class AdSelectionRunnerTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                        AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
                         AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
         verify(mAdServicesLoggerSpy)
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                                AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
                                 AdServicesStatusUtils.STATUS_INTERNAL_ERROR));
     }
 
     @Test
     public void testRunAdSelectionPartialNegativeScoring() throws AdServicesException {
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        when(mClock.instant()).thenReturn(Clock.systemUTC().instant());
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
         // Creating ad selection config for happy case with all the buyers in place
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -1060,6 +1142,7 @@ public class AdSelectionRunnerTest {
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
                         mExecutorService,
+                        mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
                         mMockAdSelectionIdGenerator,
@@ -1074,7 +1157,7 @@ public class AdSelectionRunnerTest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig);
 
-        Mockito.verify(mMockAdBidGenerator)
+        verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer1,
                         adSelectionConfig.getAdSelectionSignals(),
@@ -1083,7 +1166,7 @@ public class AdSelectionRunnerTest {
                                 .get(mDBCustomAudienceForBuyer1.getBuyer()),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
-        Mockito.verify(mMockAdBidGenerator)
+        verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer2,
                         adSelectionConfig.getAdSelectionSignals(),
@@ -1092,8 +1175,7 @@ public class AdSelectionRunnerTest {
                                 .get(mDBCustomAudienceForBuyer2.getBuyer()),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
-        Mockito.verify(mMockAdsScoreGenerator)
-                .runAdScoring(mAdBiddingOutcomeList, adSelectionConfig);
+        verify(mMockAdsScoreGenerator).runAdScoring(mAdBiddingOutcomeList, adSelectionConfig);
 
         DBAdSelection expectedDBAdSelectionResult =
                 new DBAdSelection.Builder()
@@ -1129,18 +1211,20 @@ public class AdSelectionRunnerTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                        AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
                         AdServicesStatusUtils.STATUS_SUCCESS);
         verify(mAdServicesLoggerSpy)
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                                AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
                                 AdServicesStatusUtils.STATUS_SUCCESS));
     }
 
     @Test
     public void testRunAdSelectionScoringException() throws AdServicesException {
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        when(mClock.instant()).thenReturn(Clock.systemUTC().instant());
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
         // Creating ad selection config for happy case with all the buyers in place
         AdSelectionConfig adSelectionConfig =
@@ -1189,6 +1273,7 @@ public class AdSelectionRunnerTest {
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
                         mExecutorService,
+                        mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
                         mMockAdSelectionIdGenerator,
@@ -1201,7 +1286,7 @@ public class AdSelectionRunnerTest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig);
 
-        Mockito.verify(mMockAdBidGenerator)
+        verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer1,
                         adSelectionConfig.getAdSelectionSignals(),
@@ -1210,7 +1295,7 @@ public class AdSelectionRunnerTest {
                                 .get(mDBCustomAudienceForBuyer1.getBuyer()),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
-        Mockito.verify(mMockAdBidGenerator)
+        verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer2,
                         adSelectionConfig.getAdSelectionSignals(),
@@ -1226,18 +1311,20 @@ public class AdSelectionRunnerTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                        AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
                         AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
         verify(mAdServicesLoggerSpy)
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                                AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
                                 AdServicesStatusUtils.STATUS_INTERNAL_ERROR));
     }
 
     @Test
     public void testRunAdSelectionOrchestrationTimesOut() throws AdServicesException {
+        when(mClock.instant()).thenReturn(Clock.systemUTC().instant());
         doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
         Flags flagsWithSmallerLimits =
                 new Flags() {
@@ -1299,6 +1386,7 @@ public class AdSelectionRunnerTest {
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
                         mExecutorService,
+                        mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
                         mMockAdSelectionIdGenerator,
@@ -1315,7 +1403,7 @@ public class AdSelectionRunnerTest {
 
         assertFalse(resultsCallback.mIsSuccess);
         verifyErrorMessageIsCorrect(
-                resultsCallback.mFledgeErrorResponse.getErrorMessage(), "Timed out");
+                resultsCallback.mFledgeErrorResponse.getErrorMessage(), AD_SELECTION_TIMED_OUT);
     }
 
     private void verifyErrorMessageIsCorrect(

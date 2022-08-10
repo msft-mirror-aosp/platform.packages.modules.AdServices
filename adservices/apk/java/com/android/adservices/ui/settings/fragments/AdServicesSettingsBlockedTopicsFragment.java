@@ -65,7 +65,6 @@ public class AdServicesSettingsBlockedTopicsFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         TopicsListViewAdapter adapter = new TopicsListViewAdapter(viewModel, true);
         recyclerView.setAdapter(adapter);
-        recyclerView.setOverScrollMode(View.OVER_SCROLL_NEVER);
 
         View noBlockedTopicsMessage = rootView.findViewById(R.id.no_blocked_topics_message);
 

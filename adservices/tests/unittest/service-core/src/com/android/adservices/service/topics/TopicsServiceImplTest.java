@@ -37,6 +37,7 @@ import android.adservices.topics.IGetTopicsCallback;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.Process;
@@ -118,6 +119,7 @@ public class TopicsServiceImplTest {
     @Mock private Flags mMockFlags;
     @Mock private Clock mClock;
     @Mock private SandboxedSdkContext mMockSdkContext;
+    @Mock private Context mMockAppContext;
     @Mock private Throttler mMockThrottler;
     @Mock private EnrollmentDao mEnrollmentDao;
     @Mock private TopicsServiceImpl mTopicsServiceImpl;
@@ -164,7 +166,7 @@ public class TopicsServiceImplTest {
         // Initialize enrollment data.
         EnrollmentData fakeEnrollmentData =
                 new EnrollmentData.Builder().setEnrollmentId(ALLOWED_SDK_ID).build();
-        when(mEnrollmentDao.getEnrollmentDataGivenSdkName(SOME_SDK_NAME))
+        when(mEnrollmentDao.getEnrollmentDataFromSdkName(SOME_SDK_NAME))
                 .thenReturn(fakeEnrollmentData);
 
         // Rate Limit is not reached.
@@ -265,7 +267,7 @@ public class TopicsServiceImplTest {
         when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         EnrollmentData fakeEnrollmentData =
                 new EnrollmentData.Builder().setEnrollmentId(null).build();
-        when(mEnrollmentDao.getEnrollmentDataGivenSdkName(SOME_SDK_NAME))
+        when(mEnrollmentDao.getEnrollmentDataFromSdkName(SOME_SDK_NAME))
                 .thenReturn(fakeEnrollmentData);
         invokeGetTopicsAndVerifyError(mMockSdkContext, STATUS_CALLER_NOT_ALLOWED);
     }
@@ -275,9 +277,49 @@ public class TopicsServiceImplTest {
         when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         EnrollmentData fakeEnrollmentData =
                 new EnrollmentData.Builder().setEnrollmentId(DISALLOWED_SDK_ID).build();
-        when(mEnrollmentDao.getEnrollmentDataGivenSdkName(SOME_SDK_NAME))
+        when(mEnrollmentDao.getEnrollmentDataFromSdkName(SOME_SDK_NAME))
                 .thenReturn(fakeEnrollmentData);
         invokeGetTopicsAndVerifyError(mMockSdkContext, STATUS_CALLER_NOT_ALLOWED);
+    }
+
+    @Test
+    public void getTopicsFromApp_SdkNotIncluded() throws Exception {
+        Mockito.lenient().when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        PackageManager.Property property =
+                mContext.getPackageManager()
+                        .getProperty(
+                                "android.adservices.AD_SERVICES_CONFIG.sdkMissing",
+                                TEST_APP_PACKAGE_NAME);
+        when(mPackageManager.getProperty(
+                        AppManifestConfigHelper.AD_SERVICES_CONFIG_PROPERTY, TEST_APP_PACKAGE_NAME))
+                .thenReturn(property);
+
+        Resources resources =
+                mContext.getPackageManager().getResourcesForApplication(TEST_APP_PACKAGE_NAME);
+        when(mPackageManager.getResourcesForApplication(TEST_APP_PACKAGE_NAME))
+                .thenReturn(resources);
+        when(mMockAppContext.getPackageManager()).thenReturn(mPackageManager);
+        invokeGetTopicsAndVerifyError(mMockAppContext, STATUS_CALLER_NOT_ALLOWED);
+    }
+
+    @Test
+    public void getTopicsFromApp_SdkTagMissing() throws Exception {
+        Mockito.lenient().when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        PackageManager.Property property =
+                mContext.getPackageManager()
+                        .getProperty(
+                                "android.adservices.AD_SERVICES_CONFIG.sdkTagMissing",
+                                TEST_APP_PACKAGE_NAME);
+        when(mPackageManager.getProperty(
+                        AppManifestConfigHelper.AD_SERVICES_CONFIG_PROPERTY, TEST_APP_PACKAGE_NAME))
+                .thenReturn(property);
+
+        Resources resources =
+                mContext.getPackageManager().getResourcesForApplication(TEST_APP_PACKAGE_NAME);
+        when(mPackageManager.getResourcesForApplication(TEST_APP_PACKAGE_NAME))
+                .thenReturn(resources);
+        when(mMockAppContext.getPackageManager()).thenReturn(mPackageManager);
+        invokeGetTopicsAndVerifyError(mMockAppContext, STATUS_CALLER_NOT_ALLOWED);
     }
 
     @Test

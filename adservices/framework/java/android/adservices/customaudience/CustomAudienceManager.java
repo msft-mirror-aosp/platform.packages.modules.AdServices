@@ -16,9 +16,9 @@
 
 package android.adservices.customaudience;
 
+import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
-import android.adservices.exceptions.AdServicesException;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
 import android.content.Context;
@@ -60,8 +60,14 @@ public class CustomAudienceManager {
                         ICustomAudienceService.Stub::asInterface);
     }
 
+    /** Create a service with test-enabling APIs */
     @NonNull
-    private ICustomAudienceService getService() {
+    public TestCustomAudienceManager getTestCustomAudienceManager() {
+        return new TestCustomAudienceManager(this);
+    }
+
+    @NonNull
+    ICustomAudienceService getService() {
         ICustomAudienceService service = mServiceBinder.getService();
         Objects.requireNonNull(service);
         return service;
@@ -97,7 +103,7 @@ public class CustomAudienceManager {
     public void joinCustomAudience(
             @NonNull JoinCustomAudienceRequest joinCustomAudienceRequest,
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<Object, AdServicesException> receiver) {
+            @NonNull OutcomeReceiver<Object, Exception> receiver) {
         Objects.requireNonNull(joinCustomAudienceRequest);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
@@ -117,12 +123,16 @@ public class CustomAudienceManager {
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(() -> receiver.onError(failureParcel.asException()));
+                            executor.execute(
+                                    () ->
+                                            receiver.onError(
+                                                    AdServicesStatusUtils.asException(
+                                                            failureParcel)));
                         }
                     });
         } catch (RemoteException e) {
             LogUtil.e(e, "Exception");
-            receiver.onError(new AdServicesException("Internal Error!"));
+            receiver.onError(new IllegalStateException("Internal Error!", e));
         }
     }
 
@@ -145,7 +155,7 @@ public class CustomAudienceManager {
     public void leaveCustomAudience(
             @NonNull LeaveCustomAudienceRequest leaveCustomAudienceRequest,
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<Object, AdServicesException> receiver) {
+            @NonNull OutcomeReceiver<Object, Exception> receiver) {
         Objects.requireNonNull(leaveCustomAudienceRequest);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
@@ -176,134 +186,7 @@ public class CustomAudienceManager {
                     });
         } catch (RemoteException e) {
             LogUtil.e(e, "Exception");
-            receiver.onError(new AdServicesException("Internal Error!"));
-        }
-    }
-
-    /**
-     * Overrides the Custom Audience API to avoid fetching data from remote servers and use the data
-     * provided in {@link AddCustomAudienceOverrideRequest} instead. The {@link
-     * AddCustomAudienceOverrideRequest} is provided by the Ads SDK.
-     *
-     * <p>This method is intended to be used for end-to-end testing. This API is enabled only for
-     * apps in debug mode with developer options enabled.
-     *
-     * <p>This call will fail silently if the {@code owner} in the {@code request} is not the
-     * calling app's package name.
-     *
-     * @throws IllegalStateException if this API is not enabled for the caller
-     *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
-     *     AdServicesException} indicates the error.
-     */
-    public void overrideCustomAudienceRemoteInfo(
-            @NonNull AddCustomAudienceOverrideRequest request,
-            @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<Object, AdServicesException> receiver) {
-        Objects.requireNonNull(request);
-        Objects.requireNonNull(executor);
-        Objects.requireNonNull(receiver);
-
-        try {
-            final ICustomAudienceService service = getService();
-            service.overrideCustomAudienceRemoteInfo(
-                    request.getOwnerPackageName(),
-                    request.getBuyer(),
-                    request.getName(),
-                    request.getBiddingLogicJs(),
-                    request.getTrustedBiddingSignals(),
-                    new CustomAudienceOverrideCallback.Stub() {
-                        @Override
-                        public void onSuccess() {
-                            executor.execute(() -> receiver.onResult(new Object()));
-                        }
-
-                        @Override
-                        public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(() -> receiver.onError(failureParcel.asException()));
-                        }
-                    });
-        } catch (RemoteException e) {
-            LogUtil.e(e, "Exception");
-            receiver.onError(new AdServicesException("Internal Error!"));
-        }
-    }
-
-    /**
-     * Removes an override in th Custom Audience API with associated the data in {@link
-     * RemoveCustomAudienceOverrideRequest}.
-     *
-     * <p>This method is intended to be used for end-to-end testing. This API is enabled only for
-     * apps in debug mode with developer options enabled.
-     *
-     * @throws IllegalStateException if this API is not enabled for the caller
-     *     <p>The {@link RemoveCustomAudienceOverrideRequest} is provided by the Ads SDK. The
-     *     receiver either returns a {@code void} for a successful run, or an {@link
-     *     AdServicesException} indicates the error.
-     */
-    public void removeCustomAudienceRemoteInfoOverride(
-            @NonNull RemoveCustomAudienceOverrideRequest request,
-            @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<Object, AdServicesException> receiver) {
-        Objects.requireNonNull(request);
-        Objects.requireNonNull(executor);
-        Objects.requireNonNull(receiver);
-
-        try {
-            final ICustomAudienceService service = getService();
-            service.removeCustomAudienceRemoteInfoOverride(
-                    request.getOwnerPackageName(),
-                    request.getBuyer(),
-                    request.getName(),
-                    new CustomAudienceOverrideCallback.Stub() {
-                        @Override
-                        public void onSuccess() {
-                            executor.execute(() -> receiver.onResult(new Object()));
-                        }
-
-                        @Override
-                        public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(() -> receiver.onError(failureParcel.asException()));
-                        }
-                    });
-        } catch (RemoteException e) {
-            LogUtil.e(e, "Exception");
-            receiver.onError(new AdServicesException("Internal Error!"));
-        }
-    }
-
-    /**
-     * Removes all override data in the Custom Audience API.
-     *
-     * <p>This method is intended to be used for end-to-end testing. This API is enabled only for
-     * apps in debug mode with developer options enabled.
-     *
-     * @throws IllegalStateException if this API is not enabled for the caller
-     *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
-     *     AdServicesException} indicates the error.
-     */
-    public void resetAllCustomAudienceOverrides(
-            @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<Object, AdServicesException> receiver) {
-        Objects.requireNonNull(executor);
-        Objects.requireNonNull(receiver);
-
-        try {
-            final ICustomAudienceService service = getService();
-            service.resetAllCustomAudienceOverrides(
-                    new CustomAudienceOverrideCallback.Stub() {
-                        @Override
-                        public void onSuccess() {
-                            executor.execute(() -> receiver.onResult(new Object()));
-                        }
-
-                        @Override
-                        public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(() -> receiver.onError(failureParcel.asException()));
-                        }
-                    });
-        } catch (RemoteException e) {
-            LogUtil.e(e, "Exception");
-            receiver.onError(new AdServicesException("Internal Error!"));
+            receiver.onError(new IllegalStateException("Internal Error!", e));
         }
     }
 }

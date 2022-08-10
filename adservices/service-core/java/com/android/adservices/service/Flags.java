@@ -42,8 +42,8 @@ public interface Flags extends Dumpable {
         return TOPICS_EPOCH_JOB_PERIOD_MS;
     }
 
-    /** Topics Epoch Job Flex. */
-    long TOPICS_EPOCH_JOB_FLEX_MS = 5 * 60 * 60 * 1000; // 5 hours.
+    /** Topics Epoch Job Flex. Note the minimum value system allows is +8h24m0s0ms */
+    long TOPICS_EPOCH_JOB_FLEX_MS = 9 * 60 * 60 * 1000; // 5 hours.
 
     /** Returns flex for the Epoch computation job in Millisecond. */
     default long getTopicsEpochJobFlexMs() {
@@ -192,6 +192,23 @@ public interface Flags extends Dumpable {
     String MEASUREMENT_APP_NAME = "";
     int MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(5);
     int MEASUREMENT_NETWORK_READ_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(30);
+
+    /**
+     * Returns the window that an InputEvent has to be within for the system to register it as a
+     * click.
+     */
+    long MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS = 60 * 1000; // 1 minute.
+
+    default long getMeasurementRegistrationInputEventValidWindowMs() {
+        return MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS;
+    }
+
+    /** Returns whether a click event should be verified before a registration request. */
+    boolean MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED = true;
+
+    default boolean getMeasurementIsClickVerificationEnabled() {
+        return MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED;
+    }
 
     /** Returns the app name. */
     default String getMeasurementAppName() {
@@ -758,6 +775,32 @@ public interface Flags extends Dumpable {
     default boolean getMeasurementReceiverDeletePackagesKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
         return getGlobalKillSwitch() || MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH;
+    }
+
+    // ADID Killswitch.
+    /**
+     * AdId API Kill Switch. The default value is false which means the AdId API is enabled. This
+     * flag is used for emergency turning off the AdId API.
+     */
+    boolean ADID_KILL_SWITCH = false; // By default, the AdId API is enabled.
+
+    /** Gets the state of the global and adId kill switch. */
+    default boolean getAdIdKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        return getGlobalKillSwitch() || ADID_KILL_SWITCH;
+    }
+
+    // APPSETID Killswitch.
+    /**
+     * AppSetId API Kill Switch. The default value is false which means the AppSetId API is enabled.
+     * This flag is used for emergency turning off the AppSetId API.
+     */
+    boolean APPSETID_KILL_SWITCH = false; // By default, the AppSetId API is enabled.
+
+    /** Gets the state of the global and appSetId kill switch. */
+    default boolean getAppSetIdKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        return getGlobalKillSwitch() || APPSETID_KILL_SWITCH;
     }
 
     // TOPICS Killswitches
