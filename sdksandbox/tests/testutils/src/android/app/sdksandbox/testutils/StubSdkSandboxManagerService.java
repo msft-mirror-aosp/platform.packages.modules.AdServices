@@ -45,7 +45,8 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
             ILoadSdkCallback callback) {}
 
     @Override
-    public void unloadSdk(String callingPackageName, String sdkName) {}
+    public void unloadSdk(
+            String callingPackageName, String sdkName, long timeAppCalledSystemServer) {}
 
     @Override
     public void requestSurfacePackage(
@@ -73,7 +74,8 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
     public void stopSdkSandbox(String callingPackageName) throws RemoteException {}
 
     @Override
-    public void syncDataFromClient(String callingPackageName, Bundle data) {}
+    public void syncDataFromClient(
+            String callingPackageName, long timeAppCalledSystemServer, Bundle data) {}
 
     @Override
     public void addSdkSandboxLifecycleCallback(

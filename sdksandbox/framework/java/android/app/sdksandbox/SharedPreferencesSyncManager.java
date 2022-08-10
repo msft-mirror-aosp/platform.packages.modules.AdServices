@@ -136,7 +136,10 @@ public class SharedPreferencesSyncManager {
         }
 
         try {
-            mService.syncDataFromClient(mContext.getPackageName(), data);
+            mService.syncDataFromClient(
+                    mContext.getPackageName(),
+                    /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                    data);
         } catch (RemoteException ignore) {
             // TODO(b/239403323): Sandbox isn't available. We need to retry when it restarts.
         }
@@ -167,7 +170,10 @@ public class SharedPreferencesSyncManager {
             data.putString(key, pref.getString(key, ""));
 
             try {
-                mService.syncDataFromClient(mContext.getPackageName(), data);
+                mService.syncDataFromClient(
+                        mContext.getPackageName(),
+                        /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                        data);
             } catch (RemoteException e) {
                 // TODO(b/239403323): Sandbox isn't available. We need to retry when it restarts.
             }

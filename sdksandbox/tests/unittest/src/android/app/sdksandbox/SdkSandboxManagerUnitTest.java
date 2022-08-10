@@ -137,7 +137,11 @@ public class SdkSandboxManagerUnitTest {
     @Test
     public void testUnloadSdk() throws Exception {
         mSdkSandboxManager.unloadSdk(SDK_NAME);
-        Mockito.verify(mBinder).unloadSdk(mContext.getPackageName(), SDK_NAME);
+        Mockito.verify(mBinder)
+                .unloadSdk(
+                        Mockito.eq(mContext.getPackageName()),
+                        Mockito.eq(SDK_NAME),
+                        Mockito.anyLong());
     }
 
     @Test

@@ -311,7 +311,10 @@ public final class SdkSandboxManager {
      */
     public void unloadSdk(@NonNull String sdkName) {
         try {
-            mService.unloadSdk(mContext.getPackageName(), sdkName);
+            mService.unloadSdk(
+                    mContext.getPackageName(),
+                    sdkName,
+                    /*timeAppCalledSystemServer=*/ System.currentTimeMillis());
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
