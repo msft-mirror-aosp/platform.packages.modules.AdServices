@@ -392,9 +392,9 @@ public abstract class CustomAudienceDao {
             @NonNull String name,
             @NonNull String appPackageName);
 
-    /** Clean up all custom audience override data */
+    /** Clean up all custom audience override data for the given package name. */
     @Query("DELETE FROM custom_audience_overrides WHERE app_package_name = :appPackageName")
-    public abstract void removeAllCustomAudienceOverrides(@NonNull String appPackageName);
+    public abstract void removeCustomAudienceOverridesByPackageName(@NonNull String appPackageName);
 
     /**
      * Fetch all the Custom Audience corresponding to the buyers
