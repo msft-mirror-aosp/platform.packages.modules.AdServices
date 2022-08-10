@@ -184,6 +184,9 @@ public final class PhFlags implements Flags {
     static final String KEY_TOPICS_KILL_SWITCH = "topics_kill_switch";
     static final String KEY_ADID_KILL_SWITCH = "adid_kill_switch";
     static final String KEY_APPSETID_KILL_SWITCH = "appsetid_kill_switch";
+    static final String KEY_FLEDGE_SELECT_ADS_KILL_SWITCH = "flegde_select_ads_kill_switch";
+    static final String KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH =
+            "flegde_custom_audience_service_kill_switch";
 
     // App/SDK AllowList/DenyList keys
     static final String KEY_PPAPI_APP_ALLOW_LIST = "ppapi_app_allow_list";
@@ -976,6 +979,36 @@ public final class PhFlags implements Flags {
                                 /* defaultValue */ TOPICS_KILL_SWITCH));
     }
 
+    // FLEDGE Kill switches
+
+    @Override
+    public boolean getFledgeSelectAdsKillSwitch() {
+        // We check the Global Kill switch first. As a result, it overrides all other kill switches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        return getGlobalKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(KEY_FLEDGE_SELECT_ADS_KILL_SWITCH),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                /* flagName */ KEY_FLEDGE_SELECT_ADS_KILL_SWITCH,
+                                /* defaultValue */ FLEDGE_SELECT_ADS_KILL_SWITCH));
+    }
+
+    @Override
+    public boolean getFledgeCustomAudienceServiceKillSwitch() {
+        // We check the Global Kill switch first. As a result, it overrides all other kill switches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        return getGlobalKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH,
+                                /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH));
+    }
+
     // TOPICS AllowLists
     @Override
     public String getPpapiAppAllowList() {
@@ -1163,6 +1196,13 @@ public final class PhFlags implements Flags {
                         + getMeasurementRegistrationInputEventValidWindowMs());
 
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
+        writer.println(
+                "\t" + KEY_FLEDGE_SELECT_ADS_KILL_SWITCH + " = " + getFledgeSelectAdsKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH
+                        + " = "
+                        + getFledgeCustomAudienceServiceKillSwitch());
         writer.println(
                 "\t"
                         + KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT

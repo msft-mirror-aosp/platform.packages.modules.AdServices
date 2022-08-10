@@ -114,8 +114,13 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         mFlags = flags;
     }
 
+    /** Creates a new instance of {@link AdSelectionServiceImpl}. */
+    public static AdSelectionServiceImpl create(@NonNull Context context) {
+        return new AdSelectionServiceImpl(context);
+    }
+
     /** Creates an instance of {@link AdSelectionServiceImpl} to be used. */
-    public AdSelectionServiceImpl(@NonNull Context context) {
+    private AdSelectionServiceImpl(@NonNull Context context) {
         this(
                 AdSelectionDatabase.getInstance(context).adSelectionEntryDao(),
                 CustomAudienceDatabase.getInstance(context).customAudienceDao(),
