@@ -30,6 +30,7 @@ import com.android.internal.annotations.GuardedBy;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -50,10 +51,19 @@ public class SharedPreferencesSyncManager {
     @GuardedBy("mLock")
     private boolean mInitialSyncComplete = false;
 
+    /**
+     * Type of keys that needs to be synced.
+     *
+     * <p>Generated from {@link #mKeysToSync}.
+     */
+    @Nullable
+    @GuardedBy("mLock")
+    private ArrayMap<String, Integer> mTypeOfKey = null;
+
     // List of keys that this manager needs to keep in sync.
     @Nullable
     @GuardedBy("mLock")
-    private ArrayMap<String, Integer> mKeysToSync = null;
+    private ArrayList<KeyWithType> mKeysToSync = null;
 
     public SharedPreferencesSyncManager(
             @NonNull Context context, @NonNull ISdkSandboxManager service) {
@@ -77,10 +87,11 @@ public class SharedPreferencesSyncManager {
         synchronized (mLock) {
             // TODO(b/239403323): Allow updating mKeysToSync
             if (mKeysToSync == null) {
-                mKeysToSync = new ArrayMap<>();
+                mTypeOfKey = new ArrayMap<>();
                 for (KeyWithType keyWithType : keysWithTypeToSync) {
-                    mKeysToSync.put(keyWithType.getName(), keyWithType.getType());
+                    mTypeOfKey.put(keyWithType.getName(), keyWithType.getType());
                 }
+                mKeysToSync = new ArrayList<>(keysWithTypeToSync);
                 return true;
             } else {
                 return false;
@@ -123,8 +134,8 @@ public class SharedPreferencesSyncManager {
     private void bulkSyncData() {
         final Bundle data = new Bundle();
         final SharedPreferences pref = getDefaultSharedPreferences();
-        for (int i = 0; i < mKeysToSync.size(); i++) {
-            final String key = mKeysToSync.keyAt(i);
+        for (int i = 0; i < mTypeOfKey.size(); i++) {
+            final String key = mTypeOfKey.keyAt(i);
             // TODO(b/239403323): Add support for removal of keys
             if (!pref.contains(key)) {
                 continue;
@@ -137,11 +148,12 @@ public class SharedPreferencesSyncManager {
             return;
         }
 
+        final SharedPreferencesUpdate update = new SharedPreferencesUpdate(mKeysToSync, data);
         try {
             mService.syncDataFromClient(
                     mContext.getPackageName(),
                     /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
-                    data);
+                    update);
         } catch (RemoteException ignore) {
             // TODO(b/239403323): Sandbox isn't available. We need to retry when it restarts.
         }
@@ -157,7 +169,7 @@ public class SharedPreferencesSyncManager {
         public void onSharedPreferenceChanged(SharedPreferences pref, @Nullable String key) {
             // Sync specified keys only
             synchronized (mLock) {
-                if (key == null || mKeysToSync == null || !mKeysToSync.containsKey(key)) {
+                if (key == null || mTypeOfKey == null || !mTypeOfKey.containsKey(key)) {
                     return;
                 }
 
@@ -168,11 +180,14 @@ public class SharedPreferencesSyncManager {
                     return;
                 }
 
+                final KeyWithType keyWithType = new KeyWithType(key, mTypeOfKey.get(key));
+                final SharedPreferencesUpdate update =
+                        new SharedPreferencesUpdate(List.of(keyWithType), data);
                 try {
                     mService.syncDataFromClient(
                             mContext.getPackageName(),
                             /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
-                            data);
+                            update);
                 } catch (RemoteException e) {
                     // TODO(b/239403323): Sandbox isn't available. We need to retry when it
                     // restarts.
@@ -189,7 +204,7 @@ public class SharedPreferencesSyncManager {
             return;
         }
 
-        final int type = mKeysToSync.get(key);
+        final int type = mTypeOfKey.get(key);
         try {
             switch (type) {
                 case KeyWithType.KEY_TYPE_STRING:

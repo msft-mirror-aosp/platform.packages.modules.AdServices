@@ -29,6 +29,7 @@ import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.LoadSdkResponse;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SdkSandboxManager;
+import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallbackBinder;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallbackBinder;
 import android.app.sdksandbox.testutils.FakeSdkSandboxLifecycleCallbackBinder;
@@ -75,6 +76,7 @@ import java.io.FileDescriptor;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Objects;
 
 /**
@@ -106,6 +108,11 @@ public class SdkSandboxManagerServiceUnitTest {
     private static final long TIME_FAILURE_HANDLED = 11;
     private static final long END_TIME_IN_SYSTEM_SERVER = 15;
     private static final long TIME_SYSTEM_SERVER_CALLED_SANDBOX = 17;
+
+    private static final String TEST_KEY = "key";
+    private static final String TEST_VALUE = "value";
+    private static final SharedPreferencesUpdate TEST_UPDATE =
+            new SharedPreferencesUpdate(new ArrayList<>(), getTestBundle());
 
     @Before
     public void setup() {
@@ -1012,7 +1019,7 @@ public class SdkSandboxManagerServiceUnitTest {
         mService.syncDataFromClient(
                 TEST_PACKAGE,
                 /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
-                new Bundle());
+                TEST_UPDATE);
 
         // Verify when sandbox is not bound, manager service does not try to sync
         assertThat(mSdkSandboxService.getLastUpdate()).isNull();
@@ -1027,10 +1034,13 @@ public class SdkSandboxManagerServiceUnitTest {
         // Sync data from client
         final Bundle data = new Bundle();
         mService.syncDataFromClient(
-                TEST_PACKAGE, /*timeAppCalledSystemServer=*/ System.currentTimeMillis(), data);
+                TEST_PACKAGE,
+                /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                TEST_UPDATE);
 
         // Verify that manager service calls sandbox to sync data
-        assertThat(mSdkSandboxService.getLastUpdate()).isSameInstanceAs(data);
+        final Bundle lastData = mSdkSandboxService.getLastUpdate();
+        assertThat(lastData.getString(TEST_KEY)).isEqualTo(TEST_VALUE);
     }
 
     @Test
@@ -1141,8 +1151,7 @@ public class SdkSandboxManagerServiceUnitTest {
     @Test
     public void testLatencyMetrics_IpcFromAppToSystemServer_SyncDataFromClient() {
         // Sync data from client
-        final Bundle data = new Bundle();
-        mService.syncDataFromClient(TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, data);
+        mService.syncDataFromClient(TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, TEST_UPDATE);
         ExtendedMockito.verify(
                 () ->
                         SdkSandboxStatsLog.write(
@@ -1604,10 +1613,16 @@ public class SdkSandboxManagerServiceUnitTest {
         }
 
         @Override
-        public void setBoundServiceForApp(CallingInfo callingInfo,
-                @Nullable ISdkSandboxService service) {
+        public void setBoundServiceForApp(
+                CallingInfo callingInfo, @Nullable ISdkSandboxService service) {
             mService.put(callingInfo, service);
         }
+    }
+
+    private static Bundle getTestBundle() {
+        final Bundle data = new Bundle();
+        data.putString(TEST_KEY, TEST_VALUE);
+        return data;
     }
 
     public static class FakeSdkSandboxService extends ISdkSandboxService.Stub {
@@ -1641,8 +1656,8 @@ public class SdkSandboxManagerServiceUnitTest {
         public void unloadSdk(IBinder sdkToken) {}
 
         @Override
-        public void syncDataFromClient(Bundle data) {
-            mLastSyncUpdate = data;
+        public void syncDataFromClient(SharedPreferencesUpdate update) {
+            mLastSyncUpdate = update.getData();
         }
 
         @Nullable

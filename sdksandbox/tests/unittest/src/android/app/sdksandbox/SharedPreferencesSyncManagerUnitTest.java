@@ -347,14 +347,16 @@ public class SharedPreferencesSyncManagerUnitTest {
 
         @Override
         public synchronized void syncDataFromClient(
-                String callingPackageName, long timeAppCalledSystemServer, Bundle data) {
+                String callingPackageName,
+                long timeAppCalledSystemServer,
+                SharedPreferencesUpdate update) {
             if (mCallingPackageName == null) {
                 mCallingPackageName = callingPackageName;
             } else {
                 assertThat(mCallingPackageName).isEqualTo(callingPackageName);
             }
 
-            mDataCache.add(data);
+            mDataCache.add(update.getData());
             mWaitForMoreUpdates.countDown();
         }
 
