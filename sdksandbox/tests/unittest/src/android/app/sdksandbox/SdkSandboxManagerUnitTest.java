@@ -168,6 +168,7 @@ public class SdkSandboxManagerUnitTest {
                         Mockito.eq(displayId),
                         Mockito.eq(width),
                         Mockito.eq(height),
+                        Mockito.anyLong(),
                         Mockito.eq(params),
                         callbackArgumentCaptor.capture());
 
@@ -214,6 +215,7 @@ public class SdkSandboxManagerUnitTest {
                         Mockito.eq(displayId),
                         Mockito.eq(width),
                         Mockito.eq(height),
+                        Mockito.anyLong(),
                         Mockito.eq(params),
                         callbackArgumentCaptor.capture());
 
