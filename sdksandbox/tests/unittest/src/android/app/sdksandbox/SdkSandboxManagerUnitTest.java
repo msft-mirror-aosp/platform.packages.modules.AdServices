@@ -125,11 +125,13 @@ public class SdkSandboxManagerUnitTest {
     @Test
     public void testGetLoadedSdkLibrariesInfo() throws Exception {
         List<SharedLibraryInfo> sharedLibraries = List.of();
-        Mockito.when(mBinder.getLoadedSdkLibrariesInfo(Mockito.anyString()))
+        Mockito.when(mBinder.getLoadedSdkLibrariesInfo(Mockito.anyString(), Mockito.anyLong()))
                 .thenReturn(sharedLibraries);
 
         assertThat(mSdkSandboxManager.getLoadedSdkLibrariesInfo()).isEqualTo(sharedLibraries);
-        Mockito.verify(mBinder).getLoadedSdkLibrariesInfo(mContext.getPackageName());
+        Mockito.verify(mBinder)
+                .getLoadedSdkLibrariesInfo(
+                        Mockito.eq(mContext.getPackageName()), Mockito.anyLong());
     }
 
     @Test
