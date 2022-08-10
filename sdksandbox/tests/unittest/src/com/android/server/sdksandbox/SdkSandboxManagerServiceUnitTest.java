@@ -51,6 +51,7 @@ import android.os.IBinder;
 import android.os.Process;
 import android.os.RemoteException;
 import android.util.ArrayMap;
+import android.view.SurfaceControlViewHost;
 
 import androidx.annotation.Nullable;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -1066,7 +1067,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 throws RemoteException {
             if (mSurfacePackageRequested) {
                 callback.onSurfacePackageReady(
-                        /*hostToken=*/ null, /*displayId=*/ 0, /*params=*/ null);
+                        Mockito.mock(SurfaceControlViewHost.SurfacePackage.class), 0, new Bundle());
             }
         }
 
