@@ -16,8 +16,8 @@
 
 package android.adservices.adselection;
 
+import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
-import android.adservices.exceptions.AdServicesException;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
 import android.content.Context;
@@ -91,21 +91,19 @@ public class AdSelectionManager {
      * AdSelectionConfig} will throws an {@link TransactionTooLargeException}.
      *
      * <p>The output is passed by the receiver, which either returns an {@link AdSelectionOutcome}
-     * for a successful run, or an {@link AdServicesException} includes the type of the exception
-     * thrown and the corresponding error message.
+     * for a successful run, or an {@link Exception} includes the type of the exception thrown and
+     * the corresponding error message.
      *
-     * <p>If the result of the {@link AdServicesException#getCause} is an {@link
-     * IllegalArgumentException}, it is caused by invalid input argument the API received to run the
-     * ad selection.
+     * <p>If the {@link IllegalArgumentException} is thrown, it is caused by invalid input argument
+     * the API received to run the ad selection.
      *
-     * <p>If the result of the {@link AdServicesException#getCause} is an {@link RemoteException}
-     * with error message "Failure of AdSelection services.", it is caused by an internal failure of
-     * the ad selection service.
+     * <p>If the {@link IllegalStateException} is thrown with error message "Failure of AdSelection
+     * services.", it is caused by an internal failure of the ad selection service.
      */
     public void selectAds(
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<AdSelectionOutcome, AdServicesException> receiver) {
+            @NonNull OutcomeReceiver<AdSelectionOutcome, Exception> receiver) {
         Objects.requireNonNull(adSelectionConfig);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
@@ -130,28 +128,33 @@ public class AdSelectionManager {
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(() -> receiver.onError(failureParcel.asException()));
+                            executor.execute(
+                                    () -> {
+                                        receiver.onError(
+                                                AdServicesStatusUtils.asException(failureParcel));
+                                    });
                         }
                     });
         } catch (NullPointerException e) {
             LogUtil.e(e, "Unable to find the AdSelection service.");
-            receiver.onError(new AdServicesException("Unable to find the AdSelection service.", e));
+            receiver.onError(
+                    new IllegalStateException("Unable to find the AdSelection service.", e));
         } catch (RemoteException e) {
             LogUtil.e(e, "Failure of AdSelection service.");
-            receiver.onError(new AdServicesException("Failure of AdSelection service.", e));
+            receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
         }
     }
 
     /**
      * Report the given impression. The {@link ReportImpressionRequest} is provided by the Ads SDK.
-     * The receiver either returns a {@code void} for a successful run, or an {@link
-     * AdServicesException} indicates the error.
+     * The receiver either returns a {@code void} for a successful run, or an {@link Exception}
+     * indicates the error.
      */
     @NonNull
     public void reportImpression(
             @NonNull ReportImpressionRequest request,
             @NonNull Executor executor,
-            @NonNull OutcomeReceiver<Object, AdServicesException> receiver) {
+            @NonNull OutcomeReceiver<Object, Exception> receiver) {
         Objects.requireNonNull(request);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
@@ -171,15 +174,20 @@ public class AdSelectionManager {
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(() -> receiver.onError(failureParcel.asException()));
+                            executor.execute(
+                                    () -> {
+                                        receiver.onError(
+                                                AdServicesStatusUtils.asException(failureParcel));
+                                    });
                         }
                     });
         } catch (NullPointerException e) {
             LogUtil.e(e, "Unable to find the AdSelection service.");
-            receiver.onError(new AdServicesException("Unable to find the AdSelection service.", e));
+            receiver.onError(
+                    new IllegalStateException("Unable to find the AdSelection service.", e));
         } catch (RemoteException e) {
             LogUtil.e(e, "Exception");
-            receiver.onError(new AdServicesException("Failure of AdSelection service.", e));
+            receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
         }
     }
 }

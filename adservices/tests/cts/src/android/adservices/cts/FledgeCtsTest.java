@@ -183,13 +183,13 @@ public class FledgeCtsTest {
         mCustomAudienceClient.joinCustomAudience(customAudience2).get(10, TimeUnit.SECONDS);
 
         // Adding AdSelection override, asserting a failure since app is not debuggable.
-        AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
+        AddAdSelectionOverrideRequest addAdSselectAdsExceptionelectionOverrideRequest =
                 new AddAdSelectionOverrideRequest(
                         AD_SELECTION_CONFIG, decisionLogicJs, TRUSTED_SCORING_SIGNALS);
 
         ListenableFuture<Void> adSelectionOverrideResult =
                 mTestAdSelectionClient.overrideAdSelectionConfigRemoteInfo(
-                        addAdSelectionOverrideRequest);
+                        addAdSselectAdsExceptionelectionOverrideRequest);
 
         Exception adSelectionOverrideException =
                 assertThrows(
@@ -232,8 +232,7 @@ public class FledgeCtsTest {
                                     .selectAds(AD_SELECTION_CONFIG)
                                     .get(30, TimeUnit.SECONDS);
                         });
-        assertThat(selectAdsException.getCause().getCause())
-                .isInstanceOf(IllegalStateException.class);
+        assertThat(selectAdsException.getCause()).isInstanceOf(IllegalStateException.class);
         // Cannot perform reporting since no ad selection id is returned.
     }
 

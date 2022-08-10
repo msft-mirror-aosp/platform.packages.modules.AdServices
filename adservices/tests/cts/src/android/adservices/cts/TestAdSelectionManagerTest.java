@@ -30,7 +30,6 @@ import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.adselection.TestAdSelectionClient;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
-import android.adservices.exceptions.AdServicesException;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Process;
@@ -117,7 +116,7 @@ public class TestAdSelectionManagerTest {
                         () -> {
                             result.get(10, TimeUnit.SECONDS);
                         });
-        assertThat(exception.getCause()).isInstanceOf(AdServicesException.class);
+        assertThat(exception.getCause()).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -206,6 +205,6 @@ public class TestAdSelectionManagerTest {
                         () -> {
                             result.get(10, TimeUnit.SECONDS);
                         });
-        assertThat(exception.getCause()).isInstanceOf(AdServicesException.class);
+        assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
     }
 }

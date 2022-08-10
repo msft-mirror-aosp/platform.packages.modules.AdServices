@@ -46,8 +46,11 @@ import android.view.InputEvent;
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.registration.SourceFetcher;
 import com.android.adservices.service.measurement.registration.SourceRegistration;
 import com.android.adservices.service.measurement.registration.TriggerFetcher;
@@ -81,6 +84,8 @@ public final class MeasurementImpl {
     private final SourceFetcher mSourceFetcher;
     private final TriggerFetcher mTriggerFetcher;
     private final ContentResolver mContentResolver;
+    private final ClickVerifier mClickVerifier;
+    private final Flags mFlags;
 
     private MeasurementImpl(Context context) {
         mContext = context;
@@ -88,6 +93,8 @@ public final class MeasurementImpl {
         mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
         mSourceFetcher = new SourceFetcher();
         mTriggerFetcher = new TriggerFetcher();
+        mClickVerifier = new ClickVerifier(context);
+        mFlags = FlagsFactory.getFlags();
     }
 
     @VisibleForTesting
@@ -96,12 +103,15 @@ public final class MeasurementImpl {
             ContentResolver contentResolver,
             DatastoreManager datastoreManager,
             SourceFetcher sourceFetcher,
-            TriggerFetcher triggerFetcher) {
+            TriggerFetcher triggerFetcher,
+            ClickVerifier clickVerifier) {
         mContext = context;
         mContentResolver = contentResolver;
         mDatastoreManager = datastoreManager;
         mSourceFetcher = sourceFetcher;
         mTriggerFetcher = triggerFetcher;
+        mClickVerifier = clickVerifier;
+        mFlags = FlagsFactory.getFlagsForTest();
     }
 
     /**
@@ -182,7 +192,9 @@ public final class MeasurementImpl {
                         requestTime,
                         sourceRegistrationRequest.getTopOriginUri(),
                         getRegistrant(request.getPackageName()),
-                        getSourceType(sourceRegistrationRequest.getInputEvent()));
+                        getSourceType(
+                                sourceRegistrationRequest.getInputEvent(),
+                                request.getRequestTime()));
                 return STATUS_SUCCESS;
             } else {
                 return STATUS_IO_ERROR;
@@ -326,7 +338,7 @@ public final class MeasurementImpl {
                     requestTime,
                     request.getTopOriginUri(),
                     getRegistrant(request.getPackageName()),
-                    getSourceType(request.getInputEvent()));
+                    getSourceType(request.getInputEvent(), request.getRequestTime()));
             return STATUS_SUCCESS;
         } else {
             return STATUS_IO_ERROR;
@@ -421,8 +433,17 @@ public final class MeasurementImpl {
                 .collect(Collectors.toList());
     }
 
-    private Source.SourceType getSourceType(InputEvent inputEvent) {
-        return inputEvent == null ? Source.SourceType.EVENT : Source.SourceType.NAVIGATION;
+    @VisibleForTesting
+    Source.SourceType getSourceType(InputEvent inputEvent, long requestTime) {
+        // If click verification is enabled and the InputEvent is not null, but it cannot be
+        // verified, then the SourceType is demoted to EVENT.
+        if (mFlags.getMeasurementIsClickVerificationEnabled()
+                && inputEvent != null
+                && !mClickVerifier.isInputEventVerifiable(inputEvent, requestTime)) {
+            return Source.SourceType.EVENT;
+        } else {
+            return inputEvent == null ? Source.SourceType.EVENT : Source.SourceType.NAVIGATION;
+        }
     }
 
     private void insertTriggers(

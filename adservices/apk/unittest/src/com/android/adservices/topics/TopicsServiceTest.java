@@ -20,6 +20,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.eq;
 
 import android.content.Context;
 import android.content.Intent;
@@ -46,6 +47,7 @@ import org.mockito.MockitoSession;
 
 /** Unit test for {@link com.android.adservices.topics.TopicsService}. */
 public class TopicsServiceTest {
+    @SuppressWarnings("unused")
     private static final String TAG = "TopicsServiceTest";
 
     @Mock Flags mMockFlags;
@@ -78,17 +80,21 @@ public class TopicsServiceTest {
             doReturn(false).when(mMockFlags).getTopicsKillSwitch();
 
             // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-            ExtendedMockito.doReturn(mMockFlags).when(() -> FlagsFactory.getFlags());
+            ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
             ExtendedMockito.doReturn(mMockTopicsWorker)
                     .when(() -> TopicsWorker.getInstance(any(Context.class)));
             ExtendedMockito.doReturn(mMockConsentManager)
                     .when(() -> ConsentManager.getInstance(any(Context.class)));
             ExtendedMockito.doReturn(mMockAdServicesLoggerImpl)
-                    .when(() -> AdServicesLoggerImpl.getInstance());
+                    .when(AdServicesLoggerImpl::getInstance);
             ExtendedMockito.doNothing()
-                    .when(() -> MaintenanceJobService.schedule(any(Context.class)));
-            ExtendedMockito.doNothing().when(() -> EpochJobService.schedule(any(Context.class)));
+                    .when(
+                            () ->
+                                    MaintenanceJobService.scheduleIfNeeded(
+                                            any(Context.class), eq(false)));
+            ExtendedMockito.doNothing()
+                    .when(() -> EpochJobService.scheduleIfNeeded(any(Context.class), eq(false)));
             ExtendedMockito.doNothing().when(() -> MddJobService.schedule(any(Context.class)));
 
             TopicsService topicsService = new TopicsService();
@@ -111,7 +117,7 @@ public class TopicsServiceTest {
             doReturn(true).when(mMockFlags).getTopicsKillSwitch();
 
             // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-            ExtendedMockito.doReturn(mMockFlags).when(() -> FlagsFactory.getFlags());
+            ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
             TopicsService topicsService = new TopicsService();
             topicsService.onCreate();

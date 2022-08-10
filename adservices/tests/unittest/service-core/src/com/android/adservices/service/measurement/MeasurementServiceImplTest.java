@@ -50,6 +50,7 @@ import androidx.test.filters.SmallTest;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import org.junit.Assert;
@@ -58,6 +59,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.MockitoSession;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -299,9 +301,20 @@ public final class MeasurementServiceImplTest {
 
     @Test
     public void testGetMeasurementApiStatus_success() throws Exception {
-        MeasurementImpl measurementImpl = MeasurementImpl.getInstance(sContext);
-        CountDownLatch countDownLatch = new CountDownLatch(1);
-        final List<Integer> list = new ArrayList<>();
+        MockitoSession session =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(ConsentManager.class)
+                        .initMocks(this)
+                        .startMocking();
+        try {
+            ExtendedMockito.doReturn(AdServicesApiConsent.GIVEN)
+                    .when(mConsentManager)
+                    .getConsent(any());
+            ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any()));
+            MeasurementImpl measurementImpl =
+                    new MeasurementImpl(sContext, null, null, null, null, null);
+            CountDownLatch countDownLatch = new CountDownLatch(1);
+            final List<Integer> list = new ArrayList<>();
 
         new MeasurementServiceImpl(measurementImpl, sContext, mConsentManager, mMockThrottler)
                 .getMeasurementApiStatus(
@@ -313,8 +326,11 @@ public final class MeasurementServiceImplTest {
                             }
                         });
 
-        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        assertThat(list.get(0)).isEqualTo(MeasurementManager.MEASUREMENT_API_STATE_ENABLED);
+            assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+            assertThat(list.get(0)).isEqualTo(MeasurementManager.MEASUREMENT_API_STATE_ENABLED);
+        } finally {
+            session.finishMocking();
+        }
     }
 
     @Test(expected = NullPointerException.class)
@@ -626,7 +642,9 @@ public final class MeasurementServiceImplTest {
                         .setAppDestination(APP_DESTINATION)
                         .build();
         return new WebSourceRegistrationRequestInternal.Builder(
-                        sourceRegistrationRequest, sContext.getAttributionSource().getPackageName())
+                        sourceRegistrationRequest,
+                        sContext.getAttributionSource().getPackageName(),
+                        10000L)
                 .build();
     }
 

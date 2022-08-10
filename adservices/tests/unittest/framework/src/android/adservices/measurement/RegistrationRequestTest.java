@@ -45,6 +45,7 @@ public final class RegistrationRequestTest {
                 .setTopOriginUri(Uri.parse("http://foo.com"))
                 .setRegistrationUri(Uri.parse("http://baz.com"))
                 .setPackageName(sContext.getAttributionSource().getPackageName())
+                .setRequestTime(1000L)
                 .build();
     }
 
@@ -55,6 +56,7 @@ public final class RegistrationRequestTest {
                 request.getRegistrationType());
         assertNull(request.getInputEvent());
         assertNotNull(request.getPackageName());
+        assertEquals(1000L, request.getRequestTime());
     }
 
     @Test
@@ -94,6 +96,7 @@ public final class RegistrationRequestTest {
                 request.getRegistrationType());
         assertNull(request.getInputEvent());
         assertNotNull(request.getPackageName());
+        assertEquals(0, request.getRequestTime());
     }
 
     @Test

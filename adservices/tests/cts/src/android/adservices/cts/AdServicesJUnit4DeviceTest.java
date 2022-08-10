@@ -37,8 +37,7 @@ public class AdServicesJUnit4DeviceTest {
 
     @Test
     public void testAdServicesState() {
-        assertThat(AdServicesState.getAdServicesState())
-                .isEqualTo(AdServicesState.ADSERVICES_API_STATE_ENABLED);
+        assertThat(AdServicesState.isAdServicesStateEnabled()).isTrue();
     }
 }
 
