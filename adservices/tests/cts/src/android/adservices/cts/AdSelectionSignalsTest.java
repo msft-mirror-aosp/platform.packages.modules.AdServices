@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-package android.adservices.common;
+package android.adservices.cts;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
+import android.adservices.common.AdSelectionSignals;
 import android.os.Parcel;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 public class AdSelectionSignalsTest {
@@ -33,7 +34,7 @@ public class AdSelectionSignalsTest {
 
     @Test
     public void testAdSelectionSignalsCreatorArray() {
-        assertArrayEquals(
+        Assert.assertArrayEquals(
                 new AdSelectionSignals[ARRAY_SIZE],
                 AdSelectionSignals.CREATOR.newArray(ARRAY_SIZE));
     }
