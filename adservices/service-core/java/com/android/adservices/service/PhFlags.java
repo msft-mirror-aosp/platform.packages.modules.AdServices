@@ -86,6 +86,12 @@ public final class PhFlags implements Flags {
             "fledge_custom_audience_max_activate_in_days";
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_EXPIRE_IN_MS =
             "fledge_custom_audience_max_expire_in_days";
+    static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NAME_SIZE_B =
+            "key_fledge_custom_audience_max_name_size_b";
+    static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_DAILY_UPDATE_URI_SIZE_B =
+            "key_fledge_custom_audience_max_daily_update_uri_size_b";
+    static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_BIDDING_LOGIC_URI_SIZE_B =
+            "key_fledge_custom_audience_max_bidding_logic_uri_size_b";
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B =
             "fledge_custom_audience_max_user_bidding_signals_size_b";
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_TRUSTED_BIDDING_DATA_SIZE_B =
@@ -469,6 +475,30 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_EXPIRE_IN_MS,
                 /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_MAX_EXPIRE_IN_MS);
+    }
+
+    @Override
+    public int getFledgeCustomAudienceMaxNameSizeB() {
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NAME_SIZE_B,
+                /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_MAX_NAME_SIZE_B);
+    }
+
+    @Override
+    public int getFledgeCustomAudienceMaxDailyUpdateUriSizeB() {
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_DAILY_UPDATE_URI_SIZE_B,
+                /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_MAX_DAILY_UPDATE_URI_SIZE_B);
+    }
+
+    @Override
+    public int getFledgeCustomAudienceMaxBiddingLogicUriSizeB() {
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_BIDDING_LOGIC_URI_SIZE_B,
+                /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_MAX_BIDDING_LOGIC_URI_SIZE_B);
     }
 
     @Override
@@ -1256,6 +1286,21 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_EXPIRE_IN_MS
                         + " = "
                         + getFledgeCustomAudienceMaxExpireInMs());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NAME_SIZE_B
+                        + " = "
+                        + getFledgeCustomAudienceMaxNameSizeB());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_DAILY_UPDATE_URI_SIZE_B
+                        + " = "
+                        + getFledgeCustomAudienceMaxDailyUpdateUriSizeB());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_BIDDING_LOGIC_URI_SIZE_B
+                        + " = "
+                        + getFledgeCustomAudienceMaxBiddingLogicUriSizeB());
         writer.println(
                 "\t"
                         + KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B
