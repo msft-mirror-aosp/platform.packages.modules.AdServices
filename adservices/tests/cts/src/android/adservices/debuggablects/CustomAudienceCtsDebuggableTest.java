@@ -16,7 +16,7 @@
 
 package android.adservices.debuggablects;
 
-import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
+import android.adservices.clients.customaudience.TestAdvertisingCustomAudienceClient;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.AddCustomAudienceOverrideRequest;
@@ -40,7 +40,7 @@ import java.util.concurrent.TimeUnit;
 
 public class CustomAudienceCtsDebuggableTest {
 
-    private AdvertisingCustomAudienceClient mClient;
+    private TestAdvertisingCustomAudienceClient mTestClient;
 
     private static final String OWNER = "owner";
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("buyer");
@@ -56,8 +56,8 @@ public class CustomAudienceCtsDebuggableTest {
     @Before
     public void setup() {
         Context context = ApplicationProvider.getApplicationContext();
-        mClient =
-                new AdvertisingCustomAudienceClient.Builder()
+        mTestClient =
+                new TestAdvertisingCustomAudienceClient.Builder()
                         .setContext(context)
                         .setExecutor(MoreExecutors.directExecutor())
                         .build();
@@ -77,14 +77,14 @@ public class CustomAudienceCtsDebuggableTest {
 
         AddCustomAudienceOverrideRequest request =
                 new AddCustomAudienceOverrideRequest.Builder()
-                        .setOwner(OWNER)
+                        .setOwnerPackageName(OWNER)
                         .setBuyer(BUYER)
                         .setName(NAME)
                         .setBiddingLogicJs(BIDDING_LOGIC_JS)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
 
-        ListenableFuture<Void> result = mClient.overrideCustomAudienceRemoteInfo(request);
+        ListenableFuture<Void> result = mTestClient.overrideCustomAudienceRemoteInfo(request);
 
         // Asserting no exception since there is no returned value
         result.get(10, TimeUnit.SECONDS);
@@ -96,12 +96,12 @@ public class CustomAudienceCtsDebuggableTest {
 
         RemoveCustomAudienceOverrideRequest request =
                 new RemoveCustomAudienceOverrideRequest.Builder()
-                        .setOwner(OWNER)
+                        .setOwnerPackageName(OWNER)
                         .setBuyer(BUYER)
                         .setName(NAME)
                         .build();
 
-        ListenableFuture<Void> result = mClient.removeCustomAudienceRemoteInfoOverride(request);
+        ListenableFuture<Void> result = mTestClient.removeCustomAudienceRemoteInfoOverride(request);
 
         // Asserting no exception since there is no returned value
         result.get(10, TimeUnit.SECONDS);
@@ -113,27 +113,27 @@ public class CustomAudienceCtsDebuggableTest {
 
         AddCustomAudienceOverrideRequest addRequest =
                 new AddCustomAudienceOverrideRequest.Builder()
-                        .setOwner(OWNER)
+                        .setOwnerPackageName(OWNER)
                         .setBuyer(BUYER)
                         .setName(NAME)
                         .setBiddingLogicJs(BIDDING_LOGIC_JS)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
 
-        ListenableFuture<Void> addResult = mClient.overrideCustomAudienceRemoteInfo(addRequest);
+        ListenableFuture<Void> addResult = mTestClient.overrideCustomAudienceRemoteInfo(addRequest);
 
         // Asserting no exception since there is no returned value
         addResult.get(10, TimeUnit.SECONDS);
 
         RemoveCustomAudienceOverrideRequest removeRequest =
                 new RemoveCustomAudienceOverrideRequest.Builder()
-                        .setOwner(OWNER)
+                        .setOwnerPackageName(OWNER)
                         .setBuyer(BUYER)
                         .setName(NAME)
                         .build();
 
         ListenableFuture<Void> removeResult =
-                mClient.removeCustomAudienceRemoteInfoOverride(removeRequest);
+                mTestClient.removeCustomAudienceRemoteInfoOverride(removeRequest);
 
         // Asserting no exception since there is no returned value
         removeResult.get(10, TimeUnit.SECONDS);
@@ -143,7 +143,7 @@ public class CustomAudienceCtsDebuggableTest {
     public void testResetAllOverridesSucceeds() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 
-        ListenableFuture<Void> result = mClient.resetAllCustomAudienceOverrides();
+        ListenableFuture<Void> result = mTestClient.resetAllCustomAudienceOverrides();
 
         // Asserting no exception since there is no returned value
         result.get(10, TimeUnit.SECONDS);

@@ -25,10 +25,16 @@ genrule {
   out: ["com/android/sdksandbox/service/stats/SdkSandboxStatsLog.java"],
 }
 
-filegroup {
-    name: "sdksandbox-metrics-logging",
-    srcs: [
-        ":statslog-sdksandbox-java-gen",
+java_library {
+    name: "sdksandbox-statsd",
+    sdk_version: "system_current",
+    min_sdk_version: "33",
+    srcs: [":statslog-sdksandbox-java-gen"],
+    defaults: [
+        "sdksandbox-java-defaults",
+    ],
+    apex_available: [
+        "com.android.adservices",
     ],
 }
 
@@ -39,25 +45,6 @@ filegroup {
     ],
     path: "java",
     visibility: ["//visibility:private"],
-}
-
-java_library {
-    name: "service-sdksandbox-metrics",
-    srcs: [
-        ":sdksandbox-metrics-logging",
-    ],
-    sdk_version: "module_current",
-    permitted_packages: [
-        "com.android.sdksandbox",
-        "com.android.server.sdksandbox",
-    ],
-    libs: [
-        "framework-statsd.stubs.module_lib",
-    ],
-    defaults: [
-        "framework-system-server-module-defaults",
-        "sdksandbox-java-defaults",
-    ],
 }
 
 java_sdk_library {
@@ -77,6 +64,7 @@ java_sdk_library {
         "jsr305",
         "modules-utils-shell-command-handler",
     ],
+    static_libs: ["sdksandbox-statsd"],
     defaults: [
         "framework-system-server-module-defaults",
         "sdksandbox-java-defaults",
@@ -86,6 +74,7 @@ java_sdk_library {
     ],
     impl_library_visibility: [
         "//packages/modules/AdServices/sdksandbox/tests/unittest",
+        "//packages/modules/AdServices/sdksandbox/tests/testutils",
         "//frameworks/base/services/tests/mockingservicestests",
         "//frameworks/base/services/tests/wmtests",
     ],

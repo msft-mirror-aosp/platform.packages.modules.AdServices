@@ -15,6 +15,7 @@
  */
 package com.android.adservices.service.topics;
 
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_TOPICS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
@@ -32,6 +33,7 @@ import android.adservices.topics.GetTopicsParam;
 import android.adservices.topics.IGetTopicsCallback;
 import android.adservices.topics.ITopicsService;
 import android.annotation.NonNull;
+import android.annotation.RequiresPermission;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Binder;
@@ -41,6 +43,7 @@ import android.text.TextUtils;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.AppManifestConfigHelper;
@@ -49,6 +52,7 @@ import com.android.adservices.service.common.SdkRuntimeUtil;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.ApiCallStats;
@@ -70,6 +74,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
     private final Clock mClock;
     private final Flags mFlags;
     private final Throttler mThrottler;
+    private final EnrollmentDao mEnrollmentDao;
 
     public TopicsServiceImpl(
             Context context,
@@ -78,7 +83,8 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
             AdServicesLogger adServicesLogger,
             Clock clock,
             Flags flags,
-            Throttler throttler) {
+            Throttler throttler,
+            EnrollmentDao enrollmentDao) {
         mContext = context;
         mTopicsWorker = topicsWorker;
         mConsentManager = consentManager;
@@ -86,9 +92,11 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
         mClock = clock;
         mFlags = flags;
         mThrottler = throttler;
+        mEnrollmentDao = enrollmentDao;
     }
 
     @Override
+    @RequiresPermission(ACCESS_ADSERVICES_TOPICS)
     public void getTopics(
             @NonNull GetTopicsParam topicsParam,
             @NonNull CallerMetadata callerMetadata,
@@ -105,16 +113,14 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
         // We need to save the Calling Uid before offloading to the background executor. Otherwise
         // the Binder.getCallingUid will return the PPAPI process Uid. This also needs to be final
         // since it's used in the lambda.
-        final int callingUid = Binder.getCallingUid();
+        final int callingUid = Binder.getCallingUidOrThrow();
 
         // Check the permission in the same thread since we're looking for caller's permissions.
         // Note: The permission check uses sdk package name since PackageManager checks if the
         // permission is declared in the manifest of that package name.
-        boolean permitted =
+        boolean hasTopicsPermission =
                 PermissionHelper.hasTopicsPermission(
-                                mContext, Process.isSdkSandboxUid(callingUid), sdkPackageName)
-                        && AppManifestConfigHelper.isAllowedTopicsAccess(
-                                mContext, packageName, sdkName);
+                        mContext, Process.isSdkSandboxUid(callingUid), sdkPackageName);
 
         sBackgroundExecutor.execute(
                 () -> {
@@ -122,7 +128,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
 
                     try {
                         if (!canCallerInvokeTopicsService(
-                                permitted, topicsParam, callingUid, callback)) {
+                                hasTopicsPermission, topicsParam, callingUid, callback)) {
                             return;
                         }
 
@@ -212,7 +218,9 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
         // This needs to access PhFlag which requires READ_DEVICE_CONFIG which
         // is not granted for binder thread. So we have to check it with one
         // of non-binder thread of the PPAPI.
-        boolean appCanUsePpapi = AllowLists.appCanUsePpapi(mFlags, topicsParam.getAppPackageName());
+        boolean appCanUsePpapi =
+                AllowLists.isPackageAllowListed(
+                        mFlags.getPpapiAppAllowList(), topicsParam.getAppPackageName());
         if (!appCanUsePpapi) {
             invokeCallbackWithStatus(
                     callback,
@@ -234,6 +242,25 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
             invokeCallbackWithStatus(
                     callback, STATUS_USER_CONSENT_REVOKED, "User consent revoked.");
             return false;
+        }
+
+        // The app developer declares which SDKs they would like to allow Topics
+        // access to using the enrollment ID. Get the enrollment ID for this SDK and
+        // check that against the app's manifest.
+        if (!mFlags.isDisableTopicsEnrollmentCheck() && !topicsParam.getSdkName().isEmpty()) {
+            EnrollmentData enrollmentData =
+                    mEnrollmentDao.getEnrollmentDataFromSdkName(topicsParam.getSdkName());
+            boolean permitted =
+                    (enrollmentData != null && enrollmentData.getEnrollmentId() != null)
+                            && AppManifestConfigHelper.isAllowedTopicsAccess(
+                                    mContext,
+                                    topicsParam.getAppPackageName(),
+                                    enrollmentData.getEnrollmentId());
+            if (!permitted) {
+                invokeCallbackWithStatus(
+                        callback, STATUS_CALLER_NOT_ALLOWED, "Caller is not authorized.");
+                return false;
+            }
         }
 
         return true;

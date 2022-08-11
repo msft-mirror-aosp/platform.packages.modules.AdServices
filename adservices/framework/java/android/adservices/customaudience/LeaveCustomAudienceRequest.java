@@ -18,6 +18,7 @@ package android.adservices.customaudience;
 
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.os.OutcomeReceiver;
 
 import java.util.Objects;
@@ -28,13 +29,12 @@ import java.util.concurrent.Executor;
  */
 public final class LeaveCustomAudienceRequest {
 
-    @NonNull private final String mOwner;
+    @NonNull private final String mOwnerPackageName;
     @NonNull private final AdTechIdentifier mBuyer;
-    @NonNull
-    private final String mName;
+    @NonNull private final String mName;
 
     private LeaveCustomAudienceRequest(@NonNull LeaveCustomAudienceRequest.Builder builder) {
-        mOwner = builder.mOwner;
+        mOwnerPackageName = builder.mOwnerPackageName;
         mBuyer = builder.mBuyer;
         mName = builder.mName;
     }
@@ -48,8 +48,8 @@ public final class LeaveCustomAudienceRequest {
      * OutcomeReceiver)}.
      */
     @NonNull
-    public String getOwner() {
-        return mOwner;
+    public String getOwnerPackageName() {
+        return mOwnerPackageName;
     }
 
     /**
@@ -81,7 +81,8 @@ public final class LeaveCustomAudienceRequest {
         if (this == o) return true;
         if (!(o instanceof LeaveCustomAudienceRequest)) return false;
         LeaveCustomAudienceRequest that = (LeaveCustomAudienceRequest) o;
-        return Objects.equals(mOwner, that.mOwner) && mBuyer.equals(that.mBuyer)
+        return Objects.equals(mOwnerPackageName, that.mOwnerPackageName)
+                && mBuyer.equals(that.mBuyer)
                 && mName.equals(that.mName);
     }
 
@@ -90,15 +91,14 @@ public final class LeaveCustomAudienceRequest {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(mOwner, mBuyer, mName);
+        return Objects.hash(mOwnerPackageName, mBuyer, mName);
     }
 
     /** Builder for {@link LeaveCustomAudienceRequest} objects. */
     public static final class Builder {
-        @NonNull private String mOwner;
-        @NonNull private AdTechIdentifier mBuyer;
-        @NonNull
-        private String mName;
+        @Nullable private String mOwnerPackageName;
+        @Nullable private AdTechIdentifier mBuyer;
+        @Nullable private String mName;
 
         public Builder() {
         }
@@ -111,11 +111,13 @@ public final class LeaveCustomAudienceRequest {
          * CustomAudienceManager#leaveCustomAudience(LeaveCustomAudienceRequest, Executor,
          * OutcomeReceiver)}.
          *
-         * <p>See {@link #getOwner()} for more information.
+         * <p>See {@link #getOwnerPackageName()} for more information.
          */
         @NonNull
-        public LeaveCustomAudienceRequest.Builder setOwner(@NonNull String owner) {
-            mOwner = owner;
+        public LeaveCustomAudienceRequest.Builder setOwnerPackageName(
+                @NonNull String ownerPackageName) {
+            Objects.requireNonNull(ownerPackageName);
+            mOwnerPackageName = ownerPackageName;
             return this;
         }
 
@@ -150,7 +152,7 @@ public final class LeaveCustomAudienceRequest {
          */
         @NonNull
         public LeaveCustomAudienceRequest build() {
-            Objects.requireNonNull(mOwner);
+            Objects.requireNonNull(mOwnerPackageName);
             Objects.requireNonNull(mBuyer);
             Objects.requireNonNull(mName);
 

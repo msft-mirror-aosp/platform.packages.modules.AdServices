@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.common;
 
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ADID;
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_TOPICS;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.Mockito.when;
@@ -73,6 +77,11 @@ public class PermissionHelperTest {
                                 mMockContextGrant, /*useSandboxCheck =*/ false, SDK_PACKAGE_NAME))
                 .isTrue();
         assertThat(
+                        PermissionHelper.hasAdIdPermission(
+                                mMockContextGrant, /*useSandboxCheck =*/ false, SDK_PACKAGE_NAME))
+                .isTrue();
+
+        assertThat(
                         PermissionHelper.hasAttributionPermission(
                                 mMockContextGrant, /*useSandboxCheck =*/ false, SDK_PACKAGE_NAME))
                 .isTrue();
@@ -86,6 +95,10 @@ public class PermissionHelperTest {
                                 mMockContextDeny, /*useSandboxCheck =*/ false, SDK_PACKAGE_NAME))
                 .isFalse();
         assertThat(
+                        PermissionHelper.hasAdIdPermission(
+                                mMockContextDeny, /*useSandboxCheck =*/ false, SDK_PACKAGE_NAME))
+                .isFalse();
+        assertThat(
                         PermissionHelper.hasAttributionPermission(
                                 mMockContextDeny, /*useSandboxCheck =*/ false, SDK_PACKAGE_NAME))
                 .isFalse();
@@ -94,22 +107,27 @@ public class PermissionHelperTest {
 
     @Test
     public void testSdkHasPermission() {
-        when(mMockPackageManager.checkPermission(
-                        PermissionHelper.ACCESS_ADSERVICES_TOPICS_PERMISSION, SDK_PACKAGE_NAME))
+        when(mMockPackageManager.checkPermission(ACCESS_ADSERVICES_TOPICS, SDK_PACKAGE_NAME))
+                .thenReturn(PackageManager.PERMISSION_GRANTED);
+        when(mMockPackageManager.checkPermission(ACCESS_ADSERVICES_ADID, SDK_PACKAGE_NAME))
                 .thenReturn(PackageManager.PERMISSION_GRANTED);
         when(mMockPackageManager.checkPermission(
                         PermissionHelper.ACCESS_ADSERVICES_ATTRIBUTION_PERMISSION,
                         SDK_PACKAGE_NAME))
                 .thenReturn(PackageManager.PERMISSION_GRANTED);
         when(mMockPackageManager.checkPermission(
-                        PermissionHelper.ACCESS_ADSERVICES_CUSTOM_AUDIENCE_PERMISSION,
-                        SDK_PACKAGE_NAME))
+                        ACCESS_ADSERVICES_CUSTOM_AUDIENCE, SDK_PACKAGE_NAME))
                 .thenReturn(PackageManager.PERMISSION_GRANTED);
 
         assertThat(
                         PermissionHelper.hasTopicsPermission(
                                 mMockContextGrant, /*useSandboxCheck =*/ true, SDK_PACKAGE_NAME))
                 .isTrue();
+
+        // TODO(b/240718367): Check Sdk permission for adid.
+        // assertThat(PermissionHelper.hasAdIdPermission(mMockContextGrant, /*useSandboxCheck
+        // =*/ true,
+
         // TODO(b/236267953): Check Sdk permission for Attribution.
         // assertThat(PermissionHelper.hasAttributionPermission(mMockContextGrant, /*useSandboxCheck
         // =*/ true,
@@ -123,22 +141,28 @@ public class PermissionHelperTest {
 
     @Test
     public void testSdkNotHasPermission() {
-        when(mMockPackageManager.checkPermission(
-                        PermissionHelper.ACCESS_ADSERVICES_TOPICS_PERMISSION, SDK_PACKAGE_NAME))
+        when(mMockPackageManager.checkPermission(ACCESS_ADSERVICES_TOPICS, SDK_PACKAGE_NAME))
+                .thenReturn(PackageManager.PERMISSION_DENIED);
+        when(mMockPackageManager.checkPermission(ACCESS_ADSERVICES_ADID, SDK_PACKAGE_NAME))
                 .thenReturn(PackageManager.PERMISSION_DENIED);
         when(mMockPackageManager.checkPermission(
                         PermissionHelper.ACCESS_ADSERVICES_ATTRIBUTION_PERMISSION,
                         SDK_PACKAGE_NAME))
                 .thenReturn(PackageManager.PERMISSION_DENIED);
         when(mMockPackageManager.checkPermission(
-                        PermissionHelper.ACCESS_ADSERVICES_CUSTOM_AUDIENCE_PERMISSION,
-                        SDK_PACKAGE_NAME))
+                        ACCESS_ADSERVICES_CUSTOM_AUDIENCE, SDK_PACKAGE_NAME))
                 .thenReturn(PackageManager.PERMISSION_DENIED);
 
         assertThat(
                         PermissionHelper.hasTopicsPermission(
                                 mMockContextDeny, /*useSandboxCheck =*/ true, SDK_PACKAGE_NAME))
                 .isFalse();
+
+        // TODO(b/240718367): Check Sdk permission for Adid.
+        // assertThat(PermissionHelper.hasAdIdPermission(mMockContextDeny, /*useSandboxCheck
+        // =*/ true,
+        // SDK_PACKAGE_NAME)).isFalse();
+
         // TODO(b/236267953): Check Sdk permission for Attribution.
         // assertThat(PermissionHelper.hasAttributionPermission(mMockContextDeny, /*useSandboxCheck
         // =*/ true,

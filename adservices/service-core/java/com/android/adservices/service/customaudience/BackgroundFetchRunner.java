@@ -47,7 +47,7 @@ public class BackgroundFetchRunner {
         UNKNOWN,
         K_ANON_FAILURE,
         // TODO(b/237342352): Consolidate if we don't need to distinguish network timeouts
-        NETWORK_CONNECT_TIMEOUT_FAILURE,
+        NETWORK_FAILURE,
         NETWORK_READ_TIMEOUT_FAILURE,
         RESPONSE_VALIDATION_FAILURE
     }
@@ -62,7 +62,8 @@ public class BackgroundFetchRunner {
                 new AdServicesHttpsClient(
                         AdServicesExecutors.getBlockingExecutor(),
                         flags.getFledgeBackgroundFetchNetworkConnectTimeoutMs(),
-                        flags.getFledgeBackgroundFetchNetworkReadTimeoutMs());
+                        flags.getFledgeBackgroundFetchNetworkReadTimeoutMs(),
+                        flags.getFledgeBackgroundFetchMaxResponseSizeB());
     }
 
     /**
@@ -87,10 +88,7 @@ public class BackgroundFetchRunner {
 
         CustomAudienceUpdatableData updatableData =
                 fetchAndValidateCustomAudienceUpdatableData(
-                        jobStartTime,
-                        // TODO(b/240302866): Implement AdTechIdentifier conversion in Room DB
-                        AdTechIdentifier.fromString(fetchData.getBuyer()),
-                        fetchData.getDailyUpdateUrl());
+                        jobStartTime, fetchData.getBuyer(), fetchData.getDailyUpdateUrl());
         fetchData = fetchData.copyWithUpdatableData(updatableData);
 
         if (updatableData.getContainsSuccessfulUpdate()) {
@@ -130,7 +128,7 @@ public class BackgroundFetchRunner {
                         exception,
                         "Timed out while fetching custom audience update from %s",
                         dailyFetchUri.toSafeString());
-                fetchResult = UpdateResultType.NETWORK_CONNECT_TIMEOUT_FAILURE;
+                fetchResult = UpdateResultType.NETWORK_FAILURE;
             } else {
                 LogUtil.e(
                         exception,
@@ -152,15 +150,6 @@ public class BackgroundFetchRunner {
                     dailyFetchUri.toSafeString());
             fetchResult = UpdateResultType.UNKNOWN;
             Thread.currentThread().interrupt();
-        }
-
-        int maxResponseSizeBytes = mFlags.getFledgeBackgroundFetchMaxResponseSizeB();
-        if (fetchResult == UpdateResultType.SUCCESS
-                && updateResponse.length() > maxResponseSizeBytes) {
-            LogUtil.e(
-                    "Custom audience update response is greater than configured max %d bytes",
-                    maxResponseSizeBytes);
-            fetchResult = UpdateResultType.RESPONSE_VALIDATION_FAILURE;
         }
 
         return CustomAudienceUpdatableData.createFromResponseString(

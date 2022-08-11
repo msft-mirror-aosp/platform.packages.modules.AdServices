@@ -50,6 +50,11 @@ public final class EventReportingJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
+        if (FlagsFactory.getFlags().getMeasurementJobEventReportingKillSwitch()) {
+            LogUtil.e("Event Reporting Job is disabled");
+            return false;
+        }
+
         LogUtil.d("EventReportingJobService: onStartJob: ");
         sBlockingExecutor.execute(() -> {
             boolean success = new EventReportingJobHandler(
@@ -82,10 +87,13 @@ public final class EventReportingJobService extends JobService {
                                         Uri.parse("android-app://" + appName));
                         jobFinished(params, success);
                     });
+                } else {
+                    return false;
                 }
             } catch (Exception e) {
                 LogUtil.e(
                         "Perform all pending reports for app %s has exception %s", appName, e);
+                return false;
             }
         }
         LogUtil.d("EventReportingJobService.onStartJob");

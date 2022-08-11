@@ -50,7 +50,10 @@ android_test {
 }
 android_test {
     name: "CtsAdServicesDebuggableDeviceTestCases",
-    defaults: ["cts_defaults"],
+    defaults: [
+        "cts_defaults",
+        "modules-utils-testable-device-config-defaults"
+    ],
     libs: [
         "android.test.runner",
         "android.test.base",
@@ -65,6 +68,8 @@ android_test {
     ],
     test_mainline_modules: ["com.google.android.adservices.apex"],
     static_libs: [
+        "androidx.room_room-runtime",
+        "androidx.room_room-testing",
         "androidx.test.rules",
         "androidx.test.ext.truth",
         "compatibility-device-util-axt",

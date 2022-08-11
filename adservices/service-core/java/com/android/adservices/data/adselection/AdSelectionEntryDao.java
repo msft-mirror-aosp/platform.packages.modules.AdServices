@@ -28,10 +28,8 @@ import java.util.List;
 /**
  * Data Access Object interface for access to the local AdSelection data storage.
  *
- * <p>Annotation will generate Room based SQLite Dao implementation. TODO(b/228114258) Add unit
- * tests
+ * <p>Annotation will generate Room based SQLite Dao implementation.
  */
-// TODO (b/229660121): Ad unit tests for this class
 @Dao
 public interface AdSelectionEntryDao {
     /**

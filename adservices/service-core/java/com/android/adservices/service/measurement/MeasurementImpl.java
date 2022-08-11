@@ -16,16 +16,17 @@
 
 package com.android.adservices.service.measurement;
 
-import static com.android.adservices.ResultCode.RESULT_INTERNAL_ERROR;
-import static com.android.adservices.ResultCode.RESULT_INVALID_ARGUMENT;
-import static com.android.adservices.ResultCode.RESULT_IO_ERROR;
-import static com.android.adservices.ResultCode.RESULT_OK;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_IO_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+
 import static com.android.adservices.service.measurement.attribution.TriggerContentProvider.TRIGGER_URI;
 import static com.android.adservices.service.measurement.util.BaseUriExtractor.getBaseUri;
 
+import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.measurement.DeletionParam;
 import android.adservices.measurement.MeasurementManager;
-import android.adservices.measurement.MeasurementManager.ResultCode;
 import android.adservices.measurement.RegistrationRequest;
 import android.adservices.measurement.WebSourceRegistrationRequest;
 import android.adservices.measurement.WebSourceRegistrationRequestInternal;
@@ -45,8 +46,11 @@ import android.view.InputEvent;
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.registration.SourceFetcher;
 import com.android.adservices.service.measurement.registration.SourceRegistration;
 import com.android.adservices.service.measurement.registration.TriggerFetcher;
@@ -80,6 +84,8 @@ public final class MeasurementImpl {
     private final SourceFetcher mSourceFetcher;
     private final TriggerFetcher mTriggerFetcher;
     private final ContentResolver mContentResolver;
+    private final ClickVerifier mClickVerifier;
+    private final Flags mFlags;
 
     private MeasurementImpl(Context context) {
         mContext = context;
@@ -87,6 +93,8 @@ public final class MeasurementImpl {
         mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
         mSourceFetcher = new SourceFetcher();
         mTriggerFetcher = new TriggerFetcher();
+        mClickVerifier = new ClickVerifier(context);
+        mFlags = FlagsFactory.getFlags();
     }
 
     @VisibleForTesting
@@ -95,12 +103,15 @@ public final class MeasurementImpl {
             ContentResolver contentResolver,
             DatastoreManager datastoreManager,
             SourceFetcher sourceFetcher,
-            TriggerFetcher triggerFetcher) {
+            TriggerFetcher triggerFetcher,
+            ClickVerifier clickVerifier) {
         mContext = context;
         mContentResolver = contentResolver;
         mDatastoreManager = datastoreManager;
         mSourceFetcher = sourceFetcher;
         mTriggerFetcher = triggerFetcher;
+        mClickVerifier = clickVerifier;
+        mFlags = FlagsFactory.getFlagsForTest();
     }
 
     /**
@@ -139,8 +150,8 @@ public final class MeasurementImpl {
         }
     }
 
-    /** Implement a registration request, returning a {@link MeasurementManager.ResultCode}. */
-    @ResultCode
+    /** Implement a registration request, returning a {@link AdServicesStatusUtils.StatusCode}. */
+    @AdServicesStatusUtils.StatusCode
     int register(@NonNull RegistrationRequest request, long requestTime) {
         mReadWriteLock.readLock().lock();
         try {
@@ -152,7 +163,7 @@ public final class MeasurementImpl {
                     return fetchAndInsertTriggers(request, requestTime);
 
                 default:
-                    return RESULT_INVALID_ARGUMENT;
+                    return STATUS_INVALID_ARGUMENT;
             }
         } finally {
             mReadWriteLock.readLock().unlock();
@@ -161,14 +172,14 @@ public final class MeasurementImpl {
 
     /**
      * Processes a source registration request delegated to OS from the caller, e.g. Chrome,
-     * returning a result code.
+     * returning a status code.
      */
     int registerWebSource(@NonNull WebSourceRegistrationRequestInternal request, long requestTime) {
         WebSourceRegistrationRequest sourceRegistrationRequest =
                 request.getSourceRegistrationRequest();
         if (!isValid(sourceRegistrationRequest)) {
             LogUtil.e("registerWebSource received invalid parameters");
-            return RESULT_INVALID_ARGUMENT;
+            return STATUS_INVALID_ARGUMENT;
         }
         mReadWriteLock.readLock().lock();
         try {
@@ -180,11 +191,14 @@ public final class MeasurementImpl {
                         fetch.get(),
                         requestTime,
                         sourceRegistrationRequest.getTopOriginUri(),
+                        EventSurfaceType.WEB,
                         getRegistrant(request.getPackageName()),
-                        getSourceType(sourceRegistrationRequest.getInputEvent()));
-                return RESULT_OK;
+                        getSourceType(
+                                sourceRegistrationRequest.getInputEvent(),
+                                request.getRequestTime()));
+                return STATUS_SUCCESS;
             } else {
-                return RESULT_IO_ERROR;
+                return STATUS_IO_ERROR;
             }
         } finally {
             mReadWriteLock.readLock().unlock();
@@ -193,7 +207,7 @@ public final class MeasurementImpl {
 
     /**
      * Processes a trigger registration request delegated to OS from the caller, e.g. Chrome,
-     * returning a result code.
+     * returning a status code.
      */
     int registerWebTrigger(
             @NonNull WebTriggerRegistrationRequestInternal request, long requestTime) {
@@ -201,7 +215,7 @@ public final class MeasurementImpl {
                 request.getTriggerRegistrationRequest();
         if (!isValid(triggerRegistrationRequest)) {
             LogUtil.e("registerWebTrigger received invalid parameters");
-            return RESULT_INVALID_ARGUMENT;
+            return STATUS_INVALID_ARGUMENT;
         }
         mReadWriteLock.readLock().lock();
         try {
@@ -213,10 +227,11 @@ public final class MeasurementImpl {
                         fetch.get(),
                         requestTime,
                         triggerRegistrationRequest.getDestination(),
-                        getRegistrant(request.getPackageName()));
-                return RESULT_OK;
+                        getRegistrant(request.getPackageName()),
+                        EventSurfaceType.WEB);
+                return STATUS_SUCCESS;
             } else {
-                return RESULT_IO_ERROR;
+                return STATUS_IO_ERROR;
             }
         } finally {
             mReadWriteLock.readLock().unlock();
@@ -224,9 +239,10 @@ public final class MeasurementImpl {
     }
 
     /**
-     * Implement a deleteRegistrations request, returning a r{@link MeasurementManager.ResultCode}.
+     * Implement a deleteRegistrations request, returning a r{@link
+     * AdServicesStatusUtils.StatusCode}.
      */
-    @ResultCode
+    @AdServicesStatusUtils.StatusCode
     int deleteRegistrations(@NonNull DeletionParam request) {
         mReadWriteLock.readLock().lock();
         try {
@@ -241,10 +257,10 @@ public final class MeasurementImpl {
                                             request.getDomainUris(),
                                             request.getMatchBehavior(),
                                             request.getDeletionMode()));
-            return deleteResult ? RESULT_OK : RESULT_INTERNAL_ERROR;
+            return deleteResult ? STATUS_SUCCESS : STATUS_INTERNAL_ERROR;
         } catch (NullPointerException | IllegalArgumentException e) {
             LogUtil.e(e, "Delete registration received invalid parameters");
-            return RESULT_INVALID_ARGUMENT;
+            return STATUS_INVALID_ARGUMENT;
         } finally {
             mReadWriteLock.readLock().unlock();
         }
@@ -308,10 +324,11 @@ public final class MeasurementImpl {
                     fetch.get(),
                     requestTime,
                     request.getTopOriginUri(),
-                    getRegistrant(request.getPackageName()));
-            return RESULT_OK;
+                    getRegistrant(request.getPackageName()),
+                    EventSurfaceType.APP);
+            return STATUS_SUCCESS;
         } else {
-            return RESULT_IO_ERROR;
+            return STATUS_IO_ERROR;
         }
     }
 
@@ -323,11 +340,12 @@ public final class MeasurementImpl {
                     fetch.get(),
                     requestTime,
                     request.getTopOriginUri(),
+                    EventSurfaceType.APP,
                     getRegistrant(request.getPackageName()),
-                    getSourceType(request.getInputEvent()));
-            return RESULT_OK;
+                    getSourceType(request.getInputEvent(), request.getRequestTime()));
+            return STATUS_SUCCESS;
         } else {
-            return RESULT_IO_ERROR;
+            return STATUS_IO_ERROR;
         }
     }
 
@@ -335,6 +353,7 @@ public final class MeasurementImpl {
             List<SourceRegistration> sourceRegistrations,
             long sourceEventTime,
             Uri topOriginUri,
+            @EventSurfaceType int publisherType,
             Uri registrant,
             Source.SourceType sourceType) {
         for (SourceRegistration registration : sourceRegistrations) {
@@ -343,6 +362,7 @@ public final class MeasurementImpl {
                             sourceEventTime,
                             registration,
                             topOriginUri,
+                            publisherType,
                             registrant,
                             sourceType,
                             // Only first destination to avoid AdTechs change this
@@ -356,6 +376,7 @@ public final class MeasurementImpl {
             long sourceEventTime,
             SourceRegistration registration,
             Uri topOriginUri,
+            @EventSurfaceType int publisherType,
             Uri registrant,
             Source.SourceType sourceType,
             Uri destination,
@@ -363,6 +384,7 @@ public final class MeasurementImpl {
         return new Source.Builder()
                 .setEventId(registration.getSourceEventId())
                 .setPublisher(getBaseUri(topOriginUri))
+                .setPublisherType(publisherType)
                 .setAppDestination(destination)
                 .setWebDestination(webDestination)
                 .setAdTechDomain(getBaseUri(registration.getReportingOrigin()))
@@ -419,17 +441,28 @@ public final class MeasurementImpl {
                 .collect(Collectors.toList());
     }
 
-    private Source.SourceType getSourceType(InputEvent inputEvent) {
-        return inputEvent == null ? Source.SourceType.EVENT : Source.SourceType.NAVIGATION;
+    @VisibleForTesting
+    Source.SourceType getSourceType(InputEvent inputEvent, long requestTime) {
+        // If click verification is enabled and the InputEvent is not null, but it cannot be
+        // verified, then the SourceType is demoted to EVENT.
+        if (mFlags.getMeasurementIsClickVerificationEnabled()
+                && inputEvent != null
+                && !mClickVerifier.isInputEventVerifiable(inputEvent, requestTime)) {
+            return Source.SourceType.EVENT;
+        } else {
+            return inputEvent == null ? Source.SourceType.EVENT : Source.SourceType.NAVIGATION;
+        }
     }
 
     private void insertTriggers(
             List<TriggerRegistration> responseBasedRegistrations,
             long triggerTime,
             Uri topOrigin,
-            Uri registrant) {
+            Uri registrant,
+            @EventSurfaceType int destinationType) {
         for (TriggerRegistration registration : responseBasedRegistrations) {
-            Trigger trigger = createTrigger(registration, triggerTime, topOrigin, registrant);
+            Trigger trigger = createTrigger(
+                    registration, triggerTime, topOrigin, registrant, destinationType);
             mDatastoreManager.runInTransaction((dao) -> dao.insertTrigger(trigger));
         }
         notifyTriggerContentProvider();
@@ -447,9 +480,14 @@ public final class MeasurementImpl {
     }
 
     private Trigger createTrigger(
-            TriggerRegistration registration, long triggerTime, Uri topOrigin, Uri registrant) {
+            TriggerRegistration registration,
+            long triggerTime,
+            Uri topOrigin,
+            Uri registrant,
+            @EventSurfaceType int destinationType) {
         return new Trigger.Builder()
                 .setAttributionDestination(topOrigin)
+                .setDestinationType(destinationType)
                 .setAdTechDomain(getBaseUri(registration.getReportingOrigin()))
                 .setRegistrant(registrant)
                 .setTriggerTime(triggerTime)

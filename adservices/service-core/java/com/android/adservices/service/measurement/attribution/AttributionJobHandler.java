@@ -22,8 +22,8 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
-import com.android.adservices.service.measurement.DestinationType;
 import com.android.adservices.service.measurement.EventReport;
+import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.EventTrigger;
 import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
@@ -164,7 +164,8 @@ class AttributionJobHandler {
                             new AggregateReport.Builder()
                                     .setPublisher(source.getRegistrant())
                                     .setAttributionDestination(source.getAppDestination())
-                                    .setSourceRegistrationTime(source.getEventTime())
+                                    .setSourceRegistrationTime(
+                                            roundDownToDay(source.getEventTime()))
                                     .setScheduledReportTime(trigger.getTriggerTime() + randomTime)
                                     .setReportingOrigin(source.getAdTechDomain())
                                     .setDebugCleartextPayload(
@@ -247,7 +248,7 @@ class AttributionJobHandler {
                         .populateFromSourceAndTrigger(source, trigger, eventTrigger)
                         .build();
 
-        if (!provisionEventReportQuota(source, newEventReport, measurementDao)) {
+        if (!provisionEventReportQuota(source, trigger, newEventReport, measurementDao)) {
             return false;
         }
 
@@ -255,15 +256,15 @@ class AttributionJobHandler {
         return true;
     }
 
-    private boolean provisionEventReportQuota(
-            Source source, EventReport newEventReport, IMeasurementDao measurementDao)
+    private boolean provisionEventReportQuota(Source source, Trigger trigger,
+            EventReport newEventReport, IMeasurementDao measurementDao)
             throws DatastoreException {
         List<EventReport> sourceEventReports = measurementDao.getSourceEventReports(source);
 
         if (isWithinReportLimit(
                 source,
                 sourceEventReports.size(),
-                DestinationType.getDestinationType(newEventReport.getAttributionDestination()))) {
+                trigger.getDestinationType())) {
             return true;
         }
 
@@ -327,7 +328,7 @@ class AttributionJobHandler {
     }
 
     private boolean isWithinReportLimit(
-            Source source, int existingReportCount, DestinationType destinationType) {
+            Source source, int existingReportCount, @EventSurfaceType int destinationType) {
         return source.getMaxReportCount(destinationType) > existingReportCount;
     }
 
@@ -444,5 +445,9 @@ class AttributionJobHandler {
             }
         }
         return OptionalInt.of(newAggregateContributions);
+    }
+
+    private static long roundDownToDay(long timestamp) {
+        return Math.floorDiv(timestamp, TimeUnit.DAYS.toMillis(1)) * TimeUnit.DAYS.toMillis(1);
     }
 }

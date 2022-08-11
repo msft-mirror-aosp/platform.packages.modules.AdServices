@@ -37,6 +37,7 @@ import com.android.adservices.LogUtil;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -145,13 +146,15 @@ public class AppUpdateTest {
     public void setup() throws InterruptedException {
         // We need to skip 3 epochs so that if there is any usage from other test runs, it will
         // not be used for epoch retrieval.
-        Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
+        //        Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
 
-        registerTopicResponseReceiver();
+        //        registerTopicResponseReceiver();
     }
 
     @Test
+    @Ignore("b/241309845")
     public void testAppUpdate() throws Exception {
+        overrideDisableTopicsEnrollmentCheck("1");
         overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
 
         // We need to turn off random topic so that we can verify the returned topic.
@@ -179,7 +182,8 @@ public class AppUpdateTest {
         Thread.sleep(TEST_EPOCH_JOB_PERIOD_MS);
 
         // Install test app1.
-        ShellUtils.runShellCommand("pm install -r " + TEST_APK_PATH);
+        String installMessage = ShellUtils.runShellCommand("pm install -r " + TEST_APK_PATH);
+        assertThat(installMessage).contains("Success");
         Thread.sleep(EXECUTION_WAITING_TIME);
 
         // Invoke test app1. The test app1 should be assigned with topics as there are usages
@@ -197,7 +201,8 @@ public class AppUpdateTest {
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
 
         // Install the test app1 again. It should not be assigned with new topics.
-        ShellUtils.runShellCommand("pm install -r " + TEST_APK_PATH);
+        installMessage = ShellUtils.runShellCommand("pm install -r " + TEST_APK_PATH);
+        assertThat(installMessage).contains("Success");
         Thread.sleep(EXECUTION_WAITING_TIME);
 
         // Invoke test app1. It should get empty returned topics because its derived data was wiped
@@ -215,6 +220,7 @@ public class AppUpdateTest {
                 .isEqualTo(EXPECTED_TOPIC_RESPONSE_BROADCASTS.length);
 
         // Reset back the original values.
+        overrideDisableTopicsEnrollmentCheck("0");
         overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
         overridePercentageForRandomTopic(DEFAULT_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
     }
@@ -264,6 +270,13 @@ public class AppUpdateTest {
                 };
 
         sContext.registerReceiver(mTopicsResponseReceiver, topicResponseIntentFilter);
+    }
+
+    // Override the flag to disable Topics enrollment check.
+    private void overrideDisableTopicsEnrollmentCheck(String val) {
+        // Setting it to 1 here disables the Topics enrollment check.
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.disable_topics_enrollment_check " + val);
     }
 
     // Override the Epoch Period to shorten the Epoch Length in the test.

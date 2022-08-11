@@ -77,7 +77,7 @@ public class CustomAudienceQuantityChecker {
 
         List<String> violations = new ArrayList<>();
         CustomAudienceDao.CustomAudienceStats customAudienceStats =
-                mCustomAudienceDao.getCustomAudienceStats(customAudience.getOwner());
+                mCustomAudienceDao.getCustomAudienceStats(customAudience.getOwnerPackageName());
         if (customAudienceStats.getPerOwnerCount() == 0
                 && customAudienceStats.getOwnerCount() >= mCustomAudienceMaxOwnerCount) {
             violations.add(THE_MAX_NUMBER_OF_OWNER_ALLOWED_FOR_THE_DEVICE_HAD_REACHED);

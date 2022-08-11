@@ -21,7 +21,9 @@ import static com.google.common.truth.Truth.assertThat;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.os.FileUtils;
+import android.os.UserHandle;
 
 import androidx.annotation.NonNull;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -32,6 +34,7 @@ import com.android.server.sdksandbox.SdkSandboxStorageManager.SdkDataDirInfo;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -40,6 +43,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 /** Unit tests for {@link SdkSandboxStorageManager}. */
 public class SdkSandboxStorageManagerUnitTest {
@@ -55,11 +59,20 @@ public class SdkSandboxStorageManagerUnitTest {
     // Separate location where all of the sdk storage directories will be created for testing
     private String mTestDir;
     private FakeSdkSandboxManagerLocal mSdkSandboxManagerLocal;
+    private PackageManager mPmMock;
+    private Context mSpyContext;
 
     @Before
     public void setup() throws Exception {
         Context context = InstrumentationRegistry.getInstrumentation().getContext();
         mTestDir = context.getDataDir().getPath();
+        mSpyContext = Mockito.spy(context);
+
+        mPmMock = Mockito.mock(PackageManager.class);
+        Mockito.doReturn(mPmMock).when(mSpyContext).getPackageManager();
+        Mockito.doReturn(mSpyContext)
+                .when(mSpyContext)
+                .createContextAsUser(Mockito.any(UserHandle.class), Mockito.anyInt());
 
         PackageManagerLocal packageManagerLocal =
                 (volumeUuid,
@@ -74,7 +87,7 @@ public class SdkSandboxStorageManagerUnitTest {
         mSdkSandboxManagerLocal = new FakeSdkSandboxManagerLocal();
         mSdkSandboxStorageManager =
                 new SdkSandboxStorageManager(
-                        context, mSdkSandboxManagerLocal, packageManagerLocal, mTestDir);
+                        mSpyContext, mSdkSandboxManagerLocal, packageManagerLocal, mTestDir);
     }
 
     @After
@@ -122,6 +135,12 @@ public class SdkSandboxStorageManagerUnitTest {
     public void test_GetSdkDataDirInfo_StorageExists() throws Exception {
         createSdkStorageForTest(
                 /*volumeUuid=*/ null, /*userId=*/ 0, CLIENT_PKG_NAME, Arrays.asList(SDK_NAME));
+
+        final ApplicationInfo info = new ApplicationInfo();
+        info.storageUuid = UUID.fromString("41217664-9172-527a-b3d5-edabb50a7d69");
+        Mockito.doReturn(info)
+                .when(mPmMock)
+                .getApplicationInfo(Mockito.any(String.class), Mockito.anyInt());
 
         // Call getSdkDataDirInfo on SdkStorageManager
         final CallingInfo callingInfo = new CallingInfo(CLIENT_UID, CLIENT_PKG_NAME);
