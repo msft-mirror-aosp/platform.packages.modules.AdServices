@@ -16,6 +16,11 @@
 
 package com.android.tests.sdksandbox.endtoend;
 
+import static android.app.sdksandbox.SdkSandboxManager.EXTRA_DISPLAY_ID;
+import static android.app.sdksandbox.SdkSandboxManager.EXTRA_HEIGHT_IN_PIXELS;
+import static android.app.sdksandbox.SdkSandboxManager.EXTRA_HOST_TOKEN;
+import static android.app.sdksandbox.SdkSandboxManager.EXTRA_WIDTH_IN_PIXELS;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
@@ -118,18 +123,16 @@ public class SdkSandboxManagerTest {
                 () ->
                         mSdkSandboxManager.sendData(
                                 sdkName, new Bundle(), Runnable::run, sendDataCallback));
+        Bundle params = new Bundle();
+        params.putInt(EXTRA_WIDTH_IN_PIXELS, 500);
+        params.putInt(EXTRA_HEIGHT_IN_PIXELS, 500);
+        params.putInt(EXTRA_DISPLAY_ID, 0);
+        params.putBinder(EXTRA_HOST_TOKEN, new Binder());
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                         mSdkSandboxManager.requestSurfacePackage(
-                                sdkName,
-                                0,
-                                500,
-                                500,
-                                new Binder(),
-                                new Bundle(),
-                                Runnable::run,
-                                requestSurfacePackageCallback));
+                                sdkName, params, Runnable::run, requestSurfacePackageCallback));
 
         // SDK can be reloaded after being unloaded.
         final FakeLoadSdkCallback callback2 = new FakeLoadSdkCallback();
@@ -160,15 +163,13 @@ public class SdkSandboxManagerTest {
         // Further calls to the SDK should still be valid.
         final FakeRequestSurfacePackageCallback surfacePackageCallback =
                 new FakeRequestSurfacePackageCallback();
+        Bundle params = new Bundle();
+        params.putInt(EXTRA_WIDTH_IN_PIXELS, 500);
+        params.putInt(EXTRA_HEIGHT_IN_PIXELS, 500);
+        params.putInt(EXTRA_DISPLAY_ID, 0);
+        params.putBinder(EXTRA_HOST_TOKEN, new Binder());
         mSdkSandboxManager.requestSurfacePackage(
-                sdkName,
-                0,
-                500,
-                500,
-                new Binder(),
-                new Bundle(),
-                Runnable::run,
-                surfacePackageCallback);
+                sdkName, params, Runnable::run, surfacePackageCallback);
         assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isTrue();
     }
 
@@ -311,15 +312,13 @@ public class SdkSandboxManagerTest {
 
         final FakeRequestSurfacePackageCallback surfacePackageCallback =
                 new FakeRequestSurfacePackageCallback();
+        Bundle params = new Bundle();
+        params.putInt(EXTRA_WIDTH_IN_PIXELS, 500);
+        params.putInt(EXTRA_HEIGHT_IN_PIXELS, 500);
+        params.putInt(EXTRA_DISPLAY_ID, 0);
+        params.putBinder(EXTRA_HOST_TOKEN, new Binder());
         mSdkSandboxManager.requestSurfacePackage(
-                sdkName,
-                0,
-                500,
-                500,
-                new Binder(),
-                new Bundle(),
-                Runnable::run,
-                surfacePackageCallback);
+                sdkName, params, Runnable::run, surfacePackageCallback);
         assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isTrue();
     }
 
@@ -333,15 +332,13 @@ public class SdkSandboxManagerTest {
 
         final FakeRequestSurfacePackageCallback surfacePackageCallback =
                 new FakeRequestSurfacePackageCallback();
+        Bundle params = new Bundle();
+        params.putInt(EXTRA_WIDTH_IN_PIXELS, 500);
+        params.putInt(EXTRA_HEIGHT_IN_PIXELS, 500);
+        params.putInt(EXTRA_DISPLAY_ID, 0);
+        params.putBinder(EXTRA_HOST_TOKEN, new Binder());
         mSdkSandboxManager.requestSurfacePackage(
-                sdkName,
-                0,
-                500,
-                500,
-                new Binder(),
-                new Bundle(),
-                Runnable::run,
-                surfacePackageCallback);
+                sdkName, params, Runnable::run, surfacePackageCallback);
         assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isFalse();
         assertThat(surfacePackageCallback.getSurfacePackageErrorCode())
                 .isEqualTo(SdkSandboxManager.REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR);
