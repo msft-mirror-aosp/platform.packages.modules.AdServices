@@ -2,9 +2,7 @@
 package android.adservices {
 
   public class AdServicesState {
-    method public static int getAdServicesState();
-    field public static final int ADSERVICES_API_STATE_DISABLED = 0; // 0x0
-    field public static final int ADSERVICES_API_STATE_ENABLED = 1; // 0x1
+    method public static boolean isAdServicesStateEnabled();
   }
 
   public class AdServicesVersion {
@@ -145,6 +143,13 @@ package android.adservices.common {
     field public static final android.adservices.common.AdSelectionSignals EMPTY;
   }
 
+  public class AdServicesPermissions {
+    field public static final String ACCESS_ADSERVICES_ADID = "android.permission.ACCESS_ADSERVICES_ADID";
+    field public static final String ACCESS_ADSERVICES_ATTRIBUTION = "android.permission.ACCESS_ADSERVICES_ATTRIBUTION";
+    field public static final String ACCESS_ADSERVICES_CUSTOM_AUDIENCE = "android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE";
+    field public static final String ACCESS_ADSERVICES_TOPICS = "android.permission.ACCESS_ADSERVICES_TOPICS";
+  }
+
   public final class AdTechIdentifier implements android.os.Parcelable {
     method public int describeContents();
     method @NonNull public static android.adservices.common.AdTechIdentifier fromString(@NonNull String);
@@ -281,12 +286,6 @@ package android.adservices.exceptions {
     ctor public AdServicesException(@Nullable String);
   }
 
-  public class MeasurementException extends android.adservices.exceptions.AdServicesException {
-    ctor public MeasurementException();
-    ctor public MeasurementException(@NonNull String);
-    ctor public MeasurementException(@NonNull String, @NonNull Throwable);
-  }
-
 }
 
 package android.adservices.measurement {
@@ -393,14 +392,14 @@ package android.adservices.measurement {
 package android.adservices.topics {
 
   public final class GetTopicsRequest {
+    method @NonNull public String getAdsSdkName();
     method @NonNull public android.content.Context getContext();
-    method @NonNull public String getSdkName();
   }
 
   public static final class GetTopicsRequest.Builder {
     ctor public GetTopicsRequest.Builder(@NonNull android.content.Context);
     method @NonNull public android.adservices.topics.GetTopicsRequest build();
-    method @NonNull public android.adservices.topics.GetTopicsRequest.Builder setSdkName(@NonNull String);
+    method @NonNull public android.adservices.topics.GetTopicsRequest.Builder setAdsSdkName(@NonNull String);
   }
 
   public final class GetTopicsResponse {

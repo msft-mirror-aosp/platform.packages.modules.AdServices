@@ -58,6 +58,7 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -115,6 +116,8 @@ public class CustomAudienceServiceEndToEndTest {
 
     private MockitoSession mStaticMockSession = null;
 
+    @Mock private ConsentManager mConsentManagerMock;
+
     // This object access some system APIs
     @Mock private DevContextFilter mDevContextFilter;
     @Mock private AppImportanceFilter mAppImportanceFilter;
@@ -157,6 +160,7 @@ public class CustomAudienceServiceEndToEndTest {
                                 CONTEXT.getPackageManager(),
                                 EnrollmentDao.getInstance(CONTEXT),
                                 mAdServicesLogger),
+                        mConsentManagerMock,
                         mDevContextFilter,
                         MoreExecutors.newDirectExecutorService(),
                         mAdServicesLogger,
@@ -213,6 +217,9 @@ public class CustomAudienceServiceEndToEndTest {
         doReturn(Process.myUid()).when(Binder::getCallingUidOrThrow);
         doNothing()
                 .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
+        doReturn(false)
+                .when(mConsentManagerMock)
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
 
         ResultCapturingCallback callback = new ResultCapturingCallback();
         mService.joinCustomAudience(CUSTOM_AUDIENCE_PK1_1, callback);
@@ -238,8 +245,28 @@ public class CustomAudienceServiceEndToEndTest {
     }
 
     @Test
+    public void testJoinCustomAudienceWithRevokedUserConsentForAppSuccess() {
+        doReturn(Process.myUid()).when(Binder::getCallingUidOrThrow);
+        doReturn(true)
+                .when(mConsentManagerMock)
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
+
+        ResultCapturingCallback callback = new ResultCapturingCallback();
+        mService.joinCustomAudience(CUSTOM_AUDIENCE_PK1_1, callback);
+        assertTrue(callback.isSuccess());
+        assertNull(
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_PK1_1.getOwnerPackageName(),
+                        CUSTOM_AUDIENCE_PK1_1.getBuyer(),
+                        CUSTOM_AUDIENCE_PK1_1.getName()));
+    }
+
+    @Test
     public void testJoinCustomAudience_beyondMaxExpirationTime_fail() {
         doReturn(Process.myUid()).when(Binder::getCallingUidOrThrow);
+        doReturn(false)
+                .when(mConsentManagerMock)
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
 
         ResultCapturingCallback callback = new ResultCapturingCallback();
         mService.joinCustomAudience(CUSTOM_AUDIENCE_PK1_BEYOND_MAX_EXPIRATION_TIME, callback);
@@ -290,6 +317,10 @@ public class CustomAudienceServiceEndToEndTest {
         when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         doNothing()
                 .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
+        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any(), any());
+        doReturn(false)
+                .when(mConsentManagerMock)
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
 
         ResultCapturingCallback callback = new ResultCapturingCallback();
         mService.joinCustomAudience(CUSTOM_AUDIENCE_PK1_1, callback);
@@ -318,8 +349,44 @@ public class CustomAudienceServiceEndToEndTest {
     }
 
     @Test
+    public void testLeaveCustomAudienceWithRevokedUserConsentForAppSuccess() {
+        doReturn(CommonFixture.FLAGS_FOR_TEST).when(FlagsFactory::getFlags);
+        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        doReturn(true).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any(), any());
+        doReturn(false)
+                .when(mConsentManagerMock)
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
+
+        ResultCapturingCallback callback = new ResultCapturingCallback();
+        mService.joinCustomAudience(CUSTOM_AUDIENCE_PK1_1, callback);
+        assertTrue(callback.isSuccess());
+        assertEquals(
+                DB_CUSTOM_AUDIENCE_PK1_1,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_PK1_1.getOwnerPackageName(),
+                        CUSTOM_AUDIENCE_PK1_1.getBuyer(),
+                        CUSTOM_AUDIENCE_PK1_1.getName()));
+
+        callback = new ResultCapturingCallback();
+        mService.leaveCustomAudience(
+                CUSTOM_AUDIENCE_PK1_1.getOwnerPackageName(),
+                CUSTOM_AUDIENCE_PK1_1.getBuyer(),
+                CUSTOM_AUDIENCE_PK1_1.getName(),
+                callback);
+        assertTrue(callback.isSuccess());
+        assertEquals(
+                DB_CUSTOM_AUDIENCE_PK1_1,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_PK1_1.getOwnerPackageName(),
+                        CUSTOM_AUDIENCE_PK1_1.getBuyer(),
+                        CUSTOM_AUDIENCE_PK1_1.getName()));
+    }
+
+    @Test
     public void testLeaveCustomAudience_leaveNotJoinedCustomAudience_doesNotFail() {
         when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any(), any());
+
         ResultCapturingCallback callback = new ResultCapturingCallback();
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
@@ -342,6 +409,7 @@ public class CustomAudienceServiceEndToEndTest {
                                 .setDevOptionsEnabled(true)
                                 .setCallingAppPackageName(MY_APP_PACKAGE_NAME)
                                 .build());
+        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any(), any());
 
         CustomAudienceOverrideTestCallback callback =
                 callAddOverride(
@@ -359,6 +427,32 @@ public class CustomAudienceServiceEndToEndTest {
     }
 
     @Test
+    public void testOverrideCustomAudienceRemoteInfoWithRevokedUserConsentSuccess()
+            throws Exception {
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(
+                        DevContext.builder()
+                                .setDevOptionsEnabled(true)
+                                .setCallingAppPackageName(MY_APP_PACKAGE_NAME)
+                                .build());
+        doReturn(true).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any(), any());
+
+        CustomAudienceOverrideTestCallback callback =
+                callAddOverride(
+                        MY_APP_PACKAGE_NAME,
+                        BUYER_1,
+                        NAME_1,
+                        BIDDING_LOGIC_JS,
+                        TRUSTED_BIDDING_DATA,
+                        mService);
+
+        assertTrue(callback.mIsSuccess);
+        assertFalse(
+                mCustomAudienceDao.doesCustomAudienceOverrideExist(
+                        MY_APP_PACKAGE_NAME, BUYER_1, NAME_1));
+    }
+
+    @Test
     public void testOverrideCustomAudienceRemoteInfoDoesNotAddOverrideWithPackageNameNotMatchOwner()
             throws Exception {
         when(mDevContextFilter.createDevContext())
@@ -367,6 +461,7 @@ public class CustomAudienceServiceEndToEndTest {
                                 .setDevOptionsEnabled(true)
                                 .setCallingAppPackageName(MY_APP_PACKAGE_NAME)
                                 .build());
+        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any(), any());
 
         String otherOwner = "otherOwner";
 
@@ -413,6 +508,7 @@ public class CustomAudienceServiceEndToEndTest {
                                 .setDevOptionsEnabled(true)
                                 .setCallingAppPackageName(MY_APP_PACKAGE_NAME)
                                 .build());
+        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any(), any());
 
         DBCustomAudienceOverride dbCustomAudienceOverride =
                 DBCustomAudienceOverride.builder()
@@ -439,6 +535,41 @@ public class CustomAudienceServiceEndToEndTest {
     }
 
     @Test
+    public void testRemoveCustomAudienceRemoteInfoOverrideWithRevokedUserConsentSuccess()
+            throws Exception {
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(
+                        DevContext.builder()
+                                .setDevOptionsEnabled(true)
+                                .setCallingAppPackageName(MY_APP_PACKAGE_NAME)
+                                .build());
+        doReturn(true).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any(), any());
+
+        DBCustomAudienceOverride dbCustomAudienceOverride =
+                DBCustomAudienceOverride.builder()
+                        .setOwner(MY_APP_PACKAGE_NAME)
+                        .setBuyer(BUYER_1)
+                        .setName(NAME_1)
+                        .setBiddingLogicJS(BIDDING_LOGIC_JS)
+                        .setTrustedBiddingData(TRUSTED_BIDDING_DATA.toString())
+                        .setAppPackageName(MY_APP_PACKAGE_NAME)
+                        .build();
+
+        mCustomAudienceDao.persistCustomAudienceOverride(dbCustomAudienceOverride);
+        assertTrue(
+                mCustomAudienceDao.doesCustomAudienceOverrideExist(
+                        MY_APP_PACKAGE_NAME, BUYER_1, NAME_1));
+
+        CustomAudienceOverrideTestCallback callback =
+                callRemoveOverride(MY_APP_PACKAGE_NAME, BUYER_1, NAME_1, mService);
+
+        assertTrue(callback.mIsSuccess);
+        assertTrue(
+                mCustomAudienceDao.doesCustomAudienceOverrideExist(
+                        MY_APP_PACKAGE_NAME, BUYER_1, NAME_1));
+    }
+
+    @Test
     public void testRemoveCustomAudienceRemoteInfoOverrideDoesNotDeleteWithIncorrectPackageName()
             throws Exception {
         String incorrectPackageName = "incorrectPackageName";
@@ -449,6 +580,7 @@ public class CustomAudienceServiceEndToEndTest {
                                 .setDevOptionsEnabled(true)
                                 .setCallingAppPackageName(incorrectPackageName)
                                 .build());
+        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any(), any());
 
         DBCustomAudienceOverride dbCustomAudienceOverride =
                 DBCustomAudienceOverride.builder()
@@ -512,6 +644,7 @@ public class CustomAudienceServiceEndToEndTest {
                                 .setDevOptionsEnabled(true)
                                 .setCallingAppPackageName(MY_APP_PACKAGE_NAME)
                                 .build());
+        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any(), any());
 
         DBCustomAudienceOverride dbCustomAudienceOverride1 =
                 DBCustomAudienceOverride.builder()
@@ -550,6 +683,58 @@ public class CustomAudienceServiceEndToEndTest {
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
                         MY_APP_PACKAGE_NAME, BUYER_1, NAME_1));
         assertFalse(
+                mCustomAudienceDao.doesCustomAudienceOverrideExist(
+                        MY_APP_PACKAGE_NAME, BUYER_2, NAME_2));
+    }
+
+    @Test
+    public void testResetAllCustomAudienceRemoteOverridesWithRevokedUserConsentSuccess()
+            throws Exception {
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(
+                        DevContext.builder()
+                                .setDevOptionsEnabled(true)
+                                .setCallingAppPackageName(MY_APP_PACKAGE_NAME)
+                                .build());
+        doReturn(true).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any(), any());
+
+        DBCustomAudienceOverride dbCustomAudienceOverride1 =
+                DBCustomAudienceOverride.builder()
+                        .setOwner(MY_APP_PACKAGE_NAME)
+                        .setBuyer(BUYER_1)
+                        .setName(NAME_1)
+                        .setBiddingLogicJS(BIDDING_LOGIC_JS)
+                        .setTrustedBiddingData(TRUSTED_BIDDING_DATA.toString())
+                        .setAppPackageName(MY_APP_PACKAGE_NAME)
+                        .build();
+
+        DBCustomAudienceOverride dbCustomAudienceOverride2 =
+                DBCustomAudienceOverride.builder()
+                        .setOwner(MY_APP_PACKAGE_NAME)
+                        .setBuyer(BUYER_2)
+                        .setName(NAME_2)
+                        .setBiddingLogicJS(BIDDING_LOGIC_JS)
+                        .setTrustedBiddingData(TRUSTED_BIDDING_DATA.toString())
+                        .setAppPackageName(MY_APP_PACKAGE_NAME)
+                        .build();
+
+        mCustomAudienceDao.persistCustomAudienceOverride(dbCustomAudienceOverride1);
+        mCustomAudienceDao.persistCustomAudienceOverride(dbCustomAudienceOverride2);
+
+        assertTrue(
+                mCustomAudienceDao.doesCustomAudienceOverrideExist(
+                        MY_APP_PACKAGE_NAME, BUYER_2, NAME_2));
+        assertTrue(
+                mCustomAudienceDao.doesCustomAudienceOverrideExist(
+                        MY_APP_PACKAGE_NAME, BUYER_2, NAME_2));
+
+        CustomAudienceOverrideTestCallback callback = callResetAllOverrides(mService);
+
+        assertTrue(callback.mIsSuccess);
+        assertTrue(
+                mCustomAudienceDao.doesCustomAudienceOverrideExist(
+                        MY_APP_PACKAGE_NAME, BUYER_1, NAME_1));
+        assertTrue(
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
                         MY_APP_PACKAGE_NAME, BUYER_2, NAME_2));
     }
@@ -565,6 +750,7 @@ public class CustomAudienceServiceEndToEndTest {
                                 .setDevOptionsEnabled(true)
                                 .setCallingAppPackageName(incorrectPackageName)
                                 .build());
+        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any(), any());
 
         DBCustomAudienceOverride dbCustomAudienceOverride1 =
                 DBCustomAudienceOverride.builder()
@@ -608,8 +794,7 @@ public class CustomAudienceServiceEndToEndTest {
     }
 
     @Test
-    public void testResetAllCustomAudienceRemoteOverridesFailsWithDevOptionsDisabled()
-            throws Exception {
+    public void testResetAllCustomAudienceRemoteOverridesFailsWithDevOptionsDisabled() {
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 

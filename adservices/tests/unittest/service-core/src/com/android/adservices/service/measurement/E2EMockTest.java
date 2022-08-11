@@ -16,11 +16,15 @@
 
 package com.android.adservices.service.measurement;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import android.net.Uri;
 
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.RegisterSource;
 import com.android.adservices.service.measurement.actions.RegisterTrigger;
@@ -28,6 +32,7 @@ import com.android.adservices.service.measurement.actions.RegisterWebSource;
 import com.android.adservices.service.measurement.actions.RegisterWebTrigger;
 import com.android.adservices.service.measurement.actions.ReportObjects;
 import com.android.adservices.service.measurement.actions.ReportingJob;
+import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.registration.SourceFetcher;
 import com.android.adservices.service.measurement.registration.TriggerFetcher;
 import com.android.adservices.service.measurement.reporting.AggregateReportingJobHandlerWrapper;
@@ -68,11 +73,16 @@ import co.nstant.in.cbor.model.UnicodeString;
 public abstract class E2EMockTest extends E2ETest {
     SourceFetcher mSourceFetcher;
     TriggerFetcher mTriggerFetcher;
+    ClickVerifier mClickVerifier;
+    Flags mFlags;
 
     E2EMockTest(Collection<Action> actions, ReportObjects expectedOutput, String name) {
         super(actions, expectedOutput, name);
         mSourceFetcher = Mockito.spy(new SourceFetcher());
         mTriggerFetcher = Mockito.spy(new TriggerFetcher());
+        mClickVerifier = Mockito.mock(ClickVerifier.class);
+        mFlags = FlagsFactory.getFlagsForTest();
+        when(mClickVerifier.isInputEventVerifiable(any(), anyLong())).thenReturn(true);
     }
 
     @Override

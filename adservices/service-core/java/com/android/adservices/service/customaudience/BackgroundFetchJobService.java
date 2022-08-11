@@ -29,6 +29,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.time.Clock;
@@ -47,13 +48,16 @@ public class BackgroundFetchJobService extends JobService {
 
         if (!FlagsFactory.getFlags().getFledgeBackgroundFetchEnabled()) {
             LogUtil.d("FLEDGE background fetch is disabled; skipping and cancelling job");
-            this.getSystemService(JobScheduler.class).cancel(FLEDGE_BACKGROUND_FETCH_JOB_ID);
-
-            jobFinished(params, false);
-            return false;
+            return skipAndCancelBackgroundJob(params);
         }
 
-        // TODO(b/234642471): Stop and cancel the job if the FLEDGE APIs no longer have user consent
+        if (FlagsFactory.getFlags().getFledgeCustomAudienceServiceKillSwitch()
+                || !ConsentManager.getInstance(this)
+                        .getConsent(this.getPackageManager())
+                        .isGiven()) {
+            LogUtil.d("FLEDGE Custom Audience API is disabled ; skipping and cancelling job");
+            return skipAndCancelBackgroundJob(params);
+        }
 
         // TODO(b/235841960): Consider using com.android.adservices.service.stats.Clock instead of
         //  Java Clock
@@ -86,6 +90,13 @@ public class BackgroundFetchJobService extends JobService {
                         });
 
         return true;
+    }
+
+    private boolean skipAndCancelBackgroundJob(final JobParameters params) {
+        this.getSystemService(JobScheduler.class).cancel(FLEDGE_BACKGROUND_FETCH_JOB_ID);
+
+        jobFinished(params, false);
+        return false;
     }
 
     @Override

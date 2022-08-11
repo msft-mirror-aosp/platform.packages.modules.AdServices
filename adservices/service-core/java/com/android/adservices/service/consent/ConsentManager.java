@@ -331,17 +331,21 @@ public class ConsentManager {
      *     the user has revoked consent for the given application to use the FLEDGE APIs
      * @throws IllegalArgumentException if the package name is invalid or not found as an installed
      *     application
-     * @throws IOException if the operation fails
      */
     public boolean isFledgeConsentRevokedForApp(
             @NonNull PackageManager packageManager, @NonNull String packageName)
-            throws IllegalArgumentException, IOException {
+            throws IllegalArgumentException {
         // TODO(b/238464639): Implement API-specific consent for FLEDGE
         if (!getConsent(packageManager).isGiven()) {
             return true;
         }
 
-        return mAppConsentDao.isConsentRevokedForApp(packageName);
+        try {
+            return mAppConsentDao.isConsentRevokedForApp(packageName);
+        } catch (IOException exception) {
+            LogUtil.e(exception, "FLEDGE consent check failed due to IOException");
+            return true;
+        }
     }
 
     /**
@@ -361,17 +365,21 @@ public class ConsentManager {
      *     false} otherwise
      * @throws IllegalArgumentException if the package name is invalid or not found as an installed
      *     application
-     * @throws IOException if the operation fails
      */
     public boolean isFledgeConsentRevokedForAppAfterSettingFledgeUse(
             @NonNull PackageManager packageManager, @NonNull String packageName)
-            throws IllegalArgumentException, IOException {
+            throws IllegalArgumentException {
         // TODO(b/238464639): Implement API-specific consent for FLEDGE
         if (!getConsent(packageManager).isGiven()) {
             return true;
         }
 
-        return mAppConsentDao.setConsentForAppIfNew(packageName, false);
+        try {
+            return mAppConsentDao.setConsentForAppIfNew(packageName, false);
+        } catch (IOException exception) {
+            LogUtil.e(exception, "FLEDGE consent check failed due to IOException");
+            return true;
+        }
     }
 
     /** Wipes out all the data gathered by Measurement API. */
@@ -479,5 +487,20 @@ public class ConsentManager {
         jobScheduler.cancel(AdServicesConfig.MDD_CHARGING_PERIODIC_TASK_JOB_ID);
         jobScheduler.cancel(AdServicesConfig.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID);
         jobScheduler.cancel(AdServicesConfig.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID);
+    }
+
+    /**
+     * Represents revoked consent as internally determined by the PP APIs.
+     *
+     * <p>This is an internal-only exception and is not meant to be returned to external callers.
+     */
+    public static class RevokedConsentException extends IllegalStateException {
+        public static final String REVOKED_CONSENT_ERROR_MESSAGE =
+                "Error caused by revoked user consent";
+
+        /** Creates an instance of a {@link RevokedConsentException}. */
+        public RevokedConsentException() {
+            super(REVOKED_CONSENT_ERROR_MESSAGE);
+        }
     }
 }

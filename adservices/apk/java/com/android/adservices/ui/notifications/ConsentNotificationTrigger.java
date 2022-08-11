@@ -69,6 +69,7 @@ public class ConsentNotificationTrigger {
                         ? context.getString(R.string.notificationUI_notification_content_eu)
                         : context.getString(R.string.notificationUI_notification_content)))
                 .setPriority(NOTIFICATION_PRIORITY)
+                .setAutoCancel(true)
                 .setContentIntent(pendingIntent);
     }
 
@@ -89,6 +90,13 @@ public class ConsentNotificationTrigger {
                 .build();
         AdServicesLoggerImpl.getInstance().logUIStats(uiStats);
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
+
+        if (!notificationManager.areNotificationsEnabled()) {
+            ConsentManager.getInstance(context)
+                    .recordNotificationDisplayed(context.getPackageManager());
+            // TODO(b/242001860): add logging
+            return;
+        }
 
         createNotificationChannel(context);
         NotificationCompat.Builder consentNotificationBuilder =

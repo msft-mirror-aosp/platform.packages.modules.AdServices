@@ -26,6 +26,7 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.customaudience.CustomAudienceOverrideCallback;
 import android.annotation.NonNull;
+import android.content.pm.PackageManager;
 import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
@@ -33,6 +34,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLogger;
 
 import com.google.common.util.concurrent.FluentFuture;
@@ -45,33 +47,44 @@ import java.util.concurrent.ExecutorService;
 
 /** Encapsulates the Custom Audience Override Logic */
 public class CustomAudienceOverrider {
+    @NonNull private final DevContext mDevContext;
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
     @NonNull private final ListeningExecutorService mListeningExecutorService;
     @NonNull private final CustomAudienceDevOverridesHelper mCustomAudienceDevOverridesHelper;
+    @NonNull private final PackageManager mPackageManager;
+    @NonNull private final ConsentManager mConsentManager;
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final AppImportanceFilter mAppImportanceFilter;
     @NonNull private final Flags mFlags;
 
     /**
      * Creates an instance of {@link CustomAudienceOverrider} with the given {@link DevContext},
-     * {@link CustomAudienceDao}, executor, and {@link CustomAudienceDevOverridesHelper}.
+     * {@link CustomAudienceDao}, executor, {@link ConsentManager} and {@link
+     * CustomAudienceDevOverridesHelper}.
      */
     public CustomAudienceOverrider(
             @NonNull DevContext devContext,
             @NonNull CustomAudienceDao customAudienceDao,
             @NonNull ExecutorService executorService,
+            @NonNull PackageManager packageManager,
+            @NonNull ConsentManager consentManager,
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull Flags flags) {
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(executorService);
+        Objects.requireNonNull(packageManager);
+        Objects.requireNonNull(consentManager);
         Objects.requireNonNull(adServicesLogger);
 
+        this.mDevContext = devContext;
         this.mCustomAudienceDao = customAudienceDao;
         this.mListeningExecutorService = MoreExecutors.listeningDecorator(executorService);
         this.mCustomAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(devContext, mCustomAudienceDao);
+        this.mPackageManager = packageManager;
+        this.mConsentManager = consentManager;
         this.mAdServicesLogger = adServicesLogger;
         this.mAppImportanceFilter = appImportanceFilter;
         this.mFlags = flags;
@@ -117,11 +130,11 @@ public class CustomAudienceOverrider {
                                         owner, buyer, name, biddingLogicJS, trustedBiddingSignals),
                         mListeningExecutorService)
                 .addCallback(
-                        new FutureCallback<Void>() {
+                        new FutureCallback<Integer>() {
                             @Override
-                            public void onSuccess(Void result) {
+                            public void onSuccess(Integer result) {
                                 LogUtil.d("Add dev override succeeded!");
-                                invokeSuccess(callback, shortApiName);
+                                invokeSuccess(callback, shortApiName, result);
                             }
 
                             @Override
@@ -167,11 +180,11 @@ public class CustomAudienceOverrider {
                         ignoredVoid -> callRemoveOverride(owner, buyer, name),
                         mListeningExecutorService)
                 .addCallback(
-                        new FutureCallback<Void>() {
+                        new FutureCallback<Integer>() {
                             @Override
-                            public void onSuccess(Void result) {
+                            public void onSuccess(Integer result) {
                                 LogUtil.d("Removing dev override succeeded!");
-                                invokeSuccess(callback, shortApiName);
+                                invokeSuccess(callback, shortApiName, result);
                             }
 
                             @Override
@@ -206,11 +219,11 @@ public class CustomAudienceOverrider {
                                 }))
                 .transformAsync(ignoredVoid -> callRemoveAllOverrides(), mListeningExecutorService)
                 .addCallback(
-                        new FutureCallback<Void>() {
+                        new FutureCallback<Integer>() {
                             @Override
-                            public void onSuccess(Void result) {
+                            public void onSuccess(Integer result) {
                                 LogUtil.d("Removing all dev overrides succeeded!");
-                                invokeSuccess(callback, shortApiName);
+                                invokeSuccess(callback, shortApiName, result);
                             }
 
                             @Override
@@ -222,7 +235,7 @@ public class CustomAudienceOverrider {
                         mListeningExecutorService);
     }
 
-    private FluentFuture<Void> callAddOverride(
+    private FluentFuture<Integer> callAddOverride(
             @NonNull String owner,
             @NonNull AdTechIdentifier buyer,
             @NonNull String name,
@@ -231,28 +244,43 @@ public class CustomAudienceOverrider {
         return FluentFuture.from(
                 mListeningExecutorService.submit(
                         () -> {
+                            if (mConsentManager.isFledgeConsentRevokedForApp(
+                                    mPackageManager, mDevContext.getCallingAppPackageName())) {
+                                return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
+                            }
+
                             mCustomAudienceDevOverridesHelper.addOverride(
                                     owner, buyer, name, biddingLogicJS, trustedBiddingData);
-                            return null;
+                            return AdServicesStatusUtils.STATUS_SUCCESS;
                         }));
     }
 
-    private FluentFuture<Void> callRemoveOverride(
+    private FluentFuture<Integer> callRemoveOverride(
             @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name) {
         return FluentFuture.from(
                 mListeningExecutorService.submit(
                         () -> {
+                            if (mConsentManager.isFledgeConsentRevokedForApp(
+                                    mPackageManager, mDevContext.getCallingAppPackageName())) {
+                                return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
+                            }
+
                             mCustomAudienceDevOverridesHelper.removeOverride(owner, buyer, name);
-                            return null;
+                            return AdServicesStatusUtils.STATUS_SUCCESS;
                         }));
     }
 
-    private FluentFuture<Void> callRemoveAllOverrides() {
+    private FluentFuture<Integer> callRemoveAllOverrides() {
         return FluentFuture.from(
                 mListeningExecutorService.submit(
                         () -> {
+                            if (mConsentManager.isFledgeConsentRevokedForApp(
+                                    mPackageManager, mDevContext.getCallingAppPackageName())) {
+                                return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
+                            }
+
                             mCustomAudienceDevOverridesHelper.removeAllOverrides();
-                            return null;
+                            return AdServicesStatusUtils.STATUS_SUCCESS;
                         }));
     }
 
@@ -279,16 +307,20 @@ public class CustomAudienceOverrider {
     }
 
     /** Invokes the onSuccess function from the callback and handles the exception. */
-    private void invokeSuccess(@NonNull CustomAudienceOverrideCallback callback, int apiName) {
-        int resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
+    private void invokeSuccess(
+            @NonNull CustomAudienceOverrideCallback callback, int apiName, Integer resultCode) {
+        int resultCodeInt = AdServicesStatusUtils.STATUS_UNSET;
+        if (resultCode != null) {
+            resultCodeInt = resultCode;
+        }
         try {
             callback.onSuccess();
         } catch (RemoteException e) {
             LogUtil.e(e, "Unable to send successful result to the callback");
-            resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
+            resultCodeInt = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
             throw e.rethrowFromSystemServer();
         } finally {
-            mAdServicesLogger.logFledgeApiCallStats(apiName, resultCode);
+            mAdServicesLogger.logFledgeApiCallStats(apiName, resultCodeInt);
         }
     }
 

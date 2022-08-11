@@ -44,6 +44,7 @@ public class WebSourceRegistrationRequestInternalTest {
     private static final Uri VERIFIED_DESTINATION = Uri.parse("https://verified-dest.com");
     private static final KeyEvent INPUT_KEY_EVENT =
             new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_1);
+    private static final long REQUEST_TIME = 10000L;
 
     private static final WebSourceParams SOURCE_REGISTRATION_1 =
             new WebSourceParams.Builder(REGISTRATION_URI_1).setDebugKeyAllowed(true).build();
@@ -83,14 +84,16 @@ public class WebSourceRegistrationRequestInternalTest {
                 NullPointerException.class,
                 () ->
                         new WebSourceRegistrationRequestInternal.Builder(
-                                        null, CONTEXT.getAttributionSource().getPackageName())
+                                        null,
+                                        CONTEXT.getAttributionSource().getPackageName(),
+                                        REQUEST_TIME)
                                 .build());
 
         assertThrows(
                 NullPointerException.class,
                 () ->
                         new WebSourceRegistrationRequestInternal.Builder(
-                                        EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST, null)
+                                        EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST, null, REQUEST_TIME)
                                 .build());
     }
 
@@ -115,7 +118,7 @@ public class WebSourceRegistrationRequestInternalTest {
         final WebSourceRegistrationRequestInternal request1 = createExampleRegistrationRequest();
         final WebSourceRegistrationRequestInternal request2 =
                 new WebSourceRegistrationRequestInternal.Builder(
-                                EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST, "com.foo")
+                                EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST, "com.foo", REQUEST_TIME)
                         .build();
 
         final Set<WebSourceRegistrationRequestInternal> requestSet1 = Set.of(request1);
@@ -128,7 +131,8 @@ public class WebSourceRegistrationRequestInternalTest {
     private WebSourceRegistrationRequestInternal createExampleRegistrationRequest() {
         return new WebSourceRegistrationRequestInternal.Builder(
                         EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST,
-                        CONTEXT.getAttributionSource().getPackageName())
+                        CONTEXT.getAttributionSource().getPackageName(),
+                        REQUEST_TIME)
                 .build();
     }
 

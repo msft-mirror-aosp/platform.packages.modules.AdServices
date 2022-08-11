@@ -125,17 +125,23 @@ public class SdkSandboxManagerUnitTest {
     @Test
     public void testGetLoadedSdkLibrariesInfo() throws Exception {
         List<SharedLibraryInfo> sharedLibraries = List.of();
-        Mockito.when(mBinder.getLoadedSdkLibrariesInfo(Mockito.anyString()))
+        Mockito.when(mBinder.getLoadedSdkLibrariesInfo(Mockito.anyString(), Mockito.anyLong()))
                 .thenReturn(sharedLibraries);
 
         assertThat(mSdkSandboxManager.getLoadedSdkLibrariesInfo()).isEqualTo(sharedLibraries);
-        Mockito.verify(mBinder).getLoadedSdkLibrariesInfo(mContext.getPackageName());
+        Mockito.verify(mBinder)
+                .getLoadedSdkLibrariesInfo(
+                        Mockito.eq(mContext.getPackageName()), Mockito.anyLong());
     }
 
     @Test
     public void testUnloadSdk() throws Exception {
         mSdkSandboxManager.unloadSdk(SDK_NAME);
-        Mockito.verify(mBinder).unloadSdk(mContext.getPackageName(), SDK_NAME);
+        Mockito.verify(mBinder)
+                .unloadSdk(
+                        Mockito.eq(mContext.getPackageName()),
+                        Mockito.eq(SDK_NAME),
+                        Mockito.anyLong());
     }
 
     @Test
@@ -168,6 +174,7 @@ public class SdkSandboxManagerUnitTest {
                         Mockito.eq(displayId),
                         Mockito.eq(width),
                         Mockito.eq(height),
+                        Mockito.anyLong(),
                         Mockito.eq(params),
                         callbackArgumentCaptor.capture());
 
@@ -214,6 +221,7 @@ public class SdkSandboxManagerUnitTest {
                         Mockito.eq(displayId),
                         Mockito.eq(width),
                         Mockito.eq(height),
+                        Mockito.anyLong(),
                         Mockito.eq(params),
                         callbackArgumentCaptor.capture());
 

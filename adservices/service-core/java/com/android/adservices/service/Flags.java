@@ -42,8 +42,8 @@ public interface Flags extends Dumpable {
         return TOPICS_EPOCH_JOB_PERIOD_MS;
     }
 
-    /** Topics Epoch Job Flex. */
-    long TOPICS_EPOCH_JOB_FLEX_MS = 5 * 60 * 60 * 1000; // 5 hours.
+    /** Topics Epoch Job Flex. Note the minimum value system allows is +8h24m0s0ms */
+    long TOPICS_EPOCH_JOB_FLEX_MS = 9 * 60 * 60 * 1000; // 5 hours.
 
     /** Returns flex for the Epoch computation job in Millisecond. */
     default long getTopicsEpochJobFlexMs() {
@@ -192,6 +192,23 @@ public interface Flags extends Dumpable {
     String MEASUREMENT_APP_NAME = "";
     int MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(5);
     int MEASUREMENT_NETWORK_READ_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(30);
+
+    /**
+     * Returns the window that an InputEvent has to be within for the system to register it as a
+     * click.
+     */
+    long MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS = 60 * 1000; // 1 minute.
+
+    default long getMeasurementRegistrationInputEventValidWindowMs() {
+        return MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS;
+    }
+
+    /** Returns whether a click event should be verified before a registration request. */
+    boolean MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED = true;
+
+    default boolean getMeasurementIsClickVerificationEnabled() {
+        return MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED;
+    }
 
     /** Returns the app name. */
     default String getMeasurementAppName() {
@@ -530,6 +547,21 @@ public interface Flags extends Dumpable {
     // MEASUREMENT Killswitches
 
     /**
+     * Measurement Kill Switch. This overrides all specific measurement kill switch. The default
+     * value is false which means that Measurement is enabled. This flag is used for emergency
+     * turning off the whole Measurement API.
+     */
+    boolean MEASUREMENT_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Global Measurement. Measurement will be disabled if either
+     * the Global Kill Switch or the Measurement Kill Switch value is true.
+     */
+    default boolean getMeasurementKillSwitch() {
+        return MEASUREMENT_KILL_SWITCH;
+    }
+
+    /**
      * Measurement API Delete Registrations Kill Switch. The default value is false which means
      * Delete Registrations API is enabled. This flag is used for emergency turning off the Delete
      * Registrations API.
@@ -538,12 +570,14 @@ public interface Flags extends Dumpable {
 
     /**
      * Returns the kill switch value for Measurement API Delete Registrations. The API will be
-     * disabled if either the Global Kill Switch or the Measurement API Delete Registration Kill
-     * Switch value is true.
+     * disabled if either the Global Kill Switch, Measurement Kill Switch, or the Measurement API
+     * Delete Registration Kill Switch value is true.
      */
     default boolean getMeasurementApiDeleteRegistrationsKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch() || MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH;
     }
 
     /**
@@ -554,11 +588,14 @@ public interface Flags extends Dumpable {
 
     /**
      * Returns the kill switch value for Measurement API Status. The API will be disabled if either
-     * the Global Kill Switch or the Measurement API Status Kill Switch value is true.
+     * the Global Kill Switch, Measurement Kill Switch, or the Measurement API Status Kill Switch
+     * value is true.
      */
     default boolean getMeasurementApiStatusKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch() || MEASUREMENT_API_STATUS_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_API_STATUS_KILL_SWITCH;
     }
 
     /**
@@ -569,12 +606,14 @@ public interface Flags extends Dumpable {
 
     /**
      * Returns the kill switch value for Measurement API Register Source. The API will be disabled
-     * if either the Global Kill Switch or the Measurement API Register Source Kill Switch value is
-     * true.
+     * if either the Global Kill Switch, Measurement Kill Switch, or the Measurement API Register
+     * Source Kill Switch value is true.
      */
     default boolean getMeasurementApiRegisterSourceKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch() || MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH;
     }
 
     /**
@@ -585,12 +624,14 @@ public interface Flags extends Dumpable {
 
     /**
      * Returns the kill switch value for Measurement API Register Trigger. The API will be disabled
-     * if either the Global Kill Switch or the Measurement API Register Trigger Kill Switch value is
-     * true.
+     * if either the Global Kill Switch, Measurement Kill Switch, or the Measurement API Register
+     * Trigger Kill Switch value is true.
      */
     default boolean getMeasurementApiRegisterTriggerKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch() || MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH;
     }
 
     /**
@@ -602,12 +643,14 @@ public interface Flags extends Dumpable {
 
     /**
      * Returns the kill switch value for Measurement API Register Web Source. The API will be
-     * disabled if either the Global Kill Switch or the Measurement API Register Web Source Kill
-     * Switch value is true.
+     * disabled if either the Global Kill Switch, Measurement Kill Switch, or the Measurement API
+     * Register Web Source Kill Switch value is true.
      */
     default boolean getMeasurementApiRegisterWebSourceKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch() || MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH;
     }
 
     /**
@@ -619,12 +662,14 @@ public interface Flags extends Dumpable {
 
     /**
      * Returns the kill switch value for Measurement API Register Web Trigger. The API will be
-     * disabled if either the Global Kill Switch or the Measurement API Register Web Trigger Kill
-     * Switch value is true.
+     * disabled if either the Global Kill Switch, Measurement Kill Switch, or the Measurement API
+     * Register Web Trigger Kill Switch value is true.
      */
     default boolean getMeasurementApiRegisterWebTriggerKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch() || MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH;
     }
 
     /**
@@ -636,12 +681,14 @@ public interface Flags extends Dumpable {
 
     /**
      * Returns the kill switch value for Measurement Job Aggregate Fallback Reporting. The API will
-     * be disabled if either the Global Kill Switch or the Measurement Job Aggregate Fallback
-     * Reporting Kill Switch value is true.
+     * be disabled if either the Global Kill Switch, Measurement Kill Switch, or the Measurement Job
+     * Aggregate Fallback Reporting Kill Switch value is true.
      */
     default boolean getMeasurementJobAggregateFallbackReportingKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch() || MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH;
     }
 
     /**
@@ -653,12 +700,14 @@ public interface Flags extends Dumpable {
 
     /**
      * Returns the kill switch value for Measurement Job Aggregate Reporting. The API will be
-     * disabled if either the Global Kill Switch or the Measurement Job Aggregate Reporting Kill
-     * Switch value is true.
+     * disabled if either the Global Kill Switch, Measurement Kill Switch, or the Measurement Job
+     * Aggregate Reporting Kill Switch value is true.
      */
     default boolean getMeasurementJobAggregateReportingKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch() || MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH;
     }
 
     /**
@@ -669,11 +718,14 @@ public interface Flags extends Dumpable {
 
     /**
      * Returns the kill switch value for Measurement Job Attribution. The API will be disabled if
-     * either the Global Kill Switch or the Measurement Job Attribution Kill Switch value is true.
+     * either the Global Kill Switch, Measurement Kill Switch, or the Measurement Job Attribution
+     * Kill Switch value is true.
      */
     default boolean getMeasurementJobAttributionKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch() || MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH;
     }
 
     /**
@@ -684,12 +736,14 @@ public interface Flags extends Dumpable {
 
     /**
      * Returns the kill switch value for Measurement Job Delete Expired. The API will be disabled if
-     * either the Global Kill Switch or the Measurement Job Delete Expired Kill Switch value is
-     * true.
+     * either the Global Kill Switch, Measurement Kill Switch, or the Measurement Job Delete Expired
+     * Kill Switch value is true.
      */
     default boolean getMeasurementJobDeleteExpiredKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch() || MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH;
     }
 
     /**
@@ -701,12 +755,14 @@ public interface Flags extends Dumpable {
 
     /**
      * Returns the kill switch value for Measurement Job Event Fallback Reporting. The API will be
-     * disabled if either the Global Kill Switch or the Measurement Job Event Fallback Reporting
-     * Kill Switch value is true.
+     * disabled if either the Global Kill Switch, Measurement Kill Switch, or the Measurement Job
+     * Event Fallback Reporting Kill Switch value is true.
      */
     default boolean getMeasurementJobEventFallbackReportingKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch() || MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH;
     }
 
     /**
@@ -718,12 +774,14 @@ public interface Flags extends Dumpable {
 
     /**
      * Returns the kill switch value for Measurement Job Event Reporting. The API will be disabled
-     * if either the Global Kill Switch or the Measurement Job Event Reporting Kill Switch value is
-     * true.
+     * if either the Global Kill Switch, Measurement Kill Switch, or the Measurement Job Event
+     * Reporting Kill Switch value is true.
      */
     default boolean getMeasurementJobEventReportingKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch() || MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH;
     }
 
     /**
@@ -735,12 +793,14 @@ public interface Flags extends Dumpable {
 
     /**
      * Returns the kill switch value for Measurement Broadcast Receiver Install Attribution. The
-     * Broadcast Receiver will be disabled if either the Global Kill Switch or the Measurement Kill
-     * Switch value is true.
+     * Broadcast Receiver will be disabled if either the Global Kill Switch, Measurement Kill Switch
+     * or the Measurement Kill Switch value is true.
      */
     default boolean getMeasurementReceiverInstallAttributionKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch() || MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH;
     }
 
     /**
@@ -752,12 +812,14 @@ public interface Flags extends Dumpable {
 
     /**
      * Returns the kill switch value for Measurement Broadcast Receiver Delete Packages. The
-     * Broadcast Receiver will be disabled if either the Global Kill Switch or the Measurement Kill
-     * Switch value is true.
+     * Broadcast Receiver will be disabled if either the Global Kill Switch, Measurement Kill Switch
+     * or the Measurement Kill Switch value is true.
      */
     default boolean getMeasurementReceiverDeletePackagesKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch() || MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH;
     }
 
     // ADID Killswitch.
@@ -797,6 +859,33 @@ public interface Flags extends Dumpable {
     default boolean getTopicsKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
         return getGlobalKillSwitch() || TOPICS_KILL_SWITCH;
+    }
+
+    // FLEDGE Kill switches
+
+    /**
+     * Fledge Ad Selection API kill switch. The default value is false which means that Select Ads
+     * API is enabled by default. This flag should be should as emergency andon cord.
+     */
+    boolean FLEDGE_SELECT_ADS_KILL_SWITCH = false;
+
+    /** @return value of Fledge Ad Selection API kill switch */
+    default boolean getFledgeSelectAdsKillSwitch() {
+        // Check for global kill switch first, as it should override all other kill switches
+        return getGlobalKillSwitch() || FLEDGE_SELECT_ADS_KILL_SWITCH;
+    }
+
+    /**
+     * Fledge Join Custom Audience API kill switch. The default value is false which means that Join
+     * Custom Audience API is enabled by default. This flag should be should as emergency andon
+     * cord.
+     */
+    boolean FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH = false;
+
+    /** @return value of Fledge Join Custom Audience API kill switch */
+    default boolean getFledgeCustomAudienceServiceKillSwitch() {
+        // Check for global kill switch first, as it should override all other kill switches
+        return getGlobalKillSwitch() || FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
     }
 
     /*
