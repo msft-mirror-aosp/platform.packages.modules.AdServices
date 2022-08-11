@@ -16,6 +16,8 @@
 
 package com.android.server.sdksandbox;
 
+import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND;
+
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__GET_LOADED_SDK_LIBRARIES_INFO;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK;
@@ -146,6 +148,10 @@ public class SdkSandboxManagerServiceUnitTest {
         Mockito.doNothing().when(mAmSpy).killUid(Mockito.anyInt(), Mockito.anyString());
     }
 
+    private void disableForegroundCheck() {
+        Mockito.doReturn(IMPORTANCE_FOREGROUND).when(mAmSpy).getUidImportance(Mockito.anyInt());
+    }
+
     /* Ignores network permission checks. */
     private void disableNetworkPermissionChecks() {
         Mockito.doNothing().when(mSpyContext).enforceCallingPermission(
@@ -157,6 +163,7 @@ public class SdkSandboxManagerServiceUnitTest {
     @Test
     public void testLoadSdkIsSuccessful() throws Exception {
         disableNetworkPermissionChecks();
+        disableForegroundCheck();
 
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         mService.loadSdk(
@@ -201,6 +208,7 @@ public class SdkSandboxManagerServiceUnitTest {
     @Test
     public void testLoadSdkPackageDoesNotExist() {
         disableNetworkPermissionChecks();
+        disableForegroundCheck();
 
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         mService.loadSdk(
@@ -220,6 +228,7 @@ public class SdkSandboxManagerServiceUnitTest {
     @Test
     public void testLoadSdk_errorFromSdkSandbox() throws Exception {
         disableNetworkPermissionChecks();
+        disableForegroundCheck();
 
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
 
@@ -276,6 +285,7 @@ public class SdkSandboxManagerServiceUnitTest {
     @Test
     public void testLoadSdk_successOnFirstLoad_errorOnLoadAgain() throws Exception {
         disableNetworkPermissionChecks();
+        disableForegroundCheck();
 
         // Load it once
         {
@@ -303,6 +313,7 @@ public class SdkSandboxManagerServiceUnitTest {
     @Test
     public void testLoadSdk_errorOnFirstLoad_canBeLoadedAgain() throws Exception {
         disableNetworkPermissionChecks();
+        disableForegroundCheck();
 
         // Load code, but make it fail
         {
@@ -327,6 +338,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Test
     public void testRequestSurfacePackageSdkNotLoaded() {
+        disableForegroundCheck();
         // Trying to request package with not exist SDK packageName
         String sdkName = "invalid";
         IllegalArgumentException thrown =
@@ -372,6 +384,7 @@ public class SdkSandboxManagerServiceUnitTest {
     public void testRequestSurfacePackageFailedAfterAppDied() throws Exception {
         disableKillUid();
         disableNetworkPermissionChecks();
+        disableForegroundCheck();
 
         FakeLoadSdkCallbackBinder callback = Mockito.spy(new FakeLoadSdkCallbackBinder());
         Mockito.doReturn(Mockito.mock(Binder.class)).when(callback).asBinder();
@@ -427,6 +440,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Test
     public void testSendData_SdkNotLoaded() throws Exception {
+        disableForegroundCheck();
         IllegalArgumentException thrown =
                 assertThrows(
                         IllegalArgumentException.class,
@@ -449,7 +463,6 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Test
     public void testAddSdkSandboxLifecycleCallback_BeforeStartingSandbox() throws Exception {
-
         // Register for sandbox death event
         FakeSdkSandboxLifecycleCallbackBinder lifecycleCallback =
                 new FakeSdkSandboxLifecycleCallbackBinder();
@@ -560,6 +573,7 @@ public class SdkSandboxManagerServiceUnitTest {
     public void testSdkSandboxServiceUnbindingWhenAppDied() throws Exception {
         disableKillUid();
         disableNetworkPermissionChecks();
+        disableForegroundCheck();
 
         ILoadSdkCallback.Stub callback = Mockito.spy(ILoadSdkCallback.Stub.class);
         int callingUid = Binder.getCallingUid();
@@ -655,7 +669,7 @@ public class SdkSandboxManagerServiceUnitTest {
         localManager.notifyInstrumentationStarted(TEST_PACKAGE, Process.myUid());
 
         // Verify that sdk sandbox was killed
-        Mockito.verify(mAmSpy, Mockito.only())
+        Mockito.verify(mAmSpy)
                 .killUid(Mockito.eq(Process.toSdkSandboxUid(Process.myUid())), Mockito.anyString());
         assertThat(mProvider.getBoundServiceForApp(callingInfo)).isNull();
     }
@@ -697,6 +711,7 @@ public class SdkSandboxManagerServiceUnitTest {
     public void testNotifyInstrumentationFinished_canLoadSdk() throws Exception {
         disableKillUid();
         disableNetworkPermissionChecks();
+        disableForegroundCheck();
 
         final SdkSandboxManagerLocal localManager = mService.getLocalManager();
         localManager.notifyInstrumentationStarted(TEST_PACKAGE, Process.myUid());
@@ -747,6 +762,7 @@ public class SdkSandboxManagerServiceUnitTest {
     @Test
     public void testGetLoadedSdkLibrariesInfo_errorLoadingSdk() throws Exception {
         disableNetworkPermissionChecks();
+        disableForegroundCheck();
 
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
 
@@ -779,6 +795,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Test
     public void testUnloadSdkThatIsNotLoaded() {
+        disableForegroundCheck();
         assertThrows(
                 IllegalArgumentException.class,
                 () -> mService.unloadSdk(TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER));
@@ -809,7 +826,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 TEST_PACKAGE, SDK_PROVIDER_RESOURCES_SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER);
 
         // No more SDKs should be loaded at this point. Verify that the sandbox has been killed.
-        Mockito.verify(mAmSpy, Mockito.only())
+        Mockito.verify(mAmSpy)
                 .killUid(Mockito.eq(Process.toSdkSandboxUid(Process.myUid())), Mockito.anyString());
         assertThat(mProvider.getBoundServiceForApp(callingInfo)).isNull();
     }
@@ -941,6 +958,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
     private void loadSdk() throws RemoteException {
         disableNetworkPermissionChecks();
+        disableForegroundCheck();
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         mService.loadSdk(
                 TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
