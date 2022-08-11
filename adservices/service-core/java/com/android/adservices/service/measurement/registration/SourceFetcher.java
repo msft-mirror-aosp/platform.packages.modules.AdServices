@@ -21,6 +21,7 @@ import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPOR
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_INSTALL_ATTRIBUTION_WINDOW;
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_POST_INSTALL_EXCLUSIVITY_WINDOW;
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+import static com.android.adservices.service.measurement.util.BaseUriExtractor.getBaseUri;
 
 import android.adservices.measurement.RegistrationRequest;
 import android.adservices.measurement.WebSourceParams;
@@ -150,7 +151,7 @@ public class SourceFetcher {
                 return false;
             }
 
-            result.setAppDestination(appUri);
+            result.setAppDestination(getBaseUri(appUri));
         }
 
         if (shouldValidateDestination
