@@ -72,7 +72,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             "This API is not enabled for the given app because either dev options are disabled or"
                     + " the app is not debuggable.";
 
-    public CustomAudienceServiceImpl(@NonNull Context context) {
+    private CustomAudienceServiceImpl(@NonNull Context context) {
         this(
                 context,
                 CustomAudienceImpl.getInstance(context),
@@ -86,6 +86,11 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                         AD_SERVICES_API_CALLED__API_CLASS__FLEDGE,
                         () -> FlagsFactory.getFlags().getForegroundStatuslLevelForValidation()),
                 FlagsFactory.getFlags());
+    }
+
+    /** Creates a new instance of {@link CustomAudienceServiceImpl}. */
+    public static CustomAudienceServiceImpl create(@NonNull Context context) {
+        return new CustomAudienceServiceImpl(context);
     }
 
     @VisibleForTesting

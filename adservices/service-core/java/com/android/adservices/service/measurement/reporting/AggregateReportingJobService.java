@@ -50,6 +50,11 @@ public final class AggregateReportingJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
+        if (FlagsFactory.getFlags().getMeasurementJobAggregateReportingKillSwitch()) {
+            LogUtil.e("Aggregate Reporting Job is disabled");
+            return false;
+        }
+
         sBlockingExecutor.execute(() -> {
             boolean success = new AggregateReportingJobHandler(
                     DatastoreManagerFactory.getDatastoreManager(
@@ -79,14 +84,17 @@ public final class AggregateReportingJobService extends JobService {
                                         Uri.parse("android-app://" + appName));
                         jobFinished(params, success);
                     });
+                } else {
+                    return false;
                 }
             } catch (Exception e) {
                 LogUtil.e(
                         "Perform all pending reports for app %s has exception %s", appName, e);
+                return false;
             }
         }
         LogUtil.d("AggregateReportingJobService.onStartJob");
-        return false;
+        return true;
     }
 
     @Override

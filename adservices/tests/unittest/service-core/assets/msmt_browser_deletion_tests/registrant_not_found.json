@@ -91,7 +91,7 @@
         "sourceType": "navigation"
       }
     ],
-    "attribution_rate_limits": [
+    "attributions": [
       {
         "id": "A1",
         "sourceSite": "android-app://com.site1",
@@ -205,7 +205,7 @@
         "sourceType": "navigation"
       }
     ],
-    "attribution_rate_limits": [
+    "attributions": [
       {
         "id": "A1",
         "sourceSite": "android-app://com.site1",

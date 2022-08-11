@@ -86,6 +86,7 @@ public class SourceTest {
                         .setAppDestination(Uri.parse("android-app://example.com/aD1"))
                         .setWebDestination(Uri.parse("https://example.com/aD2"))
                         .setPublisher(Uri.parse("https://example.com/aS"))
+                        .setPublisherType(EventSurfaceType.WEB)
                         .setId("1")
                         .setEventId(2L)
                         .setPriority(3L)
@@ -107,6 +108,7 @@ public class SourceTest {
                         .setAppDestination(Uri.parse("android-app://example.com/aD1"))
                         .setWebDestination(Uri.parse("https://example.com/aD2"))
                         .setPublisher(Uri.parse("https://example.com/aS"))
+                        .setPublisherType(EventSurfaceType.WEB)
                         .setId("1")
                         .setEventId(2L)
                         .setPriority(3L)
@@ -159,6 +161,11 @@ public class SourceTest {
                         .setPublisher(Uri.parse("https://1.com")).build(),
                 SourceFixture.getValidSourceBuilder()
                         .setPublisher(Uri.parse("https://2.com")).build());
+        assertNotEquals(
+                SourceFixture.getValidSourceBuilder()
+                        .setPublisherType(EventSurfaceType.APP).build(),
+                SourceFixture.getValidSourceBuilder()
+                        .setPublisherType(EventSurfaceType.WEB).build());
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder().setPriority(1L).build(),
                 SourceFixture.getValidSourceBuilder().setPriority(2L).build());
@@ -437,7 +444,7 @@ public class SourceTest {
                         .build();
         assertEquals(
                 expiryTime + TimeUnit.HOURS.toMillis(1),
-                source.getReportingTime(triggerTime, DestinationType.APP));
+                source.getReportingTime(triggerTime, EventSurfaceType.APP));
     }
 
     @Test
@@ -456,7 +463,7 @@ public class SourceTest {
                 sourceEventTime
                         + PrivacyParams.INSTALL_ATTR_EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS[0]
                         + TimeUnit.HOURS.toMillis(1),
-                source.getReportingTime(triggerTime, DestinationType.APP));
+                source.getReportingTime(triggerTime, EventSurfaceType.APP));
     }
 
     @Test
@@ -473,7 +480,7 @@ public class SourceTest {
                         .build();
         assertEquals(
                 expiryTime + TimeUnit.HOURS.toMillis(1),
-                source.getReportingTime(triggerTime, DestinationType.APP));
+                source.getReportingTime(triggerTime, EventSurfaceType.APP));
     }
 
     @Test
@@ -490,7 +497,7 @@ public class SourceTest {
                         .build();
         assertEquals(
                 expiryTime + TimeUnit.HOURS.toMillis(1),
-                source.getReportingTime(triggerTime, DestinationType.WEB));
+                source.getReportingTime(triggerTime, EventSurfaceType.WEB));
     }
 
     @Test
@@ -507,7 +514,7 @@ public class SourceTest {
                         .build();
         assertEquals(
                 expiryTime + TimeUnit.HOURS.toMillis(1),
-                source.getReportingTime(triggerTime, DestinationType.WEB));
+                source.getReportingTime(triggerTime, EventSurfaceType.WEB));
     }
 
     @Test
@@ -523,7 +530,7 @@ public class SourceTest {
                         .build();
         assertEquals(
                 expiryTime + TimeUnit.HOURS.toMillis(1),
-                source.getReportingTime(triggerTime, DestinationType.WEB));
+                source.getReportingTime(triggerTime, EventSurfaceType.WEB));
     }
 
     @Test
@@ -541,7 +548,7 @@ public class SourceTest {
                 sourceEventTime
                         + PrivacyParams.NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS[0]
                         + TimeUnit.HOURS.toMillis(1),
-                source.getReportingTime(triggerTime, DestinationType.APP));
+                source.getReportingTime(triggerTime, EventSurfaceType.APP));
     }
 
     @Test
@@ -559,7 +566,7 @@ public class SourceTest {
                 sourceEventTime
                         + PrivacyParams.NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS[1]
                         + TimeUnit.HOURS.toMillis(1),
-                source.getReportingTime(triggerTime, DestinationType.APP));
+                source.getReportingTime(triggerTime, EventSurfaceType.APP));
     }
 
     @Test
@@ -575,7 +582,7 @@ public class SourceTest {
                         .build();
         assertEquals(
                 sourceExpiryTime + TimeUnit.HOURS.toMillis(1),
-                source.getReportingTime(triggerTime, DestinationType.APP));
+                source.getReportingTime(triggerTime, EventSurfaceType.APP));
     }
 
     @Test
@@ -591,7 +598,7 @@ public class SourceTest {
                         .build();
         assertEquals(
                 sourceExpiryTime + TimeUnit.HOURS.toMillis(1),
-                source.getReportingTime(triggerTime, DestinationType.APP));
+                source.getReportingTime(triggerTime, EventSurfaceType.APP));
     }
 
     @Test
@@ -648,10 +655,10 @@ public class SourceTest {
                         .build();
         assertEquals(
                 PrivacyParams.EVENT_SOURCE_MAX_REPORTS,
-                eventSourceInstallNotAttributed.getMaxReportCount(DestinationType.APP));
+                eventSourceInstallNotAttributed.getMaxReportCount(EventSurfaceType.APP));
         assertEquals(
                 PrivacyParams.EVENT_SOURCE_MAX_REPORTS,
-                eventSourceInstallNotAttributed.getMaxReportCount(DestinationType.WEB));
+                eventSourceInstallNotAttributed.getMaxReportCount(EventSurfaceType.WEB));
 
         Source navigationSourceInstallNotAttributed =
                 SourceFixture.getValidSourceBuilder()
@@ -660,10 +667,12 @@ public class SourceTest {
                         .build();
         assertEquals(
                 PrivacyParams.NAVIGATION_SOURCE_MAX_REPORTS,
-                navigationSourceInstallNotAttributed.getMaxReportCount(DestinationType.APP));
+                navigationSourceInstallNotAttributed.getMaxReportCount(
+                        EventSurfaceType.APP));
         assertEquals(
                 PrivacyParams.NAVIGATION_SOURCE_MAX_REPORTS,
-                navigationSourceInstallNotAttributed.getMaxReportCount(DestinationType.WEB));
+                navigationSourceInstallNotAttributed.getMaxReportCount(
+                        EventSurfaceType.WEB));
 
         Source eventSourceInstallAttributed =
                 SourceFixture.getValidSourceBuilder()
@@ -672,11 +681,11 @@ public class SourceTest {
                         .build();
         assertEquals(
                 PrivacyParams.INSTALL_ATTR_EVENT_SOURCE_MAX_REPORTS,
-                eventSourceInstallAttributed.getMaxReportCount(DestinationType.APP));
+                eventSourceInstallAttributed.getMaxReportCount(EventSurfaceType.APP));
         // Install attribution state does not matter for web destination
         assertEquals(
                 PrivacyParams.EVENT_SOURCE_MAX_REPORTS,
-                eventSourceInstallAttributed.getMaxReportCount(DestinationType.WEB));
+                eventSourceInstallAttributed.getMaxReportCount(EventSurfaceType.WEB));
 
         Source navigationSourceInstallAttributed =
                 SourceFixture.getValidSourceBuilder()
@@ -685,10 +694,10 @@ public class SourceTest {
                         .build();
         assertEquals(
                 PrivacyParams.NAVIGATION_SOURCE_MAX_REPORTS,
-                navigationSourceInstallAttributed.getMaxReportCount(DestinationType.APP));
+                navigationSourceInstallAttributed.getMaxReportCount(EventSurfaceType.APP));
         assertEquals(
                 PrivacyParams.NAVIGATION_SOURCE_MAX_REPORTS,
-                navigationSourceInstallAttributed.getMaxReportCount(DestinationType.WEB));
+                navigationSourceInstallAttributed.getMaxReportCount(EventSurfaceType.WEB));
     }
 
     @Test
