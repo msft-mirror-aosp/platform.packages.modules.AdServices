@@ -22,7 +22,10 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <application android:debuggable="true">
         <activity android:name=".SdkSandboxTestDebuggableActivity"
-                  android:exported="true">
+                  android:exported="true"
+                  android:turnScreenOn="true"
+                  android:keepScreenOn="true"
+                  android:showWhenLocked="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>

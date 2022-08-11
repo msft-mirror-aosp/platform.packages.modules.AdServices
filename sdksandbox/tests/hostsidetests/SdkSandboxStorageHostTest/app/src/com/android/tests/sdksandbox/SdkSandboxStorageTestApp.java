@@ -33,11 +33,13 @@ import android.os.Process;
 import android.os.UserHandle;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import junit.framework.AssertionFailedError;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -57,6 +59,8 @@ public class SdkSandboxStorageTestApp {
             "open failed: EACCES (Permission denied)";
     private static final String JAVA_FILE_NOT_FOUND_MSG =
             "open failed: ENOENT (No such file or directory)";
+
+    @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(TestActivity.class);
 
     private Context mContext;
     private SdkSandboxManager mSdkSandboxManager;
@@ -82,6 +86,8 @@ public class SdkSandboxStorageTestApp {
 
     @Test
     public void loadSdk() throws Exception {
+        mRule.getScenario();
+
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
@@ -95,6 +101,8 @@ public class SdkSandboxStorageTestApp {
 
     @Test
     public void testSdkDataPackageDirectory_SharedStorageIsUsable() throws Exception {
+        mRule.getScenario();
+
         // First load SDK
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
@@ -106,6 +114,8 @@ public class SdkSandboxStorageTestApp {
 
     @Test
     public void testSdkDataSubDirectory_PerSdkStorageIsUsable() throws Exception {
+        mRule.getScenario();
+
         // First load SDK
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
@@ -117,6 +127,8 @@ public class SdkSandboxStorageTestApp {
 
     @Test
     public void testSdkDataIsAttributedToApp() throws Exception {
+        mRule.getScenario();
+
         // First load sdk
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
