@@ -154,6 +154,11 @@ public final class PrivacyParams {
      */
     public static final int MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE = 65536;
 
+    /**
+     * Maximum number of aggregation keys allowed during source or trigger registration.
+     */
+    public static final int MAX_AGGREGATE_KEYS_PER_REGISTRATION = 50;
+
     /** Amount of bytes allocated for aggregate histogram bucket */
     public static final int AGGREGATE_HISTOGRAM_BUCKET_BYTE_SIZE = 16;
 
