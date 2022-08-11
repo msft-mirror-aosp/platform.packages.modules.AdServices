@@ -27,11 +27,11 @@ public final class GetTopicsRequest {
     private final Context mContext;
 
     /** Name of Ads SDK that is involved in this request. */
-    private final String mSdkName;
+    private final String mAdsSdkName;
 
-    private GetTopicsRequest(@NonNull Context context, @NonNull String sdkName) {
+    private GetTopicsRequest(@NonNull Context context, @NonNull String adsSdkName) {
         mContext = context;
-        mSdkName = sdkName;
+        mAdsSdkName = adsSdkName;
     }
 
     /** Get the Context. */
@@ -40,12 +40,10 @@ public final class GetTopicsRequest {
         return mContext;
     }
 
-    /**
-     * Get the Sdk Name.
-     */
+    /** Get the Sdk Name. */
     @NonNull
-    public String getSdkName() {
-        return mSdkName;
+    public String getAdsSdkName() {
+        return mAdsSdkName;
     }
 
     /**
@@ -55,6 +53,12 @@ public final class GetTopicsRequest {
         private final Context mContext;
         private String mSdkName;
 
+        /**
+         * Creates a {@link Builder} object using provided {@link Context}.
+         *
+         * @param context {@link Context} of the application/sandbox which send out the request to
+         *     getTopics API.
+         */
         public Builder(@NonNull Context context) {
             mContext = context;
         }
@@ -63,7 +67,7 @@ public final class GetTopicsRequest {
          * Set the Sdk Name. When the app calls the Topics API directly without using a SDK, don't
          * set this field.
          */
-        public @NonNull Builder setSdkName(@NonNull String sdkName) {
+        public @NonNull Builder setAdsSdkName(@NonNull String sdkName) {
             mSdkName = sdkName;
             return this;
         }

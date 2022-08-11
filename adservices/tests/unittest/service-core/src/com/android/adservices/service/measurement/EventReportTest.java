@@ -267,7 +267,7 @@ public final class EventReportTest {
         assertEquals(source.getAdTechDomain(), report.getAdTechDomain());
         assertEquals(trigger.getAttributionDestination(), report.getAttributionDestination());
         assertEquals(
-                source.getReportingTime(trigger.getTriggerTime(), DestinationType.WEB),
+                source.getReportingTime(trigger.getTriggerTime(), EventSurfaceType.WEB),
                 report.getReportTime());
         assertEquals(source.getSourceType(), report.getSourceType());
         assertEquals(

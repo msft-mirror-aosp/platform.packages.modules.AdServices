@@ -91,6 +91,13 @@ public class ConsentNotificationTrigger {
         AdServicesLoggerImpl.getInstance().logUIStats(uiStats);
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
 
+        if (!notificationManager.areNotificationsEnabled()) {
+            ConsentManager.getInstance(context)
+                    .recordNotificationDisplayed(context.getPackageManager());
+            // TODO(b/242001860): add logging
+            return;
+        }
+
         createNotificationChannel(context);
         NotificationCompat.Builder consentNotificationBuilder =
                 getConsentNotificationBuilder(context, isEuDevice);
