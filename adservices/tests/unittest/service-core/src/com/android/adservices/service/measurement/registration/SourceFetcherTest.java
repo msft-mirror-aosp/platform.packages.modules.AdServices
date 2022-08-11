@@ -806,6 +806,34 @@ public final class SourceFetcherTest {
     }
 
     @Test
+    public void testBasicSourceRequestWithAggregateSource_rejectsTooManyKeys() throws Exception {
+        StringBuilder tooManyKeys = new StringBuilder("[");
+        for (int i = 0; i < 51; i++) {
+            tooManyKeys.append(String.format(
+                    "{\"id\": \"campaign-%1$s\", \"key_piece\": \"0x15%1$s\"}", i));
+        }
+        tooManyKeys.append("]");
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                            + "  \"destination\": \"android-app://com.myapps\",\n"
+                                            + "  \"priority\": \"123\",\n"
+                                            + "  \"expiry\": \"456789\",\n"
+                                            + "  \"source_event_id\": \"987654321\"}\n"),
+                                "Attribution-Reporting-Register-Aggregatable-Source",
+                                List.of(tooManyKeys.toString())));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
     public void fetchWebSources_basic_success() throws IOException {
         // Setup
         SourceRegistration expectedResult1 =
