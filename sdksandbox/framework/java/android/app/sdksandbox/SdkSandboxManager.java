@@ -296,6 +296,9 @@ public final class SdkSandboxManager {
      * created, otherwise other SDKs will be loaded into the same sandbox which already created for
      * the client application.
      *
+     * <p>This API may only be called while the caller is running in the foreground. Calls from the
+     * background will result in a {@link SecurityException} being thrown.
+     *
      * @param sdkName name of the SDK to be loaded
      * @param params the parameters App passes to SDK
      * @param executor the {@link Executor} on which to invoke the receiver.
@@ -343,6 +346,9 @@ public final class SdkSandboxManager {
      * #requestSurfacePackage(String, Bundle, Executor, OutcomeReceiver)} for the given {@code
      * sdkName} will fail.
      *
+     * <p>This API may only be called while the caller is running in the foreground. Calls from the
+     * background will result in a {@link SecurityException} being thrown.
+     *
      * @param sdkName name of the SDK to be unloaded.
      * @throws IllegalArgumentException if the SDK is not loaded.
      */
@@ -367,6 +373,9 @@ public final class SdkSandboxManager {
      * <p>When the {@link SurfacePackage} is ready, {@code onResult} function of the {@code
      * receiver} will be called with Bundle, that bundle will contain the key {@code
      * EXTRA_SURFACE_PACKAGE} with value present the requested {@link SurfacePackage}.
+     *
+     * <p>This API may only be called while the caller is running in the foreground. Calls from the
+     * background will result in a {@link SecurityException} being thrown.
      *
      * @param sdkName name of the SDK loaded into sdk sandbox
      * @param params the parameters which the client application passes to the SDK, it should
@@ -447,6 +456,9 @@ public final class SdkSandboxManager {
      * <p>After the client application receives a signal about a successful SDK load, it is then
      * able to asynchronously request to send any data to the SDK in the sandbox. If the SDK is not
      * loaded, {@link IllegalArgumentException} is thrown.
+     *
+     * <p>This API may only be called while the caller is running in the foreground. Calls from the
+     * background will result in a {@link SecurityException} being thrown.
      *
      * @param sdkName name of the SDK loaded into sdk sandbox, the same name used in {@link
      *     SdkSandboxManager#loadSdk(String, Bundle, Executor, OutcomeReceiver)}

@@ -35,9 +35,13 @@ import android.content.pm.SharedLibraryInfo;
 import android.os.Binder;
 import android.os.Bundle;
 
+import androidx.lifecycle.Lifecycle;
+import androidx.test.core.app.ActivityScenario;
+import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -52,12 +56,17 @@ import java.util.List;
 @RunWith(JUnit4.class)
 public class SdkSandboxManagerTest {
 
+    @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(TestActivity.class);
+
+    private ActivityScenario<TestActivity> mScenario;
+
     private SdkSandboxManager mSdkSandboxManager;
 
     @Before
     public void setup() {
         final Context context = InstrumentationRegistry.getInstrumentation().getContext();
         mSdkSandboxManager = context.getSystemService(SdkSandboxManager.class);
+        mScenario = mRule.getScenario();
     }
 
     @Test
@@ -408,6 +417,24 @@ public class SdkSandboxManagerTest {
         // TODO(b/241542162): Avoid using reflection as a workaround once test apis can be run
         //  without issue.
         mSdkSandboxManager.getClass().getMethod("stopSdkSandbox").invoke(mSdkSandboxManager);
+    }
+
+    @Test
+    public void testLoadSdkInBackgroundFails() throws Exception {
+        mScenario.moveToState(Lifecycle.State.DESTROYED);
+
+        // Wait for the activity to be destroyed
+        Thread.sleep(1000);
+
+        final String sdkName = "com.android.loadSdkSuccessfullySdkProvider";
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        SecurityException thrown =
+                assertThrows(
+                        SecurityException.class,
+                        () ->
+                                mSdkSandboxManager.loadSdk(
+                                        sdkName, new Bundle(), Runnable::run, callback));
+        assertThat(thrown).hasMessageThat().contains("does not run in the foreground");
     }
 }
 
