@@ -311,7 +311,7 @@ class AttributionJobHandler {
             throws DatastoreException {
         trigger.setStatus(Trigger.Status.ATTRIBUTED);
         measurementDao.updateTriggerStatus(trigger);
-        measurementDao.insertAttributionRateLimit(source, trigger);
+        measurementDao.insertAttribution(source, trigger);
     }
 
     private void ignoreTrigger(Trigger trigger, IMeasurementDao measurementDao)
