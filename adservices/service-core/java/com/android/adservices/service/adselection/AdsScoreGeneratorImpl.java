@@ -39,6 +39,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -133,7 +134,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
     @Nullable
     private List<AdScoringOutcome> handleTimeoutError(TimeoutException e) {
         LogUtil.e(e, "Scoring exceeded time limit");
-        throw new IllegalStateException(SCORING_TIMED_OUT);
+        throw new UncheckedTimeoutException(SCORING_TIMED_OUT);
     }
 
     private ListenableFuture<String> getAdSelectionLogic(
