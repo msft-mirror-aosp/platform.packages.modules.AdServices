@@ -16,11 +16,16 @@
             "destination": "android-app://example.2d1.com",
             "priority": "100",
             "filter_data": {
-              "key_1": ["value_11", "value_12"],
-              "key_2": ["value_21", "value_22"]
+              "key_1": [
+                "value_11",
+                "value_12"
+              ],
+              "key_2": [
+                "value_21",
+                "value_22"
+              ]
             }
           },
-          "Attribution-Reporting-Register-Aggregatable-Source": null,
           "Location": null,
           "Attribution-Reporting-Redirect": null
         }
@@ -37,17 +42,26 @@
         "responses": [{
           "url": "https://www.ad-tech1.com",
           "response": {
-            "Attribution-Reporting-Register-Event-Trigger": [{
-              "trigger_data": "1",
-              "priority": "101"
-            }],
-            "Attribution-Reporting-Register-Aggregatable-Trigger-Data": null,
+            "Attribution-Reporting-Register-Trigger": {
+              "event_trigger_data": [
+                {
+                  "trigger_data": "1",
+                  "priority": "101"
+                }
+              ],
+              "filters": {
+                "key_1": [
+                  "value_11_x",
+                  "value_12_x"
+                ],
+                "key_2": [
+                  "value_21_x",
+                  "value_22_x"
+                ]
+              }
+            },
             "Location": null,
-            "Attribution-Reporting-Redirect": null,
-            "Attribution-Reporting-Filters": [{
-                "key_1": ["value_11_x", "value_12_x"],
-                "key_2": ["value_21_x", "value_22_x"]
-            }]
+            "Attribution-Reporting-Redirect": null
           }
         }],
         "timestamp": "800604800000"
