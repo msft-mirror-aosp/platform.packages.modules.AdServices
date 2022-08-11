@@ -23,7 +23,7 @@ android_test {
         // The tests below are interacting with the JsSandbox singleton and should
         // be run in a separate process
         "src/com/android/adservices/service/js/JSScriptEngineTest.java",
-        "src/com/android/adservices/service/js/JsSandboxProviderTest.java",
+        "src/com/android/adservices/service/js/JavaScriptSandboxProviderTest.java",
     ],
     defaults: ["modules-utils-testable-device-config-defaults"],
     sdk_version: "module_current",
@@ -78,7 +78,7 @@ android_test {
     name: "AdServicesJsEngineUnitTests",
     srcs: [
         "src/com/android/adservices/service/js/JSScriptEngineTest.java",
-        "src/com/android/adservices/service/js/JsSandboxProviderTest.java",
+        "src/com/android/adservices/service/js/JavaScriptSandboxProviderTest.java",
     ],
     defaults: ["modules-utils-testable-device-config-defaults"],
     sdk_version: "module_current",
