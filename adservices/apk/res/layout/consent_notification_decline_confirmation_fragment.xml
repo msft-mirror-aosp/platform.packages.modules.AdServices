@@ -41,6 +41,7 @@
                     android:orientation="vertical">
 
                 <TextView
+                        android:layout_marginTop="60dp"
                         android:text="@string/notificationUI_confirmation_decline_title"
                         style="@style/MainStyle.H1" />
 
