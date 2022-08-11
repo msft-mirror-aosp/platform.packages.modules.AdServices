@@ -188,8 +188,7 @@ public class AdSelectionE2ETest {
     private AdSelectionConfig mAdSelectionConfig;
     private AdSelectionServiceImpl mAdSelectionService;
     private Dispatcher mDispatcher;
-    private final Flags mFlags =
-            FlagsWithOverriddenAppImportanceCheck.createFlagsWithAppImportanceCheckEnabled();
+    private final Flags mFlags = new FledgeE2ETestFlags();
 
     @Before
     public void setUp() throws Exception {
@@ -1204,6 +1203,11 @@ public class AdSelectionE2ETest {
                     public long getAdSelectionBiddingTimeoutPerCaMs() {
                         return 100;
                     }
+
+                    @Override
+                    public boolean getEnforceIsolateMaxHeapSize() {
+                        return false;
+                    }
                 };
 
         // Create an instance of AdSelection Service with real dependencies
@@ -1305,6 +1309,11 @@ public class AdSelectionE2ETest {
                     @Override
                     public long getAdSelectionScoringTimeoutMs() {
                         return 100;
+                    }
+
+                    @Override
+                    public boolean getEnforceIsolateMaxHeapSize() {
+                        return false;
                     }
                 };
 
@@ -1824,6 +1833,28 @@ public class AdSelectionE2ETest {
             mIsSuccess = false;
             mFledgeErrorResponse = fledgeErrorResponse;
             mCountDownLatch.countDown();
+        }
+    }
+
+    private static class FledgeE2ETestFlags implements Flags {
+        @Override
+        public boolean getEnforceIsolateMaxHeapSize() {
+            return false;
+        }
+
+        @Override
+        public boolean getEnforceForegroundStatusForFledgeRunAdSelection() {
+            return true;
+        }
+
+        @Override
+        public boolean getEnforceForegroundStatusForFledgeReportImpression() {
+            return true;
+        }
+
+        @Override
+        public boolean getEnforceForegroundStatusForFledgeOverrides() {
+            return true;
         }
     }
 }

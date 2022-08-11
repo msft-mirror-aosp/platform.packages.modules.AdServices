@@ -74,6 +74,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+
 /**
  * Orchestrator that runs the Ads Auction/Bidding and Scoring logic The class expects the caller to
  * create a concrete object instance of the class. The instances are mutually exclusive and do not
@@ -135,7 +136,6 @@ public final class AdSelectionRunner {
         Objects.requireNonNull(executorService);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(flags);
-
         mContext = context;
         mCustomAudienceDao = customAudienceDao;
         mAdSelectionEntryDao = adSelectionEntryDao;
@@ -144,7 +144,10 @@ public final class AdSelectionRunner {
         mAdServicesLogger = adServicesLogger;
         mAdsScoreGenerator =
                 new AdsScoreGeneratorImpl(
-                        new AdSelectionScriptEngine(mContext),
+                        new AdSelectionScriptEngine(
+                                mContext,
+                                () -> flags.getEnforceIsolateMaxHeapSize(),
+                                () -> flags.getIsolateMaxHeapSizeBytes()),
                         mExecutorService,
                         new AdServicesHttpsClient(mExecutorService),
                         devContext,

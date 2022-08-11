@@ -1031,4 +1031,20 @@ public interface Flags extends Dumpable {
     default String getWebContextRegistrationClientAppAllowList() {
         return WEB_CONTEXT_REGISTRATION_CLIENT_ALLOW_LIST;
     }
+
+    boolean ENFORCE_ISOLATE_MAX_HEAP_SIZE = true;
+    long ISOLATE_MAX_HEAP_SIZE_BYTES = 2 * 1024 * 1024L; // 2 MB
+
+    /**
+     * @return true if we enforce to check that JavaScriptIsolate supports limiting the max heap
+     *     size
+     */
+    default boolean getEnforceIsolateMaxHeapSize() {
+        return ENFORCE_ISOLATE_MAX_HEAP_SIZE;
+    }
+
+    /** @return size in bytes we bound the heap memory for JavaScript isolate */
+    default long getIsolateMaxHeapSizeBytes() {
+        return ISOLATE_MAX_HEAP_SIZE_BYTES;
+    }
 }

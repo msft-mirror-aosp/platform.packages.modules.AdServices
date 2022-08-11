@@ -178,6 +178,11 @@ public class AdSelectionServiceImplTest {
                 public long getReportImpressionOverallTimeoutMs() {
                     return 500;
                 }
+
+                @Override
+                public boolean getEnforceIsolateMaxHeapSize() {
+                    return false;
+                }
             };
     private MockitoSession mStaticMockSession = null;
     @Spy private final AdServicesLogger mAdServicesLoggerSpy = AdServicesLoggerImpl.getInstance();
