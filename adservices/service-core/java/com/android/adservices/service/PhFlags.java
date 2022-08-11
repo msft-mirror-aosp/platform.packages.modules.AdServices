@@ -142,6 +142,7 @@ public final class PhFlags implements Flags {
 
     static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE =
             "fledge_ad_selection_enforce_foreground_status_custom_audience";
+    static final String KEY_ENFORCE_FOREGROUND_STATUS_TOPICS = "topics_enforce_foreground_status";
 
     // MDD keys.
     static final String KEY_DOWNLOADER_CONNECTION_TIMEOUT_MS = "downloader_connection_timeout_ms";
@@ -1070,6 +1071,16 @@ public final class PhFlags implements Flags {
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_DISABLE_TOPICS_ENROLLMENT_CHECK,
                         /* defaultValue */ DISABLE_TOPICS_ENROLLMENT_CHECK));
+    }
+
+    @Override
+    public boolean getEnforceForegroundStatusForTopics() {
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(KEY_ENFORCE_FOREGROUND_STATUS_TOPICS),
+                /* defaultValue */ DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_ENFORCE_FOREGROUND_STATUS_TOPICS,
+                        /* defaultValue */ ENFORCE_FOREGROUND_STATUS_TOPICS));
     }
 
     @Override
