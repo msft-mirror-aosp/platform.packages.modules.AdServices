@@ -23,7 +23,6 @@ import static android.app.sdksandbox.SdkSandboxManager.EXTRA_SURFACE_PACKAGE;
 import static android.app.sdksandbox.SdkSandboxManager.EXTRA_WIDTH_IN_PIXELS;
 import static android.app.sdksandbox.SdkSandboxManager.LOAD_SDK_NOT_FOUND;
 import static android.app.sdksandbox.SdkSandboxManager.REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR;
-import static android.app.sdksandbox.SdkSandboxManager.SEND_DATA_INTERNAL_ERROR;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -546,62 +545,6 @@ public class SdkSandboxManagerUnitTest {
         params.putInt(EXTRA_DISPLAY_ID, 0);
         params.putBinder(EXTRA_HOST_TOKEN, null);
         ensureIllegalArgumentExceptionOnRequestSurfacePackage(params, EXTRA_HOST_TOKEN);
-    }
-
-    @Test
-    public void testSendDataSuccess() throws Exception {
-        final Bundle params = new Bundle();
-
-        OutcomeReceiver<SendDataResponse, SendDataException> outcomeReceiver =
-                Mockito.spy(new FakeOutcomeReceiver<>());
-        mSdkSandboxManager.sendData(SDK_NAME, params, Runnable::run, outcomeReceiver);
-
-        ArgumentCaptor<ISendDataCallback> callbackArgumentCaptor =
-                ArgumentCaptor.forClass(ISendDataCallback.class);
-        Mockito.verify(mBinder)
-                .sendData(
-                        Mockito.eq(mContext.getPackageName()),
-                        Mockito.eq(SDK_NAME),
-                        Mockito.eq(params),
-                        callbackArgumentCaptor.capture());
-
-        // Simulate the success callback
-        final Bundle extraInfo = new Bundle();
-        callbackArgumentCaptor.getValue().onSendDataSuccess(extraInfo);
-        ArgumentCaptor<SendDataResponse> responseCapture =
-                ArgumentCaptor.forClass(SendDataResponse.class);
-        Mockito.verify(outcomeReceiver).onResult(responseCapture.capture());
-
-        final SendDataResponse response = responseCapture.getValue();
-        assertThat(response.getExtraInformation()).isEqualTo(extraInfo);
-    }
-
-    @Test
-    public void testSendDataFailure() throws Exception {
-        final Bundle params = new Bundle();
-
-        OutcomeReceiver<SendDataResponse, SendDataException> outcomeReceiver =
-                Mockito.spy(new FakeOutcomeReceiver<>());
-        mSdkSandboxManager.sendData(SDK_NAME, params, Runnable::run, outcomeReceiver);
-
-        ArgumentCaptor<ISendDataCallback> callbackArgumentCaptor =
-                ArgumentCaptor.forClass(ISendDataCallback.class);
-        Mockito.verify(mBinder)
-                .sendData(
-                        Mockito.eq(mContext.getPackageName()),
-                        Mockito.eq(SDK_NAME),
-                        Mockito.eq(params),
-                        callbackArgumentCaptor.capture());
-
-        // Simulate the error callback
-        callbackArgumentCaptor.getValue().onSendDataError(SEND_DATA_INTERNAL_ERROR, ERROR_MSG);
-        ArgumentCaptor<SendDataException> responseCapture =
-                ArgumentCaptor.forClass(SendDataException.class);
-        Mockito.verify(outcomeReceiver).onError(responseCapture.capture());
-
-        SendDataException exception = responseCapture.getValue();
-        assertThat(exception.getSendDataErrorCode()).isEqualTo(SEND_DATA_INTERNAL_ERROR);
-        assertThat(exception.getMessage()).isEqualTo(ERROR_MSG);
     }
 
     private void ensureIllegalArgumentExceptionOnRequestSurfacePackage(

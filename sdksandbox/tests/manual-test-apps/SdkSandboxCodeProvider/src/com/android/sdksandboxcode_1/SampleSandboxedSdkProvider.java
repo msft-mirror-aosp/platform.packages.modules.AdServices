@@ -51,9 +51,6 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
         return new TestView(windowContext, getContext(), width, height);
     }
 
-    @Override
-    public void onDataReceived(Bundle data, DataReceivedCallback callback) {}
-
     private static class TestView extends View {
 
         private Context mSdkContext;

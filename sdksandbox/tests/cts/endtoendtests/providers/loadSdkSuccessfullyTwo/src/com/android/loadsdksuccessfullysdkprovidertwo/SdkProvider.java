@@ -34,7 +34,4 @@ public class SdkProvider extends SandboxedSdkProvider {
     public View getView(Context windowContext, Bundle params, int width, int height) {
         return null;
     }
-
-    @Override
-    public void onDataReceived(Bundle data, DataReceivedCallback callback) {}
 }

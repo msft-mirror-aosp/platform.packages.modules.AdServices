@@ -3,5 +3,4 @@ rule android.app.sdksandbox.ILoadSdkCallback** com.android.sdksandbox.ILoadSdkCa
 rule android.app.sdksandbox.IRequestSurfacePackageCallback** com.android.sdksandbox.IRequestSurfacePackageCallback@1
 rule android.app.sdksandbox.ISdkSandboxLifecycleCallback** com.android.sdksandbox.ISdkSandboxLifecycleCallback@1
 rule android.app.sdksandbox.ISdkSandboxManager** com.android.sdksandbox.ISdkSandboxManager@1
-rule android.app.sdksandbox.ISendDataCallback** com.android.sdksandbox.ISendDataCallback@1
 rule android.app.sdksandbox.ISdkToServiceCallback** com.android.sdksandbox.ISdkToServiceCallback@1

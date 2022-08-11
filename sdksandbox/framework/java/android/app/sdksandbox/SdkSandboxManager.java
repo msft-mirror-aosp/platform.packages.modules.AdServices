@@ -134,19 +134,6 @@ public final class SdkSandboxManager {
     @Retention(RetentionPolicy.SOURCE)
     public @interface RequestSurfacePackageErrorCode {}
 
-    /**
-     * Internal error while performing {@link SdkSandboxManager#sendData}.
-     *
-     * <p>This indicates a generic internal error happened while requesting to send data to an SDK.
-     */
-    public static final int SEND_DATA_INTERNAL_ERROR = 800;
-
-    /** @hide */
-    @IntDef(
-            prefix = "SEND_DATA_",
-            value = {SEND_DATA_INTERNAL_ERROR})
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface SendDataErrorCode {}
 
     /**
      * SDK Sandbox is disabled.
@@ -367,9 +354,8 @@ public final class SdkSandboxManager {
      * Unloads an SDK that has been previously loaded by the caller.
      *
      * <p>It is not guaranteed that the memory allocated for this SDK will be freed immediately. All
-     * subsequent calls to {@link #sendData(String, Bundle, Executor, OutcomeReceiver)} or {@link
-     * #requestSurfacePackage(String, Bundle, Executor, OutcomeReceiver)} for the given {@code
-     * sdkName} will fail.
+     * subsequent calls to {@link #requestSurfacePackage(String, Bundle, Executor, OutcomeReceiver)}
+     * for the given {@code sdkName} will fail.
      *
      * <p>This API may only be called while the caller is running in the foreground. Calls from the
      * background will result in a {@link SecurityException} being thrown.
@@ -471,37 +457,6 @@ public final class SdkSandboxManager {
                     /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
                     params,
                     callbackProxy);
-        } catch (RemoteException e) {
-            throw e.rethrowFromSystemServer();
-        }
-    }
-
-    /**
-     * Sends a bundle of {@code data} to SDK.
-     *
-     * <p>After the client application receives a signal about a successful SDK load, it is then
-     * able to asynchronously request to send any data to the SDK in the sandbox. If the SDK is not
-     * loaded, {@link IllegalArgumentException} is thrown.
-     *
-     * <p>This API may only be called while the caller is running in the foreground. Calls from the
-     * background will result in a {@link SecurityException} being thrown.
-     *
-     * @param sdkName name of the SDK loaded into sdk sandbox, the same name used in {@link
-     *     SdkSandboxManager#loadSdk(String, Bundle, Executor, OutcomeReceiver)}
-     * @param data the data to be sent to the SDK represented in the form of a {@link Bundle}
-     * @param callbackExecutor the {@link Executor} on which to invoke the callback
-     * @param receiver the {@link OutcomeReceiver} which will receive events from loading and
-     *     interacting with SDKs. The SDK may also send a Bundle of data back on a successful run.
-     * @throws IllegalArgumentException if the SDK is not loaded.
-     */
-    public void sendData(
-            @NonNull String sdkName,
-            @NonNull Bundle data,
-            @NonNull @CallbackExecutor Executor callbackExecutor,
-            @NonNull OutcomeReceiver<SendDataResponse, SendDataException> receiver) {
-        SendDataReceiverProxy callbackProxy = new SendDataReceiverProxy(callbackExecutor, receiver);
-        try {
-            mService.sendData(mContext.getPackageName(), sdkName, data, callbackProxy);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
@@ -643,28 +598,6 @@ public final class SdkSandboxManager {
                                 + "Error: "
                                 + e.getMessage());
             }
-        }
-    }
-
-    /** @hide */
-    private static class SendDataReceiverProxy extends ISendDataCallback.Stub {
-        private final Executor mExecutor;
-        private final OutcomeReceiver<SendDataResponse, SendDataException> mReceiver;
-
-        SendDataReceiverProxy(
-                Executor executor, OutcomeReceiver<SendDataResponse, SendDataException> receiver) {
-            mExecutor = executor;
-            mReceiver = receiver;
-        }
-
-        @Override
-        public void onSendDataSuccess(Bundle params) {
-            mExecutor.execute(() -> mReceiver.onResult(new SendDataResponse(params)));
-        }
-
-        @Override
-        public void onSendDataError(int errorCode, String errorMsg) {
-            mExecutor.execute(() -> mReceiver.onError(new SendDataException(errorCode, errorMsg)));
         }
     }
 }
