@@ -889,9 +889,9 @@ public interface Flags extends Dumpable {
     }
 
     /*
-     * The Allow List for PP APIs. This list has the list of app package names that we allow
-     * to use PP APIs.
-     * App Package Name that does not belongs to this Allow List will not be able use PP APIs.
+     * The allow-list for PP APIs. This list has the list of app package names that we allow
+     * using PP APIs.
+     * App Package Name that does not belong to this allow-list will not be able to use PP APIs.
      * If this list has special value "*", then all package names are allowed.
      * There must be not any empty space between comma.
      */
@@ -910,6 +910,14 @@ public interface Flags extends Dumpable {
                     + "com.example.adservices.samples.topics.sampleapp4,"
                     + "com.example.adservices.samples.topics.sampleapp5,"
                     + "com.example.adservices.samples.topics.sampleapp6";
+
+    /**
+     * The client app packages that are allowed to invoke web context registration APIs, i.e. {@link
+     * android.adservices.measurement.MeasurementManager#registerWebSource} and {@link
+     * android.adservices.measurement.MeasurementManager#registerWebTrigger}. App packages that do
+     * not belong to the list will be responded back with an error response.
+     */
+    String WEB_CONTEXT_REGISTRATION_CLIENT_ALLOW_LIST = "";
 
     /**
      * Returns the The Allow List for PP APIs. Only App Package Name belongs to this Allow List can
@@ -950,6 +958,7 @@ public interface Flags extends Dumpable {
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE = true;
+    boolean ENFORCE_FOREGROUND_STATUS_TOPICS = true;
 
     /**
      * @return true if FLEDGE runAdSelection API should require that the calling API is running in
@@ -983,10 +992,19 @@ public interface Flags extends Dumpable {
         return ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE;
     }
 
+    /** @return true if Topics API should require that the calling API is running in foreground. */
+    default boolean getEnforceForegroundStatusForTopics() {
+        return ENFORCE_FOREGROUND_STATUS_TOPICS;
+    }
+
     int FOREGROUND_STATUS_LEVEL = IMPORTANCE_FOREGROUND_SERVICE;
 
     /** @return the importance level to use to check if an application is in foreground. */
     default int getForegroundStatuslLevelForValidation() {
         return FOREGROUND_STATUS_LEVEL;
+    }
+
+    default String getWebContextRegistrationClientAppAllowList() {
+        return WEB_CONTEXT_REGISTRATION_CLIENT_ALLOW_LIST;
     }
 }

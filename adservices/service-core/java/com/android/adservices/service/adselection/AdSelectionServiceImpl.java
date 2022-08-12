@@ -150,7 +150,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             adSelectionConfigValidator.validate(adSelectionConfig);
         } catch (NullPointerException | IllegalArgumentException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                    AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                     AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
             // Rethrow because we want to fail fast
             throw exception;

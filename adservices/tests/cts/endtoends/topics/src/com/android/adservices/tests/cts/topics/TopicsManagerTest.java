@@ -73,6 +73,7 @@ public class TopicsManagerTest {
 
     @Test
     public void testTopicsManager() throws Exception {
+        overrideEnforceForegroundStatusForTopics(false);
         overrideDisableTopicsEnrollmentCheck("1");
         overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
 
@@ -130,9 +131,16 @@ public class TopicsManagerTest {
         assertThat(sdk2Result2.getTopics()).isEmpty();
 
         // Reset back the original values.
+        overrideEnforceForegroundStatusForTopics(true);
         overrideDisableTopicsEnrollmentCheck("0");
         overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
         overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+    }
+
+    // Override the flag to disable enforcing foreground.
+    private void overrideEnforceForegroundStatusForTopics(boolean enforce) {
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.topics_enforce_foreground_status " + enforce);
     }
 
     // Override the flag to disable Topics enrollment check.

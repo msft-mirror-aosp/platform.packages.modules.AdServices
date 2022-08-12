@@ -29,17 +29,16 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.content.Context;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
 import com.android.adservices.service.measurement.EventReport;
+import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.Trigger;
@@ -48,7 +47,6 @@ import com.android.adservices.service.measurement.TriggerFixture;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -71,6 +69,7 @@ public class AttributionJobHandlerTest {
 
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Uri APP_DESTINATION = Uri.parse("android-app://com.example.app");
+    private static final Uri PUBLISHER = Uri.parse("android-app://publisher.app");
     private static final String EVENT_TRIGGERS =
             "[\n"
                     + "{\n"
@@ -116,12 +115,6 @@ public class AttributionJobHandlerTest {
     @Before
     public void before() {
         mDatastoreManager = new FakeDatastoreManager();
-        SQLiteDatabase db = DbHelper.getInstance(sContext).getWritableDatabase();
-    }
-
-    @After
-    public void after() {
-        SQLiteDatabase db = DbHelper.getInstance(sContext).getWritableDatabase();
     }
 
     @Test
@@ -214,6 +207,32 @@ public class AttributionJobHandlerTest {
         AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
         attributionService.performPendingAttributions();
         verify(mMeasurementDao).getAttributionsPerRateLimitWindow(source, trigger);
+        ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
+        verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
+        Assert.assertEquals(Trigger.Status.IGNORED, triggerArg.getValue().getStatus());
+        verify(mMeasurementDao, never()).insertEventReport(any());
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+    }
+
+    @Test
+    public void shouldNotAddIfAdTechPrivacyBoundExceeded() throws DatastoreException {
+        Trigger trigger = createAPendingTrigger();
+        Source source = SourceFixture.getValidSourceBuilder()
+                .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                .build();
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.countDistinctAdTechsPerPublisherXDestinationInAttribution(
+                any(), any(), any(), anyLong(), anyLong())).thenReturn(10);
+        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
+        attributionService.performPendingAttributions();
+        verify(mMeasurementDao).countDistinctAdTechsPerPublisherXDestinationInAttribution(
+                any(), any(), any(), anyLong(), anyLong());
         ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
         verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
         Assert.assertEquals(Trigger.Status.IGNORED, triggerArg.getValue().getStatus());
@@ -442,6 +461,8 @@ public class AttributionJobHandlerTest {
         when(source.getDedupKeys()).thenReturn(new ArrayList<>());
         when(source.getAttributionMode()).thenReturn(Source.AttributionMode.TRUTHFULLY);
         when(source.getAppDestination()).thenReturn(APP_DESTINATION);
+        when(source.getPublisherType()).thenReturn(EventSurfaceType.APP);
+        when(source.getPublisher()).thenReturn(PUBLISHER);
         AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
         attributionService.performPendingAttributions();
         verify(mMeasurementDao).deleteEventReport(eventReport1);

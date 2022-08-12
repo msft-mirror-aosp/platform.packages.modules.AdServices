@@ -33,13 +33,13 @@
             "sourceType": "navigation"
           }
         ],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [],
         "triggers": [],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "uri": "android-app://com.example.abc"
     },
@@ -89,7 +89,7 @@
             "sourceType": "navigation"
           }
         ],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -122,7 +122,7 @@
             "sourceType": "navigation"
           }
         ],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "uri": "android-app://remove.me"
     },
@@ -194,7 +194,7 @@
             "sourceType": "navigation"
           }
         ],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -245,7 +245,7 @@
             "sourceType": "navigation"
           }
         ],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "uri": "android-app://remove.me"
     },
@@ -324,7 +324,7 @@
             "sourceType": "navigation"
           }
         ],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -375,12 +375,12 @@
             "sourceType": "navigation"
           }
         ],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "uri": "android-app://remove.me"
     },
     {
-      "name": "Remove an AttributionRateLimit",
+      "name": "Remove an Attribution",
       "input": {
         "sources": [
           {
@@ -412,7 +412,7 @@
             "sourceType": "navigation"
           }
         ],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "Attr1",
             "sourceSite": "android-app://remove.me",
@@ -476,7 +476,7 @@
             "sourceType": "navigation"
           }
         ],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "Attr3",
             "sourceSite": "android-app://dont.remove.me",
@@ -524,7 +524,7 @@
         ],
         "triggers": [],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -544,7 +544,7 @@
         ],
         "triggers": [],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "uri": "android-app://remove.me"
     }

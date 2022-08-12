@@ -45,6 +45,7 @@ import com.android.adservices.service.topics.TopicsWorker;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -53,6 +54,7 @@ import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
 /** Unit test for {@link com.android.adservices.service.common.PackageChangedReceiver}. */
+@Ignore("TODO: b/242149584")
 @SmallTest
 public class PackageChangedReceiverTest {
     private static final Context sContext = ApplicationProvider.getApplicationContext();

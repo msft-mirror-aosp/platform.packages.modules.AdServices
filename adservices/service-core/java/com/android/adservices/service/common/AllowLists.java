@@ -18,7 +18,6 @@ package com.android.adservices.service.common;
 
 import android.annotation.NonNull;
 
-import com.android.adservices.service.Flags;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Arrays;
@@ -29,14 +28,21 @@ public class AllowLists {
 
     private static final String SPLITTER = ",";
 
-    /** Check if an app is allowed to call Topics API */
-    public static boolean appCanUsePpapi(@NonNull Flags flags, @NonNull String appPackageName) {
-        if (ALLOW_ALL.equals(flags.getPpapiAppAllowList())) {
+    /**
+     * A utility to check if an app package exists in the provided allow-list. The allow-list to
+     * search is split by {@link #SPLITTER} without any white spaces. E.g. of a valid allow list -
+     * "abc.package1.app,com.package2.app,com.package3.xyz" If the provided parameter {@code
+     * appPackageName} exists in the allow-list (e.g. com.package2.app), then the method returns
+     * true, false otherwise.
+     */
+    public static boolean isPackageAllowListed(
+            @NonNull String allowList, @NonNull String appPackageName) {
+        if (ALLOW_ALL.equals(allowList)) {
             return true;
         }
 
         // TODO(b/237686242): Cache the AllowList so that we don't need to read from Flags and split
         // on every API call.
-        return Arrays.asList(flags.getPpapiAppAllowList().split(SPLITTER)).contains(appPackageName);
+        return Arrays.asList(allowList.split(SPLITTER)).contains(appPackageName);
     }
 }
