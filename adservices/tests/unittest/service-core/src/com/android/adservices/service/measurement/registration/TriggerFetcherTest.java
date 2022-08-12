@@ -324,6 +324,26 @@ public final class TriggerFetcherTest {
     }
 
     @Test
+    public void testBasicTriggerRequestWithAggregateTriggerData_rejectsTooManyDataKeys()
+            throws Exception {
+        StringBuilder tooManyKeys = new StringBuilder("[");
+        for (int i = 0; i < 51; i++) {
+            tooManyKeys.append(String.format(
+                    "{\"key_piece\": \"0x15%1$s\",\"source_keys\":[\"campaign-%1$s\"]}", i));
+        }
+        tooManyKeys.append("]");
+        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(Map.of("Attribution-Reporting-Register-Aggregatable-Trigger-Data",
+                        List.of(tooManyKeys.toString())));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
     public void testBasicTriggerRequestWithAggregateValues() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
@@ -339,6 +359,26 @@ public final class TriggerFetcherTest {
         assertEquals("https://foo.com", result.get(0).getReportingOrigin().toString());
         assertEquals("{\"campaignCounts\":32768,\"geoValue\":1644}",
                 result.get(0).getAggregateValues());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testBasicTriggerRequestWithAggregateTriggerData_rejectsTooManyValueKeys()
+            throws Exception {
+        StringBuilder tooManyKeys = new StringBuilder("{");
+        int i = 0;
+        for (; i < 50; i++) {
+            tooManyKeys.append(String.format("\"key-%s\": 12345,", i));
+        }
+        tooManyKeys.append(String.format("\"key-%s\": 12345}", i));
+        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(Map.of("Attribution-Reporting-Register-Aggregatable-Values",
+                        List.of(tooManyKeys.toString())));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertFalse(fetch.isPresent());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
