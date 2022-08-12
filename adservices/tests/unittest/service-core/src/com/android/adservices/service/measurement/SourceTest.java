@@ -891,8 +891,8 @@ public class SourceTest {
         int neverCount = 0;
         int truthCount = 0;
         for (int i = 0; i < 500; i++) {
-            List<Source.FakeReport> fakeReports = source
-                    .assignAttributionModeAndGenerateFakeReport();
+            List<Source.FakeReport> fakeReports =
+                    source.assignAttributionModeAndGenerateFakeReports();
             if (source.getAttributionMode() == Source.AttributionMode.FALSELY) {
                 falseCount++;
                 assertNotEquals(0, fakeReports.size());
@@ -1314,7 +1314,7 @@ public class SourceTest {
         int truthCount = 0;
         for (int i = 0; i < 500; i++) {
             List<Source.FakeReport> fakeReports =
-                    source.assignAttributionModeAndGenerateFakeReport();
+                    source.assignAttributionModeAndGenerateFakeReports();
             if (source.getAttributionMode() == Source.AttributionMode.FALSELY) {
                 falseCount++;
                 assertNotEquals(0, fakeReports.size());

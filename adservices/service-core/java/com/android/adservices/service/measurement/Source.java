@@ -221,7 +221,6 @@ public class Source {
      * @param windowIndex index of the reporting window for which
      * @return reporting time in milliseconds
      */
-    @VisibleForTesting
     public long getReportingTimeForNoising(int windowIndex) {
         List<Long> windowList = getEarlyReportingWindows(isInstallDetectionEnabled());
         return windowIndex < windowList.size()
@@ -388,7 +387,7 @@ public class Source {
      *
      * @return fake reports to be stored in the datastore.
      */
-    public List<FakeReport> assignAttributionModeAndGenerateFakeReport() {
+    public List<FakeReport> assignAttributionModeAndGenerateFakeReports() {
         Random rand = new Random();
         double value = rand.nextDouble();
         if (value > getRandomAttributionProbability()) {
