@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package android.adservices.customaudience;
+package android.adservices.cts;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -24,6 +24,9 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.common.AdData;
 import android.adservices.common.AdDataFixture;
 import android.adservices.common.CommonFixture;
+import android.adservices.customaudience.CustomAudience;
+import android.adservices.customaudience.CustomAudienceFixture;
+import android.adservices.customaudience.TrustedBiddingDataFixture;
 import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;

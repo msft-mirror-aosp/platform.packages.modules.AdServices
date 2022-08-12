@@ -30,6 +30,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.service.measurement.EventReport;
+import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.Trigger;
@@ -50,6 +51,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -131,6 +134,7 @@ public class MeasurementDaoTest {
             Assert.assertNotNull(trigger.getId());
             assertEquals(
                     validTrigger.getAttributionDestination(), trigger.getAttributionDestination());
+            assertEquals(validTrigger.getDestinationType(), trigger.getDestinationType());
             assertEquals(validTrigger.getAdTechDomain(), trigger.getAdTechDomain());
             assertEquals(validTrigger.getRegistrant(), trigger.getRegistrant());
             assertEquals(validTrigger.getTriggerTime(), trigger.getTriggerTime());
@@ -171,6 +175,456 @@ public class MeasurementDaoTest {
         dm.runInTransaction(
                 measurementDao -> {
                     assertEquals(0, measurementDao.getNumTriggersPerRegistrant(APP_NO_TRIGGERS));
+                });
+    }
+
+    @Test
+    public void testCountDistinctAdTechsPerPublisherXDestinationInAttribution_appDestination() {
+        Uri sourceSite = Uri.parse("android-app://publisher.app");
+        Uri webDestination = Uri.parse("https://web-destination.com");
+        Uri appDestination = Uri.parse("android-app://destination.app");
+        List<Attribution> attributionsWithAppDestinations1 =
+                getAttributionsWithDifferentAdTechDomains(
+                        4, appDestination, 5000000000L, sourceSite);
+        List<Attribution> attributionsWithAppDestinations2 =
+                getAttributionsWithDifferentAdTechDomains(
+                        2, appDestination, 5000000000L, sourceSite);
+        List<Attribution> attributionsWithWebDestinations =
+                getAttributionsWithDifferentAdTechDomains(
+                        2, webDestination, 5500000000L, sourceSite);
+        List<Attribution> attributionsOutOfWindow =
+                getAttributionsWithDifferentAdTechDomains(
+                        10, appDestination, 50000000000L, sourceSite);
+        for (Attribution attribution : attributionsWithAppDestinations1) {
+            insertAttribution(attribution);
+        }
+        for (Attribution attribution : attributionsWithAppDestinations2) {
+            insertAttribution(attribution);
+        }
+        for (Attribution attribution : attributionsWithWebDestinations) {
+            insertAttribution(attribution);
+        }
+        for (Attribution attribution : attributionsOutOfWindow) {
+            insertAttribution(attribution);
+        }
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        Uri excludedAdTech = Uri.parse("https://ad-tech-domain-0.com");
+        datastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(Integer.valueOf(3), measurementDao
+                            .countDistinctAdTechsPerPublisherXDestinationInAttribution(
+                                    sourceSite, appDestination, excludedAdTech,
+                                    4000000000L, 6000000000L));
+                });
+    }
+
+    @Test
+    public void testCountDistinctAdTechsPerPublisherXDestinationInAttribution_webDestination() {
+        Uri sourceSite = Uri.parse("android-app://publisher.app");
+        Uri webDestination = Uri.parse("https://web-destination.com");
+        Uri appDestination = Uri.parse("android-app://destination.app");
+        List<Attribution> attributionsWithAppDestinations =
+                getAttributionsWithDifferentAdTechDomains(
+                        2, appDestination, 5000000000L, sourceSite);
+        List<Attribution> attributionsWithWebDestinations1 =
+                getAttributionsWithDifferentAdTechDomains(
+                        4, webDestination, 5000000000L, sourceSite);
+        List<Attribution> attributionsWithWebDestinations2 =
+                getAttributionsWithDifferentAdTechDomains(
+                        2, webDestination, 5500000000L, sourceSite);
+        List<Attribution> attributionsOutOfWindow =
+                getAttributionsWithDifferentAdTechDomains(
+                        10, webDestination, 50000000000L, sourceSite);
+        for (Attribution attribution : attributionsWithAppDestinations) {
+            insertAttribution(attribution);
+        }
+        for (Attribution attribution : attributionsWithWebDestinations1) {
+            insertAttribution(attribution);
+        }
+        for (Attribution attribution : attributionsWithWebDestinations2) {
+            insertAttribution(attribution);
+        }
+        for (Attribution attribution : attributionsOutOfWindow) {
+            insertAttribution(attribution);
+        }
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        Uri excludedAdTech = Uri.parse("https://ad-tech-domain-3.com");
+        datastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(Integer.valueOf(3), measurementDao
+                            .countDistinctAdTechsPerPublisherXDestinationInAttribution(
+                                    sourceSite, webDestination, excludedAdTech,
+                                    4000000000L, 6000000000L));
+                });
+    }
+
+    @Test
+    public void testCountDistinctDestinationsPerPublisherInActiveSource_appPublisher() {
+        Uri publisher = Uri.parse("android-app://publisher.app");
+        List<Source> activeSourcesWithAppAndWebDestinations =
+                getSourcesWithDifferentDestinations(
+                        4, true, true, 4500000000L, publisher,
+                        SourceFixture.ValidSourceParams.AD_TECH_DOMAIN, Source.Status.ACTIVE);
+        List<Source> activeSourcesWithAppDestinations =
+                getSourcesWithDifferentDestinations(
+                        2, true, false, 5000000000L, publisher,
+                        SourceFixture.ValidSourceParams.AD_TECH_DOMAIN, Source.Status.ACTIVE);
+        List<Source> activeSourcesWithWebDestinations =
+                getSourcesWithDifferentDestinations(
+                        2, false, true, 5500000000L, publisher,
+                        SourceFixture.ValidSourceParams.AD_TECH_DOMAIN, Source.Status.ACTIVE);
+        List<Source> activeSourcesOutOfWindow =
+                getSourcesWithDifferentDestinations(
+                        10, true, true, 50000000000L, publisher,
+                        SourceFixture.ValidSourceParams.AD_TECH_DOMAIN, Source.Status.ACTIVE);
+        List<Source> ignoredSources =
+                getSourcesWithDifferentDestinations(
+                        10, true, true, 5000000000L, publisher,
+                        SourceFixture.ValidSourceParams.AD_TECH_DOMAIN, Source.Status.IGNORED);
+        for (Source source : activeSourcesWithAppAndWebDestinations) {
+            insertSource(source);
+        }
+        for (Source source : activeSourcesWithAppDestinations) {
+            insertSource(source);
+        }
+        for (Source source : activeSourcesWithWebDestinations) {
+            insertSource(source);
+        }
+        for (Source source : activeSourcesOutOfWindow) {
+            insertSource(source);
+        }
+        for (Source source : ignoredSources) {
+            insertSource(source);
+        }
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        Uri excludedDestination = Uri.parse("https://web-destination-2.com");
+        datastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            Integer.valueOf(3),
+                            measurementDao
+                                    .countDistinctDestinationsPerPublisherXAdTechInActiveSource(
+                                            publisher, EventSurfaceType.APP,
+                                            SourceFixture.ValidSourceParams.AD_TECH_DOMAIN,
+                                            excludedDestination, EventSurfaceType.WEB,
+                                            4000000000L, 6000000000L));
+                });
+    }
+
+    // (Testing countDistinctDestinationsPerPublisherInActiveSource)
+    @Test
+    public void testCountDistinctDestinations_appPublisher_adTechMismatch() {
+        Uri publisher = Uri.parse("android-app://publisher.app");
+        List<Source> activeSourcesWithAppAndWebDestinations =
+                getSourcesWithDifferentDestinations(
+                        4, true, true, 4500000000L, publisher,
+                        SourceFixture.ValidSourceParams.AD_TECH_DOMAIN, Source.Status.ACTIVE);
+        List<Source> activeSourcesWithAppDestinations =
+                getSourcesWithDifferentDestinations(
+                        2, true, false, 5000000000L, publisher,
+                        SourceFixture.ValidSourceParams.AD_TECH_DOMAIN, Source.Status.ACTIVE);
+        List<Source> activeSourcesWithWebDestinations =
+                getSourcesWithDifferentDestinations(
+                        2, false, true, 5500000000L, publisher,
+                        SourceFixture.ValidSourceParams.AD_TECH_DOMAIN, Source.Status.ACTIVE);
+        List<Source> activeSourcesOutOfWindow =
+                getSourcesWithDifferentDestinations(
+                        10, true, true, 50000000000L, publisher,
+                        SourceFixture.ValidSourceParams.AD_TECH_DOMAIN, Source.Status.ACTIVE);
+        List<Source> ignoredSources =
+                getSourcesWithDifferentDestinations(
+                        10, true, true, 5000000000L, publisher,
+                        SourceFixture.ValidSourceParams.AD_TECH_DOMAIN, Source.Status.IGNORED);
+        for (Source source : activeSourcesWithAppAndWebDestinations) {
+            insertSource(source);
+        }
+        for (Source source : activeSourcesWithAppDestinations) {
+            insertSource(source);
+        }
+        for (Source source : activeSourcesWithWebDestinations) {
+            insertSource(source);
+        }
+        for (Source source : activeSourcesOutOfWindow) {
+            insertSource(source);
+        }
+        for (Source source : ignoredSources) {
+            insertSource(source);
+        }
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        Uri excludedDestination = Uri.parse("https://web-destination-2.com");
+        datastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            Integer.valueOf(0),
+                            measurementDao
+                                    .countDistinctDestinationsPerPublisherXAdTechInActiveSource(
+                                            publisher, EventSurfaceType.APP,
+                                            Uri.parse("https://unmatched-ad-tech.com"),
+                                            excludedDestination, EventSurfaceType.WEB,
+                                            4000000000L, 6000000000L));
+                });
+    }
+
+    @Test
+    public void testCountDistinctDestinationsPerPublisherInActiveSource_webPublisher_exactMatch() {
+        Uri publisher = Uri.parse("https://publisher.com");
+        List<Source> activeSourcesWithAppAndWebDestinations =
+                getSourcesWithDifferentDestinations(
+                        4, true, true, 4500000000L, publisher,
+                        SourceFixture.ValidSourceParams.AD_TECH_DOMAIN, Source.Status.ACTIVE);
+        List<Source> activeSourcesWithAppDestinations =
+                getSourcesWithDifferentDestinations(
+                        2, true, false, 5000000000L, publisher,
+                        SourceFixture.ValidSourceParams.AD_TECH_DOMAIN, Source.Status.ACTIVE);
+        List<Source> activeSourcesWithWebDestinations =
+                getSourcesWithDifferentDestinations(
+                        2, false, true, 5500000000L, publisher,
+                        SourceFixture.ValidSourceParams.AD_TECH_DOMAIN, Source.Status.ACTIVE);
+        List<Source> activeSourcesOutOfWindow =
+                getSourcesWithDifferentDestinations(
+                        10, true, true, 50000000000L, publisher,
+                        SourceFixture.ValidSourceParams.AD_TECH_DOMAIN, Source.Status.ACTIVE);
+        List<Source> ignoredSources =
+                getSourcesWithDifferentDestinations(
+                        10, true, true, 5000000000L, publisher,
+                        SourceFixture.ValidSourceParams.AD_TECH_DOMAIN, Source.Status.IGNORED);
+        for (Source source : activeSourcesWithAppAndWebDestinations) {
+            insertSource(source);
+        }
+        for (Source source : activeSourcesWithAppDestinations) {
+            insertSource(source);
+        }
+        for (Source source : activeSourcesWithWebDestinations) {
+            insertSource(source);
+        }
+        for (Source source : activeSourcesOutOfWindow) {
+            insertSource(source);
+        }
+        for (Source source : ignoredSources) {
+            insertSource(source);
+        }
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        Uri excludedDestination = Uri.parse("https://web-destination-2.com");
+        datastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            Integer.valueOf(3),
+                            measurementDao
+                                    .countDistinctDestinationsPerPublisherXAdTechInActiveSource(
+                                            publisher, EventSurfaceType.WEB,
+                                            SourceFixture.ValidSourceParams.AD_TECH_DOMAIN,
+                                            excludedDestination, EventSurfaceType.WEB,
+                                            4000000000L, 6000000000L));
+                });
+    }
+
+    // (Testing countDistinctDestinationsPerPublisherXAdTechInActiveSource)
+    @Test
+    public void testCountDistinctDestinations_webPublisher_doesNotMatchDomainAsSuffix() {
+        Uri publisher = Uri.parse("https://publisher.com");
+        Uri publisherAsSuffix = Uri.parse("https://prefix-publisher.com");
+        List<Source> activeSourcesWithAppAndWebDestinations =
+                getSourcesWithDifferentDestinations(
+                        4, true, true, 4500000000L, publisherAsSuffix,
+                        SourceFixture.ValidSourceParams.AD_TECH_DOMAIN, Source.Status.ACTIVE);
+        List<Source> activeSourcesWithAppDestinations =
+                getSourcesWithDifferentDestinations(
+                        2, true, false, 5000000000L, publisher,
+                        SourceFixture.ValidSourceParams.AD_TECH_DOMAIN, Source.Status.ACTIVE);
+        List<Source> activeSourcesWithWebDestinations =
+                getSourcesWithDifferentDestinations(
+                        2, false, true, 5500000000L, publisher,
+                        SourceFixture.ValidSourceParams.AD_TECH_DOMAIN, Source.Status.ACTIVE);
+        List<Source> activeSourcesOutOfWindow =
+                getSourcesWithDifferentDestinations(
+                        10, true, true, 50000000000L, publisher,
+                        SourceFixture.ValidSourceParams.AD_TECH_DOMAIN, Source.Status.ACTIVE);
+        List<Source> ignoredSources =
+                getSourcesWithDifferentDestinations(
+                        10, true, true, 5000000000L, publisher,
+                        SourceFixture.ValidSourceParams.AD_TECH_DOMAIN, Source.Status.IGNORED);
+        for (Source source : activeSourcesWithAppAndWebDestinations) {
+            insertSource(source);
+        }
+        for (Source source : activeSourcesWithAppDestinations) {
+            insertSource(source);
+        }
+        for (Source source : activeSourcesWithWebDestinations) {
+            insertSource(source);
+        }
+        for (Source source : activeSourcesOutOfWindow) {
+            insertSource(source);
+        }
+        for (Source source : ignoredSources) {
+            insertSource(source);
+        }
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        Uri excludedDestination = Uri.parse("https://web-destination-2.com");
+        datastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            Integer.valueOf(2),
+                            measurementDao
+                                    .countDistinctDestinationsPerPublisherXAdTechInActiveSource(
+                                            publisher, EventSurfaceType.WEB,
+                                            SourceFixture.ValidSourceParams.AD_TECH_DOMAIN,
+                                            excludedDestination, EventSurfaceType.WEB,
+                                            4000000000L, 6000000000L));
+                });
+    }
+
+    // (Testing countDistinctDestinationsPerPublisherXAdTechInActiveSource)
+    @Test
+    public void testCountDistinctDestinations_webPublisher_doesNotMatchDifferentScheme() {
+        Uri publisher = Uri.parse("https://publisher.com");
+        Uri publisherWithDifferentScheme = Uri.parse("http://publisher.com");
+        List<Source> activeSourcesWithAppAndWebDestinations =
+                getSourcesWithDifferentDestinations(
+                        4, true, true, 4500000000L, publisherWithDifferentScheme,
+                        SourceFixture.ValidSourceParams.AD_TECH_DOMAIN, Source.Status.ACTIVE);
+        List<Source> activeSourcesWithAppDestinations =
+                getSourcesWithDifferentDestinations(
+                        2, true, false, 5000000000L, publisher,
+                        SourceFixture.ValidSourceParams.AD_TECH_DOMAIN, Source.Status.ACTIVE);
+        List<Source> activeSourcesWithWebDestinations =
+                getSourcesWithDifferentDestinations(
+                        2, false, true, 5500000000L, publisher,
+                        SourceFixture.ValidSourceParams.AD_TECH_DOMAIN, Source.Status.ACTIVE);
+        List<Source> activeSourcesOutOfWindow =
+                getSourcesWithDifferentDestinations(
+                        10, true, true, 50000000000L, publisher,
+                        SourceFixture.ValidSourceParams.AD_TECH_DOMAIN, Source.Status.ACTIVE);
+        List<Source> ignoredSources =
+                getSourcesWithDifferentDestinations(
+                        10, true, true, 5000000000L, publisher,
+                        SourceFixture.ValidSourceParams.AD_TECH_DOMAIN, Source.Status.IGNORED);
+        for (Source source : activeSourcesWithAppAndWebDestinations) {
+            insertSource(source);
+        }
+        for (Source source : activeSourcesWithAppDestinations) {
+            insertSource(source);
+        }
+        for (Source source : activeSourcesWithWebDestinations) {
+            insertSource(source);
+        }
+        for (Source source : activeSourcesOutOfWindow) {
+            insertSource(source);
+        }
+        for (Source source : ignoredSources) {
+            insertSource(source);
+        }
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        Uri excludedDestination = Uri.parse("https://web-destination-2.com");
+        datastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            Integer.valueOf(2),
+                            measurementDao
+                                    .countDistinctDestinationsPerPublisherXAdTechInActiveSource(
+                                            publisher, EventSurfaceType.WEB,
+                                            SourceFixture.ValidSourceParams.AD_TECH_DOMAIN,
+                                            excludedDestination, EventSurfaceType.WEB,
+                                            4000000000L, 6000000000L));
+                });
+    }
+
+    @Test
+    public void testCountDistinctAdTechsPerPublisherXDestinationInSource_appDestination() {
+        Uri publisher = Uri.parse("android-app://publisher.app");
+        Uri webDestination = Uri.parse("https://web-destination.com");
+        Uri appDestination = Uri.parse("android-app://destination.app");
+        List<Source> activeSourcesWithAppAndWebDestinations =
+                getSourcesWithDifferentAdTechDomains(
+                        2, appDestination, webDestination, 4500000000L, publisher,
+                        Source.Status.ACTIVE);
+        List<Source> activeSourcesWithAppDestinations =
+                getSourcesWithDifferentAdTechDomains(
+                        2, appDestination, null, 5000000000L, publisher, Source.Status.ACTIVE);
+        List<Source> activeSourcesWithWebDestinations =
+                getSourcesWithDifferentAdTechDomains(
+                        2, null, webDestination, 5500000000L, publisher, Source.Status.ACTIVE);
+        List<Source> activeSourcesOutOfWindow =
+                getSourcesWithDifferentAdTechDomains(
+                        10, appDestination, webDestination, 50000000000L, publisher,
+                        Source.Status.ACTIVE);
+        List<Source> ignoredSources =
+                getSourcesWithDifferentAdTechDomains(
+                        3, appDestination, webDestination, 5000000000L, publisher,
+                        Source.Status.IGNORED);
+        for (Source source : activeSourcesWithAppAndWebDestinations) {
+            insertSource(source);
+        }
+        for (Source source : activeSourcesWithAppDestinations) {
+            insertSource(source);
+        }
+        for (Source source : activeSourcesWithWebDestinations) {
+            insertSource(source);
+        }
+        for (Source source : activeSourcesOutOfWindow) {
+            insertSource(source);
+        }
+        for (Source source : ignoredSources) {
+            insertSource(source);
+        }
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        Uri excludedAdTech = Uri.parse("https://ad-tech-domain-1.com");
+        datastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            Integer.valueOf(2),
+                            measurementDao.countDistinctAdTechsPerPublisherXDestinationInSource(
+                                    publisher, EventSurfaceType.APP, appDestination,
+                                    excludedAdTech, 4000000000L, 6000000000L));
+                });
+    }
+
+    @Test
+    public void testCountDistinctAdTechsPerPublisherXDestinationInSource_webDestination() {
+        Uri publisher = Uri.parse("android-app://publisher.app");
+        Uri webDestination = Uri.parse("https://web-destination.com");
+        Uri appDestination = Uri.parse("android-app://destination.app");
+        List<Source> activeSourcesWithAppAndWebDestinations =
+                getSourcesWithDifferentAdTechDomains(
+                        2, appDestination, webDestination, 4500000000L, publisher,
+                        Source.Status.ACTIVE);
+        List<Source> activeSourcesWithAppDestinations =
+                getSourcesWithDifferentAdTechDomains(
+                        2, appDestination, null, 5000000000L, publisher, Source.Status.ACTIVE);
+        List<Source> activeSourcesWithWebDestinations =
+                getSourcesWithDifferentAdTechDomains(
+                        2, null, webDestination, 5500000000L, publisher, Source.Status.ACTIVE);
+        List<Source> activeSourcesOutOfWindow =
+                getSourcesWithDifferentAdTechDomains(
+                        10, appDestination, webDestination, 50000000000L, publisher,
+                        Source.Status.ACTIVE);
+        List<Source> ignoredSources =
+                getSourcesWithDifferentAdTechDomains(
+                        3, appDestination, webDestination, 5000000000L, publisher,
+                        Source.Status.IGNORED);
+        for (Source source : activeSourcesWithAppAndWebDestinations) {
+            insertSource(source);
+        }
+        for (Source source : activeSourcesWithAppDestinations) {
+            insertSource(source);
+        }
+        for (Source source : activeSourcesWithWebDestinations) {
+            insertSource(source);
+        }
+        for (Source source : activeSourcesOutOfWindow) {
+            insertSource(source);
+        }
+        for (Source source : ignoredSources) {
+            insertSource(source);
+        }
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        Uri excludedAdTech = Uri.parse("https://ad-tech-domain-22.com");
+        datastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            Integer.valueOf(3),
+                            measurementDao.countDistinctAdTechsPerPublisherXDestinationInSource(
+                                    publisher, EventSurfaceType.APP, appDestination,
+                                    excludedAdTech, 4000000000L, 6000000000L));
                 });
     }
 
@@ -536,6 +990,7 @@ public class MeasurementDaoTest {
                         .setTriggerTime(12)
                         .setAdTechDomain(adTechDomain)
                         .setAttributionDestination(appDestination)
+                        .setDestinationType(EventSurfaceType.APP)
                         .build();
         List<Source> result1 = runFunc.apply(trigger1MatchSource1And2);
         Assert.assertEquals(3, result1.size());
@@ -555,6 +1010,7 @@ public class MeasurementDaoTest {
                         .setTriggerTime(20)
                         .setAdTechDomain(adTechDomain)
                         .setAttributionDestination(appDestination)
+                        .setDestinationType(EventSurfaceType.APP)
                         .build();
 
         List<Source> result2 = runFunc.apply(trigger2MatchSource127);
@@ -575,6 +1031,7 @@ public class MeasurementDaoTest {
                         .setTriggerTime(21)
                         .setAdTechDomain(adTechDomain)
                         .setAttributionDestination(appDestination)
+                        .setDestinationType(EventSurfaceType.APP)
                         .build();
 
         List<Source> result3 = runFunc.apply(trigger3MatchSource237);
@@ -594,6 +1051,7 @@ public class MeasurementDaoTest {
                         .setTriggerTime(31)
                         .setAdTechDomain(adTechDomain)
                         .setAttributionDestination(appDestination)
+                        .setDestinationType(EventSurfaceType.APP)
                         .build();
 
         List<Source> result4 = runFunc.apply(trigger4MatchSource1And2And3);
@@ -612,6 +1070,7 @@ public class MeasurementDaoTest {
                         .setTriggerTime(12)
                         .setAdTechDomain(adTechDomain)
                         .setAttributionDestination(webDestination)
+                        .setDestinationType(EventSurfaceType.WEB)
                         .build();
         List<Source> result5 = runFunc.apply(trigger5MatchSource567);
         Assert.assertEquals(3, result1.size());
@@ -629,6 +1088,7 @@ public class MeasurementDaoTest {
                         .setTriggerTime(21)
                         .setAdTechDomain(adTechDomain)
                         .setAttributionDestination(webDestinationWithSubdomain)
+                        .setDestinationType(EventSurfaceType.WEB)
                         .build();
 
         List<Source> result6 = runFunc.apply(trigger6MatchSource67);
@@ -740,10 +1200,10 @@ public class MeasurementDaoTest {
         aggregateReportValue.put("_id", aggregateReport.getId());
         db.insert(MeasurementTables.AggregateReport.TABLE, null, aggregateReportValue);
 
-        AttributionRateLimit rateLimit = new AttributionRateLimit.Builder().setId("ARL1").build();
+        Attribution rateLimit = new Attribution.Builder().setId("ARL1").build();
         ContentValues rateLimitValue = new ContentValues();
         rateLimitValue.put("_id", rateLimit.getId());
-        db.insert(MeasurementTables.AttributionRateLimitContract.TABLE, null, rateLimitValue);
+        db.insert(MeasurementTables.AttributionContract.TABLE, null, rateLimitValue);
 
         AggregateEncryptionKey key =
                 new AggregateEncryptionKey.Builder()
@@ -797,10 +1257,10 @@ public class MeasurementDaoTest {
         aggregateReportValue.put("_id", aggregateReport.getId());
         db.insert(MeasurementTables.AggregateReport.TABLE, null, aggregateReportValue);
 
-        AttributionRateLimit rateLimit = new AttributionRateLimit.Builder().setId("ARL1").build();
+        Attribution rateLimit = new Attribution.Builder().setId("ARL1").build();
         ContentValues rateLimitValue = new ContentValues();
         rateLimitValue.put("_id", rateLimit.getId());
-        db.insert(MeasurementTables.AttributionRateLimitContract.TABLE, null, rateLimitValue);
+        db.insert(MeasurementTables.AttributionContract.TABLE, null, rateLimitValue);
 
         AggregateEncryptionKey key =
                 new AggregateEncryptionKey.Builder()
@@ -871,6 +1331,131 @@ public class MeasurementDaoTest {
         for (String tableName : tableNames) {
             assertThat(MeasurementTables.ALL_MSMT_TABLES).asList().contains(tableName);
         }
+    }
+
+    private static List<Source> getSourcesWithDifferentDestinations(
+            int numSources,
+            boolean hasAppDestination,
+            boolean hasWebDestination,
+            long eventTime,
+            Uri publisher,
+            Uri adTechDomain,
+            @Source.Status int sourceStatus) {
+        List<Source> sources = new ArrayList<>();
+        for (int i = 0; i < numSources; i++) {
+            Source.Builder sourceBuilder = new Source.Builder()
+                    .setEventTime(eventTime)
+                    .setPublisher(publisher)
+                    .setAdTechDomain(adTechDomain)
+                    .setRegistrant(SourceFixture.ValidSourceParams.REGISTRANT)
+                    .setStatus(sourceStatus);
+            if (hasAppDestination) {
+                sourceBuilder.setAppDestination(Uri.parse(
+                        "android-app://app-destination-" + String.valueOf(i)));
+            }
+            if (hasWebDestination) {
+                sourceBuilder.setWebDestination(Uri.parse(
+                        "https://web-destination-" + String.valueOf(i) + ".com"));
+            }
+            sources.add(sourceBuilder.build());
+        }
+        return sources;
+    }
+
+    private static List<Source> getSourcesWithDifferentAdTechDomains(
+            int numSources,
+            Uri appDestination,
+            Uri webDestination,
+            long eventTime,
+            Uri publisher,
+            @Source.Status int sourceStatus) {
+        List<Source> sources = new ArrayList<>();
+        for (int i = 0; i < numSources; i++) {
+            Source.Builder sourceBuilder = new Source.Builder()
+                    .setEventTime(eventTime)
+                    .setPublisher(publisher)
+                    .setRegistrant(SourceFixture.ValidSourceParams.REGISTRANT)
+                    .setStatus(sourceStatus)
+                    .setAppDestination(appDestination)
+                    .setWebDestination(webDestination)
+                    .setAdTechDomain(Uri.parse(
+                            "https://ad-tech-domain-" + String.valueOf(i) + ".com"));
+            sources.add(sourceBuilder.build());
+        }
+        return sources;
+    }
+
+    private static List<Attribution> getAttributionsWithDifferentAdTechDomains(
+            int numAttributions,
+            Uri destinationSite,
+            long triggerTime,
+            Uri sourceSite) {
+        List<Attribution> attributions = new ArrayList<>();
+        for (int i = 0; i < numAttributions; i++) {
+            Attribution.Builder attributionBuilder = new Attribution.Builder()
+                    .setTriggerTime(triggerTime)
+                    .setSourceSite(sourceSite.toString())
+                    .setDestinationSite(destinationSite.toString())
+                    .setAdTechDomain(
+                            "https://ad-tech-domain-" + String.valueOf(i) + ".com");
+            attributions.add(attributionBuilder.build());
+        }
+        return attributions;
+    }
+
+    private static void insertAttribution(Attribution attribution) {
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.AttributionContract.ID, UUID.randomUUID().toString());
+        values.put(MeasurementTables.AttributionContract.SOURCE_SITE,
+                attribution.getSourceSite());
+        values.put(MeasurementTables.AttributionContract.DESTINATION_SITE,
+                attribution.getDestinationSite());
+        values.put(MeasurementTables.AttributionContract.AD_TECH_DOMAIN,
+                attribution.getAdTechDomain());
+        values.put(MeasurementTables.AttributionContract.TRIGGER_TIME,
+                attribution.getTriggerTime());
+        long row = db.insert("msmt_attribution", null, values);
+        Assert.assertNotEquals("Attribution insertion failed", -1, row);
+    }
+
+    // This is needed because MeasurementDao::insertSource inserts a default value for status.
+    private static void insertSource(Source source) {
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.SourceContract.ID, UUID.randomUUID().toString());
+        values.put(MeasurementTables.SourceContract.EVENT_ID, source.getEventId());
+        values.put(MeasurementTables.SourceContract.PUBLISHER, source.getPublisher().toString());
+        values.put(MeasurementTables.SourceContract.PUBLISHER_TYPE, source.getPublisherType());
+        values.put(
+                MeasurementTables.SourceContract.APP_DESTINATION,
+                getNullableUriString(source.getAppDestination()));
+        values.put(
+                MeasurementTables.SourceContract.WEB_DESTINATION,
+                getNullableUriString(source.getWebDestination()));
+        values.put(MeasurementTables.SourceContract.AD_TECH_DOMAIN,
+                source.getAdTechDomain().toString());
+        values.put(MeasurementTables.SourceContract.EVENT_TIME, source.getEventTime());
+        values.put(MeasurementTables.SourceContract.EXPIRY_TIME, source.getExpiryTime());
+        values.put(MeasurementTables.SourceContract.PRIORITY, source.getPriority());
+        values.put(MeasurementTables.SourceContract.STATUS, source.getStatus());
+        values.put(MeasurementTables.SourceContract.SOURCE_TYPE, source.getSourceType().name());
+        values.put(MeasurementTables.SourceContract.REGISTRANT, source.getRegistrant().toString());
+        values.put(MeasurementTables.SourceContract.INSTALL_ATTRIBUTION_WINDOW,
+                source.getInstallAttributionWindow());
+        values.put(MeasurementTables.SourceContract.INSTALL_COOLDOWN_WINDOW,
+                source.getInstallCooldownWindow());
+        values.put(MeasurementTables.SourceContract.ATTRIBUTION_MODE, source.getAttributionMode());
+        values.put(MeasurementTables.SourceContract.AGGREGATE_SOURCE, source.getAggregateSource());
+        values.put(MeasurementTables.SourceContract.FILTER_DATA, source.getAggregateFilterData());
+        values.put(MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS, 0);
+        values.put(MeasurementTables.SourceContract.DEBUG_KEY, source.getDebugKey());
+        long row = db.insert("msmt_source", null, values);
+        Assert.assertNotEquals("Source insertion failed", -1, row);
+    }
+
+    private static String getNullableUriString(Uri uri) {
+        return Optional.ofNullable(uri).map(Uri::toString).orElse(null);
     }
 
     private void setupSourceAndTriggerData() {

@@ -33,6 +33,7 @@ import android.adservices.measurement.WebSourceRegistrationRequestInternal;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.adservices.measurement.WebTriggerRegistrationRequestInternal;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.annotation.WorkerThread;
 import android.content.ComponentName;
 import android.content.ContentProviderClient;
@@ -46,8 +47,11 @@ import android.view.InputEvent;
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.registration.SourceFetcher;
 import com.android.adservices.service.measurement.registration.SourceRegistration;
 import com.android.adservices.service.measurement.registration.TriggerFetcher;
@@ -81,6 +85,8 @@ public final class MeasurementImpl {
     private final SourceFetcher mSourceFetcher;
     private final TriggerFetcher mTriggerFetcher;
     private final ContentResolver mContentResolver;
+    private final ClickVerifier mClickVerifier;
+    private final Flags mFlags;
 
     private MeasurementImpl(Context context) {
         mContext = context;
@@ -88,6 +94,8 @@ public final class MeasurementImpl {
         mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
         mSourceFetcher = new SourceFetcher();
         mTriggerFetcher = new TriggerFetcher();
+        mClickVerifier = new ClickVerifier(context);
+        mFlags = FlagsFactory.getFlags();
     }
 
     @VisibleForTesting
@@ -96,12 +104,15 @@ public final class MeasurementImpl {
             ContentResolver contentResolver,
             DatastoreManager datastoreManager,
             SourceFetcher sourceFetcher,
-            TriggerFetcher triggerFetcher) {
+            TriggerFetcher triggerFetcher,
+            ClickVerifier clickVerifier) {
         mContext = context;
         mContentResolver = contentResolver;
         mDatastoreManager = datastoreManager;
         mSourceFetcher = sourceFetcher;
         mTriggerFetcher = triggerFetcher;
+        mClickVerifier = clickVerifier;
+        mFlags = FlagsFactory.getFlagsForTest();
     }
 
     /**
@@ -181,8 +192,11 @@ public final class MeasurementImpl {
                         fetch.get(),
                         requestTime,
                         sourceRegistrationRequest.getTopOriginUri(),
+                        EventSurfaceType.WEB,
                         getRegistrant(request.getPackageName()),
-                        getSourceType(sourceRegistrationRequest.getInputEvent()));
+                        getSourceType(
+                                sourceRegistrationRequest.getInputEvent(),
+                                request.getRequestTime()));
                 return STATUS_SUCCESS;
             } else {
                 return STATUS_IO_ERROR;
@@ -214,7 +228,8 @@ public final class MeasurementImpl {
                         fetch.get(),
                         requestTime,
                         triggerRegistrationRequest.getDestination(),
-                        getRegistrant(request.getPackageName()));
+                        getRegistrant(request.getPackageName()),
+                        EventSurfaceType.WEB);
                 return STATUS_SUCCESS;
             } else {
                 return STATUS_IO_ERROR;
@@ -310,7 +325,8 @@ public final class MeasurementImpl {
                     fetch.get(),
                     requestTime,
                     request.getTopOriginUri(),
-                    getRegistrant(request.getPackageName()));
+                    getRegistrant(request.getPackageName()),
+                    EventSurfaceType.APP);
             return STATUS_SUCCESS;
         } else {
             return STATUS_IO_ERROR;
@@ -325,8 +341,9 @@ public final class MeasurementImpl {
                     fetch.get(),
                     requestTime,
                     request.getTopOriginUri(),
+                    EventSurfaceType.APP,
                     getRegistrant(request.getPackageName()),
-                    getSourceType(request.getInputEvent()));
+                    getSourceType(request.getInputEvent(), request.getRequestTime()));
             return STATUS_SUCCESS;
         } else {
             return STATUS_IO_ERROR;
@@ -337,19 +354,52 @@ public final class MeasurementImpl {
             List<SourceRegistration> sourceRegistrations,
             long sourceEventTime,
             Uri topOriginUri,
+            @EventSurfaceType int publisherType,
             Uri registrant,
             Source.SourceType sourceType) {
+        Optional<Uri> publisher = getTopLevelPublisher(topOriginUri, publisherType);
+        if (!publisher.isPresent()) {
+            LogUtil.d("insertSources: getTopLevelPublisher failed", topOriginUri);
+            return;
+        }
+        // Only first destination to avoid AdTechs change this
+        Uri appDestination = sourceRegistrations.get(0).getAppDestination();
+        Uri webDestination = sourceRegistrations.get(0).getWebDestination();
         for (SourceRegistration registration : sourceRegistrations) {
+            if (!isDestinationWithinPrivacyBounds(
+                    publisher.get(),
+                    publisherType,
+                    registration.getReportingOrigin(),
+                    sourceEventTime,
+                    appDestination,
+                    webDestination)) {
+                LogUtil.d("insertSources: destination exceeds privacy bound. %s %s %s %s",
+                        appDestination, webDestination, publisher.get(),
+                        registration.getReportingOrigin());
+                continue;
+            }
+            if (!isAdTechWithinPrivacyBounds(
+                    publisher.get(),
+                    publisherType,
+                    sourceEventTime,
+                    appDestination,
+                    webDestination,
+                    registration.getReportingOrigin())) {
+                LogUtil.d("insertSources: ad-tech exceeds privacy bound. %s %s %s %s",
+                        registration.getReportingOrigin(), publisher.get(), appDestination,
+                        webDestination);
+                continue;
+            }
             Source source =
                     createSource(
                             sourceEventTime,
                             registration,
                             topOriginUri,
+                            publisherType,
                             registrant,
                             sourceType,
-                            // Only first destination to avoid AdTechs change this
-                            sourceRegistrations.get(0).getAppDestination(),
-                            sourceRegistrations.get(0).getWebDestination());
+                            appDestination,
+                            webDestination);
             insertSource(source);
         }
     }
@@ -358,6 +408,7 @@ public final class MeasurementImpl {
             long sourceEventTime,
             SourceRegistration registration,
             Uri topOriginUri,
+            @EventSurfaceType int publisherType,
             Uri registrant,
             Source.SourceType sourceType,
             Uri destination,
@@ -365,6 +416,7 @@ public final class MeasurementImpl {
         return new Source.Builder()
                 .setEventId(registration.getSourceEventId())
                 .setPublisher(getBaseUri(topOriginUri))
+                .setPublisherType(publisherType)
                 .setAppDestination(destination)
                 .setWebDestination(webDestination)
                 .setAdTechDomain(getBaseUri(registration.getReportingOrigin()))
@@ -408,7 +460,7 @@ public final class MeasurementImpl {
                                         .setSourceId(source.getEventId())
                                         .setReportTime(fakeReport.getReportingTime())
                                         .setTriggerData(fakeReport.getTriggerData())
-                                        .setAttributionDestination(source.getAppDestination())
+                                        .setAttributionDestination(fakeReport.getDestination())
                                         .setAdTechDomain(source.getAdTechDomain())
                                         .setTriggerTime(0)
                                         .setTriggerPriority(0L)
@@ -421,17 +473,28 @@ public final class MeasurementImpl {
                 .collect(Collectors.toList());
     }
 
-    private Source.SourceType getSourceType(InputEvent inputEvent) {
-        return inputEvent == null ? Source.SourceType.EVENT : Source.SourceType.NAVIGATION;
+    @VisibleForTesting
+    Source.SourceType getSourceType(InputEvent inputEvent, long requestTime) {
+        // If click verification is enabled and the InputEvent is not null, but it cannot be
+        // verified, then the SourceType is demoted to EVENT.
+        if (mFlags.getMeasurementIsClickVerificationEnabled()
+                && inputEvent != null
+                && !mClickVerifier.isInputEventVerifiable(inputEvent, requestTime)) {
+            return Source.SourceType.EVENT;
+        } else {
+            return inputEvent == null ? Source.SourceType.EVENT : Source.SourceType.NAVIGATION;
+        }
     }
 
     private void insertTriggers(
             List<TriggerRegistration> responseBasedRegistrations,
             long triggerTime,
             Uri topOrigin,
-            Uri registrant) {
+            Uri registrant,
+            @EventSurfaceType int destinationType) {
         for (TriggerRegistration registration : responseBasedRegistrations) {
-            Trigger trigger = createTrigger(registration, triggerTime, topOrigin, registrant);
+            Trigger trigger = createTrigger(
+                    registration, triggerTime, topOrigin, registrant, destinationType);
             mDatastoreManager.runInTransaction((dao) -> dao.insertTrigger(trigger));
         }
         notifyTriggerContentProvider();
@@ -449,9 +512,14 @@ public final class MeasurementImpl {
     }
 
     private Trigger createTrigger(
-            TriggerRegistration registration, long triggerTime, Uri topOrigin, Uri registrant) {
+            TriggerRegistration registration,
+            long triggerTime,
+            Uri topOrigin,
+            Uri registrant,
+            @EventSurfaceType int destinationType) {
         return new Trigger.Builder()
                 .setAttributionDestination(topOrigin)
+                .setDestinationType(destinationType)
                 .setAdTechDomain(getBaseUri(registration.getReportingOrigin()))
                 .setRegistrant(registrant)
                 .setTriggerTime(triggerTime)
@@ -550,5 +618,135 @@ public final class MeasurementImpl {
 
     private interface AppVendorPackages {
         String PLAY_STORE = "com.android.vending";
+    }
+
+    private boolean isDestinationWithinPrivacyBounds(
+            Uri publisher,
+            @EventSurfaceType int publisherType,
+            Uri reportingOrigin,
+            long requestTime,
+            @Nullable Uri appDestination,
+            @Nullable Uri webDestination) {
+        long windowStartTime = requestTime - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS;
+        if (appDestination != null && !isDestinationWithinPrivacyBounds(
+                publisher,
+                publisherType,
+                reportingOrigin,
+                appDestination,
+                EventSurfaceType.APP,
+                windowStartTime,
+                requestTime)) {
+            return false;
+        }
+        if (webDestination != null && !isDestinationWithinPrivacyBounds(
+                publisher,
+                publisherType,
+                reportingOrigin,
+                webDestination,
+                EventSurfaceType.WEB,
+                windowStartTime,
+                requestTime)) {
+            return false;
+        }
+        return true;
+    }
+
+    private boolean isDestinationWithinPrivacyBounds(
+            Uri publisher,
+            @EventSurfaceType int publisherType,
+            Uri reportingOrigin,
+            Uri destination,
+            @EventSurfaceType int destinationType,
+            long windowStartTime,
+            long requestTime) {
+        Optional<Integer> destinationCount =
+                mDatastoreManager.runInTransactionWithResult((dao) ->
+                        dao.countDistinctDestinationsPerPublisherXAdTechInActiveSource(
+                                publisher,
+                                publisherType,
+                                reportingOrigin,
+                                destination,
+                                destinationType,
+                                windowStartTime,
+                                requestTime));
+
+        if (destinationCount.isPresent()) {
+            return destinationCount.get() < PrivacyParams
+                    .MAX_DISTINCT_DESTINATIONS_PER_PUBLISHER_IN_ACTIVE_SOURCE;
+        } else {
+            LogUtil.e("isDestinationWithinPrivacyBounds: "
+                    + "dao.countDistinctDestinationsPerPublisherXAdTechInActiveSource not present."
+                    + " %s ::: %s ::: %s ::: %s", publisher, destination, windowStartTime,
+                    requestTime);
+            return false;
+        }
+    }
+
+    private boolean isAdTechWithinPrivacyBounds(
+            Uri publisher,
+            @EventSurfaceType int publisherType,
+            long requestTime,
+            @Nullable Uri appDestination,
+            @Nullable Uri webDestination,
+            Uri reportingOrigin) {
+        long windowStartTime = requestTime - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS;
+        if (appDestination != null && !isAdTechWithinPrivacyBounds(
+                publisher,
+                publisherType,
+                appDestination,
+                // TODO: will be replaced with enrollment ID
+                reportingOrigin,
+                windowStartTime,
+                requestTime)) {
+            return false;
+        }
+        if (webDestination != null && !isAdTechWithinPrivacyBounds(
+                publisher,
+                publisherType,
+                webDestination,
+                // TODO: will be replaced with enrollment ID
+                reportingOrigin,
+                windowStartTime,
+                requestTime)) {
+            return false;
+        }
+        return true;
+    }
+
+    private boolean isAdTechWithinPrivacyBounds(
+            Uri publisher,
+            @EventSurfaceType int publisherType,
+            Uri destination,
+            Uri reportingOrigin,
+            long windowStartTime,
+            long requestTime) {
+        Optional<Integer> adTechCount =
+                mDatastoreManager.runInTransactionWithResult((dao) ->
+                        dao.countDistinctAdTechsPerPublisherXDestinationInSource(
+                                publisher,
+                                publisherType,
+                                destination,
+                                // TODO: will be replaced with enrollment ID
+                                reportingOrigin,
+                                windowStartTime,
+                                requestTime));
+
+        if (adTechCount.isPresent()) {
+            return adTechCount.get() < PrivacyParams
+                    .MAX_DISTINCT_AD_TECHS_PER_PUBLISHER_X_DESTINATION_IN_SOURCE;
+        } else {
+            LogUtil.e("isAdTechWithinPrivacyBounds: "
+                    + "dao.countDistinctAdTechsPerPublisherXDestinationInSource not present"
+                    + ". %s ::: %s ::: %s ::: %s ::: $s", publisher, destination,
+                    reportingOrigin, windowStartTime, requestTime);
+            return false;
+        }
+    }
+
+    private static Optional<Uri> getTopLevelPublisher(Uri topOrigin,
+            @EventSurfaceType int publisherType) {
+        return publisherType == EventSurfaceType.APP
+                ? Optional.of(topOrigin)
+                : Web.topPrivateDomainAndScheme(topOrigin);
     }
 }

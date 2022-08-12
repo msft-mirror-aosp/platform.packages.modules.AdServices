@@ -23,7 +23,7 @@ import java.util.Objects;
  * field types were only made to correspond
  * with the database column types.
  */
-class AttributionRateLimit {
+class Attribution {
     private String mId;
     private String mSourceSite;
     private String mSourceOrigin;
@@ -35,10 +35,10 @@ class AttributionRateLimit {
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof AttributionRateLimit)) {
+        if (!(obj instanceof Attribution)) {
             return false;
         }
-        AttributionRateLimit attr = (AttributionRateLimit) obj;
+        Attribution attr = (Attribution) obj;
         return mTriggerTime == attr.mTriggerTime
                 && Objects.equals(mSourceSite, attr.mSourceSite)
                 && Objects.equals(mSourceOrigin, attr.mSourceOrigin)
@@ -88,13 +88,13 @@ class AttributionRateLimit {
     }
 
     /**
-     * Builder for AttributionRateLimit
+     * Builder for Attribution
      */
     public static final class Builder {
-        private final AttributionRateLimit mBuilding;
+        private final Attribution mBuilding;
 
         Builder() {
-            mBuilding = new AttributionRateLimit();
+            mBuilding = new Attribution();
         }
 
         public Builder setId(String id) {
@@ -138,9 +138,9 @@ class AttributionRateLimit {
         }
 
         /**
-         * Build the AttributionRateLimit
+         * Build the Attribution
          */
-        public AttributionRateLimit build() {
+        public Attribution build() {
             return mBuilding;
         }
     }

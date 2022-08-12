@@ -40,7 +40,7 @@ public class Combinatorics {
             k = n - k;
         }
         // (n choose k) = n (n -1) ... (n - (k - 1)) / k!
-        // = mul((n + i - i) / i), i from 1 -> k.
+        // = mul((n + 1 - i) / i), i from 1 -> k.
         //
         // You might be surprised that this algorithm works just fine with integer
         // division (i.e. division occurs cleanly with no remainder). However, this is
@@ -139,10 +139,10 @@ public class Combinatorics {
     }
 
     /**
-     * Returns an array of the indices of every star in the stars and bars sequence indexed
-     * by {@code sequenceIndex}.
+     * Returns an array of the indices of every star in the stars and bars sequence indexed by
+     * {@code sequenceIndex}.
      *
-     * @param numStars      number of starts in the sequence
+     * @param numStars number of stars in the sequence
      * @param sequenceIndex index of the sequence
      * @return list of indices of every star in stars & bars sequence
      */

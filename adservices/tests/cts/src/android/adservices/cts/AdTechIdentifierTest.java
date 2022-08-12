@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-package android.adservices.common;
+package android.adservices.cts;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
+import android.adservices.common.AdTechIdentifier;
 import android.os.Parcel;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 public class AdTechIdentifierTest {
@@ -33,7 +34,7 @@ public class AdTechIdentifierTest {
 
     @Test
     public void testAdTechIdentifierCreatorArray() {
-        assertArrayEquals(
+        Assert.assertArrayEquals(
                 new AdTechIdentifier[ARRAY_SIZE], AdTechIdentifier.CREATOR.newArray(ARRAY_SIZE));
     }
 

@@ -30,10 +30,11 @@ interface ISdkSandboxManager {
     void addSdkSandboxLifecycleCallback(in String callingPackageName, in ISdkSandboxLifecycleCallback callback);
     void removeSdkSandboxLifecycleCallback(in String callingPackageName, in ISdkSandboxLifecycleCallback callback);
     void loadSdk(in String callingPackageName, in String sdkName, long timeAppCalledSystemServer, in Bundle params, in ILoadSdkCallback callback);
-    void unloadSdk(in String callingPackageName, in String sdkName);
-    void requestSurfacePackage(in String callingPackageName, in String sdkName, in IBinder hostToken, int displayId, in int width, in int height, in Bundle params, IRequestSurfacePackageCallback callback);
+    void unloadSdk(in String callingPackageName, in String sdkName, long timeAppCalledSystemServer);
+    // TODO(b/242031240): wrap the many input params in one parcelable object
+    void requestSurfacePackage(in String callingPackageName, in String sdkName, in IBinder hostToken, int displayId, int width, int height, long timeAppCalledSystemServer, in Bundle params, IRequestSurfacePackageCallback callback);
     void sendData(in String callingPackageName, in String sdkName, in Bundle data, in ISendDataCallback callback);
-    List<SharedLibraryInfo> getLoadedSdkLibrariesInfo(in String callingPackageName);
-    void syncDataFromClient(in String callingPackageName, in Bundle data);
+    List<SharedLibraryInfo> getLoadedSdkLibrariesInfo(in String callingPackageName, long timeAppCalledSystemServer);
+    void syncDataFromClient(in String callingPackageName, long timeAppCalledSystemServer, in Bundle data);
     void stopSdkSandbox(in String callingPackageName);
 }

@@ -163,7 +163,7 @@
         "sourceType": "navigation"
       }
     ],
-    "attribution_rate_limits": [
+    "attributions": [
       {
         "id": "A1",
         "sourceSite": "android-app://com.site.deleteCandidate",
@@ -291,7 +291,7 @@
         "sourceType": "navigation"
       }
     ],
-    "attribution_rate_limits": [
+    "attributions": [
       {
         "id": "A2",
         "sourceSite": "android-app://com.site.deleteCandidate",

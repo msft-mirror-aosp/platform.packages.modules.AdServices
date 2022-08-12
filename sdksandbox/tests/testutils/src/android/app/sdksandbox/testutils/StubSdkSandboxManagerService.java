@@ -45,7 +45,8 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
             ILoadSdkCallback callback) {}
 
     @Override
-    public void unloadSdk(String callingPackageName, String sdkName) {}
+    public void unloadSdk(
+            String callingPackageName, String sdkName, long timeAppCalledSystemServer) {}
 
     @Override
     public void requestSurfacePackage(
@@ -55,6 +56,7 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
             int displayId,
             int width,
             int height,
+            long timeAppCalledSystemServer,
             Bundle params,
             IRequestSurfacePackageCallback callback) {}
 
@@ -63,7 +65,8 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
             String callingPackageName, String sdkName, Bundle data, ISendDataCallback callback) {}
 
     @Override
-    public List<SharedLibraryInfo> getLoadedSdkLibrariesInfo(String callingPackageName) {
+    public List<SharedLibraryInfo> getLoadedSdkLibrariesInfo(
+            String callingPackageName, long timeAppCalledSystemServer) {
         return Collections.emptyList();
     }
 
@@ -71,7 +74,8 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
     public void stopSdkSandbox(String callingPackageName) throws RemoteException {}
 
     @Override
-    public void syncDataFromClient(String callingPackageName, Bundle data) {}
+    public void syncDataFromClient(
+            String callingPackageName, long timeAppCalledSystemServer, Bundle data) {}
 
     @Override
     public void addSdkSandboxLifecycleCallback(

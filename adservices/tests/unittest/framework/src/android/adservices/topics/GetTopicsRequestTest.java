@@ -59,7 +59,7 @@ public final class GetTopicsRequestTest {
                 IllegalArgumentException.class,
                 () -> {
                     new GetTopicsRequest.Builder(mSandboxedSdkContext)
-                            .setSdkName(SOME_SDK_NAME)
+                            .setAdsSdkName(SOME_SDK_NAME)
                             .build();
                 });
     }
@@ -76,15 +76,15 @@ public final class GetTopicsRequestTest {
                         SDK_DE_DATA_DIR);
         GetTopicsRequest request = // don't call setSdkName
                 new GetTopicsRequest.Builder(mSandboxedSdkContext).build();
-        assertThat(request.getSdkName()).isEqualTo(SDK_NAME);
+        assertThat(request.getAdsSdkName()).isEqualTo(SDK_NAME);
     }
 
     @Test
     public void testNonSandboxedSdk_nonNullSdkName() {
         GetTopicsRequest request =
-                new GetTopicsRequest.Builder(sContext).setSdkName(SOME_SDK_NAME).build();
+                new GetTopicsRequest.Builder(sContext).setAdsSdkName(SOME_SDK_NAME).build();
 
-        assertThat(request.getSdkName()).isEqualTo(SOME_SDK_NAME);
+        assertThat(request.getAdsSdkName()).isEqualTo(SOME_SDK_NAME);
     }
 
     @Test
@@ -94,15 +94,15 @@ public final class GetTopicsRequestTest {
                         // Not setting mSdkName making it null.
                         .build();
         // When sdkName is not set in builder, we will use EMPTY_SDK by default
-        assertThat(request.getSdkName()).isEqualTo(EMPTY_SDK);
+        assertThat(request.getAdsSdkName()).isEqualTo(EMPTY_SDK);
     }
 
     @Test
     public void testNonSandboxedSdk_nonNullContext() {
         GetTopicsRequest request =
-                new GetTopicsRequest.Builder(sContext).setSdkName(SOME_SDK_NAME).build();
+                new GetTopicsRequest.Builder(sContext).setAdsSdkName(SOME_SDK_NAME).build();
 
-        assertThat(request.getSdkName()).isEqualTo(SOME_SDK_NAME);
+        assertThat(request.getAdsSdkName()).isEqualTo(SOME_SDK_NAME);
     }
 
     @Test
@@ -111,7 +111,7 @@ public final class GetTopicsRequestTest {
                 IllegalArgumentException.class,
                 () -> {
                     new GetTopicsRequest.Builder(/* context */ null)
-                            .setSdkName(SOME_SDK_NAME)
+                            .setAdsSdkName(SOME_SDK_NAME)
                             .build();
                 });
     }

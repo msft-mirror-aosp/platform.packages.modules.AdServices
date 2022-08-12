@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package android.adservices.common;
+package android.adservices.cts;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
+import android.adservices.common.AdData;
 import android.net.Uri;
 import android.os.Parcel;
 

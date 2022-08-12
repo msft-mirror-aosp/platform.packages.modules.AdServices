@@ -15,12 +15,14 @@
  */
 package com.android.adservices.service.measurement.registration;
 
+import static com.android.adservices.service.measurement.PrivacyParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_INSTALL_ATTRIBUTION_WINDOW;
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_POST_INSTALL_EXCLUSIVITY_WINDOW;
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_INSTALL_ATTRIBUTION_WINDOW;
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_POST_INSTALL_EXCLUSIVITY_WINDOW;
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+import static com.android.adservices.service.measurement.util.BaseUriExtractor.getBaseUri;
 
 import android.adservices.measurement.RegistrationRequest;
 import android.adservices.measurement.WebSourceParams;
@@ -35,6 +37,7 @@ import com.android.adservices.service.measurement.MeasurementHttpClient;
 import com.android.adservices.service.measurement.util.Web;
 import com.android.internal.annotations.VisibleForTesting;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -150,7 +153,7 @@ public class SourceFetcher {
                 return false;
             }
 
-            result.setAppDestination(appUri);
+            result.setAppDestination(getBaseUri(appUri));
         }
 
         if (shouldValidateDestination
@@ -256,9 +259,17 @@ public class SourceFetcher {
                 LogUtil.d("Expected one aggregate source!");
                 return false;
             }
-            // Parse in aggregate source. additionalResult will be false until then.
-            result.setAggregateSource(field.get(0));
-            additionalResult = true;
+            try {
+                if (isValidAggregateSource(field.get(0))) {
+                    result.setAggregateSource(field.get(0));
+                    additionalResult = true;
+                } else {
+                    return false;
+                }
+            } catch (JSONException e) {
+                LogUtil.d(e, "Invalid JSON");
+                return false;
+            }
         }
         if (additionalResult) {
             synchronized (addToResults) {
@@ -475,6 +486,16 @@ public class SourceFetcher {
                                 true,
                                 sourceParams.isDebugKeyAllowed()),
                 mIoExecutor);
+    }
+
+    private boolean isValidAggregateSource(String aggregateSource) throws JSONException {
+        JSONArray jsonArray = new JSONArray(aggregateSource);
+        if (jsonArray.length() > MAX_AGGREGATE_KEYS_PER_REGISTRATION) {
+            LogUtil.d("Aggregate source has more keys than permitted. %s",
+                    jsonArray.length());
+            return false;
+        }
+        return true;
     }
 
     private interface EventSourceContract {

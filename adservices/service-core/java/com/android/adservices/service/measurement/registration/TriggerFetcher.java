@@ -15,6 +15,8 @@
  */
 package com.android.adservices.service.measurement.registration;
 
+import static com.android.adservices.service.measurement.PrivacyParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
+
 import android.adservices.measurement.RegistrationRequest;
 import android.adservices.measurement.WebTriggerParams;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
@@ -25,6 +27,10 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
 import com.android.internal.annotations.VisibleForTesting;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -87,9 +93,17 @@ public class TriggerFetcher {
                 LogUtil.d("Expected one aggregate trigger data!");
                 return false;
             }
-            // Parses in aggregate trigger data. additionalResult will be false until then.
-            result.setAggregateTriggerData(field.get(0));
-            additionalResult = true;
+            try {
+                if (isValidAggregateTriggerData(field.get(0))) {
+                    result.setAggregateTriggerData(field.get(0));
+                    additionalResult = true;
+                } else {
+                    return false;
+                }
+            } catch (JSONException e) {
+                LogUtil.d(e, "Invalid JSON");
+                return false;
+            }
         }
         field = headers.get("Attribution-Reporting-Register-Aggregatable-Values");
         if (field != null) {
@@ -97,9 +111,17 @@ public class TriggerFetcher {
                 LogUtil.d("Expected one aggregatable value!");
                 return false;
             }
-            // Parses in aggregate values. additionalResult will be false until then.
-            result.setAggregateValues(field.get(0));
-            additionalResult = true;
+            try {
+                if (isValidAggregateValues(field.get(0))) {
+                    result.setAggregateValues(field.get(0));
+                    additionalResult = true;
+                } else {
+                    return false;
+                }
+            } catch (JSONException e) {
+                LogUtil.d(e, "Invalid JSON");
+                return false;
+            }
         }
 
         field = headers.get("Attribution-Reporting-Filters");
@@ -276,5 +298,25 @@ public class TriggerFetcher {
                                 true,
                                 triggerParams.isDebugKeyAllowed()),
                 mIoExecutor);
+    }
+
+    private boolean isValidAggregateTriggerData(String aggregateTriggerData) throws JSONException {
+        JSONArray jsonArray = new JSONArray(aggregateTriggerData);
+        if (jsonArray.length() > MAX_AGGREGATE_KEYS_PER_REGISTRATION) {
+            LogUtil.d("Aggregate trigger data has more keys than permitted. %s",
+                    jsonArray.length());
+            return false;
+        }
+        return true;
+    }
+
+    private boolean isValidAggregateValues(String aggregateValues) throws JSONException {
+        JSONObject jsonObj = new JSONObject(aggregateValues);
+        if (jsonObj.length() > MAX_AGGREGATE_KEYS_PER_REGISTRATION) {
+            LogUtil.d("Aggregate values have more keys than permitted. %s",
+                    jsonObj.length());
+            return false;
+        }
+        return true;
     }
 }
