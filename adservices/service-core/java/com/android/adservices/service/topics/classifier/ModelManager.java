@@ -72,10 +72,9 @@ public class ModelManager {
     private final String mModelFilePath;
 
     // Use "\t" as a delimiter to read the precomputed app topics file
-    private static final String DELIMITER = "\t";
-    // TODO(b/229323531): Implement new encoding method for dynamic topics size
-    // Use "None" as a null topic for each app
-    private static final String NONE_TOPIC = "None";
+    private static final String LIST_COLUMN_DELIMITER = "\t";
+    // Use "," as a delimiter to read multi-topics of one app in precomputed app topics file
+    private static final String TOPICS_DELIMITER = ",";
 
     // The key name of asset metadata property in classifier_assets_metadata.json
     private static final String ASSET_PROPERTY_NAME = "property";
@@ -88,6 +87,7 @@ public class ModelManager {
     private static final Set<String> ASSETS_NORMAL_ATTRIBUTIONS =
             new HashSet(Arrays.asList("asset_version", "path", "checksum", "updated_date"));
 
+    @VisibleForTesting
     public ModelManager(
             @NonNull Context context,
             @NonNull String labelsFilePath,
@@ -145,7 +145,10 @@ public class ModelManager {
             BufferedReader reader = new BufferedReader(inputStreamReader);
 
             while ((line = reader.readLine()) != null) {
-                labels.add(Integer.parseInt(line));
+                // If the line has at least 1 digit, this line will be added to the labels.
+                if (line.length() > 0) {
+                    labels.add(Integer.parseInt(line));
+                }
             }
         } catch (IOException e) {
             LogUtil.e(e, "Unable to read precomputed labels");
@@ -170,8 +173,7 @@ public class ModelManager {
         String line;
 
         // The immutable set of the topics from labels file
-        ImmutableList<Integer> validTopics =
-                CommonClassifierHelper.retrieveLabels(mAssetManager, mLabelsFilePath);
+        ImmutableList<Integer> validTopics = retrieveLabels();
 
         try (InputStreamReader inputStreamReader =
                 new InputStreamReader(mAssetManager.open(mTopAppsFilePath))) {
@@ -181,40 +183,41 @@ public class ModelManager {
             reader.readLine();
 
             while ((line = reader.readLine()) != null) {
-                String[] columns = line.split(DELIMITER);
+                String[] columns = line.split(LIST_COLUMN_DELIMITER);
 
-                // The first column name is app
+                // If the line has less than 2 elements, this app contains empty topic
+                // and will not be saved in the appTopicsMap.
+                if (columns.length < 2) {
+                    continue;
+                }
+
+                // The first column is app package name
                 String app = columns[0];
 
-                // This list is used to temporarily store the topicIDs of one app.
-                List<Integer> appTopics = new ArrayList<>();
+                // The second column is multi-topics of the app
+                String[] appTopics = columns[1].split(TOPICS_DELIMITER);
 
-                for (int i = 1; i < columns.length; i++) {
-                    String topic = columns[i];
-                    // NONE_TOPIC will not be added to the app topics list
-                    if (NONE_TOPIC.equals(topic)) {
-                        break;
-                    }
+                // This list is used to temporarily store the allowed topicIDs of one app.
+                List<Integer> allowedAppTopics = new ArrayList<>();
 
+                for (String appTopic : appTopics) {
                     // The topic will not save to the app topics map
                     // if it is not a valid topic in labels file
-                    if (!validTopics.contains(Integer.parseInt(topic))) {
-                        LogUtil.e(
-                                "Unable to load topicID \"%s\" in app \"%s\", "
-                                        + "because it is not a valid topic in labels file.",
-                                topic, app);
+                    if (!validTopics.contains(Integer.parseInt(appTopic))) {
+                        LogUtil.e("Unable to load topicID \"%s\" in app \"%s\", "
+                                + "because it is not a valid topic in labels file.", appTopic, app);
                         continue;
                     }
 
-                    // The other columns are topics of the app
-                    appTopics.add(Integer.parseInt(topic));
+                    // Add the allowed topic to the list
+                    allowedAppTopics.add(Integer.parseInt(appTopic));
                 }
 
                 // Do not add empty topics in the precomputed list.
-                if (appTopics.isEmpty()) {
+                if (allowedAppTopics.isEmpty()) {
                     LogUtil.e("Topics for " + app + " cannot be empty.");
                 } else {
-                    appTopicsMap.put(app, ImmutableList.copyOf(appTopics));
+                    appTopicsMap.put(app, ImmutableList.copyOf(allowedAppTopics));
                 }
             }
         } catch (IOException e) {
