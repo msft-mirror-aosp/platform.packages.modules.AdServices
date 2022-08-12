@@ -40,6 +40,8 @@ import android.net.Uri;
 import androidx.test.filters.SmallTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -786,12 +788,12 @@ public final class SourceFetcherTest {
                                             + "  \"destination\": \"android-app://com.myapps\",\n"
                                             + "  \"priority\": \"123\",\n"
                                             + "  \"expiry\": \"456789\",\n"
-                                            + "  \"source_event_id\": \"987654321\"}\n"),
-                                "Attribution-Reporting-Register-Aggregatable-Source",
-                                List.of(
-                                        "[{\"id\" : \"campaignCounts\", \"key_piece\" :"
+                                            + "  \"source_event_id\": \"987654321\",\n"
+                                            + "\"aggregation_keys\": [{\"id\" :"
+                                            + " \"campaignCounts\", \"key_piece\" :"
                                             + " \"0x159\"},{\"id\" : \"geoValue\", \"key_piece\" :"
-                                            + " \"0x5\"}]")));
+                                            + " \"0x5\"}]\n"
+                                            + "}\n")));
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertTrue(fetch.isPresent());
         List<SourceRegistration> result = fetch.get();
@@ -799,8 +801,10 @@ public final class SourceFetcherTest {
         assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
         assertEquals("https://foo.com", result.get(0).getReportingOrigin().toString());
         assertEquals(
-                "[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},{\"id\" : "
-                        + "\"geoValue\", \"key_piece\" : \"0x5\"}]",
+                new JSONArray(
+                                "[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},{\"id\""
+                                        + " : \"geoValue\", \"key_piece\" : \"0x5\"}]")
+                        .toString(),
                 result.get(0).getAggregateSource());
         verify(mUrlConnection).setRequestMethod("POST");
     }
@@ -825,9 +829,9 @@ public final class SourceFetcherTest {
                                             + "  \"destination\": \"android-app://com.myapps\",\n"
                                             + "  \"priority\": \"123\",\n"
                                             + "  \"expiry\": \"456789\",\n"
-                                            + "  \"source_event_id\": \"987654321\"}\n"),
-                                "Attribution-Reporting-Register-Aggregatable-Source",
-                                List.of(tooManyKeys.toString())));
+                                            + "  \"source_event_id\":"
+                                            + " \"987654321\",'aggregation_keys': "
+                                                + tooManyKeys)));
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection).setRequestMethod("POST");
@@ -980,7 +984,7 @@ public final class SourceFetcherTest {
     }
 
     @Test
-    public void fetchWebSources_withExtendedHeaders_success() throws IOException {
+    public void fetchWebSources_withExtendedHeaders_success() throws IOException, JSONException {
         // Setup
         WebSourceRegistrationRequest request =
                 buildWebSourceRegistrationRequest(
@@ -1008,9 +1012,10 @@ public final class SourceFetcherTest {
                                                 + "  \"source_event_id\": \"987654321\",\n"
                                                 + "  \"filter_data\": "
                                                 + filterData
-                                                + "}"),
-                                "Attribution-Reporting-Register-Aggregatable-Source",
-                                List.of(aggregateSource)));
+                                                + ", "
+                                                + " \"aggregation_keys\": "
+                                                + aggregateSource
+                                                + "}")));
         SourceRegistration expectedSourceRegistration =
                 new SourceRegistration.Builder()
                         .setAppDestination(OS_DESTINATION)
@@ -1018,7 +1023,7 @@ public final class SourceFetcherTest {
                         .setExpiry(456789)
                         .setSourceEventId(987654321)
                         .setAggregateFilterData(filterData)
-                        .setAggregateSource(aggregateSource)
+                        .setAggregateSource(new JSONArray(aggregateSource).toString())
                         .setTopOrigin(Uri.parse(DEFAULT_TOP_ORIGIN))
                         .setReportingOrigin(REGISTRATION_URI_1)
                         .build();
@@ -1036,7 +1041,7 @@ public final class SourceFetcherTest {
     }
 
     @Test
-    public void fetchWebSources_withRedirects_ignoresRedirects() throws IOException {
+    public void fetchWebSources_withRedirects_ignoresRedirects() throws IOException, JSONException {
         // Setup
         WebSourceRegistrationRequest request =
                 buildWebSourceRegistrationRequest(
@@ -1064,9 +1069,10 @@ public final class SourceFetcherTest {
                                                 + "  \"source_event_id\": \"987654321\",\n"
                                                 + "  \"filter_data\": "
                                                 + filterData
+                                                + " , "
+                                                + " \"aggregation_keys\": "
+                                                + aggregateSource
                                                 + "}"),
-                                "Attribution-Reporting-Register-Aggregatable-Source",
-                                List.of(aggregateSource),
                                 "Attribution-Reporting-Redirect",
                                 List.of(ALT_REGISTRATION)));
         SourceRegistration expectedSourceRegistration =
@@ -1076,7 +1082,7 @@ public final class SourceFetcherTest {
                         .setExpiry(456789)
                         .setSourceEventId(987654321)
                         .setAggregateFilterData(filterData)
-                        .setAggregateSource(aggregateSource)
+                        .setAggregateSource(new JSONArray(aggregateSource).toString())
                         .setTopOrigin(Uri.parse(DEFAULT_TOP_ORIGIN))
                         .setReportingOrigin(REGISTRATION_URI_1)
                         .build();
