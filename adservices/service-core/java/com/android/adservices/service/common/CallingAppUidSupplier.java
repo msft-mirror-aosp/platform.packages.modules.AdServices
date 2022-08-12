@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package android.adservices.adselection;
+package com.android.adservices.service.common;
 
 /**
- * This interface defines the input to the reportImpression API.
- * A ReportImpressionInput is a Parcelable object that contains an adSelectionId, an AdSelectionConfig, and a callerPackageName.
- *
- * {@hide}
+ * This interface describes a strategy pattern of getting the calling app UID. Different classes
+ * will implement this interface to acquire the uid depending on the situation.
  */
-parcelable ReportImpressionInput;
+public interface CallingAppUidSupplier {
+    /** Gets the calling app UID depending on the strategy */
+    int getCallingAppUid();
+}
