@@ -42,6 +42,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 /** Integration tests for {@link AggregateReportingJobHandler} */
 @RunWith(Parameterized.class)
@@ -98,8 +99,8 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
 
         switch (Action.valueOf(action)) {
             case ALL_REPORTS:
-                final Long startValue = ((Number) get("start")).longValue();
-                final Long endValue = ((Number) get("end")).longValue();
+                final long startValue = ((Number) Objects.requireNonNull(get("start"))).longValue();
+                final long endValue = ((Number) Objects.requireNonNull(get("end"))).longValue();
                 Assert.assertTrue(
                         "Aggregate report failed.",
                         spyReportingService.performScheduledPendingReportsInWindow(
@@ -112,9 +113,7 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
                         spyReportingService.performAllPendingReportsForGivenApp(appName));
                 break;
             case SINGLE_REPORT:
-                final AggregateReportingJobHandler.PerformReportResult result =
-                        AggregateReportingJobHandler.PerformReportResult.valueOf(
-                                (String) get("result"));
+                final int result = ((Number) Objects.requireNonNull(get("result"))).intValue();
                 final String id = (String) get("id");
                 Assert.assertEquals(
                         "Aggregate report failed.",
