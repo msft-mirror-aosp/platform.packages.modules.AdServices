@@ -42,6 +42,7 @@ import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 
 import org.json.JSONException;
 
@@ -211,7 +212,9 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
     @Nullable
     private AdBiddingOutcome handleTimeoutError(TimeoutException e) {
         LogUtil.e(e, "Bid Generation exceeded time limit");
-        throw new IllegalStateException(BIDDING_TIMED_OUT);
+        // Despite this exception will be flattened, after doing `successfulAsList` on bids, keeping
+        // it consistent with Scoring and overall Ad Selection timeouts
+        throw new UncheckedTimeoutException(BIDDING_TIMED_OUT);
     }
 
     @Nullable
