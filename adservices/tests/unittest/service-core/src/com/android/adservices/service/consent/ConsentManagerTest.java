@@ -481,7 +481,8 @@ public class ConsentManagerTest {
     }
 
     @Test
-    public void testResetApps() throws IOException, PackageManager.NameNotFoundException {
+    public void testResetAllAppConsentAndAppData()
+            throws IOException, PackageManager.NameNotFoundException {
         doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
         doNothing().when(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
 
@@ -519,7 +520,7 @@ public class ConsentManagerTest {
     }
 
     @Test
-    public void testResetAllFledgeCustomAudienceData()
+    public void testResetAllowedAppConsentAndAppData()
             throws IOException, PackageManager.NameNotFoundException {
         doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
         doNothing().when(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
@@ -548,23 +549,15 @@ public class ConsentManagerTest {
         assertThat(knownAppsWithConsentBeforeReset).hasSize(2);
         assertThat(appsWithRevokedConsentBeforeReset).hasSize(1);
 
-        mConsentManager.resetAllAppData();
+        mConsentManager.resetAllowedAppConsentAndAppData();
 
-        // No app consent data was deleted
+        // Known apps with consent were cleared; revoked apps were not deleted
         ImmutableList<App> knownAppsWithConsentAfterReset =
                 mConsentManager.getKnownAppsWithConsent();
         ImmutableList<App> appsWithRevokedConsentAfterReset =
                 mConsentManager.getAppsWithRevokedConsent();
-        assertThat(knownAppsWithConsentAfterReset).hasSize(2);
+        assertThat(knownAppsWithConsentAfterReset).isEmpty();
         assertThat(appsWithRevokedConsentAfterReset).hasSize(1);
-        assertThat(
-                        knownAppsWithConsentAfterReset.stream()
-                                .map(App::getPackageName)
-                                .collect(Collectors.toList()))
-                .containsExactlyElementsIn(
-                        knownAppsWithConsentBeforeReset.stream()
-                                .map(App::getPackageName)
-                                .collect(Collectors.toList()));
         assertThat(
                         appsWithRevokedConsentAfterReset.stream()
                                 .map(App::getPackageName)
