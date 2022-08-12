@@ -17,10 +17,22 @@ package {
 }
 
 filegroup {
-    name: "framework-sdksandbox-sources",
+    name: "framework-sdksandbox-aidl-sources",
     srcs: [
       "java/**/*.aidl",
-      "java/**/*.java"
+    ],
+    visibility: [
+        "//frameworks/base",
+        "//packages/modules/AdServices:__subpackages__",
+    ],
+    path: "java",
+}
+
+filegroup {
+    name: "framework-sdksandbox-sources",
+    srcs: [
+      "java/**/*.java",
+      ":framework-sdksandbox-aidl-sources",
     ],
     visibility: [
         "//frameworks/base",
