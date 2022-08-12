@@ -30,19 +30,6 @@ import android.content.pm.PackageManager;
 public final class PermissionHelper {
     private PermissionHelper() {}
 
-    /** This permission needs to be declared by the caller of Topics APIs. */
-    public static final String ACCESS_ADSERVICES_TOPICS_PERMISSION =
-            "android.permission.ACCESS_ADSERVICES_TOPICS";
-
-    /** This permission needs to be declared by the caller of Attribution APIs. */
-    public static final String ACCESS_ADSERVICES_ATTRIBUTION_PERMISSION =
-            "android.permission.ACCESS_ADSERVICES_ATTRIBUTION";
-
-    /** This permission needs to be declared by the caller of Custom Audiences APIs. */
-    public static final String ACCESS_ADSERVICES_CUSTOM_AUDIENCE_PERMISSION =
-            "android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE";
-
-
     private static boolean checkSdkPermission(
             @NonNull Context context, @NonNull String sdkName, @NonNull String perm) {
         return context.getPackageManager().checkPermission(perm, sdkName)

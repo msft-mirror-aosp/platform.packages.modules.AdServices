@@ -18,26 +18,42 @@ package com.android.adservices.tests.permissions;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import android.Manifest;
+import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
 import android.adservices.clients.topics.AdvertisingTopicsClient;
+import android.adservices.common.AdTechIdentifier;
+import android.adservices.customaudience.CustomAudience;
 import android.adservices.topics.GetTopicsResponse;
 import android.content.Context;
+import android.net.Uri;
 
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.runner.AndroidJUnit4;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.service.PhFlagsFixture;
 import com.android.compatibility.common.util.ShellUtils;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 @RunWith(AndroidJUnit4.class)
-// TODO: Add tests for measurement (b/238194122) and FLEDGE (b/238195126).
+// TODO: Add tests for measurement (b/238194122).
 public class PermissionsValidTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final Context sContext = ApplicationProvider.getApplicationContext();
+
+    @Before
+    public void setup() {
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+    }
 
     @Test
     public void testValidPermissions_topics() throws Exception {
@@ -56,6 +72,58 @@ public class PermissionsValidTest {
         assertThat(sdk1Result.getTopics()).isEmpty();
         overrideDisableTopicsEnrollmentCheck("0");
     }
+
+    @Test
+    public void testValidPermissions_fledgeJoinCustomAudience()
+            throws ExecutionException, InterruptedException {
+        PhFlagsFixture.overrideFledgeCustomAudienceEnrollmentCheck(true);
+
+        try {
+            AdvertisingCustomAudienceClient customAudienceClient =
+                    new AdvertisingCustomAudienceClient.Builder()
+                            .setContext(sContext)
+                            .setExecutor(CALLBACK_EXECUTOR)
+                            .build();
+
+            CustomAudience customAudience =
+                    new CustomAudience.Builder()
+                            .setOwnerPackageName(sContext.getPackageName())
+                            .setBuyer(AdTechIdentifier.fromString("test.com"))
+                            .setName("exampleCustomAudience")
+                            .setDailyUpdateUrl(Uri.parse("https://test.com/daily-update"))
+                            .setBiddingLogicUrl(Uri.parse("https://test.com/bidding-logic"))
+                            .build();
+
+            customAudienceClient.joinCustomAudience(customAudience).get();
+        } finally {
+            PhFlagsFixture.overrideFledgeCustomAudienceEnrollmentCheck(false);
+        }
+    }
+
+    @Test
+    public void testValidPermissions_fledgeLeaveCustomAudience()
+            throws ExecutionException, InterruptedException {
+        PhFlagsFixture.overrideFledgeCustomAudienceEnrollmentCheck(true);
+
+        try {
+            AdvertisingCustomAudienceClient customAudienceClient =
+                    new AdvertisingCustomAudienceClient.Builder()
+                            .setContext(sContext)
+                            .setExecutor(CALLBACK_EXECUTOR)
+                            .build();
+
+            customAudienceClient
+                    .leaveCustomAudience(
+                            sContext.getPackageName(),
+                            AdTechIdentifier.fromString("test.com"),
+                            "exampleCustomAudience")
+                    .get();
+        } finally {
+            PhFlagsFixture.overrideFledgeCustomAudienceEnrollmentCheck(false);
+        }
+    }
+
+    // TODO(b/238195126): Add FLEDGE ad selection and impression reporting tests
 
     // Override the flag to disable Topics enrollment check.
     private void overrideDisableTopicsEnrollmentCheck(String val) {
