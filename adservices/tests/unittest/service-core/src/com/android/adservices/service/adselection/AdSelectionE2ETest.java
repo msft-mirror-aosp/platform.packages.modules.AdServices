@@ -29,7 +29,7 @@ import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.MISSING_SCORING_LOGIC;
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.MISSING_TRUSTED_SCORING_SIGNALS;
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.SCORING_TIMED_OUT;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
 import static com.android.adservices.stats.FledgeApiCallStatsMatcher.aCallStatForFledgeApiWithStatus;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
@@ -339,12 +339,11 @@ public class AdSelectionE2ETest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION, STATUS_SUCCESS);
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, STATUS_SUCCESS);
         verify(mAdServicesLoggerSpy)
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
-                                STATUS_SUCCESS));
+                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, STATUS_SUCCESS));
     }
 
     @Test
@@ -398,12 +397,11 @@ public class AdSelectionE2ETest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
-                        STATUS_USER_CONSENT_REVOKED);
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, STATUS_USER_CONSENT_REVOKED);
         verify(mAdServicesLoggerSpy)
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                                 STATUS_USER_CONSENT_REVOKED));
     }
 
@@ -1432,12 +1430,11 @@ public class AdSelectionE2ETest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
-                        STATUS_INVALID_ARGUMENT);
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, STATUS_INVALID_ARGUMENT);
         verify(mAdServicesLoggerSpy)
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                                 STATUS_INVALID_ARGUMENT));
     }
 

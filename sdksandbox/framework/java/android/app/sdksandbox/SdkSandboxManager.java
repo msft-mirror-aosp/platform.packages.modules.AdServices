@@ -149,6 +149,43 @@ public final class SdkSandboxManager {
     })
     public @interface SdkSandboxState {}
 
+    /**
+     * The name of key to be used in the Bundle fields of {@link #requestSurfacePackage(String,
+     * Bundle, Executor, OutcomeReceiver)}, its value should define the integer width of the {@link
+     * SurfacePackage} in pixels.
+     */
+    public static final String EXTRA_WIDTH_IN_PIXELS =
+            "android.app.sdksandbox.extra.WIDTH_IN_PIXELS";
+    /**
+     * The name of key to be used in the Bundle fields of {@link #requestSurfacePackage(String,
+     * Bundle, Executor, OutcomeReceiver)}, its value should define the integer height of the {@link
+     * SurfacePackage} in pixels.
+     */
+    public static final String EXTRA_HEIGHT_IN_PIXELS =
+            "android.app.sdksandbox.extra.HEIGHT_IN_PIXELS";
+    /**
+     * The name of key to be used in the Bundle fields of {@link #requestSurfacePackage(String,
+     * Bundle, Executor, OutcomeReceiver)}, its value should define the integer ID of the logical
+     * display to display the {@link SurfacePackage}.
+     */
+    public static final String EXTRA_DISPLAY_ID = "android.app.sdksandbox.extra.DISPLAY_ID";
+
+    /**
+     * The name of key to be used in the Bundle fields of {@link #requestSurfacePackage(String,
+     * Bundle, Executor, OutcomeReceiver)}, its value should present the token returned by {@link
+     * android.view.SurfaceView#getHostToken()} once the {@link android.view.SurfaceView} has been
+     * added to the view hierarchy. Only a non-null value is accepted to enable ANR reporting.
+     */
+    public static final String EXTRA_HOST_TOKEN = "android.app.sdksandbox.extra.HOST_TOKEN";
+
+    /**
+     * The name of key in the Bundle which is passed to the {@code onResult} function of the {@link
+     * OutcomeReceiver} which is field of {@link #requestSurfacePackage(String, Bundle, Executor,
+     * OutcomeReceiver)}, its value presents the requested {@link SurfacePackage}.
+     */
+    public static final String EXTRA_SURFACE_PACKAGE =
+            "android.app.sdksandbox.extra.SURFACE_PACKAGE";
+
     private final ISdkSandboxManager mService;
 
     private final Context mContext;
@@ -259,6 +296,9 @@ public final class SdkSandboxManager {
      * created, otherwise other SDKs will be loaded into the same sandbox which already created for
      * the client application.
      *
+     * <p>This API may only be called while the caller is running in the foreground. Calls from the
+     * background will result in a {@link SecurityException} being thrown.
+     *
      * @param sdkName name of the SDK to be loaded
      * @param params the parameters App passes to SDK
      * @param executor the {@link Executor} on which to invoke the receiver.
@@ -290,7 +330,9 @@ public final class SdkSandboxManager {
      */
     public @NonNull List<SharedLibraryInfo> getLoadedSdkLibrariesInfo() {
         try {
-            return mService.getLoadedSdkLibrariesInfo(mContext.getPackageName());
+            return mService.getLoadedSdkLibrariesInfo(
+                    mContext.getPackageName(),
+                    /*timeAppCalledSystemServer=*/ System.currentTimeMillis());
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
@@ -301,15 +343,21 @@ public final class SdkSandboxManager {
      *
      * <p>It is not guaranteed that the memory allocated for this SDK will be freed immediately. All
      * subsequent calls to {@link #sendData(String, Bundle, Executor, OutcomeReceiver)} or {@link
-     * #requestSurfacePackage(String, int, int, int, IBinder, Bundle, Executor, OutcomeReceiver)}
-     * for the given {@code sdkName} will fail.
+     * #requestSurfacePackage(String, Bundle, Executor, OutcomeReceiver)} for the given {@code
+     * sdkName} will fail.
+     *
+     * <p>This API may only be called while the caller is running in the foreground. Calls from the
+     * background will result in a {@link SecurityException} being thrown.
      *
      * @param sdkName name of the SDK to be unloaded.
      * @throws IllegalArgumentException if the SDK is not loaded.
      */
     public void unloadSdk(@NonNull String sdkName) {
         try {
-            mService.unloadSdk(mContext.getPackageName(), sdkName);
+            mService.unloadSdk(
+                    mContext.getPackageName(),
+                    sdkName,
+                    /*timeAppCalledSystemServer=*/ System.currentTimeMillis());
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
@@ -322,38 +370,71 @@ public final class SdkSandboxManager {
      * {@link android.view.SurfaceView} to the view hierarchy, it may asynchronously request a
      * {@link SurfacePackage} to render a view from the SDK.
      *
-     * <p>The requested {@link SurfacePackage} is returned to client application through {@code
-     * receiver}
+     * <p>When the {@link SurfacePackage} is ready, {@code onResult} function of the {@code
+     * receiver} will be called with Bundle, that bundle will contain the key {@code
+     * EXTRA_SURFACE_PACKAGE} with value present the requested {@link SurfacePackage}.
+     *
+     * <p>This API may only be called while the caller is running in the foreground. Calls from the
+     * background will result in a {@link SecurityException} being thrown.
      *
      * @param sdkName name of the SDK loaded into sdk sandbox
-     * @param displayId the id of the logical display to display the surface package
-     * @param width the width of the surface package
-     * @param height the height of the surface package
-     * @param hostToken the token returned by {@link android.view.SurfaceView#getHostToken()} once
-     *     the {@link android.view.SurfaceView} has been added to the view hierarchy. Only a
-     *     non-null hostToken is accepted to enable ANR reporting.
-     * @param params the parameters which client application passes to SDK
+     * @param params the parameters which the client application passes to the SDK, it should
+     *     contain the following params: (EXTRA_WIDTH_IN_PIXELS, EXTRA_HEIGHT_IN_PIXELS,
+     *     EXTRA_DISPLAY_ID, EXTRA_HOST_TOKEN). If any of these params is missing, an
+     *     IllegalArgumentException will be thrown.
      * @param callbackExecutor the {@link Executor} on which to invoke the callback
-     * @param receiver This either returns a {@link RequestSurfacePackageResponse} on success, or
-     *     {@link RequestSurfacePackageException}.
+     * @param receiver This either returns a {@link Bundle} on success which should contain the key
+     *     EXTRA_SURFACE_PACKAGE with value of {@link SurfacePackage} response, or {@link
+     *     RequestSurfacePackageException} on failure.
+     * @throws IllegalArgumentException if any of the following params (EXTRA_WIDTH_IN_PIXELS,
+     *     EXTRA_HEIGHT_IN_PIXELS, EXTRA_DISPLAY_ID, EXTRA_HOST_TOKEN) are missing from the Bundle
+     *     or passed with the wrong value or type.
+     * @see android.app.sdksandbox.SdkSandboxManager#EXTRA_WIDTH_IN_PIXELS
+     * @see android.app.sdksandbox.SdkSandboxManager#EXTRA_HEIGHT_IN_PIXELS
+     * @see android.app.sdksandbox.SdkSandboxManager#EXTRA_DISPLAY_ID
+     * @see android.app.sdksandbox.SdkSandboxManager#EXTRA_HOST_TOKEN
      */
     public void requestSurfacePackage(
             @NonNull String sdkName,
-            int displayId,
-            int width,
-            int height,
-            @NonNull IBinder hostToken,
             @NonNull Bundle params,
             @NonNull @CallbackExecutor Executor callbackExecutor,
-            @NonNull
-                    OutcomeReceiver<RequestSurfacePackageResponse, RequestSurfacePackageException>
-                            receiver) {
-        if (hostToken == null) {
-            throw new IllegalArgumentException("hostToken cannot be null");
-        }
-        final RequestSurfacePackageReceiverProxy callbackProxy =
-                new RequestSurfacePackageReceiverProxy(callbackExecutor, receiver);
+            @NonNull OutcomeReceiver<Bundle, RequestSurfacePackageException> receiver) {
         try {
+            int width = params.getInt(EXTRA_WIDTH_IN_PIXELS, -1); // -1 means invalid width
+            if (width <= 0) {
+                throw new IllegalArgumentException(
+                        "Field params should have the entry for the key ("
+                                + EXTRA_WIDTH_IN_PIXELS
+                                + ") with positive integer value");
+            }
+
+            int height = params.getInt(EXTRA_HEIGHT_IN_PIXELS, -1); // -1 means invalid height
+            if (height <= 0) {
+                throw new IllegalArgumentException(
+                        "Field params should have the entry for the key ("
+                                + EXTRA_HEIGHT_IN_PIXELS
+                                + ") with positive integer value");
+            }
+
+            int displayId = params.getInt(EXTRA_DISPLAY_ID, -1); // -1 means invalid displayId
+            if (displayId < 0) {
+                throw new IllegalArgumentException(
+                        "Field params should have the entry for the key ("
+                                + EXTRA_DISPLAY_ID
+                                + ") with integer >= 0");
+            }
+
+            IBinder hostToken = params.getBinder(EXTRA_HOST_TOKEN);
+            if (hostToken == null) {
+                throw new IllegalArgumentException(
+                        "Field params should have the entry for the key ("
+                                + EXTRA_HOST_TOKEN
+                                + ") with not null IBinder value");
+            }
+
+            final RequestSurfacePackageReceiverProxy callbackProxy =
+                    new RequestSurfacePackageReceiverProxy(callbackExecutor, receiver);
+
             mService.requestSurfacePackage(
                     mContext.getPackageName(),
                     sdkName,
@@ -375,6 +456,9 @@ public final class SdkSandboxManager {
      * <p>After the client application receives a signal about a successful SDK load, it is then
      * able to asynchronously request to send any data to the SDK in the sandbox. If the SDK is not
      * loaded, {@link IllegalArgumentException} is thrown.
+     *
+     * <p>This API may only be called while the caller is running in the foreground. Calls from the
+     * background will result in a {@link SecurityException} being thrown.
      *
      * @param sdkName name of the SDK loaded into sdk sandbox, the same name used in {@link
      *     SdkSandboxManager#loadSdk(String, Bundle, Executor, OutcomeReceiver)}
@@ -463,13 +547,11 @@ public final class SdkSandboxManager {
     private static class RequestSurfacePackageReceiverProxy
             extends IRequestSurfacePackageCallback.Stub {
         private final Executor mExecutor;
-        private final OutcomeReceiver<RequestSurfacePackageResponse, RequestSurfacePackageException>
-                mReceiver;
+        private final OutcomeReceiver<Bundle, RequestSurfacePackageException> mReceiver;
 
         RequestSurfacePackageReceiverProxy(
                 Executor executor,
-                OutcomeReceiver<RequestSurfacePackageResponse, RequestSurfacePackageException>
-                        receiver) {
+                OutcomeReceiver<Bundle, RequestSurfacePackageException> receiver) {
             mExecutor = executor;
             mReceiver = receiver;
         }
@@ -478,9 +560,10 @@ public final class SdkSandboxManager {
         public void onSurfacePackageReady(SurfacePackage surfacePackage,
                 int surfacePackageId, Bundle params) {
             mExecutor.execute(
-                    () ->
-                            mReceiver.onResult(
-                                    new RequestSurfacePackageResponse(surfacePackage, params)));
+                    () -> {
+                        params.putParcelable(EXTRA_SURFACE_PACKAGE, surfacePackage);
+                        mReceiver.onResult(params);
+                    });
         }
 
         @Override

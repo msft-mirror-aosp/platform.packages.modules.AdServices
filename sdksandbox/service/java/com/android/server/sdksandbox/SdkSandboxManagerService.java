@@ -16,11 +16,15 @@
 
 package com.android.server.sdksandbox;
 
+import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND;
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_SERVICE;
 
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED;
+import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__GET_LOADED_SDK_LIBRARIES_INFO;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE;
+import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__SYNC_DATA_FROM_CLIENT;
+import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__UNLOAD_SDK;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER;
 import static com.android.server.sdksandbox.SdkSandboxStorageManager.SdkDataDirInfo;
 
@@ -181,7 +185,17 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     @Override
-    public List<SharedLibraryInfo> getLoadedSdkLibrariesInfo(String callingPackageName) {
+    public List<SharedLibraryInfo> getLoadedSdkLibrariesInfo(
+            String callingPackageName, long timeAppCalledSystemServer) {
+        final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
+
+        SdkSandboxStatsLog.write(
+                SANDBOX_API_CALLED,
+                SANDBOX_API_CALLED__METHOD__GET_LOADED_SDK_LIBRARIES_INFO,
+                /*latency=*/ (int)
+                        (timeSystemServerReceivedCallFromApp - timeAppCalledSystemServer),
+                /*success=*/ true,
+                SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER);
         final int callingUid = Binder.getCallingUid();
         final CallingInfo callingInfo = new CallingInfo(callingUid, callingPackageName);
         enforceCallingPackageBelongsToUid(callingInfo);
@@ -259,6 +273,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
         enforceCallingPackageBelongsToUid(callingInfo);
         enforceCallerHasNetworkAccess(callingPackageName);
+        enforceCallerRunsInForeground(callingInfo);
 
         //TODO(b/232924025): Sdk data should be prepared once per sandbox instantiation
         mSdkSandboxStorageManager.prepareSdkDataOnLoad(callingInfo);
@@ -324,9 +339,20 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     @Override
-    public void unloadSdk(String callingPackageName, String sdkName) {
+    public void unloadSdk(
+            String callingPackageName, String sdkName, long timeAppCalledSystemServer) {
+        final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
+
+        SdkSandboxStatsLog.write(
+                SANDBOX_API_CALLED,
+                SANDBOX_API_CALLED__METHOD__UNLOAD_SDK,
+                /*latency=*/ (int)
+                        (timeSystemServerReceivedCallFromApp - timeAppCalledSystemServer),
+                /*success=*/ true,
+                SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER);
         final CallingInfo callingInfo = new CallingInfo(Binder.getCallingUid(), callingPackageName);
         enforceCallingPackageBelongsToUid(callingInfo);
+        enforceCallerRunsInForeground(callingInfo);
 
         final long token = Binder.clearCallingIdentity();
         try {
@@ -362,6 +388,19 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
         if (packageUid != callingUid) {
             throw new SecurityException(callingPackage + " does not belong to uid " + callingUid);
+        }
+    }
+
+    private void enforceCallerRunsInForeground(CallingInfo callingInfo) {
+        String callingPackage = callingInfo.getPackageName();
+        final long token = Binder.clearCallingIdentity();
+        try {
+            int importance = mActivityManager.getUidImportance(callingInfo.getUid());
+            if (importance > IMPORTANCE_FOREGROUND) {
+                throw new SecurityException(callingPackage + " does not run in the foreground");
+            }
+        } finally {
+            Binder.restoreCallingIdentity(token);
         }
     }
 
@@ -407,6 +446,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         final CallingInfo callingInfo = new CallingInfo(callingUid, callingPackageName);
         enforceCallingPackageBelongsToUid(callingInfo);
+        enforceCallerRunsInForeground(callingInfo);
         try {
             final IBinder sdkToken = mSdkTokenManager.getSdkToken(callingInfo, sdkName);
             if (sdkToken == null) {
@@ -442,6 +482,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         final CallingInfo callingInfo = new CallingInfo(callingUid, callingPackageName);
         enforceCallingPackageBelongsToUid(callingInfo);
+        enforceCallerRunsInForeground(callingInfo);
         try {
             final IBinder sdkToken = mSdkTokenManager.getSdkToken(callingInfo, sdkName);
             if (sdkToken == null) {
@@ -484,7 +525,18 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     @Override
-    public void syncDataFromClient(String callingPackageName, Bundle data) {
+    public void syncDataFromClient(
+            String callingPackageName, long timeAppCalledSystemServer, Bundle data) {
+        final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
+
+        SdkSandboxStatsLog.write(
+                SANDBOX_API_CALLED,
+                SANDBOX_API_CALLED__METHOD__SYNC_DATA_FROM_CLIENT,
+                /*latency=*/ (int)
+                        (timeSystemServerReceivedCallFromApp - timeAppCalledSystemServer),
+                /*success=*/ true,
+                SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER);
+
         final int callingUid = Binder.getCallingUid();
         final long token = Binder.clearCallingIdentity();
 

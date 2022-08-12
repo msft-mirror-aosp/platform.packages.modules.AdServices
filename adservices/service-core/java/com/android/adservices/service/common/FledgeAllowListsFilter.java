@@ -47,7 +47,7 @@ public class FledgeAllowListsFilter {
      */
     public void assertAppCanUsePpapi(@NonNull String appPackageName, int apiNameLoggingId) {
         Objects.requireNonNull(appPackageName);
-        if (!AllowLists.appCanUsePpapi(mFlags, appPackageName)) {
+        if (!AllowLists.isPackageAllowListed(mFlags.getPpapiAppAllowList(), appPackageName)) {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiNameLoggingId, AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED);
             throw new SecurityException(

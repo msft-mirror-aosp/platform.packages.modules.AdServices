@@ -114,8 +114,13 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         mFlags = flags;
     }
 
+    /** Creates a new instance of {@link AdSelectionServiceImpl}. */
+    public static AdSelectionServiceImpl create(@NonNull Context context) {
+        return new AdSelectionServiceImpl(context);
+    }
+
     /** Creates an instance of {@link AdSelectionServiceImpl} to be used. */
-    public AdSelectionServiceImpl(@NonNull Context context) {
+    private AdSelectionServiceImpl(@NonNull Context context) {
         this(
                 AdSelectionDatabase.getInstance(context).adSelectionEntryDao(),
                 CustomAudienceDatabase.getInstance(context).customAudienceDao(),
@@ -145,7 +150,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             adSelectionConfigValidator.validate(adSelectionConfig);
         } catch (NullPointerException | IllegalArgumentException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                    AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                     AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
             // Rethrow because we want to fail fast
             throw exception;

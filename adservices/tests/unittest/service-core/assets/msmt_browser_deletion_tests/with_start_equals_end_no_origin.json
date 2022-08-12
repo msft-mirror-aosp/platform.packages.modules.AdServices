@@ -107,7 +107,7 @@
         "sourceType": "navigation"
       }
     ],
-    "attribution_rate_limits": [
+    "attributions": [
       {
         "id": "A1",
         "sourceSite": "android-app://com.site1.triggerTimeInRangeForDeletion",
@@ -181,7 +181,7 @@
         "sourceType": "navigation"
       }
     ],
-    "attribution_rate_limits": [
+    "attributions": [
       {
         "id": "A2",
         "sourceSite": "android-app://com.site1.triggerTimeNotInRangeForDeletion",

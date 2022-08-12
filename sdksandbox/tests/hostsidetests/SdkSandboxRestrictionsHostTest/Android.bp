@@ -36,12 +36,14 @@ java_defaults {
     name: "SdkSandboxRestrictionsHostTestDefaults",
     srcs: [
         "app/src/**/SdkSandboxRestrictionsTestApp.java",
+        "app/src/**/SdkSandboxEmptyActivity.java",
         ":framework-sdksandbox-sources",
         ":sdksandbox_aidl",
         ":sdksandbox-sources",
     ],
     static_libs: [
         "androidx.core_core",
+        "androidx.test.ext.junit",
         "compatibility-device-util-axt",
         "SdkSandboxTestUtils",
     ],
