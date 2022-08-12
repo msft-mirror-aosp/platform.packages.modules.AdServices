@@ -38,10 +38,7 @@ public class ReportImpressionRequestTest {
         AdSelectionConfig testAdSelectionConfig = anAdSelectionConfig();
 
         ReportImpressionRequest request =
-                new ReportImpressionRequest.Builder()
-                        .setAdSelectionId(AUCTION_ID)
-                        .setAdSelectionConfig(testAdSelectionConfig)
-                        .build();
+                new ReportImpressionRequest(AUCTION_ID, testAdSelectionConfig);
 
         assertThat(request.getAdSelectionId()).isEqualTo(AUCTION_ID);
         assertThat(request.getAdSelectionConfig()).isEqualTo(testAdSelectionConfig);
@@ -49,28 +46,9 @@ public class ReportImpressionRequestTest {
 
     @Test
     public void testFailsToBuildWithUnsetAdSelectionId() {
-
         AdSelectionConfig testAdSelectionConfig = anAdSelectionConfig();
         assertThrows(
                 IllegalArgumentException.class,
-                () -> {
-                    new ReportImpressionRequest.Builder()
-                            // Not setting AdSelectionId making it null.
-                            .setAdSelectionConfig(testAdSelectionConfig)
-                            .build();
-                });
-    }
-
-    @Test
-    public void testFailsToBuildWithNullAdSelectionConfig() {
-
-        assertThrows(
-                NullPointerException.class,
-                () -> {
-                    new ReportImpressionRequest.Builder()
-                            .setAdSelectionId(AUCTION_ID)
-                            // Not setting AdSelectionConfig making it null.
-                            .build();
-                });
+                () -> new ReportImpressionRequest(0, testAdSelectionConfig));
     }
 }
