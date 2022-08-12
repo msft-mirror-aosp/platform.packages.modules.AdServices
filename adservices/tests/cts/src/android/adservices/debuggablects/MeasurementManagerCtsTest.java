@@ -18,8 +18,6 @@ package android.adservices.debuggablects;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -48,6 +46,7 @@ import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -245,8 +244,10 @@ public class MeasurementManagerCtsTest {
                         .setDomainUris(Collections.singletonList(DOMAIN_URI))
                         .setEnd(Instant.now())
                         .build();
+
         manager.deleteRegistrations(request, mExecutorService, callback);
-        assertNull(future.get());
+
+        Assert.assertNull(future.get());
     }
 
     @Test
@@ -254,14 +255,16 @@ public class MeasurementManagerCtsTest {
         CountDownLatch countDownLatch = new CountDownLatch(1);
         final MeasurementManager manager = sContext.getSystemService(MeasurementManager.class);
         List<Integer> resultCodes = new ArrayList<>();
+
         manager.getMeasurementApiStatus(
                 mExecutorService,
                 result -> {
                     resultCodes.add(result);
                     countDownLatch.countDown();
                 });
-        assertThat(countDownLatch.await(500, TimeUnit.MICROSECONDS)).isTrue();
-        assertNotNull(resultCodes);
-        assertEquals(1, resultCodes.size());
+
+        assertThat(countDownLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
+        Assert.assertNotNull(resultCodes);
+        Assert.assertEquals(1, resultCodes.size());
     }
 }
