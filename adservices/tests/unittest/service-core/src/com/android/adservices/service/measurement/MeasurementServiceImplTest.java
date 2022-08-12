@@ -25,8 +25,11 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
+import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.measurement.DeletionParam;
 import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.IMeasurementApiStatusCallback;
@@ -43,10 +46,12 @@ import android.adservices.measurement.WebTriggerRegistrationRequestInternal;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.provider.DeviceConfig;
 
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
@@ -58,6 +63,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
 
@@ -148,6 +154,77 @@ public final class MeasurementServiceImplTest {
     }
 
     @Test
+    public void testRegisterSource_killSwitchOff() throws Exception {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_api_register_source_kill_switch",
+                Boolean.toString(false),
+                /* makeDefault */ false);
+
+        final CountDownLatch countDownLatchAny = new CountDownLatch(1);
+        new MeasurementServiceImpl(
+                        mMockMeasurementImpl,
+                        mMockContext,
+                        mConsentManager,
+                        mMockThrottler,
+                        FlagsFactory.getFlags())
+                .register(
+                        getDefaultRegistrationSourceRequest(),
+                        new IMeasurementCallback.Stub() {
+                            @Override
+                            public void onResult() {
+                                countDownLatchAny.countDown();
+                            }
+
+                            @Override
+                            public void onFailure(MeasurementErrorResponse errorResponse) {
+                                countDownLatchAny.countDown();
+                            }
+                        });
+
+        assertThat(countDownLatchAny.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        Mockito.verify(mMockMeasurementImpl, times(1)).register(any(), anyLong());
+    }
+
+    @Test
+    public void testRegisterSource_killSwitchOn() throws Exception {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_api_register_source_kill_switch",
+                Boolean.toString(true),
+                /* makeDefault */ false);
+
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        final List<MeasurementErrorResponse> errors = new ArrayList<>();
+        new MeasurementServiceImpl(
+                        mMockMeasurementImpl,
+                        mMockContext,
+                        mConsentManager,
+                        mMockThrottler,
+                        FlagsFactory.getFlags())
+                .register(
+                        getDefaultRegistrationSourceRequest(),
+                        new IMeasurementCallback.Stub() {
+                            @Override
+                            public void onResult() {
+                                Assert.fail();
+                            }
+
+                            @Override
+                            public void onFailure(MeasurementErrorResponse responseParcel) {
+                                errors.add(responseParcel);
+                                countDownLatch.countDown();
+                            }
+                        });
+
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        Mockito.verify(mMockMeasurementImpl, never()).register(any(), anyLong());
+        Assert.assertEquals(1, errors.size());
+        Assert.assertEquals(
+                AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED, errors.get(0).getStatusCode());
+    }
+
+    @Test
     public void testRegisterSource_successfulThrottled() throws Exception {
         final CountDownLatch countDownLatchSuccess = new CountDownLatch(1);
         final CountDownLatch countDownLatchFailed = new CountDownLatch(1);
@@ -221,6 +298,77 @@ public final class MeasurementServiceImplTest {
         assertThat(errors.size()).isEqualTo(1);
     }
 
+    @Test
+    public void testRegisterTrigger_killSwitchOff() throws Exception {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_api_register_trigger_kill_switch",
+                Boolean.toString(false),
+                /* makeDefault */ false);
+
+        final CountDownLatch countDownLatchAny = new CountDownLatch(1);
+        new MeasurementServiceImpl(
+                        mMockMeasurementImpl,
+                        mMockContext,
+                        mConsentManager,
+                        mMockThrottler,
+                        FlagsFactory.getFlags())
+                .register(
+                        getDefaultRegistrationTriggerRequest(),
+                        new IMeasurementCallback.Stub() {
+                            @Override
+                            public void onResult() {
+                                countDownLatchAny.countDown();
+                            }
+
+                            @Override
+                            public void onFailure(MeasurementErrorResponse errorResponse) {
+                                countDownLatchAny.countDown();
+                            }
+                        });
+
+        assertThat(countDownLatchAny.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        Mockito.verify(mMockMeasurementImpl, times(1)).register(any(), anyLong());
+    }
+
+    @Test
+    public void testRegisterTrigger_killSwitchOn() throws Exception {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_api_register_trigger_kill_switch",
+                Boolean.toString(true),
+                /* makeDefault */ false);
+
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        final List<MeasurementErrorResponse> errors = new ArrayList<>();
+        new MeasurementServiceImpl(
+                        mMockMeasurementImpl,
+                        mMockContext,
+                        mConsentManager,
+                        mMockThrottler,
+                        FlagsFactory.getFlags())
+                .register(
+                        getDefaultRegistrationTriggerRequest(),
+                        new IMeasurementCallback.Stub() {
+                            @Override
+                            public void onResult() {
+                                Assert.fail();
+                            }
+
+                            @Override
+                            public void onFailure(MeasurementErrorResponse responseParcel) {
+                                errors.add(responseParcel);
+                                countDownLatch.countDown();
+                            }
+                        });
+
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        Mockito.verify(mMockMeasurementImpl, never()).register(any(), anyLong());
+        Assert.assertEquals(1, errors.size());
+        Assert.assertEquals(
+                AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED, errors.get(0).getStatusCode());
+    }
+
     @Test(expected = NullPointerException.class)
     public void testRegister_invalidRequest() {
         mMeasurementServiceImpl.register(
@@ -260,6 +408,77 @@ public final class MeasurementServiceImplTest {
         assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
         assertThat(list.get(0)).isEqualTo(STATUS_SUCCESS);
         assertThat(list.size()).isEqualTo(1);
+    }
+
+    @Test
+    public void testDeleteRegistrations_killSwitchOff() throws Exception {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_api_delete_registrations_kill_switch",
+                Boolean.toString(false),
+                /* makeDefault */ false);
+
+        final CountDownLatch countDownLatchAny = new CountDownLatch(1);
+        new MeasurementServiceImpl(
+                        mMockMeasurementImpl,
+                        mMockContext,
+                        mConsentManager,
+                        mMockThrottler,
+                        FlagsFactory.getFlags())
+                .deleteRegistrations(
+                        getDefaultDeletionRequest(),
+                        new IMeasurementCallback.Stub() {
+                            @Override
+                            public void onResult() {
+                                countDownLatchAny.countDown();
+                            }
+
+                            @Override
+                            public void onFailure(MeasurementErrorResponse errorResponse) {
+                                countDownLatchAny.countDown();
+                            }
+                        });
+
+        assertThat(countDownLatchAny.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        Mockito.verify(mMockMeasurementImpl, times(1)).deleteRegistrations(any());
+    }
+
+    @Test
+    public void testDeleteRegistrations_killSwitchOn() throws Exception {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_api_delete_registrations_kill_switch",
+                Boolean.toString(true),
+                /* makeDefault */ false);
+
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        final List<MeasurementErrorResponse> errors = new ArrayList<>();
+        new MeasurementServiceImpl(
+                        mMockMeasurementImpl,
+                        mMockContext,
+                        mConsentManager,
+                        mMockThrottler,
+                        FlagsFactory.getFlags())
+                .deleteRegistrations(
+                        getDefaultDeletionRequest(),
+                        new IMeasurementCallback.Stub() {
+                            @Override
+                            public void onResult() {
+                                Assert.fail();
+                            }
+
+                            @Override
+                            public void onFailure(MeasurementErrorResponse responseParcel) {
+                                errors.add(responseParcel);
+                                countDownLatch.countDown();
+                            }
+                        });
+
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        Mockito.verify(mMockMeasurementImpl, never()).deleteRegistrations(any());
+        Assert.assertEquals(1, errors.size());
+        Assert.assertEquals(
+                AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED, errors.get(0).getStatusCode());
     }
 
     @Test
@@ -358,6 +577,60 @@ public final class MeasurementServiceImplTest {
         }
     }
 
+    @Test
+    public void testGetMeasurementApiStatus_killSwitchOff() throws Exception {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_api_status_kill_switch",
+                Boolean.toString(false),
+                /* makeDefault */ false);
+
+        final CountDownLatch countDownLatchAny = new CountDownLatch(1);
+        new MeasurementServiceImpl(
+                        mMockMeasurementImpl,
+                        mMockContext,
+                        mConsentManager,
+                        mMockThrottler,
+                        FlagsFactory.getFlags())
+                .getMeasurementApiStatus(
+                        new IMeasurementApiStatusCallback.Stub() {
+                            @Override
+                            public void onResult(int result) {
+                                countDownLatchAny.countDown();
+                            }
+                        });
+
+        assertThat(countDownLatchAny.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        Mockito.verify(mMockMeasurementImpl, times(1)).getMeasurementApiStatus();
+    }
+
+    @Test
+    public void testGetMeasurementApiStatus_killSwitchOn() throws Exception {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_api_status_kill_switch",
+                Boolean.toString(true),
+                /* makeDefault */ false);
+
+        final CountDownLatch countDownLatchAny = new CountDownLatch(1);
+        new MeasurementServiceImpl(
+                        mMockMeasurementImpl,
+                        mMockContext,
+                        mConsentManager,
+                        mMockThrottler,
+                        FlagsFactory.getFlags())
+                .getMeasurementApiStatus(
+                        new IMeasurementApiStatusCallback.Stub() {
+                            @Override
+                            public void onResult(int result) {
+                                countDownLatchAny.countDown();
+                            }
+                        });
+
+        assertThat(countDownLatchAny.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        Mockito.verify(mMockMeasurementImpl, never()).getMeasurementApiStatus();
+    }
+
     @Test(expected = NullPointerException.class)
     public void testGetMeasurementApiStatus_invalidCallback() {
         mMeasurementServiceImpl.getMeasurementApiStatus(null);
@@ -384,6 +657,83 @@ public final class MeasurementServiceImplTest {
         assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
         assertThat(list.get(0)).isEqualTo(STATUS_SUCCESS);
         assertThat(list.size()).isEqualTo(1);
+    }
+
+    @Test
+    public void testRegisterWebSource_killSwitchOff() throws Exception {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_api_register_web_source_kill_switch",
+                Boolean.toString(false),
+                /* makeDefault */ false);
+
+        // Allow client to call API
+        allowAllRegistrationClients();
+
+        final CountDownLatch countDownLatchAny = new CountDownLatch(1);
+        new MeasurementServiceImpl(
+                        mMockMeasurementImpl,
+                        mMockContext,
+                        mConsentManager,
+                        mMockThrottler,
+                        FlagsFactory.getFlags())
+                .registerWebSource(
+                        createWebSourceRegistrationRequest(),
+                        new IMeasurementCallback.Stub() {
+                            @Override
+                            public void onResult() {
+                                countDownLatchAny.countDown();
+                            }
+
+                            @Override
+                            public void onFailure(MeasurementErrorResponse errorResponse) {
+                                countDownLatchAny.countDown();
+                            }
+                        });
+
+        assertThat(countDownLatchAny.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        Mockito.verify(mMockMeasurementImpl, times(1)).registerWebSource(any(), anyLong());
+    }
+
+    @Test
+    public void testRegisterWebSource_killSwitchOn() throws Exception {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_api_register_web_source_kill_switch",
+                Boolean.toString(true),
+                /* makeDefault */ false);
+
+        // Allow client to call API
+        allowAllRegistrationClients();
+
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        final List<MeasurementErrorResponse> errors = new ArrayList<>();
+        new MeasurementServiceImpl(
+                        mMockMeasurementImpl,
+                        mMockContext,
+                        mConsentManager,
+                        mMockThrottler,
+                        FlagsFactory.getFlags())
+                .registerWebSource(
+                        createWebSourceRegistrationRequest(),
+                        new IMeasurementCallback.Stub() {
+                            @Override
+                            public void onResult() {
+                                Assert.fail();
+                            }
+
+                            @Override
+                            public void onFailure(MeasurementErrorResponse responseParcel) {
+                                errors.add(responseParcel);
+                                countDownLatch.countDown();
+                            }
+                        });
+
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        Mockito.verify(mMockMeasurementImpl, never()).registerWebSource(any(), anyLong());
+        Assert.assertEquals(1, errors.size());
+        Assert.assertEquals(
+                AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED, errors.get(0).getStatusCode());
     }
 
     @Test
@@ -462,6 +812,83 @@ public final class MeasurementServiceImplTest {
         assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
         assertThat(list.get(0)).isEqualTo(STATUS_SUCCESS);
         assertThat(list.size()).isEqualTo(1);
+    }
+
+    @Test
+    public void testRegisterWebTrigger_killSwitchOff() throws Exception {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_api_register_web_trigger_kill_switch",
+                Boolean.toString(false),
+                /* makeDefault */ false);
+
+        // Allow client to call API
+        allowAllRegistrationClients();
+
+        final CountDownLatch countDownLatchAny = new CountDownLatch(1);
+        new MeasurementServiceImpl(
+                        mMockMeasurementImpl,
+                        mMockContext,
+                        mConsentManager,
+                        mMockThrottler,
+                        FlagsFactory.getFlags())
+                .registerWebTrigger(
+                        createWebTriggerRegistrationRequest(),
+                        new IMeasurementCallback.Stub() {
+                            @Override
+                            public void onResult() {
+                                countDownLatchAny.countDown();
+                            }
+
+                            @Override
+                            public void onFailure(MeasurementErrorResponse errorResponse) {
+                                countDownLatchAny.countDown();
+                            }
+                        });
+
+        assertThat(countDownLatchAny.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        Mockito.verify(mMockMeasurementImpl, times(1)).registerWebTrigger(any(), anyLong());
+    }
+
+    @Test
+    public void testRegisterWebTrigger_killSwitchOn() throws Exception {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_api_register_web_trigger_kill_switch",
+                Boolean.toString(true),
+                /* makeDefault */ false);
+
+        // Allow client to call API
+        allowAllRegistrationClients();
+
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        final List<MeasurementErrorResponse> errors = new ArrayList<>();
+        new MeasurementServiceImpl(
+                        mMockMeasurementImpl,
+                        mMockContext,
+                        mConsentManager,
+                        mMockThrottler,
+                        FlagsFactory.getFlags())
+                .registerWebTrigger(
+                        createWebTriggerRegistrationRequest(),
+                        new IMeasurementCallback.Stub() {
+                            @Override
+                            public void onResult() {
+                                Assert.fail();
+                            }
+
+                            @Override
+                            public void onFailure(MeasurementErrorResponse responseParcel) {
+                                errors.add(responseParcel);
+                                countDownLatch.countDown();
+                            }
+                        });
+
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        Mockito.verify(mMockMeasurementImpl, never()).registerWebTrigger(any(), anyLong());
+        Assert.assertEquals(1, errors.size());
+        Assert.assertEquals(
+                AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED, errors.get(0).getStatusCode());
     }
 
     @Test
@@ -693,5 +1120,13 @@ public final class MeasurementServiceImplTest {
                 .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
                 .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
                 .build();
+    }
+
+    private void allowAllRegistrationClients() {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "web_context_registration_client_allow_list",
+                "*",
+                /* makeDefault */ false);
     }
 }
