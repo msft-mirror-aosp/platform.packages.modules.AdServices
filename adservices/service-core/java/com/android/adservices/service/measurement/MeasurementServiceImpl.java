@@ -15,6 +15,7 @@
  */
 package com.android.adservices.service.measurement;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
@@ -25,6 +26,7 @@ import android.adservices.measurement.IMeasurementApiStatusCallback;
 import android.adservices.measurement.IMeasurementCallback;
 import android.adservices.measurement.IMeasurementService;
 import android.adservices.measurement.MeasurementErrorResponse;
+import android.adservices.measurement.MeasurementManager;
 import android.adservices.measurement.RegistrationRequest;
 import android.adservices.measurement.WebSourceRegistrationRequestInternal;
 import android.adservices.measurement.WebTriggerRegistrationRequestInternal;
@@ -58,12 +60,14 @@ import java.util.function.Consumer;
  */
 public class MeasurementServiceImpl extends IMeasurementService.Stub {
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
+    private static final Executor sLightExecutor = AdServicesExecutors.getLightWeightExecutor();
     private final MeasurementImpl mMeasurementImpl;
     private final Flags mFlags;
     private final ConsentManager mConsentManager;
     private final Context mContext;
     private final Throttler mThrottler;
     private static final String RATE_LIMIT_REACHED = "Rate limit reached to call this API.";
+    private static final String KILL_SWITCH_ENABLED = "Measurement API is disabled.";
 
     public MeasurementServiceImpl(
             @NonNull Context context,
@@ -101,13 +105,17 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                 RegistrationRequest.REGISTER_SOURCE == request.getRegistrationType()
                         ? Throttler.ApiKey.MEASUREMENT_API_REGISTER_SOURCE
                         : Throttler.ApiKey.MEASUREMENT_API_REGISTER_TRIGGER;
-
         if (isThrottled(request.getPackageName(), apiKey, callback)) {
             return;
         }
 
         sBackgroundExecutor.execute(
                 () -> {
+                    if (isRegisterDisabled(request)) {
+                        setKillSwitchCallbackFailure(callback);
+                        return;
+                    }
+
                     performWorkIfAllowed(
                             (mMeasurementImpl) ->
                                     mMeasurementImpl.register(request, System.currentTimeMillis()),
@@ -131,6 +139,12 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
 
         sBackgroundExecutor.execute(
                 () -> {
+                    if (mFlags.getMeasurementApiRegisterWebSourceKillSwitch()) {
+                        LogUtil.e("Measurement Register Web Source API is disabled");
+                        setKillSwitchCallbackFailure(callback);
+                        return;
+                    }
+
                     performWorkIfAllowed(
                             (mMeasurementImpl) ->
                                     mMeasurementImpl.registerWebSource(
@@ -158,6 +172,12 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
 
         sBackgroundExecutor.execute(
                 () -> {
+                    if (mFlags.getMeasurementApiRegisterWebTriggerKillSwitch()) {
+                        LogUtil.e("Measurement Register Web Trigger API is disabled");
+                        setKillSwitchCallbackFailure(callback);
+                        return;
+                    }
+
                     performWorkIfAllowed(
                             (measurementImpl) ->
                                     measurementImpl.registerWebTrigger(
@@ -184,6 +204,12 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
 
         sBackgroundExecutor.execute(
                 () -> {
+                    if (mFlags.getMeasurementApiDeleteRegistrationsKillSwitch()) {
+                        LogUtil.e("Measurement Delete Registrations API is disabled");
+                        setKillSwitchCallbackFailure(callback);
+                        return;
+                    }
+
                     try {
                         @AdServicesStatusUtils.StatusCode
                         int resultCode = mMeasurementImpl.deleteRegistrations(request);
@@ -208,11 +234,26 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
     public void getMeasurementApiStatus(@NonNull IMeasurementApiStatusCallback callback) {
         Objects.requireNonNull(callback);
 
-        try {
-            callback.onResult(mMeasurementImpl.getMeasurementApiStatus());
-        } catch (RemoteException e) {
-            LogUtil.e(e, "Unable to send result to the callback");
-        }
+        sLightExecutor.execute(
+                () -> {
+                    if (mFlags.getMeasurementApiStatusKillSwitch()) {
+                        LogUtil.e("Measurement Status API is disabled");
+                        try {
+                            callback.onResult(MeasurementManager.MEASUREMENT_API_STATE_DISABLED);
+                        } catch (RemoteException e) {
+                            LogUtil.e(
+                                    e,
+                                    "Failed to call the callback on measurement kill switch"
+                                            + " enabled.");
+                        }
+                        return;
+                    }
+                    try {
+                        callback.onResult(mMeasurementImpl.getMeasurementApiStatus());
+                    } catch (RemoteException e) {
+                        LogUtil.e(e, "Unable to send result to the callback");
+                    }
+                });
     }
 
     private void performWorkIfAllowed(
@@ -261,5 +302,31 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             return true;
         }
         return false;
+    }
+
+    private boolean isRegisterDisabled(RegistrationRequest request) {
+        final boolean isRegistrationSource =
+                request.getRegistrationType() == RegistrationRequest.REGISTER_SOURCE;
+
+        if (isRegistrationSource && mFlags.getMeasurementApiRegisterSourceKillSwitch()) {
+            LogUtil.e("Measurement Register Source API is disabled");
+            return true;
+        } else if (!isRegistrationSource && mFlags.getMeasurementApiRegisterTriggerKillSwitch()) {
+            LogUtil.e("Measurement Register Trigger API is disabled");
+            return true;
+        }
+        return false;
+    }
+
+    private void setKillSwitchCallbackFailure(IMeasurementCallback callback) {
+        try {
+            callback.onFailure(
+                    new MeasurementErrorResponse.Builder()
+                            .setStatusCode(STATUS_KILLSWITCH_ENABLED)
+                            .setErrorMessage(KILL_SWITCH_ENABLED)
+                            .build());
+        } catch (RemoteException e) {
+            LogUtil.e(e, "Failed to call the callback on measurement kill switch enabled.");
+        }
     }
 }

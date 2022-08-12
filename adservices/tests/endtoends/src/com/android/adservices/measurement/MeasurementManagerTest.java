@@ -296,6 +296,7 @@ public class MeasurementManagerTest {
     @Test
     public void testGetMeasurementApiStatus() throws Exception {
         MeasurementManager mm = Mockito.spy(sContext.getSystemService(MeasurementManager.class));
+
         CompletableFuture<Integer> future = new CompletableFuture<>();
         OutcomeReceiver<Integer, Exception> callback =
                 new OutcomeReceiver<Integer, Exception>() {
@@ -311,6 +312,7 @@ public class MeasurementManagerTest {
                 };
 
         mm.getMeasurementApiStatus(CALLBACK_EXECUTOR, callback);
+
         Assert.assertEquals(
                 Integer.valueOf(MeasurementManager.MEASUREMENT_API_STATE_ENABLED), future.get());
     }
