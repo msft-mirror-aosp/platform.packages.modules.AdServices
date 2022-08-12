@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertFalse;

@@ -33,7 +33,6 @@ import android.adservices.customaudience.ICustomAudienceCallback;
 import android.adservices.customaudience.ICustomAudienceService;
 import android.annotation.NonNull;
 import android.content.Context;
-import android.os.Binder;
 import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
@@ -43,8 +42,9 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
+import com.android.adservices.service.common.CallingAppUidSupplier;
+import com.android.adservices.service.common.CallingAppUidSupplierBinderImpl;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
-import com.android.adservices.service.common.SdkRuntimeUtil;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.CustomAudienceOverrider;
 import com.android.adservices.service.devapi.DevContext;
@@ -67,6 +67,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final AppImportanceFilter mAppImportanceFilter;
     @NonNull private final Flags mFlags;
+    @NonNull private final CallingAppUidSupplier mCallingAppUidSupplier;
 
     private static final String API_NOT_AUTHORIZED_MSG =
             "This API is not enabled for the given app because either dev options are disabled or"
@@ -85,7 +86,8 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                         context,
                         AD_SERVICES_API_CALLED__API_CLASS__FLEDGE,
                         () -> FlagsFactory.getFlags().getForegroundStatuslLevelForValidation()),
-                FlagsFactory.getFlags());
+                FlagsFactory.getFlags(),
+                CallingAppUidSupplierBinderImpl.create());
     }
 
     /** Creates a new instance of {@link CustomAudienceServiceImpl}. */
@@ -103,7 +105,8 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             @NonNull ExecutorService executorService,
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull AppImportanceFilter appImportanceFilter,
-            @NonNull Flags flags) {
+            @NonNull Flags flags,
+            @NonNull CallingAppUidSupplier callingAppUidSupplier) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceImpl);
         Objects.requireNonNull(fledgeAuthorizationFilter);
@@ -120,6 +123,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         mAdServicesLogger = adServicesLogger;
         mAppImportanceFilter = appImportanceFilter;
         mFlags = flags;
+        mCallingAppUidSupplier = callingAppUidSupplier;
     }
 
     /**
@@ -442,7 +446,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
     private int getCallingUid(int apiNameLoggingId) {
         try {
-            return SdkRuntimeUtil.getCallingAppUid(Binder.getCallingUidOrThrow());
+            return mCallingAppUidSupplier.getCallingAppUid();
         } catch (IllegalStateException illegalStateException) {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiNameLoggingId, AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
