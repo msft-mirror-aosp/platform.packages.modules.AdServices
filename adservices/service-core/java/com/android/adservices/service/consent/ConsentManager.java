@@ -47,6 +47,8 @@ import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 
@@ -77,6 +79,7 @@ public class ConsentManager {
     private final AdServicesLoggerImpl mAdServicesLoggerImpl;
     private int mDeviceLoggingRegion;
     private final CustomAudienceDao mCustomAudienceDao;
+    private final ExecutorService mExecutor;
 
     ConsentManager(
             @NonNull Context context,
@@ -98,6 +101,7 @@ public class ConsentManager {
         mMeasurementImpl = measurementImpl;
         mAdServicesLoggerImpl = adServicesLoggerImpl;
         mCustomAudienceDao = customAudienceDao;
+        mExecutor = Executors.newSingleThreadExecutor();
     }
 
     /**
@@ -167,7 +171,7 @@ public class ConsentManager {
 
             // reset all data
             resetTopicsAndBlockedTopics();
-            resetAllAppConsentAndAppData();
+            resetAppsAndBlockedApps();
             resetMeasurement();
 
             unscheduleAllBackgroundJobs(context.getSystemService(JobScheduler.class));
@@ -284,9 +288,10 @@ public class ConsentManager {
      * @param app {@link App} to block.
      * @throws IOException if the operation fails
      */
-    public void revokeConsentForAppAndClearAppData(@NonNull App app) throws IOException {
+    public void revokeConsentForApp(@NonNull App app) throws IOException {
         mAppConsentDao.setConsentForApp(app.getPackageName(), true);
-        mCustomAudienceDao.deleteCustomAudienceDataByOwner(app.getPackageName());
+        asyncExecute(
+                () -> mCustomAudienceDao.deleteCustomAudienceDataByOwner(app.getPackageName()));
     }
 
     /**
@@ -306,9 +311,9 @@ public class ConsentManager {
      *
      * @throws IOException if the operation fails
      */
-    public void resetAllAppConsentAndAppData() throws IOException {
+    public void resetAppsAndBlockedApps() throws IOException {
         mAppConsentDao.clearAllConsentData();
-        mCustomAudienceDao.deleteAllCustomAudienceData();
+        asyncExecute(mCustomAudienceDao::deleteAllCustomAudienceData);
     }
 
     /**
@@ -318,9 +323,9 @@ public class ConsentManager {
      *
      * @throws IOException if the operation fails
      */
-    public void resetAllowedAppConsentAndAppData() throws IOException {
+    public void resetApps() throws IOException {
         mAppConsentDao.clearKnownAppsWithConsent();
-        mCustomAudienceDao.deleteAllCustomAudienceData();
+        asyncExecute(mCustomAudienceDao::deleteAllCustomAudienceData);
     }
 
     /**
@@ -509,5 +514,9 @@ public class ConsentManager {
         public RevokedConsentException() {
             super(REVOKED_CONSENT_ERROR_MESSAGE);
         }
+    }
+
+    private void asyncExecute(Runnable runnable) {
+        mExecutor.execute(runnable);
     }
 }
