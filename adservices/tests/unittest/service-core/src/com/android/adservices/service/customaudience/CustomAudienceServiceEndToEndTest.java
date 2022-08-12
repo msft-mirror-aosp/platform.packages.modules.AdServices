@@ -217,17 +217,19 @@ public class CustomAudienceServiceEndToEndTest {
     }
 
     @Test
-    public void testJoinCustomAudience_notAuthorized_fail() {
+    public void testJoinCustomAudience_callerPackageNameMismatch_fail() {
         ResultCapturingCallback callback = new ResultCapturingCallback();
-        assertThrows(
-                SecurityException.class,
-                () -> {
-                    mService.joinCustomAudience(
-                            CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
-                                    .setOwnerPackageName("other_owner")
-                                    .build(),
-                            callback);
-                });
+        mService.joinCustomAudience(
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                        .setOwnerPackageName("other_owner")
+                        .build(),
+                callback);
+
+        assertFalse(callback.isSuccess());
+        assertTrue(callback.getException() instanceof SecurityException);
+        assertEquals(
+                AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE,
+                callback.getException().getMessage());
         assertNull(
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
@@ -343,17 +345,19 @@ public class CustomAudienceServiceEndToEndTest {
     }
 
     @Test
-    public void testLeaveCustomAudience_notAuthorized_fail() {
+    public void testLeaveCustomAudience_callerPackageNameMismatch_fail() {
         ResultCapturingCallback callback = new ResultCapturingCallback();
-        assertThrows(
-                SecurityException.class,
-                () -> {
-                    mService.leaveCustomAudience(
-                            "other_owner",
-                            CommonFixture.VALID_BUYER,
-                            CustomAudienceFixture.VALID_NAME,
-                            callback);
-                });
+        mService.leaveCustomAudience(
+                "other_owner",
+                CommonFixture.VALID_BUYER,
+                CustomAudienceFixture.VALID_NAME,
+                callback);
+
+        assertFalse(callback.isSuccess());
+        assertTrue(callback.getException() instanceof SecurityException);
+        assertEquals(
+                AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE,
+                callback.getException().getMessage());
     }
 
     @Test

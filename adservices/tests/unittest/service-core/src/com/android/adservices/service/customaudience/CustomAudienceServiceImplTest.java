@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.customaudience;
 
+import static android.adservices.common.AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
@@ -245,17 +246,25 @@ public class CustomAudienceServiceImplTest {
     }
 
     @Test
-    public void testJoinCustomAudience_ownerAssertFailed() {
-        doThrow(SecurityException.class)
+    public void testJoinCustomAudience_ownerAssertFailed() throws RemoteException {
+        doThrow(
+                        new SecurityException(
+                                SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE))
                 .when(mFledgeAuthorizationFilter)
                 .assertCallingPackageName(
                         CustomAudienceFixture.VALID_OWNER,
                         Process.myUid(),
                         AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
 
-        assertThrows(
-                SecurityException.class,
-                () -> mService.joinCustomAudience(VALID_CUSTOM_AUDIENCE, mICustomAudienceCallback));
+        mService.joinCustomAudience(VALID_CUSTOM_AUDIENCE, mICustomAudienceCallback);
+
+        ArgumentCaptor<FledgeErrorResponse> actualResponseCaptor =
+                ArgumentCaptor.forClass(FledgeErrorResponse.class);
+        verify(mICustomAudienceCallback).onFailure(actualResponseCaptor.capture());
+        assertThat(actualResponseCaptor.getValue().getStatusCode())
+                .isEqualTo(AdServicesStatusUtils.STATUS_UNAUTHORIZED);
+        assertThat(actualResponseCaptor.getValue().getErrorMessage())
+                .isEqualTo(SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE);
         verify(mFledgeAuthorizationFilter)
                 .assertCallingPackageName(
                         CustomAudienceFixture.VALID_OWNER,
@@ -519,23 +528,29 @@ public class CustomAudienceServiceImplTest {
     }
 
     @Test
-    public void testLeaveCustomAudience_ownerAssertFailed() {
-        doThrow(SecurityException.class)
+    public void testLeaveCustomAudience_ownerAssertFailed() throws RemoteException {
+        doThrow(
+                        new SecurityException(
+                                SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE))
                 .when(mFledgeAuthorizationFilter)
                 .assertCallingPackageName(
                         CustomAudienceFixture.VALID_OWNER,
                         Process.myUid(),
                         AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
 
-        assertThrows(
-                SecurityException.class,
-                () ->
-                        mService.leaveCustomAudience(
-                                CustomAudienceFixture.VALID_OWNER,
-                                CommonFixture.VALID_BUYER,
-                                CustomAudienceFixture.VALID_NAME,
-                                mICustomAudienceCallback));
+        mService.leaveCustomAudience(
+                CustomAudienceFixture.VALID_OWNER,
+                CommonFixture.VALID_BUYER,
+                CustomAudienceFixture.VALID_NAME,
+                mICustomAudienceCallback);
 
+        ArgumentCaptor<FledgeErrorResponse> actualResponseCaptor =
+                ArgumentCaptor.forClass(FledgeErrorResponse.class);
+        verify(mICustomAudienceCallback).onFailure(actualResponseCaptor.capture());
+        assertThat(actualResponseCaptor.getValue().getStatusCode())
+                .isEqualTo(AdServicesStatusUtils.STATUS_UNAUTHORIZED);
+        assertThat(actualResponseCaptor.getValue().getErrorMessage())
+                .isEqualTo(SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE);
         verify(mFledgeAuthorizationFilter)
                 .assertCallingPackageName(
                         CustomAudienceFixture.VALID_OWNER,
