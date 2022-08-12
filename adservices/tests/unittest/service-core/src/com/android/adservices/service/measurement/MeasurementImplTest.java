@@ -106,6 +106,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /** Unit tests for {@link MeasurementImpl} */
 @SmallTest
@@ -341,7 +343,7 @@ public final class MeasurementImplTest {
 
         long eventTime = System.currentTimeMillis();
         // Disable Impression Noise
-        doReturn(Collections.emptyList()).when(measurementImpl).getSourceEventReports(any());
+        doReturn(Collections.emptyList()).when(measurementImpl).generateFakeEventReports(any());
         final int result = measurementImpl.register(registrationRequest, eventTime);
 
         // Assert
@@ -380,7 +382,7 @@ public final class MeasurementImplTest {
         when(mSourceFetcher.fetchSource(any())).thenReturn(Optional.empty());
 
         // Disable Impression Noise
-        doReturn(Collections.emptyList()).when(mMeasurementImpl).getSourceEventReports(any());
+        doReturn(Collections.emptyList()).when(mMeasurementImpl).generateFakeEventReports(any());
         final int result =
                 mMeasurementImpl.register(SOURCE_REGISTRATION_REQUEST, System.currentTimeMillis());
         // STATUS_IO_ERROR is expected when fetchSource returns Optional.empty()
@@ -421,7 +423,7 @@ public final class MeasurementImplTest {
 
         long eventTime = System.currentTimeMillis();
         // Disable Impression Noise
-        doReturn(Collections.emptyList()).when(measurement).getSourceEventReports(any());
+        doReturn(Collections.emptyList()).when(measurement).generateFakeEventReports(any());
         final int result = measurement.register(registrationRequest, eventTime);
 
         // Assert
@@ -471,7 +473,7 @@ public final class MeasurementImplTest {
 
         long eventTime = System.currentTimeMillis();
         // Disable Impression Noise
-        doReturn(Collections.emptyList()).when(measurement).getSourceEventReports(any());
+        doReturn(Collections.emptyList()).when(measurement).generateFakeEventReports(any());
         final int result = measurement.register(registrationRequest, eventTime);
 
         // Assert
@@ -705,7 +707,7 @@ public final class MeasurementImplTest {
                         eventTime);
         assertEquals(STATUS_SUCCESS, result);
         ArgumentCaptor<Source> sourceArgs = ArgumentCaptor.forClass(Source.class);
-        verify(measurementImpl).getSourceEventReports(sourceArgs.capture());
+        verify(measurementImpl).generateFakeEventReports(sourceArgs.capture());
         Source capturedSource = sourceArgs.getValue();
         assertEquals(sampleSource.getSourceType(), capturedSource.getSourceType());
         assertEquals(sampleSource.getEventId(), capturedSource.getEventId());
@@ -739,7 +741,7 @@ public final class MeasurementImplTest {
         SourceFetcher mockSourceFetcher = Mockito.mock(SourceFetcher.class);
         TriggerFetcher mockTriggerFetcher = Mockito.mock(TriggerFetcher.class);
 
-        List<EventReport> fakeEventReports = mMeasurementImpl.getSourceEventReports(source);
+        List<EventReport> fakeEventReports = mMeasurementImpl.generateFakeEventReports(source);
 
         // Generate valid report times
         Set<Long> reportingTimes = new HashSet<>();
@@ -756,7 +758,7 @@ public final class MeasurementImplTest {
         for (EventReport report : fakeEventReports) {
             Assert.assertEquals(source.getEventId(), report.getSourceId());
             Assert.assertTrue(reportingTimes.stream().anyMatch(x -> x == report.getReportTime()));
-            Assert.assertEquals(0, report.getTriggerTime());
+            Assert.assertEquals(source.getEventTime(), report.getTriggerTime());
             Assert.assertEquals(0, report.getTriggerPriority());
             Assert.assertEquals(source.getAppDestination(), report.getAttributionDestination());
             Assert.assertEquals(source.getAdTechDomain(), report.getAdTechDomain());
@@ -871,7 +873,7 @@ public final class MeasurementImplTest {
 
         long eventTime = System.currentTimeMillis();
         // Disable Impression Noise
-        doReturn(Collections.emptyList()).when(measurementImpl).getSourceEventReports(any());
+        doReturn(Collections.emptyList()).when(measurementImpl).generateFakeEventReports(any());
         final int result = measurementImpl.registerWebSource(registrationRequest, eventTime);
 
         // Assert
@@ -910,7 +912,7 @@ public final class MeasurementImplTest {
         when(mSourceFetcher.fetchWebSources(any())).thenReturn(Optional.empty());
 
         // Disable Impression Noise
-        doReturn(Collections.emptyList()).when(mMeasurementImpl).getSourceEventReports(any());
+        doReturn(Collections.emptyList()).when(mMeasurementImpl).generateFakeEventReports(any());
         final int result =
                 mMeasurementImpl.registerWebSource(
                         createWebSourceRegistrationRequest(APP_DESTINATION, WEB_DESTINATION, null),
@@ -963,7 +965,7 @@ public final class MeasurementImplTest {
 
         long eventTime = System.currentTimeMillis();
         // Disable Impression Noise
-        doReturn(Collections.emptyList()).when(measurement).getSourceEventReports(any());
+        doReturn(Collections.emptyList()).when(measurement).generateFakeEventReports(any());
         final int result = measurement.registerWebSource(registrationRequest, eventTime);
 
         // Assert
@@ -1014,7 +1016,7 @@ public final class MeasurementImplTest {
 
         long eventTime = System.currentTimeMillis();
         // Disable Impression Noise
-        doReturn(Collections.emptyList()).when(measurement).getSourceEventReports(any());
+        doReturn(Collections.emptyList()).when(measurement).generateFakeEventReports(any());
         final int result = measurement.registerWebSource(registrationRequest, eventTime);
 
         // Assert
@@ -1223,7 +1225,7 @@ public final class MeasurementImplTest {
         doReturn(Optional.of(sourceRegistrationsOut)).when(mSourceFetcher).fetchSource(any());
 
         // Disable Impression Noise
-        doReturn(Collections.emptyList()).when(mMeasurementImpl).getSourceEventReports(any());
+        doReturn(Collections.emptyList()).when(mMeasurementImpl).generateFakeEventReports(any());
 
         doReturn(false).when(mClickVerifier).isInputEventVerifiable(any(), anyLong());
 
@@ -1297,6 +1299,264 @@ public final class MeasurementImplTest {
         } finally {
             session.finishMocking();
         }
+    }
+
+    @Test
+    public void insertSource_withFakeReportsFalseAppAttribution_accountsForFakeReportAttribution()
+            throws DatastoreException {
+        // Setup
+        int fakeReportsCount = 2;
+        Source source =
+                spy(
+                        SourceFixture.getValidSourceBuilder()
+                                .setAppDestination(
+                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
+                                .setWebDestination(null)
+                                .build());
+        List<Source.FakeReport> fakeReports =
+                createFakeReports(
+                        source,
+                        fakeReportsCount,
+                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION);
+        MeasurementImpl measurementImpl =
+                new MeasurementImpl(
+                        null,
+                        mContentResolver,
+                        mDatastoreManager,
+                        mSourceFetcher,
+                        mTriggerFetcher,
+                        mClickVerifier);
+        Answer<?> falseAttributionAnswer =
+                (arg) -> {
+                    source.setAttributionMode(Source.AttributionMode.FALSELY);
+                    return fakeReports;
+                };
+        doAnswer(falseAttributionAnswer).when(source).assignAttributionModeAndGenerateFakeReports();
+        ArgumentCaptor<ThrowingCheckedConsumer> consumerArgCaptor =
+                ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
+        ArgumentCaptor<Attribution> attributionRateLimitArgCaptor =
+                ArgumentCaptor.forClass(Attribution.class);
+
+        // Execution
+        measurementImpl.insertSource(source);
+
+        // Assertion
+        verify(mDatastoreManager).runInTransaction(consumerArgCaptor.capture());
+
+        consumerArgCaptor.getValue().accept(mMeasurementDao);
+
+        verify(mMeasurementDao).insertSource(source);
+        verify(mMeasurementDao, times(2)).insertEventReport(any());
+        verify(mMeasurementDao).insertAttribution(attributionRateLimitArgCaptor.capture());
+
+        assertEquals(
+                new Attribution.Builder()
+                        .setAdTechDomain(source.getAdTechDomain().toString())
+                        .setDestinationOrigin(source.getAppDestination().toString())
+                        .setDestinationSite(source.getAppDestination().toString())
+                        .setSourceOrigin(source.getPublisher().toString())
+                        .setSourceSite(source.getPublisher().toString())
+                        .setRegistrant(source.getRegistrant().toString())
+                        .setTriggerTime(source.getEventTime())
+                        .build(),
+                attributionRateLimitArgCaptor.getValue());
+    }
+
+    @Test
+    public void insertSource_withFakeReportsFalseWebAttribution_accountsForFakeReportAttribution()
+            throws DatastoreException {
+        // Setup
+        int fakeReportsCount = 2;
+        Source source =
+                spy(
+                        SourceFixture.getValidSourceBuilder()
+                                .setAppDestination(null)
+                                .setWebDestination(SourceFixture.ValidSourceParams.WEB_DESTINATION)
+                                .build());
+        List<Source.FakeReport> fakeReports =
+                createFakeReports(
+                        source, fakeReportsCount, SourceFixture.ValidSourceParams.WEB_DESTINATION);
+        MeasurementImpl measurementImpl =
+                new MeasurementImpl(
+                        null,
+                        mContentResolver,
+                        mDatastoreManager,
+                        mSourceFetcher,
+                        mTriggerFetcher,
+                        mClickVerifier);
+        Answer<?> falseAttributionAnswer =
+                (arg) -> {
+                    source.setAttributionMode(Source.AttributionMode.FALSELY);
+                    return fakeReports;
+                };
+        doAnswer(falseAttributionAnswer).when(source).assignAttributionModeAndGenerateFakeReports();
+        ArgumentCaptor<ThrowingCheckedConsumer> consumerArgCaptor =
+                ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
+        ArgumentCaptor<Attribution> attributionRateLimitArgCaptor =
+                ArgumentCaptor.forClass(Attribution.class);
+
+        // Execution
+        measurementImpl.insertSource(source);
+
+        // Assertion
+        verify(mDatastoreManager).runInTransaction(consumerArgCaptor.capture());
+
+        consumerArgCaptor.getValue().accept(mMeasurementDao);
+
+        verify(mMeasurementDao).insertSource(source);
+        verify(mMeasurementDao, times(2)).insertEventReport(any());
+        verify(mMeasurementDao).insertAttribution(attributionRateLimitArgCaptor.capture());
+
+        assertEquals(
+                new Attribution.Builder()
+                        .setAdTechDomain(source.getAdTechDomain().toString())
+                        .setDestinationOrigin(source.getWebDestination().toString())
+                        .setDestinationSite(source.getWebDestination().toString())
+                        .setSourceOrigin(source.getPublisher().toString())
+                        .setSourceSite(source.getPublisher().toString())
+                        .setRegistrant(source.getRegistrant().toString())
+                        .setTriggerTime(source.getEventTime())
+                        .build(),
+                attributionRateLimitArgCaptor.getValue());
+    }
+
+    @Test
+    public void insertSource_withFalseAppAndWebAttribution_accountsForFakeReportAttribution()
+            throws DatastoreException {
+        // Setup
+        int fakeReportsCount = 2;
+        Source source =
+                spy(
+                        SourceFixture.getValidSourceBuilder()
+                                .setAppDestination(
+                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
+                                .setWebDestination(SourceFixture.ValidSourceParams.WEB_DESTINATION)
+                                .build());
+        List<Source.FakeReport> fakeReports =
+                createFakeReports(
+                        source,
+                        fakeReportsCount,
+                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION);
+        MeasurementImpl measurementImpl =
+                new MeasurementImpl(
+                        null,
+                        mContentResolver,
+                        mDatastoreManager,
+                        mSourceFetcher,
+                        mTriggerFetcher,
+                        mClickVerifier);
+        Answer<?> falseAttributionAnswer =
+                (arg) -> {
+                    source.setAttributionMode(Source.AttributionMode.FALSELY);
+                    return fakeReports;
+                };
+        doAnswer(falseAttributionAnswer).when(source).assignAttributionModeAndGenerateFakeReports();
+        ArgumentCaptor<ThrowingCheckedConsumer> consumerArgCaptor =
+                ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
+        ArgumentCaptor<Attribution> attributionRateLimitArgCaptor =
+                ArgumentCaptor.forClass(Attribution.class);
+
+        // Execution
+        measurementImpl.insertSource(source);
+
+        // Assertion
+        verify(mDatastoreManager).runInTransaction(consumerArgCaptor.capture());
+
+        consumerArgCaptor.getValue().accept(mMeasurementDao);
+
+        verify(mMeasurementDao).insertSource(source);
+        verify(mMeasurementDao, times(2)).insertEventReport(any());
+        verify(mMeasurementDao, times(2))
+                .insertAttribution(attributionRateLimitArgCaptor.capture());
+
+        assertEquals(
+                new Attribution.Builder()
+                        .setAdTechDomain(source.getAdTechDomain().toString())
+                        .setDestinationOrigin(source.getAppDestination().toString())
+                        .setDestinationSite(source.getAppDestination().toString())
+                        .setSourceOrigin(source.getPublisher().toString())
+                        .setSourceSite(source.getPublisher().toString())
+                        .setRegistrant(source.getRegistrant().toString())
+                        .setTriggerTime(source.getEventTime())
+                        .build(),
+                attributionRateLimitArgCaptor.getAllValues().get(0));
+
+        assertEquals(
+                new Attribution.Builder()
+                        .setAdTechDomain(source.getAdTechDomain().toString())
+                        .setDestinationOrigin(source.getWebDestination().toString())
+                        .setDestinationSite(source.getWebDestination().toString())
+                        .setSourceOrigin(source.getPublisher().toString())
+                        .setSourceSite(source.getPublisher().toString())
+                        .setRegistrant(source.getRegistrant().toString())
+                        .setTriggerTime(source.getEventTime())
+                        .build(),
+                attributionRateLimitArgCaptor.getAllValues().get(1));
+    }
+
+    @Test
+    public void insertSource_withFakeReportsNeverAppAttribution_accountsForFakeReportAttribution()
+            throws DatastoreException {
+        // Setup
+        Source source =
+                spy(
+                        SourceFixture.getValidSourceBuilder()
+                                .setAppDestination(
+                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
+                                .setWebDestination(null)
+                                .build());
+        List<Source.FakeReport> fakeReports = Collections.emptyList();
+        MeasurementImpl measurementImpl =
+                new MeasurementImpl(
+                        null,
+                        mContentResolver,
+                        mDatastoreManager,
+                        mSourceFetcher,
+                        mTriggerFetcher,
+                        mClickVerifier);
+        Answer<?> neverAttributionAnswer =
+                (arg) -> {
+                    source.setAttributionMode(Source.AttributionMode.NEVER);
+                    return fakeReports;
+                };
+        doAnswer(neverAttributionAnswer).when(source).assignAttributionModeAndGenerateFakeReports();
+        ArgumentCaptor<ThrowingCheckedConsumer> consumerArgCaptor =
+                ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
+        ArgumentCaptor<Attribution> attributionRateLimitArgCaptor =
+                ArgumentCaptor.forClass(Attribution.class);
+
+        // Execution
+        measurementImpl.insertSource(source);
+
+        // Assertion
+        verify(mDatastoreManager).runInTransaction(consumerArgCaptor.capture());
+
+        consumerArgCaptor.getValue().accept(mMeasurementDao);
+
+        verify(mMeasurementDao).insertSource(source);
+        verify(mMeasurementDao, never()).insertEventReport(any());
+        verify(mMeasurementDao).insertAttribution(attributionRateLimitArgCaptor.capture());
+
+        assertEquals(
+                new Attribution.Builder()
+                        .setAdTechDomain(source.getAdTechDomain().toString())
+                        .setDestinationOrigin(source.getAppDestination().toString())
+                        .setDestinationSite(source.getAppDestination().toString())
+                        .setSourceOrigin(source.getPublisher().toString())
+                        .setSourceSite(source.getPublisher().toString())
+                        .setRegistrant(source.getRegistrant().toString())
+                        .setTriggerTime(source.getEventTime())
+                        .build(),
+                attributionRateLimitArgCaptor.getValue());
+    }
+
+    private List<Source.FakeReport> createFakeReports(Source source, int count, Uri destination) {
+        return IntStream.range(0, count)
+                .mapToObj(
+                        x ->
+                                new Source.FakeReport(
+                                        0, source.getReportingTimeForNoising(0), destination))
+                .collect(Collectors.toList());
     }
 
     private void verifyInsertSource(
