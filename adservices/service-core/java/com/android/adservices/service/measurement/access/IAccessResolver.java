@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.access;
 
+import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
 import android.content.Context;
 
@@ -27,6 +28,10 @@ public interface IAccessResolver {
      * @return true, if access is granted, false otherwise
      */
     boolean isAllowed(@NonNull Context context);
+
+    /** @return error status code to return in case the access was not granted. */
+    @AdServicesStatusUtils.StatusCode
+    int getErrorStatusCode();
 
     /** @return error message to throw in case the user access wasn't granted. */
     @NonNull

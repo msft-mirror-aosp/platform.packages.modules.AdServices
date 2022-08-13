@@ -29,6 +29,7 @@ import android.content.Context;
 import android.net.Uri;
 
 import com.android.adservices.data.adselection.CustomAudienceSignals;
+import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.internal.util.Preconditions;
@@ -43,6 +44,7 @@ import org.json.JSONObject;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executor;
+import java.util.function.Supplier;
 
 /**
  * Utility class to execute a reporting script. Current implementation is thread safe but relies on
@@ -76,9 +78,16 @@ public class ReportImpressionScriptEngine {
     private final JSScriptEngine mJsEngine;
     // Used for the Futures.transform calls to compose futures.
     private final Executor mExecutor = MoreExecutors.directExecutor();
+    private final Supplier<Boolean> mEnforceMaxHeapSizeFeatureSupplier;
+    private final Supplier<Long> mMaxHeapSizeBytesSupplier;
 
-    public ReportImpressionScriptEngine(Context context) {
+    public ReportImpressionScriptEngine(
+            Context context,
+            Supplier<Boolean> enforceMaxHeapSizeFeatureSupplier,
+            Supplier<Long> maxHeapSizeBytesSupplier) {
         mJsEngine = JSScriptEngine.getInstance(context);
+        mEnforceMaxHeapSizeFeatureSupplier = enforceMaxHeapSizeFeatureSupplier;
+        mMaxHeapSizeBytesSupplier = maxHeapSizeBytesSupplier;
     }
 
     /**
@@ -196,8 +205,12 @@ public class ReportImpressionScriptEngine {
     private ListenableFuture<String> callReportingScript(
             String jsScript, String functionName, List<JSScriptArgument> args)
             throws JSONException {
-
-        return mJsEngine.evaluate(jsScript, args, functionName);
+        IsolateSettings isolateSettings =
+                mEnforceMaxHeapSizeFeatureSupplier.get()
+                        ? IsolateSettings.forMaxHeapSizeEnforcementEnabled(
+                                mMaxHeapSizeBytesSupplier.get())
+                        : IsolateSettings.forMaxHeapSizeEnforcementDisabled();
+        return mJsEngine.evaluate(jsScript, args, functionName, isolateSettings);
     }
 
     /**

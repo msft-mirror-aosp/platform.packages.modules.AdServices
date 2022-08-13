@@ -118,10 +118,9 @@ public class AdSelectionRunnerTest {
     @Mock private AdBidGenerator mMockAdBidGenerator;
     @Mock private AdSelectionIdGenerator mMockAdSelectionIdGenerator;
     @Mock private AppImportanceFilter mAppImportanceFilter;
-    @Mock private Clock mClock;
+    @Spy private Clock mClock = Clock.systemUTC();
     @Mock private ConsentManager mConsentManagerMock;
     private Flags mFlags;
-
     private Context mContext;
     private ExecutorService mExecutorService;
     private CustomAudienceDao mCustomAudienceDao;
@@ -1407,8 +1406,12 @@ public class AdSelectionRunnerTest {
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
 
         assertFalse(resultsCallback.mIsSuccess);
-        verifyErrorMessageIsCorrect(
-                resultsCallback.mFledgeErrorResponse.getErrorMessage(), AD_SELECTION_TIMED_OUT);
+        FledgeErrorResponse response = resultsCallback.mFledgeErrorResponse;
+        verifyErrorMessageIsCorrect(response.getErrorMessage(), AD_SELECTION_TIMED_OUT);
+        Assert.assertEquals(
+                "Error response code mismatch",
+                AdServicesStatusUtils.STATUS_TIMEOUT,
+                response.getStatusCode());
     }
 
     private void verifyErrorMessageIsCorrect(

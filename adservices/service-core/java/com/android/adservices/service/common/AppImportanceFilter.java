@@ -34,6 +34,8 @@ import com.android.adservices.service.stats.ApiCallStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 
@@ -131,7 +133,21 @@ public class AppImportanceFilter {
     public void assertCallerIsInForeground(
             @NonNull String appPackageName, int apiNameIdForLogging, @Nullable String sdkName)
             throws WrongCallingApplicationStateException {
-        if (!isForegroundApp(appPackageName)) {
+        List<RunningAppProcessInfo> processes = getProcesses();
+        int minImportance = Integer.MAX_VALUE;
+        for (ActivityManager.RunningAppProcessInfo process : processes) {
+            if (Arrays.asList(process.pkgList).contains(appPackageName)) {
+                minImportance = Math.min(minImportance, process.importance);
+            }
+        }
+        LogUtil.v(
+                "Package "
+                        + appPackageName
+                        + " has minimum importance "
+                        + minImportance
+                        + " comparing with threshold of "
+                        + mImportanceThresholdSupplier.get());
+        if (minImportance > mImportanceThresholdSupplier.get()) {
             logForegroundViolation(appPackageName, apiNameIdForLogging, sdkName);
 
             throw new WrongCallingApplicationStateException();
@@ -156,31 +172,41 @@ public class AppImportanceFilter {
     public void assertCallerIsInForeground(
             int appUid, int apiNameLoggingId, @Nullable String sdkName)
             throws WrongCallingApplicationStateException {
-        String[] possiblePackageNames = mPackageManager.getPackagesForUid(appUid);
-        boolean canBeForegroundApp =
-                Arrays.stream(possiblePackageNames).anyMatch(this::isForegroundApp);
-        if (!canBeForegroundApp) {
-            logForegroundViolation(
-                    possiblePackageNames.length == 1
-                            ? possiblePackageNames[0]
-                            : UNKNOWN_APP_PACKAGE_NAME,
-                    apiNameLoggingId,
-                    sdkName);
-
-            throw new WrongCallingApplicationStateException();
+        List<RunningAppProcessInfo> processes = getProcesses();
+        for (ActivityManager.RunningAppProcessInfo process : processes) {
+            if (process.uid == appUid) {
+                LogUtil.v(
+                        "Process "
+                                + process.uid
+                                + "has importance "
+                                + process.importance
+                                + " comparing with threshold of "
+                                + mImportanceThresholdSupplier.get());
+                if (process.importance > mImportanceThresholdSupplier.get()) {
+                    logForegroundViolation(
+                            process.pkgList.length == 1
+                                    ? process.pkgList[0]
+                                    : UNKNOWN_APP_PACKAGE_NAME,
+                            apiNameLoggingId,
+                            sdkName);
+                    throw new WrongCallingApplicationStateException();
+                }
+                return;
+            }
         }
+        logForegroundViolation(UNKNOWN_APP_PACKAGE_NAME, apiNameLoggingId, sdkName);
+        throw new WrongCallingApplicationStateException();
     }
 
-    /** Check if the request comes from foreground app. */
-    private boolean isForegroundApp(@NonNull String appPackageName) {
+    /** Get list of processes */
+    private List<RunningAppProcessInfo> getProcesses() {
         try {
-            return mActivityManager.getPackageImportance(appPackageName)
-                    <= mImportanceThresholdSupplier.get();
+            return mActivityManager.getRunningAppProcesses();
         } catch (SecurityException e) {
             LogUtil.e(
                     e,
                     "Failed to check the app state, considering the application not in foreground");
-            return false;
+            return Collections.EMPTY_LIST;
         }
     }
 
