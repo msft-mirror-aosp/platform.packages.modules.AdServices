@@ -26,6 +26,7 @@ import static com.android.adservices.data.measurement.MeasurementTables.TriggerC
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -1376,6 +1377,39 @@ public class MeasurementDaoTest {
                 });
 
         assertEquals(1L, attributionsCount.get());
+    }
+
+    @Test
+    public void testTransactionRollbackForRuntimeException() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        DatastoreManagerFactory.getDatastoreManager(sContext)
+                                .runInTransaction(
+                                        (dao) -> {
+                                            dao.insertSource(SourceFixture.getValidSource());
+                                            // build() call throws IllegalArgumentException
+                                            Trigger trigger = new Trigger.Builder().build();
+                                            dao.insertTrigger(trigger);
+                                        }));
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+        // There should be no insertions
+        assertEquals(
+                0,
+                db.query(MeasurementTables.SourceContract.TABLE, null, null, null, null, null, null)
+                        .getCount());
+        assertEquals(
+                0,
+                db.query(
+                                MeasurementTables.TriggerContract.TABLE,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null)
+                        .getCount());
     }
 
     private static List<Source> getSourcesWithDifferentDestinations(
