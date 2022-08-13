@@ -118,10 +118,9 @@ public class AdSelectionRunnerTest {
     @Mock private AdBidGenerator mMockAdBidGenerator;
     @Mock private AdSelectionIdGenerator mMockAdSelectionIdGenerator;
     @Mock private AppImportanceFilter mAppImportanceFilter;
-    @Mock private Clock mClock;
+    @Spy private Clock mClock = Clock.systemUTC();
     @Mock private ConsentManager mConsentManagerMock;
     private Flags mFlags;
-
     private Context mContext;
     private ExecutorService mExecutorService;
     private CustomAudienceDao mCustomAudienceDao;
