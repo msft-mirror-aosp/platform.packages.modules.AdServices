@@ -1390,8 +1390,12 @@ public class AdSelectionE2ETest {
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         Assert.assertFalse(resultsCallback.mIsSuccess);
 
-        verifyErrorMessageIsCorrect(
-                resultsCallback.mFledgeErrorResponse.getErrorMessage(), SCORING_TIMED_OUT);
+        FledgeErrorResponse response = resultsCallback.mFledgeErrorResponse;
+        verifyErrorMessageIsCorrect(response.getErrorMessage(), SCORING_TIMED_OUT);
+        Assert.assertEquals(
+                "Error response code mismatch",
+                AdServicesStatusUtils.STATUS_TIMEOUT,
+                response.getStatusCode());
     }
 
     @Test
