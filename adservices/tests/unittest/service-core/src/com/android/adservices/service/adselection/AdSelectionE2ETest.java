@@ -1202,7 +1202,7 @@ public class AdSelectionE2ETest {
                 new Flags() {
                     @Override
                     public long getAdSelectionBiddingTimeoutPerCaMs() {
-                        return 100;
+                        return 1500;
                     }
                 };
 
@@ -1304,7 +1304,7 @@ public class AdSelectionE2ETest {
                 new Flags() {
                     @Override
                     public long getAdSelectionScoringTimeoutMs() {
-                        return 100;
+                        return 1500;
                     }
                 };
 
