@@ -25,6 +25,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -36,79 +37,98 @@ import java.util.Map;
 public class ModelManagerTest {
 
     private static final Context sContext = ApplicationProvider.getApplicationContext();
+    private ImmutableList<Integer> mTestLabels;
     private ImmutableList<Integer> mProductionLabels;
     private ImmutableMap<String, ImmutableMap<String, String>> mProductionClassifierAssetsMetadata;
     private ImmutableMap<String, ImmutableMap<String, String>> mTestClassifierAssetsMetadata;
-    private ModelManager mModelManager;
+    private ModelManager mTestModelManager;
+    private ModelManager mProductionModelManager;
     private static final String TEST_LABELS_FILE_PATH = "classifier/labels_test_topics.txt";
     private static final String TEST_APPS_FILE_PATH = "classifier/precomputed_test_app_list.csv";
     private static final String TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH =
             "classifier/classifier_test_assets_metadata.json";
+    private static final String PRODUCTION_LABELS_FILE_PATH = "classifier/labels_topics.txt";
+    private static final String PRODUCTION_APPS_FILE_PATH = "classifier/precomputed_app_list.csv";
+    private static final String PRODUCTION_CLASSIFIER_ASSETS_METADATA_FILE_PATH =
+            "classifier/classifier_assets_metadata.json";
     private static final String MODEL_FILE_PATH = "classifier/model.tflite";
+
+    @Before
+    public void setup() {
+        mTestModelManager = new ModelManager(
+                sContext,
+                TEST_LABELS_FILE_PATH,
+                TEST_APPS_FILE_PATH,
+                TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
+                MODEL_FILE_PATH);
+
+        mProductionModelManager = new ModelManager(
+                sContext,
+                PRODUCTION_LABELS_FILE_PATH,
+                PRODUCTION_APPS_FILE_PATH,
+                PRODUCTION_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
+                MODEL_FILE_PATH);
+
+        mTestLabels = mTestModelManager.retrieveLabels();
+        mTestClassifierAssetsMetadata = mTestModelManager.retrieveClassifierAssetsMetadata();
+
+        mProductionLabels = mProductionModelManager.retrieveLabels();
+        mProductionClassifierAssetsMetadata =
+                mProductionModelManager.retrieveClassifierAssetsMetadata();
+    }
 
     @Test
     public void testRetrieveLabels_successfulRead() {
-        // Test the labels list in production assets
+        // Test the labels list in test assets
         // Check size of list.
-        // The labels_topics.txt contains 349 topics.
-        mModelManager = ModelManager.getInstance(sContext);
-        mProductionLabels = mModelManager.retrieveLabels();
-        assertThat(mProductionLabels.size()).isEqualTo(349);
+        // The labels_test_topics.txt contains 446 topics.
+        assertThat(mTestLabels.size()).isEqualTo(446);
 
         // Check some labels.
-        assertThat(mProductionLabels).containsAtLeast(10, 200, 270, 320);
+        assertThat(mTestLabels).containsAtLeast(10043, 10075, 10150, 10445);
+
+
+        // Test the labels list in production assets
+        // Check size of list.
+        // The labels_topics.txt contains 446 topics.
+        assertThat(mProductionLabels.size()).isEqualTo(446);
+
+        // Check some labels.
+        assertThat(mProductionLabels).containsAtLeast(10010, 10200, 10270, 10432);
     }
 
     @Test
     public void testRetrieveLabels_emptyListReturnedOnException() {
-        mModelManager =
+        ModelManager wrongFilePathModelManager =
                 new ModelManager(
                         sContext,
                         "WrongFilePath",
                         "WrongFilePath",
                         "WrongFilePath",
                         "WrongFilePath");
-        mProductionLabels = mModelManager.retrieveLabels();
-        ImmutableList<Integer> labels = mModelManager.retrieveLabels();
+        mTestLabels = wrongFilePathModelManager.retrieveLabels();
+        ImmutableList<Integer> labels = wrongFilePathModelManager.retrieveLabels();
         // Check empty list returned.
         assertThat(labels).isEmpty();
     }
 
     @Test
     public void testLoadedAppTopics() {
-        mModelManager =
-                new ModelManager(
-                        sContext,
-                        TEST_LABELS_FILE_PATH,
-                        TEST_APPS_FILE_PATH,
-                        TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
-                        MODEL_FILE_PATH);
-        Map<String, List<Integer>> appTopic = mModelManager.retrieveAppClassificationTopics();
+        Map<String, List<Integer>> appTopic = mTestModelManager.retrieveAppClassificationTopics();
         // Check size of map
-        // The app topics file contains 1000 apps + 11 sample apps + 2 test valid topics' apps
+        // The app topics file contains 11 sample apps + 2 test valid topics' apps
         // + 1 end2end test app.
-        assertThat(appTopic.size()).isEqualTo(1015);
-
-        // Check whatsApp, chrome and a sample app topics in map
-        // The topicId of "com.whatsapp" in assets/precomputed_test_app_list.csv
-        // is 222
-        List<Integer> whatsAppTopics = Arrays.asList(222);
-        assertThat(appTopic.get("com.whatsapp")).isEqualTo(whatsAppTopics);
-
-        // The topicId of "com.android.chrome" in assets/precomputed_test_app_list.csv
-        // is 148
-        List<Integer> chromeTopics = Arrays.asList(148);
-        assertThat(appTopic.get("com.android.chrome")).isEqualTo(chromeTopics);
+        assertThat(appTopic.size()).isEqualTo(14);
 
         // The topicIds of "com.example.adservices.samples.topics.sampleapp" in
-        // assets/precomputed_test_app_list.csv are 222, 223, 116, 243, 254
+        // assets/precomputed_test_app_list.csv are 10222, 10223, 10116, 10243, 10254
         String sampleAppPrefix = "com.example.adservices.samples.topics.sampleapp";
-        List<Integer> sampleAppTopics = Arrays.asList(222, 223, 116, 243, 254);
+        List<Integer> sampleAppTopics = Arrays.asList(10222, 10223, 10116, 10243, 10254);
         assertThat(appTopic.get(sampleAppPrefix)).isEqualTo(sampleAppTopics);
 
         // The topicIds of "com.example.adservices.samples.topics.sampleapp4" in
-        // assets/precomputed_test_app_list.csv are 253, 146, 277, 59,127
-        List<Integer> sampleApp4Topics = Arrays.asList(253, 146, 277, 59, 127);
+        // assets/precomputed_test_app_list.csv are 10253, 10146, 10227, 10390, 10413
+        List<Integer> sampleApp4Topics = Arrays.asList(10253, 10146, 10227, 10390, 10413);
         assertThat(appTopic.get(sampleAppPrefix + "4")).isEqualTo(sampleApp4Topics);
 
         // Check if all sample apps have 5 unique topics
@@ -122,20 +142,90 @@ public class ModelManagerTest {
         String validTestAppPrefix = "com.example.adservices.valid.topics.testapp";
 
         // The valid topicIds of "com.example.adservices.valid.topics.testapp1" in
-        // assets/precomputed_test_app_list.csv are 211, 78, 16
-        List<Integer> validTestApp1Topics = Arrays.asList(211, 78, 16);
+        // assets/precomputed_test_app_list.csv are 10147, 10253, 10254
+        List<Integer> validTestApp1Topics = Arrays.asList(10147, 10253, 10254);
         assertThat(appTopic.get(validTestAppPrefix + "1")).isEqualTo(validTestApp1Topics);
 
         // The valid topicIds of "com.example.adservices.valid.topics.testapp2" in
         // assets/precomputed_test_app_list.csv are 143, 15
-        List<Integer> validTestApp2Topics = Arrays.asList(143, 15);
+        List<Integer> validTestApp2Topics = Arrays.asList(10253, 10254);
         assertThat(appTopic.get(validTestAppPrefix + "2")).isEqualTo(validTestApp2Topics);
     }
 
     @Test
+    public void testAppsWithOnlyEmptyTopics() {
+        // This app has empty topic in `assets/precomputed_test_app_list.csv`
+        String appWithEmptyTopics = "com.emptytopics";
+
+        // Load precomputed labels from the test source `assets/precomputed_test_app_list.csv`
+        Map<String, List<Integer>> appTopic = mTestModelManager.retrieveAppClassificationTopics();
+
+        // Verify this entry is not present in the map.
+        assertThat(appTopic).doesNotContainKey(appWithEmptyTopics);
+    }
+
+    @Test
+    public void testGetTestClassifierAssetsMetadata_correctFormat() {
+        // There should contain 6 assets and 1 property in classifier_test_assets_metadata.json.
+        // The asset without "asset_name" or "property" will not be stored in the map.
+        mTestClassifierAssetsMetadata = mTestModelManager.retrieveClassifierAssetsMetadata();
+        assertThat(mTestClassifierAssetsMetadata).hasSize(7);
+
+        // The property of metadata with correct format should contain 3 attributions:
+        // "taxonomy_type", "taxonomy_version", "updated_date".
+        // The key name of property is "version_info"
+        assertThat(mTestClassifierAssetsMetadata.get("version_info")).hasSize(3);
+        assertThat(mTestClassifierAssetsMetadata.get("version_info").keySet()).containsExactly(
+                "taxonomy_type", "taxonomy_version", "updated_date");
+
+        // The property "version_info" should have attribution "taxonomy_version"
+        // and its value should be "12".
+        assertThat(mTestClassifierAssetsMetadata.get("version_info").get("taxonomy_version"))
+                .isEqualTo("12");
+
+        // The property "version_info" should have attribution "taxonomy_type"
+        // and its value should be "chrome_and_mobile_taxonomy".
+        assertThat(mTestClassifierAssetsMetadata.get("version_info").get("taxonomy_type"))
+                .isEqualTo("chrome_and_mobile_taxonomy");
+
+        // The metadata of 1 asset with correct format should contain 4 attributions:
+        // "asset_version", "path", "checksum", "updated_date".
+        // Check if "labels_topics" asset has the correct format.
+        assertThat(mTestClassifierAssetsMetadata.get("labels_topics")).hasSize(4);
+        assertThat(mTestClassifierAssetsMetadata.get("labels_topics").keySet()).containsExactly(
+                "asset_version", "path", "checksum", "updated_date");
+
+        // The asset "labels_topics" should have attribution "asset_version" and its value should be
+        // "34"
+        assertThat(mTestClassifierAssetsMetadata.get("labels_topics").get("asset_version"))
+                .isEqualTo("34");
+
+        // The asset "labels_topics" should have attribution "path" and its value should be
+        // "assets/classifier/labels_test_topics.txt"
+        assertThat(mTestClassifierAssetsMetadata.get("labels_topics").get("path"))
+                .isEqualTo("assets/classifier/labels_test_topics.txt");
+
+        // The asset "labels_topics" should have attribution "updated_date" and its value should be
+        // "2022-07-29"
+        assertThat(mTestClassifierAssetsMetadata.get("labels_topics").get("updated_date"))
+                .isEqualTo("2022-07-29");
+
+        // There should contain 4 metadata attributions in asset "topic_id_to_name"
+        assertThat(mTestClassifierAssetsMetadata.get("topic_id_to_name")).hasSize(4);
+
+        // The asset "topic_id_to_name" should have attribution "path" and its value should be
+        // "assets/classifier/topic_id_to_name.csv"
+        assertThat(mTestClassifierAssetsMetadata.get("topic_id_to_name").get("path"))
+                .isEqualTo("assets/classifier/topic_id_to_name.csv");
+
+        // The asset "precomputed_app_list" should have attribution "checksum" and
+        // its value should be "7e80025cd0836ef8465bc42031ec4ae95b3b07e325e23b58d298341e37f4fb4e"
+        assertThat(mTestClassifierAssetsMetadata.get("precomputed_app_list").get("checksum"))
+                .isEqualTo("7e80025cd0836ef8465bc42031ec4ae95b3b07e325e23b58d298341e37f4fb4e");
+    }
+
+    @Test
     public void testGetProductionClassifierAssetsMetadata_correctFormat() {
-        mModelManager = ModelManager.getInstance(sContext);
-        mProductionClassifierAssetsMetadata = mModelManager.retrieveClassifierAssetsMetadata();
         // There should contain 4 assets and 1 property in classifier_assets_metadata.json.
         assertThat(mProductionClassifierAssetsMetadata).hasSize(5);
 
@@ -144,17 +234,18 @@ public class ModelManagerTest {
         // The key name of property is "version_info"
         assertThat(mProductionClassifierAssetsMetadata.get("version_info")).hasSize(3);
         assertThat(mProductionClassifierAssetsMetadata.get("version_info").keySet())
-                .containsExactly("taxonomy_type", "taxonomy_version", "updated_date");
+                .containsExactly(
+                        "taxonomy_type", "taxonomy_version", "updated_date");
 
         // The property "version_info" should have attribution "taxonomy_version"
-        // and its value should be "1".
+        // and its value should be "2".
         assertThat(mProductionClassifierAssetsMetadata.get("version_info").get("taxonomy_version"))
-                .isEqualTo("1");
+                .isEqualTo("2");
 
         // The property "version_info" should have attribution "taxonomy_type"
-        // and its value should be "chrome".
+        // and its value should be "chrome_and_mobile_taxonomy".
         assertThat(mProductionClassifierAssetsMetadata.get("version_info").get("taxonomy_type"))
-                .isEqualTo("chrome");
+                .isEqualTo("chrome_and_mobile_taxonomy");
 
         // The metadata of 1 asset in production metadata should contain 4 attributions:
         // "asset_version", "path", "checksum", "updated_date".
@@ -164,9 +255,9 @@ public class ModelManagerTest {
                 .containsExactly("asset_version", "path", "checksum", "updated_date");
 
         // The asset "labels_topics" should have attribution "asset_version" and its value should be
-        // "1"
+        // "2"
         assertThat(mProductionClassifierAssetsMetadata.get("labels_topics").get("asset_version"))
-                .isEqualTo("1");
+                .isEqualTo("2");
 
         // The asset "labels_topics" should have attribution "path" and its value should be
         // "assets/classifier/labels_topics.txt"
@@ -174,9 +265,9 @@ public class ModelManagerTest {
                 .isEqualTo("assets/classifier/labels_topics.txt");
 
         // The asset "labels_topics" should have attribution "updated_date" and its value should be
-        // "2022-06-15"
+        // "2022-07-29"
         assertThat(mProductionClassifierAssetsMetadata.get("labels_topics").get("updated_date"))
-                .isEqualTo("2022-06-15");
+                .isEqualTo("2022-07-29");
 
         // There should contain 5 metadata attributions in asset "topic_id_to_name"
         assertThat(mProductionClassifierAssetsMetadata.get("topic_id_to_name")).hasSize(4);
@@ -187,23 +278,17 @@ public class ModelManagerTest {
                 .isEqualTo("assets/classifier/topic_id_to_name.csv");
 
         // The asset "precomputed_app_list" should have attribution "checksum" and
-        // its value should be "f155c15126a475f03329edda23d6cc90e1227d9d8fddb8318b9acc88b6d0fffe"
+        // its value should be "e5d118889e7e57f1e5ed166354f3dfa81963ee7e917f98c8a687d541b9bbe489"
         assertThat(mProductionClassifierAssetsMetadata.get("precomputed_app_list").get("checksum"))
-                .isEqualTo("f155c15126a475f03329edda23d6cc90e1227d9d8fddb8318b9acc88b6d0fffe");
+                .isEqualTo("e5d118889e7e57f1e5ed166354f3dfa81963ee7e917f98c8a687d541b9bbe489");
     }
+
 
     @Test
     public void testGetTestClassifierAssetsMetadata_wrongFormat() {
-        mModelManager =
-                new ModelManager(
-                        sContext,
-                        TEST_LABELS_FILE_PATH,
-                        TEST_APPS_FILE_PATH,
-                        TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
-                        MODEL_FILE_PATH);
-        mTestClassifierAssetsMetadata = mModelManager.retrieveClassifierAssetsMetadata();
         // There should contain 1 metadata attributions in asset "test_asset1",
         // because it doesn't have "checksum" and "updated_date"
+        mTestClassifierAssetsMetadata = mTestModelManager.retrieveClassifierAssetsMetadata();
         assertThat(mTestClassifierAssetsMetadata.get("test_asset1")).hasSize(1);
 
         // The asset "test_asset1" should have attribution "path" and its value should be

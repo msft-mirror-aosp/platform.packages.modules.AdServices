@@ -188,8 +188,7 @@ public class AdSelectionE2ETest {
     private AdSelectionConfig mAdSelectionConfig;
     private AdSelectionServiceImpl mAdSelectionService;
     private Dispatcher mDispatcher;
-    private final Flags mFlags =
-            FlagsWithOverriddenAppImportanceCheck.createFlagsWithAppImportanceCheckEnabled();
+    private final Flags mFlags = new FledgeE2ETestFlags();
 
     @Before
     public void setUp() throws Exception {
@@ -1202,7 +1201,12 @@ public class AdSelectionE2ETest {
                 new Flags() {
                     @Override
                     public long getAdSelectionBiddingTimeoutPerCaMs() {
-                        return 100;
+                        return 1500;
+                    }
+
+                    @Override
+                    public boolean getEnforceIsolateMaxHeapSize() {
+                        return false;
                     }
                 };
 
@@ -1304,7 +1308,12 @@ public class AdSelectionE2ETest {
                 new Flags() {
                     @Override
                     public long getAdSelectionScoringTimeoutMs() {
-                        return 100;
+                        return 1500;
+                    }
+
+                    @Override
+                    public boolean getEnforceIsolateMaxHeapSize() {
+                        return false;
                     }
                 };
 
@@ -1390,8 +1399,12 @@ public class AdSelectionE2ETest {
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         Assert.assertFalse(resultsCallback.mIsSuccess);
 
-        verifyErrorMessageIsCorrect(
-                resultsCallback.mFledgeErrorResponse.getErrorMessage(), SCORING_TIMED_OUT);
+        FledgeErrorResponse response = resultsCallback.mFledgeErrorResponse;
+        verifyErrorMessageIsCorrect(response.getErrorMessage(), SCORING_TIMED_OUT);
+        Assert.assertEquals(
+                "Error response code mismatch",
+                AdServicesStatusUtils.STATUS_TIMEOUT,
+                response.getStatusCode());
     }
 
     @Test
@@ -1820,6 +1833,28 @@ public class AdSelectionE2ETest {
             mIsSuccess = false;
             mFledgeErrorResponse = fledgeErrorResponse;
             mCountDownLatch.countDown();
+        }
+    }
+
+    private static class FledgeE2ETestFlags implements Flags {
+        @Override
+        public boolean getEnforceIsolateMaxHeapSize() {
+            return false;
+        }
+
+        @Override
+        public boolean getEnforceForegroundStatusForFledgeRunAdSelection() {
+            return true;
+        }
+
+        @Override
+        public boolean getEnforceForegroundStatusForFledgeReportImpression() {
+            return true;
+        }
+
+        @Override
+        public boolean getEnforceForegroundStatusForFledgeOverrides() {
+            return true;
         }
     }
 }

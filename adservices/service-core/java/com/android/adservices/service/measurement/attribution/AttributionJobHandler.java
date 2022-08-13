@@ -24,6 +24,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
+import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.EventTrigger;
@@ -316,7 +317,7 @@ class AttributionJobHandler {
             throws DatastoreException {
         trigger.setStatus(Trigger.Status.ATTRIBUTED);
         measurementDao.updateTriggerStatus(trigger);
-        measurementDao.insertAttribution(source, trigger);
+        measurementDao.insertAttribution(createAttribution(source, trigger));
     }
 
     private void ignoreTrigger(Trigger trigger, IMeasurementDao measurementDao)
@@ -499,5 +500,40 @@ class AttributionJobHandler {
                     publisherTopPrivateDomain.get(),
                     triggerDestinationTopPrivateDomain.get()));
         }
+    }
+
+    public Attribution createAttribution(@NonNull Source source, @NonNull Trigger trigger) {
+        Optional<Uri> publisherBaseUri =
+                extractBaseUri(source.getPublisher(), source.getPublisherType());
+        Uri destination = trigger.getAttributionDestination();
+        Optional<Uri> destinationBaseUri =
+                extractBaseUri(destination, trigger.getDestinationType());
+
+        if (!publisherBaseUri.isPresent() || !destinationBaseUri.isPresent()) {
+            throw new IllegalArgumentException(
+                    String.format(
+                            "insertAttributionRateLimit: "
+                                    + "getSourceAndDestinationTopPrivateDomains"
+                                    + " failed. Publisher: %s; Attribution destination: %s",
+                            source.getPublisher(), destination));
+        }
+
+        String publisherTopPrivateDomain = publisherBaseUri.get().toString();
+        String triggerDestinationTopPrivateDomain = destinationBaseUri.get().toString();
+        return new Attribution.Builder()
+                .setSourceSite(publisherTopPrivateDomain)
+                .setSourceOrigin(BaseUriExtractor.getBaseUri(source.getPublisher()).toString())
+                .setDestinationSite(triggerDestinationTopPrivateDomain)
+                .setDestinationOrigin(BaseUriExtractor.getBaseUri(destination).toString())
+                .setAdTechDomain(trigger.getAdTechDomain().toString())
+                .setTriggerTime(trigger.getTriggerTime())
+                .setRegistrant(trigger.getRegistrant().toString())
+                .build();
+    }
+
+    private static Optional<Uri> extractBaseUri(Uri uri, @EventSurfaceType int eventSurfaceType) {
+        return eventSurfaceType == EventSurfaceType.APP
+                ? Optional.of(BaseUriExtractor.getBaseUri(uri))
+                : Web.topPrivateDomainAndScheme(uri);
     }
 }

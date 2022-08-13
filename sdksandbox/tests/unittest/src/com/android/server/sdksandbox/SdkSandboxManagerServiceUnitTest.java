@@ -25,6 +25,8 @@ import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_AP
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__SYNC_DATA_FROM_CLIENT;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__UNLOAD_SDK;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER;
+import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__LOAD_SANDBOX;
+import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -104,8 +106,11 @@ public class SdkSandboxManagerServiceUnitTest {
             "com.android.codeproviderresources_1";
     private static final String TEST_PACKAGE = "com.android.server.sdksandbox.tests";
     private static final long TIME_APP_CALLED_SYSTEM_SERVER = 1;
-    private static final long FAKE_TIME_IN_MILLIS = 10;
-    private static final long TIME_SYSTEM_SERVER_RECEIVED_CALL = 10;
+    private static final long TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP = 3;
+    private static final long START_TIME_TO_LOAD_SANDBOX = 5;
+    private static final long END_TIME_TO_LOAD_SANDBOX = 7;
+    private static final long TIME_BEFORE_SYSTEM_SERVER_CALLS_SANDBOX = 9;
+    private static final long TIME_FAILURE_HANDLED = 11;
 
     @Before
     public void setup() {
@@ -176,6 +181,7 @@ public class SdkSandboxManagerServiceUnitTest {
     @Test
     public void testLoadSdkNonExistentCallingPackage() {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
+
         SecurityException thrown =
                 assertThrows(
                         SecurityException.class,
@@ -903,12 +909,9 @@ public class SdkSandboxManagerServiceUnitTest {
                         SdkSandboxStatsLog.write(
                                 SANDBOX_API_CALLED,
                                 SANDBOX_API_CALLED__METHOD__LOAD_SDK,
-                                /**
-                                 * timeAppCalledSystemServer is sent as 10, and the current time at
-                                 * SdkSandboxManagerService for tests is hard coded in a fake Time
-                                 * class which returns 10.
-                                 */
-                                (int) (FAKE_TIME_IN_MILLIS - TIME_APP_CALLED_SYSTEM_SERVER),
+                                (int)
+                                        (TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP
+                                                - TIME_APP_CALLED_SYSTEM_SERVER),
                                 /*success=*/ true,
                                 SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER));
     }
@@ -936,7 +939,9 @@ public class SdkSandboxManagerServiceUnitTest {
                         SdkSandboxStatsLog.write(
                                 SANDBOX_API_CALLED,
                                 SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE,
-                                (int) (FAKE_TIME_IN_MILLIS - TIME_APP_CALLED_SYSTEM_SERVER),
+                                (int)
+                                        (TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP
+                                                - TIME_APP_CALLED_SYSTEM_SERVER),
                                 /*success=*/ true,
                                 SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER));
     }
@@ -951,19 +956,11 @@ public class SdkSandboxManagerServiceUnitTest {
                         SdkSandboxStatsLog.write(
                                 SANDBOX_API_CALLED,
                                 SANDBOX_API_CALLED__METHOD__GET_LOADED_SDK_LIBRARIES_INFO,
-                                (int) (FAKE_TIME_IN_MILLIS - TIME_APP_CALLED_SYSTEM_SERVER),
+                                (int)
+                                        (TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP
+                                                - TIME_APP_CALLED_SYSTEM_SERVER),
                                 /*success=*/ true,
                                 SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER));
-    }
-
-    private void loadSdk() throws RemoteException {
-        disableNetworkPermissionChecks();
-        disableForegroundCheck();
-        FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
-        mService.loadSdk(
-                TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
-        mSdkSandboxService.sendLoadCodeSuccessful();
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
     }
 
     @Test
@@ -977,7 +974,7 @@ public class SdkSandboxManagerServiceUnitTest {
                                 SANDBOX_API_CALLED,
                                 SANDBOX_API_CALLED__METHOD__UNLOAD_SDK,
                                 (int)
-                                        (TIME_SYSTEM_SERVER_RECEIVED_CALL
+                                        (TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP
                                                 - TIME_APP_CALLED_SYSTEM_SERVER),
                                 /*success=*/ true,
                                 SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER));
@@ -993,9 +990,244 @@ public class SdkSandboxManagerServiceUnitTest {
                         SdkSandboxStatsLog.write(
                                 SANDBOX_API_CALLED,
                                 SANDBOX_API_CALLED__METHOD__SYNC_DATA_FROM_CLIENT,
-                                (int) (FAKE_TIME_IN_MILLIS - TIME_APP_CALLED_SYSTEM_SERVER),
+                                (int)
+                                        (TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP
+                                                - TIME_APP_CALLED_SYSTEM_SERVER),
                                 /*success=*/ true,
                                 SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER));
+    }
+
+    // TODO(b/242149555): Update tests to use fake for getting time series.
+    @Test
+    public void testLatencyMetrics_SystemServerAppToSandbox_LoadSdk() throws Exception {
+        disableNetworkPermissionChecks();
+        disableForegroundCheck();
+        SdkSandboxManagerService.Injector injector =
+                Mockito.mock(SdkSandboxManagerService.Injector.class);
+
+        SdkSandboxManagerService service =
+                new SdkSandboxManagerService(mSpyContext, mProvider, injector);
+        Mockito.when(injector.getCurrentTime())
+                .thenReturn(
+                        TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
+                        START_TIME_TO_LOAD_SANDBOX,
+                        END_TIME_TO_LOAD_SANDBOX,
+                        TIME_BEFORE_SYSTEM_SERVER_CALLS_SANDBOX);
+        FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
+        service.loadSdk(
+                TEST_PACKAGE,
+                SDK_NAME,
+                /**
+                 * Sending a random long value to test the value of latency is calculated correctly
+                 */
+                TIME_APP_CALLED_SYSTEM_SERVER,
+                new Bundle(),
+                callback);
+        // Assume sdk sandbox loads successfully
+        mSdkSandboxService.sendLoadCodeSuccessful();
+
+        final int timeToLoadSdk = (int) (END_TIME_TO_LOAD_SANDBOX - START_TIME_TO_LOAD_SANDBOX);
+
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                SANDBOX_API_CALLED,
+                                SANDBOX_API_CALLED__METHOD__LOAD_SDK,
+                                timeToLoadSdk,
+                                /*success=*/ true,
+                                SANDBOX_API_CALLED__STAGE__LOAD_SANDBOX));
+
+        int timeSystemServerAppToSandbox =
+                (int)
+                        (TIME_BEFORE_SYSTEM_SERVER_CALLS_SANDBOX
+                                - TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP
+                                - timeToLoadSdk);
+
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                SANDBOX_API_CALLED,
+                                SANDBOX_API_CALLED__METHOD__LOAD_SDK,
+                                timeSystemServerAppToSandbox,
+                                /*success=*/ true,
+                                SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX));
+    }
+
+    @Test
+    public void testLatencyMetrics_SystemServerAppToSandbox_LoadSdk_FailureOnMultiLoad()
+            throws Exception {
+        disableNetworkPermissionChecks();
+        disableForegroundCheck();
+
+        SdkSandboxManagerService.Injector injector =
+                Mockito.mock(SdkSandboxManagerService.Injector.class);
+
+        SdkSandboxManagerService service =
+                new SdkSandboxManagerService(mSpyContext, mProvider, injector);
+        Mockito.when(injector.getCurrentTime())
+                .thenReturn(
+                        TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
+                        START_TIME_TO_LOAD_SANDBOX,
+                        END_TIME_TO_LOAD_SANDBOX,
+                        TIME_BEFORE_SYSTEM_SERVER_CALLS_SANDBOX,
+                        TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
+                        TIME_FAILURE_HANDLED);
+
+        // Load it once
+        {
+            FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
+            service.loadSdk(
+                    TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
+            mSdkSandboxService.sendLoadCodeSuccessful();
+        }
+
+        // Load it again
+        {
+            FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
+            service.loadSdk(
+                    TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
+        }
+
+        int timeSystemServerAppToSandbox =
+                (int) (TIME_FAILURE_HANDLED - TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP);
+
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                SANDBOX_API_CALLED,
+                                SANDBOX_API_CALLED__METHOD__LOAD_SDK,
+                                timeSystemServerAppToSandbox,
+                                /*success=*/ false,
+                                SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX));
+    }
+
+    @Test
+    public void testLatencyMetrics_SystemServerAppToSandbox_LoadSdk_InvalidSdkName() {
+        disableNetworkPermissionChecks();
+        disableForegroundCheck();
+
+        SdkSandboxManagerService.Injector injector =
+                Mockito.mock(SdkSandboxManagerService.Injector.class);
+
+        SdkSandboxManagerService service =
+                new SdkSandboxManagerService(mSpyContext, mProvider, injector);
+        Mockito.when(injector.getCurrentTime())
+                .thenReturn(TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP, TIME_FAILURE_HANDLED);
+
+        FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
+        service.loadSdk(
+                TEST_PACKAGE, "RANDOM", TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
+
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                SANDBOX_API_CALLED,
+                                SANDBOX_API_CALLED__METHOD__LOAD_SDK,
+                                (int)
+                                        (TIME_FAILURE_HANDLED
+                                                - TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP),
+                                /*success=*/ false,
+                                SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX));
+
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                Mockito.anyInt(),
+                                Mockito.anyInt(),
+                                Mockito.anyInt(),
+                                Mockito.anyBoolean(),
+                                Mockito.anyInt()),
+                Mockito.times(2));
+    }
+
+    @Test
+    public void testLatencyMetrics_SystemServerAppToSandbox_LoadSdk_FailureOnAppDeath()
+            throws RemoteException {
+        disableNetworkPermissionChecks();
+        disableForegroundCheck();
+
+        FakeLoadSdkCallbackBinder callback = Mockito.mock(FakeLoadSdkCallbackBinder.class);
+        IBinder binder = Mockito.mock(IBinder.class);
+        Mockito.when(callback.asBinder()).thenReturn(binder);
+
+        Mockito.doThrow(new RemoteException())
+                .when(binder)
+                .linkToDeath(Mockito.any(), Mockito.anyInt());
+
+        SdkSandboxManagerService.Injector injector =
+                Mockito.mock(SdkSandboxManagerService.Injector.class);
+
+        SdkSandboxManagerService service =
+                new SdkSandboxManagerService(mSpyContext, mProvider, injector);
+        Mockito.when(injector.getCurrentTime())
+                .thenReturn(TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP, TIME_FAILURE_HANDLED);
+
+        service.loadSdk(
+                TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
+
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                SANDBOX_API_CALLED,
+                                SANDBOX_API_CALLED__METHOD__LOAD_SDK,
+                                (int)
+                                        (TIME_FAILURE_HANDLED
+                                                - TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP),
+                                /*success=*/ false,
+                                SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX));
+
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                Mockito.anyInt(),
+                                Mockito.anyInt(),
+                                Mockito.anyInt(),
+                                Mockito.anyBoolean(),
+                                Mockito.anyInt()),
+                Mockito.times(2));
+    }
+
+    @Test
+    public void testLatencyMetrics_SystemServerAppToSandbox_LoadSdk_LoadSandboxFailure() {
+        disableNetworkPermissionChecks();
+        disableForegroundCheck();
+
+        SdkSandboxManagerService.Injector injector =
+                Mockito.mock(SdkSandboxManagerService.Injector.class);
+
+        SdkSandboxManagerService service =
+                new SdkSandboxManagerService(mSpyContext, mProvider, injector);
+
+        mProvider.disableBinding();
+
+        Mockito.when(injector.getCurrentTime())
+                .thenReturn(
+                        TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
+                        START_TIME_TO_LOAD_SANDBOX,
+                        TIME_FAILURE_HANDLED);
+
+        FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
+        service.loadSdk(
+                TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
+
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                SANDBOX_API_CALLED,
+                                SANDBOX_API_CALLED__METHOD__LOAD_SDK,
+                                (int) (TIME_FAILURE_HANDLED - START_TIME_TO_LOAD_SANDBOX),
+                                /*success=*/ false,
+                                SANDBOX_API_CALLED__STAGE__LOAD_SANDBOX));
+    }
+
+    private void loadSdk() throws RemoteException {
+        disableNetworkPermissionChecks();
+        disableForegroundCheck();
+        FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
+        mService.loadSdk(
+                TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
+        mSdkSandboxService.sendLoadCodeSuccessful();
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
     }
 
     /** Fake service provider that returns local instance of {@link SdkSandboxServiceProvider} */
@@ -1003,12 +1235,24 @@ public class SdkSandboxManagerServiceUnitTest {
         private final ISdkSandboxService mSdkSandboxService;
         private final ArrayMap<CallingInfo, ISdkSandboxService> mService = new ArrayMap<>();
 
+        // When set to true, this will fail the bindService call
+        private boolean mFailBinding = false;
+
         FakeSdkSandboxProvider(ISdkSandboxService service) {
             mSdkSandboxService = service;
         }
 
+        public void disableBinding() {
+            mFailBinding = true;
+        }
+
         @Override
         public void bindService(CallingInfo callingInfo, ServiceConnection serviceConnection) {
+            if (mFailBinding) {
+                serviceConnection.onNullBinding(new ComponentName("random", "component"));
+                return;
+            }
+
             if (mService.containsKey(callingInfo)) {
                 return;
             }
@@ -1116,7 +1360,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
         @Override
         public long getCurrentTime() {
-            return FAKE_TIME_IN_MILLIS;
+            return TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP;
         }
     }
 }

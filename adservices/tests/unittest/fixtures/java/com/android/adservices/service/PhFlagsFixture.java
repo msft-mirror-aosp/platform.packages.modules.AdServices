@@ -95,4 +95,20 @@ public class PhFlagsFixture {
                 Boolean.toString(value),
                 false);
     }
+
+    public static void overrideEnforceIsolateMaxHeapSize(boolean value) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                PhFlags.KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE,
+                Boolean.toString(value),
+                false);
+    }
+
+    public static void overrideIsolateMaxHeapSizeBytes(long value) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                PhFlags.KEY_ISOLATE_MAX_HEAP_SIZE_BYTES,
+                Long.toString(value),
+                false);
+    }
 }

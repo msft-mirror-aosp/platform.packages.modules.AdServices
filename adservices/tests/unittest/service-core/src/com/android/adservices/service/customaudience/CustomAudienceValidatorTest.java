@@ -35,7 +35,9 @@ import com.android.adservices.service.common.ValidatorUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Locale;
 
 public class CustomAudienceValidatorTest {
     private static final AdTechIdentifier ANOTHER_BUYER = AdTechIdentifier.fromString("b.com");
@@ -301,5 +303,24 @@ public class CustomAudienceValidatorTest {
                                 JsonValidator.SHOULD_BE_A_VALID_JSON,
                                 AdDataValidator.AD_DATA_CLASS_NAME,
                                 AdDataValidator.METADATA_FIELD_NAME)));
+    }
+
+    @Test
+    public void testNameTooLong() {
+        String tooLongName =
+                "This is a super long name.This is a super long name.This is a super long"
+                    + " name.This is a super long name.This is a super long name.This is a super"
+                    + " long name.This is a super long name.This is a super long name.This is a"
+                    + " super long name.This is a super long name.";
+        ValidatorTestUtil.assertViolationContainsOnly(
+                mValidator.getValidationViolations(
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                                .setName(tooLongName)
+                                .build()),
+                String.format(
+                        Locale.getDefault(),
+                        CustomAudienceFieldSizeValidator.VIOLATION_NAME_TOO_LONG,
+                        CommonFixture.FLAGS_FOR_TEST.getFledgeCustomAudienceMaxNameSizeB(),
+                        tooLongName.getBytes(StandardCharsets.UTF_8).length));
     }
 }

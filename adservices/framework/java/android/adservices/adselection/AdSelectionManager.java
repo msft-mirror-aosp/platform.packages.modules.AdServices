@@ -32,6 +32,7 @@ import com.android.adservices.ServiceBinder;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeoutException;
 
 /**
  * AdSelection Manager provides APIs for app and ad-SDKs to run ad selection processes as well
@@ -100,6 +101,9 @@ public class AdSelectionManager {
      *
      * <p>If the {@link IllegalStateException} is thrown with error message "Failure of AdSelection
      * services.", it is caused by an internal failure of the ad selection service.
+     *
+     * <p>If the {@link TimeoutException} is thrown, it is caused when a timeout is encountered
+     * during bidding, scoring, or overall selection process to find winning Ad.
      */
     public void selectAds(
             @NonNull AdSelectionConfig adSelectionConfig,

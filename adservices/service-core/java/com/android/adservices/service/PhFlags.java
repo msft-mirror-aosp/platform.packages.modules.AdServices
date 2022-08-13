@@ -86,6 +86,12 @@ public final class PhFlags implements Flags {
             "fledge_custom_audience_max_activate_in_days";
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_EXPIRE_IN_MS =
             "fledge_custom_audience_max_expire_in_days";
+    static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NAME_SIZE_B =
+            "key_fledge_custom_audience_max_name_size_b";
+    static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_DAILY_UPDATE_URI_SIZE_B =
+            "key_fledge_custom_audience_max_daily_update_uri_size_b";
+    static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_BIDDING_LOGIC_URI_SIZE_B =
+            "key_fledge_custom_audience_max_bidding_logic_uri_size_b";
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B =
             "fledge_custom_audience_max_user_bidding_signals_size_b";
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_TRUSTED_BIDDING_DATA_SIZE_B =
@@ -132,6 +138,7 @@ public final class PhFlags implements Flags {
     static final String KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY =
             "topics_number_of_epochs_to_keep_in_history";
 
+    // Fledge invoking app status keys
     static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION =
             "fledge_ad_selection_enforce_foreground_status_run_ad_selection";
     static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION =
@@ -139,10 +146,14 @@ public final class PhFlags implements Flags {
     static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE =
             "fledge_ad_selection_enforce_foreground_status_ad_selection_override";
     static final String KEY_FOREGROUND_STATUS_LEVEL = "foreground_validation_status_level";
-
     static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE =
             "fledge_ad_selection_enforce_foreground_status_custom_audience";
     static final String KEY_ENFORCE_FOREGROUND_STATUS_TOPICS = "topics_enforce_foreground_status";
+
+    // Fledge JS isolate setting keys
+    static final String KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE =
+            "fledge_js_isolate_enforce_max_heap_size";
+    static final String KEY_ISOLATE_MAX_HEAP_SIZE_BYTES = "fledge_js_isolate_max_heap_size_bytes";
 
     // MDD keys.
     static final String KEY_DOWNLOADER_CONNECTION_TIMEOUT_MS = "downloader_connection_timeout_ms";
@@ -469,6 +480,30 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_EXPIRE_IN_MS,
                 /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_MAX_EXPIRE_IN_MS);
+    }
+
+    @Override
+    public int getFledgeCustomAudienceMaxNameSizeB() {
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NAME_SIZE_B,
+                /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_MAX_NAME_SIZE_B);
+    }
+
+    @Override
+    public int getFledgeCustomAudienceMaxDailyUpdateUriSizeB() {
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_DAILY_UPDATE_URI_SIZE_B,
+                /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_MAX_DAILY_UPDATE_URI_SIZE_B);
+    }
+
+    @Override
+    public int getFledgeCustomAudienceMaxBiddingLogicUriSizeB() {
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_BIDDING_LOGIC_URI_SIZE_B,
+                /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_MAX_BIDDING_LOGIC_URI_SIZE_B);
     }
 
     @Override
@@ -1124,6 +1159,22 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getEnforceIsolateMaxHeapSize() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE,
+                /* defaultValue */ ENFORCE_ISOLATE_MAX_HEAP_SIZE);
+    }
+
+    @Override
+    public long getIsolateMaxHeapSizeBytes() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ISOLATE_MAX_HEAP_SIZE_BYTES,
+                /* defaultValue */ ISOLATE_MAX_HEAP_SIZE_BYTES);
+    }
+
+    @Override
     public String getWebContextRegistrationClientAppAllowList() {
         return DeviceConfig.getString(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -1258,6 +1309,21 @@ public final class PhFlags implements Flags {
                         + getFledgeCustomAudienceMaxExpireInMs());
         writer.println(
                 "\t"
+                        + KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NAME_SIZE_B
+                        + " = "
+                        + getFledgeCustomAudienceMaxNameSizeB());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_DAILY_UPDATE_URI_SIZE_B
+                        + " = "
+                        + getFledgeCustomAudienceMaxDailyUpdateUriSizeB());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_BIDDING_LOGIC_URI_SIZE_B
+                        + " = "
+                        + getFledgeCustomAudienceMaxBiddingLogicUriSizeB());
+        writer.println(
+                "\t"
                         + KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B
                         + " = "
                         + getFledgeCustomAudienceMaxUserBiddingSignalsSizeB());
@@ -1381,6 +1447,12 @@ public final class PhFlags implements Flags {
                         + KEY_FOREGROUND_STATUS_LEVEL
                         + " = "
                         + getForegroundStatuslLevelForValidation());
+
+        writer.println(
+                "\t" + KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE + " = " + getEnforceIsolateMaxHeapSize());
+
+        writer.println(
+                "\t" + KEY_ISOLATE_MAX_HEAP_SIZE_BYTES + " = " + getIsolateMaxHeapSizeBytes());
 
         writer.println("==== AdServices PH Flags Dump STATUS ====");
         writer.println("\t" + KEY_ADSERVICES_ENABLE_STATUS + " = " + getAdservicesEnableStatus());

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.measurement.permissions;
+package com.android.adservices.service.measurement.access;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -26,7 +26,6 @@ import android.content.pm.PackageManager;
 
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.measurement.access.UserConsentAccessResolver;
 
 import org.junit.Before;
 import org.junit.Test;

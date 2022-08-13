@@ -34,6 +34,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
@@ -107,6 +108,7 @@ public class CustomAudienceCtsDebuggableTest {
         result.get(10, TimeUnit.SECONDS);
     }
 
+    @Ignore
     @Test
     public void testRemoveExistingOverrideSucceeds() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);

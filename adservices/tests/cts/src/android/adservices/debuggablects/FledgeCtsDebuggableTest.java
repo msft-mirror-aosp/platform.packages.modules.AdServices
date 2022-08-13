@@ -166,6 +166,8 @@ public class FledgeCtsDebuggableTest {
         PhFlagsFixture.overrideForegroundStatusForFledgeOverrides(false);
         PhFlagsFixture.overrideForegroundStatusForFledgeRunAdSelection(false);
         PhFlagsFixture.overrideForegroundStatusForFledgeReportImpression(false);
+        PhFlagsFixture.overrideEnforceIsolateMaxHeapSize(false);
+        PhFlagsFixture.overrideIsolateMaxHeapSizeBytes(0);
     }
 
     @Test
