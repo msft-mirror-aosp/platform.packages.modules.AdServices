@@ -58,6 +58,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 
 import java.time.Clock;
 import java.util.List;
@@ -294,6 +295,8 @@ public final class AdSelectionRunner {
         try {
             if (t instanceof WrongCallingApplicationStateException) {
                 resultCode = AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
+            } else if (t instanceof UncheckedTimeoutException) {
+                resultCode = AdServicesStatusUtils.STATUS_TIMEOUT;
             } else {
                 resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
             }
@@ -387,7 +390,7 @@ public final class AdSelectionRunner {
     @Nullable
     private DBAdSelection handleTimeoutError(TimeoutException e) {
         LogUtil.e(e, "Ad Selection exceeded time limit");
-        throw new IllegalStateException(AD_SELECTION_TIMED_OUT);
+        throw new UncheckedTimeoutException(AD_SELECTION_TIMED_OUT);
     }
 
     private ListenableFuture<List<DBCustomAudience>> getBuyersCustomAudience(
