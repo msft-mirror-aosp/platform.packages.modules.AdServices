@@ -49,14 +49,20 @@ android {
                     '../../../../../frameworks/base/packages/SettingsLib/' +
                             'ActionBarShadow/src',
                     '../../../../../frameworks/base/core/java',
+                    '../../../../../frameworks/base/packages/SettingsLib/' +
+                            'CollapsingToolbarBaseActivity/src',
+                    '../../../../../frameworks/base/packages/SettingsLib/' +
+                            'MainSwitchPreference/src',
+                    '../../../../../out/soong/.intermediates/packages/modules/AdServices/adservices/service-core/statslog-adservices-java-gen/gen',
             ]
             java.setIncludes(new HashSet([
                     'com/android/adservices/ui/**/*.java',
-                    'com/android/adservices/service/consent/*.java',
-                    'com/android/adservices/*.java',
+                    'com/android/adservices/**/*.java',
                     'com/android/settingslib/widget/**/*.java',
                     'com/google/common/collect/*.java',
                     'android/os/*.java',
+                    'com/android/settingslib/collapsingtoolbar/**/*.java',
+                    'com/android/adservices/service/stats/*.java',
             ]))
             res.srcDirs = [
                     'res',

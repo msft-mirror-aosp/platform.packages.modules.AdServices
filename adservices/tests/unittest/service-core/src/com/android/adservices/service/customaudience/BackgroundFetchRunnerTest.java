@@ -23,10 +23,16 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.spyOn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import android.adservices.common.CommonFixture;
+import android.adservices.http.MockWebServerRule;
+import android.net.Uri;
 
+import com.android.adservices.LogUtil;
+import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.customaudience.DBCustomAudienceBackgroundFetchDataFixture;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetchData;
@@ -34,22 +40,36 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import com.google.mockwebserver.Dispatcher;
+import com.google.mockwebserver.MockResponse;
+import com.google.mockwebserver.MockWebServer;
+import com.google.mockwebserver.RecordedRequest;
+
+import org.json.JSONException;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoSession;
 
 import java.time.Instant;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class BackgroundFetchRunnerTest {
     private final Flags mFlags = FlagsFactory.getFlagsForTest();
+    private final String mFetchPath = "/fetch";
 
     private MockitoSession mStaticMockSession = null;
 
     @Mock private CustomAudienceDao mCustomAudienceDaoMock;
 
     private BackgroundFetchRunner mBackgroundFetchRunnerSpy;
+    @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
+
+    private Uri mFetchUri;
 
     @Before
     public void setup() {
@@ -63,6 +83,8 @@ public class BackgroundFetchRunnerTest {
 
         mBackgroundFetchRunnerSpy = new BackgroundFetchRunner(mCustomAudienceDaoMock, mFlags);
         spyOn(mBackgroundFetchRunnerSpy);
+
+        mFetchUri = mMockWebServerRule.uriForPath(mFetchPath);
     }
 
     @After
@@ -81,14 +103,14 @@ public class BackgroundFetchRunnerTest {
     }
 
     @Test
-    public void testBackgroundFetchRunnerUpdateCustomAudienceSuccessfulFetch() {
+    public void testUpdateCustomAudienceWithEmptyUpdate() {
         doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
 
         CustomAudienceUpdatableData updatableData =
                 CustomAudienceUpdatableDataFixture.getValidBuilderEmptySuccessfulResponse().build();
         doReturn(updatableData)
                 .when(mBackgroundFetchRunnerSpy)
-                .fetchAndValidateCustomAudienceUpdatableData(any(), any());
+                .fetchAndValidateCustomAudienceUpdatableData(any(), any(), any());
 
         Instant originalEligibleUpdateTime = CommonFixture.FIXED_NOW.minusMillis(60L * 1000L);
         Instant expectedEligibleUpdateTime =
@@ -96,11 +118,13 @@ public class BackgroundFetchRunnerTest {
                         .computeNextEligibleUpdateTimeAfterSuccessfulUpdate(
                                 CommonFixture.FIXED_NOW, mFlags);
         DBCustomAudienceBackgroundFetchData originalFetchData =
-                DBCustomAudienceBackgroundFetchDataFixture.getValidBuilder()
+                DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
+                                CommonFixture.VALID_BUYER)
                         .setEligibleUpdateTime(originalEligibleUpdateTime)
                         .build();
         DBCustomAudienceBackgroundFetchData expectedFetchData =
-                DBCustomAudienceBackgroundFetchDataFixture.getValidBuilder()
+                DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
+                                CommonFixture.VALID_BUYER)
                         .setEligibleUpdateTime(expectedEligibleUpdateTime)
                         .build();
 
@@ -113,20 +137,22 @@ public class BackgroundFetchRunnerTest {
     }
 
     @Test
-    public void testBackgroundFetchRunnerUpdateCustomAudienceFailedFetch() {
+    public void testUpdateCustomAudienceWithFailedUpdate() {
         CustomAudienceUpdatableData updatableData =
                 CustomAudienceUpdatableDataFixture.getValidBuilderEmptyFailedResponse().build();
         doReturn(updatableData)
                 .when(mBackgroundFetchRunnerSpy)
-                .fetchAndValidateCustomAudienceUpdatableData(any(), any());
+                .fetchAndValidateCustomAudienceUpdatableData(any(), any(), any());
 
         Instant originalEligibleUpdateTime = CommonFixture.FIXED_NOW.minusMillis(60L * 1000L);
         DBCustomAudienceBackgroundFetchData originalFetchData =
-                DBCustomAudienceBackgroundFetchDataFixture.getValidBuilder()
+                DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
+                                CommonFixture.VALID_BUYER)
                         .setEligibleUpdateTime(originalEligibleUpdateTime)
                         .build();
         DBCustomAudienceBackgroundFetchData expectedFetchData =
-                DBCustomAudienceBackgroundFetchDataFixture.getValidBuilder()
+                DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
+                                CommonFixture.VALID_BUYER)
                         .setEligibleUpdateTime(originalEligibleUpdateTime)
                         .setNumValidationFailures(1)
                         .build();
@@ -137,5 +163,167 @@ public class BackgroundFetchRunnerTest {
                 .updateCustomAudienceAndBackgroundFetchData(any(), any());
         verify(mCustomAudienceDaoMock)
                 .persistCustomAudienceBackgroundFetchData(eq(expectedFetchData));
+    }
+
+    @Test
+    public void testFetchAndValidateSuccessfulEmptyCustomAudienceUpdatableData() throws Exception {
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse()
+                                        .setBody(
+                                                CustomAudienceUpdatableDataFixture
+                                                        .getEmptyJsonResponseString())));
+        CustomAudienceUpdatableData expectedUpdatableData =
+                CustomAudienceUpdatableDataFixture.getValidBuilderEmptySuccessfulResponse().build();
+
+        CustomAudienceUpdatableData updatableData =
+                mBackgroundFetchRunnerSpy.fetchAndValidateCustomAudienceUpdatableData(
+                        CommonFixture.FIXED_NOW, CommonFixture.VALID_BUYER, mFetchUri);
+
+        assertEquals(expectedUpdatableData, updatableData);
+
+        assertEquals(1, mockWebServer.getRequestCount());
+        RecordedRequest fetchRequest = mockWebServer.takeRequest();
+        assertEquals(mFetchPath, fetchRequest.getPath());
+    }
+
+    @Test
+    public void testFetchAndValidateSuccessfulFullCustomAudienceUpdatableData() throws Exception {
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse()
+                                        .setBody(
+                                                CustomAudienceUpdatableDataFixture
+                                                        .getFullSuccessfulJsonResponseString())));
+        CustomAudienceUpdatableData expectedUpdatableData =
+                CustomAudienceUpdatableDataFixture.getValidBuilderFullSuccessfulResponse().build();
+
+        CustomAudienceUpdatableData updatableData =
+                mBackgroundFetchRunnerSpy.fetchAndValidateCustomAudienceUpdatableData(
+                        CommonFixture.FIXED_NOW, CommonFixture.VALID_BUYER, mFetchUri);
+
+        assertEquals(expectedUpdatableData, updatableData);
+
+        assertEquals(1, mockWebServer.getRequestCount());
+        RecordedRequest fetchRequest = mockWebServer.takeRequest();
+        assertEquals(mFetchPath, fetchRequest.getPath());
+    }
+
+    @Test
+    public void testFetchAndValidateCustomAudienceUpdatableDataNetworkTimeout() throws Exception {
+        class FlagsWithSmallLimits implements Flags {
+            @Override
+            public int getFledgeBackgroundFetchNetworkConnectTimeoutMs() {
+                return 30;
+            }
+
+            @Override
+            public int getFledgeBackgroundFetchNetworkReadTimeoutMs() {
+                return 50;
+            }
+        }
+
+        BackgroundFetchRunner runnerWithSmallLimits =
+                new BackgroundFetchRunner(mCustomAudienceDaoMock, new FlagsWithSmallLimits());
+
+        CountDownLatch responseLatch = new CountDownLatch(1);
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        new Dispatcher() {
+                            @Override
+                            public MockResponse dispatch(RecordedRequest request)
+                                    throws InterruptedException {
+                                Thread.sleep(70);
+                                try {
+                                    return new MockResponse()
+                                            .setBody(
+                                                    CustomAudienceUpdatableDataFixture
+                                                            .getFullSuccessfulJsonResponseString());
+                                } catch (JSONException exception) {
+                                    LogUtil.e(exception, "Failed to create JSON full response");
+                                    return null;
+                                } finally {
+                                    responseLatch.countDown();
+                                }
+                            }
+                        });
+        CustomAudienceUpdatableData expectedUpdatableData =
+                CustomAudienceUpdatableDataFixture.getValidBuilderEmptyFailedResponse()
+                        .setInitialUpdateResult(
+                                BackgroundFetchRunner.UpdateResultType.NETWORK_FAILURE)
+                        .build();
+
+        CustomAudienceUpdatableData updatableData =
+                runnerWithSmallLimits.fetchAndValidateCustomAudienceUpdatableData(
+                        CommonFixture.FIXED_NOW, CommonFixture.VALID_BUYER, mFetchUri);
+
+        assertTrue(responseLatch.await(150, TimeUnit.MILLISECONDS));
+        assertEquals(expectedUpdatableData, updatableData);
+
+        assertEquals(1, mockWebServer.getRequestCount());
+        RecordedRequest fetchRequest = mockWebServer.takeRequest();
+        assertEquals(mFetchPath, fetchRequest.getPath());
+    }
+
+    @Test
+    public void testFetchWithInvalidUriAndValidateCustomAudienceUpdatableData() throws Exception {
+        Uri invalidFetchUri = Uri.parse("https://localhost:-1/fetch");
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse()
+                                        .setBody(
+                                                CustomAudienceUpdatableDataFixture
+                                                        .getFullSuccessfulJsonResponseString())));
+        CustomAudienceUpdatableData expectedUpdatableData =
+                CustomAudienceUpdatableDataFixture.getValidBuilderEmptyFailedResponse()
+                        .setInitialUpdateResult(BackgroundFetchRunner.UpdateResultType.UNKNOWN)
+                        .build();
+
+        CustomAudienceUpdatableData updatableData =
+                mBackgroundFetchRunnerSpy.fetchAndValidateCustomAudienceUpdatableData(
+                        CommonFixture.FIXED_NOW, CommonFixture.VALID_BUYER, invalidFetchUri);
+
+        assertEquals(expectedUpdatableData, updatableData);
+
+        assertEquals(0, mockWebServer.getRequestCount());
+    }
+
+    @Test
+    public void testFetchAndValidateCustomAudienceUpdatableDataResponseTooLarge() throws Exception {
+        class FlagsWithSmallLimits implements Flags {
+            @Override
+            public int getFledgeBackgroundFetchMaxResponseSizeB() {
+                return 10;
+            }
+        }
+
+        BackgroundFetchRunner runnerWithSmallLimits =
+                new BackgroundFetchRunner(mCustomAudienceDaoMock, new FlagsWithSmallLimits());
+
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse()
+                                        .setBody(
+                                                CustomAudienceUpdatableDataFixture
+                                                        .getFullSuccessfulJsonResponseString())));
+        CustomAudienceUpdatableData expectedUpdatableData =
+                CustomAudienceUpdatableDataFixture.getValidBuilderEmptyFailedResponse()
+                        .setInitialUpdateResult(
+                                BackgroundFetchRunner.UpdateResultType.NETWORK_FAILURE)
+                        .build();
+
+        CustomAudienceUpdatableData updatableData =
+                runnerWithSmallLimits.fetchAndValidateCustomAudienceUpdatableData(
+                        CommonFixture.FIXED_NOW, CommonFixture.VALID_BUYER, mFetchUri);
+
+        assertEquals(expectedUpdatableData, updatableData);
+
+        assertEquals(1, mockWebServer.getRequestCount());
+        RecordedRequest fetchRequest = mockWebServer.takeRequest();
+        assertEquals(mFetchPath, fetchRequest.getPath());
     }
 }

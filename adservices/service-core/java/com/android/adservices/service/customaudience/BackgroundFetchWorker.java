@@ -37,6 +37,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -51,6 +52,10 @@ public class BackgroundFetchWorker {
     private final Flags mFlags;
     private final BackgroundFetchRunner mBackgroundFetchRunner;
 
+    private volatile boolean mWorkInProgress;
+    private volatile boolean mStopWorkRequested;
+    private CountDownLatch mStopWorkLatch;
+
     @VisibleForTesting
     protected BackgroundFetchWorker(
             @NonNull CustomAudienceDao customAudienceDao,
@@ -62,6 +67,9 @@ public class BackgroundFetchWorker {
         mCustomAudienceDao = customAudienceDao;
         mFlags = flags;
         mBackgroundFetchRunner = backgroundFetchRunner;
+        mWorkInProgress = false;
+        mStopWorkRequested = false;
+        mStopWorkLatch = new CountDownLatch(0);
     }
 
     /**
@@ -107,61 +115,111 @@ public class BackgroundFetchWorker {
             throws InterruptedException, ExecutionException, TimeoutException {
         Objects.requireNonNull(jobStartTime);
 
-        // Clean up expired custom audiences first so the actual fetch won't do unnecessary work
-        mBackgroundFetchRunner.deleteExpiredCustomAudiences(jobStartTime);
-
-        long remainingJobTimeMs =
-                mFlags.getFledgeBackgroundFetchJobMaxRuntimeMs()
-                        - (Clock.systemUTC().instant().toEpochMilli()
-                                - jobStartTime.toEpochMilli());
-        if (remainingJobTimeMs <= 0) {
-            LogUtil.e("Timed out before updating FLEDGE custom audiences");
-            throw new TimeoutException();
-        }
-
-        // Fetch stale/eligible/delinquent custom audiences
-        final List<DBCustomAudienceBackgroundFetchData> fetchDataList =
-                mCustomAudienceDao.getActiveEligibleCustomAudienceBackgroundFetchData(
-                        jobStartTime, mFlags.getFledgeBackgroundFetchMaxNumUpdated());
-
-        if (fetchDataList.isEmpty()) {
-            LogUtil.d("No custom audiences found to update");
+        LogUtil.d("Running FLEDGE background fetch with jobStartTime %s", jobStartTime.toString());
+        if (mWorkInProgress) {
+            LogUtil.w("Already running FLEDGE background fetch, skipping call");
             return;
+        }
+
+        try {
+            mWorkInProgress = true;
+            mStopWorkRequested = false;
+
+            // Clean up expired custom audiences first so the actual fetch won't do unnecessary work
+            mBackgroundFetchRunner.deleteExpiredCustomAudiences(jobStartTime);
+
+            if (mStopWorkRequested) {
+                LogUtil.d("Stopping FLEDGE background fetch");
+                return;
+            }
+
+            long remainingJobTimeMs =
+                    mFlags.getFledgeBackgroundFetchJobMaxRuntimeMs()
+                            - (Clock.systemUTC().instant().toEpochMilli()
+                                    - jobStartTime.toEpochMilli());
+            if (remainingJobTimeMs <= 0) {
+                LogUtil.e("Timed out before updating FLEDGE custom audiences");
+                throw new TimeoutException();
+            }
+
+            // Fetch stale/eligible/delinquent custom audiences
+            final List<DBCustomAudienceBackgroundFetchData> fetchDataList =
+                    mCustomAudienceDao.getActiveEligibleCustomAudienceBackgroundFetchData(
+                            jobStartTime, mFlags.getFledgeBackgroundFetchMaxNumUpdated());
+
+            if (fetchDataList.isEmpty()) {
+                LogUtil.d("No custom audiences found to update");
+                return;
+            } else {
+                LogUtil.d("Updating %d custom audiences", fetchDataList.size());
+            }
+
+            // Divide the gathered CAs among worker threads
+            int numWorkers =
+                    Math.min(
+                            Math.max(1, Runtime.getRuntime().availableProcessors() - 2),
+                            mFlags.getFledgeBackgroundFetchThreadPoolSize());
+            int numCustomAudiencesPerWorker =
+                    (fetchDataList.size() / numWorkers)
+                            + (((fetchDataList.size() % numWorkers) == 0) ? 0 : 1);
+
+            List<ListenableFuture<Void>> subListFutureUpdates = new ArrayList<>();
+
+            for (final List<DBCustomAudienceBackgroundFetchData> fetchDataSubList :
+                    Lists.partition(fetchDataList, numCustomAudiencesPerWorker)) {
+                subListFutureUpdates.add(
+                        AdServicesExecutors.getBackgroundExecutor()
+                                .submit(
+                                        () -> {
+                                            for (DBCustomAudienceBackgroundFetchData fetchData :
+                                                    fetchDataSubList) {
+                                                if (mStopWorkRequested) {
+                                                    return null;
+                                                }
+                                                mBackgroundFetchRunner.updateCustomAudience(
+                                                        jobStartTime, fetchData);
+                                            }
+                                            return null;
+                                        }));
+            }
+
+            // Wait for all workers to complete within the allotted time
+            remainingJobTimeMs =
+                    mFlags.getFledgeBackgroundFetchJobMaxRuntimeMs()
+                            - (Clock.systemUTC().instant().toEpochMilli()
+                                    - jobStartTime.toEpochMilli());
+            Futures.allAsList(subListFutureUpdates).get(remainingJobTimeMs, TimeUnit.MILLISECONDS);
+        } finally {
+            mStopWorkLatch.countDown();
+            mWorkInProgress = false;
+        }
+    }
+
+    /** Requests that any ongoing work be stopped gracefully and waits for work to be stopped. */
+    public void stopWork() {
+        LogUtil.d("FLEDGE background fetch stop work requested");
+
+        if (!mWorkInProgress) {
+            LogUtil.d("FLEDGE background fetch not running");
+            return;
+        }
+
+        if (mStopWorkRequested && mStopWorkLatch.getCount() != 0) {
+            LogUtil.d("FLEDGE background fetch stop work already requested; waiting for stop");
         } else {
-            LogUtil.d("Updating %d custom audiences", fetchDataList.size());
+            mStopWorkLatch = new CountDownLatch(1);
         }
 
-        // Divide the gathered CAs among worker threads
-        int numWorkers =
-                Math.min(
-                        Math.max(1, Runtime.getRuntime().availableProcessors() - 2),
-                        mFlags.getFledgeBackgroundFetchThreadPoolSize());
-        int numCustomAudiencesPerWorker =
-                (fetchDataList.size() / numWorkers)
-                        + (((fetchDataList.size() % numWorkers) == 0) ? 0 : 1);
+        mStopWorkRequested = true;
 
-        List<ListenableFuture<Void>> subListFutureUpdates = new ArrayList<>();
-
-        for (final List<DBCustomAudienceBackgroundFetchData> fetchDataSubList :
-                Lists.partition(fetchDataList, numCustomAudiencesPerWorker)) {
-            subListFutureUpdates.add(
-                    AdServicesExecutors.getBackgroundExecutor()
-                            .submit(
-                                    () -> {
-                                        for (DBCustomAudienceBackgroundFetchData fetchData :
-                                                fetchDataSubList) {
-                                            mBackgroundFetchRunner.updateCustomAudience(
-                                                    jobStartTime, fetchData);
-                                        }
-                                        return null;
-                                    }));
+        // Wait for work to be stopped so that we keep the wakelock while work is stopping
+        // Note that onStopJob() has its own timeout that is imposed while waiting for work to stop
+        try {
+            mStopWorkLatch.await();
+        } catch (InterruptedException exception) {
+            LogUtil.e(
+                    exception, "Interrupt while waiting for FLEDGE background fetch to stop fully");
         }
-
-        // Wait for all workers to complete within the allotted time
-        remainingJobTimeMs =
-                mFlags.getFledgeBackgroundFetchJobMaxRuntimeMs()
-                        - (Clock.systemUTC().instant().toEpochMilli()
-                                - jobStartTime.toEpochMilli());
-        Futures.allAsList(subListFutureUpdates).get(remainingJobTimeMs, TimeUnit.MILLISECONDS);
+        LogUtil.d("FLEDGE background fetch work stopped");
     }
 }

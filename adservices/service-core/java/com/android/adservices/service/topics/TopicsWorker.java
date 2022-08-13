@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.topics;
 
-import static android.adservices.topics.TopicsManager.RESULT_OK;
+import static com.android.adservices.ResultCode.RESULT_OK;
 
 import android.adservices.topics.GetTopicsResult;
 import android.annotation.NonNull;
@@ -182,6 +182,11 @@ public class TopicsWorker {
     @NonNull
     public GetTopicsResult getTopics(@NonNull String app, @NonNull String sdk) {
         LogUtil.v("TopicsWorker.getTopics for %s, %s", app, sdk);
+
+        // We will generally handle the App and SDK topics assignment through
+        // PackageChangedReceiver. However, this is to catch the case we miss the broadcast.
+        handleSdkTopicsAssignment(app, sdk);
+
         mReadWriteLock.readLock().lock();
         try {
             List<Topic> topics =
@@ -284,14 +289,20 @@ public class TopicsWorker {
     }
 
     /**
-     * Reconcile app installation info
+     * Reconcile unhandled app update in real-time service.
+     *
+     * <p>Uninstallation: Wipe out data in all tables for an uninstalled application with data still
+     * persisted in database.
+     *
+     * <p>Installation: Assign a random top topic from last 3 epochs to app only.
      *
      * @param context the context
      */
-    public void reconcileUninstalledApps(Context context) {
+    public void reconcileApplicationUpdate(Context context) {
         mReadWriteLock.writeLock().lock();
         try {
             mAppUpdateManager.reconcileUninstalledApps(context);
+            mAppUpdateManager.reconcileInstalledApps(context, mEpochManager.getCurrentEpochId());
 
             loadCache();
         } finally {
@@ -310,6 +321,45 @@ public class TopicsWorker {
             mAppUpdateManager.deleteAppDataByUri(packageUri);
 
             loadCache();
+            LogUtil.v("Derived data is cleared for %s", packageUri.toString());
+        } finally {
+            mReadWriteLock.writeLock().unlock();
+        }
+    }
+
+    /**
+     * Handle application installation for Topics API
+     *
+     * @param packageUri The {@link Uri} got from Broadcast Intent
+     */
+    public void handleAppInstallation(@NonNull Uri packageUri) {
+        mReadWriteLock.writeLock().lock();
+        try {
+            mAppUpdateManager.assignTopicsToNewlyInstalledApps(
+                    packageUri, mEpochManager.getCurrentEpochId());
+
+            loadCache();
+            LogUtil.v(
+                    "Topics have been assigned to newly installed %s and cache" + "is reloaded",
+                    packageUri);
+        } finally {
+            mReadWriteLock.writeLock().unlock();
+        }
+    }
+
+    // Handle topic assignment to SDK for newly installed applications. Cached topics need to be
+    // reloaded if any topic assignment happens.
+    private void handleSdkTopicsAssignment(String app, String sdk) {
+        mReadWriteLock.writeLock().lock();
+        try {
+            if (mAppUpdateManager.assignTopicsToSdkForAppInstallation(
+                    app, sdk, mEpochManager.getCurrentEpochId())) {
+                loadCache();
+                LogUtil.v(
+                        "Topics have been assigned to sdk %s as app %s is newly installed in"
+                                + " current epoch",
+                        sdk, app);
+            }
         } finally {
             mReadWriteLock.writeLock().unlock();
         }

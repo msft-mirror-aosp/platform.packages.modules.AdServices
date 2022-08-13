@@ -1,12 +1,24 @@
 {
   "mainline-presubmit": [
     {
+      // Install com.google.android.adservices.apex and run AdServicesApkUITests.
+      "name": "AdServicesApkUITests[com.google.android.adservices.apex]"
+    },
+    {
+      // Install com.google.android.adservices.apex and run AdServicesApkUnitTests.
+      "name": "AdServicesApkUnitTests[com.google.android.adservices.apex]"
+    },
+    {
       // Install com.google.android.adservices.apex and run AdServicesFrameworkUnitTests.
       "name": "AdServicesFrameworkUnitTests[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run AdServicesServiceCoreUnitTests.
       "name": "AdServicesServiceCoreUnitTests[com.google.android.adservices.apex]"
+    },
+    {
+      // Install com.google.android.adservices.apex and run AdServicesJsEngineUnitTests.
+      "name": "AdServicesJsEngineUnitTests[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run CtsAdServicesDeviceTestCases.
@@ -28,6 +40,10 @@
     },
     {
       "name": "CtsAdServicesPermissionsNoPermEndToEndTests[com.google.android.adservices.apex]"
+    },
+    {
+      // Install com.google.android.adservices.apex and run CtsSandboxedTopicsManagerTests.
+      "name": "CtsSandboxedTopicsManagerTests[com.google.android.adservices.apex]"
     }
   ],
   "presubmit": [
@@ -36,6 +52,9 @@
     },
     {
       "name": "AdServicesServiceCoreUnitTests"
+    },
+    {
+      "name": "AdServicesJsEngineUnitTests"
     },
     {
       "name": "AdServicesEndToEndTests"

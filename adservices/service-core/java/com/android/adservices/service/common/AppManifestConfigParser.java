@@ -32,11 +32,15 @@ import java.util.List;
 /** Parser and validator for {@link AppManifestConfig} objects. */
 public class AppManifestConfigParser {
     private static final String TAG_AD_SERVICES_CONFIG = "ad-services-config";
+    private static final String TAG_INCLUDES_SDK_LIBRARY = "includes-sdk-library";
     private static final String TAG_ATTRIBUTION = "attribution";
     private static final String TAG_CUSTOM_AUDIENCES = "custom-audiences";
     private static final String TAG_TOPICS = "topics";
+    private static final String TAG_ADID = "adid";
+    private static final String TAG_APPSETID = "appsetid";
     private static final String ATTR_ALLOW_ALL_TO_ACCESS = "allowAllToAccess";
-    private static final String ATTR_ALLOW_SDK_TO_ACCESS = "allowSdkToAccess";
+    private static final String ATTR_ALLOW_AD_PARTNERS_TO_ACCESS = "allowAdPartnersToAccess";
+    private static final String ATTR_SDK_NAME = "name";
 
     private AppManifestConfigParser() {}
 
@@ -50,9 +54,13 @@ public class AppManifestConfigParser {
      */
     public static AppManifestConfig getConfig(@NonNull XmlResourceParser parser)
             throws XmlParseException, XmlPullParserException, IOException {
+        AppManifestIncludesSdkLibraryConfig includesSdkLibraryConfig;
         AppManifestAttributionConfig attributionConfig = null;
         AppManifestCustomAudiencesConfig customAudiencesConfig = null;
         AppManifestTopicsConfig topicsConfig = null;
+        AppManifestAdIdConfig adIdConfig = null;
+        AppManifestAppSetIdConfig appSetIdConfig = null;
+        List<String> includesSdkLibraries = new ArrayList<>();
 
         // The first next goes to START_DOCUMENT, so we need another next to go to START_TAG.
         parser.next();
@@ -68,8 +76,9 @@ public class AppManifestConfigParser {
             }
             for (int i = 0; i < parser.getAttributeCount(); i++) {
                 String attr = parser.getAttributeName(i);
-                if (!attr.equals(ATTR_ALLOW_ALL_TO_ACCESS)
-                        && !attr.equals(ATTR_ALLOW_SDK_TO_ACCESS)) {
+                if (!attr.equals(ATTR_SDK_NAME)
+                        && !attr.equals(ATTR_ALLOW_ALL_TO_ACCESS)
+                        && !attr.equals(ATTR_ALLOW_AD_PARTNERS_TO_ACCESS)) {
                     throw new XmlParseException(
                             "Unknown attribute: "
                                     + attr
@@ -78,6 +87,17 @@ public class AppManifestConfigParser {
             }
             switch (parser.getName()) {
                 case TAG_AD_SERVICES_CONFIG:
+                    break;
+
+                case TAG_INCLUDES_SDK_LIBRARY:
+                    String sdkLibrary = getSdkLibrary(parser);
+                    if (sdkLibrary == null || sdkLibrary.isEmpty()) {
+                        throw new XmlParseException(
+                                "Sdk name not mentioned in <includes-sdk-library>");
+                    }
+                    if (!includesSdkLibraries.contains(sdkLibrary)) {
+                        includesSdkLibraries.add(sdkLibrary);
+                    }
                     break;
 
                 case TAG_ATTRIBUTION:
@@ -89,7 +109,7 @@ public class AppManifestConfigParser {
                     attributionConfig =
                             new AppManifestAttributionConfig(
                                     allowAllToAccess,
-                                    getAllowSdksToAccess(parser, allowAllToAccess));
+                                    getAllowAdPartnersToAccess(parser, allowAllToAccess));
                     break;
 
                 case TAG_CUSTOM_AUDIENCES:
@@ -101,7 +121,7 @@ public class AppManifestConfigParser {
                     customAudiencesConfig =
                             new AppManifestCustomAudiencesConfig(
                                     allowAllToAccess,
-                                    getAllowSdksToAccess(parser, allowAllToAccess));
+                                    getAllowAdPartnersToAccess(parser, allowAllToAccess));
                     break;
 
                 case TAG_TOPICS:
@@ -113,7 +133,31 @@ public class AppManifestConfigParser {
                     topicsConfig =
                             new AppManifestTopicsConfig(
                                     allowAllToAccess,
-                                    getAllowSdksToAccess(parser, allowAllToAccess));
+                                    getAllowAdPartnersToAccess(parser, allowAllToAccess));
+                    break;
+
+                case TAG_ADID:
+                    allowAllToAccess = getAllowAllToAccess(parser);
+                    if (adIdConfig != null) {
+                        throw new XmlParseException(
+                                "Tag " + parser.getName() + " appears more than once");
+                    }
+                    adIdConfig =
+                            new AppManifestAdIdConfig(
+                                    allowAllToAccess,
+                                    getAllowAdPartnersToAccess(parser, allowAllToAccess));
+                    break;
+
+                case TAG_APPSETID:
+                    allowAllToAccess = getAllowAllToAccess(parser);
+                    if (appSetIdConfig != null) {
+                        throw new XmlParseException(
+                                "Tag " + parser.getName() + " appears more than once");
+                    }
+                    appSetIdConfig =
+                            new AppManifestAppSetIdConfig(
+                                    allowAllToAccess,
+                                    getAllowAdPartnersToAccess(parser, allowAllToAccess));
                     break;
 
                 default:
@@ -125,7 +169,18 @@ public class AppManifestConfigParser {
             parser.next();
         }
 
-        return new AppManifestConfig(attributionConfig, customAudiencesConfig, topicsConfig);
+        includesSdkLibraryConfig = new AppManifestIncludesSdkLibraryConfig(includesSdkLibraries);
+        return new AppManifestConfig(
+                includesSdkLibraryConfig,
+                attributionConfig,
+                customAudiencesConfig,
+                topicsConfig,
+                adIdConfig,
+                appSetIdConfig);
+    }
+
+    private static String getSdkLibrary(@NonNull XmlResourceParser parser) {
+        return parser.getAttributeValue(/*namespace=*/ null, ATTR_SDK_NAME);
     }
 
     private static boolean getAllowAllToAccess(@NonNull XmlResourceParser parser) {
@@ -134,14 +189,18 @@ public class AppManifestConfigParser {
         return allowAllToAccess.equals("false") ? false : true;
     }
 
-    private static List<String> getAllowSdksToAccess(
+    private static List<String> getAllowAdPartnersToAccess(
             @NonNull XmlResourceParser parser, @NonNull boolean allowAllToAccess)
             throws XmlParseException {
-        String allowSdkToAccess = parser.getAttributeValue(null, ATTR_ALLOW_SDK_TO_ACCESS);
-        if (allowSdkToAccess == null || allowSdkToAccess.isEmpty()) return new ArrayList<>();
-        if (allowAllToAccess) {
-            throw new XmlParseException("allowAll cannot be set to true when allowSdk is also set");
+        String allowAdPartnersToAccess =
+                parser.getAttributeValue(null, ATTR_ALLOW_AD_PARTNERS_TO_ACCESS);
+        if (allowAdPartnersToAccess == null || allowAdPartnersToAccess.isEmpty()) {
+            return new ArrayList<>();
         }
-        return Arrays.asList(allowSdkToAccess.split("\\s*,\\s*"));
+        if (allowAllToAccess) {
+            throw new XmlParseException(
+                    "allowAll cannot be set to true when allowAdPartners is also set");
+        }
+        return Arrays.asList(allowAdPartnersToAccess.split("\\s*,\\s*"));
     }
 }

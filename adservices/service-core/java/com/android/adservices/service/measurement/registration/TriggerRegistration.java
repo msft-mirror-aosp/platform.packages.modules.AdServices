@@ -19,7 +19,7 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
 
-import com.android.adservices.service.measurement.validation.Validation;
+import com.android.adservices.service.measurement.util.Validation;
 
 import java.util.Objects;
 
@@ -33,6 +33,7 @@ public final class TriggerRegistration {
     private final String mAggregateValues;
     private final String mFilters;
     private final String mEventTriggers;
+    @Nullable private final Long mDebugKey;
 
     /** Create a trigger registration. */
     private TriggerRegistration(
@@ -41,13 +42,15 @@ public final class TriggerRegistration {
             @NonNull String eventTriggers,
             @Nullable String aggregateTriggerData,
             @Nullable String aggregateValues,
-            @Nullable String filters) {
+            @Nullable String filters,
+            @Nullable Long debugKey) {
         mTopOrigin = topOrigin;
         mReportingOrigin = reportingOrigin;
         mAggregateTriggerData = aggregateTriggerData;
         mAggregateValues = aggregateValues;
         mFilters = filters;
         mEventTriggers = eventTriggers;
+        mDebugKey = debugKey;
     }
 
     @Override
@@ -60,7 +63,8 @@ public final class TriggerRegistration {
                 && Objects.equals(mAggregateTriggerData, that.mAggregateTriggerData)
                 && Objects.equals(mAggregateValues, that.mAggregateValues)
                 && Objects.equals(mFilters, that.mFilters)
-                && Objects.equals(mEventTriggers, that.mEventTriggers);
+                && Objects.equals(mEventTriggers, that.mEventTriggers)
+                && Objects.equals(mDebugKey, that.mDebugKey);
     }
 
     @Override
@@ -71,7 +75,8 @@ public final class TriggerRegistration {
                 mAggregateTriggerData,
                 mAggregateValues,
                 mFilters,
-                mEventTriggers);
+                mEventTriggers,
+                mDebugKey);
     }
 
     /** Top level origin. */
@@ -110,6 +115,10 @@ public final class TriggerRegistration {
     public String getFilters() {
         return mFilters;
     }
+    /** Trigger Debug Key. */
+    public @Nullable Long getDebugKey() {
+        return mDebugKey;
+    }
 
     /**
      * A builder for {@link TriggerRegistration}.
@@ -121,6 +130,7 @@ public final class TriggerRegistration {
         private String mAggregateTriggerData;
         private String mAggregateValues;
         private String mFilters;
+        private @Nullable Long mDebugKey;
 
         /** See {@link TriggerRegistration#getTopOrigin}. */
         @NonNull
@@ -167,6 +177,12 @@ public final class TriggerRegistration {
             return this;
         }
 
+        /** See {@link TriggerRegistration#getDebugKey()}. */
+        public Builder setDebugKey(@Nullable Long debugKey) {
+            mDebugKey = debugKey;
+            return this;
+        }
+
         /** Build the TriggerRegistration. */
         @NonNull
         public TriggerRegistration build() {
@@ -178,7 +194,8 @@ public final class TriggerRegistration {
                     mEventTriggers,
                     mAggregateTriggerData,
                     mAggregateValues,
-                    mFilters);
+                    mFilters,
+                    mDebugKey);
         }
     }
 }

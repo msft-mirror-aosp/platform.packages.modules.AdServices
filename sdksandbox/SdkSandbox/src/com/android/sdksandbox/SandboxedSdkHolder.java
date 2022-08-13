@@ -16,7 +16,6 @@
 
 package com.android.sdksandbox;
 
-import android.annotation.SuppressLint;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
@@ -39,7 +38,6 @@ import java.util.Random;
 /**
  * A holder for loaded code.
  */
-@SuppressLint("NewApi") // TODO(b/227329631): remove this after T SDK is finalized
 class SandboxedSdkHolder {
 
     private static final String TAG = "SdkSandbox";
@@ -71,8 +69,8 @@ class SandboxedSdkHolder {
         try {
             Class<?> clz = Class.forName(sdkProviderClassName, true, loader);
             mSdk = (SandboxedSdkProvider) clz.getConstructor().newInstance();
+            mSdk.attachContext(sandboxedSdkContext);
             mSdk.onLoadSdk(
-                    sandboxedSdkContext,
                     params,
                     mContext.getMainExecutor(),
                     new SandboxedSdkProvider.OnLoadSdkCallback() {
@@ -93,6 +91,10 @@ class SandboxedSdkHolder {
         } catch (Throwable e) {
             sendLoadSdkError("Error thrown during init: " + e, callback);
         }
+    }
+
+    void unloadSdk() {
+        mSdk.beforeUnloadSdk();
     }
 
     void dump(PrintWriter writer) {
@@ -180,7 +182,8 @@ class SandboxedSdkHolder {
                 mHandler.post(
                         () -> {
                             try {
-                                final View view = mSdk.getView(windowContext, params);
+                                final View view =
+                                        mSdk.getView(windowContext, params, width, height);
                                 SurfaceControlViewHost host =
                                         new SurfaceControlViewHost(
                                                 windowContext,

@@ -8,8 +8,8 @@
             "id": "S1",
             "eventId": 1,
             "sourceType": "navigation",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "android-app://com.example.abc",
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -38,7 +38,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -46,8 +46,8 @@
             "id": "S1",
             "eventId": 1,
             "sourceType": "navigation",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "android-app://com.example.abc",
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -88,11 +88,13 @@
           "sourceType": "navigation",
           "randomizedTriggerRate":  0.0024263
         }],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "unused",
-            "sourceSite": "https://www.example1.com",
+            "sourceSite": "android-app://com.example.abc",
+            "sourceOrigin": "android-app://com.example.abc",
             "destinationSite": "android-app://com.example2.app",
+            "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
@@ -108,8 +110,8 @@
             "id": "S1",
             "eventId": 1,
             "sourceType": "navigation",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "https://www.example1.com",
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -138,7 +140,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -146,8 +148,8 @@
             "id": "S1",
             "eventId": 1,
             "sourceType": "navigation",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "https://www.example1.com",
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -176,7 +178,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       }
     },
     {
@@ -187,8 +189,9 @@
             "id": "S1",
             "eventId": 1,
             "sourceType": "navigation",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "https://www.example1.com",
+            "publisherType": 1,
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -200,8 +203,9 @@
             "id": "S2",
             "eventId": 2,
             "sourceType": "navigation",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "https://www.example1.com",
+            "publisherType": 1,
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -230,7 +234,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -238,8 +242,9 @@
             "id": "S1",
             "eventId": 1,
             "sourceType": "navigation",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "https://www.example1.com",
+            "publisherType": 1,
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -251,8 +256,9 @@
             "id": "S2",
             "eventId": 2,
             "sourceType": "navigation",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "https://www.example1.com",
+            "publisherType": 1,
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -293,11 +299,13 @@
           "sourceType": "navigation",
           "randomizedTriggerRate":  0.0024263
         }],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "unused",
-            "sourceSite": "https://www.example1.com",
+            "sourceSite": "https://example1.com",
+            "sourceOrigin": "https://www.example1.com",
             "destinationSite": "android-app://com.example2.app",
+            "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
@@ -314,7 +322,7 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "android-app://com.example.abc",
-            "attributionDestination": "android-app://com.example.xyz",
+            "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -327,7 +335,7 @@
             "eventId": 2,
             "sourceType": "navigation",
             "publisher": "android-app://com.example.abc",
-            "attributionDestination": "android-app://com.example.xyz",
+            "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000002,
             "expiryTime": 8640000030,
@@ -356,7 +364,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -365,7 +373,7 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "android-app://com.example.abc",
-            "attributionDestination": "android-app://com.example.xyz",
+            "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -378,7 +386,7 @@
             "eventId": 2,
             "sourceType": "navigation",
             "publisher": "android-app://com.example.abc",
-            "attributionDestination": "android-app://com.example.xyz",
+            "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000002,
             "expiryTime": 8640000030,
@@ -419,11 +427,13 @@
           "sourceType": "navigation",
           "randomizedTriggerRate":  0.0024263
         }],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "unused",
             "sourceSite": "android-app://com.example.abc",
+            "sourceOrigin": "android-app://com.example.abc",
             "destinationSite": "android-app://com.example.xyz",
+            "destinationOrigin": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
             "triggerTime": 8640000003,
             "registrant": "android-app://com.example.xyz"
@@ -441,7 +451,7 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "android-app://com.example.abc",
-            "attributionDestination": "android-app://com.example.xyz",
+            "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 10368000000,
@@ -454,7 +464,7 @@
             "eventId": 2,
             "sourceType": "navigation",
             "publisher": "android-app://com.example.abc",
-            "attributionDestination": "android-app://com.example.xyz",
+            "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000000,
             "expiryTime": 10368000000,
@@ -485,7 +495,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -494,7 +504,7 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "android-app://com.example.abc",
-            "attributionDestination": "android-app://com.example.xyz",
+            "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 10368000000,
@@ -507,7 +517,7 @@
             "eventId": 2,
             "sourceType": "navigation",
             "publisher": "android-app://com.example.abc",
-            "attributionDestination": "android-app://com.example.xyz",
+            "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000000,
             "expiryTime": 10368000000,
@@ -552,11 +562,13 @@
             "randomizedTriggerRate":  0.0024263
           }
         ],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "unused",
             "sourceSite": "android-app://com.example.abc",
+            "sourceOrigin": "android-app://com.example.abc",
             "destinationSite": "android-app://com.example.xyz",
+            "destinationOrigin": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
@@ -574,7 +586,7 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "android-app://com.example.abc",
-            "attributionDestination": "android-app://com.example.xyz",
+            "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 10368000000,
@@ -587,7 +599,7 @@
             "eventId": 2,
             "sourceType": "navigation",
             "publisher": "android-app://com.example.abc",
-            "attributionDestination": "android-app://com.example.xyz",
+            "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000000,
             "expiryTime": 10368000000,
@@ -618,7 +630,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "attributionTriggerIds": ["T1"],
       "output": {
@@ -628,7 +640,7 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "android-app://com.example.abc",
-            "attributionDestination": "android-app://com.example.xyz",
+            "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 10368000000,
@@ -641,7 +653,7 @@
             "eventId": 2,
             "sourceType": "navigation",
             "publisher": "android-app://com.example.abc",
-            "attributionDestination": "android-app://com.example.xyz",
+            "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000000,
             "expiryTime": 10368000000,
@@ -686,11 +698,13 @@
             "randomizedTriggerRate":  0.0024263
           }
         ],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "unused",
             "sourceSite": "android-app://com.example.abc",
+            "sourceOrigin": "android-app://com.example.abc",
             "destinationSite": "android-app://com.example.xyz",
+            "destinationOrigin": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
             "triggerTime": 9072000001,
             "registrant": "android-app://com.example.xyz"
@@ -708,7 +722,7 @@
             "eventId": 1,
             "sourceType": "event",
             "publisher": "android-app://com.example.abc",
-            "attributionDestination": "android-app://com.example.xyz",
+            "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 10368000000,
@@ -721,7 +735,7 @@
             "eventId": 2,
             "sourceType": "event",
             "publisher": "android-app://com.example.abc",
-            "attributionDestination": "android-app://com.example.xyz",
+            "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000000,
             "expiryTime": 10368000000,
@@ -753,7 +767,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -762,7 +776,7 @@
             "eventId": 1,
             "sourceType": "event",
             "publisher": "android-app://com.example.abc",
-            "attributionDestination": "android-app://com.example.xyz",
+            "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 10368000000,
@@ -775,7 +789,7 @@
             "eventId": 2,
             "sourceType": "event",
             "publisher": "android-app://com.example.abc",
-            "attributionDestination": "android-app://com.example.xyz",
+            "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000000,
             "expiryTime": 10368000000,
@@ -820,11 +834,13 @@
             "randomizedTriggerRate":  0.0000125
           }
         ],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "unused",
             "sourceSite": "android-app://com.example.abc",
+            "sourceOrigin": "android-app://com.example.abc",
             "destinationSite": "android-app://com.example.xyz",
+            "destinationOrigin": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
@@ -842,7 +858,7 @@
             "eventId": 1,
             "sourceType": "event",
             "publisher": "android-app://com.example.abc",
-            "attributionDestination": "android-app://com.example.xyz",
+            "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 10368000000,
@@ -855,7 +871,7 @@
             "eventId": 2,
             "sourceType": "event",
             "publisher": "android-app://com.example.abc",
-            "attributionDestination": "android-app://com.example.xyz",
+            "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000000,
             "expiryTime": 10368000000,
@@ -886,7 +902,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -895,7 +911,7 @@
             "eventId": 1,
             "sourceType": "event",
             "publisher": "android-app://com.example.abc",
-            "attributionDestination": "android-app://com.example.xyz",
+            "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 10368000000,
@@ -908,7 +924,7 @@
             "eventId": 2,
             "sourceType": "event",
             "publisher": "android-app://com.example.abc",
-            "attributionDestination": "android-app://com.example.xyz",
+            "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000000,
             "expiryTime": 10368000000,
@@ -953,11 +969,13 @@
             "randomizedTriggerRate":  0.0000025
           }
         ],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "unused",
             "sourceSite": "android-app://com.example.abc",
+            "sourceOrigin": "android-app://com.example.abc",
             "destinationSite": "android-app://com.example.xyz",
+            "destinationOrigin": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
             "triggerTime": 9072000001,
             "registrant": "android-app://com.example.xyz"
@@ -974,8 +992,9 @@
             "id": "S1",
             "eventId": 1,
             "sourceType": "event",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "https://www.example1.com",
+            "publisherType": 1,
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -1004,7 +1023,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -1012,8 +1031,9 @@
             "id": "S1",
             "eventId": 1,
             "sourceType": "event",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "https://www.example1.com",
+            "publisherType": 1,
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -1054,11 +1074,13 @@
           "sourceType": "event",
           "randomizedTriggerRate":  0.0000025
         }],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "unused",
-            "sourceSite": "https://www.example1.com",
+            "sourceSite": "https://example1.com",
+            "sourceOrigin": "https://www.example1.com",
             "destinationSite": "android-app://com.example2.app",
+            "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
@@ -1075,8 +1097,8 @@
             "id": "S1",
             "eventId": 1,
             "sourceType": "navigation",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "android-app://com.example.abc",
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -1105,7 +1127,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -1113,8 +1135,8 @@
             "id": "S1",
             "eventId": 1,
             "sourceType": "navigation",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "android-app://com.example.abc",
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -1155,11 +1177,13 @@
           "sourceType": "navigation",
           "randomizedTriggerRate":  0.0024263
         }],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "unused",
-            "sourceSite": "https://www.example1.com",
+            "sourceSite": "android-app://com.example.abc",
+            "sourceOrigin": "android-app://com.example.abc",
             "destinationSite": "android-app://com.example2.app",
+            "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
@@ -1175,8 +1199,9 @@
           "id": "S1",
           "eventId": 1,
           "sourceType": "event",
-          "publisher": "https://www.example1.com/s1",
-          "attributionDestination": "android-app://com.example2.app/d1",
+          "publisher": "https://www.example1.com",
+          "publisherType": 1,
+          "appDestination": "android-app://com.example2.app/d1",
           "adTechDomain": "https://www.example3.com",
           "eventTime": 8640000001,
           "expiryTime": 8640000030,
@@ -1218,15 +1243,16 @@
           "registrant": "android-app://com.example.xyz"
         }],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [{
           "id": "S1",
           "eventId": 1,
           "sourceType": "event",
-          "publisher": "https://www.example1.com/s1",
-          "attributionDestination": "android-app://com.example2.app/d1",
+          "publisher": "https://www.example1.com",
+          "publisherType": 1,
+          "appDestination": "android-app://com.example2.app/d1",
           "adTechDomain": "https://www.example3.com",
           "eventTime": 8640000001,
           "expiryTime": 8640000030,
@@ -1280,10 +1306,12 @@
           "sourceType": "event",
           "randomizedTriggerRate":  0.0000025
         }],
-        "attribution_rate_limits": [{
+        "attributions": [{
           "id": "unused",
-          "sourceSite": "https://www.example1.com",
+          "sourceSite": "https://example1.com",
+          "sourceOrigin": "https://www.example1.com",
           "destinationSite": "android-app://com.example2.app",
+          "destinationOrigin": "android-app://com.example2.app",
           "adTechDomain": "https://www.example3.com",
           "triggerTime": 8640000002,
           "registrant": "android-app://com.example.xyz"
@@ -1298,8 +1326,9 @@
           "id": "S1",
           "eventId": 1,
           "sourceType": "event",
-          "publisher": "https://www.example1.com/s1",
-          "attributionDestination": "android-app://com.example2.app/d1",
+          "publisher": "https://www.example1.com",
+          "publisherType": 1,
+          "appDestination": "android-app://com.example2.app/d1",
           "adTechDomain": "https://www.example3.com",
           "eventTime": 8640000001,
           "expiryTime": 8640000030,
@@ -1341,15 +1370,16 @@
           "registrant": "android-app://com.example.xyz"
         }],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [{
           "id": "S1",
           "eventId": 1,
           "sourceType": "event",
-          "publisher": "https://www.example1.com/s1",
-          "attributionDestination": "android-app://com.example2.app/d1",
+          "publisher": "https://www.example1.com",
+          "publisherType": 1,
+          "appDestination": "android-app://com.example2.app/d1",
           "adTechDomain": "https://www.example3.com",
           "eventTime": 8640000001,
           "expiryTime": 8640000030,
@@ -1403,19 +1433,23 @@
           "sourceType": "event",
           "randomizedTriggerRate":  0.0000025
         }],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "unused1",
-            "sourceSite": "https://www.example1.com",
+            "sourceSite": "https://example1.com",
+            "sourceOrigin": "https://www.example1.com",
             "destinationSite": "android-app://com.example2.app",
+            "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           },
           {
             "id": "unused2",
-            "sourceSite": "https://www.example1.com",
+            "sourceSite": "https://example1.com",
+            "sourceOrigin": "https://www.example1.com",
             "destinationSite": "android-app://com.example2.app",
+            "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
             "triggerTime": 8640000003,
             "registrant": "android-app://com.example.xyz"
@@ -1431,8 +1465,8 @@
             "id": "S1",
             "eventId": 1,
             "sourceType": "navigation",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "android-app://com.example.abc",
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -1512,7 +1546,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -1520,8 +1554,8 @@
             "id": "S1",
             "eventId": 1,
             "sourceType": "navigation",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "android-app://com.example.abc",
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -1641,35 +1675,43 @@
             "randomizedTriggerRate":  0.0024263
           }
         ],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "unused1",
-            "sourceSite": "https://www.example1.com",
+            "sourceSite": "android-app://com.example.abc",
+            "sourceOrigin": "android-app://com.example.abc",
             "destinationSite": "android-app://com.example2.app",
+            "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           },
           {
             "id": "unused2",
-            "sourceSite": "https://www.example1.com",
+            "sourceSite": "android-app://com.example.abc",
+            "sourceOrigin": "android-app://com.example.abc",
             "destinationSite": "android-app://com.example2.app",
+            "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
             "triggerTime": 8640000003,
             "registrant": "android-app://com.example.xyz"
           },
           {
             "id": "unused3",
-            "sourceSite": "https://www.example1.com",
+            "sourceSite": "android-app://com.example.abc",
+            "sourceOrigin": "android-app://com.example.abc",
             "destinationSite": "android-app://com.example2.app",
+            "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
             "triggerTime": 8640000004,
             "registrant": "android-app://com.example.xyz"
           },
           {
             "id": "unused4",
-            "sourceSite": "https://www.example1.com",
+            "sourceSite": "android-app://com.example.abc",
+            "sourceOrigin": "android-app://com.example.abc",
             "destinationSite": "android-app://com.example2.app",
+            "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
             "triggerTime": 8640000005,
             "registrant": "android-app://com.example.xyz"
@@ -1686,8 +1728,9 @@
             "id": "S1",
             "eventId": 1,
             "sourceType": "navigation",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "https://www.example1.com",
+            "publisherType": 1,
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -1767,7 +1810,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -1775,8 +1818,9 @@
             "id": "S1",
             "eventId": 1,
             "sourceType": "navigation",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "https://www.example1.com",
+            "publisherType": 1,
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -1896,35 +1940,43 @@
             "randomizedTriggerRate":  0.0024263
           }
         ],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "unused1",
-            "sourceSite": "https://www.example1.com",
+            "sourceSite": "https://example1.com",
+            "sourceOrigin": "https://www.example1.com",
             "destinationSite": "android-app://com.example2.app",
+            "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           },
           {
             "id": "unused2",
-            "sourceSite": "https://www.example1.com",
+            "sourceSite": "https://example1.com",
+            "sourceOrigin": "https://www.example1.com",
             "destinationSite": "android-app://com.example2.app",
+            "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
             "triggerTime": 8640000003,
             "registrant": "android-app://com.example.xyz"
           },
           {
             "id": "unused3",
-            "sourceSite": "https://www.example1.com",
+            "sourceSite": "https://example1.com",
+            "sourceOrigin": "https://www.example1.com",
             "destinationSite": "android-app://com.example2.app",
+            "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
             "triggerTime": 8640000004,
             "registrant": "android-app://com.example.xyz"
           },
           {
             "id": "unused4",
-            "sourceSite": "https://www.example1.com",
+            "sourceSite": "https://example1.com",
+            "sourceOrigin": "https://www.example1.com",
             "destinationSite": "android-app://com.example2.app",
+            "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
             "triggerTime": 8640000005,
             "registrant": "android-app://com.example.xyz"
@@ -1941,8 +1993,8 @@
             "id": "S1",
             "eventId": 1,
             "sourceType": "navigation",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "https://www.example1.com",
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -1955,8 +2007,8 @@
             "id": "S2",
             "eventId": 2,
             "sourceType": "navigation",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "https://www.example1.com",
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
@@ -1986,7 +2038,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -1994,8 +2046,8 @@
             "id": "S1",
             "eventId": 1,
             "sourceType": "navigation",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "https://www.example1.com",
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -2008,8 +2060,8 @@
             "id": "S2",
             "eventId": 2,
             "sourceType": "navigation",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "https://www.example1.com",
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
@@ -2039,7 +2091,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       }
     },
     {
@@ -2051,8 +2103,8 @@
             "id": "S1",
             "eventId": 1,
             "sourceType": "navigation",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "https://www.example1.com",
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -2065,8 +2117,8 @@
             "id": "S2",
             "eventId": 2,
             "sourceType": "navigation",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "https://www.example1.com",
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
@@ -2096,7 +2148,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -2104,8 +2156,8 @@
             "id": "S1",
             "eventId": 1,
             "sourceType": "navigation",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "https://www.example1.com",
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -2118,8 +2170,8 @@
             "id": "S2",
             "eventId": 2,
             "sourceType": "navigation",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "https://www.example1.com",
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
@@ -2149,7 +2201,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       }
     },
     {
@@ -2161,8 +2213,9 @@
             "id": "S1",
             "eventId": 2,
             "sourceType": "event",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "https://www.example1.com",
+            "publisherType": 1,
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
@@ -2196,7 +2249,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -2204,8 +2257,9 @@
             "id": "S1",
             "eventId": 2,
             "sourceType": "event",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "https://www.example1.com",
+            "publisherType": 1,
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
@@ -2253,11 +2307,13 @@
             "randomizedTriggerRate": 0.0000025
           }
         ],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "unused1",
-            "sourceSite": "https://www.example1.com",
+            "sourceSite": "https://example1.com",
+            "sourceOrigin": "https://www.example1.com",
             "destinationSite": "android-app://com.example2.app",
+            "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
@@ -2274,8 +2330,9 @@
             "id": "S1",
             "eventId": 2,
             "sourceType": "navigation",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "https://www.example1.com",
+            "publisherType": 1,
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
@@ -2310,7 +2367,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -2318,8 +2375,9 @@
             "id": "S1",
             "eventId": 2,
             "sourceType": "navigation",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "https://www.example1.com",
+            "publisherType": 1,
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
@@ -2354,7 +2412,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       }
     },
     {
@@ -2366,8 +2424,8 @@
             "id": "S1",
             "eventId": 2,
             "sourceType": "event",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "android-app://com.example.abc",
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
@@ -2411,7 +2469,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -2419,8 +2477,8 @@
             "id": "S1",
             "eventId": 2,
             "sourceType": "event",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "android-app://com.example.abc",
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
@@ -2478,11 +2536,13 @@
             "randomizedTriggerRate": 0.0000025
           }
         ],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "unused1",
-            "sourceSite": "https://www.example1.com",
+            "sourceSite": "android-app://com.example.abc",
+            "sourceOrigin": "android-app://com.example.abc",
             "destinationSite": "android-app://com.example2.app",
+            "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
@@ -2499,8 +2559,8 @@
             "id": "S1",
             "eventId": 2,
             "sourceType": "event",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "android-app://com.example.abc",
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
@@ -2540,7 +2600,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -2548,8 +2608,8 @@
             "id": "S1",
             "eventId": 2,
             "sourceType": "event",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "android-app://com.example.abc",
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
@@ -2603,11 +2663,13 @@
             "randomizedTriggerRate": 0.0000025
           }
         ],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "unused1",
-            "sourceSite": "https://www.example1.com",
+            "sourceSite": "android-app://com.example.abc",
+            "sourceOrigin": "android-app://com.example.abc",
             "destinationSite": "android-app://com.example2.app",
+            "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
@@ -2624,8 +2686,9 @@
             "id": "S1",
             "eventId": 2,
             "sourceType": "event",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "https://www.example1.com",
+            "publisherType": 1,
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
@@ -2673,7 +2736,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -2681,8 +2744,9 @@
             "id": "S1",
             "eventId": 2,
             "sourceType": "event",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "https://www.example1.com",
+            "publisherType": 1,
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
@@ -2744,11 +2808,13 @@
             "randomizedTriggerRate": 0.0000025
           }
         ],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "unused1",
-            "sourceSite": "https://www.example1.com",
+            "sourceSite": "https://example1.com",
+            "sourceOrigin": "https://www.example1.com",
             "destinationSite": "android-app://com.example2.app",
+            "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
@@ -2765,8 +2831,8 @@
             "id": "S1",
             "eventId": 2,
             "sourceType": "event",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "android-app://com.example.abc",
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
@@ -2817,7 +2883,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -2825,8 +2891,8 @@
             "id": "S1",
             "eventId": 2,
             "sourceType": "event",
-            "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "publisher": "android-app://com.example.abc",
+            "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
@@ -2891,11 +2957,13 @@
             "randomizedTriggerRate": 0.0000025
           }
         ],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "unused1",
-            "sourceSite": "https://www.example1.com",
+            "sourceSite": "android-app://com.example.abc",
+            "sourceOrigin": "android-app://com.example.abc",
             "destinationSite": "android-app://com.example2.app",
+            "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"

@@ -16,7 +16,6 @@
 
 package com.android.sdksandboxcode_1;
 
-import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
 import android.content.Intent;
@@ -25,6 +24,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -33,21 +33,21 @@ import java.util.concurrent.Executor;
 
 public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
 
-    private SandboxedSdkContext mContext;
+    private static final String TAG = "SampleSandboxedSdkProvider";
 
     @Override
-    public void onLoadSdk(
-            SandboxedSdkContext context,
-            Bundle params,
-            Executor executor,
-            OnLoadSdkCallback callback) {
-        mContext = context;
+    public void onLoadSdk(Bundle params, Executor executor, OnLoadSdkCallback callback) {
         callback.onLoadSdkFinished(null);
     }
 
     @Override
-    public View getView(Context windowContext, Bundle params) {
-        return new TestView(windowContext, mContext);
+    public void beforeUnloadSdk() {
+        Log.i(TAG, "SDK unloaded");
+    }
+
+    @Override
+    public View getView(Context windowContext, Bundle params, int width, int height) {
+        return new TestView(windowContext, getContext(), width, height);
     }
 
     @Override
@@ -55,11 +55,11 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
 
     private static class TestView extends View {
 
-        private SandboxedSdkContext mSandboxedSdkContext;
+        private Context mSdkContext;
 
-        TestView(Context context, SandboxedSdkContext sandboxedSdkContext) {
-            super(context);
-            mSandboxedSdkContext = sandboxedSdkContext;
+        TestView(Context windowContext, Context sdkContext, int width, int height) {
+            super(windowContext);
+            mSdkContext = sdkContext;
         }
 
         @Override
@@ -71,11 +71,10 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
             paint.setColor(Color.WHITE);
             paint.setTextSize(50);
             Random random = new Random();
-            String message = mSandboxedSdkContext.getResources().getString(R.string.view_message);
+            String message = mSdkContext.getResources().getString(R.string.view_message);
             int c = Color.rgb(random.nextInt(256), random.nextInt(256), random.nextInt(256));
             canvas.drawColor(c);
             canvas.drawText(message, 75, 75, paint);
-
             setOnClickListener(this::onClickListener);
         }
 
@@ -88,7 +87,7 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
             visitUrl.setData(Uri.parse(url));
             visitUrl.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-            mContext.startActivity(visitUrl);
+            mSdkContext.startActivity(visitUrl);
         }
 
     }

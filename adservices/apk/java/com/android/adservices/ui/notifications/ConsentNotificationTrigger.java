@@ -16,6 +16,10 @@
 
 package com.android.adservices.ui.notifications;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__REQUESTED_NOTIFICATION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
 import static com.android.adservices.ui.notifications.ConsentNotificationFragment.IS_EU_DEVICE_ARGUMENT_KEY;
 
 import android.app.NotificationChannel;
@@ -30,10 +34,11 @@ import androidx.core.app.NotificationManagerCompat;
 
 import com.android.adservices.api.R;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.UIStats;
 
 /** Provides methods which can be used to display Privacy Sandbox consent notification. */
 public class ConsentNotificationTrigger {
-    public static final String EEA_DEVICE = "com.google.android.feature.EEA_DEVICE";
     // Random integer for NotificationCompat purposes
     private static final int NOTIFICATION_ID = 67920;
     private static final String CHANNEL_ID = "PRIVACY_SANDBOX_CHANNEL";
@@ -50,26 +55,21 @@ public class ConsentNotificationTrigger {
         Intent intent = new Intent(context, ConsentNotificationActivity.class);
         intent.putExtra(IS_EU_DEVICE_ARGUMENT_KEY, isEuDevice);
         PendingIntent pendingIntent =
-                PendingIntent.getActivity(context, 1, intent, PendingIntent.FLAG_IMMUTABLE);
+                PendingIntent.getActivity(
+                        context, 1, intent, PendingIntent.FLAG_IMMUTABLE);
         return new NotificationCompat.Builder(context, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_launcher_background)
-                .setContentTitle(
-                        isEuDevice
-                                ? context.getString(R.string.notificationUI_eu_title)
-                                : context.getString(R.string.notificationUI_non_eu_title))
-                .setContentText(
-                        isEuDevice
-                                ? context.getString(R.string.notificationUI_eu_content)
-                                : context.getString(R.string.notificationUI_non_eu_content))
-                .setStyle(
-                        new NotificationCompat.BigTextStyle()
-                                .bigText(
-                                        isEuDevice
-                                                ? context.getString(
-                                                        R.string.notificationUI_eu_content)
-                                                : context.getString(
-                                                        R.string.notificationUI_non_eu_content)))
+                .setSmallIcon(R.drawable.ic_android_icon_small)
+                .setContentTitle(isEuDevice
+                        ? context.getString(R.string.notificationUI_notification_title_eu)
+                        : context.getString(R.string.notificationUI_notification_title))
+                .setContentText(isEuDevice
+                        ? context.getString(R.string.notificationUI_notification_content_eu)
+                        : context.getString(R.string.notificationUI_notification_content))
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(isEuDevice
+                        ? context.getString(R.string.notificationUI_notification_content_eu)
+                        : context.getString(R.string.notificationUI_notification_content)))
                 .setPriority(NOTIFICATION_PRIORITY)
+                .setAutoCancel(true)
                 .setContentIntent(pendingIntent);
     }
 
@@ -79,14 +79,32 @@ public class ConsentNotificationTrigger {
      * @param context Context which is used to display {@link NotificationCompat}
      */
     public static void showConsentNotification(@NonNull Context context, boolean isEuDevice) {
+        UIStats uiStats = new UIStats.Builder()
+                .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
+                .setRegion(
+                        isEuDevice
+                                ? AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU
+                                : AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW)
+                .setAction(
+                        AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__REQUESTED_NOTIFICATION)
+                .build();
+        AdServicesLoggerImpl.getInstance().logUIStats(uiStats);
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
+
+        if (!notificationManager.areNotificationsEnabled()) {
+            ConsentManager.getInstance(context)
+                    .recordNotificationDisplayed(context.getPackageManager());
+            // TODO(b/242001860): add logging
+            return;
+        }
 
         createNotificationChannel(context);
         NotificationCompat.Builder consentNotificationBuilder =
                 getConsentNotificationBuilder(context, isEuDevice);
 
         notificationManager.notify(NOTIFICATION_ID, consentNotificationBuilder.build());
-        ConsentManager.getInstance(context).recordNotificationDisplayed();
+        ConsentManager.getInstance(context)
+                .recordNotificationDisplayed(context.getPackageManager());
     }
 
     private static void createNotificationChannel(@NonNull Context context) {

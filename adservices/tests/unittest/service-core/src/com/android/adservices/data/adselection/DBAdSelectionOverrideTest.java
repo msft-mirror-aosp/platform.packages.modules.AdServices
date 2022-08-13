@@ -25,6 +25,11 @@ public class DBAdSelectionOverrideTest {
     private static final String AD_SELECTION_CONFIG_ID = "123";
     private static final String APP_PACKAGE_NAME = "appPackageName";
     private static final String DECISION_LOGIC_JS = "function test() { return \"hello world\"; }";
+    private static final String TRUSTED_SCORING_SIGNALS =
+            "{\n"
+                    + "\t\"render_url_1\": \"signals_for_1\",\n"
+                    + "\t\"render_url_2\": \"signals_for_2\"\n"
+                    + "}";
 
     @Test
     public void testBuildDBAdSelectionOverride() {
@@ -33,11 +38,13 @@ public class DBAdSelectionOverrideTest {
                         .setAdSelectionConfigId(AD_SELECTION_CONFIG_ID)
                         .setAppPackageName(APP_PACKAGE_NAME)
                         .setDecisionLogicJS(DECISION_LOGIC_JS)
+                        .setTrustedScoringSignals(TRUSTED_SCORING_SIGNALS)
                         .build();
 
         assertEquals(dbAdSelectionOverride.getAdSelectionConfigId(), AD_SELECTION_CONFIG_ID);
         assertEquals(dbAdSelectionOverride.getAppPackageName(), APP_PACKAGE_NAME);
         assertEquals(dbAdSelectionOverride.getDecisionLogicJS(), DECISION_LOGIC_JS);
+        assertEquals(dbAdSelectionOverride.getTrustedScoringSignals(), TRUSTED_SCORING_SIGNALS);
     }
 
     @Test
@@ -48,6 +55,7 @@ public class DBAdSelectionOverrideTest {
                     DBAdSelectionOverride.builder()
                             .setAppPackageName(APP_PACKAGE_NAME)
                             .setDecisionLogicJS(DECISION_LOGIC_JS)
+                            .setTrustedScoringSignals(TRUSTED_SCORING_SIGNALS)
                             .build();
                 });
     }
@@ -60,6 +68,7 @@ public class DBAdSelectionOverrideTest {
                     DBAdSelectionOverride.builder()
                             .setAdSelectionConfigId(AD_SELECTION_CONFIG_ID)
                             .setDecisionLogicJS(DECISION_LOGIC_JS)
+                            .setTrustedScoringSignals(TRUSTED_SCORING_SIGNALS)
                             .build();
                 });
     }
@@ -74,5 +83,33 @@ public class DBAdSelectionOverrideTest {
                             .setAppPackageName(APP_PACKAGE_NAME)
                             .build();
                 });
+    }
+
+    @Test
+    public void testThrowsExceptionWithNoTrustedScoringSignals() {
+        assertThrows(
+                IllegalStateException.class,
+                () -> {
+                    DBAdSelectionOverride.builder()
+                            .setAdSelectionConfigId(AD_SELECTION_CONFIG_ID)
+                            .setAppPackageName(APP_PACKAGE_NAME)
+                            .setDecisionLogicJS(DECISION_LOGIC_JS)
+                            .build();
+                });
+    }
+
+    @Test
+    public void testDBAdSelectionOverrideCreate() {
+        DBAdSelectionOverride dbAdSelectionOverride =
+                DBAdSelectionOverride.create(
+                        AD_SELECTION_CONFIG_ID,
+                        APP_PACKAGE_NAME,
+                        DECISION_LOGIC_JS,
+                        TRUSTED_SCORING_SIGNALS);
+
+        assertEquals(AD_SELECTION_CONFIG_ID, dbAdSelectionOverride.getAdSelectionConfigId());
+        assertEquals(APP_PACKAGE_NAME, dbAdSelectionOverride.getAppPackageName());
+        assertEquals(DECISION_LOGIC_JS, dbAdSelectionOverride.getDecisionLogicJS());
+        assertEquals(TRUSTED_SCORING_SIGNALS, dbAdSelectionOverride.getTrustedScoringSignals());
     }
 }

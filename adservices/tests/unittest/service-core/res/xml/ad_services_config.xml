@@ -15,7 +15,10 @@
   ~ limitations under the License.
   -->
 <ad-services-config>
-    <attribution allowSdkToAccess="com.xyz" allowAllToAccess="false" />
-    <custom-audiences allowAllToAccess="false" allowSdkToAccess="com.abc, com.xyz" />
-    <topics allowAllToAccess="true" />
+    <includes-sdk-library name="1234567" />
+    <includes-sdk-library name="1234" />
+    <includes-sdk-library name="4567" />
+    <attribution allowAdPartnersToAccess="1234" allowAllToAccess="false" />
+    <custom-audiences allowAllToAccess="false" allowAdPartnersToAccess="1234, 4567" />
+    <topics allowAllToAccess="false" allowAdPartnersToAccess="1234567" />
 </ad-services-config>

@@ -21,11 +21,11 @@
         android:id="@+id/notification_activity"
         android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="#F2F2F2">
+        android:layout_height="match_parent" >
     <ScrollView
             android:layout_width="match_parent"
             android:layout_height="0dp"
+            android:scrollbars="vertical"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toTopOf="@id/nav_buttons"
             app:layout_constraintEnd_toEndOf="parent"
@@ -51,18 +51,12 @@
                         tools:ignore="ContentDescription" />
 
                 <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="24dp"
                         android:text="@string/notificationUI_header_title"
-                        android:textSize="36sp" />
+                        style="@style/MainStyle.H1" />
 
                 <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="20dp"
                         android:text="@string/notificationUI_header_subtitle"
-                        android:textSize="18sp" />
+                        style="@style/MainStyle.H6" />
             </LinearLayout>
 
             <LinearLayout
@@ -71,13 +65,13 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:padding="24dp"
-                    android:background="@drawable/ic_rounded_white_background"
+                    android:background="@drawable/ic_rounded_background"
                     android:orientation="vertical">
                 <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/notificationUI_container1_title"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                        android:textAppearance="@style/TextAppearance.H4"
                         android:gravity="center_vertical"
                         android:drawableStart="@drawable/ic_notification_icon_1"
                         android:drawablePadding="24dp"/>
@@ -86,7 +80,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
                         android:text="@string/notificationUI_container1_body_text"
-                        android:textSize="16sp" />
+                        android:textAppearance="@style/TextAppearance.Body1" />
             </LinearLayout>
 
             <LinearLayout
@@ -95,13 +89,13 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:padding="24dp"
-                    android:background="@drawable/ic_rounded_white_background"
+                    android:background="@drawable/ic_rounded_background"
                     android:orientation="vertical">
                 <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/notificationUI_container2_title"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                        android:textAppearance="@style/TextAppearance.H4"
                         android:gravity="center_vertical"
                         android:drawableStart="@drawable/ic_notification_icon_2"
                         android:drawablePadding="24dp"/>
@@ -110,33 +104,51 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
                         android:text="@string/notificationUI_container2_body_text"
-                        android:textSize="16sp" />
+                        android:textAppearance="@style/TextAppearance.Body1" />
                 <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
                         android:layout_marginTop="16dp"
                         android:layout_marginBottom="16dp"
-                        android:background="#E2E2E2"/>
+                        android:background="@color/divider_color" />
 
                 <TextView
                         android:id="@+id/how_it_works_expander"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:drawableEnd="@drawable/ic_expand"
-                        android:drawablePadding="24dp"
                         android:gravity="center_vertical"
                         android:text="@string/notificationUI_container2_control_text"
-                        android:textSize="16sp" />
+                        android:textAppearance="@style/TextAppearance.Body1" />
 
-                <!-- TODO(b/230372892): Change to correct text with styles and the correct component or animation to display and hide the text -->
-                <TextView
+                <LinearLayout
                         android:id="@+id/how_it_works_expanded_text"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:text="placeholder text"
-                        android:textSize="16sp"
-                        android:visibility="gone" />
+                        android:orientation="vertical"
+                        android:visibility="gone" >
+                    <TextView
+                            android:text="@string/notificationUI_how_it_works_expanded_text1"
+                            style="@style/MainStyle.H5" />
+                    <TextView
+                            android:text="@string/notificationUI_how_it_works_expanded_text2"
+                            style="@style/MainStyle.Body1" />
+                    <TextView
+                            android:text="@string/notificationUI_how_it_works_expanded_text3"
+                            style="@style/MainStyle.H5" />
+                    <TextView
+                            android:text="@string/notificationUI_how_it_works_expanded_text4"
+                            style="@style/MainStyle.Body1BoldBullet" />
+                    <TextView
+                            android:text="@string/notificationUI_how_it_works_expanded_text5"
+                            style="@style/MainStyle.Body1BulletSubtext" />
+                    <TextView
+                            style="@style/MainStyle.Body1BoldBullet"
+                            android:text="@string/notificationUI_how_it_works_expanded_text6" />
+                    <TextView
+                            android:text="@string/notificationUI_how_it_works_expanded_text7"
+                            style="@style/MainStyle.Body1BulletSubtext" />
+                </LinearLayout>
             </LinearLayout>
 
             <LinearLayout
@@ -146,13 +158,13 @@
                     android:layout_marginTop="16dp"
                     android:layout_marginBottom="22dp"
                     android:padding="24dp"
-                    android:background="@drawable/ic_rounded_white_background"
+                    android:background="@drawable/ic_rounded_background"
                     android:orientation="vertical">
                 <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/notificationUI_container3_title"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                        android:textAppearance="@style/TextAppearance.H4"
                         android:gravity="center_vertical"
                         android:drawableStart="@drawable/ic_notification_icon_3"
                         android:drawablePadding="24dp"/>
@@ -161,35 +173,43 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
                         android:text="@string/notificationUI_container3_body_text"
-                        android:textSize="16sp" />
+                        android:textAppearance="@style/TextAppearance.Body1" />
             </LinearLayout>
-
-
         </LinearLayout>
     </ScrollView>
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/nav_buttons"
             android:layout_width="match_parent"
-            android:layout_height="100dp"
+            android:layout_height="96dp"
             android:orientation="horizontal"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent">
-
+        <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/divider_color"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
         <Button
                 android:id="@+id/leftControlButton"
+                style="@style/MainStyle.NotificationPrimaryButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:text="@string/notificationUI_left_control_button_text"
-                android:textAllCaps="false" />
+                android:textAllCaps="false"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
         <Button
                 android:id="@+id/rightControlButton"
+                style="@style/MainStyle.NotificationPrimaryButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:text="@string/notificationUI_right_control_button_text"
-                android:textAllCaps="false" />
-    </LinearLayout>
+                android:textAllCaps="false"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

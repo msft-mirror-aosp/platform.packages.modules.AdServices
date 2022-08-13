@@ -24,7 +24,7 @@ import static org.junit.Assert.assertThrows;
 
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
-import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallback;
+import android.app.sdksandbox.testutils.FakeSendDataCallback;
 import android.app.usage.StorageStats;
 import android.app.usage.StorageStatsManager;
 import android.content.Context;
@@ -33,11 +33,13 @@ import android.os.Process;
 import android.os.UserHandle;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import junit.framework.AssertionFailedError;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -53,20 +55,20 @@ public class SdkSandboxStorageTestApp {
 
     private static final String BUNDLE_KEY_PHASE_NAME = "phase-name";
 
-    private static Context sContext;
-
     private static final String JAVA_FILE_PERMISSION_DENIED_MSG =
             "open failed: EACCES (Permission denied)";
     private static final String JAVA_FILE_NOT_FOUND_MSG =
             "open failed: ENOENT (No such file or directory)";
 
+    @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(TestActivity.class);
+
+    private Context mContext;
     private SdkSandboxManager mSdkSandboxManager;
 
     @Before
     public void setup() {
-        sContext = ApplicationProvider.getApplicationContext();
-        mSdkSandboxManager = sContext.getSystemService(
-                SdkSandboxManager.class);
+        mContext = ApplicationProvider.getApplicationContext();
+        mSdkSandboxManager = mContext.getSystemService(SdkSandboxManager.class);
         assertThat(mSdkSandboxManager).isNotNull();
     }
 
@@ -75,15 +77,17 @@ public class SdkSandboxStorageTestApp {
         Bundle bundle = new Bundle();
         bundle.putString(BUNDLE_KEY_PHASE_NAME, phaseName);
 
-        FakeRequestSurfacePackageCallback callback = new FakeRequestSurfacePackageCallback();
-        mSdkSandboxManager.requestSurfacePackage(
-                SDK_NAME, 0, 500, 500, bundle, Runnable::run, callback);
-        // Wait for SDK to finish handling the request
-        assertThat(callback.isRequestSurfacePackageSuccessful()).isFalse();
+        final FakeSendDataCallback callback = new FakeSendDataCallback();
+        mSdkSandboxManager.sendData(SDK_NAME, bundle, Runnable::run, callback);
+        if (!callback.isSendDataSuccessful()) {
+            throw new AssertionError(callback.getSendDataErrorMsg());
+        }
     }
 
     @Test
     public void loadSdk() throws Exception {
+        mRule.getScenario();
+
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
@@ -97,6 +101,8 @@ public class SdkSandboxStorageTestApp {
 
     @Test
     public void testSdkDataPackageDirectory_SharedStorageIsUsable() throws Exception {
+        mRule.getScenario();
+
         // First load SDK
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
@@ -108,6 +114,8 @@ public class SdkSandboxStorageTestApp {
 
     @Test
     public void testSdkDataSubDirectory_PerSdkStorageIsUsable() throws Exception {
+        mRule.getScenario();
+
         // First load SDK
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
@@ -119,6 +127,8 @@ public class SdkSandboxStorageTestApp {
 
     @Test
     public void testSdkDataIsAttributedToApp() throws Exception {
+        mRule.getScenario();
+
         // First load sdk
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);

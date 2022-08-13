@@ -24,6 +24,7 @@ import android.database.sqlite.SQLiteException;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.DbHelper;
+import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
@@ -95,7 +96,7 @@ public abstract class AbstractDbIntegrationTest {
                 areEqual(mOutput.mTriggerList, dbState.mTriggerList));
         Assert.assertTrue(
                 "Report mismatch", areEqual(mOutput.mEventReportList, dbState.mEventReportList));
-        Assert.assertTrue("AttributionRateLimit mismatch",
+        Assert.assertTrue("Attribution mismatch",
                 areEqual(mOutput.mAttrRateLimitList, dbState.mAttrRateLimitList));
         Assert.assertTrue(
                 "AggregateReport mismatch",
@@ -196,7 +197,7 @@ public abstract class AbstractDbIntegrationTest {
         db.delete(MeasurementTables.SourceContract.TABLE, null, null);
         db.delete(MeasurementTables.TriggerContract.TABLE, null, null);
         db.delete(MeasurementTables.EventReportContract.TABLE, null, null);
-        db.delete(MeasurementTables.AttributionRateLimitContract.TABLE, null, null);
+        db.delete(MeasurementTables.AttributionContract.TABLE, null, null);
         db.delete(MeasurementTables.AggregateReport.TABLE, null, null);
         db.delete(MeasurementTables.AggregateEncryptionKey.TABLE, null, null);
     }
@@ -214,7 +215,8 @@ public abstract class AbstractDbIntegrationTest {
         for (EventReport eventReport : input.mEventReportList) {
             insertToDb(eventReport, db);
         }
-        for (AttributionRateLimit attr : input.mAttrRateLimitList) {
+        for (com.android.adservices.service.measurement.Attribution attr :
+                input.mAttrRateLimitList) {
             insertToDb(attr, db);
         }
         for (AggregateReport aggregateReport : input.mAggregateReportList) {
@@ -235,8 +237,11 @@ public abstract class AbstractDbIntegrationTest {
         values.put(MeasurementTables.SourceContract.SOURCE_TYPE, source.getSourceType().toString());
         values.put(MeasurementTables.SourceContract.PUBLISHER,
                 source.getPublisher().toString());
-        values.put(MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION,
-                source.getAttributionDestination().toString());
+        values.put(MeasurementTables.SourceContract.PUBLISHER_TYPE,
+                source.getPublisherType());
+        values.put(
+                MeasurementTables.SourceContract.APP_DESTINATION,
+                source.getAppDestination().toString());
         values.put(MeasurementTables.SourceContract.AD_TECH_DOMAIN,
                 source.getAdTechDomain().toString());
         values.put(MeasurementTables.SourceContract.STATUS, source.getStatus());
@@ -267,6 +272,8 @@ public abstract class AbstractDbIntegrationTest {
         values.put(MeasurementTables.TriggerContract.ID, trigger.getId());
         values.put(MeasurementTables.TriggerContract.ATTRIBUTION_DESTINATION,
                 trigger.getAttributionDestination().toString());
+        values.put(MeasurementTables.TriggerContract.DESTINATION_TYPE,
+                trigger.getDestinationType());
         values.put(MeasurementTables.TriggerContract.AD_TECH_DOMAIN,
                 trigger.getAdTechDomain().toString());
         values.put(MeasurementTables.TriggerContract.STATUS, trigger.getStatus());
@@ -312,25 +319,28 @@ public abstract class AbstractDbIntegrationTest {
     }
 
     /**
-     * Inserts an AttributionRateLimit record into the given database.
+     * Inserts an Attribution record into the given database.
      */
-    private static void insertToDb(AttributionRateLimit attrRateLimit, SQLiteDatabase db)
+    private static void insertToDb(Attribution attribution, SQLiteDatabase db)
             throws SQLiteException {
         ContentValues values = new ContentValues();
-        values.put(MeasurementTables.AttributionRateLimitContract.ID, attrRateLimit.getId());
-        values.put(MeasurementTables.AttributionRateLimitContract.SOURCE_SITE,
-                attrRateLimit.getSourceSite());
-        values.put(MeasurementTables.AttributionRateLimitContract.DESTINATION_SITE,
-                attrRateLimit.getDestinationSite());
-        values.put(MeasurementTables.AttributionRateLimitContract.AD_TECH_DOMAIN,
-                attrRateLimit.getAdTechDomain());
-        values.put(MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME,
-                attrRateLimit.getTriggerTime());
-        values.put(MeasurementTables.AttributionRateLimitContract.REGISTRANT,
-                attrRateLimit.getRegistrant());
-        long row = db.insert(MeasurementTables.AttributionRateLimitContract.TABLE, null, values);
+        values.put(MeasurementTables.AttributionContract.ID, attribution.getId());
+        values.put(MeasurementTables.AttributionContract.SOURCE_SITE, attribution.getSourceSite());
+        values.put(
+                MeasurementTables.AttributionContract.SOURCE_ORIGIN, attribution.getSourceOrigin());
+        values.put(MeasurementTables.AttributionContract.DESTINATION_SITE,
+                attribution.getDestinationSite());
+        values.put(MeasurementTables.AttributionContract.DESTINATION_ORIGIN,
+                attribution.getDestinationOrigin());
+        values.put(MeasurementTables.AttributionContract.AD_TECH_DOMAIN,
+                attribution.getAdTechDomain());
+        values.put(MeasurementTables.AttributionContract.TRIGGER_TIME,
+                attribution.getTriggerTime());
+        values.put(MeasurementTables.AttributionContract.REGISTRANT,
+                attribution.getRegistrant());
+        long row = db.insert(MeasurementTables.AttributionContract.TABLE, null, values);
         if (row == -1) {
-            throw new SQLiteException("AttributionRateLimit insertion failed");
+            throw new SQLiteException("Attribution insertion failed");
         }
     }
 

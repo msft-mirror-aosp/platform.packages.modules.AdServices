@@ -19,7 +19,6 @@ package com.android.tests.providers.sdk1;
 import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.Topic;
-import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
 import android.os.Bundle;
@@ -43,17 +42,11 @@ public class Sdk1 extends SandboxedSdkProvider {
     private static final ImmutableSet<Integer> TOPIC_ID_SET =
             ImmutableSet.of(20, 183, 96, 6, 13, 286, 112, 194, 242, 17);
 
-    private Context mContext;
     private Executor mExecutor;
     private OnLoadSdkCallback mCallback;
 
     @Override
-    public void onLoadSdk(
-            SandboxedSdkContext context,
-            Bundle params,
-            Executor executor,
-            OnLoadSdkCallback callback) {
-        mContext = context;
+    public void onLoadSdk(Bundle params, Executor executor, OnLoadSdkCallback callback) {
         mExecutor = executor;
         mCallback = callback;
         executeTest();
@@ -125,7 +118,7 @@ public class Sdk1 extends SandboxedSdkProvider {
     }
 
     @Override
-    public View getView(Context windowContext, Bundle params) {
+    public View getView(Context windowContext, Bundle params, int width, int height) {
         return null;
     }
 
@@ -135,7 +128,7 @@ public class Sdk1 extends SandboxedSdkProvider {
     private GetTopicsResponse callTopicsApi() throws Exception {
         AdvertisingTopicsClient advertisingTopicsClient =
                 new AdvertisingTopicsClient.Builder()
-                        .setContext(mContext)
+                        .setContext(getContext())
                         .setExecutor(CALLBACK_EXECUTOR)
                         .build();
 

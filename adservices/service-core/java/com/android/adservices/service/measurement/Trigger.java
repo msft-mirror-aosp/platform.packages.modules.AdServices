@@ -24,7 +24,7 @@ import android.net.Uri;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
-import com.android.adservices.service.measurement.validation.Validation;
+import com.android.adservices.service.measurement.util.Validation;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -50,6 +50,7 @@ public class Trigger {
 
     private String mId;
     private Uri mAttributionDestination;
+    @EventSurfaceType private int mDestinationType;
     private Uri mAdTechDomain;
     private long mTriggerTime;
     private String mEventTriggers;
@@ -59,6 +60,7 @@ public class Trigger {
     private String mAggregateValues;
     private AggregatableAttributionTrigger mAggregatableAttributionTrigger;
     private String mFilters;
+    private @Nullable Long mDebugKey;
 
     @IntDef(value = {
             Status.PENDING,
@@ -67,13 +69,15 @@ public class Trigger {
     })
     @Retention(RetentionPolicy.SOURCE)
     public @interface Status {
-
         int PENDING = 0;
         int IGNORED = 1;
         int ATTRIBUTED = 2;
     }
+
     private Trigger() {
         mStatus = Status.PENDING;
+        // Making this default explicit since it anyway occur on an uninitialised int field.
+        mDestinationType = EventSurfaceType.APP;
     }
 
     @Override
@@ -84,8 +88,10 @@ public class Trigger {
         Trigger trigger = (Trigger) obj;
         return Objects.equals(mId, trigger.getId())
                 && Objects.equals(mAttributionDestination, trigger.mAttributionDestination)
+                && mDestinationType == trigger.mDestinationType
                 && Objects.equals(mAdTechDomain, trigger.mAdTechDomain)
                 && mTriggerTime == trigger.mTriggerTime
+                && Objects.equals(mDebugKey, trigger.mDebugKey)
                 && Objects.equals(mEventTriggers, trigger.mEventTriggers)
                 && mStatus == trigger.mStatus
                 && Objects.equals(mRegistrant, trigger.mRegistrant)
@@ -101,6 +107,7 @@ public class Trigger {
         return Objects.hash(
                 mId,
                 mAttributionDestination,
+                mDestinationType,
                 mAdTechDomain,
                 mTriggerTime,
                 mEventTriggers,
@@ -108,7 +115,8 @@ public class Trigger {
                 mAggregateTriggerData,
                 mAggregateValues,
                 mAggregatableAttributionTrigger,
-                mFilters);
+                mFilters,
+                mDebugKey);
     }
 
     /**
@@ -123,6 +131,12 @@ public class Trigger {
      */
     public Uri getAttributionDestination() {
         return mAttributionDestination;
+    }
+
+    /** Destination type of the {@link Trigger}. */
+    @EventSurfaceType
+    public int getDestinationType() {
+        return mDestinationType;
     }
 
     /**
@@ -225,6 +239,10 @@ public class Trigger {
         return mFilters;
     }
 
+    /** Debug key of {@link Trigger}. */
+    public @Nullable Long getDebugKey() {
+        return mDebugKey;
+    }
     /**
      * Generates AggregatableAttributionTrigger from aggregate trigger data string and aggregate
      * values string in Trigger.
@@ -344,10 +362,6 @@ public class Trigger {
             mBuilding = new Trigger();
         }
 
-        public Builder(Trigger trigger) {
-            mBuilding = trigger;
-        }
-
         /** See {@link Trigger#getId()}. */
         @NonNull
         public Builder setId(String id) {
@@ -360,6 +374,13 @@ public class Trigger {
         public Builder setAttributionDestination(Uri attributionDestination) {
             Validation.validateUri(attributionDestination);
             mBuilding.mAttributionDestination = attributionDestination;
+            return this;
+        }
+
+        /** See {@link Trigger#getDestinationType()}. */
+        @NonNull
+        public Builder setDestinationType(@EventSurfaceType int destinationType) {
+            mBuilding.mDestinationType = destinationType;
             return this;
         }
 
@@ -419,6 +440,12 @@ public class Trigger {
         @NonNull
         public Builder setFilters(@Nullable String filters) {
             mBuilding.mFilters = filters;
+            return this;
+        }
+
+        /** See {@link Trigger#getDebugKey()} ()} */
+        public Builder setDebugKey(@Nullable Long debugKey) {
+            mBuilding.mDebugKey = debugKey;
             return this;
         }
 

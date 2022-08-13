@@ -18,11 +18,18 @@ package android.adservices.topics;
 import java.util.Objects;
 
 /** Represent the topic result from the getTopics API. */
-public class Topic {
+public final class Topic {
     private final long mTaxonomyVersion;
     private final long mModelVersion;
     private final int mTopicId;
 
+    /**
+     * Creates an object which represents the result from the getTopics API.
+     *
+     * @param mTaxonomyVersion a long representing the version of the taxonomy.
+     * @param mModelVersion a long representing the version of the model.
+     * @param mTopicId an integer representing the unique id of a topic.
+     */
     public Topic(long mTaxonomyVersion, long mModelVersion, int mTopicId) {
         this.mTaxonomyVersion = mTaxonomyVersion;
         this.mModelVersion = mModelVersion;
@@ -39,7 +46,7 @@ public class Topic {
         return mTaxonomyVersion;
     }
 
-    /** Get the Topic Id. */
+    /** Get the Topic ID. */
     public int getTopicId() {
         return mTopicId;
     }
@@ -47,17 +54,16 @@ public class Topic {
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
-        if (object == null || !(object instanceof Topic)) return false;
-        if (!super.equals(object)) return false;
+        if (!(object instanceof Topic)) return false;
         Topic topic = (Topic) object;
-        return mTaxonomyVersion == topic.mTaxonomyVersion
-                && mModelVersion == topic.mModelVersion
-                && mTopicId == topic.mTopicId;
+        return getTaxonomyVersion() == topic.getTaxonomyVersion()
+                && getModelVersion() == topic.getModelVersion()
+                && getTopicId() == topic.getTopicId();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), mTaxonomyVersion, mModelVersion, mTopicId);
+        return Objects.hash(getTaxonomyVersion(), getModelVersion(), getTopicId());
     }
 
     @Override

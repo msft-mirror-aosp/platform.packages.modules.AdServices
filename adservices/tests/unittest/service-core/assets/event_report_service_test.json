@@ -5,12 +5,12 @@
       "input": {
         "sources": [],
         "triggers": [],
-        "attribution_rate_limits": [],
+        "attributions": [],
         "event_reports": [
           {
             "id": "ER1",
             "sourceId": 1,
-            "attributionDestination": "https://www.example2.com/d1",
+            "attributionDestination": "android-app://com.example2/d1",
             "adTechDomain": "https://www.example3.com",
             "triggerData": 2,
             "triggerTime": 8640000002,
@@ -25,12 +25,12 @@
       "output": {
         "sources": [],
         "triggers": [],
-        "attribution_rate_limits": [],
+        "attributions": [],
         "event_reports": [
           {
             "id": "ER1",
             "sourceId": 1,
-            "attributionDestination": "https://www.example2.com/d1",
+            "attributionDestination": "android-app://com.example2/d1",
             "adTechDomain": "https://www.example3.com",
             "triggerData": 2,
             "triggerTime": 8640000002,
@@ -45,7 +45,7 @@
       "param": {
         "responseCode": 200,
         "action": "SINGLE_REPORT",
-        "result": "SUCCESS",
+        "result": 0,
         "id": "ER1"
       }
     },
@@ -54,12 +54,12 @@
       "input": {
         "sources": [],
         "triggers": [],
-        "attribution_rate_limits": [],
+        "attributions": [],
         "event_reports": [
           {
             "id": "ER1",
             "sourceId": 1,
-            "attributionDestination": "https://www.example2.com/d1",
+            "attributionDestination": "android-app://com.example2/d1",
             "adTechDomain": "https://www.example3.com",
             "triggerData": 2,
             "triggerTime": 8640000002,
@@ -74,12 +74,12 @@
       "output": {
         "sources": [],
         "triggers": [],
-        "attribution_rate_limits": [],
+        "attributions": [],
         "event_reports": [
           {
             "id": "ER1",
             "sourceId": 1,
-            "attributionDestination": "https://www.example2.com/d1",
+            "attributionDestination": "android-app://com.example2/d1",
             "adTechDomain": "https://www.example3.com",
             "triggerData": 2,
             "triggerTime": 8640000002,
@@ -94,7 +94,7 @@
       "param": {
         "responseCode": 400,
         "action": "SINGLE_REPORT",
-        "result": "POST_REQUEST_ERROR",
+        "result": 4,
         "id": "ER1"
       }
     },
@@ -103,12 +103,12 @@
       "input": {
         "sources": [],
         "triggers": [],
-        "attribution_rate_limits": [],
+        "attributions": [],
         "event_reports": [
           {
             "id": "ER1",
             "sourceId": 1,
-            "attributionDestination": "https://www.example2.com/d1",
+            "attributionDestination": "android-app://com.example2/d1",
             "adTechDomain": "https://www.example3.com",
             "triggerData": 2,
             "triggerTime": 8640000002,
@@ -123,12 +123,12 @@
       "output": {
         "sources": [],
         "triggers": [],
-        "attribution_rate_limits": [],
+        "attributions": [],
         "event_reports": [
           {
             "id": "ER1",
             "sourceId": 1,
-            "attributionDestination": "https://www.example2.com/d1",
+            "attributionDestination": "android-app://com.example2/d1",
             "adTechDomain": "https://www.example3.com",
             "triggerData": 2,
             "triggerTime": 8640000002,
@@ -143,7 +143,7 @@
       "param": {
         "responseCode": 200,
         "action": "SINGLE_REPORT",
-        "result": "ALREADY_DELIVERED",
+        "result": 2,
         "id": "ER1"
       }
     },
@@ -156,7 +156,7 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "https://www.example2.com/d1",
+            "appDestination": "android-app://com.example2/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -169,7 +169,7 @@
             "eventId": 2,
             "sourceType": "navigation",
             "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "https://www.example2.com/d1",
+            "appDestination": "android-app://com.example2/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -182,7 +182,7 @@
             "eventId": 3,
             "sourceType": "navigation",
             "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "https://www.example2.com/d1",
+            "appDestination": "android-app://com.example2/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -192,12 +192,12 @@
           }
         ],
         "triggers": [],
-        "attribution_rate_limits": [],
+        "attributions": [],
         "event_reports": [
           {
             "id": "ER1",
             "sourceId": 1,
-            "attributionDestination": "https://www.example2.com/d1",
+            "attributionDestination": "android-app://com.example2/d1",
             "adTechDomain": "https://www.example3.com",
             "triggerData": 2,
             "triggerTime": 8640000002,
@@ -210,7 +210,7 @@
           {
             "id": "ER2",
             "sourceId": 2,
-            "attributionDestination": "https://www.example2.com/d1",
+            "attributionDestination": "android-app://com.example2/d1",
             "adTechDomain": "https://www.example3.com",
             "triggerData": 2,
             "triggerTime": 8640000002,
@@ -223,7 +223,7 @@
           {
             "id": "ER3",
             "sourceId": 3,
-            "attributionDestination": "https://www.example2.com/d1",
+            "attributionDestination": "android-app://com.example2/d1",
             "adTechDomain": "https://www.example3.com",
             "triggerData": 2,
             "triggerTime": 8640000002,
@@ -242,7 +242,7 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "https://www.example2.com/d1",
+            "appDestination": "android-app://com.example2/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -255,7 +255,7 @@
             "eventId": 2,
             "sourceType": "navigation",
             "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "https://www.example2.com/d1",
+            "appDestination": "android-app://com.example2/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -268,7 +268,7 @@
             "eventId": 3,
             "sourceType": "navigation",
             "publisher": "https://www.example1.com/s1",
-            "attributionDestination": "https://www.example2.com/d1",
+            "appDestination": "android-app://com.example2/d1",
             "adTechDomain": "https://www.example3.com",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -278,12 +278,12 @@
           }
         ],
         "triggers": [],
-        "attribution_rate_limits": [],
+        "attributions": [],
         "event_reports": [
           {
             "id": "ER1",
             "sourceId": 1,
-            "attributionDestination": "https://www.example2.com/d1",
+            "attributionDestination": "android-app://com.example2/d1",
             "adTechDomain": "https://www.example3.com",
             "triggerData": 2,
             "triggerTime": 8640000002,
@@ -296,7 +296,7 @@
           {
             "id": "ER2",
             "sourceId": 2,
-            "attributionDestination": "https://www.example2.com/d1",
+            "attributionDestination": "android-app://com.example2/d1",
             "adTechDomain": "https://www.example3.com",
             "triggerData": 2,
             "triggerTime": 8640000002,
@@ -309,7 +309,7 @@
           {
             "id": "ER3",
             "sourceId": 3,
-            "attributionDestination": "https://www.example2.com/d1",
+            "attributionDestination": "android-app://com.example2/d1",
             "adTechDomain": "https://www.example3.com",
             "triggerData": 2,
             "triggerTime": 8640000002,
@@ -332,12 +332,12 @@
       "input":{
         "sources": [],
         "triggers": [],
-        "attribution_rate_limits": [],
+        "attributions": [],
         "event_reports": [
           {
             "id": "ER1",
             "sourceId": 1,
-            "attributionDestination": "https://www.example2.com/d1",
+            "attributionDestination": "android-app://com.example2/d1",
             "adTechDomain": "https://www.example3.com",
             "triggerData": 2,
             "triggerTime": 8640000002,
@@ -350,7 +350,7 @@
           {
             "id": "ER2",
             "sourceId": 2,
-            "attributionDestination": "https://www.example2.com/d1",
+            "attributionDestination": "android-app://com.example2/d1",
             "adTechDomain": "https://www.example3.com",
             "triggerData": 2,
             "triggerTime": 8440000002,
@@ -365,12 +365,12 @@
       "output":{
         "sources": [],
         "triggers": [],
-        "attribution_rate_limits": [],
+        "attributions": [],
         "event_reports": [
           {
             "id": "ER1",
             "sourceId": 1,
-            "attributionDestination": "https://www.example2.com/d1",
+            "attributionDestination": "android-app://com.example2/d1",
             "adTechDomain": "https://www.example3.com",
             "triggerData": 2,
             "triggerTime": 8640000002,
@@ -383,7 +383,7 @@
           {
             "id": "ER2",
             "sourceId": 2,
-            "attributionDestination": "https://www.example2.com/d1",
+            "attributionDestination": "android-app://com.example2/d1",
             "adTechDomain": "https://www.example3.com",
             "triggerData": 2,
             "triggerTime": 8440000002,
@@ -407,12 +407,12 @@
       "input":{
         "sources": [],
         "triggers": [],
-        "attribution_rate_limits": [],
+        "attributions": [],
         "event_reports": [
           {
             "id": "ER1",
             "sourceId": 1,
-            "attributionDestination": "https://www.example2.com/d1",
+            "attributionDestination": "android-app://com.example2/d1",
             "adTechDomain": "https://www.example3.com",
             "triggerData": 2,
             "triggerTime": 8640000002,
@@ -425,7 +425,7 @@
           {
             "id": "ER2",
             "sourceId": 2,
-            "attributionDestination": "https://www.example2.com/d1",
+            "attributionDestination": "android-app://com.example2/d1",
             "adTechDomain": "https://www.example3.com",
             "triggerData": 2,
             "triggerTime": 8440000002,
@@ -438,7 +438,7 @@
           {
             "id": "ER3",
             "sourceId": 3,
-            "attributionDestination": "https://www.example2.com/d1",
+            "attributionDestination": "android-app://com.example2/d1",
             "adTechDomain": "https://www.example3.com",
             "triggerData": 2,
             "triggerTime": 8240000002,
@@ -453,12 +453,12 @@
       "output":{
         "sources": [],
         "triggers": [],
-        "attribution_rate_limits": [],
+        "attributions": [],
         "event_reports": [
           {
             "id": "ER1",
             "sourceId": 1,
-            "attributionDestination": "https://www.example2.com/d1",
+            "attributionDestination": "android-app://com.example2/d1",
             "adTechDomain": "https://www.example3.com",
             "triggerData": 2,
             "triggerTime": 8640000002,
@@ -471,7 +471,7 @@
           {
             "id": "ER2",
             "sourceId": 2,
-            "attributionDestination": "https://www.example2.com/d1",
+            "attributionDestination": "android-app://com.example2/d1",
             "adTechDomain": "https://www.example3.com",
             "triggerData": 2,
             "triggerTime": 8440000002,
@@ -484,7 +484,7 @@
           {
             "id": "ER2",
             "sourceId": 3,
-            "attributionDestination": "https://www.example2.com/d1",
+            "attributionDestination": "android-app://com.example2/d1",
             "adTechDomain": "https://www.example3.com",
             "triggerData": 2,
             "triggerTime": 8240000002,

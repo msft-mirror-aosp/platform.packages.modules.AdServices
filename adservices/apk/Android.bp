@@ -49,10 +49,14 @@ android_app {
         "androidx.recyclerview_recyclerview",
         // TODO(b/230653497): Try to remove this.
         "androidx.room_room-runtime",
+        "mobile_data_downloader_lib",
         "tflite_support_classifiers_java",
         "SettingsLibActionBarShadow",
         "SettingsLibSettingsTheme",
+        "SettingsLibCollapsingToolbarBaseActivity",
+        "SettingsLibMainSwitchPreference",
     ],
+    jarjar_rules: "jarjar_rules.txt",
     resource_dirs: ["res"],
     aaptflags: [
         // Don't compress *.tflite files. Compressed models cannot be loaded on device.

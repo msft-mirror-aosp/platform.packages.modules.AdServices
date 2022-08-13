@@ -18,14 +18,15 @@ package android.app.sdksandbox.testutils;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import android.app.sdksandbox.SdkSandboxManager.RequestSurfacePackageCallback;
+import android.app.sdksandbox.RequestSurfacePackageException;
 import android.os.Bundle;
-import android.view.SurfaceControlViewHost;
+import android.os.OutcomeReceiver;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-public class FakeRequestSurfacePackageCallback implements RequestSurfacePackageCallback {
+public class FakeRequestSurfacePackageCallback
+        implements OutcomeReceiver<Bundle, RequestSurfacePackageException> {
     private CountDownLatch mSurfacePackageLatch = new CountDownLatch(1);
 
     private boolean mSurfacePackageSuccess;
@@ -34,18 +35,15 @@ public class FakeRequestSurfacePackageCallback implements RequestSurfacePackageC
     private String mErrorMsg;
 
     @Override
-    public void onSurfacePackageError(int errorCode, String errorMsg) {
+    public void onError(RequestSurfacePackageException exception) {
         mSurfacePackageSuccess = false;
-        mErrorCode = errorCode;
-        mErrorMsg = errorMsg;
+        mErrorCode = exception.getRequestSurfacePackageErrorCode();
+        mErrorMsg = exception.getMessage();
         mSurfacePackageLatch.countDown();
     }
 
     @Override
-    public void onSurfacePackageReady(
-            SurfaceControlViewHost.SurfacePackage surfacePackage,
-            int surfacePackageId,
-            Bundle params) {
+    public void onResult(Bundle response) {
         mSurfacePackageSuccess = true;
         mSurfacePackageLatch.countDown();
     }

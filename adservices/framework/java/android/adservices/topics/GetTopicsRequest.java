@@ -21,16 +21,17 @@ import android.annotation.NonNull;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 
-/**
- * Get Topics Request.
- */
-public class GetTopicsRequest {
+/** Get Topics Request. */
+public final class GetTopicsRequest {
+    /** Context of the application/sandbox which send out the request to getTopics API. */
     private final Context mContext;
-    private final String mSdkName;
 
-    private GetTopicsRequest(@NonNull Context context, @NonNull String sdkName) {
+    /** Name of Ads SDK that is involved in this request. */
+    private final String mAdsSdkName;
+
+    private GetTopicsRequest(@NonNull Context context, @NonNull String adsSdkName) {
         mContext = context;
-        mSdkName = sdkName;
+        mAdsSdkName = adsSdkName;
     }
 
     /** Get the Context. */
@@ -39,12 +40,10 @@ public class GetTopicsRequest {
         return mContext;
     }
 
-    /**
-     * Get the Sdk Name.
-     */
+    /** Get the Sdk Name. */
     @NonNull
-    public String getSdkName() {
-        return mSdkName;
+    public String getAdsSdkName() {
+        return mAdsSdkName;
     }
 
     /**
@@ -54,6 +53,12 @@ public class GetTopicsRequest {
         private final Context mContext;
         private String mSdkName;
 
+        /**
+         * Creates a {@link Builder} object using provided {@link Context}.
+         *
+         * @param context {@link Context} of the application/sandbox which send out the request to
+         *     getTopics API.
+         */
         public Builder(@NonNull Context context) {
             mContext = context;
         }
@@ -61,10 +66,8 @@ public class GetTopicsRequest {
         /**
          * Set the Sdk Name. When the app calls the Topics API directly without using a SDK, don't
          * set this field.
-         * <p> Currently we allow callers to specify the SdkName. In the future releases we will
-         * probably have a way to get the SdkName internally.
          */
-        public @NonNull Builder setSdkName(@NonNull String sdkName) {
+        public @NonNull Builder setAdsSdkName(@NonNull String sdkName) {
             mSdkName = sdkName;
             return this;
         }

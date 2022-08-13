@@ -27,6 +27,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.AdServicesConfig;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.SystemHealthParams;
 
 import java.util.concurrent.Executor;
@@ -47,6 +48,11 @@ public final class EventFallbackReportingJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
+        if (FlagsFactory.getFlags().getMeasurementJobEventFallbackReportingKillSwitch()) {
+            LogUtil.e("Event Fallback Reporting Job is disabled");
+            return false;
+        }
+
         sBlockingExecutor.execute(() -> {
             boolean success = new EventReportingJobHandler(
                     DatastoreManagerFactory.getDatastoreManager(
@@ -60,7 +66,7 @@ public final class EventFallbackReportingJobService extends JobService {
             jobFinished(params, !success);
         });
         LogUtil.d("FallbackReportingJobService.onStartJob");
-        return false;
+        return true;
     }
 
     @Override

@@ -22,6 +22,10 @@ import android.database.sqlite.SQLiteDatabase;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.google.common.collect.ImmutableSet;
+
+import java.util.Set;
+
 public final class DbTestUtil {
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final String DATABASE_NAME_FOR_TEST = "adservices_test.db";
@@ -57,14 +61,29 @@ public final class DbTestUtil {
     /** Return true if table exists in the DB and column count matches. */
     public static boolean doesTableExistAndColumnCountMatch(
             SQLiteDatabase db, String tableName, int columnCount) {
+        final Set<String> tableColumns = getTableColumns(db, tableName);
+        return tableColumns.size() == columnCount;
+    }
+
+    /** Returns column names of the table. */
+    public static Set<String> getTableColumns(SQLiteDatabase db, String tableName) {
         String query =
-                "select s.tbl_name, p.name from sqlite_master s "
+                "select p.name from sqlite_master s "
                         + "join pragma_table_info(s.name) p "
                         + "where s.tbl_name = '"
                         + tableName
                         + "'";
         Cursor cursor = db.rawQuery(query, null);
-        return cursor != null && cursor.getCount() == columnCount;
+        if (cursor == null) {
+            throw new IllegalArgumentException("Cursor is null.");
+        }
+
+        ImmutableSet.Builder<String> tableColumns = ImmutableSet.builder();
+        while (cursor.moveToNext()) {
+            tableColumns.add(cursor.getString(0));
+        }
+
+        return tableColumns.build();
     }
 
     /** Return true if the given index exists in the DB. */

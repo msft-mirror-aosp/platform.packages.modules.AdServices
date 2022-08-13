@@ -22,6 +22,10 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="1644434244130657749">"AdServices Attribution API වෙත ප්‍රවේශ වීමට යෙදුමකට ඉඩ දෙයි."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="2766614780488510189">"AdServices Custom Audience API වෙත ප්‍රවේශ වන්න"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"AdServices Custom Audience API වෙත ප්‍රවේශ වීමට යෙදුමකට ඉඩ දෙයි."</string>
+    <!-- no translation found for permlab_accessAdServicesAdId (2754825914769538156) -->
+    <skip />
+    <!-- no translation found for permdesc_accessAdServicesAdId (7717770480967762044) -->
+    <skip />
     <string name="permlab_accessAdServicesConsent" msgid="3203633397142568707">"AdServices Consent API වෙත ප්‍රවේශ වන්න"</string>
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"AdServices Consent API වෙත ප්‍රවේශ වීමට යෙදුමකට ඉඩ දෙයි."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID API වෙත ප්‍රවේශ වන්න"</string>
@@ -30,18 +34,516 @@
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"App Set ID API වෙත ප්‍රවේශ වීමට යෙදුමකට ඉඩ දෙයි."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service API වෙත ප්‍රවේශ වන්න"</string>
     <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"Consent Service API වෙත ප්‍රවේශ වීමට යෙදුමකට ඉඩ දෙයි."</string>
+    <string name="app_label" msgid="5985320129629013968">"Android පද්ධතිය"</string>
     <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"රහස්‍යතා සෑන්ඩ්බොක්ස් බීටා"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"රහස්‍යතා සෑන්ඩ්බොක්ස් බීටා"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"රහස්‍යතා සෑන්ඩ්බොක්ස් බීටා ටොගල කරන්න"</string>
-    <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
-    <string name="settingsUI_topics_title" msgid="4024683469932819788">"ඔබගේ සාමාන්‍ය ලැදිකම්"</string>
-    <string name="settingsUI_topics_summary" msgid="3146101472984434355">"ඔබගේ සාමාන්‍ය ලැදිකම් කළමනාකරණය කරන්න"</string>
+    <string name="settingsUI_main_view_title" msgid="255982490790282252">"Android හි දැන්වීම් පෞද්ගලිකත්ව බීටා"</string>
+    <string name="settingsUI_main_view_subtitle" msgid="3380585883687237827">"යෙදුම් අතර හඹා යෑම සීමා කරන නව පෞද්ගලිකත්ව වැලි පෙට්ටිය පරීක්‍ෂා කරන්න"</string>
+    <string name="settingsUI_main_view_info_text1" msgid="8353580266621706164">"පෞද්ගලිකත්ව වැලිපෙට්ටිය ක්‍රියා කරන ආකාරය"</string>
+    <string name="settingsUI_main_view_info_text2" msgid="5144888171043725329">"ඔබ කැමති විය හැකි දැන්වීම් පෙන්වීමට පෞද්ගලිකත්ව වැලි පෙට්ටිය තුළ දත්ත රැස් කෙරෙන නමුත් එය බෙදා ගනු ලබන්නේ ඔබව හෝ ඔබේ උපාංගය හඳුනා නොගෙන ය."</string>
+    <string name="settingsUI_main_view_info_text3" msgid="9106658161862318732">"පෞද්ගලිකත්ව වැලි පෙට්ටිය තුළ ගබඩා කෙරන දත්ත වර්ගය කුමක්ද?"</string>
+    <string name="settingsUI_main_view_info_text4" msgid="5819359066240454954">"•  සාමාන්‍ය ලැදිකම්"</string>
+    <string name="settingsUI_main_view_info_text5" msgid="6064832868440367397">"Android ඔබ භාවිත කරන යෙදුම්වලට අනුව මෙම දත්ත උත්පාදන කර එය පෞද්ගලිකත්ව වැලි පෙට්ටිය වෙත එක් කරයි. උදාහරණය වශයෙන්, ඔබේ සාමාන්‍ය ලැදිකම්වලින් එකක් “ක්‍රීඩා” වීමට ඉඩ ඇත. \n\nඔබට ඔබේ පෞද්ගලිකත්ව සැකසීම් තුළ ඔබේ ලැදිකම්වල ලැයිස්තුවක් බැලීමටත් ඔබ අකමැති කිසිවක් මකා දැමීමටත් හැකිය."</string>
+    <string name="settingsUI_main_view_info_text6" msgid="3406976290919982143">"•  නිශ්චිත ලැදිකම්"</string>
+    <string name="settingsUI_main_view_info_text7" msgid="210269084665708892">"ඔබේ යෙදුම් ඔබ ඒවා භාවිත කරන ආකාරය අනුව මෙම දත්ත උත්පාදන කරන අතර පෞද්ගලිකත්ව වැලි පෙට්ටිය වෙත එය එක් කළ හැක. උදාහරණය වශයෙන්, ඔබ දිවීමේ සපත්තු සඳහා සාප්පු යෑමට භාවිත කළ යෙදුමක් ක්‍රීඩාව_දිවීම යන ලේබලය එක් කළ හැක.\n\nඔබේ පෞද්ගලිකත්ව සැකසීම් තුළ, ඔබට මෙය කරන යෙදුම්වල ලැයිස්තුව බලා ඕනෑම යෙදුමක් පෞද්ගලිකත්ව වැලි පෙට්ටියට දත්ත දායක කිරීම අවහිර කළ හැක."</string>
+    <string name="settingsUI_topics_view_title" msgid="7437641813424176118">"ලැදිකම් කළමනා කරන්න"</string>
+    <string name="settingsUI_topics_view_subtitle" msgid="5347912133908026725">"Android හි පෞද්ගලිකත්ව වැලි පෙට්ටිය යෙදුම්වලට ඔබට ඔබ කැමති විය හැකි දැන්වීම් පෙන්වීමට ඉඩ දෙන අතරතුර යෙදුම් අතරින් හඹා යෑම සීමා කරයි. Android දත්ත ඔබව හෝ ඔබේ උපාංගය නොහඳුන්වා දැන්වීම්කරුවන් සමග බෙදා ගනියි.\n\nඔබ භාවිත කරන යෙදුම්වලට අනුව, Android ඔබේ සාමාන්‍ය ලැදිකම්වල මෙම ලැයිස්තුව උත්පාදන කර යාවත්කාලීන කරයි. ඔබ ලැදිකමක් අවහිර කරන්නේ නම්, ඔබ එය අවහිර නොකරන්නේ නම් මිස එය නැවත ලැයිස්තුවට එක් කරනු නොලැබේ. ඔබ තවමත් යම් අදාළ දැන්වීම් දැකිය හැක."</string>
+    <string name="settingsUI_topics_view_info_text1" msgid="6729245512525985403">"සාමාන්‍ය දැන්වීම් ලැදිකම්"</string>
+    <string name="settingsUI_topics_view_info_text2" msgid="8355913397424818046">"Android ඔබ භාවිත කරන යෙදුම්වලට අනුව මෙම ලැදිකම් උත්පාදන කරයි.\n\nඋදාහරණය වශයෙන්, ඔබට ඔබේ උපාංගය මත ක්‍රීඩා යෙදුම් කිහිපයක් තිබෙබ් නම්, Android විසින් “ක්‍රීඩා” යන ලැදිකම වැලි පෙට්ටියට එක් කරනු ලැබිය හැක.\n\nපසුව, මෙම දත්ත ඔබව හෝ ඔබේ උපාංගය නොහඳුන්වා දැන්වීම්කරුවන් සමග බෙදා ගැනේ."</string>
     <string name="settingsUI_apps_key" msgid="5279102708260885695">"apps_preference"</string>
     <string name="settingsUI_apps_title" msgid="2177966577556486280">"විශේෂිත ලැදිකම් ජනනය කරන ඔබගේ යෙදුම්"</string>
     <string name="settingsUI_apps_summary" msgid="2382082513059909726">"විශේෂිත ලැදිකම් ජනනය කරන ඔබගේ යෙදුම් කළමනාකරණය කරන්න"</string>
+    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"ඔබ අවහිර කර ඇති යෙදුම්"</string>
+    <string name="settingsUI_apps_view_title" msgid="3615627092403761282">"යෙදුම් කළමනාකරණය කරන්න"</string>
+    <string name="settingsUI_apps_view_subtitle" msgid="5257332567222983503">"ඔබ ඒවා භාවිත කරන ආකාරයට අනුව, සමහර යෙදුම් පෞද්ගලිකත්ව වැලි පෙට්ටිය සඳහා ඔබේ නිශ්චිත දැන්වීම් අභිරුචි ගැන දත්ත නිපදවයි. ඔබට එය බැලීමට හෝ සංස්කරණ කිරීමට හැකි වන පරිදි, Android මෙම ලැයිස්තුව යාවත්කාලීන කරයි.\n\nඔබ යෙදුමක් අවහිර කරන්නේ නම්, එය තව නිශ්චිත අභිරුචි කිසිවක් එක් නොකරයි. ඔබ එය අවහිර නොකරන්නේ නම් මිස එය නැවත මෙම ලැයිස්තුවට එක් කරනු නොලැබේ. දැනටමත් යෙදුමෙන් නිපදවන ලද ලැදිකම් මකනු ලැබේ, නමුත් ඔබ තවමත් සමහර අදාළ දැන්වීම් දැකිය හැක."</string>
+    <string name="settingsUI_apps_view_no_apps_text" msgid="1056905761942948495">"දැන් පෙන්වීමට යෙදුම් නැත"</string>
+    <string name="settingsUI_reset_apps_title" msgid="3308597019425923552">"යෙදුම් මගින් උත්පාදනය කරන ලද දත්ත යළි පිහිටුවන්න"</string>
+    <string name="settingsUI_apps_view_info_text1" msgid="503353133396835755">"විශේෂිත දැන්වීම් රුචිකත්වයන්"</string>
+    <string name="settingsUI_apps_view_info_text2" msgid="6562781312486257254">"ඔබ භාවිතා කරන සමහර යෙදුම් වෙළඳ ප්‍රචාරණය සඳහා ඔබේ නිශ්චිත රුචිකත්වයන් පිළිබඳ දත්ත උත්පාදනය කර එය රහස්‍යතා සෑන්ඩ්බොක්ස් වෙත එක් කරන්න.\n\nඋදාහරණයක් ලෙස, ඔබ ධාවන සපත්තු සඳහා සාප්පු යෑමට භාවිතා කරන යෙදුමක් sport_running ලේබලය එක් කළ හැක.\n\nපසුව, රහස්‍යතා සෑන්ඩ්බොක්ස් හි එකතු කරන ලද දත්ත ඔබ හෝ ඔබේ උපාංගය හඳුනා නොගෙන දැන්වීම්කරුවන් සමග බෙදා ගනු ලැබේ. එබැවින් ඔබ තවමත් ඔබ කැමති විය හැකි දැන්වීම් දකින නමුත්, වැඩි රහස්‍යතා ආරක්ෂණයක් සහිතවයි."</string>
+    <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="5700261138344146462">"දැන් පෙන්වීමට අවහිර කළ යෙදුම් නැත"</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"දැනට පෙන්වීමට ලැදිකම් කිසිවක් නැත"</string>
+    <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
+    <string name="settingsUI_topics_title" msgid="4024683469932819788">"ඔබගේ සාමාන්‍ය ලැදිකම්"</string>
+    <string name="settingsUI_topics_summary" msgid="3146101472984434355">"ඔබගේ සාමාන්‍ය ලැදිකම් කළමනාකරණය කරන්න"</string>
     <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"දැන්වීම් සඳහා වන ඔබේ සාමාන්‍ය ලැදිකම් කළමනා කරන්න"</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"අවහිර කරන්න"</string>
-    <string name="settingsUI_blocked_topics_title" msgid="8563397445730522086">"ඔබ අවහිර කර ඇති ලැදිකම්"</string>
-    <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"ලැදිකම් සියල්ල යළි සකසන්න."</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"අවහිර නොකරන්න"</string>
+    <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"ඔබ අවහිර කර ඇති ලැදිකම්"</string>
+    <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"ලැදිකම් සියල්ල යළි සකසන්න."</string>
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="5717377146633882375">"දැන් පෙන්වීමට අවහිර කළ ලැදිකම් නැත"</string>
+    <string name="notificationUI_notification_content_eu" msgid="7419441022808120101">"යෙදුම් හරහා හඹා යෑම සීමා කරන නව විශේෂාංග පරීක්ෂා කරන්න"</string>
+    <string name="notificationUI_header_title_eu" msgid="6822288197367284058">"දැන්වීම් පෞද්ගලිකත්ව බීටා වෙත එක් වන්න"</string>
+    <string name="notificationUI_container3_title_eu" msgid="3157854074121291065">"ඔබට කළ හැකි දේ"</string>
+    <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"එපා ස්තුතියි"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="7294736040084958697">"ඔව්, මම එය කර බලන්නම්"</string>
+    <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"සහභාගී වීම වෙනුවෙන් ඔබට ස්තුතියි"</string>
+    <string name="notificationUI_confirmation_accept_subtitle" msgid="722290263168711051">"ඔබ දැන් පෞද්ගලිකත්ව වැලි පෙට්ටිය බීටාවෙ කොටසකි. \n\nඔබට ඔබේ පෞද්ගලිකත්ව සැකසීම් තුළින් තව දැන ගැනීමට හෝ ඕනෑම වේලාවකදී බීටාවෙන් පිටවීමට හැකිය."</string>
+    <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"ඔබ සහභාගී නොවීමට තෝරා ගෙන ඇත"</string>
+    <string name="notificationUI_confirmation_decline_subtitle" msgid="1869322730722065768">"ඔබේ ප්‍රතිචාරය සඳහා ස්තුතියි. ඔබ පෞද්ගලිකත්ව වැලි පෙට්ටිය බීටාවට එක් කරනු ලැබී ඇත.\n\nඔබ ඔබේ සිත වෙනස් කර ගන්නේ නම් හෝ තව දැන ගැනීමට කැමති නම්, පෞද්ගලිකත්ව සැකසීම් වෙත යන්න."</string>
+    <string name="notificationUI_notification_content" msgid="2096372976024736172">"ඔබ හරස් යෙදුම් හඹා යෑම සීමා කරන නව විශේෂාංග පරීක්ෂා කරමින් සිටියි"</string>
+    <string name="notificationUI_header_title" msgid="857744302422337933">"ඔබ Android වෙත යෙදුම් අතර හඹා යෑමට සීමා පැනවීමට උදවු කරයි"</string>
+    <string name="notificationUI_header_subtitle" msgid="522289584167376388">"Android වෙළෙඳ ප්‍රචාරකයෝ යෙදුම් අතර හඹා යෑම සීමා කරන නව විශේෂාංග අත්හදා බලති"</string>
+    <string name="notificationUI_container1_title" msgid="3837529978480615552">"යෙදුම් අතර හඹා යෑම යනු කුමක් ද?"</string>
+    <string name="notificationUI_container1_body_text" msgid="2564452110982505130">"අද ඔබේ යෙදුම් පරිශීලනය පිළිබඳ දත්ත පහසුවෙන් ම ඔබේ උපාංගයට අදාළ කොට, වෙළෙඳ ප්‍රචාරණ අරමුණු සඳහා යෙදුම් පුරා බෙදාගත හැක."</string>
+    <string name="notificationUI_container2_title" msgid="4796199061758878885">"Android කරන දෙය"</string>
+    <string name="notificationUI_container2_body_text" msgid="7717896223210525953">"Android වෙළෙඳ ප්‍රචාරණ දත්ත ආරක්ෂිතව ගබඩා කර බෙදා ගන්නා නව පෞද්ගලිකත්ව සෑන්ඩ්බොක්ස් එකක් — ඔබව හෝ ඔබේ උපාංගය හඳුනා ගැනීමෙන් තොරව — අත්හදා බලමින් සිටී. \n\nමෙම නව පද්ධතිය යෙදුම් මගින් ඍජුවම වෙනත් යෙදුම් වෙත දත්ත යැවීම වැළැක්වීමට උපකාරී වන නමුදු, තවදුරටත් ඔබ කැමති වීමට ඉඩ ඇති වෙළෙඳ දැන්වීම් ඔබට පෙන්වීමට ඒවාට ඉඩ සලසයි."</string>
+    <string name="notificationUI_container2_control_text" msgid="3031227311095645064">"එය ක්‍රියා කරන ආකාරය"</string>
+    <string name="notificationUI_container3_title" msgid="1283794406634157611">"ඔබ උදවු කරන ආකාරය"</string>
+    <string name="notificationUI_container3_body_text" msgid="2636703086913037594">"ඔබ දකින වෙළඳ දැන්වීම්වල වෙනස්කම් ඔබ නොදකින අතරේ, බීටා හි කොටසක් වීම කාලයත් සමග Android හරස් යෙදුම් ලුහුබැඳීම සීමා කිරීමට උදවු වනු ඇත. ඔබේ පෞද්ගලිකත්ව සැකසීම් වෙත යාමෙන් ඔබට ඕනෑම වේලාවක බීටා හැර යා හැක."</string>
+    <string name="notificationUI_left_control_button_text" msgid="6459461402253858770">"පෞද්ගලිකත්ව සැකසීම්"</string>
+    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"තේරුණා"</string>
+    <string name="notificationUI_how_it_works_expanded_text1" msgid="1753701052925879129">"පෞද්ගලිකත්ව වැලිපෙට්ටිය ක්‍රියා කරන ආකාරය"</string>
+    <string name="notificationUI_how_it_works_expanded_text2" msgid="3117263986288195274">"ඔබ කැමති විය හැකි දැන්වීම් පෙන්වීමට පෞද්ගලිකත්ව වැලි පෙට්ටිය තුළ දත්ත රැස් කෙරෙන නමුත් එය බෙදා ගනු ලබන්නේ ඔබව හෝ ඔබේ උපාංගය හඳුනා නොගෙන ය."</string>
+    <string name="notificationUI_how_it_works_expanded_text3" msgid="7270822532577167752">"රහස්‍යතා සෑන්ඩ්බොක්ස් හි ගබඩා කරන්නේ කුමන ආකාරයේ දත්ත ද?"</string>
+    <string name="notificationUI_how_it_works_expanded_text4" msgid="5609475052636889205">"•  සාමාන්‍ය ලැදිකම්"</string>
+    <string name="notificationUI_how_it_works_expanded_text5" msgid="6757375506547548599">"Android ඔබ භාවිත කරන යෙදුම්වලට අනුව මෙම දත්ත උත්පාදන කර එය පෞද්ගලිකත්ව වැලි පෙට්ටිය වෙත එක් කරයි. උදාහරණය වශයෙන්, ඔබේ සාමාන්‍ය ලැදිකම්වලින් එකක් ක්‍රීඩා වීමට ඉඩ ඇත. \n\nඔබට ඔබේ පෞද්ගලිකත්ව සැකසීම් තුළ ඔබේ ලැදිකම්වල ලැයිස්තුවක් බැලීමටත් ඔබ අකමැති කිසිවක් මකා දැමීමටත් හැකිය."</string>
+    <string name="notificationUI_how_it_works_expanded_text6" msgid="2863877874268072458">"•  නිශ්චිත ලැදිකම්"</string>
+    <string name="notificationUI_how_it_works_expanded_text7" msgid="2140515900209351523">"ඔබේ යෙදුම් ඔබ ඒවා භාවිතා කරන ආකාරය අනුව මෙම දත්ත උත්පාදන කරන අතර පෞද්ගලිකත්ව වැලි පෙට්ටිය වෙත එය එක් කළ හැක. උදාහරණය වශයෙන්, ඔබ දිවීමේ සපත්තු සඳහා සාප්පු යෑමට භාවිතා කළ යෙදුමක් sport_running යන ලේබලය එක් කළ හැක.\n\nඔබේ පෞද්ගලිකත්ව සැකසීම් තුළ, ඔබට මෙය කරන යෙදුම්වල ලැයිස්තුව බලා ඕනෑම යෙදුමක් පෞද්ගලිකත්ව වැලි පෙට්ටියට දත්ත දායක කිරීම අවහිර කළ හැක."</string>
+    <string name="topic10001" msgid="1636806320891333775">"කලා සහ විනෝදාස්වාදය"</string>
+    <string name="topic10002" msgid="1226367977754287428">"රංගනය සහ රංග ශාලාව"</string>
+    <string name="topic10003" msgid="6949890838957814881">"සජීවන සහ මංගා"</string>
+    <string name="topic10004" msgid="5397903150832181233">"කාටූන්"</string>
+    <string name="topic10005" msgid="6316179809581237302">"විකට"</string>
+    <string name="topic10006" msgid="7442330644172139790">"ප්‍රසංග සහ සංගීත උත්සව"</string>
+    <string name="topic10007" msgid="5537896091418145164">"නර්තනය"</string>
+    <string name="topic10008" msgid="2737343278307552521">"විනෝදාත්මක කර්මාන්තය"</string>
+    <string name="topic10009" msgid="3252367380340240453">"විනෝදය සහ සුළු දේවල්"</string>
+    <string name="topic10010" msgid="932301479153552725">"විනෝද පරීක්ෂණ සහ මෝඩ සමීක්ෂණ"</string>
+    <string name="topic10011" msgid="3123553390567261985">"හාස්‍යය"</string>
+    <string name="topic10012" msgid="8756486271154511326">"විහිළු පින්තූර සහ වීඩියෝ"</string>
+    <string name="topic10013" msgid="1242353161202448753">"සජීවී ප්‍රහසන"</string>
+    <string name="topic10014" msgid="6086156236112755291">"සජීවී ක්‍රීඩා සිදුවීම්"</string>
+    <string name="topic10015" msgid="9196350141359833832">"මැජික්"</string>
+    <string name="topic10016" msgid="202419376638900745">"චිත්‍රපට ලැයිස්තුගත කිරීම් සහ රඟහල දර්ශන වේලාවන්"</string>
+    <string name="topic10017" msgid="6737229918787540100">"චිත්‍රපට"</string>
+    <string name="topic10018" msgid="6823676154109177487">"ක්‍රියාව සහ වික්‍රමාන්විත චිත්‍රපට"</string>
+    <string name="topic10019" msgid="6875960630918973127">"සජීවනය කළ චිත්‍රපට"</string>
+    <string name="topic10020" msgid="4323870300602151489">"ප්‍රහසන චිත්‍රපට"</string>
+    <string name="topic10021" msgid="446758643774468418">"වෘත සහ ඉන්ඩි චිත්‍රපට"</string>
+    <string name="topic10022" msgid="3671929742155787005">"වාර්තාමය චිත්‍රපට"</string>
+    <string name="topic10023" msgid="3547616830531182863">"නාට්‍යමය චිත්‍රපට"</string>
+    <string name="topic10024" msgid="1044853632986202120">"පවුලේ චිත්‍රපට"</string>
+    <string name="topic10025" msgid="5958629223443279316">"බිහිසුණු චිත්‍රපට"</string>
+    <string name="topic10026" msgid="5685515125614860029">"ප්‍රේමනීය චිත්‍රපට"</string>
+    <string name="topic10027" msgid="8846353713171614854">"ත‍්‍රාසජනක"</string>
+    <string name="topic10028" msgid="170404703980174756">"සංගීතය සහ ශ්‍රව්‍ය"</string>
+    <string name="topic10029" msgid="4634600135545614665">"බ්ලූස්"</string>
+    <string name="topic10030" msgid="7226438392540805771">"සම්භාව්‍ය සංගීත"</string>
+    <string name="topic10031" msgid="1488013446112025676">"ජන සංගීත"</string>
+    <string name="topic10032" msgid="9053666244854789632">"නැටුම් සහ විද්‍යුත් සංගීතය"</string>
+    <string name="topic10033" msgid="440063573197454181">"ජන සහ සාම්ප්‍රදායික සංගීතය"</string>
+    <string name="topic10034" msgid="8296307244554241197">"ජෑස්"</string>
+    <string name="topic10035" msgid="9171752741499923310">"සංගීත ප්‍රවාහ සහ බාගැනීම්"</string>
+    <string name="topic10036" msgid="2490236112725457376">"සංගීත වීඩියෝ"</string>
+    <string name="topic10037" msgid="1923690469725883551">"සංගීත උපකරණ"</string>
+    <string name="topic10038" msgid="2817492732688549631">"පියානෝ සහ යතුරු පුවරු"</string>
+    <string name="topic10039" msgid="8970033643570782019">"පොප් සංගීතය"</string>
+    <string name="topic10040" msgid="7478395512712452137">"රේඩියෝ"</string>
+    <string name="topic10041" msgid="3319379117705411886">"කතා රේඩියෝව"</string>
+    <string name="topic10042" msgid="8830471038440654640">"රැප් සහ හිප්-හොප්"</string>
+    <string name="topic10043" msgid="8585450284346207691">"රොක් සංගීතය"</string>
+    <string name="topic10044" msgid="3710011249220779842">"ක්ලැසික් රොක් සහ ඕල්ඩීස්"</string>
+    <string name="topic10045" msgid="7593443421067822441">"හාඩ් රොක් සහ ප්‍රගතිශීලී"</string>
+    <string name="topic10046" msgid="8715621227472631784">"ඉන්ඩි සහ විකල්ප සංගීතය"</string>
+    <string name="topic10047" msgid="3518038303049899798">"නියැදි සහ ශබ්ද පුස්තකාල"</string>
+    <string name="topic10048" msgid="3063505369500799094">"ආත්මීය සහ R&amp;B"</string>
+    <string name="topic10049" msgid="8061992014977840818">"හඬපටි"</string>
+    <string name="topic10050" msgid="3540229495848506229">"ලෝක සංගීතය"</string>
+    <string name="topic10051" msgid="6132468331924347995">"රෙගේ සහ කැරිබියන් සංගීතය"</string>
+    <string name="topic10052" msgid="8213269199807045473">"සබැඳි රූප ගැලරි"</string>
+    <string name="topic10053" msgid="1378192203082454197">"සබැඳි වීඩියෝ"</string>
+    <string name="topic10054" msgid="3727401645405134505">"සජීවී වීඩියෝ ප්‍රවාහය"</string>
+    <string name="topic10055" msgid="4943174831732192854">"චිත්‍රපට සහ රූපවාහිනී විකාශනය"</string>
+    <string name="topic10056" msgid="3066058636154255073">"ඔපෙරා"</string>
+    <string name="topic10057" msgid="387445514677222034">"රූපවාහිනී මාර්ගෝපදේශ සහ යොමුව"</string>
+    <string name="topic10058" msgid="9149178644022969766">"රූපවාහිනී ජාල සහ ස්ථාන"</string>
+    <string name="topic10059" msgid="6300562669238320524">"රූපවාහිනී සංදර්ශන සහ වැඩසටහන්"</string>
+    <string name="topic10060" msgid="3901256055064835246">"රූපවාහිනී විකට කතා"</string>
+    <string name="topic10061" msgid="8343924749123326062">"රූපවාහිනී වාර්තාමය සහ ප්‍රබන්ධ නොවන"</string>
+    <string name="topic10062" msgid="9183355218976951211">"රූපවාහිනී නාට්‍යය"</string>
+    <string name="topic10063" msgid="644340831620792432">"රූපවාහිනී සෝප් ඔපරා"</string>
+    <string name="topic10064" msgid="5961885645457010998">"TV පවුල් පාදක කරගත් වැඩසටහන්"</string>
+    <string name="topic10065" msgid="7916343612028608044">"TV රියලිටි වැඩසටහන්"</string>
+    <string name="topic10066" msgid="5984396525358003559">"TV විද්‍යා ප්‍රබන්ධ සහ මනහ්කල්පිත සංදර්ශන"</string>
+    <string name="topic10067" msgid="6404637729885733437">"දෘශ්‍ය කලාව සහ නිර්මාණය"</string>
+    <string name="topic10068" msgid="4589856961950168493">"සැලසුම"</string>
+    <string name="topic10069" msgid="3129378082034151991">"පින්තාරුව"</string>
+    <string name="topic10070" msgid="2570256568661324147">"ඡායාරූපකරණ සහ ඩිජිටල් කලා"</string>
+    <string name="topic10071" msgid="1288722040962471254">"මෝටර් රථ සහ වාහන"</string>
+    <string name="topic10072" msgid="9155509766616567261">"භාණ්ඩ ට්‍රක් රථ සහ ට්‍රේලර"</string>
+    <string name="topic10073" msgid="3748676231341513738">"සම්භාව්‍ය වාහන"</string>
+    <string name="topic10074" msgid="2040911547161463227">"අභිරුචි සහ කාර්ය සාධන වාහන"</string>
+    <string name="topic10075" msgid="1242538698445713796">"ගෑස් මිල සහ වාහන ඉන්ධන"</string>
+    <string name="topic10076" msgid="8674225812339579627">"මෝටර් වාහන (වර්ගය අනුව)"</string>
+    <string name="topic10077" msgid="3577709810751953433">"ස්වයංක්‍රීය වාහන"</string>
+    <string name="topic10078" msgid="5493263845129910125">"හැකිළිය හැකි"</string>
+    <string name="topic10079" msgid="3466838852836498580">"කූප්ස්"</string>
+    <string name="topic10080" msgid="3515647285637163190">"හැච්බැක්"</string>
+    <string name="topic10081" msgid="4135085035401158860">"දෙමුහුන් සහ විකල්ප වාහන"</string>
+    <string name="topic10082" msgid="7168659489029594320">"සුඛෝපභෝගී වාහන"</string>
+    <string name="topic10083" msgid="1532745144715857802">"මයික්‍රොකාර් සහ උප සංයුක්ත"</string>
+    <string name="topic10084" msgid="1984231414410381476">"යතුරුපැදි"</string>
+    <string name="topic10085" msgid="5235555028227554661">"පාරෙන් පිට ධාවනය වන වාහන"</string>
+    <string name="topic10086" msgid="8360336602646460411">"පිකප් ට්‍රක් රථ"</string>
+    <string name="topic10087" msgid="6566900167002195406">"ස්කූටර් සහ මොපෙඩ්"</string>
+    <string name="topic10088" msgid="2899313082601001223">"සේඩාන්"</string>
+    <string name="topic10089" msgid="1053630346809973163">"ස්ටේෂන් වැගන්"</string>
+    <string name="topic10090" msgid="4478565601243447368">"SUVs සහ ක්‍රොස්ඕවර්ස්"</string>
+    <string name="topic10091" msgid="3812668311830832874">"ක්‍රොස්ඕවර්ස්"</string>
+    <string name="topic10092" msgid="524130833813249539">"වෑන් සහ කුඩාවෑන්"</string>
+    <string name="topic10093" msgid="8900143351472824542">"ඇදගෙන යාම සහ මඟ අසල සහාය"</string>
+    <string name="topic10094" msgid="6205146188176216038">"වාහන සහ රථවාහන ආරක්ෂාව"</string>
+    <string name="topic10095" msgid="7983070264654477553">"වාහන කොටස් සහ ආයිත්තම්"</string>
+    <string name="topic10096" msgid="8148747014459050804">"වාහන අලුත්වැඩියාව සහ නඩත්තුව"</string>
+    <string name="topic10097" msgid="4716536434833425748">"වාහන සාප්පුකරණය"</string>
+    <string name="topic10098" msgid="6401980112135995019">"පාවිච්චි කළ වාහන"</string>
+    <string name="topic10099" msgid="8018714209926584445">"වාහන සංදර්ශන"</string>
+    <string name="topic10100" msgid="2481422464734249871">"රූපලාවන්‍ය සහ යෝග්‍යතාවය"</string>
+    <string name="topic10101" msgid="7889144198021629053">"ශරීර කලාව"</string>
+    <string name="topic10102" msgid="577637051755692238">"මුහුණ සහ ශරීර රැකවරණය"</string>
+    <string name="topic10103" msgid="6618157344631408510">"දහඩිය නාශක"</string>
+    <string name="topic10104" msgid="6043649669944382784">"නාන සහ ශරීර නිෂ්පාදන"</string>
+    <string name="topic10105" msgid="3248569527339253661">"පිරිසිදු අලංකාරය"</string>
+    <string name="topic10106" msgid="1291481249483309832">"වේශ නිරූපණය සහ විලවුන්"</string>
+    <string name="topic10107" msgid="1335060201249279923">"නිය සත්කාර නිෂ්පාදන"</string>
+    <string name="topic10108" msgid="4996884435711154930">"සුවඳ විලවුන් සහ සුවඳ ධූප"</string>
+    <string name="topic10109" msgid="7298403319989686251">"දැළිපිහි සහ රැවුල කපනයන්"</string>
+    <string name="topic10110" msgid="5954355866247248022">"විලාසිතා සහ විලාසය"</string>
+    <string name="topic10111" msgid="4447710938881368413">"යෝග්‍යතාවය"</string>
+    <string name="topic10112" msgid="8816530137921714131">"කායවර්ධනය"</string>
+    <string name="topic10113" msgid="8138889299405853557">"යෝග්‍යතා උපදෙස් සහ පුද්ගලික පුහුණුව"</string>
+    <string name="topic10114" msgid="2172821400279346865">"යෝග්‍යතා තාක්ෂණ නිෂ්පාදන"</string>
+    <string name="topic10115" msgid="9060244278068231494">"හිසකෙස් රැකවරණය"</string>
+    <string name="topic10116" msgid="116242880964485085">"පොත් සහ සාහිත්‍යය"</string>
+    <string name="topic10117" msgid="8933734721100160863">"ළමා සාහිත්‍යය"</string>
+    <string name="topic10118" msgid="4368531903547695191">"ඉ-පොත්"</string>
+    <string name="topic10119" msgid="2781095265741115471">"සඟරා"</string>
+    <string name="topic10120" msgid="3099507102655270527">"කවි"</string>
+    <string name="topic10121" msgid="4466592180799340837">"ව්‍යාපාර සහ කාර්මික"</string>
+    <string name="topic10122" msgid="2375136741125920744">"ප්‍රචාරණය සහ අලෙවිකරණය"</string>
+    <string name="topic10123" msgid="6974082907852347979">"විකුණුම්"</string>
+    <string name="topic10124" msgid="44474598156972786">"කෘෂිකර්මය සහ වන විද්‍යාව"</string>
+    <string name="topic10125" msgid="9170394261421539760">"ආහාර නිෂ්පාදනය"</string>
+    <string name="topic10126" msgid="2210146434071038904">"රථවාහන කර්මාන්තය"</string>
+    <string name="topic10127" msgid="5503077037318678029">"ගුවන් සේවා කර්මාන්තය"</string>
+    <string name="topic10128" msgid="285525650692719959">"ව්‍යාපාර මෙහෙයුම්"</string>
+    <string name="topic10129" msgid="3094691551566702427">"නම්‍යශීලී වැඩ සැලසුම්"</string>
+    <string name="topic10130" msgid="1922351409757117764">"මානව සම්පත්"</string>
+    <string name="topic10131" msgid="8598763405951029782">"වාණිජමය ණය දීම"</string>
+    <string name="topic10132" msgid="1476352626208153907">"ඉදිකිරීම් සහ නඩත්තු"</string>
+    <string name="topic10133" msgid="7089177624979453528">"සිවිල් ඉංජිනේරු"</string>
+    <string name="topic10134" msgid="3833032373311037601">"ආරක්ෂක කර්මාන්තය"</string>
+    <string name="topic10135" msgid="2478808072377000440">"බලශක්ති සහ උපයෝගිතා"</string>
+    <string name="topic10136" msgid="9083992436834044162">"ජල සැපයුම සහ ප්‍රතිකාර"</string>
+    <string name="topic10137" msgid="1912599316814246824">"ආගන්තුක සත්කාර කර්මාන්තය"</string>
+    <string name="topic10138" msgid="7428346836350671895">"නිෂ්පාදන"</string>
+    <string name="topic10139" msgid="1396685812404869953">"ලෝහ සහ පතල් කැණීම"</string>
+    <string name="topic10140" msgid="5264212052238781441">"MLM සහ ව්‍යාපාරික අවස්ථා"</string>
+    <string name="topic10141" msgid="860058416683118730">"ඖෂධ සහ ජෛව තාක්ෂණය"</string>
+    <string name="topic10142" msgid="2912550934111655896">"මුද්‍රණය සහ ප්‍රකාශනය"</string>
+    <string name="topic10143" msgid="5690610408227078117">"සිල්ලර විකුණුම"</string>
+    <string name="topic10144" msgid="3341052306953106368">"ව්‍යාපාර ප්‍රාග්ධන සපයන්නන්"</string>
+    <string name="topic10145" msgid="6886608911083388041">"පරිගණක සහ ඉලෙක්ට්‍රොනික"</string>
+    <string name="topic10146" msgid="8202145175139144216">"පරිගණක පර්යන්ත"</string>
+    <string name="topic10147" msgid="4687964705548995437">"මුද්‍රක"</string>
+    <string name="topic10148" msgid="8861628145647459323">"පරිගණක ආරක්ෂාව"</string>
+    <string name="topic10149" msgid="1719988773455991739">"ප්‍රතිවෛරස සහ අනිෂ්ට මෘදුකාංග"</string>
+    <string name="topic10150" msgid="1482205464872465298">"ජාල ආරක්ෂාව"</string>
+    <string name="topic10151" msgid="1772262905623388968">"පාරිභෝගික ඉලෙක්ට්‍රොනික උපාංග"</string>
+    <string name="topic10152" msgid="651152740021127086">"කැමරා සහ වීඩියෝ කැමරා"</string>
+    <string name="topic10153" msgid="8741504768717646372">"GPS සහ සංචාලනය"</string>
+    <string name="topic10154" msgid="5382029798409496090">"නිවස ස්වයංකරණය"</string>
+    <string name="topic10155" msgid="5243817792730496258">"නිවාස නෘත්‍ය ශාලා පද්ධති"</string>
+    <string name="topic10156" msgid="2497791567138856030">"MP3 සහ අතේ ගෙන යා හැකි මාධ්‍ය වාදක"</string>
+    <string name="topic10157" msgid="4723439422860510190">"පළඳිය හැකි තාක්ෂණය"</string>
+    <string name="topic10158" msgid="5345830001295028513">"දත්ත උපස්ථ සහ ප්‍රතිසාධනය"</string>
+    <string name="topic10159" msgid="6146958285117174314">"ඩෙස්ක්ටොප් පරිගණක"</string>
+    <string name="topic10160" msgid="6624820395549466426">"ලැප්ටොප් සහ නෝට්බුක්"</string>
+    <string name="topic10161" msgid="912458758908978530">"ජාලකරණය"</string>
+    <string name="topic10162" msgid="6717352131379507693">"බෙදාහරින ලද සහ ක්ලවුඩ් පරිගණකකරණය"</string>
+    <string name="topic10163" msgid="6344926622025055321">"ක්‍රමලේඛනය"</string>
+    <string name="topic10164" msgid="4228888249078845459">"මෘදුකාංගය"</string>
+    <string name="topic10165" msgid="5507908999219967161">"ශ්‍රව්‍ය සහ සංගීත මෘදුකාංග"</string>
+    <string name="topic10166" msgid="4768106492755849560">"ව්‍යාපාර සහ ඵලදායිතා මෘදුකාංග"</string>
+    <string name="topic10167" msgid="8556935769754922871">"දින දර්ශනය සහ උපලේඛනගත මෘදුකාංග"</string>
+    <string name="topic10168" msgid="7730134961167790334">"සහයෝගීතාවය සහ සම්මන්ත්‍රණ මෘදුකාංග"</string>
+    <string name="topic10169" msgid="5655084106378890454">"ඉදිරිපත් කිරීමේ මෘදුකාංග"</string>
+    <string name="topic10170" msgid="4638281897205909919">"පැතිරුම්පත් මෘදුකාංගය"</string>
+    <string name="topic10171" msgid="7910183120486541228">"වදන් සැකසුම් මෘදුකාංගය"</string>
+    <string name="topic10172" msgid="3626573644414074730">"ඩෙස්ක්ටොප් ප්‍රකාශනය"</string>
+    <string name="topic10173" msgid="7320053835183057144">"අකුරු වර්ග"</string>
+    <string name="topic10174" msgid="5770469447869586710">"බාගැනීමේ කළමනාකරුවන්"</string>
+    <string name="topic10175" msgid="3475235810022334041">"නිදහස් මෘදුකාංග සහ බෙදාහැරීමේ මෘදුකාංග"</string>
+    <string name="topic10176" msgid="6881704501596479881">"ග්‍රැෆික් සහ සජීවිකරණ මෘදුකාංග"</string>
+    <string name="topic10177" msgid="6740430730079682579">"බුද්ධිමත් පුද්ගලික සහායකයින්"</string>
+    <string name="topic10178" msgid="7261811053741593091">"මාධ්‍ය වාදක"</string>
+    <string name="topic10179" msgid="2967001567120854492">"අධීක්ෂණ මෘදුකාංග"</string>
+    <string name="topic10180" msgid="4197420326455130102">"මෙහෙයුම් පද්ධති"</string>
+    <string name="topic10181" msgid="3537573129132698830">"ඡායාරූප සහ වීඩියෝ මෘදුකාංග"</string>
+    <string name="topic10182" msgid="7688631285131229981">"ඡායාරූප මෘදුකාංගය"</string>
+    <string name="topic10183" msgid="5994974566140272512">"වීඩියෝ මෘදුකාංග"</string>
+    <string name="topic10184" msgid="8685817335076871509">"මෘදුකාංග උපයුක්තතා"</string>
+    <string name="topic10185" msgid="308314128178285390">"වෙබ් බ්‍රවුසර"</string>
+    <string name="topic10186" msgid="3147859503481018245">"මූල්‍යය"</string>
+    <string name="topic10187" msgid="7077128721410871032">"ගිණුම්කරණය සහ විගණනය"</string>
+    <string name="topic10188" msgid="2206138708659457910">"බදු සකස් කිරීම සහ සැලසුම් කිරීම"</string>
+    <string name="topic10189" msgid="4001795553008246784">"බැංකුකරණය"</string>
+    <string name="topic10190" msgid="2988430661381243083">"මුදල් හුවමාරු සහ මාරු කිරීමේ සේවා"</string>
+    <string name="topic10191" msgid="6196081825838237614">"ණය සහ ණය දීම"</string>
+    <string name="topic10192" msgid="3290123244833047307">"ණය කාඩ්පත්"</string>
+    <string name="topic10193" msgid="294407043381146861">"නිවාස මූල්‍යය"</string>
+    <string name="topic10194" msgid="2834543407440890272">"පුද්ගලික ණය"</string>
+    <string name="topic10195" msgid="7650553060132394782">"ශිෂ්‍ය ණය සහ විද්‍යාල මූල්‍යකරණය"</string>
+    <string name="topic10196" msgid="5395035781876507254">"මූල්‍ය සැලසුම්කරණය සහ කළමනාකරණය"</string>
+    <string name="topic10197" msgid="1287138667488226463">"විශ්‍රාම ගැනීම සහ විශ්‍රාම වැටුප්"</string>
+    <string name="topic10198" msgid="2523256186943366779">"ප්‍රතිපාදන"</string>
+    <string name="topic10199" msgid="3746711537661530183">"ප්‍රතිපාදන"</string>
+    <string name="topic10200" msgid="2394864891391267841">"රක්ෂණය"</string>
+    <string name="topic10201" msgid="4301879117376963742">"වාහන රක්ෂණය"</string>
+    <string name="topic10202" msgid="739808503036239379">"සෞඛ්‍ය රක්ෂණය"</string>
+    <string name="topic10203" msgid="838786942776142290">"නිවාස රක්ෂණය"</string>
+    <string name="topic10204" msgid="6591131759521321677">"ජීවිත රක්ෂණය"</string>
+    <string name="topic10205" msgid="3294946723815021478">"සංචාරක රක්ෂණය"</string>
+    <string name="topic10206" msgid="6166888350685752683">"ආයෝජනය"</string>
+    <string name="topic10207" msgid="2296385804039743999">"භාණ්ඩ සහ ඉදිරි ගනුදෙනු වෙළඳාම"</string>
+    <string name="topic10208" msgid="2717498987483479091">"මුදල් වර්ග සහ විදේශ විනිමය"</string>
+    <string name="topic10209" msgid="5204948738662951962">"හෙජ් අරමුදල්"</string>
+    <string name="topic10210" msgid="4607225697024266227">"අන්‍යොන්‍ය අරමුදල්"</string>
+    <string name="topic10211" msgid="7475381839877166080">"කොටස් සහ බැඳුම්කර"</string>
+    <string name="topic10212" msgid="3988751035952286047">"ආහාර සහ පාන"</string>
+    <string name="topic10213" msgid="1358963098339995471">"ඉවුම් පිහුම් සහ වට්ටෝරු"</string>
+    <string name="topic10214" msgid="8463864389138867811">"බාබකියු සහ ග්‍රිල් කිරීම"</string>
+    <string name="topic10215" msgid="3085467051491069648">"කෑම පිසීමේ ක්‍රම"</string>
+    <string name="topic10216" msgid="6043130649326166680">"නිර්මාංශ මුළුතැන්ගෙය"</string>
+    <string name="topic10217" msgid="7173870057669247536">"නිර්මාංශ ආාහාර"</string>
+    <string name="topic10218" msgid="5570240643247064951">"සෞඛ්‍යයමත ආහාර ගැනීම්"</string>
+    <string name="topic10219" msgid="5896715206025463732">"ආහාර සහ සිල්ලර වෙළෙන්දන්"</string>
+    <string name="topic10220" msgid="3894580611467039658">"ක්‍රීඩා"</string>
+    <string name="topic10221" msgid="14471057764591805">"ආකේඩ් සහ කාසිවලින්-මෙහෙයවන ක්‍රීඩා"</string>
+    <string name="topic10222" msgid="2704894577954508861">"බිලියර්ඩ්"</string>
+    <string name="topic10223" msgid="202900267060220170">"පුවරු ක්‍රීඩා"</string>
+    <string name="topic10224" msgid="6572627325588452785">"චෙස් සහ වියුක්ත උපාය මාර්ග ක්‍රීඩා"</string>
+    <string name="topic10225" msgid="8056906319560292131">"කාඩ් ක්‍රීඩා"</string>
+    <string name="topic10226" msgid="714463563336281099">"එකතු කළ හැකි කාඩ් ක්‍රීඩා"</string>
+    <string name="topic10227" msgid="218768654597520683">"පරිගණක සහ වීඩියෝ ක්‍රීඩා"</string>
+    <string name="topic10228" msgid="850597136074192489">"ක්‍රියාදාම සහ කරළි ක්‍රීඩා"</string>
+    <string name="topic10229" msgid="4284501233897149886">"වික්‍රමාන්විත ක්‍රීඩා"</string>
+    <string name="topic10230" msgid="7156822286576815181">"සාමාන්‍ය ක්‍රීඩා"</string>
+    <string name="topic10231" msgid="7620407218897744361">"තරඟකාරී වීඩියෝ ක්‍රීඩා"</string>
+    <string name="topic10232" msgid="3029734447275709941">"රිය පැදවීමේ සහ ධාවන ක්‍රීඩා"</string>
+    <string name="topic10233" msgid="8318075279868138231">"සටන් ක්‍රීඩා"</string>
+    <string name="topic10234" msgid="3899847414436099153">"ක්‍රීඩා යොමු සහ සමාලෝචන"</string>
+    <string name="topic10235" msgid="5851356242523630529">"වීඩියෝ ක්‍රීඩා වංචා සහ ඉඟි"</string>
+    <string name="topic10236" msgid="1986665634014804954">"දැවැන්ත බහු ක්‍රීඩක ක්‍රීඩා"</string>
+    <string name="topic10237" msgid="5569920221620447713">"සංගීත සහ නර්තන ක්‍රීඩා"</string>
+    <string name="topic10238" msgid="7431087331656772530">"සෑන්ඩ්බොක්ස් ක්‍රීඩා"</string>
+    <string name="topic10239" msgid="8667462879554115515">"වෙඩි තැබීමේ ක්‍රීඩා"</string>
+    <string name="topic10240" msgid="1618985302446756520">"සමාකරණ ක්‍රීඩා"</string>
+    <string name="topic10241" msgid="8450778411063723262">"ව්‍යාපාරික සහ ධනපති ව්‍යාපාරික ක්‍රීඩා"</string>
+    <string name="topic10242" msgid="8860812940320018907">"නගර ගොඩනැඟීමේ ක්‍රීඩා"</string>
+    <string name="topic10243" msgid="1764694148721971512">"ජීවිත සමාකරණ ක්‍රීඩා"</string>
+    <string name="topic10244" msgid="4308588210397969087">"වාහන සිමියුෙල්ටර"</string>
+    <string name="topic10245" msgid="6904368410919496658">"තරඟ ක්‍රීඩා"</string>
+    <string name="topic10246" msgid="3381244806751528148">"තරඟ කළමනාකරණය ක්‍රීඩා"</string>
+    <string name="topic10247" msgid="5927502688389762068">"උපායාත්මක ක්‍රීඩා"</string>
+    <string name="topic10248" msgid="8471339627212674032">"වීඩියෝ ක්‍රීඩා ප්‍රකාර සහ ඈඳුම්"</string>
+    <string name="topic10249" msgid="5076706536204559962">"අධ්‍යාපනික ක්‍රීඩා"</string>
+    <string name="topic10250" msgid="6083030595195401083">"පවුල ඉලක්ක කරගත් ක්‍රීඩා සහ ක්‍රියාකාරකම්"</string>
+    <string name="topic10251" msgid="99237306730665104">"ඇඳීම සහ වර්ණ ගැන්වීම"</string>
+    <string name="topic10252" msgid="6543039575961394064">"ඇඳුම් පැළඳුම් සහ විලාසිතා ක්‍රීඩා"</string>
+    <string name="topic10253" msgid="566596668186874227">"ප්‍රහේලිකා සහ උග්‍ර ප්‍රශ්න"</string>
+    <string name="topic10254" msgid="5732147617072023634">"භූමිකා නිරූපණ ක්‍රීඩා"</string>
+    <string name="topic10255" msgid="2890655077164103057">"මේස පන්දු"</string>
+    <string name="topic10256" msgid="3302096971402751679">"උළු ක්‍රීඩා"</string>
+    <string name="topic10257" msgid="4238531589193902619">"වචන ක්‍රීඩා"</string>
+    <string name="topic10258" msgid="6995329540076529056">"විනෝදාංශ සහ විවේකය"</string>
+    <string name="topic10259" msgid="8649688885811560410">"සංවත්සර"</string>
+    <string name="topic10260" msgid="487999213495640080">"උපන් දින සහ නම් දින"</string>
+    <string name="topic10261" msgid="8970668366745952094">"කිමිදුම් සහ දිය යට ක්‍රියාකාරකම්"</string>
+    <string name="topic10262" msgid="6644046161469353448">"තන්තු සහ රෙදිපිළි කලාව"</string>
+    <string name="topic10263" msgid="848165976917542929">"එළිමහන්"</string>
+    <string name="topic10264" msgid="6274985117752637104">"මාළු බෑම"</string>
+    <string name="topic10265" msgid="4134876488948695674">"දඩයම් කිරීම සහ වෙඩි තැබීම"</string>
+    <string name="topic10266" msgid="6617785039128074351">"පෙයින්ට්බෝල්"</string>
+    <string name="topic10267" msgid="488093331618885003">"රේඩියෝ පාලනය සහ ආදෘශ්‍යනය"</string>
+    <string name="topic10268" msgid="277932389492046264">"මංගල උත්සව"</string>
+    <string name="topic10269" msgid="8572041514147955202">"නිවස සහ ගෙවත්ත"</string>
+    <string name="topic10270" msgid="2646715182474030951">"ගෙවතු අලංකරණය"</string>
+    <string name="topic10271" msgid="1308931236810509881">"නිවස සහ අභ්‍යන්තර අලංකරණය"</string>
+    <string name="topic10272" msgid="8746698707390628887">"නිවාස උවාරණ"</string>
+    <string name="topic10273" msgid="344442071339164852">"නිවාස වැඩි දියුණු කිරීම"</string>
+    <string name="topic10274" msgid="8982330028561451429">"නිවසේ සුරක්ෂිතභාවය සහ ආරක්ෂාව"</string>
+    <string name="topic10275" msgid="8280198018937968735">"ගෘහස්ථ සැපයුම්"</string>
+    <string name="topic10276" msgid="1651598271798609235">"භූදර්ශන සැලසුම"</string>
+    <string name="topic10277" msgid="7675195736886448994">"අන්තර්ජාලය සහ ටෙලිකොම්"</string>
+    <string name="topic10278" msgid="873251714192341707">"ඉ-තැපෑල සහ පණිවිඩ යැවීම"</string>
+    <string name="topic10279" msgid="6514296374139842600">"ඉ-තැපෑල"</string>
+    <string name="topic10280" msgid="7976787187115018267">"පෙළ සහ ක්ෂණික පණිවිඩ යැවීම"</string>
+    <string name="topic10281" msgid="4013341162811169339">"හඬ සහ වීඩියෝ කතාබස්"</string>
+    <string name="topic10282" msgid="7810462611906257564">"ISPs"</string>
+    <string name="topic10283" msgid="3958287780718485172">"දුරකථන සේවා සපයන්නන්"</string>
+    <string name="topic10284" msgid="2415044270290467935">"නාද රටා සහ ජංගම තේමා"</string>
+    <string name="topic10285" msgid="7056449544316408821">"සෙවුම් යන්ත්‍ර"</string>
+    <string name="topic10286" msgid="3458688996478472971">"ස්මාර්ට්ෆෝන්"</string>
+    <string name="topic10287" msgid="6766203044518402938">"ටෙලිසම්මන්ත්‍රණ"</string>
+    <string name="topic10288" msgid="3883137694557636622">"වෙබ් යෙදුම් සහ සබැඳි මෙවලම්"</string>
+    <string name="topic10289" msgid="3392995633794787676">"වෙබ් සේවා"</string>
+    <string name="topic10290" msgid="3118880486702986341">"ක්ලවුඩ් ආචයනය"</string>
+    <string name="topic10291" msgid="6025855926350955094">"වෙබ් නිර්මාණය සහ සංවර්ධනය"</string>
+    <string name="topic10292" msgid="3069720659823056935">"වෙබ් හොස්ටින්"</string>
+    <string name="topic10293" msgid="2489957780009828409">"රැකියා සහ අධ්‍යාපනය"</string>
+    <string name="topic10294" msgid="474839431177892843">"අධ්‍යාපනය"</string>
+    <string name="topic10295" msgid="2215489196192620880">"ශාස්ත්‍රීය සම්මන්ත්‍රණ සහ ප්‍රකාශන"</string>
+    <string name="topic10296" msgid="4494362881225210483">"විද්‍යාල සහ විශ්ව විද්‍යාල"</string>
+    <string name="topic10297" msgid="8596946591674128749">"දුරස්ථ ඉගෙනුම"</string>
+    <string name="topic10298" msgid="6669181180128620422">"පූර්ව ළමාවිය අධ්‍යාපනය"</string>
+    <string name="topic10299" msgid="989138215800115613">"පෙර පාසල"</string>
+    <string name="topic10300" msgid="8281464235308602670">"නිවෙස් අධ්‍යාපනය ලැබීම"</string>
+    <string name="topic10301" msgid="9156890858635333460">"ප්‍රමාණීකෘත සහ ඇතුළත් වීමේ පරීක්ෂණ"</string>
+    <string name="topic10302" msgid="1325835179421990876">"ඉගැන්වීම සහ පන්ති කාමර සම්පත්"</string>
+    <string name="topic10303" msgid="3103839978894155537">"වෘත්තීය සහ සන්තන අධ්‍යාපනය"</string>
+    <string name="topic10304" msgid="8831682558788062486">"රැකියා"</string>
+    <string name="topic10305" msgid="8415203095484493106">"වෘත්තීය සම්පත් සහ සැලසුම්"</string>
+    <string name="topic10306" msgid="7426556527349374835">"රැකියා ලැයිස්තුගත කිරීම්"</string>
+    <string name="topic10307" msgid="1187762846826735256">"නීතිය සහ රජය"</string>
+    <string name="topic10308" msgid="3346756665358311386">"අපරාධ සහ යුක්තිය"</string>
+    <string name="topic10309" msgid="2041175328931014735">"නෛතික"</string>
+    <string name="topic10310" msgid="7079570344976872062">"නෛතික සේවා"</string>
+    <string name="topic10311" msgid="2095095138677585525">"පුවත්"</string>
+    <string name="topic10312" msgid="939721674816307639">"ආර්ථික පුවත්"</string>
+    <string name="topic10313" msgid="4159611985538361632">"දේශීය පුවත්"</string>
+    <string name="topic10314" msgid="93219947859117151">"ඒකාබද්ධ කිරීම් සහ අත්පත් කර ගැනීම්"</string>
+    <string name="topic10315" msgid="5046321177148647481">"පුවත්පත්"</string>
+    <string name="topic10316" msgid="8592980844674525307">"දේශපාලනය"</string>
+    <string name="topic10317" msgid="2412259096368647866">"ක්‍රීඩා පුවත්"</string>
+    <string name="topic10318" msgid="1508449672941031904">"කාලගුණය"</string>
+    <string name="topic10319" msgid="3973645291178509390">"ලෝක පුවත්"</string>
+    <string name="topic10320" msgid="5279440074507438174">"සබැඳි ප්‍රජාවන්"</string>
+    <string name="topic10321" msgid="7018890132742820265">"ක්ලිප් ආර්ට් සහ සජීවනය කළ GIFs"</string>
+    <string name="topic10322" msgid="1585737438943011532">"ආලය සහ පුද්ගලික"</string>
+    <string name="topic10323" msgid="962863497957179646">"ආහාර එකතු කිරීම සහ සමාජ පිටු සලකුණු කිරීම"</string>
+    <string name="topic10324" msgid="1425257460381023853">"ගොනු බෙදා ගැනීම සහ සත්කාරකත්වය"</string>
+    <string name="topic10325" msgid="8698912164970408378">"සංසදය සහ කතාබස් සපයන්නන්"</string>
+    <string name="topic10326" msgid="2425798096705921796">"මයික්‍රො බ්ලොග්කරණය"</string>
+    <string name="topic10327" msgid="8518822987595111212">"ඡායාරූප සහ වීඩියෝ බෙදා ගැනීම"</string>
+    <string name="topic10328" msgid="8932708475346340912">"ඡායාරූප සහ රූප බෙදා ගැනීම"</string>
+    <string name="topic10329" msgid="223933889758324282">"වීඩියෝ බෙදා ගැනීම"</string>
+    <string name="topic10330" msgid="188028553492626282">"සම්"</string>
+    <string name="topic10331" msgid="426844238985651925">"සමාජ ජාල යෙදුම් සහ ඈඳුම්"</string>
+    <string name="topic10332" msgid="291747325781232456">"සමාජ ජාලා"</string>
+    <string name="topic10333" msgid="7950152600374846488">"පුද්ගලයින් සහ සමාජය"</string>
+    <string name="topic10334" msgid="8671262583721706509">"පවුල සහ සබඳතා"</string>
+    <string name="topic10335" msgid="1526523762163185819">"පරම්පරාව සහ පෙළපත්"</string>
+    <string name="topic10336" msgid="4551233571090493177">"විවාහය"</string>
+    <string name="topic10337" msgid="8436172065188964882">"මාපිය කටයුතු"</string>
+    <string name="topic10338" msgid="8896269734682970">"ප්‍රතිග්‍රහණය"</string>
+    <string name="topic10339" msgid="781900237993621300">"ළදරුවන් සහ කුඩා දරුවන්"</string>
+    <string name="topic10340" msgid="6538182603360796294">"ළමා අන්තර්ජාල ආරක්ෂාව"</string>
+    <string name="topic10341" msgid="3586543243312398568">"ප්‍රේමය"</string>
+    <string name="topic10342" msgid="3695176378281477573">"විද්‍යා ප්‍රබන්ධ සහ මනහ්කල්පිත"</string>
+    <string name="topic10343" msgid="2318169062960263837">"සුරතලුන් සහ සතුන්"</string>
+    <string name="topic10344" msgid="2005534117977874327">"සුරතල් සතුන් සඳහා ආහාර සහ සුරතල් සත්කාර සැපයුම්"</string>
+    <string name="topic10345" msgid="2397329020706244200">"සුරතලුන්"</string>
+    <string name="topic10346" msgid="1323702748723563694">"පක්ෂීන්"</string>
+    <string name="topic10347" msgid="3301879823396773413">"පූසන්"</string>
+    <string name="topic10348" msgid="8066686305498410222">"බල්ලන්"</string>
+    <string name="topic10349" msgid="5253723822905761195">"මාළු සහ මින්මැදුර"</string>
+    <string name="topic10350" msgid="6164036369108076590">"උරගයින් සහ උභයජීවීන්"</string>
+    <string name="topic10351" msgid="1132984519083501363">"පශු වෛද්‍යවරු"</string>
+    <string name="topic10352" msgid="6310110390516037997">"ඉඩකඩම්"</string>
+    <string name="topic10353" msgid="5114390804081576684">"ඉඩම් කැබලි සහ ඉඩම"</string>
+    <string name="topic10354" msgid="7980778954791504082">"කාල බෙදා ගැනීම් සහ නිවාඩු දේපළ"</string>
+    <string name="topic10355" msgid="7720717354548642600">"නිර්දේශ"</string>
+    <string name="topic10356" msgid="8366981308613661935">"ව්‍යාපාර සහ පුද්ගලික ලැයිස්තුගත කිරීම්"</string>
+    <string name="topic10357" msgid="3185598234676097975">"පොදු පරිශීලනය"</string>
+    <string name="topic10358" msgid="6732669037513504019">"ගණක සහ විමර්ශන මෙවලම්"</string>
+    <string name="topic10359" msgid="8901932349008990500">"ශබ්දකෝෂ සහ විශ්වකෝෂ"</string>
+    <string name="topic10360" msgid="6113408769992775754">"අධ්‍යාපනික සම්පත්"</string>
+    <string name="topic10361" msgid="364838820459183817">"ආකාර"</string>
+    <string name="topic10362" msgid="3760998790588600032">"කාලය සහ දින දර්ශන"</string>
+    <string name="topic10363" msgid="5464708619861040861">"භාෂා සම්පත්"</string>
+    <string name="topic10364" msgid="4685400848805560054">"විදෙස් භාෂා ඉගෙනීම"</string>
+    <string name="topic10365" msgid="5196231842716190887">"පරිවර්තන මෙවලම් සහ සම්පත්"</string>
+    <string name="topic10366" msgid="7460927054539097025">"සිතියම්"</string>
+    <string name="topic10367" msgid="3900361839783743700">"විද්‍යාව"</string>
+    <string name="topic10368" msgid="2069447039109930660">"වැඩි දියුණු කළ සහ අතථ්‍ය යථාර්ථය"</string>
+    <string name="topic10369" msgid="5747888306428024793">"ජෛව විද්‍යා"</string>
+    <string name="topic10370" msgid="4860829940151353583">"ජාන විද්‍යාව"</string>
+    <string name="topic10371" msgid="8229818210867472466">"රසායන විද්‍යාව"</string>
+    <string name="topic10372" msgid="6400467418954574231">"පරිසර විද්‍යාව සහ පරිසරය"</string>
+    <string name="topic10373" msgid="6990757247198163741">"භූ විද්‍යාව"</string>
+    <string name="topic10374" msgid="8057983193031950119">"යාන්ත්‍රික ඉගෙනුම සහ කෘතිම බුද්ධිය"</string>
+    <string name="topic10375" msgid="8511185098682306025">"ගණිතය"</string>
+    <string name="topic10376" msgid="6387800251638760737">"භෞතික විද්‍යාව"</string>
+    <string name="topic10377" msgid="7834619927563362042">"රොබෝ තාක්ෂණය"</string>
+    <string name="topic10378" msgid="242496862821758873">"සාප්පු සවාරි"</string>
+    <string name="topic10379" msgid="5505228335012447165">"පුරාවස්තු සහ එකතු කිරීම්"</string>
+    <string name="topic10380" msgid="4989560205486143927">"ඇඟලුම්"</string>
+    <string name="topic10381" msgid="7585496746485093505">"ළමා ඇඳුම්"</string>
+    <string name="topic10382" msgid="5088060295126473451">"ඇඳුම් පැලඳුම්"</string>
+    <string name="topic10383" msgid="4947104586590538143">"පිරිමි ඇඳුම්"</string>
+    <string name="topic10384" msgid="3752472493887374077">"කාන්තා ඇඳුම්"</string>
+    <string name="topic10385" msgid="5275843140794803595">"වර්ගීකෘත"</string>
+    <string name="topic10386" msgid="5887032952574801982">"පාරිභෝගික සම්පත්"</string>
+    <string name="topic10387" msgid="8474154360410317897">"කූපන් සහ වට්ටම් දීමනා"</string>
+    <string name="topic10388" msgid="3650307363028796765">"ලැදියා කාඩ්පත් සහ වැඩසටහන්"</string>
+    <string name="topic10389" msgid="1542336508240183221">"තාක්ෂණික සහාය සහ අලුත්වැඩියාව"</string>
+    <string name="topic10390" msgid="831225961168954292">"මල්"</string>
+    <string name="topic10391" msgid="6810540242154911762">"ආචාර කිරීමේ කාඩ්පත්"</string>
+    <string name="topic10392" msgid="2431377771302967625">"සාද සහ නිවාඩු සැපයුම්"</string>
+    <string name="topic10393" msgid="2671274205988136926">"සාප්පු ද්වාර"</string>
+    <string name="topic10394" msgid="1530096364743244151">"ක්‍රීඩා"</string>
+    <string name="topic10395" msgid="316192616624062917">"ඇමරිකානු පාපන්දු"</string>
+    <string name="topic10396" msgid="8042120651878490689">"ඕස්ට්‍රේලියානු පාපන්දු"</string>
+    <string name="topic10397" msgid="492901976344700942">"මෝටර් රථ ධාවන තරඟය"</string>
+    <string name="topic10398" msgid="3471795015226090296">"බේස්බෝල්"</string>
+    <string name="topic10399" msgid="2126280752064021308">"පැසිපන්දු"</string>
+    <string name="topic10400" msgid="5440499529264277027">"පන්දු යැවීම"</string>
+    <string name="topic10401" msgid="166689951236922024">"බොක්සිං"</string>
+    <string name="topic10402" msgid="2451339788231007479">"ඔල්වරසන් නැඟීම"</string>
+    <string name="topic10403" msgid="6455478521804717635">"පාසල් ක්‍රීඩා"</string>
+    <string name="topic10404" msgid="5261583496913118024">"ක්‍රිකට්"</string>
+    <string name="topic10405" msgid="482477447879117820">"බයිසිකල් පැදීම"</string>
+    <string name="topic10406" msgid="8167644332387528703">"අශ්වාරෝහක"</string>
+    <string name="topic10407" msgid="3237734582719584272">"දරුණු ක්‍රීඩා"</string>
+    <string name="topic10408" msgid="3859749534843254349">"ඉහළ යෑම සහ කඳු නැගීම"</string>
+    <string name="topic10409" msgid="7485614115639267976">"කාල්පනික ක්‍රීඩා"</string>
+    <string name="topic10410" msgid="5996939009229881074">"ගොල්ෆ්"</string>
+    <string name="topic10411" msgid="2513997418184786648">"ජිම්නාස්ටික්"</string>
+    <string name="topic10412" msgid="5411755341358248299">"හොකී"</string>
+    <string name="topic10413" msgid="3319233613448963890">"හිම මත ලිස්සා යාම"</string>
+    <string name="topic10414" msgid="1797840816328584660">"සටන් කලා"</string>
+    <string name="topic10415" msgid="2886043330316735719">"යතුරු පැදි ධාවන තරඟ"</string>
+    <string name="topic10416" msgid="3436682172863605224">"ඔලිම්පික්"</string>
+    <string name="topic10417" msgid="8296644015663416236">"රග්බි"</string>
+    <string name="topic10418" msgid="8276736633218488127">"දිවීම සහ ඇවිදීම"</string>
+    <string name="topic10419" msgid="5663062924928275215">"ස්කීං සහ හිම පුවරුවේ යාම"</string>
+    <string name="topic10420" msgid="2509320683543423424">"සොකර්"</string>
+    <string name="topic10421" msgid="6512889128030030686">"රළ ක්‍රීඩා"</string>
+    <string name="topic10422" msgid="8342986282852879750">"පිහිනීම"</string>
+    <string name="topic10423" msgid="6333426807705188459">"ටෙනිස්"</string>
+    <string name="topic10424" msgid="5495511215629567375">"ධාවන පථය සහ පිටිය"</string>
+    <string name="topic10425" msgid="4009138228283995179">"වොලිබෝල්"</string>
+    <string name="topic10426" msgid="7998590461761852196">"මල්ලව පොර"</string>
+    <string name="topic10427" msgid="6711468161729797769">"සංචාර සහ ප්‍රවාහන"</string>
+    <string name="topic10428" msgid="661919563628063196">"වික්‍රමාන්විත සංචාරය"</string>
+    <string name="topic10429" msgid="408270392813634227">"ගුවන් ගමන්"</string>
+    <string name="topic10430" msgid="3046485339481297656">"ව්‍යාපාර ගමන්"</string>
+    <string name="topic10431" msgid="7439352609169583150">"මෝටර් රථ කුලිය"</string>
+    <string name="topic10432" msgid="5034961318884376752">"යාත්‍රා සහ සන්නස"</string>
+    <string name="topic10433" msgid="6354590445323135986">"පවුලේ සංචාර"</string>
+    <string name="topic10434" msgid="7081309045291255264">"මධුසමය සහ ආදර නිවාඩු"</string>
+    <string name="topic10435" msgid="1064605516265819020">"හෝටල් සහ නවාතැන්"</string>
+    <string name="topic10436" msgid="9050375924140897722">"දිගු දුර බස් සහ දුම්රිය"</string>
+    <string name="topic10437" msgid="2655664900730187701">"අඩු වියදම් සහ අවසාන මිනිත්තුවේ සංචාරය"</string>
+    <string name="topic10438" msgid="7944023251845122923">"ගමන් මලු සහ සංචාරක ආයිත්තම්"</string>
+    <string name="topic10439" msgid="7845433008088931971">"සංචාරක ගමනාන්ත"</string>
+    <string name="topic10440" msgid="485118071443976808">"වෙරළ සහ දූපත්"</string>
+    <string name="topic10441" msgid="518643446480879895">"ප්‍රාදේශීය උද්‍යාන සහ උද්‍යාන"</string>
+    <string name="topic10442" msgid="6534536077484540292">"තේමා උද්‍යාන"</string>
+    <string name="topic10443" msgid="8787722062991478596">"සත්වෝද්‍යාන"</string>
+    <string name="topic10444" msgid="2075863187654728611">"රථවාහන සහ මාර්ග සැලසුම්කරුවන්"</string>
+    <string name="topic10445" msgid="3460421948068980869">"සංචාරක නියෝජිතායතන සහ සේවා"</string>
+    <string name="topic10446" msgid="5333138740720504195">"සංචාරක මාර්ගෝපදේශ සහ සංචාරක සටහන්"</string>
 </resources>

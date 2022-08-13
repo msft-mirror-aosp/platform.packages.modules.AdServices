@@ -17,7 +17,6 @@
 package android.adservices.measurement;
 
 import android.annotation.NonNull;
-import android.content.AttributionSource;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -31,7 +30,6 @@ import java.util.Objects;
  */
 public class WebSourceRegistrationRequestInternal implements Parcelable {
     /** Creator for Paracelable (via reflection). */
-    @NonNull
     public static final Parcelable.Creator<WebSourceRegistrationRequestInternal> CREATOR =
             new Parcelable.Creator<WebSourceRegistrationRequestInternal>() {
                 @Override
@@ -47,19 +45,21 @@ public class WebSourceRegistrationRequestInternal implements Parcelable {
     /** Holds input to measurement source registration calls from web context. */
     @NonNull private final WebSourceRegistrationRequest mSourceRegistrationRequest;
     /** Holds package info of where the request is coming from. */
-    @NonNull private final AttributionSource mAttributionSource;
+    @NonNull private final String mPackageName;
+    /** Time the request was created, as millis since boot excluding time in deep sleep. */
+    private final long mRequestTime;
 
-    private WebSourceRegistrationRequestInternal(
-            WebSourceRegistrationRequest sourceRegistrationRequest,
-            AttributionSource attributionSource) {
-        mSourceRegistrationRequest = sourceRegistrationRequest;
-        mAttributionSource = attributionSource;
+    private WebSourceRegistrationRequestInternal(@NonNull Builder builder) {
+        mSourceRegistrationRequest = builder.mSourceRegistrationRequest;
+        mPackageName = builder.mPackageName;
+        mRequestTime = builder.mRequestTime;
     }
 
     private WebSourceRegistrationRequestInternal(Parcel in) {
         Objects.requireNonNull(in);
         mSourceRegistrationRequest = WebSourceRegistrationRequest.CREATOR.createFromParcel(in);
-        mAttributionSource = AttributionSource.CREATOR.createFromParcel(in);
+        mPackageName = in.readString();
+        mRequestTime = in.readLong();
     }
 
     /** Getter for {@link #mSourceRegistrationRequest}. */
@@ -67,9 +67,14 @@ public class WebSourceRegistrationRequestInternal implements Parcelable {
         return mSourceRegistrationRequest;
     }
 
-    /** Getter for {@link #mAttributionSource}. */
-    public AttributionSource getAttributionSource() {
-        return mAttributionSource;
+    /** Getter for {@link #mPackageName}. */
+    public String getPackageName() {
+        return mPackageName;
+    }
+
+    /** Getter for {@link #mRequestTime}. */
+    public long getRequestTime() {
+        return mRequestTime;
     }
 
     @Override
@@ -78,12 +83,13 @@ public class WebSourceRegistrationRequestInternal implements Parcelable {
         if (!(o instanceof WebSourceRegistrationRequestInternal)) return false;
         WebSourceRegistrationRequestInternal that = (WebSourceRegistrationRequestInternal) o;
         return Objects.equals(mSourceRegistrationRequest, that.mSourceRegistrationRequest)
-                && Objects.equals(mAttributionSource, that.mAttributionSource);
+                && Objects.equals(mPackageName, that.mPackageName)
+                && mRequestTime == that.mRequestTime;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mSourceRegistrationRequest, mAttributionSource);
+        return Objects.hash(mSourceRegistrationRequest, mPackageName);
     }
 
     @Override
@@ -95,49 +101,41 @@ public class WebSourceRegistrationRequestInternal implements Parcelable {
     public void writeToParcel(@NonNull Parcel out, int flags) {
         Objects.requireNonNull(out);
         mSourceRegistrationRequest.writeToParcel(out, flags);
-        mAttributionSource.writeToParcel(out, flags);
+        out.writeString(mPackageName);
+        out.writeLong(mRequestTime);
     }
 
     /** Builder for {@link WebSourceRegistrationRequestInternal}. */
     public static final class Builder {
         /** External source registration request from client app SDK. */
-        @NonNull private WebSourceRegistrationRequest mSourceRegistrationRequest;
-        /** AttributionSource of the registration. Used to determine the registrant. */
-        @NonNull private AttributionSource mAttributionSource;
+        @NonNull private final WebSourceRegistrationRequest mSourceRegistrationRequest;
+        /** Client's package name used for the registration. Used to determine the registrant. */
+        @NonNull private final String mPackageName;
+        /** Time the request was created, as millis since boot excluding time in deep sleep. */
+        private final long mRequestTime;
 
         /**
-         * Setter for {@link #mSourceRegistrationRequest}.
+         * Builder constructor for {@link WebSourceRegistrationRequestInternal}.
          *
-         * @param sourceRegistrationRequest source registration request
-         * @return builder
+         * @param sourceRegistrationRequest external source registration request
+         * @param packageName that is calling PP API
+         * @param requestTime time that the request was created
          */
-        @NonNull
-        public Builder setSourceRegistrationRequest(
-                @NonNull WebSourceRegistrationRequest sourceRegistrationRequest) {
+        public Builder(
+                @NonNull WebSourceRegistrationRequest sourceRegistrationRequest,
+                @NonNull String packageName,
+                long requestTime) {
+            Objects.requireNonNull(sourceRegistrationRequest);
+            Objects.requireNonNull(packageName);
             mSourceRegistrationRequest = sourceRegistrationRequest;
-            return this;
+            mPackageName = packageName;
+            mRequestTime = requestTime;
         }
 
-        /**
-         * Setter for {@link #mAttributionSource}.
-         *
-         * @param attributionSource app that is calling PP API
-         * @return builder
-         */
-        @NonNull
-        public Builder setAttributionSource(@NonNull AttributionSource attributionSource) {
-            mAttributionSource = attributionSource;
-            return this;
-        }
-
-        /** Pre-validates paramerters and builds {@link WebSourceRegistrationRequestInternal}. */
+        /** Pre-validates parameters and builds {@link WebSourceRegistrationRequestInternal}. */
         @NonNull
         public WebSourceRegistrationRequestInternal build() {
-            Objects.requireNonNull(mSourceRegistrationRequest);
-            Objects.requireNonNull(mAttributionSource);
-
-            return new WebSourceRegistrationRequestInternal(
-                    mSourceRegistrationRequest, mAttributionSource);
+            return new WebSourceRegistrationRequestInternal(this);
         }
     }
 }

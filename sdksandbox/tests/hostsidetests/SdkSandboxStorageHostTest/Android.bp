@@ -42,15 +42,19 @@ java_defaults {
     name: "SdkSandboxStorageHostTestDefaults",
     srcs: [
         "app/src/**/SdkSandboxStorageTestApp.java",
+        "app/src/**/TestActivity.java",
         ":framework-sdksandbox-sources",
         ":sdksandbox_aidl",
         ":sdksandbox-sources",
     ],
     static_libs: [
         "androidx.core_core",
+        "androidx.test.ext.junit",
         "compatibility-device-util-axt",
         "SdkSandboxTestUtils",
     ],
+    min_sdk_version: "Tiramisu",
+    target_sdk_version: "current",
     test_suites: ["general-tests"],
     platform_apis: true,
 }
@@ -74,6 +78,9 @@ android_test_helper_app {
     srcs: [
        "codeprovider/src/**/*.java",
        ":framework-sdksandbox-sources",
+    ],
+    static_libs: [
+        "compatibility-device-util-axt",
     ],
     platform_apis: true,
     certificate: ":sdksandbox-test",

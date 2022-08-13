@@ -22,6 +22,10 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="1644434244130657749">"អនុញ្ញាតឱ្យកម្មវិធីចូលប្រើប្រាស់ AdServices Attribution API។"</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="2766614780488510189">"ចូលប្រើប្រាស់ AdServices Custom Audience API"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"អនុញ្ញាតឱ្យកម្មវិធីចូលប្រើប្រាស់ AdServices Custom Audiences API។"</string>
+    <!-- no translation found for permlab_accessAdServicesAdId (2754825914769538156) -->
+    <skip />
+    <!-- no translation found for permdesc_accessAdServicesAdId (7717770480967762044) -->
+    <skip />
     <string name="permlab_accessAdServicesConsent" msgid="3203633397142568707">"ចូលប្រើប្រាស់ AdServices Consent API"</string>
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"អនុញ្ញាតឱ្យកម្មវិធីចូលប្រើប្រាស់ AdServices Consent API។"</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"ចូលប្រើប្រាស់ Ad ID API"</string>
@@ -30,18 +34,516 @@
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"អនុញ្ញាតឱ្យកម្មវិធីចូលប្រើប្រាស់ App Set ID API។"</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"សិទ្ធិចូលប្រើប្រាស់ Consent Service API"</string>
     <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"អនុញ្ញាតឱ្យកម្មវិធីចូលប្រើប្រាស់ Consent Service API។"</string>
+    <string name="app_label" msgid="5985320129629013968">"ប្រព័ន្ធ Android"</string>
     <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"បេតា Privacy Sandbox"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"បេតា Privacy Sandbox"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"បិទ/បើកបេតា Privacy Sandbox"</string>
-    <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
-    <string name="settingsUI_topics_title" msgid="4024683469932819788">"ចំណាប់អារម្មណ៍ទូទៅរបស់អ្នក"</string>
-    <string name="settingsUI_topics_summary" msgid="3146101472984434355">"គ្រប់គ្រងចំណាប់អារម្មណ៍ទូទៅរបស់អ្នក"</string>
+    <string name="settingsUI_main_view_title" msgid="255982490790282252">"កំណែបេតានៃឯកជនភាពនៃការផ្សាយពាណិជ្ជកម្មរបស់ Android"</string>
+    <string name="settingsUI_main_view_subtitle" msgid="3380585883687237827">"សាកល្បងប្រព័ន្ធ Privacy Sandbox ថ្មីដែលដាក់កំហិតទៅលើការតាមដានឆ្លងកម្មវិធី"</string>
+    <string name="settingsUI_main_view_info_text1" msgid="8353580266621706164">"របៀបដែល Privacy Sandbox ដំណើរការ"</string>
+    <string name="settingsUI_main_view_info_text2" msgid="5144888171043725329">"ទិន្នន័យត្រូវបានប្រមូលនៅក្នុង Privacy Sandbox ដើម្បីបង្ហាញអ្នកនូវការផ្សាយពាណិជ្ជកម្មដែលអ្នកអាចនឹងចូលចិត្ត ប៉ុន្ដែត្រូវបានចែករំលែកដោយ​មិន​កំណត់​អត្តសញ្ញាណ​អ្នក ឬឧបករណ៍របស់អ្នក។"</string>
+    <string name="settingsUI_main_view_info_text3" msgid="9106658161862318732">"តើទិន្នន័យប្រភេទណាដែលត្រូវបានផ្ទុកនៅក្នុង Privacy Sandbox?"</string>
+    <string name="settingsUI_main_view_info_text4" msgid="5819359066240454954">"•  ចំណាប់អារម្មណ៍ទូទៅ"</string>
+    <string name="settingsUI_main_view_info_text5" msgid="6064832868440367397">"Android បង្កើតទិន្នន័យនេះដោយផ្អែកលើកម្មវិធីដែលអ្នកប្រើ និងបញ្ចូលវាទៅក្នុង Privacy Sandbox។ ឧទាហរណ៍ មួយក្នុងចំណោមចំណាប់អារម្មណ៍ទូទៅរបស់អ្នកអាចជា \"កីឡា\"។ \n\nអ្នកអាចឃើញបញ្ជីនៃចំណាប់អារម្មណ៍របស់អ្នកនៅក្នុងការកំណត់​ឯកជនភាពរបស់អ្នក និងទប់ស្កាត់ចំណាប់អារម្មណ៍ណាដែលអ្នកមិនចូលចិត្ត។"</string>
+    <string name="settingsUI_main_view_info_text6" msgid="3406976290919982143">"•  ចំណាប់អារម្មណ៍ជាក់លាក់"</string>
+    <string name="settingsUI_main_view_info_text7" msgid="210269084665708892">"កម្មវិធីរបស់អ្នកបង្កើតទិន្នន័យដោយផ្អែកលើរបៀបដែលអ្នកប្រើប្រាស់កម្មវិធីទាំងនោះ និងបញ្ចូលវាទៅក្នុង Privacy Sandbox។ ឧទាហរណ៍​ កម្មវិធីដែលអ្នកប្រើប្រាស់ដើម្បីទិញស្បែកជើងសម្រាប់រត់អាចនឹងបញ្ចូលស្លាក sport_running។\n\nនៅក្នុងការកំណត់​ឯកជនភាពរបស់អ្នក អ្នកអាចឃើញបញ្ជីនៃកម្មវិធីដែលធ្វើសកម្មភាពនេះ និង​ទប់ស្កាត់កម្មវិធីផ្សេងៗពីការបញ្ចូលទិន្នន័យទៅក្នុង Privacy Sandbox។"</string>
+    <string name="settingsUI_topics_view_title" msgid="7437641813424176118">"គ្រប់គ្រងចំណាប់អារម្មណ៍"</string>
+    <string name="settingsUI_topics_view_subtitle" msgid="5347912133908026725">"Privacy Sandbox របស់ Android ដាក់កំហិតទៅលើការតាមដានឆ្លងកម្មវិធី ប៉ុន្តែ​នៅតែអនុញ្ញាតឱ្យកម្មវិធីបង្ហាញការផ្សាយពាណិជ្ជកម្មដែលអ្នកអាចចូលចិត្ត​ដល់​អ្នក។ Android ចែករំលែកទិន្នន័យនេះជាមួយអ្នក​ផ្សាយ​ពាណិជ្ជកម្មដោយមិនចាំបាច់កំណត់អត្តសញ្ញាណអ្នក ឬឧបករណ៍របស់អ្នកឡើយ។\n\nដោយផ្អែកលើកម្មវិធីដែលអ្នកប្រើ Android បង្កើត និងធ្វើបច្ចុប្បន្នភាពបញ្ជីនៃចំណាប់អារម្មណ៍ទូទៅ​របស់​អ្នក​លើ​ការផ្សាយពាណិជ្ជកម្ម។ ប្រសិនបើអ្នកទប់ស្កាត់ចំណាប់អារម្មណ៍ណាមួយ ចំណាប់​អារម្មណ៍​នោះ​នឹងមិន​ត្រូវ​បាន​បញ្ចូលទៅក្នុង​បញ្ជីម្ដងទៀតនោះទេ លុះត្រាតែអ្នកឈប់​ទប់ស្កាត់វា។ អ្នកនៅតែ​អាច​មើល​ឃើញការផ្សាយពាណិជ្ជកម្ម​ដែល​ពាក់ព័ន្ធមួយចំនួន។"</string>
+    <string name="settingsUI_topics_view_info_text1" msgid="6729245512525985403">"ចំណាប់អារម្មណ៍ទៅលើការផ្សាយពាណិជ្ជកម្មទូទៅ"</string>
+    <string name="settingsUI_topics_view_info_text2" msgid="8355913397424818046">"Android បង្កើតចំណាប់អារម្មណ៍ទាំងនេះដោយផ្អែកលើកម្មវិធីដែលអ្នកប្រើប្រាស់។\n\nឧទាហរណ៍ ប្រសិនបើអ្នកមានកម្មវិធីកីឡាមួយចំនួននៅលើឧបករណ៍របស់អ្នក Android អាចនឹងបញ្ចូលចំណាប់អារម្មណ៍ \"កីឡា\" ទៅកាន់ Privacy Sandbox។ \n\nបន្ទាប់មក ទិន្នន័យនេះត្រូវបានចែករំលែកជាមួយអ្នក​ផ្សាយ​ពាណិជ្ជកម្មដោយមិនចាំបាច់កំណត់អត្តសញ្ញាណអ្នក ឬឧបករណ៍របស់អ្នកឡើយ។"</string>
     <string name="settingsUI_apps_key" msgid="5279102708260885695">"apps_preference"</string>
     <string name="settingsUI_apps_title" msgid="2177966577556486280">"កម្មវិធីដែលបង្កើតចំណាប់អារម្មណ៍ជាក់លាក់របស់អ្នក"</string>
     <string name="settingsUI_apps_summary" msgid="2382082513059909726">"គ្រប់គ្រងកម្មវិធី​ដែលបង្កើតចំណាប់អារម្មណ៍ជាក់លាក់របស់អ្នក"</string>
+    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"កម្មវិធី​ដែល​អ្នក​បាន​ទប់ស្កាត់"</string>
+    <string name="settingsUI_apps_view_title" msgid="3615627092403761282">"គ្រប់គ្រង​កម្មវិធី"</string>
+    <string name="settingsUI_apps_view_subtitle" msgid="5257332567222983503">"ផ្អែក​លើ​របៀប​ដែល​អ្នក​ប្រើប្រាស់ កម្មវិធី​មួយ​ចំនួន​បង្កើត​ទិន្នន័យ​អំពី​ចំណាប់អារម្មណ៍​ជាក់លាក់​របស់​អ្នក​លើ​ការផ្សាយពាណិជ្ជកម្ម​សម្រាប់ Privacy Sandbox។ Android ធ្វើ​បច្ចុប្បន្នភាព​បញ្ជី​កម្មវិធី​នេះ ដើម្បី​ឱ្យ​អ្នក​អាច​មើល ឬ​កែ​បញ្ជី​នេះ​បាន។\n\nប្រសិន​បើ​អ្នក​ទប់ស្កាត់​កម្មវិធី​ណា​មួយ កម្មវិធី​នោះ​នឹង​មិន​បញ្ចូល​ចំណាប់អារម្មណ៍​ជាក់លាក់​ទៀត​ទេ។ កម្មវិធី​នោះ​នឹង​មិន​ត្រូវ​បាន​បញ្ចូល​ទៅ​ក្នុង​បញ្ជី​នេះ​ម្ដង​ទៀត​ទេ ប្រសិន​បើ​អ្នក​មិន​ឈប់​ទប់ស្កាត់​វា។ ចំណាប់អារម្មណ៍​ដែល​បាន​បង្កើត​ដោយ​កម្មវិធី​នោះ​រួច​ហើយ​នឹង​ត្រូវ​បាន​លុប ប៉ុន្តែ​អ្នក​នៅ​តែ​អាច​មើល​ឃើញ​ការផ្សាយ​ពាណិជ្ជកម្ម​ដែល​ពាក់ព័ន្ធ​មួយ​ចំនួន។"</string>
+    <string name="settingsUI_apps_view_no_apps_text" msgid="1056905761942948495">"គ្មាន​កម្មវិធី​ដែល​ត្រូវ​បង្ហាញ​ឥឡូវ​នេះ​ទេ"</string>
+    <string name="settingsUI_reset_apps_title" msgid="3308597019425923552">"កំណត់ទិន្នន័យដែលបង្កើតដោយកម្មវិធីឡើងវិញ"</string>
+    <string name="settingsUI_apps_view_info_text1" msgid="503353133396835755">"ចំណាប់អារម្មណ៍លើការផ្សាយពាណិជ្ជកម្មជាក់លាក់"</string>
+    <string name="settingsUI_apps_view_info_text2" msgid="6562781312486257254">"កម្មវិធីមួយចំនួនដែលអ្នកប្រើ បង្កើតទិន្នន័យអំពីចំណាប់អារម្មណ៍ជាក់លាក់របស់អ្នកសម្រាប់ការផ្សាយពាណិជ្ជកម្ម ហើយបញ្ចូលវាទៅក្នុង Privacy Sandbox។\n\nឧទាហរណ៍ កម្មវិធីដែលអ្នកប្រើដើម្បីទិញស្បែកជើងសម្រាប់រត់ប្រហែលជាបញ្ចូលស្លាក sport_running។\n\nក្រោយមក ទិន្នន័យដែលប្រមូលបាននៅក្នុង Privacy Sandbox ត្រូវបានចែករំលែកជាមួយអ្នកផ្សាយពាណិជ្ជកម្មដោយមិនកំណត់អត្តសញ្ញាណអ្នក ឬឧបករណ៍របស់អ្នកឡើយ។ ដូច្នេះ អ្នកនៅតែមើលឃើញការផ្សាយពាណិជ្ជកម្មដែលអ្នកប្រហែលជាចូលចិត្តដដែល ប៉ុន្តែដោយមានការការពារឯកជនភាពកាន់តែខ្លាំង។"</string>
+    <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="5700261138344146462">"គ្មាន​កម្មវិធី​ដែល​បាន​ទប់ស្កាត់​ដែល​ត្រូវ​បង្ហាញ​ឥឡូវ​នេះ​ទេ"</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"គ្មានចំណាប់អារម្មណ៍ដែលត្រូវបង្ហាញឥឡូវនេះទេ"</string>
+    <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
+    <string name="settingsUI_topics_title" msgid="4024683469932819788">"ចំណាប់អារម្មណ៍ទូទៅរបស់អ្នក"</string>
+    <string name="settingsUI_topics_summary" msgid="3146101472984434355">"គ្រប់គ្រងចំណាប់អារម្មណ៍ទូទៅរបស់អ្នក"</string>
     <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"គ្រប់គ្រងចំណាប់អារម្មណ៍ទូទៅលើការផ្សាយពាណិជ្ជកម្មរបស់អ្នក"</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"ទប់ស្កាត់"</string>
-    <string name="settingsUI_blocked_topics_title" msgid="8563397445730522086">"ចំណាប់អារម្មណ៍ដែល​អ្នក​បាន​ទប់ស្កាត់"</string>
-    <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"កំណត់​ចំណាប់អារម្មណ៍​ទាំង​អស់​​ឡើង​វិញ"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"ឈប់ទប់ស្កាត់"</string>
+    <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"ចំណាប់អារម្មណ៍ដែល​អ្នក​បាន​ទប់ស្កាត់"</string>
+    <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"កំណត់​ចំណាប់អារម្មណ៍​ទាំង​អស់​​ឡើង​វិញ"</string>
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="5717377146633882375">"គ្មានចំណាប់អារម្មណ៍ដែល​បាន​ទប់ស្កាត់​ដែលត្រូវបង្ហាញឥឡូវនេះទេ"</string>
+    <string name="notificationUI_notification_content_eu" msgid="7419441022808120101">"សាកល្បង​ប្រើ​មុខងារថ្មីៗដែលនឹងដាក់កំហិតលើការតាមដានឆ្លងកម្មវិធី"</string>
+    <string name="notificationUI_header_title_eu" msgid="6822288197367284058">"ចូលរួមកំណែបេតានៃឯកជនភាពនៃការផ្សាយពាណិជ្ជកម្ម"</string>
+    <string name="notificationUI_container3_title_eu" msgid="3157854074121291065">"អ្វី​ដែល​អ្នក​អាច​ធ្វើ​បាន"</string>
+    <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"ទេ អរគុណ"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="7294736040084958697">"បាទ/ចាស ខ្ញុំនឹងសាកល្បង"</string>
+    <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"សូមអរគុណ​សម្រាប់​ការចូលរួម"</string>
+    <string name="notificationUI_confirmation_accept_subtitle" msgid="722290263168711051">"ឥឡូវនេះ អ្នកជាផ្នែក​មួយ​នៃកំណែបេតា Privacy Sandbox។ \n\nអ្នកអាច​ស្វែងយល់បន្ថែម ឬចាកចេញពី​កំណែបេតា​បានគ្រប់ពេល​នៅក្នុង​ការកំណត់​ឯកជនភាព​របស់អ្នក។"</string>
+    <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"អ្នកបានជ្រើសរើស​មិន​ចូលរួម"</string>
+    <string name="notificationUI_confirmation_decline_subtitle" msgid="1869322730722065768">"សូមអរគុណ​ចំពោះការឆ្លើយតប​របស់អ្នក។ អ្នកមិន​ត្រូវបានបញ្ចូល​ទៅក្នុង​កំណែបេតា Privacy Sandbox ទេ។\n\nប្រសិនបើ​អ្នកប្ដូរចិត្ត ឬចង់ស្វែងយល់បន្ថែម សូមចូលទៅកាន់​ការកំណត់ឯកជនភាព​របស់អ្នក។"</string>
+    <string name="notificationUI_notification_content" msgid="2096372976024736172">"អ្នកកំពុងសាកល្បង​ប្រើ​មុខងារថ្មីៗដែលដាក់កំហិតលើការតាមដានឆ្លងកម្មវិធី"</string>
+    <string name="notificationUI_header_title" msgid="857744302422337933">"អ្នកកំពុងជួយ Android ក្នុងការដាក់កំហិតលើការតាមដានឆ្លងកម្មវិធី"</string>
+    <string name="notificationUI_header_subtitle" msgid="522289584167376388">"Android កំពុងសាកល្បងមុខងារថ្មីដែលនឹងដាក់កំហិតលើការតាមដានឆ្លងកម្មវិធីដោយអ្នក​ផ្សាយ​ពាណិជ្ជកម្ម"</string>
+    <string name="notificationUI_container1_title" msgid="3837529978480615552">"តើអ្វីជាការតាមដានឆ្លងកម្មវិធី?"</string>
+    <string name="notificationUI_container1_body_text" msgid="2564452110982505130">"បច្ចុប្បន្ន អ្នកអាចភ្ជាប់ទិន្នន័យអំពីការប្រើប្រាស់កម្មវិធីរបស់អ្នកទៅនឹងឧបករណ៍របស់អ្នកបានយ៉ាងងាយស្រួល រួចចែករំលែកទិន្នន័យនោះនៅលើកម្មវិធីនានាក្នុងគោលបំណងផ្សាយ​ពាណិជ្ជកម្ម។"</string>
+    <string name="notificationUI_container2_title" msgid="4796199061758878885">"អ្វីដែល Android កំពុងធ្វើ"</string>
+    <string name="notificationUI_container2_body_text" msgid="7717896223210525953">"Android កំពុងសាកល្បង Privacy Sandbox ថ្មីដែលរក្សាទុក និងចែករំលែកទិន្នន័យអំពីការ​ផ្សាយ​ពាណិជ្ជកម្មយ៉ាងមានសុវត្ថិភាព ដោយមិនចាំបាច់សម្គាល់អ្នក ឬឧបករណ៍របស់អ្នកឡើយ។ \n\nប្រព័ន្ធថ្មីនេះជួយរារាំងមិនឱ្យកម្មវិធីបញ្ជូនទិន្នន័យដោយផ្ទាល់ទៅកាន់កម្មវិធីផ្សេងទៀត ប៉ុន្តែនៅតែអនុញ្ញាតឱ្យកម្មវិធីទាំងនោះបង្ហាញជូនអ្នកនូវការផ្សាយពាណិជ្ជកម្មដែលអ្នកអាចនឹងចូលចិត្ត។"</string>
+    <string name="notificationUI_container2_control_text" msgid="3031227311095645064">"របៀបដែលវាដំណើរការ"</string>
+    <string name="notificationUI_container3_title" msgid="1283794406634157611">"របៀប​ដែល​អ្នក​កំពុង​ជួយ"</string>
+    <string name="notificationUI_container3_body_text" msgid="2636703086913037594">"ទោះបីអ្នកប្រហែលជាមិនកត់សម្គាល់ការផ្លាស់ប្ដូរចំពោះការផ្សាយពាណិជ្ជកម្មដែលអ្នកមើលឃើញក៏ដោយ ការក្លាយជាផ្នែកមួយនៃកំណែបេតានឹងជួយឱ្យ Android ដាក់កំហិតលើការតាមដានឆ្លងកម្មវិធីបន្តិចម្ដងៗ។ អ្នកអាចចាកចេញពីកំណែបេតាបានគ្រប់ពេល ដោយចូលទៅកាន់ការកំណត់ឯកជនភាពរបស់អ្នក។"</string>
+    <string name="notificationUI_left_control_button_text" msgid="6459461402253858770">"ការកំណត់​ឯកជនភាព"</string>
+    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"យល់ហើយ"</string>
+    <string name="notificationUI_how_it_works_expanded_text1" msgid="1753701052925879129">"របៀបដែល Privacy Sandbox ដំណើរការ"</string>
+    <string name="notificationUI_how_it_works_expanded_text2" msgid="3117263986288195274">"ទិន្នន័យត្រូវបានប្រមូលនៅក្នុង Privacy Sandbox ដើម្បីបង្ហាញអ្នកនូវការផ្សាយពាណិជ្ជកម្មដែលអ្នកអាចនឹងចូលចិត្ត ប៉ុន្ដែត្រូវបានចែករំលែកដោយ​មិន​កំណត់​អត្តសញ្ញាណ​អ្នក ឬឧបករណ៍របស់អ្នក។"</string>
+    <string name="notificationUI_how_it_works_expanded_text3" msgid="7270822532577167752">"តើ​ទិន្នន័យ​ប្រភេទ​ណា​ខ្លះ​នឹង​ត្រូវ​បាន​រក្សា​ទុក​នៅ​ក្នុង Privacy Sandbox?"</string>
+    <string name="notificationUI_how_it_works_expanded_text4" msgid="5609475052636889205">"•  ចំណាប់អារម្មណ៍ទូទៅ"</string>
+    <string name="notificationUI_how_it_works_expanded_text5" msgid="6757375506547548599">"Android បង្កើតទិន្នន័យនេះដោយផ្អែកលើកម្មវិធីដែលអ្នកប្រើ និងបញ្ចូលវាទៅក្នុង Privacy Sandbox។ ឧទាហរណ៍ ចំណាប់​អារម្មណ៍​មួយក្នុងចំណោមចំណាប់អារម្មណ៍ទូទៅរបស់អ្នកអាចជា​កីឡា។ \n\nអ្នកអាចឃើញបញ្ជីនៃចំណាប់អារម្មណ៍របស់អ្នកនៅក្នុងការកំណត់​ឯកជនភាពរបស់អ្នក និងទប់ស្កាត់ចំណាប់អារម្មណ៍ណាដែលអ្នកមិនចូលចិត្ត។"</string>
+    <string name="notificationUI_how_it_works_expanded_text6" msgid="2863877874268072458">"•  ចំណាប់អារម្មណ៍ជាក់លាក់"</string>
+    <string name="notificationUI_how_it_works_expanded_text7" msgid="2140515900209351523">"កម្មវិធីរបស់អ្នកបង្កើតទិន្នន័យនេះដោយផ្អែកលើរបៀបដែលអ្នកប្រើប្រាស់កម្មវិធីទាំងនោះ និងបញ្ចូលវាទៅក្នុង Privacy Sandbox។ ឧទាហរណ៍ កម្មវិធីដែលអ្នកប្រើ ដើម្បីទិញស្បែកជើងសម្រាប់រត់ប្រហែលជា​បញ្ចូលស្លាក sport_running។\n\nនៅក្នុងការកំណត់​ឯកជនភាព​របស់អ្នក អ្នកអាចមើលឃើញ​បញ្ជីកម្មវិធី​ដែលធ្វើសកម្មភាពបែបនេះ និងទប់ស្កាត់​កម្មវិធីណាមួយ​មិនឱ្យបញ្ចូល​ទិន្នន័យទៅក្នុង sandbox។"</string>
+    <string name="topic10001" msgid="1636806320891333775">"សិល្បៈ និងការកម្សាន្ត"</string>
+    <string name="topic10002" msgid="1226367977754287428">"ការសម្ដែង និងរោង​ល្ខោន"</string>
+    <string name="topic10003" msgid="6949890838957814881">"គំនូរជីវចល និងតុក្កតា"</string>
+    <string name="topic10004" msgid="5397903150832181233">"គំនូរ​ជីវចល"</string>
+    <string name="topic10005" msgid="6316179809581237302">"សៀវភៅរូបថ្លុក"</string>
+    <string name="topic10006" msgid="7442330644172139790">"ការប្រគំតន្រ្តី និងព្រឹត្តិការណ៍​តន្ត្រី"</string>
+    <string name="topic10007" msgid="5537896091418145164">"ការរាំ"</string>
+    <string name="topic10008" msgid="2737343278307552521">"វិស័យ​កម្សាន្ត"</string>
+    <string name="topic10009" msgid="3252367380340240453">"ភាពសប្បាយរីករាយ និងរឿង​កំប៉ិកកំប៉ុក"</string>
+    <string name="topic10010" msgid="932301479153552725">"ការ​ធ្វើតេស្តបែបសប្បាយ​រីករាយ និង​ការ​ស្ទង់​មតិ​បែបឡប់ៗ"</string>
+    <string name="topic10011" msgid="3123553390567261985">"សំណើច"</string>
+    <string name="topic10012" msgid="8756486271154511326">"រូបភាព និងវីដេអូកំប្លែង"</string>
+    <string name="topic10013" msgid="1242353161202448753">"កំប្លែង​បន្ត​ផ្ទាល់"</string>
+    <string name="topic10014" msgid="6086156236112755291">"ព្រឹត្តិការណ៍​កីឡា​បន្ត​ផ្ទាល់"</string>
+    <string name="topic10015" msgid="9196350141359833832">"វេទមន្ត"</string>
+    <string name="topic10016" msgid="202419376638900745">"បញ្ជីភាពយន្ត និង​ម៉ោងបញ្ចាំង​នៅរោងភាពយន្ត"</string>
+    <string name="topic10017" msgid="6737229918787540100">"ភាពយន្ត"</string>
+    <string name="topic10018" msgid="6823676154109177487">"ភាពយន្ត​បែបសកម្មភាព និង​ផ្សង​ព្រេង"</string>
+    <string name="topic10019" msgid="6875960630918973127">"ភាពយន្ត​ជីវចល"</string>
+    <string name="topic10020" msgid="4323870300602151489">"ភាពយន្ត​​កំប្លែង"</string>
+    <string name="topic10021" msgid="446758643774468418">"ភាពយន្ត​វប្បធម៌ និងអ៊ីនឌី"</string>
+    <string name="topic10022" msgid="3671929742155787005">"ភាពយន្ត​ឯកសារ"</string>
+    <string name="topic10023" msgid="3547616830531182863">"ភាពយន្ត​ភាគ"</string>
+    <string name="topic10024" msgid="1044853632986202120">"ភាពយន្ត​គ្រួសារ"</string>
+    <string name="topic10025" msgid="5958629223443279316">"ភាពយន្ត​ភ័យរន្ធត់​"</string>
+    <string name="topic10026" msgid="5685515125614860029">"ភាពយន្ត​មនោសញ្ចេតនា"</string>
+    <string name="topic10027" msgid="8846353713171614854">"រំជើបរំជួល"</string>
+    <string name="topic10028" msgid="170404703980174756">"តន្រ្តី និង​សំឡេង"</string>
+    <string name="topic10029" msgid="4634600135545614665">"ប៊្លូ"</string>
+    <string name="topic10030" msgid="7226438392540805771">"តន្ត្រី​បុរាណ"</string>
+    <string name="topic10031" msgid="1488013446112025676">"តន្ត្រី​ជនបទ"</string>
+    <string name="topic10032" msgid="9053666244854789632">"តន្ត្រី​រាំ និងអេឡិចត្រូនិក"</string>
+    <string name="topic10033" msgid="440063573197454181">"តន្ត្រី​ប្រជាប្រិយ និង​ប្រពៃណី"</string>
+    <string name="topic10034" msgid="8296307244554241197">"​ហ្សាស់"</string>
+    <string name="topic10035" msgid="9171752741499923310">"ការចាក់​ និងទាញ​យកតន្ត្រី"</string>
+    <string name="topic10036" msgid="2490236112725457376">"វីដេអូ​​តន្ត្រី"</string>
+    <string name="topic10037" msgid="1923690469725883551">"ឧបករណ៍​តន្ត្រី"</string>
+    <string name="topic10038" msgid="2817492732688549631">"ព្យាណូ និងក្ដារចុច"</string>
+    <string name="topic10039" msgid="8970033643570782019">"តន្ត្រី​ប៉ុប"</string>
+    <string name="topic10040" msgid="7478395512712452137">"វិទ្យុ"</string>
+    <string name="topic10041" msgid="3319379117705411886">"វិទ្យុ​ជជែក"</string>
+    <string name="topic10042" msgid="8830471038440654640">"រ៉េប និងហ៊ីប​ហ​ប"</string>
+    <string name="topic10043" msgid="8585450284346207691">"តន្ត្រីរ៉ុក"</string>
+    <string name="topic10044" msgid="3710011249220779842">"ក្លាស៊ិករ៉ុក និងអូលឌី"</string>
+    <string name="topic10045" msgid="7593443421067822441">"ហាដរ៉ុក និង​ប្រូគ្រេសស៊ីវ"</string>
+    <string name="topic10046" msgid="8715621227472631784">"តន្ត្រីអ៊ីនឌី និងអាល់ធើណាធីវ"</string>
+    <string name="topic10047" msgid="3518038303049899798">"បណ្ណាល័យ​គំរូ និង​សំឡេង"</string>
+    <string name="topic10048" msgid="3063505369500799094">"សូល និង R&amp;B"</string>
+    <string name="topic10049" msgid="8061992014977840818">"បទភ្លេង"</string>
+    <string name="topic10050" msgid="3540229495848506229">"តន្ត្រី​ពិភព​លោក​"</string>
+    <string name="topic10051" msgid="6132468331924347995">"តន្ត្រី​រ៉េកហ្គេ និងកា​រា​បៀ​ន"</string>
+    <string name="topic10052" msgid="8213269199807045473">"វិចិត្រសាល​រូបភាព​លើ​បណ្ដាញ"</string>
+    <string name="topic10053" msgid="1378192203082454197">"វីដេអូ​លើ​បណ្ដាញ"</string>
+    <string name="topic10054" msgid="3727401645405134505">"ការផ្សាយវីដេអូ​បន្តផ្ទាល់"</string>
+    <string name="topic10055" msgid="4943174831732192854">"ការចាក់ភាពយន្ត និងកម្មវិធីទូរទស្សន៍"</string>
+    <string name="topic10056" msgid="3066058636154255073">"អូប៉េរ៉ា"</string>
+    <string name="topic10057" msgid="387445514677222034">"មគ្គុទេសក៍​ និង​ឯកសារ​យោងទូរទស្សន៍"</string>
+    <string name="topic10058" msgid="9149178644022969766">"បណ្តាញ និងស្ថានីយទូរទស្សន៍"</string>
+    <string name="topic10059" msgid="6300562669238320524">"កម្មវិធីទូរទស្សន៍"</string>
+    <string name="topic10060" msgid="3901256055064835246">"កម្មវិធី​កំប្លែង​តាម​ទូរទស្សន៍"</string>
+    <string name="topic10061" msgid="8343924749123326062">"កម្មវិធី​វីដេអូឯកសារ​ និងរឿងមិនប្រឌិតតាមទូរទស្សន៍"</string>
+    <string name="topic10062" msgid="9183355218976951211">"រឿងភាគទូរទស្សន៍"</string>
+    <string name="topic10063" msgid="644340831620792432">"កម្មវិធី​ទូរទស្សន៍​សូប​អូប៉េរ៉ា"</string>
+    <string name="topic10064" msgid="5961885645457010998">"កម្មវិធី​ទូរទស្សន៍​សម្រាប់​គ្រួសារ"</string>
+    <string name="topic10065" msgid="7916343612028608044">"កម្មវិធី​ភាពពិតលើ​ទូរទស្សន៍"</string>
+    <string name="topic10066" msgid="5984396525358003559">"កម្មវិធី​ទូរទស្សន៍​វិទ្យាសាស្ត្រ​ប្រឌិត និង​ស្រមើស្រមៃ"</string>
+    <string name="topic10067" msgid="6404637729885733437">"សិល្បៈ​គំនូរ និងការ​រចនា"</string>
+    <string name="topic10068" msgid="4589856961950168493">"ការរចនា"</string>
+    <string name="topic10069" msgid="3129378082034151991">"គំនូរ"</string>
+    <string name="topic10070" msgid="2570256568661324147">"សិល្បៈ​ថតរូប និងឌីជីថល"</string>
+    <string name="topic10071" msgid="1288722040962471254">"យានយន្ត និងយានជំនិះ"</string>
+    <string name="topic10072" msgid="9155509766616567261">"រថយន្ត​ដឹក​ទំនិញ និង​រថយន្ត​សណ្ដោង"</string>
+    <string name="topic10073" msgid="3748676231341513738">"យានយន្ត​សម័យមុន"</string>
+    <string name="topic10074" msgid="2040911547161463227">"យាន​ជំនិះ​កម្លាំងខ្លាំង និង​កែច្នៃ"</string>
+    <string name="topic10075" msgid="1242538698445713796">"តម្លៃប្រេងឥន្ធនៈ និងការចាក់ឥន្ធនៈយានជំនិះ"</string>
+    <string name="topic10076" msgid="8674225812339579627">"យានជំនិះដំណើរការដោយម៉ាស៊ីន (តាមប្រភេទ)"</string>
+    <string name="topic10077" msgid="3577709810751953433">"យានជំនិះ​ដែលបើកបរ​ដោយស្វ័យប្រវត្តិ"</string>
+    <string name="topic10078" msgid="5493263845129910125">"រថយន្តអត់ដំបូល"</string>
+    <string name="topic10079" msgid="3466838852836498580">"រថយន្ត​ប្រភេទ Coupe"</string>
+    <string name="topic10080" msgid="3515647285637163190">"រថយន្ត​ប្រភេទ Hatchback"</string>
+    <string name="topic10081" msgid="4135085035401158860">"យាន​ជំនិះ​ហាយប្រ៊ីដ និង​មិនប្រើប្រេងឥន្ធនៈ"</string>
+    <string name="topic10082" msgid="7168659489029594320">"រថយន្ត​ប្រណិត"</string>
+    <string name="topic10083" msgid="1532745144715857802">"រថយន្តធុនតូច"</string>
+    <string name="topic10084" msgid="1984231414410381476">"ម៉ូតូ"</string>
+    <string name="topic10085" msgid="5235555028227554661">"យាន​ជំនិះ​លើ​ផ្លូវ​លំបាក"</string>
+    <string name="topic10086" msgid="8360336602646460411">"រថយន្ត​​ភីកអាប់"</string>
+    <string name="topic10087" msgid="6566900167002195406">"ម៉ូតូតូច និងម៉ូតូមានឈ្នាន់"</string>
+    <string name="topic10088" msgid="2899313082601001223">"រថយន្ត​ប្រភេទ Sedan"</string>
+    <string name="topic10089" msgid="1053630346809973163">"រថយន្ត​ប្រភេទ Station Wagon"</string>
+    <string name="topic10090" msgid="4478565601243447368">"រថយន្តប្រភេទ SUV និង Crossover"</string>
+    <string name="topic10091" msgid="3812668311830832874">"រថយន្ត​ប្រភេទ Crossover"</string>
+    <string name="topic10092" msgid="524130833813249539">"ឡាន​ដឹក​ទំនិញ និង​ឡាន​ដឹក​ទំនិញ​តូច"</string>
+    <string name="topic10093" msgid="8900143351472824542">"ជំនួយក្នុងការអូសសណ្ដោង និងជំនួយតាមដងផ្លូវ"</string>
+    <string name="topic10094" msgid="6205146188176216038">"សុវត្ថិភាពយានជំនិះ និងចរាចរណ៍"</string>
+    <string name="topic10095" msgid="7983070264654477553">"គ្រឿងបន្លាស់ និងគ្រឿងតុបតែងយានជំនិះ"</string>
+    <string name="topic10096" msgid="8148747014459050804">"ជួសជុល​ និងការថែទាំយានជំនិះ"</string>
+    <string name="topic10097" msgid="4716536434833425748">"ការទិញ​យាន​ជំនិះ"</string>
+    <string name="topic10098" msgid="6401980112135995019">"យានជំនិះ​មួយទឹក"</string>
+    <string name="topic10099" msgid="8018714209926584445">"ពិព័រណ៍​យាន​ជំនិះ"</string>
+    <string name="topic10100" msgid="2481422464734249871">"សម្រស់ និងកាយសម្បទា"</string>
+    <string name="topic10101" msgid="7889144198021629053">"សិល្បៈ​លើ​ដង​ខ្លួន"</string>
+    <string name="topic10102" msgid="577637051755692238">"ការថែទាំ​​ផ្ទៃមុខ និងដងខ្លួន"</string>
+    <string name="topic10103" msgid="6618157344631408510">"ផលិតផល​កាត់បន្ថយ​ការបែកញើស"</string>
+    <string name="topic10104" msgid="6043649669944382784">"ផលិតផលសម្រាប់ការងូតទឹក និងសម្អាតរាងកាយ"</string>
+    <string name="topic10105" msgid="3248569527339253661">"គ្រឿងថែរក្សាសម្ផស្សគ្មានសារធាតុគ្រោះថ្នាក់"</string>
+    <string name="topic10106" msgid="1291481249483309832">"ការ​តុបតែង​ខ្លួន និង​គ្រឿង​សម្អាង"</string>
+    <string name="topic10107" msgid="1335060201249279923">"ផលិតផល​ថែទាំក្រចក"</string>
+    <string name="topic10108" msgid="4996884435711154930">"ទឹកអប់ និង​គ្រឿងក្រអូប"</string>
+    <string name="topic10109" msgid="7298403319989686251">"ឡាម និងឧបករណ៍កោរ"</string>
+    <string name="topic10110" msgid="5954355866247248022">"ម៉ូត និងស្តាយល៍"</string>
+    <string name="topic10111" msgid="4447710938881368413">"លំហាត់ប្រាណ"</string>
+    <string name="topic10112" msgid="8816530137921714131">"កាយ​វប្បកម្ម"</string>
+    <string name="topic10113" msgid="8138889299405853557">"ការ​ណែនាំ​អំពីលំហាត់​ប្រាណ និង​ការ​ហ្វឹកហាត់​ផ្ទាល់​ខ្លួន"</string>
+    <string name="topic10114" msgid="2172821400279346865">"ផលិតផលបច្ចេកវិទ្យាលំហាត់ប្រាណ"</string>
+    <string name="topic10115" msgid="9060244278068231494">"ការថែទាំសក់"</string>
+    <string name="topic10116" msgid="116242880964485085">"សៀវភៅ និង​អក្សរសាស្រ្ត"</string>
+    <string name="topic10117" msgid="8933734721100160863">"អក្សរសាស្ត្រ​សម្រាប់​កុមារ"</string>
+    <string name="topic10118" msgid="4368531903547695191">"សៀវភៅ​អេឡិចត្រូនិក"</string>
+    <string name="topic10119" msgid="2781095265741115471">"ទស្សនាវដ្ដី"</string>
+    <string name="topic10120" msgid="3099507102655270527">"កំណាព្យ"</string>
+    <string name="topic10121" msgid="4466592180799340837">"អាជីវកម្ម និងឧស្សាហកម្ម"</string>
+    <string name="topic10122" msgid="2375136741125920744">"ការផ្សាយពាណិជ្ជកម្ម និងការធ្វើទីផ្សារ"</string>
+    <string name="topic10123" msgid="6974082907852347979">"ការ​លក់"</string>
+    <string name="topic10124" msgid="44474598156972786">"កសិកម្ម និងព្រៃឈើ"</string>
+    <string name="topic10125" msgid="9170394261421539760">"ផលិតកម្ម​អាហារ"</string>
+    <string name="topic10126" msgid="2210146434071038904">"វិស័យ​រថយន្ត"</string>
+    <string name="topic10127" msgid="5503077037318678029">"វិស័យអាកាសចរណ៍"</string>
+    <string name="topic10128" msgid="285525650692719959">"ប្រតិបត្តិការអាជីវកម្ម"</string>
+    <string name="topic10129" msgid="3094691551566702427">"ការរៀបចំ​កន្លែងធ្វើការ​ដែលមាន​ភាពបត់បែន"</string>
+    <string name="topic10130" msgid="1922351409757117764">"ធនធាន​មនុស្ស"</string>
+    <string name="topic10131" msgid="8598763405951029782">"កម្ចី​ពាណិជ្ជកម្ម"</string>
+    <string name="topic10132" msgid="1476352626208153907">"សំណង់ និងការថែទាំ"</string>
+    <string name="topic10133" msgid="7089177624979453528">"វិស្វកម្ម​សំណង់​ស៊ីវិល​"</string>
+    <string name="topic10134" msgid="3833032373311037601">"វិស័យការពារ​"</string>
+    <string name="topic10135" msgid="2478808072377000440">"ថាមពល និងការផ្គត់ផ្គង់ថាមពល"</string>
+    <string name="topic10136" msgid="9083992436834044162">"ការ​ផ្គត់ផ្គង់ និង​ប្រព្រឹត្តិកម្មទឹក"</string>
+    <string name="topic10137" msgid="1912599316814246824">"វិស័យ​បដិសណ្ឋារកិច្ច"</string>
+    <string name="topic10138" msgid="7428346836350671895">"កម្មន្តសាល"</string>
+    <string name="topic10139" msgid="1396685812404869953">"លោហ និងការរុករករ៉ែ"</string>
+    <string name="topic10140" msgid="5264212052238781441">"MLM និងឱកាសអាជីវកម្ម"</string>
+    <string name="topic10141" msgid="860058416683118730">"ឱសថ និងជីវបច្ចេកវិទ្យា"</string>
+    <string name="topic10142" msgid="2912550934111655896">"ការបោះពុម្ព និងការបោះផ្សាយ"</string>
+    <string name="topic10143" msgid="5690610408227078117">"ជំនួញ​លក់រាយ"</string>
+    <string name="topic10144" msgid="3341052306953106368">"ទុន​​វិនិយោគពីក្រុមហ៊ុនវិនិយោគ"</string>
+    <string name="topic10145" msgid="6886608911083388041">"កុំព្យូទ័រ និងគ្រឿងអេឡិចត្រូនិក"</string>
+    <string name="topic10146" msgid="8202145175139144216">"គ្រឿង​កុំព្យូទ័រ"</string>
+    <string name="topic10147" msgid="4687964705548995437">"ម៉ាស៊ីន​បោះពុម្ព"</string>
+    <string name="topic10148" msgid="8861628145647459323">"សុវត្ថិភាព​កុំព្យូទ័រ"</string>
+    <string name="topic10149" msgid="1719988773455991739">"កម្មវិធី​កម្ចាត់​មេរោគ និងកម្មវិធីគ្រោះថ្នាក់"</string>
+    <string name="topic10150" msgid="1482205464872465298">"សុវត្ថិភាព​បណ្ដាញ"</string>
+    <string name="topic10151" msgid="1772262905623388968">"គ្រឿង​អេឡិចត្រូនិក​ប្រើប្រាស់"</string>
+    <string name="topic10152" msgid="651152740021127086">"កាមេរ៉ា និង​កាម៉េរាថត​វីដេអូ"</string>
+    <string name="topic10153" msgid="8741504768717646372">"GPS និងការរុករក"</string>
+    <string name="topic10154" msgid="5382029798409496090">"ប្រព័ន្ធស្វ័យប្រវត្តិក្នុងផ្ទះ"</string>
+    <string name="topic10155" msgid="5243817792730496258">"ប្រព័ន្ធ​បញ្ចាំង​ភាពយន្ត​នៅ​ផ្ទះ"</string>
+    <string name="topic10156" msgid="2497791567138856030">"ឧបករណ៍ចាក់ MP3 និងមេឌៀចល័ត"</string>
+    <string name="topic10157" msgid="4723439422860510190">"បច្ចេកវិទ្យា​ឧបករណ៍​អាចពាក់បាន"</string>
+    <string name="topic10158" msgid="5345830001295028513">"ការបម្រុងទុក និងការស្ដារទិន្នន័យឡើងវិញ"</string>
+    <string name="topic10159" msgid="6146958285117174314">"កុំព្យូទ័រ​លើ​តុ"</string>
+    <string name="topic10160" msgid="6624820395549466426">"កុំព្យូទ័រយួរដៃ"</string>
+    <string name="topic10161" msgid="912458758908978530">"ការភ្ជាប់បណ្ដាញ"</string>
+    <string name="topic10162" msgid="6717352131379507693">"ការប្រើ​កុំព្យូទ័រ​លក្ខណៈចែកចាយ និង​តាមអ៊ីនធឺណិត"</string>
+    <string name="topic10163" msgid="6344926622025055321">"ការ​សរសេរ​កម្មវិធី"</string>
+    <string name="topic10164" msgid="4228888249078845459">"កម្មវិធី"</string>
+    <string name="topic10165" msgid="5507908999219967161">"កម្មវិធីសំឡេង និងតន្ត្រី"</string>
+    <string name="topic10166" msgid="4768106492755849560">"កម្មវិធីអាជីវកម្ម និងផលិតភាព"</string>
+    <string name="topic10167" msgid="8556935769754922871">"កម្មវិធី​ប្រតិទិន និង​កាលវិភាគ"</string>
+    <string name="topic10168" msgid="7730134961167790334">"កម្មវិធីសម្រាប់សហការ និងការប្រជុំ"</string>
+    <string name="topic10169" msgid="5655084106378890454">"កម្មវិធី​ធ្វើ​បទ​បង្ហាញ"</string>
+    <string name="topic10170" msgid="4638281897205909919">"កម្មវិធី​សៀវភៅ​បញ្ជី"</string>
+    <string name="topic10171" msgid="7910183120486541228">"កម្មវិធី​វាយ​អត្ថបទ"</string>
+    <string name="topic10172" msgid="3626573644414074730">"ការ​បោះ​ពុម្ព​ពី​កុំព្យូទ័រ"</string>
+    <string name="topic10173" msgid="7320053835183057144">"ពុម្ពអក្សរ"</string>
+    <string name="topic10174" msgid="5770469447869586710">"កម្មវិធី​គ្រប់គ្រង​ការ​ទាញ​យក"</string>
+    <string name="topic10175" msgid="3475235810022334041">"កម្មវិធី​ឥត​គិត​ថ្លៃ និង​កម្មវិធី​សាកល្បង"</string>
+    <string name="topic10176" msgid="6881704501596479881">"កម្មវិធី​រូបមាន​ចលនា និង​ក្រាហ្វិក"</string>
+    <string name="topic10177" msgid="6740430730079682579">"ជំនួយការ​ផ្ទាល់ខ្លួនឆ្លាតវៃ"</string>
+    <string name="topic10178" msgid="7261811053741593091">"កម្មវិធីចាក់មេឌៀ"</string>
+    <string name="topic10179" msgid="2967001567120854492">"កម្មវិធីត្រួតពិនិត្យ"</string>
+    <string name="topic10180" msgid="4197420326455130102">"ប្រព័ន្ធ​ប្រតិបត្តិការ"</string>
+    <string name="topic10181" msgid="3537573129132698830">"កម្មវិធីរូបថត និងវីដេអូ"</string>
+    <string name="topic10182" msgid="7688631285131229981">"កម្មវិធី​រូបថត"</string>
+    <string name="topic10183" msgid="5994974566140272512">"កម្មវិធី​វីដេអូ"</string>
+    <string name="topic10184" msgid="8685817335076871509">"កម្មវិធី​សម្រួលដំណើរការ"</string>
+    <string name="topic10185" msgid="308314128178285390">"កម្មវិធីរុករកតាមអ៊ីនធឺណិត"</string>
+    <string name="topic10186" msgid="3147859503481018245">"ហិរញ្ញវត្ថុ"</string>
+    <string name="topic10187" msgid="7077128721410871032">"គណនេយ្យ និងសវនកម្ម"</string>
+    <string name="topic10188" msgid="2206138708659457910">"ការ​រៀបចំលិខិតប្រកាស និង​ផែនការ​ពន្ធ"</string>
+    <string name="topic10189" msgid="4001795553008246784">"ធនាគារ"</string>
+    <string name="topic10190" msgid="2988430661381243083">"សេវា​ផ្ញើ​ប្រាក់ និង​វេរ​ប្រាក់"</string>
+    <string name="topic10191" msgid="6196081825838237614">"ឥណទាន និងកម្ចី"</string>
+    <string name="topic10192" msgid="3290123244833047307">"កាតឥណទាន"</string>
+    <string name="topic10193" msgid="294407043381146861">"ហិរញ្ញវត្ថុ​ទិញ​ផ្ទះ"</string>
+    <string name="topic10194" msgid="2834543407440890272">"កម្ចី​ផ្ទាល់​ខ្លួន"</string>
+    <string name="topic10195" msgid="7650553060132394782">"ប្រាក់កម្ចីនិស្សិត និងហិរញ្ញវត្ថុ​មហាវិទ្យាល័យ"</string>
+    <string name="topic10196" msgid="5395035781876507254">"ផែនការ​ហិរញ្ញវត្ថុ និងការ​គ្រប់គ្រង"</string>
+    <string name="topic10197" msgid="1287138667488226463">"ការចូលនិវត្តន៍ និងប្រាក់​សោធន​និវត្តន៍"</string>
+    <string name="topic10198" msgid="2523256186943366779">"ជំនួយ"</string>
+    <string name="topic10199" msgid="3746711537661530183">"ជំនួយ"</string>
+    <string name="topic10200" msgid="2394864891391267841">"ធានា​រ៉ាប់រង"</string>
+    <string name="topic10201" msgid="4301879117376963742">"ធានារ៉ាប់រង​យានយន្ត"</string>
+    <string name="topic10202" msgid="739808503036239379">"ធានា​រ៉ាប់រង​សុខភាព"</string>
+    <string name="topic10203" msgid="838786942776142290">"ធានា​រ៉ាប់រង​ផ្ទះ"</string>
+    <string name="topic10204" msgid="6591131759521321677">"ធានា​រ៉ាប់រង​អាយុ​ជីវិត"</string>
+    <string name="topic10205" msgid="3294946723815021478">"ធានា​រ៉ាប់រង​ធ្វើ​ដំណើរ"</string>
+    <string name="topic10206" msgid="6166888350685752683">"ការ​វិនិយោគ"</string>
+    <string name="topic10207" msgid="2296385804039743999">"ការជួញដូរ​នាពេលអនាគត និង​ទំនិញ"</string>
+    <string name="topic10208" msgid="2717498987483479091">"អត្រាប្ដូរប្រាក់បរទេស និង​រូបិយបណ្ណ"</string>
+    <string name="topic10209" msgid="5204948738662951962">"មូលនិធិ​ការពារហានិភ័យ"</string>
+    <string name="topic10210" msgid="4607225697024266227">"សង្គហធន"</string>
+    <string name="topic10211" msgid="7475381839877166080">"ភាគហ៊ុន និង​សញ្ញាបណ្ណ"</string>
+    <string name="topic10212" msgid="3988751035952286047">"អាហារ និងភេសជ្ជៈ"</string>
+    <string name="topic10213" msgid="1358963098339995471">"ការ​ធ្វើ​ម្ហូប និង​រូបមន្ត"</string>
+    <string name="topic10214" msgid="8463864389138867811">"BBQ និង​ការអាំងសាច់"</string>
+    <string name="topic10215" msgid="3085467051491069648">"មុខ​ម្ហូប"</string>
+    <string name="topic10216" msgid="6043130649326166680">"ម្ហូបបួស"</string>
+    <string name="topic10217" msgid="7173870057669247536">"ម្ហូបអ្នកតមសាច់និងស៊ុត"</string>
+    <string name="topic10218" msgid="5570240643247064951">"ការ​បរិភោគដែលផ្ដល់សុខភាពល្អ"</string>
+    <string name="topic10219" msgid="5896715206025463732">"អ្នកលក់អាហារ និង​គ្រឿងទេស"</string>
+    <string name="topic10220" msgid="3894580611467039658">"ហ្គេម"</string>
+    <string name="topic10221" msgid="14471057764591805">"ហ្គេម Arcade និង​ដាក់​កាក់"</string>
+    <string name="topic10222" msgid="2704894577954508861">"ល្បែង​បុក​ប៊ីយ៉ា"</string>
+    <string name="topic10223" msgid="202900267060220170">"ហ្គេមក្តារ"</string>
+    <string name="topic10224" msgid="6572627325588452785">"ហ្គេមអុក និងហ្គេមយុទ្ធសាស្ត្រអរូបី"</string>
+    <string name="topic10225" msgid="8056906319560292131">"ហ្គេម​បៀ"</string>
+    <string name="topic10226" msgid="714463563336281099">"ហ្គេមប្រមូល​កាត"</string>
+    <string name="topic10227" msgid="218768654597520683">"ហ្គេមកុំព្យូទ័រ និងវីដេអូ​ហ្គេម"</string>
+    <string name="topic10228" msgid="850597136074192489">"ហ្គេមសកម្មភាព &amp; ហ្គេម​រត់លោត"</string>
+    <string name="topic10229" msgid="4284501233897149886">"ហ្គេមផ្សងព្រេង"</string>
+    <string name="topic10230" msgid="7156822286576815181">"ហ្គេមធម្មតា"</string>
+    <string name="topic10231" msgid="7620407218897744361">"ការលេងវីដេអូហ្គេមប្រកួតប្រជែង"</string>
+    <string name="topic10232" msgid="3029734447275709941">"ហ្គេម​បើកបរ និងប្រណាំង"</string>
+    <string name="topic10233" msgid="8318075279868138231">"ហ្គេម​ប្រយុទ្ធ"</string>
+    <string name="topic10234" msgid="3899847414436099153">"ឯកសារយោង និងការវាយតម្លៃហ្គេម"</string>
+    <string name="topic10235" msgid="5851356242523630529">"ល្បិច និងតម្រុយក្នុងហ្គេម"</string>
+    <string name="topic10236" msgid="1986665634014804954">"ហ្គេម​ដែលមាន​អ្នកលេង​ដ៏ច្រើន"</string>
+    <string name="topic10237" msgid="5569920221620447713">"ហ្គេម​តន្ត្រី និងរាំ"</string>
+    <string name="topic10238" msgid="7431087331656772530">"ហ្គេម​ Sandbox"</string>
+    <string name="topic10239" msgid="8667462879554115515">"ហ្គេម​បាញ់​ប្រហារ"</string>
+    <string name="topic10240" msgid="1618985302446756520">"ហ្គេមត្រាប់តាម"</string>
+    <string name="topic10241" msgid="8450778411063723262">"ហ្គេម​អាជីវកម្ម​ និងមហាសេដ្ឋី"</string>
+    <string name="topic10242" msgid="8860812940320018907">"ហ្គេមកសាងទីក្រុង​"</string>
+    <string name="topic10243" msgid="1764694148721971512">"ហ្គេម​ត្រាប់តាមជីវិតពិត"</string>
+    <string name="topic10244" msgid="4308588210397969087">"ហ្គេម​ត្រាប់តាមយានជំនិះ"</string>
+    <string name="topic10245" msgid="6904368410919496658">"ហ្គេមកីឡា"</string>
+    <string name="topic10246" msgid="3381244806751528148">"ល្បែង​គ្រប់គ្រង​កីឡា"</string>
+    <string name="topic10247" msgid="5927502688389762068">"ហ្គេមយុទ្ធសាស្ត្រ"</string>
+    <string name="topic10248" msgid="8471339627212674032">"ម៉ដ និងកម្មវិធី​បន្ថែមសម្រាប់វីដេអូហ្គេម"</string>
+    <string name="topic10249" msgid="5076706536204559962">"ហ្គេម​អប់រំ"</string>
+    <string name="topic10250" msgid="6083030595195401083">"ហ្គេម និង​សកម្មភាពក្នុង​គ្រួសារ"</string>
+    <string name="topic10251" msgid="99237306730665104">"គំនូរ និងការផាត់ពណ៌"</string>
+    <string name="topic10252" msgid="6543039575961394064">"ហ្គេម​ស្លៀក​ពាក់ និង​ម៉ូត"</string>
+    <string name="topic10253" msgid="566596668186874227">"ហ្គេមល្បងប្រាជ្ញា និងបណ្ដុះគំនិត"</string>
+    <string name="topic10254" msgid="5732147617072023634">"ហ្គេម​​ដើរ​តួ"</string>
+    <string name="topic10255" msgid="2890655077164103057">"​កីឡា​វាយ​កូន​បាល់​លើតុ"</string>
+    <string name="topic10256" msgid="3302096971402751679">"ល្បែង​តម្រៀប"</string>
+    <string name="topic10257" msgid="4238531589193902619">"ហ្គេម​ពាក្យ"</string>
+    <string name="topic10258" msgid="6995329540076529056">"ចំណូលចិត្ត និងការលំហែអារម្មណ៍"</string>
+    <string name="topic10259" msgid="8649688885811560410">"ខួប"</string>
+    <string name="topic10260" msgid="487999213495640080">"ថ្ងៃ​កំណើត និងថ្ងៃដាក់ឈ្មោះ"</string>
+    <string name="topic10261" msgid="8970668366745952094">"ការមុជទឹក និងសកម្មភាព​ក្រោម​ទឹក"</string>
+    <string name="topic10262" msgid="6644046161469353448">"សិល្បៈ​សរសៃអំបោះ និងវាយនភណ្ឌ"</string>
+    <string name="topic10263" msgid="848165976917542929">"ក្រៅអគារ"</string>
+    <string name="topic10264" msgid="6274985117752637104">"ស្ទូច​ត្រី"</string>
+    <string name="topic10265" msgid="4134876488948695674">"ការបរបាញ់ និងការ​បាញ់​កាំភ្លើង"</string>
+    <string name="topic10266" msgid="6617785039128074351">"កីឡា​បាញ់កាំភ្លើងគ្រាប់​ពណ៌​"</string>
+    <string name="topic10267" msgid="488093331618885003">"ការបង្កើតគំរូ និង​ការបញ្ជា​តាមរលកវិទ្យុ"</string>
+    <string name="topic10268" msgid="277932389492046264">"អាពាហ៍ពិពាហ៍"</string>
+    <string name="topic10269" msgid="8572041514147955202">"ផ្ទះ និងសួន​ច្បារ"</string>
+    <string name="topic10270" msgid="2646715182474030951">"ការថែសួន"</string>
+    <string name="topic10271" msgid="1308931236810509881">"ការ​តុបតែង​ផ្ទះ និង​ផ្នែក​​ខាងក្នុង"</string>
+    <string name="topic10272" msgid="8746698707390628887">"គ្រឿងអេឡិចត្រូនិកប្រើប្រាស់​ក្នុង​ផ្ទះ"</string>
+    <string name="topic10273" msgid="344442071339164852">"ការកែលម្អ​ផ្ទះ"</string>
+    <string name="topic10274" msgid="8982330028561451429">"សុវត្ថិភាព និងសន្តិសុខតាមផ្ទះ"</string>
+    <string name="topic10275" msgid="8280198018937968735">"សម្ភារប្រើប្រាស់​ក្នុងផ្ទះ"</string>
+    <string name="topic10276" msgid="1651598271798609235">"ការរចនាទេសភាព"</string>
+    <string name="topic10277" msgid="7675195736886448994">"អ៊ីនធឺណិត និងទូរគមនាគមន៍"</string>
+    <string name="topic10278" msgid="873251714192341707">"អ៊ីមែល និងការផ្ញើសារ"</string>
+    <string name="topic10279" msgid="6514296374139842600">"អ៊ីមែល"</string>
+    <string name="topic10280" msgid="7976787187115018267">"ការផ្ញើសារជាអក្សរ និងការ​ផ្ញើ​សារ​​ភ្លាម​ៗ"</string>
+    <string name="topic10281" msgid="4013341162811169339">"ការជជែក​ជា​សំឡេង និងវីដេអូ"</string>
+    <string name="topic10282" msgid="7810462611906257564">"ISP"</string>
+    <string name="topic10283" msgid="3958287780718485172">"ក្រុមហ៊ុន​ផ្ដល់​សេវា​ទូរសព្ទ"</string>
+    <string name="topic10284" msgid="2415044270290467935">"សំឡេង​រោទ៍ និងទម្រង់រចនាឧបករណ៍​ចល័ត"</string>
+    <string name="topic10285" msgid="7056449544316408821">"ម៉ាស៊ីន​ស្វែងរក"</string>
+    <string name="topic10286" msgid="3458688996478472971">"ទូរសព្ទ​ឆ្លាតវៃ"</string>
+    <string name="topic10287" msgid="6766203044518402938">"ការ​ធ្វើ​សន្និសីទ​ពី​ចម្ងាយ"</string>
+    <string name="topic10288" msgid="3883137694557636622">"កម្មវិធីលើអ៊ីនធឺណិត និងឧបករណ៍លើអ៊ីនធឺណិត"</string>
+    <string name="topic10289" msgid="3392995633794787676">"សេវា​លើអ៊ីនធឺណិត"</string>
+    <string name="topic10290" msgid="3118880486702986341">"ទំហំ​ផ្ទុក​លើ​ពពក"</string>
+    <string name="topic10291" msgid="6025855926350955094">"ការរចនា និងការអភិវឌ្ឍគេហទំព័រ"</string>
+    <string name="topic10292" msgid="3069720659823056935">"ការបង្ហោះ​គេហទំព័រ"</string>
+    <string name="topic10293" msgid="2489957780009828409">"ការងារ និងការអប់រំ"</string>
+    <string name="topic10294" msgid="474839431177892843">"ការអប់រំ"</string>
+    <string name="topic10295" msgid="2215489196192620880">"សន្និសីទ​ការ​សិក្សា និង​ការ​បោះ​ពុម្ព​ផ្សាយ"</string>
+    <string name="topic10296" msgid="4494362881225210483">"មហាវិទ្យាល័យ និងសកលវិទ្យាល័យ"</string>
+    <string name="topic10297" msgid="8596946591674128749">"ការ​សិក្សា​ពី​ចម្ងាយ"</string>
+    <string name="topic10298" msgid="6669181180128620422">"ការអប់រំកុមារតូច"</string>
+    <string name="topic10299" msgid="989138215800115613">"មត្តេយ្យសិក្សា"</string>
+    <string name="topic10300" msgid="8281464235308602670">"ការ​អប់រំ​នៅ​ផ្ទះ"</string>
+    <string name="topic10301" msgid="9156890858635333460">"ការធ្វើតេស្តស្តង់ដារ និងការធ្វើតេស្តចូលរៀន"</string>
+    <string name="topic10302" msgid="1325835179421990876">"ធនធានបង្រៀន និងធនធានក្នុងថ្នាក់រៀន"</string>
+    <string name="topic10303" msgid="3103839978894155537">"ការអប់រំបន្ត និង​វិជ្ជាជីវៈ"</string>
+    <string name="topic10304" msgid="8831682558788062486">"ការងារ"</string>
+    <string name="topic10305" msgid="8415203095484493106">"ការរៀបចំ​ផែនការ និងធនធាន​សម្រាប់អាជីព"</string>
+    <string name="topic10306" msgid="7426556527349374835">"បញ្ជី​ការងារ"</string>
+    <string name="topic10307" msgid="1187762846826735256">"ច្បាប់ និងរដ្ឋាភិបាល"</string>
+    <string name="topic10308" msgid="3346756665358311386">"ឧក្រិដ្ឋកម្ម និងយុត្តិធម៌"</string>
+    <string name="topic10309" msgid="2041175328931014735">"ផ្នែកច្បាប់"</string>
+    <string name="topic10310" msgid="7079570344976872062">"សេវា​ច្បាប់"</string>
+    <string name="topic10311" msgid="2095095138677585525">"ព័ត៌មាន"</string>
+    <string name="topic10312" msgid="939721674816307639">"ព័ត៌មាន​សេដ្ឋកិច្ច"</string>
+    <string name="topic10313" msgid="4159611985538361632">"ព័ត៌មាន​ក្នុងស្រុក​"</string>
+    <string name="topic10314" msgid="93219947859117151">"ការទិញលក់ និង​ការរួមបញ្ចូលក្រុមហ៊ុន"</string>
+    <string name="topic10315" msgid="5046321177148647481">"សារព័ត៌មាន"</string>
+    <string name="topic10316" msgid="8592980844674525307">"នយោបាយ"</string>
+    <string name="topic10317" msgid="2412259096368647866">"ព័ត៌មានកីឡា"</string>
+    <string name="topic10318" msgid="1508449672941031904">"អាកាសធាតុ"</string>
+    <string name="topic10319" msgid="3973645291178509390">"ព័ត៌មាន​ពិភពលោក"</string>
+    <string name="topic10320" msgid="5279440074507438174">"សហគមន៍​នៅលើអ៊ីនធឺណិត"</string>
+    <string name="topic10321" msgid="7018890132742820265">"រូបឃ្លីបអាត និង​រូបភាព GIF មាន​ចលនា"</string>
+    <string name="topic10322" msgid="1585737438943011532">"ការ​ណាត់ និងរឿងផ្ទាល់ខ្លួន"</string>
+    <string name="topic10323" msgid="962863497957179646">"បណ្ដុំ​ព័ត៌មាន និង​បណ្ដុំចំណាំ​ពីអ៊ីនធើណិត"</string>
+    <string name="topic10324" msgid="1425257460381023853">"ការចែករំលែក​ និងការបង្ហោះឯកសារ"</string>
+    <string name="topic10325" msgid="8698912164970408378">"​ក្រុមហ៊ុនផ្ដល់​សេវាវេទិកា និងជជែក"</string>
+    <string name="topic10326" msgid="2425798096705921796">"ការធ្វើមីក្រូប្លក់"</string>
+    <string name="topic10327" msgid="8518822987595111212">"ការចែករំលែករូបថត និងវីដេអូ"</string>
+    <string name="topic10328" msgid="8932708475346340912">"ការចែករំលែករូបថត និងរូបភាព"</string>
+    <string name="topic10329" msgid="223933889758324282">"ការ​ចែក​រំលែក​វីដេអូ"</string>
+    <string name="topic10330" msgid="188028553492626282">"រូបរាង"</string>
+    <string name="topic10331" msgid="426844238985651925">"កម្មវិធី​បណ្ដាញ​សង្គម និង​កម្មវិធី​បន្ថែម"</string>
+    <string name="topic10332" msgid="291747325781232456">"បណ្ដាញ​សង្គម"</string>
+    <string name="topic10333" msgid="7950152600374846488">"មនុស្ស និងសង្គម"</string>
+    <string name="topic10334" msgid="8671262583721706509">"គ្រួសារ និងទំនាក់ទំនង"</string>
+    <string name="topic10335" msgid="1526523762163185819">"ពូជពង្ស និងសន្តតិវង្ស​វិទ្យា"</string>
+    <string name="topic10336" msgid="4551233571090493177">"អាពាហ៍ពិពាហ៍"</string>
+    <string name="topic10337" msgid="8436172065188964882">"ការចិញ្ចឹមកូន"</string>
+    <string name="topic10338" msgid="8896269734682970">"ការ​សុំ​កូនមក​ចិញ្ចឹម"</string>
+    <string name="topic10339" msgid="781900237993621300">"ទារក និងក្មេង​​​ទើប​ចេះ​ដើរ⁣⁣"</string>
+    <string name="topic10340" msgid="6538182603360796294">"សុវត្ថិភាព​នៃ​អ៊ីនធឺណិត​សម្រាប់កុមារ"</string>
+    <string name="topic10341" msgid="3586543243312398568">"មនោសញ្ចេតនា"</string>
+    <string name="topic10342" msgid="3695176378281477573">"​ប្រឌិត​បែបវិទ្យា​សាស្ត្រ​ និងស្រមើស្រមៃ"</string>
+    <string name="topic10343" msgid="2318169062960263837">"សត្វ​ចិញ្ចឹម និងសត្វពាហនៈ"</string>
+    <string name="topic10344" msgid="2005534117977874327">"ផលិតផល​ថែទាំ​សត្វចិញ្ចឹម និង​អាហារ​របស់សត្វចិញ្ចឹម"</string>
+    <string name="topic10345" msgid="2397329020706244200">"សត្វ​ចិញ្ចឹម"</string>
+    <string name="topic10346" msgid="1323702748723563694">"បក្សី"</string>
+    <string name="topic10347" msgid="3301879823396773413">"ឆ្មា"</string>
+    <string name="topic10348" msgid="8066686305498410222">"ឆ្កែ"</string>
+    <string name="topic10349" msgid="5253723822905761195">"ត្រី និង​អាង​ចិញ្ចឹមត្រី"</string>
+    <string name="topic10350" msgid="6164036369108076590">"ល្មូន និង​ថលជលិក"</string>
+    <string name="topic10351" msgid="1132984519083501363">"បសុពេទ្យ"</string>
+    <string name="topic10352" msgid="6310110390516037997">"អចលនទ្រព្យ"</string>
+    <string name="topic10353" msgid="5114390804081576684">"ដីឡូត៍ និងដី"</string>
+    <string name="topic10354" msgid="7980778954791504082">"អចលនទ្រព្យ​វិស្សមកាល និង​អចលនទ្រព្យ​រួម"</string>
+    <string name="topic10355" msgid="7720717354548642600">"ឯកសារយោង"</string>
+    <string name="topic10356" msgid="8366981308613661935">"បញ្ជីពាណិជ្ជកម្ម និងបញ្ជីផ្ទាល់ខ្លួន"</string>
+    <string name="topic10357" msgid="3185598234676097975">"ឯកសារយោង​ទូទៅ"</string>
+    <string name="topic10358" msgid="6732669037513504019">"ម៉ាស៊ីនគិតលេខ និងឧបករណ៍ឯកសារយោង"</string>
+    <string name="topic10359" msgid="8901932349008990500">"វចនានុក្រម និង​សព្វវចនាធិប្បាយ"</string>
+    <string name="topic10360" msgid="6113408769992775754">"ធនធាន​អប់រំ"</string>
+    <string name="topic10361" msgid="364838820459183817">"របៀប​ធ្វើ"</string>
+    <string name="topic10362" msgid="3760998790588600032">"ម៉ោង និងប្រតិទិន"</string>
+    <string name="topic10363" msgid="5464708619861040861">"ធនធាន​ភាសា"</string>
+    <string name="topic10364" msgid="4685400848805560054">"ការសិក្សា​ភាសា​បរទេស"</string>
+    <string name="topic10365" msgid="5196231842716190887">"ឧបករណ៍ និងធនធានសម្រាប់ការបកប្រែ"</string>
+    <string name="topic10366" msgid="7460927054539097025">"ផែនទី"</string>
+    <string name="topic10367" msgid="3900361839783743700">"វិទ្យាសាស្ត្រ"</string>
+    <string name="topic10368" msgid="2069447039109930660">"AR និង VR"</string>
+    <string name="topic10369" msgid="5747888306428024793">"វិទ្យាសាស្ត្រ​ជីវវិទ្យា"</string>
+    <string name="topic10370" msgid="4860829940151353583">"សេនេទិច"</string>
+    <string name="topic10371" msgid="8229818210867472466">"គីមីវិទ្យា"</string>
+    <string name="topic10372" msgid="6400467418954574231">"អេកូឡូស៊ី និងបរិស្ថាន"</string>
+    <string name="topic10373" msgid="6990757247198163741">"ភូគព្ភសាស្ត្រ"</string>
+    <string name="topic10374" msgid="8057983193031950119">"ការរៀន​របស់​ម៉ាស៊ីន និង​បញ្ញា​សិប្បនិម្មិត"</string>
+    <string name="topic10375" msgid="8511185098682306025">"គណិតវិទ្យា"</string>
+    <string name="topic10376" msgid="6387800251638760737">"រូបវិទ្យា"</string>
+    <string name="topic10377" msgid="7834619927563362042">"រ៉ូបូត​វិទ្យា"</string>
+    <string name="topic10378" msgid="242496862821758873">"ការ​ទិញ​​ទំនិញ"</string>
+    <string name="topic10379" msgid="5505228335012447165">"វត្ថុបុរាណ និង​វត្ថុមានតម្លៃ"</string>
+    <string name="topic10380" msgid="4989560205486143927">"សម្លៀកបំពាក់"</string>
+    <string name="topic10381" msgid="7585496746485093505">"សម្លៀកបំពាក់​កុមារ"</string>
+    <string name="topic10382" msgid="5088060295126473451">"ឈុតសម្លៀកបំពាក់"</string>
+    <string name="topic10383" msgid="4947104586590538143">"សម្លៀកបំពាក់​បុរស"</string>
+    <string name="topic10384" msgid="3752472493887374077">"សម្លៀកបំពាក់​នារី"</string>
+    <string name="topic10385" msgid="5275843140794803595">"ការផ្សព្វផ្សាយចម្រុះ"</string>
+    <string name="topic10386" msgid="5887032952574801982">"ធនធាន​អ្នក​ប្រើប្រាស់"</string>
+    <string name="topic10387" msgid="8474154360410317897">"ការផ្ដល់ជូនគូប៉ុង និង​​ការបញ្ចុះ​តម្លៃ"</string>
+    <string name="topic10388" msgid="3650307363028796765">"កាត និងកម្មវិធីសមាជិក"</string>
+    <string name="topic10389" msgid="1542336508240183221">"ជំនួយ​បច្ចេកទេស និងការជួសជុល"</string>
+    <string name="topic10390" msgid="831225961168954292">"ផ្កា"</string>
+    <string name="topic10391" msgid="6810540242154911762">"បណ្ណ​ជូន​ពរ"</string>
+    <string name="topic10392" msgid="2431377771302967625">"គ្រឿង​ផ្គត់ផ្គង់​ពិធី​ជប់លៀង និង​វិស្សមកាល"</string>
+    <string name="topic10393" msgid="2671274205988136926">"ច្រកចូលទិញ​ទំនិញ"</string>
+    <string name="topic10394" msgid="1530096364743244151">"កីឡា"</string>
+    <string name="topic10395" msgid="316192616624062917">"កីឡា​បាល់ឱប​​អាមេរិក"</string>
+    <string name="topic10396" msgid="8042120651878490689">"កីឡាបាល់ឱប​អូស្ត្រាលី"</string>
+    <string name="topic10397" msgid="492901976344700942">"ការ​ប្រណាំង​រថយន្ត"</string>
+    <string name="topic10398" msgid="3471795015226090296">"បេស្បល"</string>
+    <string name="topic10399" msgid="2126280752064021308">"បាល់បោះ"</string>
+    <string name="topic10400" msgid="5440499529264277027">"ប៊ូលីង"</string>
+    <string name="topic10401" msgid="166689951236922024">"ប្រដាល់"</string>
+    <string name="topic10402" msgid="2451339788231007479">"សកម្មភាពលើកទឹកចិត្តផ្នែកកីឡា"</string>
+    <string name="topic10403" msgid="6455478521804717635">"កីឡា​មហាវិទ្យាល័យ"</string>
+    <string name="topic10404" msgid="5261583496913118024">"គ្រីឃីត"</string>
+    <string name="topic10405" msgid="482477447879117820">"ជិះកង់"</string>
+    <string name="topic10406" msgid="8167644332387528703">"អ្នកជំនាញជិះសេះ"</string>
+    <string name="topic10407" msgid="3237734582719584272">"កីឡា​គ្រោះថ្នាក់​ខ្លាំង"</string>
+    <string name="topic10408" msgid="3859749534843254349">"ការឡើង និងការឡើងភ្នំ"</string>
+    <string name="topic10409" msgid="7485614115639267976">"កីឡា​បែបស្រមើ​ស្រមៃ"</string>
+    <string name="topic10410" msgid="5996939009229881074">"កូនហ្គោល"</string>
+    <string name="topic10411" msgid="2513997418184786648">"កាយសម្ព័ន្ធ"</string>
+    <string name="topic10412" msgid="5411755341358248299">"ហុកគី"</string>
+    <string name="topic10413" msgid="3319233613448963890">"ជិះ​ស្គី​លើទឹក​កក"</string>
+    <string name="topic10414" msgid="1797840816328584660">"ក្បាច់គុន"</string>
+    <string name="topic10415" msgid="2886043330316735719">"ការប្រណាំងម៉ូតូ"</string>
+    <string name="topic10416" msgid="3436682172863605224">"ព្រឹត្តិការណ៍​កីឡាអូឡាំពិក​"</string>
+    <string name="topic10417" msgid="8296644015663416236">"បាល់​ឱប"</string>
+    <string name="topic10418" msgid="8276736633218488127">"ការរត់ និងការដើរ"</string>
+    <string name="topic10419" msgid="5663062924928275215">"ការជិះ​ស្គី និងការជិះក្តារលើទឹកកក"</string>
+    <string name="topic10420" msgid="2509320683543423424">"បាល់ទាត់"</string>
+    <string name="topic10421" msgid="6512889128030030686">"ការជិះ​ក្ដារ​លើ​ទឹក"</string>
+    <string name="topic10422" msgid="8342986282852879750">"ការហែលទឹក"</string>
+    <string name="topic10423" msgid="6333426807705188459">"តិន្នីស"</string>
+    <string name="topic10424" msgid="5495511215629567375">"ផ្លូវរត់ និង​ទីលាន"</string>
+    <string name="topic10425" msgid="4009138228283995179">"បាល់ទះ"</string>
+    <string name="topic10426" msgid="7998590461761852196">"ចំបាប់"</string>
+    <string name="topic10427" msgid="6711468161729797769">"ការ​ធ្វើដំណើរ និងការដឹកជញ្ជូន"</string>
+    <string name="topic10428" msgid="661919563628063196">"ការ​ធ្វើ​ដំណើរ​ផ្សងព្រេង"</string>
+    <string name="topic10429" msgid="408270392813634227">"ការធ្វើដំណើរ​តាមអាកាស"</string>
+    <string name="topic10430" msgid="3046485339481297656">"ដំណើរធុរកិច្ច"</string>
+    <string name="topic10431" msgid="7439352609169583150">"ការជួល​រថយន្ត"</string>
+    <string name="topic10432" msgid="5034961318884376752">"នាវាកម្សាន្ត និង​ការជួល​យានជំនិះ"</string>
+    <string name="topic10433" msgid="6354590445323135986">"ការធ្វើដំណើរ​លក្ខណៈគ្រួសារ"</string>
+    <string name="topic10434" msgid="7081309045291255264">"ដំណើរកម្សាន្តក្រេបទឹកឃ្មុំ និងបែបរ៉ូមែនទិក"</string>
+    <string name="topic10435" msgid="1064605516265819020">"សណ្ឋាគារ និងកន្លែង​ស្នាក់​នៅ"</string>
+    <string name="topic10436" msgid="9050375924140897722">"ឡានក្រុងផ្លូវឆ្ងាយ និងផ្លូវដែក"</string>
+    <string name="topic10437" msgid="2655664900730187701">"ការធ្វើដំណើរតម្លៃទាប និងការធ្វើដំណើរ​នៅនាទីចុងក្រោយ"</string>
+    <string name="topic10438" msgid="7944023251845122923">"​អីវ៉ាន់ និង​សម្ភារ​​ធ្វើ​ដំណើរ"</string>
+    <string name="topic10439" msgid="7845433008088931971">"គោលដៅ​ទេសចរណ៍"</string>
+    <string name="topic10440" msgid="485118071443976808">"ឆ្នេរ និងកោះ"</string>
+    <string name="topic10441" msgid="518643446480879895">"ឧទ្យាន និង​សួនច្បារ​តាម​តំបន់"</string>
+    <string name="topic10442" msgid="6534536077484540292">"សួន​កម្សាន្ត"</string>
+    <string name="topic10443" msgid="8787722062991478596">"សួនសត្វ"</string>
+    <string name="topic10444" msgid="2075863187654728611">"កម្មវិធីរៀបគម្រោងផ្លូវ និងចរាចរណ៍"</string>
+    <string name="topic10445" msgid="3460421948068980869">"ភ្នាក់ងារ និងសេវាកម្មទេសចរណ៍"</string>
+    <string name="topic10446" msgid="5333138740720504195">"មគ្គទេសក៍​ធ្វើ​ដំណើរ និង​សៀវភៅ​ស្ដី​ពី​ការ​ធ្វើ​ដំណើរ"</string>
 </resources>

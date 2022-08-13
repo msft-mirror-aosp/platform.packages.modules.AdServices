@@ -19,15 +19,17 @@ package com.android.adservices.customaudience;
 import static org.junit.Assert.assertTrue;
 
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
-import android.adservices.common.AdDataFixture;
+import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
-import android.adservices.customaudience.TrustedBiddingDataFixture;
 import android.content.Context;
 import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.LogUtil;
+import com.android.adservices.service.PhFlagsFixture;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Test;
@@ -36,6 +38,9 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 public class CustomAudienceManagerTest {
+    private static final String WRITE_DEVICE_CONFIG_PERMISSION =
+            "android.permission.WRITE_DEVICE_CONFIG";
+
     private static final String TAG = "CustomAudienceManagerTest";
     private static final String SERVICE_APK_NAME = "com.android.adservices.api";
     private static final int MAX_RETRY = 50;
@@ -43,50 +48,52 @@ public class CustomAudienceManagerTest {
     protected static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
-    private static final CustomAudience CUSTOM_AUDIENCE = new CustomAudience.Builder()
-            .setOwner(CustomAudienceFixture.VALID_OWNER)
-            .setBuyer(CustomAudienceFixture.VALID_BUYER)
-            .setName(CustomAudienceFixture.VALID_NAME)
-            .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
-            .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
-            .setDailyUpdateUrl(CustomAudienceFixture.VALID_DAILY_UPDATE_URL)
-            .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
-            .setTrustedBiddingData(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_DATA)
-            .setBiddingLogicUrl(CustomAudienceFixture.VALID_BIDDING_LOGIC_URL)
-            .setAds(AdDataFixture.VALID_ADS)
-            .build();
+    private static final CustomAudience CUSTOM_AUDIENCE =
+            CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER).build();
 
     private void measureJoinCustomAudience(String label) throws Exception {
         Log.i(TAG, "Calling joinCustomAudience()");
         final long start = System.currentTimeMillis();
 
-        AdvertisingCustomAudienceClient client = new AdvertisingCustomAudienceClient.Builder()
-                .setContext(CONTEXT)
-                .setExecutor(CALLBACK_EXECUTOR)
-                .build();
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(WRITE_DEVICE_CONFIG_PERMISSION);
+        // This test is running in background
+        PhFlagsFixture.overrideForegroundStatusForFledgeCustomAudience(false);
 
-        client.joinCustomAudience(CUSTOM_AUDIENCE).get();
+        AdvertisingCustomAudienceClient client =
+                new AdvertisingCustomAudienceClient.Builder()
+                        .setContext(CONTEXT)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        client.joinCustomAudience(
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                                .build())
+                .get();
 
         final long duration = System.currentTimeMillis() - start;
-        Log.i(TAG, "joinCustomAudience() took "
-                + duration + " ms: " + label);
+        Log.i(TAG, "joinCustomAudience() took " + duration + " ms: " + label);
     }
 
     private void measureLeaveCustomAudience(String label) throws Exception {
         Log.i(TAG, "Calling joinCustomAudience()");
         final long start = System.currentTimeMillis();
 
-        AdvertisingCustomAudienceClient client = new AdvertisingCustomAudienceClient.Builder()
-                .setContext(CONTEXT)
-                .setExecutor(CALLBACK_EXECUTOR)
-                .build();
+        AdvertisingCustomAudienceClient client =
+                new AdvertisingCustomAudienceClient.Builder()
+                        .setContext(CONTEXT)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
 
-        client.leaveCustomAudience(CustomAudienceFixture.VALID_OWNER,
-                CustomAudienceFixture.VALID_BUYER, CustomAudienceFixture.VALID_NAME).get();
+        client.leaveCustomAudience(
+                        CustomAudienceFixture.VALID_OWNER,
+                        CommonFixture.VALID_BUYER,
+                        CustomAudienceFixture.VALID_NAME)
+                .get();
 
         final long duration = System.currentTimeMillis() - start;
-        Log.i(TAG, "joinCustomAudience() took "
-                + duration + " ms: " + label);
+        Log.i(TAG, "joinCustomAudience() took " + duration + " ms: " + label);
     }
 
     @Test
@@ -98,22 +105,20 @@ public class CustomAudienceManagerTest {
     }
 
     /**
-     * Test to measure an "end-to-end" latency of registerSource()
-     * and registerTrigger, * when the service process isn't running.
-     * <p>
-     * To run this test alone, use the following command.
-     * {@code atest com.android.adservices.customaudience
+     * Test to measure an "end-to-end" latency of registerSource() and registerTrigger, * when the
+     * service process isn't running.
+     *
+     * <p>To run this test alone, use the following command. {@code atest
+     * com.android.adservices.customaudience
      * .CustomAudienceManagerTest#testCallCustomAudienceAPIAfterKillingService}
      *
-     * Note the performance varies depending on various factors (examples below),
-     * so getting the "real world number" is really hard.
-     * - What other processes are running, what they're doing, and the temperature of the
-     * device,
-     * which affects the CPU clock, disk I/O performance, etc...
-     * The busy the CPU is, the higher the clock gets, but that causes the CPU to become hot,
-     * which then will lower the CPU clock.
-     * For micro-benchmarks, we fixate to a lower clock speed to avoid fluctuation, which works
-     * okay for comparing multiple algorithms, but not a good way to get the "actual" number.
+     * <p>Note the performance varies depending on various factors (examples below), so getting the
+     * "real world number" is really hard. - What other processes are running, what they're doing,
+     * and the temperature of the device, which affects the CPU clock, disk I/O performance, etc...
+     * The busy the CPU is, the higher the clock gets, but that causes the CPU to become hot, which
+     * then will lower the CPU clock. For micro-benchmarks, we fixate to a lower clock speed to
+     * avoid fluctuation, which works okay for comparing multiple algorithms, but not a good way to
+     * get the "actual" number.
      */
     @Test
     public void testCallCustomAudienceAPIAfterKillingService() throws Exception {
@@ -124,6 +129,12 @@ public class CustomAudienceManagerTest {
         // Kill the service process.
         ShellUtils.runShellCommand("su 0 killall -9 " + SERVICE_APK_NAME);
 
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(WRITE_DEVICE_CONFIG_PERMISSION);
+        // This test is running in background
+        PhFlagsFixture.overrideForegroundStatusForFledgeCustomAudience(false);
+
         // TODO(b/230873929): Extract to util method.
         int count = 0;
         boolean succeed = false;
@@ -133,6 +144,7 @@ public class CustomAudienceManagerTest {
                 succeed = true;
                 break;
             } catch (Exception exception) {
+                LogUtil.e(exception, "Failure testing Custom Audience API");
                 Thread.sleep(1000);
                 count++;
             }
