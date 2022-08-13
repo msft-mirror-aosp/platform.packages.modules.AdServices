@@ -33,6 +33,7 @@ import org.mockito.Mockito;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Objects;
 
 /** Integration tests for {@link EventReportingJobHandler} */
 @RunWith(Parameterized.class)
@@ -78,8 +79,8 @@ public class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrati
 
         switch (Action.valueOf(action)) {
             case ALL_REPORTS:
-                final Long startValue = ((Number) get("start")).longValue();
-                final Long endValue = ((Number) get("end")).longValue();
+                final long startValue = ((Number) Objects.requireNonNull(get("start"))).longValue();
+                final long endValue = ((Number) Objects.requireNonNull(get("end"))).longValue();
                 Assert.assertTrue(
                         "Event report failed.",
                         spyReportingService.performScheduledPendingReportsInWindow(
@@ -92,9 +93,7 @@ public class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrati
                         spyReportingService.performAllPendingReportsForGivenApp(appName));
                 break;
             case SINGLE_REPORT:
-                final EventReportingJobHandler.PerformReportResult result =
-                        EventReportingJobHandler.PerformReportResult.valueOf(
-                                (String) get("result"));
+                final int result = ((Number) Objects.requireNonNull(get("result"))).intValue();
                 final String id = (String) get("id");
                 Assert.assertEquals(
                         "Event report failed.", result, spyReportingService.performReport(id));
