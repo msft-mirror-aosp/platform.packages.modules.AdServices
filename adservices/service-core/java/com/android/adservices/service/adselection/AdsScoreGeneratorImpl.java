@@ -39,13 +39,14 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 /**
@@ -58,6 +59,12 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
 
     @VisibleForTesting
     static final String MISSING_TRUSTED_SCORING_SIGNALS = "Error fetching trusted scoring signals";
+
+    @VisibleForTesting
+    static final String MISSING_SCORING_LOGIC = "Error fetching scoring decision logic";
+
+    @VisibleForTesting
+    static final String SCORING_TIMED_OUT = "Scoring exceeded allowed time limit";
 
     @NonNull private final AdSelectionScriptEngine mAdSelectionScriptEngine;
     @NonNull private final ListeningExecutorService mListeningExecutorService;
@@ -93,6 +100,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
             @NonNull final AdSelectionConfig adSelectionConfig)
             throws AdServicesException {
 
+        LogUtil.v("Starting Ad scoring for #%d bidding outcomes", adBiddingOutcomes.size());
         ListenableFuture<String> scoreAdJs =
                 getAdSelectionLogic(adSelectionConfig.getDecisionLogicUri(), adSelectionConfig);
 
@@ -118,15 +126,15 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                         //  use a global scheduled executor
                         new ScheduledThreadPoolExecutor(1))
                 .catching(
-                        ExecutionException.class,
+                        TimeoutException.class,
                         this::handleTimeoutError,
                         mListeningExecutorService);
     }
 
     @Nullable
-    private List<AdScoringOutcome> handleTimeoutError(ExecutionException e) {
-        LogUtil.w(e, "Scoring exceeded time limit");
-        throw new IllegalStateException(MISSING_TRUSTED_SCORING_SIGNALS);
+    private List<AdScoringOutcome> handleTimeoutError(TimeoutException e) {
+        LogUtil.e(e, "Scoring exceeded time limit");
+        throw new UncheckedTimeoutException(SCORING_TIMED_OUT);
     }
 
     private ListenableFuture<String> getAdSelectionLogic(
@@ -137,19 +145,28 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                                 () ->
                                         mAdSelectionDevOverridesHelper.getDecisionLogicOverride(
                                                 adSelectionConfig)));
-        return jsOverrideFuture.transformAsync(
-                jsOverride -> {
-                    if (jsOverride == null) {
-                        return mAdServicesHttpsClient.fetchPayload(decisionLogicUri);
-                    } else {
-                        LogUtil.d(
-                                "Developer options enabled and an override JS is provided "
-                                        + "for the current ad selection config. "
-                                        + "Skipping call to server.");
-                        return Futures.immediateFuture(jsOverride);
-                    }
-                },
-                mListeningExecutorService);
+        return jsOverrideFuture
+                .transformAsync(
+                        jsOverride -> {
+                            if (jsOverride == null) {
+                                LogUtil.v("Fetching Ad Scoring Logic from the server");
+                                return mAdServicesHttpsClient.fetchPayload(decisionLogicUri);
+                            } else {
+                                LogUtil.d(
+                                        "Developer options enabled and an override JS is provided "
+                                                + "for the current ad selection config. "
+                                                + "Skipping call to server.");
+                                return Futures.immediateFuture(jsOverride);
+                            }
+                        },
+                        mListeningExecutorService)
+                .catching(
+                        Exception.class,
+                        e -> {
+                            LogUtil.e(e, "Exception encountered when fetching scoring logic");
+                            throw new IllegalStateException(MISSING_SCORING_LOGIC);
+                        },
+                        mListeningExecutorService);
     }
 
     private ListenableFuture<List<Double>> getAdScores(
@@ -163,6 +180,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
         ListenableFuture<List<Double>> adScores =
                 trustedScoringSignals.transformAsync(
                         trustedSignals -> {
+                            LogUtil.v("Invoking JS engine to generate Ad Scores");
                             return mAdSelectionScriptEngine.scoreAds(
                                     scoringLogic,
                                     adBiddingOutcomes.stream()
@@ -217,6 +235,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                 .transformAsync(
                         jsOverride -> {
                             if (jsOverride == null) {
+                                LogUtil.v("Fetching trusted scoring signals from server");
                                 return Futures.transform(
                                         mAdServicesHttpsClient.fetchPayload(
                                                 trustedScoringSignalsUri),
@@ -234,7 +253,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                 .catching(
                         Exception.class,
                         e -> {
-                            LogUtil.w(e, "Exception encountered when fetching trusted signals");
+                            LogUtil.e(e, "Exception encountered when fetching trusted signals");
                             throw new IllegalStateException(MISSING_TRUSTED_SCORING_SIGNALS);
                         },
                         mListeningExecutorService);
@@ -249,7 +268,9 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
     private List<AdScoringOutcome> mapAdsToScore(
             List<AdBiddingOutcome> adBiddingOutcomes, List<Double> adScores) {
         List<AdScoringOutcome> adScoringOutcomes = new ArrayList<>();
-
+        LogUtil.v(
+                "Mapping #%d bidding outcomes to #%d ads with scores",
+                adBiddingOutcomes.size(), adScores.size());
         for (int i = 0; i < adScores.size(); i++) {
             final Double score = adScores.get(i);
             final AdWithBid adWithBid = adBiddingOutcomes.get(i).getAdWithBid();
@@ -264,6 +285,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                             .setCustomAudienceBiddingInfo(customAudienceBiddingInfo)
                             .build());
         }
+        LogUtil.v("Returning Ad Scoring Outcome");
         return adScoringOutcomes;
     }
 }

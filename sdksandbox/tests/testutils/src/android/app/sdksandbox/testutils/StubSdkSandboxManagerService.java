@@ -18,11 +18,13 @@ package android.app.sdksandbox.testutils;
 
 import android.app.sdksandbox.ILoadSdkCallback;
 import android.app.sdksandbox.IRequestSurfacePackageCallback;
+import android.app.sdksandbox.ISdkSandboxLifecycleCallback;
 import android.app.sdksandbox.ISdkSandboxManager;
 import android.app.sdksandbox.ISendDataCallback;
 import android.content.pm.SharedLibraryInfo;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.RemoteException;
 
 import java.util.Collections;
 import java.util.List;
@@ -36,10 +38,15 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     @Override
     public void loadSdk(
-            String callingPackageName, String sdkName, Bundle params, ILoadSdkCallback callback) {}
+            String callingPackageName,
+            String sdkName,
+            long timeAppCalledSystemServer,
+            Bundle params,
+            ILoadSdkCallback callback) {}
 
     @Override
-    public void unloadSdk(String callingPackageName, String sdkName) {}
+    public void unloadSdk(
+            String callingPackageName, String sdkName, long timeAppCalledSystemServer) {}
 
     @Override
     public void requestSurfacePackage(
@@ -49,6 +56,7 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
             int displayId,
             int width,
             int height,
+            long timeAppCalledSystemServer,
             Bundle params,
             IRequestSurfacePackageCallback callback) {}
 
@@ -57,10 +65,23 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
             String callingPackageName, String sdkName, Bundle data, ISendDataCallback callback) {}
 
     @Override
-    public List<SharedLibraryInfo> getLoadedSdkLibrariesInfo(String callingPackageName) {
+    public List<SharedLibraryInfo> getLoadedSdkLibrariesInfo(
+            String callingPackageName, long timeAppCalledSystemServer) {
         return Collections.emptyList();
     }
 
     @Override
-    public void syncDataFromClient(String callingPackageName, Bundle data) {}
+    public void stopSdkSandbox(String callingPackageName) throws RemoteException {}
+
+    @Override
+    public void syncDataFromClient(
+            String callingPackageName, long timeAppCalledSystemServer, Bundle data) {}
+
+    @Override
+    public void addSdkSandboxLifecycleCallback(
+            String callingPackageName, ISdkSandboxLifecycleCallback callback) {}
+
+    @Override
+    public void removeSdkSandboxLifecycleCallback(
+            String callingPackageName, ISdkSandboxLifecycleCallback callback) {}
 }

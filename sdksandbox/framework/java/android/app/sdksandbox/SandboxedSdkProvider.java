@@ -38,14 +38,19 @@ public abstract class SandboxedSdkProvider {
 
     /**
      * Sets the SDK {@link Context} which can then be received using {@link
-     * SandboxedSdkProvider#getContext()}. This is called by the platform before {@link
-     * SandboxedSdkProvider#onLoadSdk}. No operations requiring a {@link Context} should be
-     * performed before then, as {@link SandboxedSdkProvider#getContext} will return null until this
-     * method has been called.
+     * SandboxedSdkProvider#getContext()}. This is called before {@link
+     * SandboxedSdkProvider#onLoadSdk} is invoked. No operations requiring a {@link Context} should
+     * be performed before then, as {@link SandboxedSdkProvider#getContext} will return null until
+     * this method has been called.
+     *
+     * <p>Throws IllegalStateException if a base context has already been set.
      *
      * @param context The new base context.
      */
     public final void attachContext(@NonNull Context context) {
+        if (mContext != null) {
+            throw new IllegalStateException("Context already set");
+        }
         mContext = context;
     }
 

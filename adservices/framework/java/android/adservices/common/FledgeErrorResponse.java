@@ -17,7 +17,6 @@
 package android.adservices.common;
 
 import android.adservices.common.AdServicesStatusUtils.StatusCode;
-import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.os.Parcel;
@@ -32,20 +31,14 @@ import java.util.Objects;
  *
  * @hide
  */
-public final class FledgeErrorResponse implements Parcelable {
-    @StatusCode private final int mStatusCode;
-    @Nullable private final String mErrorMessage;
+public final class FledgeErrorResponse extends AdServicesResponse {
 
     private FledgeErrorResponse(@StatusCode int statusCode, @Nullable String errorMessage) {
-        mStatusCode = statusCode;
-        mErrorMessage = errorMessage;
+        super(statusCode, errorMessage);
     }
 
     private FledgeErrorResponse(@NonNull Parcel in) {
-        Objects.requireNonNull(in);
-
-        mStatusCode = in.readInt();
-        mErrorMessage = in.readString();
+        super(in);
     }
 
     @NonNull
@@ -75,49 +68,6 @@ public final class FledgeErrorResponse implements Parcelable {
 
         dest.writeInt(mStatusCode);
         dest.writeString(mErrorMessage);
-    }
-
-    /** Returns one of the {@code STATUS} constants defined in {@link AdServicesStatusUtils}. */
-    public int getStatusCode() {
-        return mStatusCode;
-    }
-
-    /**
-     * Returns the error message associated with this response.
-     *
-     * <p>If {@link AdServicesStatusUtils#isSuccess(int)} is {@code true}, the error message is
-     * always {@code null}. The error message may not be {@code null} even if {@link
-     * AdServicesStatusUtils#isSuccess(int)} is {@code false}.
-     */
-    @Nullable
-    public String getErrorMessage() {
-        return mErrorMessage;
-    }
-
-    /** Converts the response to an exception to be used in the callback. */
-    @NonNull
-    public AdServicesException asException() {
-
-        Exception innerException;
-        switch (mStatusCode) {
-            case AdServicesStatusUtils.STATUS_UNAUTHORIZED:
-                innerException = new SecurityException();
-                break;
-            case AdServicesStatusUtils.STATUS_INTERNAL_ERROR: // Intentional fallthrough
-            case AdServicesStatusUtils.STATUS_BACKGROUND_CALLER:
-                innerException = new IllegalStateException();
-                break;
-            case AdServicesStatusUtils.STATUS_INVALID_ARGUMENT:
-                innerException = new IllegalArgumentException();
-                break;
-            case AdServicesStatusUtils.STATUS_SUCCESS: // Intentional fallthrough
-            case AdServicesStatusUtils.STATUS_UNKNOWN_ERROR: // Intentional fallthrough
-            case AdServicesStatusUtils.STATUS_UNSET: // Intentional fallthrough
-            default:
-                innerException = new Exception();
-                break;
-        }
-        return new AdServicesException(mErrorMessage, innerException);
     }
 
     /**

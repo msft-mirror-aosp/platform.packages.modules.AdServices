@@ -70,7 +70,7 @@ public final class TriggerFixture {
                 "[\n"
                         + "{\n"
                         + "  \"trigger_data\": \"5\",\n"
-                        + "  \"priority\": \"123\"\n"
+                        + "  \"priority\": \"123\",\n"
                         + "  \"filters\": {\n"
                         + "    \"source_type\": [\"navigation\"],\n"
                         + "    \"key_1\": [\"value_1\"] \n"
@@ -78,11 +78,11 @@ public final class TriggerFixture {
                         + "},\n"
                         + "{\n"
                         + "  \"trigger_data\": \"0\",\n"
-                        + "  \"priority\": \"124\"\n"
-                        + "  \"deduplication_key\": \"101\"\n"
+                        + "  \"priority\": \"124\",\n"
+                        + "  \"deduplication_key\": \"101\",\n"
                         + "  \"filters\": {\n"
                         + "     \"source_type\": [\"event\"]\n"
-                        + "   },\n"
+                        + "   }\n"
                         + "}\n"
                         + "]\n";
 

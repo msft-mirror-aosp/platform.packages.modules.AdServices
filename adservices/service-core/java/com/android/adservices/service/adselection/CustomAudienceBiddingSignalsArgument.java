@@ -59,7 +59,7 @@ public class CustomAudienceBiddingSignalsArgument {
         return recordArg(
                 name,
                 stringArg(OWNER_FIELD_NAME, customAudienceSignals.getOwner()),
-                stringArg(BUYER_FIELD_NAME, customAudienceSignals.getBuyer()),
+                stringArg(BUYER_FIELD_NAME, customAudienceSignals.getBuyer().toString()),
                 stringArg(NAME_FIELD_NAME, customAudienceSignals.getName()),
                 numericArg(
                         ACTIVATION_TIME_FIELD_NAME,

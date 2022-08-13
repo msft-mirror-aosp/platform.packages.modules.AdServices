@@ -19,7 +19,6 @@ package com.android.adservices.data.adselection;
 import static org.junit.Assert.assertEquals;
 
 import android.adservices.adselection.CustomAudienceSignalsFixture;
-import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
@@ -32,13 +31,11 @@ public class CustomAudienceSignalsTest {
     public void testBuildCustomAudienceSignals() {
         CustomAudienceSignals customAudienceSignals =
                 CustomAudienceSignalsFixture.aCustomAudienceSignalsBuilder()
-                        .setBuyer(CommonFixture.VALID_BUYER.toString())
+                        .setBuyer(CommonFixture.VALID_BUYER)
                         .build();
 
         assertEquals(customAudienceSignals.getOwner(), CustomAudienceFixture.VALID_OWNER);
-        assertEquals(
-                AdTechIdentifier.fromString(customAudienceSignals.getBuyer()),
-                CommonFixture.VALID_BUYER);
+        assertEquals(customAudienceSignals.getBuyer(), CommonFixture.VALID_BUYER);
         assertEquals(customAudienceSignals.getName(), CustomAudienceFixture.VALID_NAME);
         assertEquals(
                 customAudienceSignals.getActivationTime(),
@@ -48,7 +45,7 @@ public class CustomAudienceSignalsTest {
                 CustomAudienceFixture.VALID_EXPIRATION_TIME);
         assertEquals(
                 customAudienceSignals.getUserBiddingSignals(),
-                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString());
+                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
     }
 
     @Test
@@ -59,9 +56,7 @@ public class CustomAudienceSignalsTest {
                                 .build());
 
         assertEquals(customAudienceSignals.getOwner(), CustomAudienceFixture.VALID_OWNER);
-        assertEquals(
-                AdTechIdentifier.fromString(customAudienceSignals.getBuyer()),
-                CommonFixture.VALID_BUYER);
+        assertEquals(customAudienceSignals.getBuyer(), CommonFixture.VALID_BUYER);
         assertEquals(customAudienceSignals.getName(), CustomAudienceFixture.VALID_NAME);
         assertEquals(
                 customAudienceSignals.getActivationTime(),
@@ -71,6 +66,38 @@ public class CustomAudienceSignalsTest {
                 CustomAudienceFixture.VALID_EXPIRATION_TIME);
         assertEquals(
                 customAudienceSignals.getUserBiddingSignals(),
-                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString());
+                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
+    }
+
+    @Test
+    public void testEqualCustomAudienceSignalsHaveSameHashCode() {
+        CustomAudienceSignals obj1 =
+                CustomAudienceSignalsFixture.aCustomAudienceSignalsBuilder()
+                        .setBuyer(CommonFixture.VALID_BUYER)
+                        .setName("the-same-name")
+                        .build();
+        CustomAudienceSignals obj2 =
+                CustomAudienceSignalsFixture.aCustomAudienceSignalsBuilder()
+                        .setBuyer(CommonFixture.VALID_BUYER)
+                        .setName("the-same-name")
+                        .build();
+
+        CommonFixture.assertHaveSameHashCode(obj1, obj2);
+    }
+
+    @Test
+    public void testNotEqualCustomAudienceSignalsHaveDifferentHashCodes() {
+        CustomAudienceSignals obj1 =
+                CustomAudienceSignalsFixture.aCustomAudienceSignalsBuilder()
+                        .setBuyer(CommonFixture.VALID_BUYER)
+                        .setName("a-name")
+                        .build();
+        CustomAudienceSignals obj2 =
+                CustomAudienceSignalsFixture.aCustomAudienceSignalsBuilder()
+                        .setBuyer(CommonFixture.VALID_BUYER)
+                        .setName("a-different-name")
+                        .build();
+
+        CommonFixture.assertDifferentHashCode(obj1, obj2);
     }
 }

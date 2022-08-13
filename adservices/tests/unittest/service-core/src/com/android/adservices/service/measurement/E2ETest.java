@@ -681,7 +681,7 @@ public abstract class E2ETest {
         db.delete("msmt_source", null, null);
         db.delete("msmt_trigger", null, null);
         db.delete("msmt_event_report", null, null);
-        db.delete("msmt_attribution_rate_limit", null, null);
+        db.delete("msmt_attribution", null, null);
         db.delete("msmt_aggregate_report", null, null);
     }
 
