@@ -103,7 +103,11 @@ public class ImpressionReporter {
         mListeningExecutorService = MoreExecutors.listeningDecorator(executor);
         mAdSelectionEntryDao = adSelectionEntryDao;
         mAdServicesHttpsClient = adServicesHttpsClient;
-        mJsEngine = new ReportImpressionScriptEngine(mContext);
+        mJsEngine =
+                new ReportImpressionScriptEngine(
+                        mContext,
+                        () -> flags.getEnforceIsolateMaxHeapSize(),
+                        () -> flags.getIsolateMaxHeapSizeBytes());
         mConsentManager = consentManager;
         mAdSelectionDevOverridesHelper =
                 new AdSelectionDevOverridesHelper(devContext, mAdSelectionEntryDao);

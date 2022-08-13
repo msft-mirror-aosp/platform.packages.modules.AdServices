@@ -36,6 +36,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.js.IsolateSettings;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.FluentFuture;
@@ -94,11 +95,15 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
 
         mContext = context;
         mListeningExecutorService = MoreExecutors.listeningDecorator(listeningExecutorService);
-        mAdSelectionScriptEngine = new AdSelectionScriptEngine(mContext);
         mAdServicesHttpsClient = new AdServicesHttpsClient(listeningExecutorService);
         mCustomAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(devContext, customAudienceDao);
         mFlags = flags;
+        mAdSelectionScriptEngine =
+                new AdSelectionScriptEngine(
+                        mContext,
+                        () -> mFlags.getEnforceIsolateMaxHeapSize(),
+                        () -> mFlags.getIsolateMaxHeapSizeBytes());
     }
 
     @VisibleForTesting
@@ -108,13 +113,15 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             @NonNull AdSelectionScriptEngine adSelectionScriptEngine,
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper,
-            @NonNull Flags flags) {
+            @NonNull Flags flags,
+            @NonNull IsolateSettings isolateSettings) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(listeningExecutorService);
         Objects.requireNonNull(adSelectionScriptEngine);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(customAudienceDevOverridesHelper);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(isolateSettings);
 
         mContext = context;
         mListeningExecutorService = listeningExecutorService;
