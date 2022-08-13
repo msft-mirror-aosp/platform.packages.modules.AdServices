@@ -20,6 +20,7 @@ import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
+import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
@@ -111,7 +112,10 @@ public class AdSelectionManager {
         try {
             final AdSelectionService service = getService();
             service.runAdSelection(
-                    adSelectionConfig,
+                    new AdSelectionInput.Builder()
+                            .setAdSelectionConfig(adSelectionConfig)
+                            .setCallerPackageName(getCallerPackageName())
+                            .build(),
                     new AdSelectionCallback.Stub() {
                         @Override
                         public void onSuccess(AdSelectionResponse resultParcel) {
@@ -165,6 +169,7 @@ public class AdSelectionManager {
                     new ReportImpressionInput.Builder()
                             .setAdSelectionId(request.getAdSelectionId())
                             .setAdSelectionConfig(request.getAdSelectionConfig())
+                            .setCallerPackageName(getCallerPackageName())
                             .build(),
                     new ReportImpressionCallback.Stub() {
                         @Override
@@ -188,6 +193,14 @@ public class AdSelectionManager {
         } catch (RemoteException e) {
             LogUtil.e(e, "Exception");
             receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
+        }
+    }
+
+    private String getCallerPackageName() {
+        if (mContext instanceof SandboxedSdkContext) {
+            return ((SandboxedSdkContext) mContext).getClientPackageName();
+        } else {
+            return mContext.getPackageName();
         }
     }
 }

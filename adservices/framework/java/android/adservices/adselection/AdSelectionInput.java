@@ -21,8 +21,6 @@ import android.annotation.Nullable;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.android.internal.util.Preconditions;
-
 import java.util.Objects;
 
 /**
@@ -30,40 +28,33 @@ import java.util.Objects;
  *
  * @hide
  */
-public final class ReportImpressionInput implements Parcelable {
-    private static final long UNSET = 0;
-
-    private final long mAdSelectionId;
-    @NonNull private final AdSelectionConfig mAdSelectionConfig;
-    @NonNull private final String mCallerPackageName;
+public final class AdSelectionInput implements Parcelable {
+    @Nullable private final AdSelectionConfig mAdSelectionConfig;
+    @Nullable private final String mCallerPackageName;
 
     @NonNull
-    public static final Parcelable.Creator<ReportImpressionInput> CREATOR =
-            new Parcelable.Creator<ReportImpressionInput>() {
-                public ReportImpressionInput createFromParcel(Parcel in) {
-                    return new ReportImpressionInput(in);
+    public static final Creator<AdSelectionInput> CREATOR =
+            new Creator<AdSelectionInput>() {
+                public AdSelectionInput createFromParcel(Parcel in) {
+                    return new AdSelectionInput(in);
                 }
 
-                public ReportImpressionInput[] newArray(int size) {
-                    return new ReportImpressionInput[size];
+                public AdSelectionInput[] newArray(int size) {
+                    return new AdSelectionInput[size];
                 }
             };
 
-    private ReportImpressionInput(
-            long adSelectionId,
-            @NonNull AdSelectionConfig adSelectionConfig,
-            @NonNull String callerPackageName) {
+    private AdSelectionInput(
+            @NonNull AdSelectionConfig adSelectionConfig, @NonNull String callerPackageName) {
         Objects.requireNonNull(adSelectionConfig);
 
-        this.mAdSelectionId = adSelectionId;
         this.mAdSelectionConfig = adSelectionConfig;
         this.mCallerPackageName = callerPackageName;
     }
 
-    private ReportImpressionInput(@NonNull Parcel in) {
+    private AdSelectionInput(@NonNull Parcel in) {
         Objects.requireNonNull(in);
 
-        this.mAdSelectionId = in.readLong();
         this.mAdSelectionConfig = AdSelectionConfig.CREATOR.createFromParcel(in);
         this.mCallerPackageName = in.readString();
     }
@@ -77,21 +68,12 @@ public final class ReportImpressionInput implements Parcelable {
     public void writeToParcel(@NonNull Parcel dest, int flags) {
         Objects.requireNonNull(dest);
 
-        dest.writeLong(mAdSelectionId);
         mAdSelectionConfig.writeToParcel(dest, flags);
         dest.writeString(mCallerPackageName);
     }
 
     /**
-     * Returns the adSelectionId, one of the inputs to {@link ReportImpressionInput} as noted in
-     * {@code AdSelectionService}.
-     */
-    public long getAdSelectionId() {
-        return mAdSelectionId;
-    }
-
-    /**
-     * Returns the adSelectionConfig, one of the inputs to {@link ReportImpressionInput} as noted in
+     * Returns the adSelectionConfig, one of the inputs to {@link AdSelectionInput} as noted in
      * {@code AdSelectionService}.
      */
     @NonNull
@@ -106,29 +88,19 @@ public final class ReportImpressionInput implements Parcelable {
     }
 
     /**
-     * Builder for {@link ReportImpressionInput} objects.
+     * Builder for {@link AdSelectionInput} objects.
      *
      * @hide
      */
     public static final class Builder {
-        // Initializing mAdSelectionId to start as -1, to differentiate it from the default
-        // initialization of 0.
-        private long mAdSelectionId = UNSET;
         @Nullable private AdSelectionConfig mAdSelectionConfig;
-        private String mCallerPackageName;
+        @Nullable private String mCallerPackageName;
 
         public Builder() {}
 
-        /** Set the mAdSelectionId. */
-        @NonNull
-        public ReportImpressionInput.Builder setAdSelectionId(long adSelectionId) {
-            this.mAdSelectionId = adSelectionId;
-            return this;
-        }
-
         /** Set the AdSelectionConfig. */
         @NonNull
-        public ReportImpressionInput.Builder setAdSelectionConfig(
+        public AdSelectionInput.Builder setAdSelectionConfig(
                 @NonNull AdSelectionConfig adSelectionConfig) {
             Objects.requireNonNull(adSelectionConfig);
 
@@ -138,24 +110,20 @@ public final class ReportImpressionInput implements Parcelable {
 
         /** Sets the caller's package name. */
         @NonNull
-        public ReportImpressionInput.Builder setCallerPackageName(
-                @NonNull String callerPackageName) {
+        public AdSelectionInput.Builder setCallerPackageName(@NonNull String callerPackageName) {
             Objects.requireNonNull(callerPackageName);
 
             this.mCallerPackageName = callerPackageName;
             return this;
         }
 
-        /** Builds a {@link ReportImpressionInput} instance. */
+        /** Builds a {@link AdSelectionInput} instance. */
         @NonNull
-        public ReportImpressionInput build() {
+        public AdSelectionInput build() {
             Objects.requireNonNull(mAdSelectionConfig);
             Objects.requireNonNull(mCallerPackageName);
 
-            Preconditions.checkArgument(mAdSelectionId != UNSET, "AdSelectionId not set");
-
-            return new ReportImpressionInput(
-                    mAdSelectionId, mAdSelectionConfig, mCallerPackageName);
+            return new AdSelectionInput(mAdSelectionConfig, mCallerPackageName);
         }
     }
 }

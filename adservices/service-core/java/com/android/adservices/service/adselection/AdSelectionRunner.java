@@ -20,6 +20,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
+import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.AdSelectionResponse;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
@@ -130,6 +131,7 @@ public final class AdSelectionRunner {
         Objects.requireNonNull(executorService);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(flags);
+
         mContext = context;
         mCustomAudienceDao = customAudienceDao;
         mAdSelectionEntryDao = adSelectionEntryDao;
@@ -199,13 +201,12 @@ public final class AdSelectionRunner {
     /**
      * Runs the ad selection for a given seller
      *
-     * @param adSelectionConfig set of signals and other bidding and scoring information provided by
-     *     the seller
+     * @param inputParams containing {@link AdSelectionConfig} and {@code callerPackageName}
      * @param callback used to notify the result back to the calling seller
      */
     public void runAdSelection(
-            @NonNull AdSelectionConfig adSelectionConfig, @NonNull AdSelectionCallback callback) {
-        Objects.requireNonNull(adSelectionConfig);
+            @NonNull AdSelectionInput inputParams, @NonNull AdSelectionCallback callback) {
+        Objects.requireNonNull(inputParams);
         Objects.requireNonNull(callback);
 
         try {
@@ -217,7 +218,10 @@ public final class AdSelectionRunner {
                             .transform(
                                     ignoredVoid -> maybeAssertForegroundCaller(), mExecutorService)
                             .transformAsync(
-                                    ignoredVoid -> orchestrateAdSelection(adSelectionConfig),
+                                    ignoredVoid ->
+                                            orchestrateAdSelection(
+                                                    inputParams.getAdSelectionConfig(),
+                                                    inputParams.getCallerPackageName()),
                                     mExecutorService);
 
             Futures.addCallback(
@@ -321,7 +325,8 @@ public final class AdSelectionRunner {
      * @return {@link AdSelectionResponse}
      */
     private ListenableFuture<DBAdSelection> orchestrateAdSelection(
-            @NonNull final AdSelectionConfig adSelectionConfig) {
+            @NonNull final AdSelectionConfig adSelectionConfig,
+            @NonNull final String callerPackageName) {
         LogUtil.v("Beginning Ad Selection Orchestration");
 
         ListenableFuture<List<DBCustomAudience>> buyerCustomAudience =
@@ -361,7 +366,8 @@ public final class AdSelectionRunner {
 
         AsyncFunction<Pair<DBAdSelection.Builder, String>, DBAdSelection> saveResultToPersistence =
                 adSelectionAndJs -> {
-                    return persistAdSelection(adSelectionAndJs.first, adSelectionAndJs.second);
+                    return persistAdSelection(
+                            adSelectionAndJs.first, adSelectionAndJs.second, callerPackageName);
                 };
 
         return FluentFuture.from(dbAdSelectionBuilder)
@@ -540,7 +546,8 @@ public final class AdSelectionRunner {
 
     private ListenableFuture<DBAdSelection> persistAdSelection(
             @NonNull DBAdSelection.Builder dbAdSelectionBuilder,
-            @NonNull String buyerDecisionLogicJS) {
+            @NonNull String buyerDecisionLogicJS,
+            @NonNull String callerPackageName) {
         ListeningExecutorService listeningExecutorService =
                 MoreExecutors.listeningDecorator(mExecutorService);
 
@@ -552,7 +559,8 @@ public final class AdSelectionRunner {
                     DBAdSelection dbAdSelection;
                     dbAdSelectionBuilder
                             .setAdSelectionId(adSelectionId)
-                            .setCreationTimestamp(mClock.instant());
+                            .setCreationTimestamp(mClock.instant())
+                            .setCallerPackageName(callerPackageName);
                     dbAdSelection = dbAdSelectionBuilder.build();
                     mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
                     mAdSelectionEntryDao.persistBuyerDecisionLogic(

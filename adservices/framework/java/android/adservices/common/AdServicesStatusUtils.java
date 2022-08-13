@@ -90,7 +90,8 @@ public class AdServicesStatusUtils {
      */
     public static final int STATUS_PERMISSION_NOT_REQUESTED = 9;
     /**
-     * The caller is not authorized to make this call. Caller is not allowed.
+     * The caller is not authorized to make this call. Caller is not allowed (not present in the
+     * allowed list).
      *
      * <p>This error may be considered similar to {@link SecurityException}.
      */
@@ -137,7 +138,7 @@ public class AdServicesStatusUtils {
      * to perform this operation on behalf of the given package.
      */
     public static final String SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE =
-            "Caller not allowed to perform this operation on behalf of the given package.";
+            "Caller is not allowed to perform this operation on behalf of the given package.";
 
     /** Returns true for a successful status. */
     public static boolean isSuccess(@StatusCode int statusCode) {
@@ -162,6 +163,9 @@ public class AdServicesStatusUtils {
                 return new SecurityException(SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE);
             case STATUS_BACKGROUND_CALLER:
                 return new IllegalStateException(ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE);
+            case STATUS_UNAUTHORIZED:
+                return new SecurityException(
+                        SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE);
             default:
                 return new IllegalStateException();
         }
