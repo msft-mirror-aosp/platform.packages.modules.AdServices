@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.customaudience;
 
+import static android.adservices.common.AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
@@ -46,6 +47,8 @@ import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
+import android.adservices.common.CallingAppUidSupplierFailureImpl;
+import android.adservices.common.CallingAppUidSupplierProcessImpl;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.customaudience.CustomAudience;
@@ -53,7 +56,6 @@ import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.CustomAudienceOverrideCallback;
 import android.adservices.customaudience.ICustomAudienceCallback;
 import android.content.Context;
-import android.os.Binder;
 import android.os.Process;
 import android.os.RemoteException;
 
@@ -114,7 +116,6 @@ public class CustomAudienceServiceImplTest {
         mStaticMockitoSession =
                 ExtendedMockito.mockitoSession()
                         .initMocks(this)
-                        .mockStatic(Binder.class)
                         .mockStatic(BackgroundFetchJobService.class)
                         .startMocking();
 
@@ -128,7 +129,8 @@ public class CustomAudienceServiceImplTest {
                         DIRECT_EXECUTOR,
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
-                        mFlagsWithForegroundCheckEnabled);
+                        mFlagsWithForegroundCheckEnabled,
+                        CallingAppUidSupplierProcessImpl.create());
     }
 
     @After
@@ -138,7 +140,6 @@ public class CustomAudienceServiceImplTest {
 
     @Test
     public void testJoinCustomAudience_runNormally() throws RemoteException {
-        doReturn(Process.myUid()).when(Binder::getCallingUidOrThrow);
         doNothing()
                 .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
         doReturn(false)
@@ -175,7 +176,6 @@ public class CustomAudienceServiceImplTest {
 
     @Test
     public void testJoinCustomAudienceWithRevokedUserConsentSuccess() throws RemoteException {
-        doReturn(Process.myUid()).when(Binder::getCallingUidOrThrow);
         doReturn(true)
                 .when(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
@@ -209,7 +209,18 @@ public class CustomAudienceServiceImplTest {
 
     @Test
     public void testJoinCustomAudience_notInBinderThread() {
-        when(Binder.getCallingUidOrThrow()).thenThrow(IllegalStateException.class);
+        mService =
+                new CustomAudienceServiceImpl(
+                        CONTEXT,
+                        mCustomAudienceImpl,
+                        mFledgeAuthorizationFilter,
+                        mConsentManagerMock,
+                        mDevContextFilter,
+                        DIRECT_EXECUTOR,
+                        mAdServicesLoggerSpy,
+                        mAppImportanceFilter,
+                        mFlagsWithForegroundCheckEnabled,
+                        CallingAppUidSupplierFailureImpl.create());
 
         assertThrows(
                 IllegalStateException.class,
@@ -235,18 +246,25 @@ public class CustomAudienceServiceImplTest {
     }
 
     @Test
-    public void testJoinCustomAudience_ownerAssertFailed() {
-        doReturn(Process.myUid()).when(Binder::getCallingUidOrThrow);
-        doThrow(SecurityException.class)
+    public void testJoinCustomAudience_ownerAssertFailed() throws RemoteException {
+        doThrow(
+                        new SecurityException(
+                                SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE))
                 .when(mFledgeAuthorizationFilter)
                 .assertCallingPackageName(
                         CustomAudienceFixture.VALID_OWNER,
                         Process.myUid(),
                         AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
 
-        assertThrows(
-                SecurityException.class,
-                () -> mService.joinCustomAudience(VALID_CUSTOM_AUDIENCE, mICustomAudienceCallback));
+        mService.joinCustomAudience(VALID_CUSTOM_AUDIENCE, mICustomAudienceCallback);
+
+        ArgumentCaptor<FledgeErrorResponse> actualResponseCaptor =
+                ArgumentCaptor.forClass(FledgeErrorResponse.class);
+        verify(mICustomAudienceCallback).onFailure(actualResponseCaptor.capture());
+        assertThat(actualResponseCaptor.getValue().getStatusCode())
+                .isEqualTo(AdServicesStatusUtils.STATUS_UNAUTHORIZED);
+        assertThat(actualResponseCaptor.getValue().getErrorMessage())
+                .isEqualTo(SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE);
         verify(mFledgeAuthorizationFilter)
                 .assertCallingPackageName(
                         CustomAudienceFixture.VALID_OWNER,
@@ -314,7 +332,6 @@ public class CustomAudienceServiceImplTest {
 
     @Test
     public void testJoinCustomAudience_errorCreateCustomAudience() throws RemoteException {
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         doThrow(new RuntimeException("Simulating Error creating Custom Audience"))
                 .when(mCustomAudienceImpl)
                 .joinCustomAudience(VALID_CUSTOM_AUDIENCE);
@@ -353,7 +370,6 @@ public class CustomAudienceServiceImplTest {
 
     @Test
     public void testJoinCustomAudience_errorReturnCallback() throws RemoteException {
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         doThrow(RemoteException.class).when(mICustomAudienceCallback).onSuccess();
         doNothing()
                 .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
@@ -394,7 +410,6 @@ public class CustomAudienceServiceImplTest {
 
     @Test
     public void testLeaveCustomAudience_runNormally() throws RemoteException {
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any(), any());
 
         mService.leaveCustomAudience(
@@ -435,7 +450,6 @@ public class CustomAudienceServiceImplTest {
 
     @Test
     public void testLeaveCustomAudienceWithRevokedUserConsent() throws RemoteException {
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         doReturn(true).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any(), any());
 
         mService.leaveCustomAudience(
@@ -472,7 +486,18 @@ public class CustomAudienceServiceImplTest {
 
     @Test
     public void testLeaveCustomAudience_notInBinderThread() {
-        when(Binder.getCallingUidOrThrow()).thenThrow(IllegalStateException.class);
+        mService =
+                new CustomAudienceServiceImpl(
+                        CONTEXT,
+                        mCustomAudienceImpl,
+                        mFledgeAuthorizationFilter,
+                        mConsentManagerMock,
+                        mDevContextFilter,
+                        DIRECT_EXECUTOR,
+                        mAdServicesLoggerSpy,
+                        mAppImportanceFilter,
+                        mFlagsWithForegroundCheckEnabled,
+                        CallingAppUidSupplierFailureImpl.create());
 
         assertThrows(
                 IllegalStateException.class,
@@ -503,24 +528,29 @@ public class CustomAudienceServiceImplTest {
     }
 
     @Test
-    public void testLeaveCustomAudience_ownerAssertFailed() {
-        doReturn(Process.myUid()).when(Binder::getCallingUidOrThrow);
-        doThrow(SecurityException.class)
+    public void testLeaveCustomAudience_ownerAssertFailed() throws RemoteException {
+        doThrow(
+                        new SecurityException(
+                                SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE))
                 .when(mFledgeAuthorizationFilter)
                 .assertCallingPackageName(
                         CustomAudienceFixture.VALID_OWNER,
                         Process.myUid(),
                         AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
 
-        assertThrows(
-                SecurityException.class,
-                () ->
-                        mService.leaveCustomAudience(
-                                CustomAudienceFixture.VALID_OWNER,
-                                CommonFixture.VALID_BUYER,
-                                CustomAudienceFixture.VALID_NAME,
-                                mICustomAudienceCallback));
+        mService.leaveCustomAudience(
+                CustomAudienceFixture.VALID_OWNER,
+                CommonFixture.VALID_BUYER,
+                CustomAudienceFixture.VALID_NAME,
+                mICustomAudienceCallback);
 
+        ArgumentCaptor<FledgeErrorResponse> actualResponseCaptor =
+                ArgumentCaptor.forClass(FledgeErrorResponse.class);
+        verify(mICustomAudienceCallback).onFailure(actualResponseCaptor.capture());
+        assertThat(actualResponseCaptor.getValue().getStatusCode())
+                .isEqualTo(AdServicesStatusUtils.STATUS_UNAUTHORIZED);
+        assertThat(actualResponseCaptor.getValue().getErrorMessage())
+                .isEqualTo(SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE);
         verify(mFledgeAuthorizationFilter)
                 .assertCallingPackageName(
                         CustomAudienceFixture.VALID_OWNER,
@@ -658,7 +688,6 @@ public class CustomAudienceServiceImplTest {
 
     @Test
     public void testLeaveCustomAudience_errorCallCustomAudienceImpl() throws RemoteException {
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         doThrow(new RuntimeException("Simulating Error calling CustomAudienceImpl"))
                 .when(mCustomAudienceImpl)
                 .leaveCustomAudience(
@@ -706,7 +735,6 @@ public class CustomAudienceServiceImplTest {
 
     @Test
     public void testLeaveCustomAudience_errorReturnCallback() throws RemoteException {
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         doThrow(RemoteException.class).when(mICustomAudienceCallback).onSuccess();
         doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any(), any());
 
@@ -750,7 +778,6 @@ public class CustomAudienceServiceImplTest {
     @Test
     public void testAppImportanceTestFails_joinCustomAudienceThrowsException()
             throws RemoteException {
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         doThrow(new WrongCallingApplicationStateException())
                 .when(mAppImportanceFilter)
                 .assertCallerIsInForeground(
@@ -782,7 +809,8 @@ public class CustomAudienceServiceImplTest {
                         DIRECT_EXECUTOR,
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
-                        mFlagsWithForegroundCheckDisabled);
+                        mFlagsWithForegroundCheckDisabled,
+                        CallingAppUidSupplierProcessImpl.create());
 
         mService.joinCustomAudience(VALID_CUSTOM_AUDIENCE, mICustomAudienceCallback);
 
@@ -793,7 +821,6 @@ public class CustomAudienceServiceImplTest {
     @Test
     public void testAppImportanceTestFails_leaveCustomAudienceThrowsException()
             throws RemoteException {
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         doThrow(new WrongCallingApplicationStateException())
                 .when(mAppImportanceFilter)
                 .assertCallerIsInForeground(
@@ -829,7 +856,8 @@ public class CustomAudienceServiceImplTest {
                         DIRECT_EXECUTOR,
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
-                        mFlagsWithForegroundCheckDisabled);
+                        mFlagsWithForegroundCheckDisabled,
+                        CallingAppUidSupplierProcessImpl.create());
 
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
@@ -895,7 +923,8 @@ public class CustomAudienceServiceImplTest {
                         DIRECT_EXECUTOR,
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
-                        mFlagsWithForegroundCheckDisabled);
+                        mFlagsWithForegroundCheckDisabled,
+                        CallingAppUidSupplierProcessImpl.create());
 
         mService.overrideCustomAudienceRemoteInfo(
                 CustomAudienceFixture.VALID_OWNER,
@@ -959,7 +988,8 @@ public class CustomAudienceServiceImplTest {
                         DIRECT_EXECUTOR,
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
-                        mFlagsWithForegroundCheckDisabled);
+                        mFlagsWithForegroundCheckDisabled,
+                        CallingAppUidSupplierProcessImpl.create());
 
         mService.removeCustomAudienceRemoteInfoOverride(
                 CustomAudienceFixture.VALID_OWNER,
@@ -980,7 +1010,6 @@ public class CustomAudienceServiceImplTest {
                                 .setCallingAppPackageName("")
                                 .setDevOptionsEnabled(true)
                                 .build());
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         int apiName = AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES;
         doThrow(new WrongCallingApplicationStateException())
                 .when(mAppImportanceFilter)
@@ -1017,7 +1046,8 @@ public class CustomAudienceServiceImplTest {
                         DIRECT_EXECUTOR,
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
-                        mFlagsWithForegroundCheckDisabled);
+                        mFlagsWithForegroundCheckDisabled,
+                        CallingAppUidSupplierProcessImpl.create());
 
         mService.overrideCustomAudienceRemoteInfo(
                 CustomAudienceFixture.VALID_OWNER,

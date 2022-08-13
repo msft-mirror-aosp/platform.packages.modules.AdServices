@@ -92,6 +92,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                 () -> MeasurementImpl.getInstance(context).deletePackageRecords(packageUri));
     }
 
+    @VisibleForTesting
     void measurementOnPackageDataCleared(Context context, Uri packageUri) {
         if (FlagsFactory.getFlags().getMeasurementReceiverDeletePackagesKillSwitch()) {
             LogUtil.e("Measurement Delete Packages Receiver is disabled");
@@ -117,7 +118,8 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                                 .doInstallAttribution(packageUri, System.currentTimeMillis()));
     }
 
-    private void topicsOnPackageFullyRemoved(Context context, @NonNull Uri packageUri) {
+    @VisibleForTesting
+    void topicsOnPackageFullyRemoved(Context context, @NonNull Uri packageUri) {
         if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
             LogUtil.e("Topics API is disabled");
             return;
@@ -128,7 +130,8 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                 () -> TopicsWorker.getInstance(context).deletePackageData(packageUri));
     }
 
-    private void topicsOnPackageAdded(Context context, @NonNull Uri packageUri) {
+    @VisibleForTesting
+    void topicsOnPackageAdded(Context context, @NonNull Uri packageUri) {
         LogUtil.d("Package Added for topics API: " + packageUri.toString());
         sBackgroundExecutor.execute(
                 () -> TopicsWorker.getInstance(context).handleAppInstallation(packageUri));

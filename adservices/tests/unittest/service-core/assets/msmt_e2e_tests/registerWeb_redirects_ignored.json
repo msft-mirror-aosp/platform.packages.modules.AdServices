@@ -22,7 +22,6 @@
             "priority": "100",
             "expiry": "172801"
           },
-          "Attribution-Reporting-Register-Aggregatable-Source": null,
           "Location": null,
           "Attribution-Reporting-Redirect": [
             "https://www.ad-tech2.com",
@@ -39,7 +38,6 @@
             "priority": "101",
             "expiry": "172802"
           },
-          "Attribution-Reporting-Register-Aggregatable-Source": null,
           "Location": null,
           "Attribution-Reporting-Redirect": [
             "https://www.ad-tech2.com",
@@ -60,12 +58,15 @@
       "responses": [{
         "url": "https://www.ad-tech1.com",
         "response": {
-          "Attribution-Reporting-Register-Event-Trigger": [{
-            "trigger_data": "1",
-            "deduplication_key": "1",
-            "priority": "101"
-          }],
-          "Attribution-Reporting-Register-Aggregatable-Trigger-Data": null,
+          "Attribution-Reporting-Register-Trigger": {
+            "event_trigger_data": [
+              {
+                "trigger_data": "1",
+                "deduplication_key": "1",
+                "priority": "101"
+              }
+            ]
+          },
           "Location": null,
           "Attribution-Reporting-Redirect": [
             "https://www.ad-tech2.com",
@@ -75,12 +76,15 @@
       }, {
         "url": "https://www.ad-tech2.com",
         "response": {
-          "Attribution-Reporting-Register-Event-Trigger": [{
-            "trigger_data": "2",
-            "deduplication_key": "1",
-            "priority": "102"
-          }],
-          "Attribution-Reporting-Register-Aggregatable-Trigger-Data": null,
+          "Attribution-Reporting-Register-Trigger": {
+            "event_trigger_data": [
+              {
+                "trigger_data": "2",
+                "deduplication_key": "1",
+                "priority": "102"
+              }
+            ]
+          },
           "Location": null,
           "Attribution-Reporting-Redirect": null
         }

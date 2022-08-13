@@ -31,6 +31,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.PrivacyParams;
@@ -460,60 +461,45 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public void insertAttribution(Source source, Trigger trigger)
-            throws DatastoreException {
-        Optional<Pair<String, String>> sourceAndDestinationTopPrivateDomains =
-                getSourceAndDestinationTopPrivateDomains(source, trigger);
-
-        if (!sourceAndDestinationTopPrivateDomains.isPresent()) {
-            throw new IllegalArgumentException(String.format(
-                    "insertAttribution: getSourceAndDestinationTopPrivateDomains failed. "
-                    + "Publisher: %s; Attribution destination: %s",
-                    source.getPublisher().toString(),
-                    trigger.getAttributionDestination().toString()));
-        }
-
-        String publisherTopPrivateDomain = sourceAndDestinationTopPrivateDomains.get().first;
-        String triggerDestinationTopPrivateDomain =
-                sourceAndDestinationTopPrivateDomains.get().second;
-
+    public void insertAttribution(@NonNull Attribution attribution) throws DatastoreException {
         ContentValues values = new ContentValues();
-        values.put(MeasurementTables.AttributionContract.ID,
-                UUID.randomUUID().toString());
+        values.put(MeasurementTables.AttributionContract.ID, UUID.randomUUID().toString());
+        values.put(MeasurementTables.AttributionContract.SOURCE_SITE, attribution.getSourceSite());
         values.put(
-                MeasurementTables.AttributionContract.SOURCE_SITE,
-                publisherTopPrivateDomain);
-        values.put(
-                MeasurementTables.AttributionContract.SOURCE_ORIGIN,
-                BaseUriExtractor.getBaseUri(source.getPublisher()).toString());
+                MeasurementTables.AttributionContract.SOURCE_ORIGIN, attribution.getSourceOrigin());
         values.put(
                 MeasurementTables.AttributionContract.DESTINATION_SITE,
-                triggerDestinationTopPrivateDomain);
+                attribution.getDestinationSite());
         values.put(
                 MeasurementTables.AttributionContract.DESTINATION_ORIGIN,
-                BaseUriExtractor.getBaseUri(trigger.getAttributionDestination()).toString());
-        values.put(MeasurementTables.AttributionContract.AD_TECH_DOMAIN,
-                trigger.getAdTechDomain().toString());
-        values.put(MeasurementTables.AttributionContract.TRIGGER_TIME,
-                trigger.getTriggerTime());
-        values.put(MeasurementTables.AttributionContract.REGISTRANT,
-                trigger.getRegistrant().toString());
-        long rowId = mSQLTransaction.getDatabase()
-                .insert(MeasurementTables.AttributionContract.TABLE,
-                        /*nullColumnHack=*/null,
-                        values);
+                attribution.getDestinationOrigin());
+        values.put(
+                MeasurementTables.AttributionContract.AD_TECH_DOMAIN,
+                attribution.getAdTechDomain());
+        values.put(
+                MeasurementTables.AttributionContract.TRIGGER_TIME, attribution.getTriggerTime());
+        values.put(MeasurementTables.AttributionContract.REGISTRANT, attribution.getRegistrant());
+        long rowId =
+                mSQLTransaction
+                        .getDatabase()
+                        .insert(
+                                MeasurementTables.AttributionContract.TABLE,
+                                /*nullColumnHack=*/ null,
+                                values);
         if (rowId == -1) {
             throw new DatastoreException("Attribution insertion failed.");
         }
     }
 
     @Override
-    public long getAttributionsPerRateLimitWindow(Source source, Trigger trigger)
+    public long getAttributionsPerRateLimitWindow(@NonNull Source source, @NonNull Trigger trigger)
             throws DatastoreException {
-        Optional<Pair<String, String>> sourceAndDestinationTopPrivateDomains =
-                getSourceAndDestinationTopPrivateDomains(source, trigger);
+        Optional<Uri> publisherBaseUri =
+                extractBaseUri(source.getPublisher(), source.getPublisherType());
+        Optional<Uri> destinationBaseUri =
+                extractBaseUri(trigger.getAttributionDestination(), trigger.getDestinationType());
 
-        if (!sourceAndDestinationTopPrivateDomains.isPresent()) {
+        if (!publisherBaseUri.isPresent() || !destinationBaseUri.isPresent()) {
             throw new IllegalArgumentException(String.format(
                     "getAttributionsPerRateLimitWindow: getSourceAndDestinationTopPrivateDomains "
                     + "failed. Publisher: %s; Attribution destination: %s",
@@ -521,9 +507,8 @@ class MeasurementDao implements IMeasurementDao {
                     trigger.getAttributionDestination().toString()));
         }
 
-        String publisherTopPrivateDomain = sourceAndDestinationTopPrivateDomains.get().first;
-        String triggerDestinationTopPrivateDomain =
-                sourceAndDestinationTopPrivateDomains.get().second;
+        String publisherTopPrivateDomain = publisherBaseUri.get().toString();
+        String triggerDestinationTopPrivateDomain = destinationBaseUri.get().toString();
 
         return DatabaseUtils.queryNumEntries(
                 mSQLTransaction.getDatabase(),
@@ -1212,35 +1197,18 @@ class MeasurementDao implements IMeasurementDao {
         } else {
             Optional<Uri> topPrivateDomainAndScheme =
                     Web.topPrivateDomainAndScheme(trigger.getAttributionDestination());
-            if (topPrivateDomainAndScheme.isPresent()) {
-                return Optional.of(Pair.create(
-                        MeasurementTables.SourceContract.WEB_DESTINATION,
-                        topPrivateDomainAndScheme.get().toString()));
-            } else {
-                return Optional.empty();
-            }
+            return topPrivateDomainAndScheme.map(
+                    uri ->
+                            Pair.create(
+                                    MeasurementTables.SourceContract.WEB_DESTINATION,
+                                    uri.toString()));
         }
     }
 
-    private static Optional<Pair<String, String>> getSourceAndDestinationTopPrivateDomains(
-            Source source, Trigger trigger) {
-        Uri attributionDestination = trigger.getAttributionDestination();
-        Optional<Uri> triggerDestinationTopPrivateDomain =
-                trigger.getDestinationType() == EventSurfaceType.APP
-                        ? Optional.of(BaseUriExtractor.getBaseUri(attributionDestination))
-                        : Web.topPrivateDomainAndScheme(attributionDestination);
-        Uri publisher = source.getPublisher();
-        Optional<Uri> publisherTopPrivateDomain =
-                source.getPublisherType() == EventSurfaceType.APP
-                ? Optional.of(publisher)
-                : Web.topPrivateDomainAndScheme(publisher);
-        if (!triggerDestinationTopPrivateDomain.isPresent()
-                || !publisherTopPrivateDomain.isPresent()) {
-            return Optional.empty();
-        } else {
-            return Optional.of(Pair.create(publisherTopPrivateDomain.get().toString(),
-                    triggerDestinationTopPrivateDomain.get().toString()));
-        }
+    private static Optional<Uri> extractBaseUri(Uri uri, @EventSurfaceType int eventSurfaceType) {
+        return eventSurfaceType == EventSurfaceType.APP
+                ? Optional.of(BaseUriExtractor.getBaseUri(uri))
+                : Web.topPrivateDomainAndScheme(uri);
     }
 
     private static String getPublisherWhereStatement(Uri publisher,

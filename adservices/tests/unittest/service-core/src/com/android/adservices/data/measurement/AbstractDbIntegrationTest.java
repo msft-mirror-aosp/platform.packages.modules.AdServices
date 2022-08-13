@@ -24,6 +24,7 @@ import android.database.sqlite.SQLiteException;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.DbHelper;
+import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
@@ -214,7 +215,8 @@ public abstract class AbstractDbIntegrationTest {
         for (EventReport eventReport : input.mEventReportList) {
             insertToDb(eventReport, db);
         }
-        for (Attribution attr : input.mAttrRateLimitList) {
+        for (com.android.adservices.service.measurement.Attribution attr :
+                input.mAttrRateLimitList) {
             insertToDb(attr, db);
         }
         for (AggregateReport aggregateReport : input.mAggregateReportList) {
@@ -323,10 +325,9 @@ public abstract class AbstractDbIntegrationTest {
             throws SQLiteException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.AttributionContract.ID, attribution.getId());
-        values.put(MeasurementTables.AttributionContract.SOURCE_SITE,
-                attribution.getSourceSite());
-        values.put(MeasurementTables.AttributionContract.SOURCE_ORIGIN,
-                attribution.getSourceOrigin());
+        values.put(MeasurementTables.AttributionContract.SOURCE_SITE, attribution.getSourceSite());
+        values.put(
+                MeasurementTables.AttributionContract.SOURCE_ORIGIN, attribution.getSourceOrigin());
         values.put(MeasurementTables.AttributionContract.DESTINATION_SITE,
                 attribution.getDestinationSite());
         values.put(MeasurementTables.AttributionContract.DESTINATION_ORIGIN,
