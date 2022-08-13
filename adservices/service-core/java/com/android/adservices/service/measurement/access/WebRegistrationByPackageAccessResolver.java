@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.access;
 
+import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
 import android.content.Context;
 
@@ -36,6 +37,13 @@ public class WebRegistrationByPackageAccessResolver implements IAccessResolver {
     @Override
     public boolean isAllowed(@NonNull Context context) {
         return AllowLists.isPackageAllowListed(mAllowList, mPackageName);
+    }
+
+    @NonNull
+    @Override
+    @AdServicesStatusUtils.StatusCode
+    public int getErrorStatusCode() {
+        return AdServicesStatusUtils.STATUS_UNAUTHORIZED;
     }
 
     @NonNull

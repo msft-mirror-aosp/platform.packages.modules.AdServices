@@ -15,6 +15,8 @@
  */
 package com.android.adservices.measurement;
 
+import static org.mockito.ArgumentMatchers.any;
+
 import android.adservices.measurement.DeletionParam;
 import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.IMeasurementService;
@@ -37,7 +39,6 @@ import androidx.test.core.app.ApplicationProvider;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
 import java.util.Collections;
@@ -69,7 +70,7 @@ public class MeasurementManagerTest {
         Mockito.when(mm.getService()).thenReturn(mockService);
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
-        Mockito.doNothing().when(mockService).register(captor.capture(), ArgumentMatchers.any());
+        Mockito.doNothing().when(mockService).register(captor.capture(), any(), any());
 
         mm.registerSource(
                 Uri.parse("https://example.com"),
@@ -89,7 +90,7 @@ public class MeasurementManagerTest {
         Mockito.when(mm.getService()).thenReturn(mockService);
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
-        Mockito.doNothing().when(mockService).register(captor.capture(), ArgumentMatchers.any());
+        Mockito.doNothing().when(mockService).register(captor.capture(), any(), any());
 
         mm.registerSource(
                 Uri.parse("https://example.com"),
@@ -108,9 +109,7 @@ public class MeasurementManagerTest {
         Mockito.when(mm.getService()).thenReturn(mockService);
         ArgumentCaptor<WebSourceRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebSourceRegistrationRequestInternal.class);
-        Mockito.doNothing()
-                .when(mockService)
-                .registerWebSource(captor.capture(), ArgumentMatchers.any());
+        Mockito.doNothing().when(mockService).registerWebSource(captor.capture(), any(), any());
 
         WebSourceParams webSourceParams =
                 new WebSourceParams.Builder(Uri.parse("https://example.com"))
@@ -141,9 +140,7 @@ public class MeasurementManagerTest {
         Mockito.when(mm.getService()).thenReturn(mockService);
         ArgumentCaptor<WebSourceRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebSourceRegistrationRequestInternal.class);
-        Mockito.doNothing()
-                .when(mockService)
-                .registerWebSource(captor.capture(), ArgumentMatchers.any());
+        Mockito.doNothing().when(mockService).registerWebSource(captor.capture(), any(), any());
 
         WebSourceParams webSourceParams =
                 new WebSourceParams.Builder(Uri.parse("https://example.com"))
@@ -173,9 +170,7 @@ public class MeasurementManagerTest {
         Mockito.when(mm.getService()).thenReturn(mockService);
         ArgumentCaptor<WebTriggerRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebTriggerRegistrationRequestInternal.class);
-        Mockito.doNothing()
-                .when(mockService)
-                .registerWebTrigger(captor.capture(), ArgumentMatchers.any());
+        Mockito.doNothing().when(mockService).registerWebTrigger(captor.capture(), any(), any());
 
         WebTriggerParams webTriggerParams =
                 new WebTriggerParams.Builder(Uri.parse("https://example.com"))
@@ -201,9 +196,7 @@ public class MeasurementManagerTest {
         Mockito.when(mm.getService()).thenReturn(mockService);
         ArgumentCaptor<WebTriggerRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebTriggerRegistrationRequestInternal.class);
-        Mockito.doNothing()
-                .when(mockService)
-                .registerWebTrigger(captor.capture(), ArgumentMatchers.any());
+        Mockito.doNothing().when(mockService).registerWebTrigger(captor.capture(), any(), any());
 
         WebTriggerParams webTriggerParams =
                 new WebTriggerParams.Builder(Uri.parse("https://example.com"))
@@ -228,7 +221,7 @@ public class MeasurementManagerTest {
         Mockito.when(mm.getService()).thenReturn(mockService);
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
-        Mockito.doNothing().when(mockService).register(captor.capture(), ArgumentMatchers.any());
+        Mockito.doNothing().when(mockService).register(captor.capture(), any(), any());
 
         mm.registerTrigger(
                 Uri.parse("https://example.com"), /* executor = */ null, /* callback = */ null);
@@ -245,7 +238,7 @@ public class MeasurementManagerTest {
         Mockito.when(mm.getService()).thenReturn(mockService);
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
-        Mockito.doNothing().when(mockService).register(captor.capture(), ArgumentMatchers.any());
+        Mockito.doNothing().when(mockService).register(captor.capture(), any(), any());
 
         mm.registerTrigger(
                 Uri.parse("https://example.com"), /* executor = */ null, /* callback = */ null);
@@ -260,9 +253,7 @@ public class MeasurementManagerTest {
         IMeasurementService mockService = Mockito.mock(IMeasurementService.class);
         Mockito.when(mm.getService()).thenReturn(mockService);
         ArgumentCaptor<DeletionParam> captor = ArgumentCaptor.forClass(DeletionParam.class);
-        Mockito.doNothing()
-                .when(mockService)
-                .deleteRegistrations(captor.capture(), ArgumentMatchers.any());
+        Mockito.doNothing().when(mockService).deleteRegistrations(captor.capture(), any(), any());
 
         mm.deleteRegistrations(
                 new DeletionRequest.Builder().build(),
@@ -280,9 +271,7 @@ public class MeasurementManagerTest {
         IMeasurementService mockService = Mockito.mock(IMeasurementService.class);
         Mockito.when(mm.getService()).thenReturn(mockService);
         ArgumentCaptor<DeletionParam> captor = ArgumentCaptor.forClass(DeletionParam.class);
-        Mockito.doNothing()
-                .when(mockService)
-                .deleteRegistrations(captor.capture(), ArgumentMatchers.any());
+        Mockito.doNothing().when(mockService).deleteRegistrations(captor.capture(), any(), any());
 
         mm.deleteRegistrations(
                 new DeletionRequest.Builder().build(),

@@ -16,12 +16,17 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__EVENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MESUREMENT_REPORTS_UPLOADED;
+
+import android.adservices.common.AdServicesStatusUtils;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.service.measurement.EventReport;
-import com.android.adservices.service.measurement.Source;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.MeasurementReportsStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONException;
@@ -43,22 +48,16 @@ public class EventReportingJobHandler {
         mDatastoreManager = datastoreManager;
     }
 
-    public enum PerformReportResult {
-        SUCCESS,
-        ALREADY_DELIVERED,
-        POST_REQUEST_ERROR,
-        DATASTORE_ERROR
-    }
-
     /**
-     * Finds all reports within the given window that have a status
-     * {@link EventReport.Status.PENDING} and attempts to upload them individually.
+     * Finds all reports within the given window that have a status {@link
+     * EventReport.Status#PENDING} and attempts to upload them individually.
+     *
      * @param windowStartTime Start time of the search window
      * @param windowEndTime End time of the search window
      * @return always return true to signal to JobScheduler that the task is done.
      */
-    synchronized boolean performScheduledPendingReportsInWindow(long windowStartTime,
-            long windowEndTime) {
+    synchronized boolean performScheduledPendingReportsInWindow(
+            long windowStartTime, long windowEndTime) {
         Optional<List<String>> pendingEventReportsInWindowOpt = mDatastoreManager
                 .runInTransactionWithResult((dao) ->
                         dao.getPendingEventReportIdsInWindow(windowStartTime, windowEndTime));
@@ -70,14 +69,16 @@ public class EventReportingJobHandler {
         List<String> pendingEventReportIdsInWindow = pendingEventReportsInWindowOpt.get();
         for (String eventReportId : pendingEventReportIdsInWindow) {
             // TODO: Use result to track rate of success vs retry vs failure
-            PerformReportResult result = performReport(eventReportId);
+            @AdServicesStatusUtils.StatusCode int result = performReport(eventReportId);
+            logReportingStats(result);
         }
         return true;
     }
 
     /**
-     * Finds all event reports for an app, these event reports have a status
-     * {@link EventReport.Status.PENDING} and attempts to upload them individually.
+     * Finds all event reports for an app, these event reports have a status {@link
+     * EventReport.Status#PENDING} and attempts to upload them individually.
+     *
      * @param appName the given app name corresponding to the registrant field in Source table.
      * @return always return true to signal to JobScheduler that the task is done.
      */
@@ -94,32 +95,33 @@ public class EventReportingJobHandler {
 
         List<String> pendingEventReportForGivenApp = pendingEventReportsForGivenApp.get();
         for (String eventReportId : pendingEventReportForGivenApp) {
-            PerformReportResult result = performReport(eventReportId);
-            if (result != PerformReportResult.SUCCESS) {
+            @AdServicesStatusUtils.StatusCode int result = performReport(eventReportId);
+            if (result != AdServicesStatusUtils.STATUS_SUCCESS) {
                 LogUtil.i("Perform report status is %s for app : %s",
                         result, String.valueOf(appName));
             }
+            logReportingStats(result);
         }
         return true;
     }
 
     /**
-     * Perform reporting by finding the relevant {@link EventReport} and making an HTTP POST
-     * request to the specified report to URL with the report data as a JSON in the body.
+     * Perform reporting by finding the relevant {@link EventReport} and making an HTTP POST request
+     * to the specified report to URL with the report data as a JSON in the body.
      *
      * @param eventReportId for the datastore id of the {@link EventReport}
      * @return success
      */
-    synchronized PerformReportResult performReport(String eventReportId) {
+    synchronized int performReport(String eventReportId) {
         Optional<EventReport> eventReportOpt =
                 mDatastoreManager.runInTransactionWithResult((dao)
                         -> dao.getEventReport(eventReportId));
         if (!eventReportOpt.isPresent()) {
-            return PerformReportResult.DATASTORE_ERROR;
+            return AdServicesStatusUtils.STATUS_IO_ERROR;
         }
         EventReport eventReport = eventReportOpt.get();
         if (eventReport.getStatus() != EventReport.Status.PENDING) {
-            return PerformReportResult.ALREADY_DELIVERED;
+            return AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
         }
         try {
             JSONObject eventReportJsonPayload = createReportJsonPayload(eventReport);
@@ -131,14 +133,16 @@ public class EventReportingJobHandler {
                 boolean success = mDatastoreManager.runInTransaction((dao) ->
                         dao.markEventReportDelivered(eventReportId));
 
-                return success ? PerformReportResult.SUCCESS : PerformReportResult.DATASTORE_ERROR;
+                return success
+                        ? AdServicesStatusUtils.STATUS_SUCCESS
+                        : AdServicesStatusUtils.STATUS_IO_ERROR;
             } else {
                 // TODO: Determine behavior for other response codes?
-                return PerformReportResult.POST_REQUEST_ERROR;
+                return AdServicesStatusUtils.STATUS_IO_ERROR;
             }
         } catch (Exception e) {
             LogUtil.e(e, e.toString());
-            return PerformReportResult.POST_REQUEST_ERROR;
+            return AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         }
     }
 
@@ -152,8 +156,7 @@ public class EventReportingJobHandler {
                 .setSourceEventId(String.valueOf(eventReport.getSourceId()))
                 .setAttributionDestination(eventReport.getAttributionDestination().toString())
                 .setTriggerData(String.valueOf(eventReport.getTriggerData()))
-                .setSourceType(eventReport.getSourceType() == Source.SourceType.NAVIGATION
-                        ? "navigation" : "event")
+                .setSourceType(eventReport.getSourceType().getValue())
                 .setRandomizedTriggerRate(eventReport.getRandomizedTriggerRate())
                 .build()
                 .toJson();
@@ -167,5 +170,15 @@ public class EventReportingJobHandler {
             throws IOException {
         EventReportSender eventReportSender = new EventReportSender();
         return eventReportSender.sendReport(adTechDomain, eventReportPayload);
+    }
+
+    private static void logReportingStats(int resultCode) {
+        AdServicesLoggerImpl.getInstance()
+                .logMeasurementReports(
+                        new MeasurementReportsStats.Builder()
+                                .setCode(AD_SERVICES_MESUREMENT_REPORTS_UPLOADED)
+                                .setType(AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__EVENT)
+                                .setResultCode(resultCode)
+                                .build());
     }
 }

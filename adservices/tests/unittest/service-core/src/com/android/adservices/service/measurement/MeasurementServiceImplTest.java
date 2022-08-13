@@ -30,6 +30,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdServicesStatusUtils;
+import android.adservices.common.CallerMetadata;
 import android.adservices.measurement.DeletionParam;
 import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.IMeasurementApiStatusCallback;
@@ -55,6 +56,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
@@ -82,9 +84,6 @@ public final class MeasurementServiceImplTest {
     public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
             new TestableDeviceConfig.TestableDeviceConfigRule();
 
-    @Mock private ConsentManager mConsentManager;
-    @Mock private PackageManager mPackageManager;
-
     private static final String PACKAGE_NAME = "test.package.name";
     private static final String ALLOW_LIST_WITHOUT_TEST_PACKAGE =
             "test1.package.name,test1.package.name";
@@ -97,10 +96,15 @@ public final class MeasurementServiceImplTest {
             new WebSourceParams.Builder(REGISTRATION_URI).setDebugKeyAllowed(true).build();
     private static final WebTriggerParams TRIGGER_REGISTRATION =
             new WebTriggerParams.Builder(REGISTRATION_URI).setDebugKeyAllowed(true).build();
+
+    @Mock private ConsentManager mConsentManager;
+    @Mock private PackageManager mPackageManager;
     @Mock private MeasurementImpl mMockMeasurementImpl;
     @Mock private Throttler mMockThrottler;
     @Mock private Context mMockContext;
     @Mock private Flags mMockFlags;
+    @Mock private AdServicesLogger mMockAdServicesLogger;
+    @Mock private CallerMetadata mMockCallerMetadata;
 
     private MeasurementServiceImpl mMeasurementServiceImpl;
 
@@ -127,7 +131,8 @@ public final class MeasurementServiceImplTest {
                         mMockContext,
                         mConsentManager,
                         mMockThrottler,
-                        mMockFlags);
+                        mMockFlags,
+                        mMockAdServicesLogger);
     }
 
     @Test
@@ -137,6 +142,7 @@ public final class MeasurementServiceImplTest {
 
         mMeasurementServiceImpl.register(
                 getDefaultRegistrationSourceRequest(),
+                mMockCallerMetadata,
                 new IMeasurementCallback.Stub() {
                     @Override
                     public void onResult() {
@@ -167,9 +173,11 @@ public final class MeasurementServiceImplTest {
                         mMockContext,
                         mConsentManager,
                         mMockThrottler,
-                        FlagsFactory.getFlags())
+                        FlagsFactory.getFlags(),
+                        mMockAdServicesLogger)
                 .register(
                         getDefaultRegistrationSourceRequest(),
+                        mMockCallerMetadata,
                         new IMeasurementCallback.Stub() {
                             @Override
                             public void onResult() {
@@ -201,9 +209,11 @@ public final class MeasurementServiceImplTest {
                         mMockContext,
                         mConsentManager,
                         mMockThrottler,
-                        FlagsFactory.getFlags())
+                        FlagsFactory.getFlags(),
+                        mMockAdServicesLogger)
                 .register(
                         getDefaultRegistrationSourceRequest(),
+                        mMockCallerMetadata,
                         new IMeasurementCallback.Stub() {
                             @Override
                             public void onResult() {
@@ -247,11 +257,21 @@ public final class MeasurementServiceImplTest {
 
         final Throttler throttler = Throttler.getInstance(1);
         new MeasurementServiceImpl(
-                        mMockMeasurementImpl, mMockContext, mConsentManager, throttler, mMockFlags)
-                .register(getDefaultRegistrationSourceRequest(), callback);
+                        mMockMeasurementImpl,
+                        mMockContext,
+                        mConsentManager,
+                        throttler,
+                        mMockFlags,
+                        mMockAdServicesLogger)
+                .register(getDefaultRegistrationSourceRequest(), mMockCallerMetadata, callback);
         new MeasurementServiceImpl(
-                        mMockMeasurementImpl, mMockContext, mConsentManager, throttler, mMockFlags)
-                .register(getDefaultRegistrationSourceRequest(), callback);
+                        mMockMeasurementImpl,
+                        mMockContext,
+                        mConsentManager,
+                        throttler,
+                        mMockFlags,
+                        mMockAdServicesLogger)
+                .register(getDefaultRegistrationSourceRequest(), mMockCallerMetadata, callback);
 
         assertThat(countDownLatchSuccess.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
         assertThat(countDownLatchFailed.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
@@ -284,11 +304,21 @@ public final class MeasurementServiceImplTest {
 
         final Throttler throttler = Throttler.getInstance(1);
         new MeasurementServiceImpl(
-                        mMockMeasurementImpl, mMockContext, mConsentManager, throttler, mMockFlags)
-                .register(getDefaultRegistrationTriggerRequest(), callback);
+                        mMockMeasurementImpl,
+                        mMockContext,
+                        mConsentManager,
+                        throttler,
+                        mMockFlags,
+                        mMockAdServicesLogger)
+                .register(getDefaultRegistrationTriggerRequest(), mMockCallerMetadata, callback);
         new MeasurementServiceImpl(
-                        mMockMeasurementImpl, mMockContext, mConsentManager, throttler, mMockFlags)
-                .register(getDefaultRegistrationTriggerRequest(), callback);
+                        mMockMeasurementImpl,
+                        mMockContext,
+                        mConsentManager,
+                        throttler,
+                        mMockFlags,
+                        mMockAdServicesLogger)
+                .register(getDefaultRegistrationTriggerRequest(), mMockCallerMetadata, callback);
 
         assertThat(countDownLatchSuccess.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
         assertThat(countDownLatchFailed.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
@@ -312,9 +342,11 @@ public final class MeasurementServiceImplTest {
                         mMockContext,
                         mConsentManager,
                         mMockThrottler,
-                        FlagsFactory.getFlags())
+                        FlagsFactory.getFlags(),
+                        mMockAdServicesLogger)
                 .register(
                         getDefaultRegistrationTriggerRequest(),
+                        mMockCallerMetadata,
                         new IMeasurementCallback.Stub() {
                             @Override
                             public void onResult() {
@@ -346,9 +378,11 @@ public final class MeasurementServiceImplTest {
                         mMockContext,
                         mConsentManager,
                         mMockThrottler,
-                        FlagsFactory.getFlags())
+                        FlagsFactory.getFlags(),
+                        mMockAdServicesLogger)
                 .register(
                         getDefaultRegistrationTriggerRequest(),
+                        mMockCallerMetadata,
                         new IMeasurementCallback.Stub() {
                             @Override
                             public void onResult() {
@@ -373,6 +407,7 @@ public final class MeasurementServiceImplTest {
     public void testRegister_invalidRequest() {
         mMeasurementServiceImpl.register(
                 null,
+                mMockCallerMetadata,
                 new IMeasurementCallback.Stub() {
                     @Override
                     public void onResult() {}
@@ -384,7 +419,8 @@ public final class MeasurementServiceImplTest {
 
     @Test(expected = NullPointerException.class)
     public void testRegister_invalidCallback() {
-        mMeasurementServiceImpl.register(getDefaultRegistrationSourceRequest(), null);
+        mMeasurementServiceImpl.register(
+                getDefaultRegistrationSourceRequest(), mMockCallerMetadata, null);
     }
 
     @Test
@@ -394,6 +430,7 @@ public final class MeasurementServiceImplTest {
 
         mMeasurementServiceImpl.deleteRegistrations(
                 getDefaultDeletionRequest(),
+                mMockCallerMetadata,
                 new IMeasurementCallback.Stub() {
                     @Override
                     public void onResult() {
@@ -424,9 +461,11 @@ public final class MeasurementServiceImplTest {
                         mMockContext,
                         mConsentManager,
                         mMockThrottler,
-                        FlagsFactory.getFlags())
+                        FlagsFactory.getFlags(),
+                        mMockAdServicesLogger)
                 .deleteRegistrations(
                         getDefaultDeletionRequest(),
+                        mMockCallerMetadata,
                         new IMeasurementCallback.Stub() {
                             @Override
                             public void onResult() {
@@ -458,9 +497,11 @@ public final class MeasurementServiceImplTest {
                         mMockContext,
                         mConsentManager,
                         mMockThrottler,
-                        FlagsFactory.getFlags())
+                        FlagsFactory.getFlags(),
+                        mMockAdServicesLogger)
                 .deleteRegistrations(
                         getDefaultDeletionRequest(),
+                        mMockCallerMetadata,
                         new IMeasurementCallback.Stub() {
                             @Override
                             public void onResult() {
@@ -504,11 +545,21 @@ public final class MeasurementServiceImplTest {
 
         final Throttler throttler = Throttler.getInstance(1);
         new MeasurementServiceImpl(
-                        mMockMeasurementImpl, mMockContext, mConsentManager, throttler, mMockFlags)
-                .deleteRegistrations(getDefaultDeletionRequest(), callback);
+                        mMockMeasurementImpl,
+                        mMockContext,
+                        mConsentManager,
+                        throttler,
+                        mMockFlags,
+                        mMockAdServicesLogger)
+                .deleteRegistrations(getDefaultDeletionRequest(), mMockCallerMetadata, callback);
         new MeasurementServiceImpl(
-                        mMockMeasurementImpl, mMockContext, mConsentManager, throttler, mMockFlags)
-                .deleteRegistrations(getDefaultDeletionRequest(), callback);
+                        mMockMeasurementImpl,
+                        mMockContext,
+                        mConsentManager,
+                        throttler,
+                        mMockFlags,
+                        mMockAdServicesLogger)
+                .deleteRegistrations(getDefaultDeletionRequest(), mMockCallerMetadata, callback);
 
         assertThat(countDownLatchSuccess.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
         assertThat(countDownLatchFailed.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
@@ -522,6 +573,7 @@ public final class MeasurementServiceImplTest {
     public void testDeleteRegistrations_invalidRequest() {
         mMeasurementServiceImpl.deleteRegistrations(
                 null,
+                mMockCallerMetadata,
                 new IMeasurementCallback.Stub() {
                     @Override
                     public void onResult() {}
@@ -533,7 +585,8 @@ public final class MeasurementServiceImplTest {
 
     @Test(expected = NullPointerException.class)
     public void testDeleteRegistrations_invalidCallback() {
-        mMeasurementServiceImpl.deleteRegistrations(getDefaultDeletionRequest(), null);
+        mMeasurementServiceImpl.deleteRegistrations(
+                getDefaultDeletionRequest(), mMockCallerMetadata, null);
     }
 
     @Test
@@ -559,8 +612,10 @@ public final class MeasurementServiceImplTest {
                             mMockContext,
                             mConsentManager,
                             mMockThrottler,
-                            mMockFlags);
+                            mMockFlags,
+                            mMockAdServicesLogger);
             mMeasurementServiceImpl.getMeasurementApiStatus(
+                    mMockCallerMetadata,
                     new IMeasurementApiStatusCallback.Stub() {
                         @Override
                         public void onResult(int result) {
@@ -591,8 +646,10 @@ public final class MeasurementServiceImplTest {
                         mMockContext,
                         mConsentManager,
                         mMockThrottler,
-                        FlagsFactory.getFlags())
+                        FlagsFactory.getFlags(),
+                        mMockAdServicesLogger)
                 .getMeasurementApiStatus(
+                        mMockCallerMetadata,
                         new IMeasurementApiStatusCallback.Stub() {
                             @Override
                             public void onResult(int result) {
@@ -618,8 +675,10 @@ public final class MeasurementServiceImplTest {
                         mMockContext,
                         mConsentManager,
                         mMockThrottler,
-                        FlagsFactory.getFlags())
+                        FlagsFactory.getFlags(),
+                        mMockAdServicesLogger)
                 .getMeasurementApiStatus(
+                        mMockCallerMetadata,
                         new IMeasurementApiStatusCallback.Stub() {
                             @Override
                             public void onResult(int result) {
@@ -633,7 +692,7 @@ public final class MeasurementServiceImplTest {
 
     @Test(expected = NullPointerException.class)
     public void testGetMeasurementApiStatus_invalidCallback() {
-        mMeasurementServiceImpl.getMeasurementApiStatus(null);
+        mMeasurementServiceImpl.getMeasurementApiStatus(mMockCallerMetadata, null);
     }
 
     @Test
@@ -643,6 +702,7 @@ public final class MeasurementServiceImplTest {
 
         mMeasurementServiceImpl.registerWebSource(
                 createWebSourceRegistrationRequest(),
+                mMockCallerMetadata,
                 new IMeasurementCallback.Stub() {
                     @Override
                     public void onResult() {
@@ -676,9 +736,11 @@ public final class MeasurementServiceImplTest {
                         mMockContext,
                         mConsentManager,
                         mMockThrottler,
-                        FlagsFactory.getFlags())
+                        FlagsFactory.getFlags(),
+                        mMockAdServicesLogger)
                 .registerWebSource(
                         createWebSourceRegistrationRequest(),
+                        mMockCallerMetadata,
                         new IMeasurementCallback.Stub() {
                             @Override
                             public void onResult() {
@@ -713,9 +775,11 @@ public final class MeasurementServiceImplTest {
                         mMockContext,
                         mConsentManager,
                         mMockThrottler,
-                        FlagsFactory.getFlags())
+                        FlagsFactory.getFlags(),
+                        mMockAdServicesLogger)
                 .registerWebSource(
                         createWebSourceRegistrationRequest(),
+                        mMockCallerMetadata,
                         new IMeasurementCallback.Stub() {
                             @Override
                             public void onResult() {
@@ -759,11 +823,23 @@ public final class MeasurementServiceImplTest {
 
         final Throttler throttler = Throttler.getInstance(1);
         new MeasurementServiceImpl(
-                        mMockMeasurementImpl, mMockContext, mConsentManager, throttler, mMockFlags)
-                .registerWebSource(createWebSourceRegistrationRequest(), callback);
+                        mMockMeasurementImpl,
+                        mMockContext,
+                        mConsentManager,
+                        throttler,
+                        mMockFlags,
+                        mMockAdServicesLogger)
+                .registerWebSource(
+                        createWebSourceRegistrationRequest(), mMockCallerMetadata, callback);
         new MeasurementServiceImpl(
-                        mMockMeasurementImpl, mMockContext, mConsentManager, throttler, mMockFlags)
-                .registerWebSource(createWebSourceRegistrationRequest(), callback);
+                        mMockMeasurementImpl,
+                        mMockContext,
+                        mConsentManager,
+                        throttler,
+                        mMockFlags,
+                        mMockAdServicesLogger)
+                .registerWebSource(
+                        createWebSourceRegistrationRequest(), mMockCallerMetadata, callback);
 
         assertThat(countDownLatchSuccess.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
         assertThat(countDownLatchFailed.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
@@ -777,6 +853,7 @@ public final class MeasurementServiceImplTest {
     public void registerWebSource_invalidRequest() {
         mMeasurementServiceImpl.registerWebSource(
                 null,
+                mMockCallerMetadata,
                 new IMeasurementCallback.Stub() {
                     @Override
                     public void onResult() {}
@@ -788,7 +865,8 @@ public final class MeasurementServiceImplTest {
 
     @Test(expected = NullPointerException.class)
     public void registerWebSource_invalidCallback() {
-        mMeasurementServiceImpl.registerWebSource(createWebSourceRegistrationRequest(), null);
+        mMeasurementServiceImpl.registerWebSource(
+                createWebSourceRegistrationRequest(), mMockCallerMetadata, null);
     }
 
     @Test
@@ -798,6 +876,7 @@ public final class MeasurementServiceImplTest {
 
         mMeasurementServiceImpl.registerWebTrigger(
                 createWebTriggerRegistrationRequest(),
+                mMockCallerMetadata,
                 new IMeasurementCallback.Stub() {
                     @Override
                     public void onResult() {
@@ -831,9 +910,11 @@ public final class MeasurementServiceImplTest {
                         mMockContext,
                         mConsentManager,
                         mMockThrottler,
-                        FlagsFactory.getFlags())
+                        FlagsFactory.getFlags(),
+                        mMockAdServicesLogger)
                 .registerWebTrigger(
                         createWebTriggerRegistrationRequest(),
+                        mMockCallerMetadata,
                         new IMeasurementCallback.Stub() {
                             @Override
                             public void onResult() {
@@ -868,9 +949,11 @@ public final class MeasurementServiceImplTest {
                         mMockContext,
                         mConsentManager,
                         mMockThrottler,
-                        FlagsFactory.getFlags())
+                        FlagsFactory.getFlags(),
+                        mMockAdServicesLogger)
                 .registerWebTrigger(
                         createWebTriggerRegistrationRequest(),
+                        mMockCallerMetadata,
                         new IMeasurementCallback.Stub() {
                             @Override
                             public void onResult() {
@@ -914,11 +997,23 @@ public final class MeasurementServiceImplTest {
 
         final Throttler throttler = Throttler.getInstance(1);
         new MeasurementServiceImpl(
-                        mMockMeasurementImpl, mMockContext, mConsentManager, throttler, mMockFlags)
-                .registerWebTrigger(createWebTriggerRegistrationRequest(), callback);
+                        mMockMeasurementImpl,
+                        mMockContext,
+                        mConsentManager,
+                        throttler,
+                        mMockFlags,
+                        mMockAdServicesLogger)
+                .registerWebTrigger(
+                        createWebTriggerRegistrationRequest(), mMockCallerMetadata, callback);
         new MeasurementServiceImpl(
-                        mMockMeasurementImpl, mMockContext, mConsentManager, throttler, mMockFlags)
-                .registerWebTrigger(createWebTriggerRegistrationRequest(), callback);
+                        mMockMeasurementImpl,
+                        mMockContext,
+                        mConsentManager,
+                        throttler,
+                        mMockFlags,
+                        mMockAdServicesLogger)
+                .registerWebTrigger(
+                        createWebTriggerRegistrationRequest(), mMockCallerMetadata, callback);
 
         assertThat(countDownLatchSuccess.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
         assertThat(countDownLatchFailed.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
@@ -932,6 +1027,7 @@ public final class MeasurementServiceImplTest {
     public void registerWebTrigger_invalidRequest() {
         mMeasurementServiceImpl.registerWebSource(
                 null,
+                mMockCallerMetadata,
                 new IMeasurementCallback.Stub() {
                     @Override
                     public void onResult() {}
@@ -943,7 +1039,8 @@ public final class MeasurementServiceImplTest {
 
     @Test(expected = NullPointerException.class)
     public void registerWebTrigger_invalidCallback() {
-        mMeasurementServiceImpl.registerWebTrigger(createWebTriggerRegistrationRequest(), null);
+        mMeasurementServiceImpl.registerWebTrigger(
+                createWebTriggerRegistrationRequest(), mMockCallerMetadata, null);
     }
 
     @Test
@@ -954,6 +1051,7 @@ public final class MeasurementServiceImplTest {
 
         mMeasurementServiceImpl.register(
                 getDefaultRegistrationSourceRequest(),
+                mMockCallerMetadata,
                 new IMeasurementCallback.Stub() {
                     @Override
                     public void onResult() {
@@ -974,6 +1072,7 @@ public final class MeasurementServiceImplTest {
 
         mMeasurementServiceImpl.registerWebSource(
                 createWebSourceRegistrationRequest(),
+                mMockCallerMetadata,
                 new IMeasurementCallback.Stub() {
                     @Override
                     public void onResult() {
@@ -1000,6 +1099,7 @@ public final class MeasurementServiceImplTest {
         // Execution
         mMeasurementServiceImpl.registerWebSource(
                 createWebSourceRegistrationRequest(),
+                mMockCallerMetadata,
                 new IMeasurementCallback.Stub() {
                     @Override
                     public void onResult() {
@@ -1025,6 +1125,7 @@ public final class MeasurementServiceImplTest {
 
         mMeasurementServiceImpl.registerWebTrigger(
                 createWebTriggerRegistrationRequest(),
+                mMockCallerMetadata,
                 new IMeasurementCallback.Stub() {
                     @Override
                     public void onResult() {
@@ -1052,6 +1153,7 @@ public final class MeasurementServiceImplTest {
         // Execution
         mMeasurementServiceImpl.registerWebTrigger(
                 createWebTriggerRegistrationRequest(),
+                mMockCallerMetadata,
                 new IMeasurementCallback.Stub() {
                     @Override
                     public void onResult() {
