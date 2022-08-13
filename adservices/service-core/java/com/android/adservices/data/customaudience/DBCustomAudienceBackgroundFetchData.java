@@ -16,6 +16,7 @@
 
 package com.android.adservices.data.customaudience;
 
+import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
@@ -41,7 +42,7 @@ import java.util.Objects;
         primaryKeys = {"owner", "buyer", "name"},
         inheritSuperIndices = true)
 public abstract class DBCustomAudienceBackgroundFetchData {
-    /** @return the owner of the custom audience */
+    /** @return the owner package name of the custom audience */
     @AutoValue.CopyAnnotations
     @ColumnInfo(name = "owner", index = true)
     @NonNull
@@ -51,7 +52,7 @@ public abstract class DBCustomAudienceBackgroundFetchData {
     @AutoValue.CopyAnnotations
     @ColumnInfo(name = "buyer", index = true)
     @NonNull
-    public abstract String getBuyer();
+    public abstract AdTechIdentifier getBuyer();
 
     /** @return the name of the custom audience */
     @AutoValue.CopyAnnotations
@@ -99,7 +100,7 @@ public abstract class DBCustomAudienceBackgroundFetchData {
     @NonNull
     public static DBCustomAudienceBackgroundFetchData create(
             @NonNull String owner,
-            @NonNull String buyer,
+            @NonNull AdTechIdentifier buyer,
             @NonNull String name,
             @NonNull Uri dailyUpdateUrl,
             @NonNull Instant eligibleUpdateTime,
@@ -178,7 +179,7 @@ public abstract class DBCustomAudienceBackgroundFetchData {
                 case RESPONSE_VALIDATION_FAILURE:
                     fetchDataBuilder.setNumValidationFailures(getNumValidationFailures() + 1);
                     break;
-                case NETWORK_CONNECT_TIMEOUT_FAILURE:
+                case NETWORK_FAILURE:
                     // TODO(b/221861706): Consider differentiating timeout failures for fairness
                     // TODO(b/237342352): Consolidate timeout failures if they don't need to be
                     //  distinguished
@@ -208,13 +209,13 @@ public abstract class DBCustomAudienceBackgroundFetchData {
     /** Builder class for a {@link DBCustomAudienceBackgroundFetchData} object. */
     @AutoValue.Builder
     public abstract static class Builder {
-        /** Sets the owner for the custom audience. */
+        /** Sets the owner package name for the custom audience. */
         @NonNull
         public abstract Builder setOwner(@NonNull String value);
 
         /** Sets the buyer for the custom audience. */
         @NonNull
-        public abstract Builder setBuyer(@NonNull String value);
+        public abstract Builder setBuyer(@NonNull AdTechIdentifier value);
 
         /** Sets the name for the custom audience. */
         @NonNull

@@ -17,6 +17,7 @@
 package com.android.adservices.service.common;
 
 import android.annotation.NonNull;
+import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
@@ -130,7 +131,72 @@ public class AppManifestConfigHelper {
         try {
             XmlResourceParser in = getXmlParser(context, appPackageName);
             AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(in);
+
+            // If the request comes directly from the app, check that the app has declared that it
+            // includes this Sdk library.
+            if (!(context instanceof SandboxedSdkContext)) {
+                return appManifestConfig
+                                .getIncludesSdkLibraryConfig()
+                                .getIncludesSdkLibraries()
+                                .contains(enrollmentId)
+                        && appManifestConfig.isAllowedTopicsAccess(enrollmentId);
+            }
+
+            // If the request comes from the SdkRuntime, then the app had to have declared the Sdk
+            // using <uses-sdk-library>, so no need to check.
             return appManifestConfig.isAllowedTopicsAccess(enrollmentId);
+        } catch (PackageManager.NameNotFoundException e) {
+            LogUtil.e(e, "App manifest parse failed: NameNotFound.");
+        } catch (XmlParseException | XmlPullParserException | IOException e) {
+            LogUtil.e(e, "App manifest parse failed.");
+        }
+        return false;
+    }
+
+    /**
+     * Parses the app's manifest config to determine whether this sdk is permitted to use the AdId
+     * API.
+     *
+     * <p>If there is a parse error, it returns false.
+     *
+     * @param context the context for the API call. This needs to be the context where the calling
+     *     UID is that of the API caller.
+     * @param appPackageName the package name of the app whose manifest config will be read.
+     * @param sdk the name of the sdk that will be checked against app's manifest config. // TODO:
+     *     Update for adtech enrollment.
+     */
+    public static boolean isAllowedAdIdAccess(
+            @NonNull Context context, @NonNull String appPackageName, @NonNull String sdk) {
+        try {
+            XmlResourceParser in = getXmlParser(context, appPackageName);
+            AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(in);
+            return appManifestConfig.isAllowedAdIdAccess(sdk);
+        } catch (PackageManager.NameNotFoundException e) {
+            LogUtil.e(e, "App manifest parse failed: NameNotFound.");
+        } catch (XmlParseException | XmlPullParserException | IOException e) {
+            LogUtil.e(e, "App manifest parse failed.");
+        }
+        return false;
+    }
+
+    /**
+     * Parses the app's manifest config to determine whether this sdk is permitted to use the
+     * AppSetId API.
+     *
+     * <p>If there is a parse error, it returns false.
+     *
+     * @param context the context for the API call. This needs to be the context where the calling
+     *     UID is that of the API caller.
+     * @param appPackageName the package name of the app whose manifest config will be read.
+     * @param sdk the name of the sdk that will be checked against app's manifest config. // TODO:
+     *     Update for adtech enrollment.
+     */
+    public static boolean isAllowedAppSetIdAccess(
+            @NonNull Context context, @NonNull String appPackageName, @NonNull String sdk) {
+        try {
+            XmlResourceParser in = getXmlParser(context, appPackageName);
+            AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(in);
+            return appManifestConfig.isAllowedAppSetIdAccess(sdk);
         } catch (PackageManager.NameNotFoundException e) {
             LogUtil.e(e, "App manifest parse failed: NameNotFound.");
         } catch (XmlParseException | XmlPullParserException | IOException e) {

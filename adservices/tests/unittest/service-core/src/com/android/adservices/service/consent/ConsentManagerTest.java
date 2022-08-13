@@ -34,8 +34,10 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import android.app.job.JobScheduler;
 import android.content.Context;
 import android.content.pm.PackageManager;
 
@@ -45,8 +47,10 @@ import androidx.test.filters.SmallTest;
 import com.android.adservices.data.common.BooleanFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.consent.AppConsentDaoFixture;
+import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
+import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -64,43 +68,49 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @SmallTest
 public class ConsentManagerTest {
-    private final Context mContext = ApplicationProvider.getApplicationContext();
+    @Spy private final Context mContextSpy = ApplicationProvider.getApplicationContext();
 
     private BooleanFileDatastore mDatastore;
     private ConsentManager mConsentManager;
     private AppConsentDao mAppConsentDao;
 
-    @Mock private PackageManager mPackageManager;
+    @Mock private PackageManager mPackageManagerMock;
     @Mock private TopicsWorker mTopicsWorker;
     @Mock private MeasurementImpl mMeasurementImpl;
     @Mock private AdServicesLoggerImpl mAdServicesLoggerImpl;
+    @Mock private CustomAudienceDao mCustomAudienceDaoMock;
 
     @Mock private AppUpdateManager mAppUpdateManager;
     @Mock private CacheManager mCacheManager;
     @Mock private BlockedTopicsManager mBlockedTopicsManager;
     @Mock private EpochManager mMockEpochManager;
     @Mock private Flags mMockFlags;
+    @Mock private JobScheduler mJobSchedulerMock;
 
     @Before
     public void setup() throws IOException {
         MockitoAnnotations.initMocks(this);
 
         mDatastore =
-                new BooleanFileDatastore(mContext, AppConsentDaoFixture.TEST_DATASTORE_NAME, 1);
-        mAppConsentDao = spy(new AppConsentDao(mDatastore, mPackageManager));
+                new BooleanFileDatastore(mContextSpy, AppConsentDaoFixture.TEST_DATASTORE_NAME, 1);
+        mAppConsentDao = spy(new AppConsentDao(mDatastore, mPackageManagerMock));
 
-        mConsentManager = new ConsentManager(
-                mContext,
-                mTopicsWorker,
-                mAppConsentDao,
-                mMeasurementImpl,
-                mAdServicesLoggerImpl);
+        mConsentManager =
+                new ConsentManager(
+                        mContextSpy,
+                        mTopicsWorker,
+                        mAppConsentDao,
+                        mMeasurementImpl,
+                        mAdServicesLoggerImpl,
+                        mCustomAudienceDaoMock);
     }
 
     @After
@@ -110,60 +120,92 @@ public class ConsentManagerTest {
 
     @Test
     public void testConsentIsGivenAfterEnabling() {
-        when(mPackageManager.hasSystemFeature(EEA_DEVICE)).thenReturn(true);
-        mConsentManager.enable(mPackageManager);
+        when(mPackageManagerMock.hasSystemFeature(EEA_DEVICE)).thenReturn(true);
+        mConsentManager.enable(mPackageManagerMock);
 
-        assertTrue(mConsentManager.getConsent(mPackageManager).isGiven());
+        assertTrue(mConsentManager.getConsent(mPackageManagerMock).isGiven());
     }
 
     @Test
     public void testConsentIsRevokedAfterDisabling() {
-        when(mPackageManager.hasSystemFeature(EEA_DEVICE)).thenReturn(true);
-        mConsentManager.disable(mPackageManager);
+        doReturn(mPackageManagerMock).when(mContextSpy).getPackageManager();
+        when(mPackageManagerMock.hasSystemFeature(EEA_DEVICE)).thenReturn(true);
+        mConsentManager.disable(mContextSpy);
 
-        assertFalse(mConsentManager.getConsent(mPackageManager).isGiven());
+        assertFalse(mConsentManager.getConsent(mPackageManagerMock).isGiven());
+    }
+
+    @Test
+    public void testJobsAreUnscheduledAfterDisabling() {
+        doReturn(mPackageManagerMock).when(mContextSpy).getPackageManager();
+        doReturn(mJobSchedulerMock).when(mContextSpy).getSystemService(JobScheduler.class);
+        when(mPackageManagerMock.hasSystemFeature(EEA_DEVICE)).thenReturn(true);
+        mConsentManager.disable(mContextSpy);
+
+        verify(mJobSchedulerMock).cancel(AdServicesConfig.MAINTENANCE_JOB_ID);
+        verify(mJobSchedulerMock).cancel(AdServicesConfig.TOPICS_EPOCH_JOB_ID);
+        verify(mJobSchedulerMock).cancel(AdServicesConfig.MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID);
+        verify(mJobSchedulerMock).cancel(AdServicesConfig.MEASUREMENT_DELETE_EXPIRED_JOB_ID);
+        verify(mJobSchedulerMock).cancel(AdServicesConfig.MEASUREMENT_ATTRIBUTION_JOB_ID);
+        verify(mJobSchedulerMock)
+                .cancel(AdServicesConfig.MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID);
+        verify(mJobSchedulerMock)
+                .cancel(AdServicesConfig.MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID);
+        verify(mJobSchedulerMock)
+                .cancel(AdServicesConfig.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID);
+        verify(mJobSchedulerMock).cancel(AdServicesConfig.FLEDGE_BACKGROUND_FETCH_JOB_ID);
+        verify(mJobSchedulerMock).cancel(AdServicesConfig.CONSENT_NOTIFICATION_JOB_ID);
+        verify(mJobSchedulerMock).cancel(AdServicesConfig.MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID);
+        verify(mJobSchedulerMock).cancel(AdServicesConfig.MDD_CHARGING_PERIODIC_TASK_JOB_ID);
+        verify(mJobSchedulerMock)
+                .cancel(AdServicesConfig.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID);
+        verify(mJobSchedulerMock).cancel(AdServicesConfig.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID);
+
+        verifyNoMoreInteractions(mJobSchedulerMock);
     }
 
     @Test
     public void testDataIsResetAfterConsentIsRevoked() throws IOException {
-        when(mPackageManager.hasSystemFeature(EEA_DEVICE)).thenReturn(true);
-        mConsentManager.disable(mPackageManager);
+        doReturn(mPackageManagerMock).when(mContextSpy).getPackageManager();
+        when(mPackageManagerMock.hasSystemFeature(EEA_DEVICE)).thenReturn(true);
+        mConsentManager.disable(mContextSpy);
 
         verify(mTopicsWorker, times(1)).clearAllTopicsData(any());
         // TODO(b/240988406): change to test for correct method call
         verify(mAppConsentDao, times(1)).clearAllConsentData();
         verify(mMeasurementImpl, times(1)).deleteAllMeasurementData(any());
+        verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
     }
 
     @Test
     public void testConsentIsEnabledForEuConfig() {
-        when(mPackageManager.hasSystemFeature(EEA_DEVICE)).thenReturn(true);
+        when(mPackageManagerMock.hasSystemFeature(EEA_DEVICE)).thenReturn(true);
 
-        assertFalse(mConsentManager.getInitialConsent(mPackageManager));
+        assertFalse(mConsentManager.getInitialConsent(mPackageManagerMock));
     }
 
     @Test
     public void testConsentIsEnabledForNonEuConfig() {
-        when(mPackageManager.hasSystemFeature(EEA_DEVICE)).thenReturn(false);
+        when(mPackageManagerMock.hasSystemFeature(EEA_DEVICE)).thenReturn(false);
 
-        assertTrue(mConsentManager.getInitialConsent(mPackageManager));
+        assertTrue(mConsentManager.getInitialConsent(mPackageManagerMock));
     }
 
     @Test
     public void testIsFledgeConsentRevokedForAppWithFullApiConsent()
             throws IOException, PackageManager.NameNotFoundException {
-        doReturn(false).when(mPackageManager).hasSystemFeature(eq(EEA_DEVICE));
-        mConsentManager.enable(mPackageManager);
-        assertTrue(mConsentManager.getConsent(mPackageManager).isGiven());
+        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
+        mConsentManager.enable(mPackageManagerMock);
+        assertTrue(mConsentManager.getConsent(mPackageManagerMock).isGiven());
 
         doReturn(AppConsentDaoFixture.APP10_UID)
-                .when(mPackageManager)
+                .when(mPackageManagerMock)
                 .getPackageUid(eq(AppConsentDaoFixture.APP10_PACKAGE_NAME), any());
         doReturn(AppConsentDaoFixture.APP20_UID)
-                .when(mPackageManager)
+                .when(mPackageManagerMock)
                 .getPackageUid(eq(AppConsentDaoFixture.APP20_PACKAGE_NAME), any());
         doReturn(AppConsentDaoFixture.APP30_UID)
-                .when(mPackageManager)
+                .when(mPackageManagerMock)
                 .getPackageUid(eq(AppConsentDaoFixture.APP30_PACKAGE_NAME), any());
 
         mDatastore.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
@@ -171,70 +213,72 @@ public class ConsentManagerTest {
 
         assertFalse(
                 mConsentManager.isFledgeConsentRevokedForApp(
-                        mPackageManager, AppConsentDaoFixture.APP10_PACKAGE_NAME));
+                        mPackageManagerMock, AppConsentDaoFixture.APP10_PACKAGE_NAME));
         assertTrue(
                 mConsentManager.isFledgeConsentRevokedForApp(
-                        mPackageManager, AppConsentDaoFixture.APP20_PACKAGE_NAME));
+                        mPackageManagerMock, AppConsentDaoFixture.APP20_PACKAGE_NAME));
         assertFalse(
                 mConsentManager.isFledgeConsentRevokedForApp(
-                        mPackageManager, AppConsentDaoFixture.APP30_PACKAGE_NAME));
+                        mPackageManagerMock, AppConsentDaoFixture.APP30_PACKAGE_NAME));
     }
 
     @Test
     public void testIsFledgeConsentRevokedForAppWithoutPrivacySandboxConsent()
-            throws PackageManager.NameNotFoundException, IOException {
-        doReturn(true).when(mPackageManager).hasSystemFeature(eq(EEA_DEVICE));
-        mConsentManager.disable(mPackageManager);
-        assertFalse(mConsentManager.getConsent(mPackageManager).isGiven());
+            throws PackageManager.NameNotFoundException {
+        doReturn(mPackageManagerMock).when(mContextSpy).getPackageManager();
+        doReturn(true).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
+        mConsentManager.disable(mContextSpy);
+        assertFalse(mConsentManager.getConsent(mPackageManagerMock).isGiven());
 
         doReturn(AppConsentDaoFixture.APP10_UID)
-                .when(mPackageManager)
+                .when(mPackageManagerMock)
                 .getPackageUid(eq(AppConsentDaoFixture.APP10_PACKAGE_NAME), any());
         doReturn(AppConsentDaoFixture.APP20_UID)
-                .when(mPackageManager)
+                .when(mPackageManagerMock)
                 .getPackageUid(eq(AppConsentDaoFixture.APP20_PACKAGE_NAME), any());
 
         assertTrue(
                 mConsentManager.isFledgeConsentRevokedForApp(
-                        mPackageManager, AppConsentDaoFixture.APP10_PACKAGE_NAME));
+                        mPackageManagerMock, AppConsentDaoFixture.APP10_PACKAGE_NAME));
         assertTrue(
                 mConsentManager.isFledgeConsentRevokedForApp(
-                        mPackageManager, AppConsentDaoFixture.APP20_PACKAGE_NAME));
+                        mPackageManagerMock, AppConsentDaoFixture.APP20_PACKAGE_NAME));
     }
 
     @Test
     public void testIsFledgeConsentRevokedForNotFoundAppThrows()
             throws PackageManager.NameNotFoundException {
-        doReturn(false).when(mPackageManager).hasSystemFeature(eq(EEA_DEVICE));
-        mConsentManager.enable(mPackageManager);
-        assertTrue(mConsentManager.getConsent(mPackageManager).isGiven());
+        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
+        mConsentManager.enable(mPackageManagerMock);
+        assertTrue(mConsentManager.getConsent(mPackageManagerMock).isGiven());
 
         doThrow(PackageManager.NameNotFoundException.class)
-                .when(mPackageManager)
+                .when(mPackageManagerMock)
                 .getPackageUid(eq(AppConsentDaoFixture.APP_NOT_FOUND_PACKAGE_NAME), any());
 
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                         mConsentManager.isFledgeConsentRevokedForApp(
-                                mPackageManager, AppConsentDaoFixture.APP_NOT_FOUND_PACKAGE_NAME));
+                                mPackageManagerMock,
+                                AppConsentDaoFixture.APP_NOT_FOUND_PACKAGE_NAME));
     }
 
     @Test
     public void testIsFledgeConsentRevokedForAppAfterSettingFledgeUseWithFullApiConsent()
             throws IOException, PackageManager.NameNotFoundException {
-        doReturn(false).when(mPackageManager).hasSystemFeature(eq(EEA_DEVICE));
-        mConsentManager.enable(mPackageManager);
-        assertTrue(mConsentManager.getConsent(mPackageManager).isGiven());
+        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
+        mConsentManager.enable(mPackageManagerMock);
+        assertTrue(mConsentManager.getConsent(mPackageManagerMock).isGiven());
 
         doReturn(AppConsentDaoFixture.APP10_UID)
-                .when(mPackageManager)
+                .when(mPackageManagerMock)
                 .getPackageUid(eq(AppConsentDaoFixture.APP10_PACKAGE_NAME), any());
         doReturn(AppConsentDaoFixture.APP20_UID)
-                .when(mPackageManager)
+                .when(mPackageManagerMock)
                 .getPackageUid(eq(AppConsentDaoFixture.APP20_PACKAGE_NAME), any());
         doReturn(AppConsentDaoFixture.APP30_UID)
-                .when(mPackageManager)
+                .when(mPackageManagerMock)
                 .getPackageUid(eq(AppConsentDaoFixture.APP30_PACKAGE_NAME), any());
 
         mDatastore.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
@@ -242,69 +286,71 @@ public class ConsentManagerTest {
 
         assertFalse(
                 mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                        mPackageManager, AppConsentDaoFixture.APP10_PACKAGE_NAME));
+                        mPackageManagerMock, AppConsentDaoFixture.APP10_PACKAGE_NAME));
         assertTrue(
                 mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                        mPackageManager, AppConsentDaoFixture.APP20_PACKAGE_NAME));
+                        mPackageManagerMock, AppConsentDaoFixture.APP20_PACKAGE_NAME));
         assertFalse(
                 mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                        mPackageManager, AppConsentDaoFixture.APP30_PACKAGE_NAME));
+                        mPackageManagerMock, AppConsentDaoFixture.APP30_PACKAGE_NAME));
     }
 
     @Test
     public void testIsFledgeConsentRevokedForAppAfterSettingFledgeUseWithoutPrivacySandboxConsent()
-            throws PackageManager.NameNotFoundException, IOException {
-        doReturn(true).when(mPackageManager).hasSystemFeature(eq(EEA_DEVICE));
-        mConsentManager.disable(mPackageManager);
-        assertFalse(mConsentManager.getConsent(mPackageManager).isGiven());
+            throws PackageManager.NameNotFoundException {
+        doReturn(mPackageManagerMock).when(mContextSpy).getPackageManager();
+        doReturn(true).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
+        mConsentManager.disable(mContextSpy);
+        assertFalse(mConsentManager.getConsent(mPackageManagerMock).isGiven());
 
         doReturn(AppConsentDaoFixture.APP10_UID)
-                .when(mPackageManager)
+                .when(mPackageManagerMock)
                 .getPackageUid(eq(AppConsentDaoFixture.APP10_PACKAGE_NAME), any());
         doReturn(AppConsentDaoFixture.APP20_UID)
-                .when(mPackageManager)
+                .when(mPackageManagerMock)
                 .getPackageUid(eq(AppConsentDaoFixture.APP20_PACKAGE_NAME), any());
 
         assertTrue(
                 mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                        mPackageManager, AppConsentDaoFixture.APP10_PACKAGE_NAME));
+                        mPackageManagerMock, AppConsentDaoFixture.APP10_PACKAGE_NAME));
         assertTrue(
                 mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                        mPackageManager, AppConsentDaoFixture.APP20_PACKAGE_NAME));
+                        mPackageManagerMock, AppConsentDaoFixture.APP20_PACKAGE_NAME));
     }
 
     @Test
     public void testIsFledgeConsentRevokedForAppAfterSettingFledgeUseThrows()
             throws PackageManager.NameNotFoundException {
-        doReturn(false).when(mPackageManager).hasSystemFeature(eq(EEA_DEVICE));
-        mConsentManager.enable(mPackageManager);
-        assertTrue(mConsentManager.getConsent(mPackageManager).isGiven());
+        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
+        mConsentManager.enable(mPackageManagerMock);
+        assertTrue(mConsentManager.getConsent(mPackageManagerMock).isGiven());
 
         doThrow(PackageManager.NameNotFoundException.class)
-                .when(mPackageManager)
+                .when(mPackageManagerMock)
                 .getPackageUid(eq(AppConsentDaoFixture.APP_NOT_FOUND_PACKAGE_NAME), any());
 
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                         mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                                mPackageManager, AppConsentDaoFixture.APP_NOT_FOUND_PACKAGE_NAME));
+                                mPackageManagerMock,
+                                AppConsentDaoFixture.APP_NOT_FOUND_PACKAGE_NAME));
     }
 
     @Test
     public void testGetKnownAppsWithConsent()
             throws IOException, PackageManager.NameNotFoundException {
-        doReturn(false).when(mPackageManager).hasSystemFeature(eq(EEA_DEVICE));
-        mConsentManager.enable(mPackageManager);
-        assertTrue(mConsentManager.getConsent(mPackageManager).isGiven());
+        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
+        mConsentManager.enable(mPackageManagerMock);
+        assertTrue(mConsentManager.getConsent(mPackageManagerMock).isGiven());
         doReturn(AppConsentDaoFixture.APP10_UID)
-                .when(mPackageManager)
+                .when(mPackageManagerMock)
                 .getPackageUid(eq(AppConsentDaoFixture.APP10_PACKAGE_NAME), any());
         doReturn(AppConsentDaoFixture.APP20_UID)
-                .when(mPackageManager)
+                .when(mPackageManagerMock)
                 .getPackageUid(eq(AppConsentDaoFixture.APP20_PACKAGE_NAME), any());
         doReturn(AppConsentDaoFixture.APP30_UID)
-                .when(mPackageManager)
+                .when(mPackageManagerMock)
                 .getPackageUid(eq(AppConsentDaoFixture.APP30_PACKAGE_NAME), any());
         mDatastore.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
         mDatastore.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, false);
@@ -320,18 +366,20 @@ public class ConsentManagerTest {
 
     @Test
     public void testGetKnownAppsWithConsentAfterConsentForOneOfThemWasRevoked()
-            throws IOException, PackageManager.NameNotFoundException {
-        doReturn(false).when(mPackageManager).hasSystemFeature(eq(EEA_DEVICE));
-        mConsentManager.enable(mPackageManager);
-        assertTrue(mConsentManager.getConsent(mPackageManager).isGiven());
+            throws IOException, PackageManager.NameNotFoundException, InterruptedException {
+        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
+        doNothing().when(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any());
+
+        mConsentManager.enable(mPackageManagerMock);
+        assertTrue(mConsentManager.getConsent(mPackageManagerMock).isGiven());
         doReturn(AppConsentDaoFixture.APP10_UID)
-                .when(mPackageManager)
+                .when(mPackageManagerMock)
                 .getPackageUid(eq(AppConsentDaoFixture.APP10_PACKAGE_NAME), any());
         doReturn(AppConsentDaoFixture.APP20_UID)
-                .when(mPackageManager)
+                .when(mPackageManagerMock)
                 .getPackageUid(eq(AppConsentDaoFixture.APP20_PACKAGE_NAME), any());
         doReturn(AppConsentDaoFixture.APP30_UID)
-                .when(mPackageManager)
+                .when(mPackageManagerMock)
                 .getPackageUid(eq(AppConsentDaoFixture.APP30_PACKAGE_NAME), any());
         mDatastore.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
         mDatastore.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, false);
@@ -348,22 +396,26 @@ public class ConsentManagerTest {
         assertThat(appsWithRevokedConsent).hasSize(1);
         App appWithRevokedConsent = appsWithRevokedConsent.get(0);
         assertThat(appWithRevokedConsent.getPackageName()).isEqualTo(app.getPackageName());
+
+        verify(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(app.getPackageName());
     }
 
     @Test
     public void testGetKnownAppsWithConsentAfterConsentForOneOfThemWasRevokedAndRestored()
-            throws IOException, PackageManager.NameNotFoundException {
-        doReturn(false).when(mPackageManager).hasSystemFeature(eq(EEA_DEVICE));
-        mConsentManager.enable(mPackageManager);
-        assertTrue(mConsentManager.getConsent(mPackageManager).isGiven());
+            throws IOException, PackageManager.NameNotFoundException, InterruptedException {
+        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
+        doNothing().when(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any());
+
+        mConsentManager.enable(mPackageManagerMock);
+        assertTrue(mConsentManager.getConsent(mPackageManagerMock).isGiven());
         doReturn(AppConsentDaoFixture.APP10_UID)
-                .when(mPackageManager)
+                .when(mPackageManagerMock)
                 .getPackageUid(eq(AppConsentDaoFixture.APP10_PACKAGE_NAME), any());
         doReturn(AppConsentDaoFixture.APP20_UID)
-                .when(mPackageManager)
+                .when(mPackageManagerMock)
                 .getPackageUid(eq(AppConsentDaoFixture.APP20_PACKAGE_NAME), any());
         doReturn(AppConsentDaoFixture.APP30_UID)
-                .when(mPackageManager)
+                .when(mPackageManagerMock)
                 .getPackageUid(eq(AppConsentDaoFixture.APP30_PACKAGE_NAME), any());
         mDatastore.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
         mDatastore.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, false);
@@ -380,6 +432,8 @@ public class ConsentManagerTest {
         assertThat(appsWithRevokedConsent).hasSize(1);
         App appWithRevokedConsent = appsWithRevokedConsent.get(0);
         assertThat(appWithRevokedConsent.getPackageName()).isEqualTo(app.getPackageName());
+
+        verify(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(app.getPackageName());
 
         // restore consent for first app
         mConsentManager.restoreConsentForApp(app);
@@ -398,7 +452,7 @@ public class ConsentManagerTest {
         Topic topic1 = Topic.create(1, taxonomyVersion, modelVersion);
         Topic topic2 = Topic.create(2, taxonomyVersion, modelVersion);
         ImmutableList<Topic> expectedKnownTopicsWithConsent = ImmutableList.of(topic1, topic2);
-        doReturn(false).when(mPackageManager).hasSystemFeature(eq(EEA_DEVICE));
+        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
         doReturn(expectedKnownTopicsWithConsent).when(mTopicsWorker).getKnownTopicsWithConsent();
 
         ImmutableList<Topic> knownTopicsWithConsent = mConsentManager.getKnownTopicsWithConsent();
@@ -414,7 +468,7 @@ public class ConsentManagerTest {
         Topic topic1 = Topic.create(1, taxonomyVersion, modelVersion);
         Topic topic2 = Topic.create(2, taxonomyVersion, modelVersion);
         ImmutableList<Topic> expectedTopicsWithRevokedConsent = ImmutableList.of(topic1, topic2);
-        doReturn(false).when(mPackageManager).hasSystemFeature(eq(EEA_DEVICE));
+        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
         doReturn(expectedTopicsWithRevokedConsent)
                 .when(mTopicsWorker)
                 .getTopicsWithRevokedConsent();
@@ -427,26 +481,115 @@ public class ConsentManagerTest {
     }
 
     @Test
+    public void testResetAllAppConsentAndAppData()
+            throws IOException, PackageManager.NameNotFoundException {
+        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
+        doNothing().when(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+
+        // Prepopulate with consent data for some apps
+        mConsentManager.enable(mPackageManagerMock);
+        assertTrue(mConsentManager.getConsent(mPackageManagerMock).isGiven());
+        doReturn(AppConsentDaoFixture.APP10_UID)
+                .when(mPackageManagerMock)
+                .getPackageUid(eq(AppConsentDaoFixture.APP10_PACKAGE_NAME), any());
+        doReturn(AppConsentDaoFixture.APP20_UID)
+                .when(mPackageManagerMock)
+                .getPackageUid(eq(AppConsentDaoFixture.APP20_PACKAGE_NAME), any());
+        doReturn(AppConsentDaoFixture.APP30_UID)
+                .when(mPackageManagerMock)
+                .getPackageUid(eq(AppConsentDaoFixture.APP30_PACKAGE_NAME), any());
+        mDatastore.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
+        mDatastore.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
+        mDatastore.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
+
+        // Verify population was successful
+        ImmutableList<App> knownAppsWithConsent = mConsentManager.getKnownAppsWithConsent();
+        ImmutableList<App> appsWithRevokedConsent = mConsentManager.getAppsWithRevokedConsent();
+        assertThat(knownAppsWithConsent).hasSize(2);
+        assertThat(appsWithRevokedConsent).hasSize(1);
+
+        mConsentManager.resetAppsAndBlockedApps();
+
+        // All app consent data was deleted
+        knownAppsWithConsent = mConsentManager.getKnownAppsWithConsent();
+        appsWithRevokedConsent = mConsentManager.getAppsWithRevokedConsent();
+        assertThat(knownAppsWithConsent).isEmpty();
+        assertThat(appsWithRevokedConsent).isEmpty();
+
+        verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+    }
+
+    @Test
+    public void testResetAllowedAppConsentAndAppData()
+            throws IOException, PackageManager.NameNotFoundException {
+        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
+        doNothing().when(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+
+        // Prepopulate with consent data for some apps
+        mConsentManager.enable(mPackageManagerMock);
+        assertTrue(mConsentManager.getConsent(mPackageManagerMock).isGiven());
+        doReturn(AppConsentDaoFixture.APP10_UID)
+                .when(mPackageManagerMock)
+                .getPackageUid(eq(AppConsentDaoFixture.APP10_PACKAGE_NAME), any());
+        doReturn(AppConsentDaoFixture.APP20_UID)
+                .when(mPackageManagerMock)
+                .getPackageUid(eq(AppConsentDaoFixture.APP20_PACKAGE_NAME), any());
+        doReturn(AppConsentDaoFixture.APP30_UID)
+                .when(mPackageManagerMock)
+                .getPackageUid(eq(AppConsentDaoFixture.APP30_PACKAGE_NAME), any());
+        mDatastore.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
+        mDatastore.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
+        mDatastore.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
+
+        // Verify population was successful
+        ImmutableList<App> knownAppsWithConsentBeforeReset =
+                mConsentManager.getKnownAppsWithConsent();
+        ImmutableList<App> appsWithRevokedConsentBeforeReset =
+                mConsentManager.getAppsWithRevokedConsent();
+        assertThat(knownAppsWithConsentBeforeReset).hasSize(2);
+        assertThat(appsWithRevokedConsentBeforeReset).hasSize(1);
+        mConsentManager.resetApps();
+
+        // Known apps with consent were cleared; revoked apps were not deleted
+        ImmutableList<App> knownAppsWithConsentAfterReset =
+                mConsentManager.getKnownAppsWithConsent();
+        ImmutableList<App> appsWithRevokedConsentAfterReset =
+                mConsentManager.getAppsWithRevokedConsent();
+        assertThat(knownAppsWithConsentAfterReset).isEmpty();
+        assertThat(appsWithRevokedConsentAfterReset).hasSize(1);
+        assertThat(
+                        appsWithRevokedConsentAfterReset.stream()
+                                .map(App::getPackageName)
+                                .collect(Collectors.toList()))
+                .containsExactlyElementsIn(
+                        appsWithRevokedConsentBeforeReset.stream()
+                                .map(App::getPackageName)
+                                .collect(Collectors.toList()));
+
+        verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+    }
+
+    @Test
     public void testNotificationDisplayedRecorded() {
-        doReturn(false).when(mPackageManager).hasSystemFeature(eq(EEA_DEVICE));
+        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
         Boolean wasNotificationDisplayed =
-                mConsentManager.wasNotificationDisplayed(mPackageManager);
+                mConsentManager.wasNotificationDisplayed(mPackageManagerMock);
 
         assertThat(wasNotificationDisplayed).isFalse();
 
-        mConsentManager.recordNotificationDisplayed(mPackageManager);
-        wasNotificationDisplayed = mConsentManager.wasNotificationDisplayed(mPackageManager);
+        mConsentManager.recordNotificationDisplayed(mPackageManagerMock);
+        wasNotificationDisplayed = mConsentManager.wasNotificationDisplayed(mPackageManagerMock);
 
         assertThat(wasNotificationDisplayed).isTrue();
     }
 
     @Test
-    public void testProxyCalls() {
+    public void testTopicsProxyCalls() {
         Topic topic = Topic.create(1, 1, 1);
         List<String> tablesToBlock = List.of(TopicsTables.BlockedTopicsContract.TABLE);
         ConsentManager consentManager =
                 new ConsentManager(
-                        mContext,
+                        mContextSpy,
                         new TopicsWorker(
                                 mMockEpochManager,
                                 mCacheManager,
@@ -455,7 +598,8 @@ public class ConsentManagerTest {
                                 mMockFlags),
                         mAppConsentDao,
                         mMeasurementImpl,
-                        mAdServicesLoggerImpl);
+                        mAdServicesLoggerImpl,
+                        mCustomAudienceDaoMock);
         doNothing().when(mBlockedTopicsManager).blockTopic(any());
         doNothing().when(mBlockedTopicsManager).unblockTopic(any());
         doNothing().when(mCacheManager).clearAllTopicsData(any());
@@ -471,9 +615,9 @@ public class ConsentManagerTest {
 
     @Test
     public void testLoggingSettingsUsageReportedOptInSelected() throws IOException {
-        when(mPackageManager.hasSystemFeature(EEA_DEVICE)).thenReturn(true);
-        mConsentManager.init(mPackageManager);
-        mConsentManager.enable(mPackageManager);
+        when(mPackageManagerMock.hasSystemFeature(EEA_DEVICE)).thenReturn(true);
+        mConsentManager.init(mPackageManagerMock);
+        mConsentManager.enable(mPackageManagerMock);
 
         UIStats expectedUIStats = new UIStats.Builder()
                 .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)

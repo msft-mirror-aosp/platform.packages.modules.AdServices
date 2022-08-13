@@ -50,6 +50,7 @@ public class Trigger {
 
     private String mId;
     private Uri mAttributionDestination;
+    @EventSurfaceType private int mDestinationType;
     private Uri mAdTechDomain;
     private long mTriggerTime;
     private String mEventTriggers;
@@ -68,13 +69,15 @@ public class Trigger {
     })
     @Retention(RetentionPolicy.SOURCE)
     public @interface Status {
-
         int PENDING = 0;
         int IGNORED = 1;
         int ATTRIBUTED = 2;
     }
+
     private Trigger() {
         mStatus = Status.PENDING;
+        // Making this default explicit since it anyway occur on an uninitialised int field.
+        mDestinationType = EventSurfaceType.APP;
     }
 
     @Override
@@ -85,6 +88,7 @@ public class Trigger {
         Trigger trigger = (Trigger) obj;
         return Objects.equals(mId, trigger.getId())
                 && Objects.equals(mAttributionDestination, trigger.mAttributionDestination)
+                && mDestinationType == trigger.mDestinationType
                 && Objects.equals(mAdTechDomain, trigger.mAdTechDomain)
                 && mTriggerTime == trigger.mTriggerTime
                 && Objects.equals(mDebugKey, trigger.mDebugKey)
@@ -103,6 +107,7 @@ public class Trigger {
         return Objects.hash(
                 mId,
                 mAttributionDestination,
+                mDestinationType,
                 mAdTechDomain,
                 mTriggerTime,
                 mEventTriggers,
@@ -126,6 +131,12 @@ public class Trigger {
      */
     public Uri getAttributionDestination() {
         return mAttributionDestination;
+    }
+
+    /** Destination type of the {@link Trigger}. */
+    @EventSurfaceType
+    public int getDestinationType() {
+        return mDestinationType;
     }
 
     /**
@@ -340,10 +351,6 @@ public class Trigger {
         return eventTriggers;
     }
 
-    public DestinationType getDestinationType() {
-        return DestinationType.getDestinationType(mAttributionDestination);
-    }
-
     /**
      * Builder for {@link Trigger}.
      */
@@ -367,6 +374,13 @@ public class Trigger {
         public Builder setAttributionDestination(Uri attributionDestination) {
             Validation.validateUri(attributionDestination);
             mBuilding.mAttributionDestination = attributionDestination;
+            return this;
+        }
+
+        /** See {@link Trigger#getDestinationType()}. */
+        @NonNull
+        public Builder setDestinationType(@EventSurfaceType int destinationType) {
+            mBuilding.mDestinationType = destinationType;
             return this;
         }
 

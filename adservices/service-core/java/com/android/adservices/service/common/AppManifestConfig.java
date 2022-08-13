@@ -21,24 +21,43 @@ import android.annotation.NonNull;
 
 /** The object representing the AdServices manifest config. */
 public class AppManifestConfig {
+    private final AppManifestIncludesSdkLibraryConfig mIncludesSdkLibraryConfig;
     private final AppManifestAttributionConfig mAttributionConfig;
     private final AppManifestCustomAudiencesConfig mCustomAudiencesConfig;
     private final AppManifestTopicsConfig mTopicsConfig;
+    private final AppManifestAdIdConfig mAdIdConfig;
+    private final AppManifestAppSetIdConfig mAppSetIdConfig;
 
     /**
-     * AdServices manifest config must contain configs for Attribution, Custom Audiences and Topics.
+     * AdServices manifest config must contain configs for Attribution, Custom Audiences, AdId,
+     * AppSetId and Topics.
      *
+     * @param includesSdkLibraryConfig the list of Sdk Libraries included in the app.
      * @param attributionConfig the config for Attribution.
      * @param customAudiencesConfig the config for Custom Audiences.
      * @param topicsConfig the config for Topics.
+     * @param adIdConfig the config for adId.
+     * @param appSetIdConfig the config for appSetId.
      */
     public AppManifestConfig(
+            @NonNull AppManifestIncludesSdkLibraryConfig includesSdkLibraryConfig,
             @NonNull AppManifestAttributionConfig attributionConfig,
             @NonNull AppManifestCustomAudiencesConfig customAudiencesConfig,
-            @NonNull AppManifestTopicsConfig topicsConfig) {
+            @NonNull AppManifestTopicsConfig topicsConfig,
+            @NonNull AppManifestAdIdConfig adIdConfig,
+            @NonNull AppManifestAppSetIdConfig appSetIdConfig) {
+        mIncludesSdkLibraryConfig = includesSdkLibraryConfig;
         mAttributionConfig = attributionConfig;
         mCustomAudiencesConfig = customAudiencesConfig;
         mTopicsConfig = topicsConfig;
+        mAdIdConfig = adIdConfig;
+        mAppSetIdConfig = appSetIdConfig;
+    }
+
+    /** Getter for IncludesSdkLibraryConfig. */
+    @NonNull
+    public AppManifestIncludesSdkLibraryConfig getIncludesSdkLibraryConfig() {
+        return mIncludesSdkLibraryConfig;
     }
 
     /** Getter for AttributionConfig. */
@@ -85,5 +104,31 @@ public class AppManifestConfig {
     public boolean isAllowedTopicsAccess(@NonNull String enrollmentId) {
         return mTopicsConfig.getAllowAllToAccess()
                 || mTopicsConfig.getAllowAdPartnersToAccess().contains(enrollmentId);
+    }
+
+    /** Getter for AdIdConfig. */
+    @NonNull
+    public AppManifestAdIdConfig getAdIdConfig() {
+        return mAdIdConfig;
+    }
+
+    /** Returns if sdk is permitted to access AdId API for config represented by this object. */
+    @NonNull
+    public boolean isAllowedAdIdAccess(@NonNull String sdk) {
+        return mAdIdConfig.getAllowAllToAccess()
+                || mAdIdConfig.getAllowAdPartnersToAccess().contains(sdk);
+    }
+
+    /** Getter for AppSetIdConfig. */
+    @NonNull
+    public AppManifestAppSetIdConfig getAppSetIdConfig() {
+        return mAppSetIdConfig;
+    }
+
+    /** Returns if sdk is permitted to access AppSetId API for config represented by this object. */
+    @NonNull
+    public boolean isAllowedAppSetIdAccess(@NonNull String sdk) {
+        return mAppSetIdConfig.getAllowAllToAccess()
+                || mAppSetIdConfig.getAllowAdPartnersToAccess().contains(sdk);
     }
 }

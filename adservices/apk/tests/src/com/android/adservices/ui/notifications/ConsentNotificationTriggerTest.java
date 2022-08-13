@@ -16,30 +16,49 @@
 
 package com.android.adservices.ui.notifications;
 
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
+
 import static com.google.common.truth.Truth.assertThat;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.content.pm.PackageManager;
 
+import androidx.core.app.NotificationManagerCompat;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.consent.ConsentManager;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
 @RunWith(AndroidJUnit4.class)
 public class ConsentNotificationTriggerTest {
     private static final String NOTIFICATION_CHANNEL_ID = "PRIVACY_SANDBOX_CHANNEL";
 
+    @Mock private NotificationManagerCompat mNotificationManagerCompat;
+    @Mock private ConsentManager mConsentManager;
     private NotificationManager mNotificationManager;
     private Context mContext;
 
+    private MockitoSession mStaticMockSession = null;
+
     @Before
     public void setUp() {
+        MockitoAnnotations.initMocks(this);
         mContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
     }
 
@@ -84,5 +103,30 @@ public class ConsentNotificationTriggerTest {
         assertThat(notification.extras.getCharSequence(Notification.EXTRA_TEXT))
                 .isEqualTo(expectedContent);
         Thread.sleep(5000); // wait 5s to make sure that Notification disappears.
+    }
+
+    @Test
+    public void testNotificationsDisabled() {
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(NotificationManagerCompat.class)
+                        .spyStatic(ConsentManager.class)
+                        .strictness(Strictness.WARN)
+                        .initMocks(this)
+                        .startMocking();
+        try {
+
+            doReturn(mNotificationManagerCompat)
+                    .when(() -> NotificationManagerCompat.from(any(Context.class)));
+            doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any(Context.class)));
+            doReturn(false).when(mNotificationManagerCompat).areNotificationsEnabled();
+
+            ConsentNotificationTrigger.showConsentNotification(mContext, true);
+
+            verify(mConsentManager).recordNotificationDisplayed(any(PackageManager.class));
+            verifyNoMoreInteractions(mConsentManager);
+        } finally {
+            mStaticMockSession.finishMocking();
+        }
     }
 }

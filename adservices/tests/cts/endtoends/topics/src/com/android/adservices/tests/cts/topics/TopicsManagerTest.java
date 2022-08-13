@@ -73,6 +73,7 @@ public class TopicsManagerTest {
 
     @Test
     public void testTopicsManager() throws Exception {
+        overrideEnforceForegroundStatusForTopics(false);
         overrideDisableTopicsEnrollmentCheck("1");
         overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
 
@@ -104,8 +105,8 @@ public class TopicsManagerTest {
         sdk1Result = advertisingTopicsClient1.getTopics().get();
         assertThat(sdk1Result.getTopics()).isNotEmpty();
 
-        // We only have 1 test app which has 5 classification topics: 147, 253, 175, 254, 33 in
-        // the precomputed list.
+        // We only have 1 test app which has 5 classification topics: 10147,10253,10175,10254,10333
+        // in the precomputed list.
         // These 5 classification topics will become top 5 topics of the epoch since there is
         // no other apps calling Topics API.
         // The app will be assigned one random topic from one of these 5 topics.
@@ -113,7 +114,7 @@ public class TopicsManagerTest {
         Topic topic = sdk1Result.getTopics().get(0);
 
         // topic is one of the 5 classification topics of the Test App.
-        assertThat(topic.getTopicId()).isIn(Arrays.asList(147, 253, 175, 254, 33));
+        assertThat(topic.getTopicId()).isIn(Arrays.asList(10147,10253,10175,10254,10333));
 
         assertThat(topic.getModelVersion()).isAtLeast(1L);
         assertThat(topic.getTaxonomyVersion()).isAtLeast(1L);
@@ -130,9 +131,16 @@ public class TopicsManagerTest {
         assertThat(sdk2Result2.getTopics()).isEmpty();
 
         // Reset back the original values.
+        overrideEnforceForegroundStatusForTopics(true);
         overrideDisableTopicsEnrollmentCheck("0");
         overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
         overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+    }
+
+    // Override the flag to disable enforcing foreground.
+    private void overrideEnforceForegroundStatusForTopics(boolean enforce) {
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.topics_enforce_foreground_status " + enforce);
     }
 
     // Override the flag to disable Topics enrollment check.

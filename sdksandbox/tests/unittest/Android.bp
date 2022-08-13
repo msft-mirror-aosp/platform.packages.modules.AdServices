@@ -41,6 +41,9 @@ java_defaults {
         "android.test.runner",
         "framework-sdksandbox.impl",
     ],
+    // Test coverage system runs on different devices. Need to
+    // compile for all architecture.
+    compile_multilib: "both",
 }
 
 android_test {
@@ -81,15 +84,13 @@ android_test {
       ":SampleServiceApp",
       ":CodeProviderWithResources",
     ],
-    // Add below line to address ATM post commit test module error
-    // See b/233124651 for details.
-    compile_multilib: "both",
 }
 
 android_test {
     name: "SdkSandboxFrameworkUnitTests",
     srcs: [
         "src/android/app/sdksandbox/*.java",
+        ":framework-sdksandbox-sources",
     ],
     defaults: ["SdkSandboxUnitTestsDefault"],
     manifest: "SdkSandboxFrameworkManifest.xml",
