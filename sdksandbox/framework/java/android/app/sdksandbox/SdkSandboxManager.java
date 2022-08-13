@@ -187,7 +187,6 @@ public final class SdkSandboxManager {
             "android.app.sdksandbox.extra.SURFACE_PACKAGE";
 
     private final ISdkSandboxManager mService;
-
     private final Context mContext;
 
     @GuardedBy("mLifecycleCallbacks")
