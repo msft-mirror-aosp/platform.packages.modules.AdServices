@@ -21,7 +21,7 @@ import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_CA_AVAILABLE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_VALID_BIDS_FOR_SCORING;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_WINNING_AD_FOUND;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
 import static com.android.adservices.stats.FledgeApiCallStatsMatcher.aCallStatForFledgeApiWithStatus;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
@@ -40,6 +40,7 @@ import android.adservices.adselection.AdBiddingOutcomeFixture;
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
+import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.AdSelectionResponse;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
@@ -110,16 +111,16 @@ public class AdSelectionRunnerTest {
     private static final Long AD_SELECTION_ID = 1234L;
     private static final String ERROR_INVALID_JSON = "Invalid Json Exception";
     private static final int CALLER_UID = 100;
+    private static final String MY_APP_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
 
     private MockitoSession mStaticMockSession = null;
     @Mock private AdsScoreGenerator mMockAdsScoreGenerator;
     @Mock private AdBidGenerator mMockAdBidGenerator;
     @Mock private AdSelectionIdGenerator mMockAdSelectionIdGenerator;
     @Mock private AppImportanceFilter mAppImportanceFilter;
-    @Mock private Clock mClock;
+    @Spy private Clock mClock = Clock.systemUTC();
     @Mock private ConsentManager mConsentManagerMock;
     private Flags mFlags;
-
     private Context mContext;
     private ExecutorService mExecutorService;
     private CustomAudienceDao mCustomAudienceDao;
@@ -296,7 +297,7 @@ public class AdSelectionRunnerTest {
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig);
+                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
 
         verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
@@ -332,12 +333,12 @@ public class AdSelectionRunnerTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                         AdServicesStatusUtils.STATUS_SUCCESS);
         verify(mAdServicesLoggerSpy)
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                                 AdServicesStatusUtils.STATUS_SUCCESS));
     }
 
@@ -378,7 +379,7 @@ public class AdSelectionRunnerTest {
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig);
+                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
 
         verify(mMockAdBidGenerator, never()).runAdBiddingPerCA(any(), any(), any(), any(), any());
         verify(mMockAdsScoreGenerator, never()).runAdScoring(any(), any());
@@ -392,12 +393,12 @@ public class AdSelectionRunnerTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                         AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED);
         verify(mAdServicesLoggerSpy)
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                                 AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED));
     }
 
@@ -462,6 +463,7 @@ public class AdSelectionRunnerTest {
                                         .getCustomAudienceBiddingInfo()
                                         .getBiddingLogicUrl())
                         .setContextualSignals("{}")
+                        .setCallerPackageName(MY_APP_PACKAGE_NAME)
                         .build();
 
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
@@ -485,7 +487,7 @@ public class AdSelectionRunnerTest {
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig);
+                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
 
         verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
@@ -514,12 +516,12 @@ public class AdSelectionRunnerTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                         AdServicesStatusUtils.STATUS_SUCCESS);
         verify(mAdServicesLoggerSpy)
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                                 AdServicesStatusUtils.STATUS_SUCCESS));
     }
 
@@ -554,7 +556,7 @@ public class AdSelectionRunnerTest {
                         mFlags,
                         CALLER_UID);
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig);
+                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
 
         assertFalse(resultsCallback.mIsSuccess);
         verifyErrorMessageIsCorrect(
@@ -562,12 +564,12 @@ public class AdSelectionRunnerTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                         AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
         verify(mAdServicesLoggerSpy)
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                                 AdServicesStatusUtils.STATUS_INTERNAL_ERROR));
     }
 
@@ -582,7 +584,7 @@ public class AdSelectionRunnerTest {
         doThrow(new IllegalStateException(validationFailure))
                 .when(mAppImportanceFilter)
                 .assertCallerIsInForeground(
-                        CALLER_UID, AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION, null);
+                        CALLER_UID, AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, null);
 
         mAdSelectionRunner =
                 new AdSelectionRunner(
@@ -600,7 +602,7 @@ public class AdSelectionRunnerTest {
                         mFlags,
                         CALLER_UID);
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig);
+                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
 
         assertFalse(resultsCallback.mIsSuccess);
         verifyErrorMessageIsCorrect(
@@ -637,7 +639,7 @@ public class AdSelectionRunnerTest {
                         mFlags,
                         CALLER_UID);
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig);
+                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
 
         verifyZeroInteractions(mAppImportanceFilter);
 
@@ -718,7 +720,7 @@ public class AdSelectionRunnerTest {
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig);
+                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
 
         DBAdSelection expectedDBAdSelectionResult =
                 new DBAdSelection.Builder()
@@ -741,6 +743,7 @@ public class AdSelectionRunnerTest {
                                         .getCustomAudienceBiddingInfo()
                                         .getBiddingLogicUrl())
                         .setContextualSignals("{}")
+                        .setCallerPackageName(MY_APP_PACKAGE_NAME)
                         .build();
 
         verify(mMockAdBidGenerator)
@@ -774,12 +777,12 @@ public class AdSelectionRunnerTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                         AdServicesStatusUtils.STATUS_SUCCESS);
         verify(mAdServicesLoggerSpy)
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                                 AdServicesStatusUtils.STATUS_SUCCESS));
     }
 
@@ -843,7 +846,7 @@ public class AdSelectionRunnerTest {
                         CALLER_UID);
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig);
+                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
 
         verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
@@ -871,12 +874,12 @@ public class AdSelectionRunnerTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                         AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
         verify(mAdServicesLoggerSpy)
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                                 AdServicesStatusUtils.STATUS_INTERNAL_ERROR));
     }
 
@@ -941,7 +944,7 @@ public class AdSelectionRunnerTest {
                         CALLER_UID);
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig);
+                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
 
         verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
@@ -969,12 +972,12 @@ public class AdSelectionRunnerTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                         AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
         verify(mAdServicesLoggerSpy)
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                                 AdServicesStatusUtils.STATUS_INTERNAL_ERROR));
     }
 
@@ -1046,7 +1049,7 @@ public class AdSelectionRunnerTest {
                         CALLER_UID);
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig);
+                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
 
         verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
@@ -1074,12 +1077,12 @@ public class AdSelectionRunnerTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                         AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
         verify(mAdServicesLoggerSpy)
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                                 AdServicesStatusUtils.STATUS_INTERNAL_ERROR));
     }
 
@@ -1155,7 +1158,7 @@ public class AdSelectionRunnerTest {
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig);
+                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
 
         verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
@@ -1198,6 +1201,7 @@ public class AdSelectionRunnerTest {
                                         .getCustomAudienceBiddingInfo()
                                         .getBiddingLogicUrl())
                         .setContextualSignals("{}")
+                        .setCallerPackageName(MY_APP_PACKAGE_NAME)
                         .build();
 
         assertTrue(resultsCallback.mIsSuccess);
@@ -1211,12 +1215,12 @@ public class AdSelectionRunnerTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                         AdServicesStatusUtils.STATUS_SUCCESS);
         verify(mAdServicesLoggerSpy)
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                                 AdServicesStatusUtils.STATUS_SUCCESS));
     }
 
@@ -1284,7 +1288,7 @@ public class AdSelectionRunnerTest {
                         CALLER_UID);
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig);
+                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
 
         verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
@@ -1311,12 +1315,12 @@ public class AdSelectionRunnerTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                         AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
         verify(mAdServicesLoggerSpy)
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                                 AdServicesStatusUtils.STATUS_INTERNAL_ERROR));
     }
 
@@ -1399,11 +1403,15 @@ public class AdSelectionRunnerTest {
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
         AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig);
+                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
 
         assertFalse(resultsCallback.mIsSuccess);
-        verifyErrorMessageIsCorrect(
-                resultsCallback.mFledgeErrorResponse.getErrorMessage(), AD_SELECTION_TIMED_OUT);
+        FledgeErrorResponse response = resultsCallback.mFledgeErrorResponse;
+        verifyErrorMessageIsCorrect(response.getErrorMessage(), AD_SELECTION_TIMED_OUT);
+        Assert.assertEquals(
+                "Error response code mismatch",
+                AdServicesStatusUtils.STATUS_TIMEOUT,
+                response.getStatusCode());
     }
 
     private void verifyErrorMessageIsCorrect(
@@ -1421,7 +1429,9 @@ public class AdSelectionRunnerTest {
     }
 
     private AdSelectionTestCallback invokeRunAdSelection(
-            AdSelectionRunner adSelectionRunner, AdSelectionConfig adSelectionConfig) {
+            AdSelectionRunner adSelectionRunner,
+            AdSelectionConfig adSelectionConfig,
+            String callerPackageName) {
 
         // Counted down in 1) callback and 2) logApiCall
         CountDownLatch countDownLatch = new CountDownLatch(2);
@@ -1436,7 +1446,13 @@ public class AdSelectionRunnerTest {
                 };
         doAnswer(countDownAnswer).when(mAdServicesLoggerSpy).logApiCallStats(any());
 
-        adSelectionRunner.runAdSelection(adSelectionConfig, adSelectionTestCallback);
+        AdSelectionInput input =
+                new AdSelectionInput.Builder()
+                        .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(callerPackageName)
+                        .build();
+
+        adSelectionRunner.runAdSelection(input, adSelectionTestCallback);
         try {
             adSelectionTestCallback.mCountDownLatch.await();
         } catch (InterruptedException e) {

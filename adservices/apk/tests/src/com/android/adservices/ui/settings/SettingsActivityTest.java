@@ -173,7 +173,7 @@ public class SettingsActivityTest {
 
         doNothing().when(sConsentManager).resetTopicsAndBlockedTopics();
         try {
-            doNothing().when(sConsentManager).resetAllAppConsentAndAppData();
+            doNothing().when(sConsentManager).resetAppsAndBlockedApps();
         } catch (IOException e) {
             e.printStackTrace();
         }

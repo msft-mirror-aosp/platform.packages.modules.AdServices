@@ -83,15 +83,9 @@ package android.adservices.adselection {
   }
 
   public class ReportImpressionRequest {
+    ctor public ReportImpressionRequest(long, @NonNull android.adservices.adselection.AdSelectionConfig);
     method @NonNull public android.adservices.adselection.AdSelectionConfig getAdSelectionConfig();
     method public long getAdSelectionId();
-  }
-
-  public static final class ReportImpressionRequest.Builder {
-    ctor public ReportImpressionRequest.Builder();
-    method @NonNull public android.adservices.adselection.ReportImpressionRequest build();
-    method @NonNull public android.adservices.adselection.ReportImpressionRequest.Builder setAdSelectionConfig(@NonNull android.adservices.adselection.AdSelectionConfig);
-    method @NonNull public android.adservices.adselection.ReportImpressionRequest.Builder setAdSelectionId(long);
   }
 
   public class TestAdSelectionManager {
@@ -141,6 +135,13 @@ package android.adservices.common {
     method public void writeToParcel(@NonNull android.os.Parcel, int);
     field @NonNull public static final android.os.Parcelable.Creator<android.adservices.common.AdSelectionSignals> CREATOR;
     field public static final android.adservices.common.AdSelectionSignals EMPTY;
+  }
+
+  public class AdServicesPermissions {
+    field public static final String ACCESS_ADSERVICES_ADID = "android.permission.ACCESS_ADSERVICES_ADID";
+    field public static final String ACCESS_ADSERVICES_ATTRIBUTION = "android.permission.ACCESS_ADSERVICES_ATTRIBUTION";
+    field public static final String ACCESS_ADSERVICES_CUSTOM_AUDIENCE = "android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE";
+    field public static final String ACCESS_ADSERVICES_TOPICS = "android.permission.ACCESS_ADSERVICES_TOPICS";
   }
 
   public final class AdTechIdentifier implements android.os.Parcelable {
@@ -279,12 +280,6 @@ package android.adservices.exceptions {
     ctor public AdServicesException(@Nullable String);
   }
 
-  public class MeasurementException extends android.adservices.exceptions.AdServicesException {
-    ctor public MeasurementException();
-    ctor public MeasurementException(@NonNull String);
-    ctor public MeasurementException(@NonNull String, @NonNull Throwable);
-  }
-
 }
 
 package android.adservices.measurement {
@@ -391,14 +386,14 @@ package android.adservices.measurement {
 package android.adservices.topics {
 
   public final class GetTopicsRequest {
+    method @NonNull public String getAdsSdkName();
     method @NonNull public android.content.Context getContext();
-    method @NonNull public String getSdkName();
   }
 
   public static final class GetTopicsRequest.Builder {
     ctor public GetTopicsRequest.Builder(@NonNull android.content.Context);
     method @NonNull public android.adservices.topics.GetTopicsRequest build();
-    method @NonNull public android.adservices.topics.GetTopicsRequest.Builder setSdkName(@NonNull String);
+    method @NonNull public android.adservices.topics.GetTopicsRequest.Builder setAdsSdkName(@NonNull String);
   }
 
   public final class GetTopicsResponse {

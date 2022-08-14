@@ -87,6 +87,7 @@ public class TriggerTest {
                 TriggerFixture.getValidTriggerBuilder()
                         .setAdTechDomain(Uri.parse("https://example.com"))
                         .setAttributionDestination(Uri.parse("https://example.com/aD"))
+                        .setDestinationType(EventSurfaceType.WEB)
                         .setId("1")
                         .setEventTriggers(EVENT_TRIGGERS)
                         .setTriggerTime(5L)
@@ -103,6 +104,7 @@ public class TriggerTest {
                 TriggerFixture.getValidTriggerBuilder()
                         .setAdTechDomain(Uri.parse("https://example.com"))
                         .setAttributionDestination(Uri.parse("https://example.com/aD"))
+                        .setDestinationType(EventSurfaceType.WEB)
                         .setId("1")
                         .setEventTriggers(EVENT_TRIGGERS)
                         .setTriggerTime(5L)
@@ -128,6 +130,11 @@ public class TriggerTest {
                         .setAttributionDestination(Uri.parse("https://1.com")).build(),
                 TriggerFixture.getValidTriggerBuilder()
                         .setAttributionDestination(Uri.parse("https://2.com")).build());
+        assertNotEquals(
+                TriggerFixture.getValidTriggerBuilder()
+                        .setDestinationType(EventSurfaceType.APP).build(),
+                TriggerFixture.getValidTriggerBuilder()
+                        .setDestinationType(EventSurfaceType.WEB).build());
         assertNotEquals(
                 TriggerFixture.getValidTriggerBuilder()
                         .setAdTechDomain(Uri.parse("https://1.com")).build(),
@@ -422,24 +429,6 @@ public class TriggerTest {
 
         // Assertion
         assertEquals(Arrays.asList(eventTrigger1, eventTrigger2), actualEventTriggers);
-    }
-
-    @Test
-    public void getDestinationType_success() {
-        // Setup
-        Trigger appTrigger =
-                TriggerFixture.getValidTriggerBuilder()
-                        .setAttributionDestination(Uri.parse("android-app://com.example.abc"))
-                        .build();
-
-        Trigger webTrigger =
-                TriggerFixture.getValidTriggerBuilder()
-                        .setAttributionDestination(Uri.parse("https://example.com"))
-                        .build();
-
-        // Assertion
-        assertEquals(DestinationType.APP, appTrigger.getDestinationType());
-        assertEquals(DestinationType.WEB, webTrigger.getDestinationType());
     }
 
     private void assertInvalidTriggerArguments(

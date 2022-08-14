@@ -366,7 +366,7 @@ public class ConsentManagerTest {
 
     @Test
     public void testGetKnownAppsWithConsentAfterConsentForOneOfThemWasRevoked()
-            throws IOException, PackageManager.NameNotFoundException {
+            throws IOException, PackageManager.NameNotFoundException, InterruptedException {
         doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
         doNothing().when(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any());
 
@@ -387,7 +387,7 @@ public class ConsentManagerTest {
         App app = App.create(AppConsentDaoFixture.APP10_PACKAGE_NAME);
 
         // revoke consent for first app
-        mConsentManager.revokeConsentForAppAndClearAppData(app);
+        mConsentManager.revokeConsentForApp(app);
         ImmutableList<App> knownAppsWithConsent = mConsentManager.getKnownAppsWithConsent();
         ImmutableList<App> appsWithRevokedConsent = mConsentManager.getAppsWithRevokedConsent();
 
@@ -402,7 +402,7 @@ public class ConsentManagerTest {
 
     @Test
     public void testGetKnownAppsWithConsentAfterConsentForOneOfThemWasRevokedAndRestored()
-            throws IOException, PackageManager.NameNotFoundException {
+            throws IOException, PackageManager.NameNotFoundException, InterruptedException {
         doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
         doNothing().when(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any());
 
@@ -423,7 +423,7 @@ public class ConsentManagerTest {
         App app = App.create(AppConsentDaoFixture.APP10_PACKAGE_NAME);
 
         // revoke consent for first app
-        mConsentManager.revokeConsentForAppAndClearAppData(app);
+        mConsentManager.revokeConsentForApp(app);
         ImmutableList<App> knownAppsWithConsent = mConsentManager.getKnownAppsWithConsent();
         ImmutableList<App> appsWithRevokedConsent = mConsentManager.getAppsWithRevokedConsent();
 
@@ -481,7 +481,8 @@ public class ConsentManagerTest {
     }
 
     @Test
-    public void testResetApps() throws IOException, PackageManager.NameNotFoundException {
+    public void testResetAllAppConsentAndAppData()
+            throws IOException, PackageManager.NameNotFoundException {
         doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
         doNothing().when(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
 
@@ -507,7 +508,7 @@ public class ConsentManagerTest {
         assertThat(knownAppsWithConsent).hasSize(2);
         assertThat(appsWithRevokedConsent).hasSize(1);
 
-        mConsentManager.resetAllAppConsentAndAppData();
+        mConsentManager.resetAppsAndBlockedApps();
 
         // All app consent data was deleted
         knownAppsWithConsent = mConsentManager.getKnownAppsWithConsent();
@@ -519,7 +520,7 @@ public class ConsentManagerTest {
     }
 
     @Test
-    public void testResetAllFledgeCustomAudienceData()
+    public void testResetAllowedAppConsentAndAppData()
             throws IOException, PackageManager.NameNotFoundException {
         doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
         doNothing().when(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
@@ -547,24 +548,15 @@ public class ConsentManagerTest {
                 mConsentManager.getAppsWithRevokedConsent();
         assertThat(knownAppsWithConsentBeforeReset).hasSize(2);
         assertThat(appsWithRevokedConsentBeforeReset).hasSize(1);
+        mConsentManager.resetApps();
 
-        mConsentManager.resetAllAppData();
-
-        // No app consent data was deleted
+        // Known apps with consent were cleared; revoked apps were not deleted
         ImmutableList<App> knownAppsWithConsentAfterReset =
                 mConsentManager.getKnownAppsWithConsent();
         ImmutableList<App> appsWithRevokedConsentAfterReset =
                 mConsentManager.getAppsWithRevokedConsent();
-        assertThat(knownAppsWithConsentAfterReset).hasSize(2);
+        assertThat(knownAppsWithConsentAfterReset).isEmpty();
         assertThat(appsWithRevokedConsentAfterReset).hasSize(1);
-        assertThat(
-                        knownAppsWithConsentAfterReset.stream()
-                                .map(App::getPackageName)
-                                .collect(Collectors.toList()))
-                .containsExactlyElementsIn(
-                        knownAppsWithConsentBeforeReset.stream()
-                                .map(App::getPackageName)
-                                .collect(Collectors.toList()));
         assertThat(
                         appsWithRevokedConsentAfterReset.stream()
                                 .map(App::getPackageName)

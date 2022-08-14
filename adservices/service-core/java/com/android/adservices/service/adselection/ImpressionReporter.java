@@ -64,6 +64,8 @@ import java.util.concurrent.TimeUnit;
 public class ImpressionReporter {
     public static final String UNABLE_TO_FIND_AD_SELECTION_WITH_GIVEN_ID =
             "Unable to find ad selection with given ID";
+    public static final String CALLER_PACKAGE_NAME_MISMATCH =
+            "Caller package name does not match name used in ad selection";
     @NonNull private final Context mContext;
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
@@ -101,7 +103,11 @@ public class ImpressionReporter {
         mListeningExecutorService = MoreExecutors.listeningDecorator(executor);
         mAdSelectionEntryDao = adSelectionEntryDao;
         mAdServicesHttpsClient = adServicesHttpsClient;
-        mJsEngine = new ReportImpressionScriptEngine(mContext);
+        mJsEngine =
+                new ReportImpressionScriptEngine(
+                        mContext,
+                        () -> flags.getEnforceIsolateMaxHeapSize(),
+                        () -> flags.getIsolateMaxHeapSizeBytes());
         mConsentManager = consentManager;
         mAdSelectionDevOverridesHelper =
                 new AdSelectionDevOverridesHelper(devContext, mAdSelectionEntryDao);
@@ -155,8 +161,8 @@ public class ImpressionReporter {
      * <p>After invoking the javascript functions, invokes the onSuccess function of the callback
      * and reports URLs resulting from the javascript functions.
      *
-     * @param requestParams request parameters containing the {@code adSelectionId} and {@code
-     *     adSelectionConfig}
+     * @param requestParams request parameters containing the {@code adSelectionId}, {@code
+     *     adSelectionConfig}, and {@code callerPackageName}
      * @param callback callback function to be called in case of success or failure
      */
     public void reportImpression(
@@ -196,7 +202,11 @@ public class ImpressionReporter {
         FluentFuture.from(userConsentFuture)
                 .transform(ignoredVoid -> maybeAssertForegroundCaller(), mListeningExecutorService)
                 .transformAsync(
-                        ignoredVoid -> computeReportingUrls(adSelectionId, adSelectionConfig),
+                        ignoredVoid ->
+                                computeReportingUrls(
+                                        adSelectionId,
+                                        adSelectionConfig,
+                                        requestParams.getCallerPackageName()),
                         mListeningExecutorService)
                 .transform(
                         reportingUrls -> notifySuccessToCaller(callback, reportingUrls),
@@ -263,8 +273,8 @@ public class ImpressionReporter {
     }
 
     private FluentFuture<ReportingUrls> computeReportingUrls(
-            long adSelectionId, AdSelectionConfig adSelectionConfig) {
-        return fetchAdSelectionEntry(adSelectionId)
+            long adSelectionId, AdSelectionConfig adSelectionConfig, String callerPackageName) {
+        return fetchAdSelectionEntry(adSelectionId, callerPackageName)
                 .transformAsync(
                         dbAdSelectionEntry -> {
                             ReportingContext ctx = new ReportingContext();
@@ -286,13 +296,19 @@ public class ImpressionReporter {
                 .transform(urlsAndContext -> urlsAndContext.first, mListeningExecutorService);
     }
 
-    private FluentFuture<DBAdSelectionEntry> fetchAdSelectionEntry(long adSelectionId) {
+    private FluentFuture<DBAdSelectionEntry> fetchAdSelectionEntry(
+            long adSelectionId, String callerPackageName) {
         return FluentFuture.from(
                 mListeningExecutorService.submit(
                         () -> {
                             Preconditions.checkArgument(
                                     mAdSelectionEntryDao.doesAdSelectionIdExist(adSelectionId),
                                     UNABLE_TO_FIND_AD_SELECTION_WITH_GIVEN_ID);
+                            Preconditions.checkArgument(
+                                    mAdSelectionEntryDao
+                                            .doesAdSelectionMatchingCallerPackageNameExist(
+                                                    adSelectionId, callerPackageName),
+                                    CALLER_PACKAGE_NAME_MISMATCH);
                             return mAdSelectionEntryDao.getAdSelectionEntityById(adSelectionId);
                         }));
     }

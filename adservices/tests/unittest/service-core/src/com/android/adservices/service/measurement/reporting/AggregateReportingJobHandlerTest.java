@@ -26,6 +26,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import android.adservices.common.AdServicesStatusUtils;
 import android.content.Context;
 import android.net.Uri;
 
@@ -132,7 +133,7 @@ public class AggregateReportingJobHandlerTest {
 
         doNothing().when(mMeasurementDao).markAggregateReportDelivered(aggregateReport.getId());
         Assert.assertEquals(
-                AggregateReportingJobHandler.PerformReportResult.SUCCESS,
+                AdServicesStatusUtils.STATUS_SUCCESS,
                 mSpyAggregateReportingJobHandler.performReport(
                         aggregateReport.getId(), AggregateCryptoFixture.getKey()));
 
@@ -167,7 +168,7 @@ public class AggregateReportingJobHandlerTest {
                 .createReportJsonPayload(Mockito.any(), Mockito.any());
 
         Assert.assertEquals(
-                AggregateReportingJobHandler.PerformReportResult.POST_REQUEST_ERROR,
+                AdServicesStatusUtils.STATUS_IO_ERROR,
                 mSpyAggregateReportingJobHandler.performReport(
                         aggregateReport.getId(), AggregateCryptoFixture.getKey()));
 
@@ -189,7 +190,7 @@ public class AggregateReportingJobHandlerTest {
         when(mMeasurementDao.getAggregateReport(aggregateReport.getId()))
                 .thenReturn(aggregateReport);
         Assert.assertEquals(
-                AggregateReportingJobHandler.PerformReportResult.ALREADY_DELIVERED,
+                AdServicesStatusUtils.STATUS_INVALID_ARGUMENT,
                 mSpyAggregateReportingJobHandler.performReport(
                         aggregateReport.getId(), AggregateCryptoFixture.getKey()));
 

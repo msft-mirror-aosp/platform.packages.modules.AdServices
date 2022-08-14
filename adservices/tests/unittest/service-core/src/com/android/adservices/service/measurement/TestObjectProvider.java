@@ -74,7 +74,7 @@ class TestObjectProvider {
                                     triggerFetcher,
                                     clickVerifier));
             // Disable Impression Noise
-            doReturn(Collections.emptyList()).when(measurementImpl).getSourceEventReports(any());
+            doReturn(Collections.emptyList()).when(measurementImpl).generateFakeEventReports(any());
             return measurementImpl;
         } else if (type == Type.NOISY) {
             MeasurementImpl measurementImpl =
@@ -105,7 +105,9 @@ class TestObjectProvider {
                                         .setStatus(EventReport.Status.PENDING)
                                         .build());
                     };
-            doAnswer(answerSourceEventReports).when(measurementImpl).getSourceEventReports(any());
+            doAnswer(answerSourceEventReports)
+                    .when(measurementImpl)
+                    .generateFakeEventReports(any());
             return measurementImpl;
         }
 
