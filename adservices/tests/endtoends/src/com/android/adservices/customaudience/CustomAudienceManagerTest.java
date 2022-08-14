@@ -37,6 +37,7 @@ import org.junit.Test;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeoutException;
 
 public class CustomAudienceManagerTest {
     private static final String WRITE_DEVICE_CONFIG_PERMISSION =
@@ -54,16 +55,21 @@ public class CustomAudienceManagerTest {
 
     private static final int DELAY_TO_AVOID_THROTTLE_MS = 1001;
 
+    @Before
+    public void setUp() throws TimeoutException {
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(WRITE_DEVICE_CONFIG_PERMISSION);
+        // Disable API throttling
+        PhFlagsFixture.overrideSdkRequestPermitsPerSecond(Integer.MAX_VALUE);
+        // This test is running in background
+        PhFlagsFixture.overrideForegroundStatusForFledgeCustomAudience(false);
+    }
+
     private void measureJoinCustomAudience(String label) throws Exception {
         Log.i(TAG, "Calling joinCustomAudience()");
         Thread.sleep(DELAY_TO_AVOID_THROTTLE_MS);
         final long start = System.currentTimeMillis();
-
-        InstrumentationRegistry.getInstrumentation()
-                .getUiAutomation()
-                .adoptShellPermissionIdentity(WRITE_DEVICE_CONFIG_PERMISSION);
-        // This test is running in background
-        PhFlagsFixture.overrideForegroundStatusForFledgeCustomAudience(false);
 
         AdvertisingCustomAudienceClient client =
                 new AdvertisingCustomAudienceClient.Builder()
@@ -100,14 +106,6 @@ public class CustomAudienceManagerTest {
         Log.i(TAG, "joinCustomAudience() took " + duration + " ms: " + label);
     }
 
-    @Before
-    public void setUp() throws Exception {
-        InstrumentationRegistry.getInstrumentation()
-                .getUiAutomation()
-                .adoptShellPermissionIdentity(WRITE_DEVICE_CONFIG_PERMISSION);
-        PhFlagsFixture.overrideSdkRequestPermitsPerSecond(Integer.MAX_VALUE);
-    }
-
     @Test
     public void testCustomAudienceManager() throws Exception {
         measureJoinCustomAudience("no-kill, 1st call");
@@ -140,12 +138,6 @@ public class CustomAudienceManagerTest {
         Thread.sleep(1000);
         // Kill the service process.
         ShellUtils.runShellCommand("su 0 killall -9 " + SERVICE_APK_NAME);
-
-        InstrumentationRegistry.getInstrumentation()
-                .getUiAutomation()
-                .adoptShellPermissionIdentity(WRITE_DEVICE_CONFIG_PERMISSION);
-        // This test is running in background
-        PhFlagsFixture.overrideForegroundStatusForFledgeCustomAudience(false);
 
         // TODO(b/230873929): Extract to util method.
         int count = 0;
