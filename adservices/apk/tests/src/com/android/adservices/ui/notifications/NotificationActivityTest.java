@@ -74,7 +74,7 @@ public class NotificationActivityTest {
     }
 
     private void checkConsentNotificationFragmentIsDisplayed() {
-        onView(withText(R.string.notificationUI_header_subtitle)).check(matches(isDisplayed()));
+        onView(withText(R.string.notificationUI_header_title)).check(matches(isDisplayed()));
     }
 
     private void launchEUActivity() {

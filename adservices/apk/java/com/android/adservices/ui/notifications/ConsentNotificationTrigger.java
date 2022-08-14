@@ -57,17 +57,27 @@ public class ConsentNotificationTrigger {
         PendingIntent pendingIntent =
                 PendingIntent.getActivity(
                         context, 1, intent, PendingIntent.FLAG_IMMUTABLE);
+        NotificationCompat.BigTextStyle textStyle =
+                new NotificationCompat.BigTextStyle()
+                        .bigText(
+                                isEuDevice
+                                        ? context.getString(
+                                                R.string.notificationUI_notification_content_eu)
+                                        : context.getString(
+                                                R.string.notificationUI_notification_content));
         return new NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_android_icon_small)
-                .setContentTitle(isEuDevice
-                        ? context.getString(R.string.notificationUI_notification_title_eu)
-                        : context.getString(R.string.notificationUI_notification_title))
-                .setContentText(isEuDevice
-                        ? context.getString(R.string.notificationUI_notification_content_eu)
-                        : context.getString(R.string.notificationUI_notification_content))
-                .setStyle(new NotificationCompat.BigTextStyle().bigText(isEuDevice
-                        ? context.getString(R.string.notificationUI_notification_content_eu)
-                        : context.getString(R.string.notificationUI_notification_content)))
+                .setContentTitle(
+                        context.getString(
+                                isEuDevice
+                                        ? R.string.notificationUI_notification_title_eu
+                                        : R.string.notificationUI_notification_title))
+                .setContentText(
+                        context.getString(
+                                isEuDevice
+                                        ? R.string.notificationUI_notification_content_eu
+                                        : R.string.notificationUI_notification_content))
+                .setStyle(textStyle)
                 .setPriority(NOTIFICATION_PRIORITY)
                 .setAutoCancel(true)
                 .setContentIntent(pendingIntent);
@@ -113,9 +123,9 @@ public class ConsentNotificationTrigger {
         NotificationChannel channel =
                 new NotificationChannel(
                         CHANNEL_ID,
-                        context.getString(R.string.settingsUI_privacy_sandbox_beta_title),
+                        context.getString(R.string.settingsUI_main_view_title),
                         importance);
-        channel.setDescription(context.getString(R.string.settingsUI_privacy_sandbox_beta_title));
+        channel.setDescription(context.getString(R.string.settingsUI_main_view_title));
         NotificationManager notificationManager =
                 context.getSystemService(NotificationManager.class);
         notificationManager.createNotificationChannel(channel);
