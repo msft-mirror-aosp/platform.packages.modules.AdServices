@@ -202,12 +202,11 @@ public class SettingsActivityTest {
 
     /**
      * Test if the strings (settingsUI_topics_title, settingsUI_apps_title,
-     * settingsUI_privacy_sandbox_beta_title) are displayed in {@link
-     * AdServicesSettingsMainFragment}.
+     * settingsUI_main_view_title) are displayed in {@link AdServicesSettingsMainFragment}.
      */
     @Test
     public void test_MainFragmentView_isDisplayed() {
-        onView(withText(R.string.settingsUI_privacy_sandbox_beta_title))
+        onView(withText(R.string.settingsUI_privacy_sandbox_beta_switch_title))
                 .perform(nestedScrollTo())
                 .check(matches(isDisplayed()));
         onView(withText(R.string.settingsUI_topics_title))
