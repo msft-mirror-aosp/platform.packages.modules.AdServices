@@ -35,7 +35,8 @@ public class AdServicesPermissions {
             "android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE";
 
     /** This permission needs to be declared by the caller of Advertising ID APIs. */
-    public static final String ACCESS_ADSERVICES_ADID = "android.permission.ACCESS_ADSERVICES_ADID";
+    public static final String ACCESS_ADSERVICES_AD_ID =
+            "android.permission.ACCESS_ADSERVICES_AD_ID";
 
     /**
      * This permission needs to be declared by the Consent Service to access AdServices.
@@ -47,7 +48,9 @@ public class AdServicesPermissions {
             "android.permission.ACCESS_ADSERVICES_CONSENT";
 
     /**
-     * This permission needs to be declared by the AdServices to access API for AdID.
+     * This is a signature permission that needs to be declared by the AdServices apk to access API
+     * for AdID provided by another provider service. The signature permission is required to make
+     * sure that only AdServices is permitted to access this api.
      *
      * @hide
      */
@@ -56,7 +59,9 @@ public class AdServicesPermissions {
             "android.permission.ADSERVICES_ACCESS_AD_ID";
 
     /**
-     * This permission needs to be declared by the AdServices to access API for AppSetId.
+     * This is a signature permission needs to be declared by the AdServices apk to access API for
+     * AppSetId provided by another provider service. The signature permission is required to make
+     * sure that only AdServices is permitted to access this api.
      *
      * @hide
      */
