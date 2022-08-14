@@ -20,6 +20,7 @@ import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
+import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
@@ -31,6 +32,7 @@ import com.android.adservices.ServiceBinder;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeoutException;
 
 /**
  * AdSelection Manager provides APIs for app and ad-SDKs to run ad selection processes as well
@@ -99,6 +101,9 @@ public class AdSelectionManager {
      *
      * <p>If the {@link IllegalStateException} is thrown with error message "Failure of AdSelection
      * services.", it is caused by an internal failure of the ad selection service.
+     *
+     * <p>If the {@link TimeoutException} is thrown, it is caused when a timeout is encountered
+     * during bidding, scoring, or overall selection process to find winning Ad.
      */
     public void selectAds(
             @NonNull AdSelectionConfig adSelectionConfig,
@@ -111,7 +116,10 @@ public class AdSelectionManager {
         try {
             final AdSelectionService service = getService();
             service.runAdSelection(
-                    adSelectionConfig,
+                    new AdSelectionInput.Builder()
+                            .setAdSelectionConfig(adSelectionConfig)
+                            .setCallerPackageName(getCallerPackageName())
+                            .build(),
                     new AdSelectionCallback.Stub() {
                         @Override
                         public void onSuccess(AdSelectionResponse resultParcel) {
@@ -165,6 +173,7 @@ public class AdSelectionManager {
                     new ReportImpressionInput.Builder()
                             .setAdSelectionId(request.getAdSelectionId())
                             .setAdSelectionConfig(request.getAdSelectionConfig())
+                            .setCallerPackageName(getCallerPackageName())
                             .build(),
                     new ReportImpressionCallback.Stub() {
                         @Override
@@ -188,6 +197,14 @@ public class AdSelectionManager {
         } catch (RemoteException e) {
             LogUtil.e(e, "Exception");
             receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
+        }
+    }
+
+    private String getCallerPackageName() {
+        if (mContext instanceof SandboxedSdkContext) {
+            return ((SandboxedSdkContext) mContext).getClientPackageName();
+        } else {
+            return mContext.getPackageName();
         }
     }
 }

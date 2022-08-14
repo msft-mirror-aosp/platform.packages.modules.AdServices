@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.common;
 
+import android.adservices.common.AdServicesPermissions;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -41,9 +42,6 @@ public final class PermissionHelper {
     public static final String ACCESS_ADSERVICES_CUSTOM_AUDIENCE_PERMISSION =
             "android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE";
 
-    /** This permission needs to be declared by the caller of Advertising ID APIs. */
-    public static final String ACCESS_ADSERVICES_ADID_PERMISSION =
-            "android.permission.ACCESS_ADSERVICES_ADID";
 
     private static boolean checkSdkPermission(
             @NonNull Context context, @NonNull String sdkName, @NonNull String perm) {
@@ -55,13 +53,14 @@ public final class PermissionHelper {
     public static boolean hasTopicsPermission(
             @NonNull Context context, boolean useSandboxCheck, @NonNull String sdkName) {
         boolean callerPerm =
-                context.checkCallingOrSelfPermission(ACCESS_ADSERVICES_TOPICS_PERMISSION)
+                context.checkCallingOrSelfPermission(AdServicesPermissions.ACCESS_ADSERVICES_TOPICS)
                         == PackageManager.PERMISSION_GRANTED;
         // Note: Checking permission declared by Sdk running in Sandbox is only for accounting
         // purposes and should not be used as a security measure.
         if (useSandboxCheck) {
             return callerPerm
-                    && checkSdkPermission(context, sdkName, ACCESS_ADSERVICES_TOPICS_PERMISSION);
+                    && checkSdkPermission(
+                            context, sdkName, AdServicesPermissions.ACCESS_ADSERVICES_TOPICS);
         }
         return callerPerm;
     }
@@ -74,7 +73,7 @@ public final class PermissionHelper {
         if (useSandboxCheck) {
             // TODO(b/240718367): Add check for SDK permission.
         }
-        return (context.checkCallingOrSelfPermission(ACCESS_ADSERVICES_ADID_PERMISSION)
+        return (context.checkCallingOrSelfPermission(AdServicesPermissions.ACCESS_ADSERVICES_ADID)
                 == PackageManager.PERMISSION_GRANTED);
     }
 
@@ -86,7 +85,9 @@ public final class PermissionHelper {
         if (useSandboxCheck) {
             // TODO(b/236267953): Add check for SDK permission.
         }
-        int status = context.checkCallingOrSelfPermission(ACCESS_ADSERVICES_ATTRIBUTION_PERMISSION);
+        int status =
+                context.checkCallingOrSelfPermission(
+                        AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION);
         return status == PackageManager.PERMISSION_GRANTED;
     }
 
@@ -94,7 +95,8 @@ public final class PermissionHelper {
     public static boolean hasCustomAudiencesPermission(@NonNull Context context) {
         // TODO(b/236268316): Add check for SDK permission.
         int status =
-                context.checkCallingOrSelfPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE_PERMISSION);
+                context.checkCallingOrSelfPermission(
+                        AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
         return status == PackageManager.PERMISSION_GRANTED;
     }
 }

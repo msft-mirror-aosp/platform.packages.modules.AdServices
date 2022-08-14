@@ -287,8 +287,7 @@ public class EventReport {
             mBuilding.mReportTime =
                     source.getReportingTime(
                             trigger.getTriggerTime(),
-                            DestinationType.getDestinationType(
-                                    trigger.getAttributionDestination()));
+                            trigger.getDestinationType());
             mBuilding.mSourceType = source.getSourceType();
             mBuilding.mRandomizedTriggerRate = source.getRandomAttributionProbability();
             return this;

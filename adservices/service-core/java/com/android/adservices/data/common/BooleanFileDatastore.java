@@ -243,7 +243,7 @@ public class BooleanFileDatastore {
     public Set<String> keySet() {
         mReadLock.lock();
         try {
-            return mLocalMap.keySet();
+            return Set.copyOf(mLocalMap.keySet());
         } finally {
             mReadLock.unlock();
         }
@@ -253,10 +253,11 @@ public class BooleanFileDatastore {
     private Set<String> keySetFilter(boolean filter) {
         mReadLock.lock();
         try {
-            return mLocalMap.entrySet().stream()
-                    .filter(entry -> entry.getValue().equals(filter))
-                    .map(Map.Entry::getKey)
-                    .collect(Collectors.toSet());
+            return Set.copyOf(
+                    mLocalMap.entrySet().stream()
+                            .filter(entry -> entry.getValue().equals(filter))
+                            .map(Map.Entry::getKey)
+                            .collect(Collectors.toSet()));
         } finally {
             mReadLock.unlock();
         }
@@ -299,6 +300,40 @@ public class BooleanFileDatastore {
         } finally {
             mWriteLock.unlock();
         }
+    }
+
+    private void clearByFilter(boolean filter) throws IOException {
+        mWriteLock.lock();
+        try {
+            mLocalMap.entrySet().removeIf(entry -> entry.getValue().equals(filter));
+            writeToFile();
+        } finally {
+            mWriteLock.unlock();
+        }
+    }
+
+    /**
+     * Clears all entries from the datastore file that have value {@code true}. Entries with value
+     * {@code false} are not removed.
+     *
+     * <p>This change is committed immediately to file.
+     *
+     * @throws IOException if file write fails
+     */
+    public void clearAllTrue() throws IOException {
+        clearByFilter(true);
+    }
+
+    /**
+     * Clears all entries from the datastore file that have value {@code false}. Entries with value
+     * {@code true} are not removed.
+     *
+     * <p>This change is committed immediately to file.
+     *
+     * @throws IOException if file write fails
+     */
+    public void clearAllFalse() throws IOException {
+        clearByFilter(false);
     }
 
     /**

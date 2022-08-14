@@ -19,7 +19,6 @@ package com.android.sdksandbox;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.annotation.RequiresPermission;
-import android.annotation.SuppressLint;
 import android.app.Service;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
@@ -48,7 +47,6 @@ import java.util.Map;
 import java.util.Objects;
 
 /** Implementation of Sdk Sandbox Service. */
-@SuppressLint("NewApi") // TODO(b/227329631): remove this after T SDK is finalized
 public class SdkSandboxServiceImpl extends Service {
 
     private static final String TAG = "SdkSandbox";

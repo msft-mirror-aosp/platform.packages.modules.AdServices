@@ -526,7 +526,7 @@ public class CustomAudienceDaoTest {
         assertTrue(mCustomAudienceDao.doesCustomAudienceOverrideExist(OWNER_4, BUYER_4, NAME_4));
         assertTrue(mCustomAudienceDao.doesCustomAudienceOverrideExist(OWNER_2, BUYER_2, NAME_2));
 
-        mCustomAudienceDao.removeAllCustomAudienceOverrides(APP_PACKAGE_NAME_1);
+        mCustomAudienceDao.removeCustomAudienceOverridesByPackageName(APP_PACKAGE_NAME_1);
 
         assertFalse(mCustomAudienceDao.doesCustomAudienceOverrideExist(OWNER_1, BUYER_1, NAME_1));
         assertFalse(mCustomAudienceDao.doesCustomAudienceOverrideExist(OWNER_4, BUYER_4, NAME_4));
