@@ -18,7 +18,6 @@ package com.android.adservices.service.topics.classifier;
 
 import android.annotation.NonNull;
 import android.content.Context;
-import android.content.res.AssetManager;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.topics.Topic;
@@ -62,7 +61,6 @@ public class OnDeviceClassifier implements Classifier {
 
     private final Preprocessor mPreprocessor;
     private final PackageManagerUtil mPackageManagerUtil;
-    private final AssetManager mAssetManager;
     private final Random mRandom;
     private final ModelManager mModelManager;
 
@@ -76,12 +74,10 @@ public class OnDeviceClassifier implements Classifier {
     public OnDeviceClassifier(
             @NonNull Preprocessor preprocessor,
             @NonNull PackageManagerUtil packageManagerUtil1,
-            @NonNull AssetManager assetManager,
             @NonNull Random random,
             @NonNull ModelManager modelManager) {
         mPreprocessor = preprocessor;
         mPackageManagerUtil = packageManagerUtil1;
-        mAssetManager = assetManager;
         mRandom = random;
         mLoaded = false;
         mAppInfoMap = ImmutableMap.of();
@@ -97,7 +93,6 @@ public class OnDeviceClassifier implements Classifier {
                         new OnDeviceClassifier(
                                 new Preprocessor(context),
                                 new PackageManagerUtil(context),
-                                context.getAssets(),
                                 new Random(),
                                 ModelManager.getInstance(context));
             }
