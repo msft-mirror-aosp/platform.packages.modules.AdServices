@@ -309,35 +309,43 @@
         "sourceType": "navigation"
       }
     ],
-    "attribution_rate_limits": [
+    "attributions": [
       {
         "id": "A1",
-        "sourceSite": "https://deleteCandidate1.site.com",
+        "sourceSite": "https://site.com",
+        "sourceOrigin": "https://deleteCandidate1.site.com",
         "destinationSite": "https://site2.com",
+        "destinationOrigin": "https://site2.com",
         "adTechDomain": "https://ad-tech.example.com",
         "triggerTime": 1648665733601,
         "registrant": "android-app://com.registrant.deleteCandidate"
       },
       {
         "id": "A2",
-        "sourceSite": "https://deleteCandidate1.site.com",
+        "sourceSite": "https://site.com",
+        "sourceOrigin": "https://deleteCandidate1.site.com",
         "destinationSite": "https://site2.com",
+        "destinationOrigin": "https://site2.com",
         "adTechDomain": "https://ad-tech.example.com",
         "triggerTime": 1648665733605,
         "registrant": "android-app://com.registrant.deleteCandidate"
       },
       {
         "id": "A3",
-        "sourceSite": "https://deleteCandidate1.site.com",
-        "destinationSite": "https://deleteCandidate2.site.com",
+        "sourceSite": "https://site.com",
+        "sourceOrigin": "https://deleteCandidate1.site.com",
+        "destinationSite": "https://site.com",
+        "destinationOrigin": "https://deleteCandidate2.site.com",
         "adTechDomain": "https://ad-tech.example.com",
         "triggerTime": 1648665733601,
         "registrant": "android-app://com.registrant.deleteCandidate"
       },
       {
         "id": "A4",
-        "sourceSite": "https://deleteCandidate2.site.com",
+        "sourceSite": "https://site.com",
+        "sourceOrigin": "https://deleteCandidate2.site.com",
         "destinationSite": "https://site2.com",
+        "destinationOrigin": "https://site2.com",
         "adTechDomain": "https://ad-tech.example.com",
         "triggerTime": 1648665733601,
         "registrant": "android-app://com.registrant.deleteCandidate"
@@ -345,15 +353,19 @@
       {
         "id": "A5",
         "sourceSite": "https://site.com",
-        "destinationSite": "https://abc.deletesite2.com",
+        "sourceOrigin": "https://site.com",
+        "destinationSite": "https://deletesite2.com",
+        "destinationOrigin": "https://abc.deletesite2.com",
         "adTechDomain": "https://ad-tech.example.com",
         "triggerTime": 1648665733601,
         "registrant": "android-app://com.registrant.deleteCandidate"
       },
       {
         "id": "A6",
-        "sourceSite": "https://abc.deletesite1.com",
+        "sourceSite": "https://deletesite1.com",
+        "sourceOrigin": "https://abc.deletesite1.com",
         "destinationSite": "https://site2.com",
+        "destinationOrigin": "https://site2.com",
         "adTechDomain": "https://ad-tech.example.com",
         "triggerTime": 1648665733601,
         "registrant": "android-app://com.registrant.deleteCandidate"
@@ -361,7 +373,9 @@
       {
         "id": "A7",
         "sourceSite": "https://site1.com",
+        "sourceOrigin": "https://site1.com",
         "destinationSite": "https://site2.com",
+        "destinationOrigin": "https://site2.com",
         "adTechDomain": "https://ad-tech.example.com",
         "triggerTime": 1648665733601,
         "registrant": "android-app://com.registrant.deleteCandidate"
@@ -607,19 +621,23 @@
         "sourceType": "navigation"
       }
     ],
-    "attribution_rate_limits": [
+    "attributions": [
       {
         "id": "A2",
-        "sourceSite": "https://deleteCandidate1.site.com",
+        "sourceSite": "https://site.com",
+        "sourceOrigin": "https://deleteCandidate1.site.com",
         "destinationSite": "https://site2.com",
+        "destinationOrigin": "https://site2.com",
         "adTechDomain": "https://ad-tech.example.com",
         "triggerTime": 1648665733605,
         "registrant": "android-app://com.registrant.deleteCandidate"
       },
       {
         "id": "A3",
-        "sourceSite": "https://deleteCandidate1.site.com",
-        "destinationSite": "https://deleteCandidate2.site.com",
+        "sourceSite": "https://site.com",
+        "sourceOrigin": "https://deleteCandidate1.site.com",
+        "destinationSite": "https://site.com",
+        "destinationOrigin": "https://deleteCandidate2.site.com",
         "adTechDomain": "https://ad-tech.example.com",
         "triggerTime": 1648665733601,
         "registrant": "android-app://com.registrant.deleteCandidate"

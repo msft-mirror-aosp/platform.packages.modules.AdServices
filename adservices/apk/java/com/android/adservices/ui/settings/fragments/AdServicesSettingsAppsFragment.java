@@ -22,7 +22,6 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -60,10 +59,28 @@ public class AdServicesSettingsAppsFragment extends Fragment {
     // initializes view model connection with topics list.
     // (Action listeners for each item in the list will be handled by the adapter)
     private void setupViewModel(View rootView) {
-        AppsViewModel viewModel = new ViewModelProvider(requireActivity()).get(AppsViewModel.class);
+        AppsViewModel viewModel =
+                ((AdServicesSettingsActivity) requireActivity())
+                        .getViewModelProvider()
+                        .get(AppsViewModel.class);
         RecyclerView recyclerView = rootView.findViewById(R.id.apps_list);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         AppsListViewAdapter adapter = new AppsListViewAdapter(viewModel, false);
         recyclerView.setAdapter(adapter);
+
+        View noAppsMessage = rootView.findViewById(R.id.no_apps_message);
+        View emptyAppsHiddenSection = rootView.findViewById(R.id.empty_apps_hidden_section);
+
+        viewModel
+                .getApps()
+                .observe(
+                        getViewLifecycleOwner(),
+                        appsList -> {
+                            noAppsMessage.setVisibility(
+                                    appsList.isEmpty() ? View.VISIBLE : View.GONE);
+                            emptyAppsHiddenSection.setVisibility(
+                                    appsList.isEmpty() ? View.GONE : View.VISIBLE);
+                            adapter.notifyDataSetChanged();
+                        });
     }
 }

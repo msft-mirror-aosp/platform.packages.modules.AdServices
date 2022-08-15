@@ -39,26 +39,26 @@ public final class WebTriggerParams implements Parcelable {
                     return new WebTriggerParams[size];
                 }
             };
-    /** Used to fetch registration metadata. */
-    @NonNull private final Uri mRegistrationUri;
-    /** True, if debugKey should be allowed in reports. */
-    private final boolean mAllowDebugKey;
-
     /**
-     * Constructor for {@link WebTriggerParams}.
-     *
-     * @param registrationUri registration URI
-     * @param allowDebugKey flag for allowing or disallowing debug keys in reports
+     * URI that the Attribution Reporting API sends a request to in order to obtain trigger
+     * registration parameters.
      */
-    private WebTriggerParams(@NonNull Uri registrationUri, boolean allowDebugKey) {
-        mRegistrationUri = registrationUri;
-        mAllowDebugKey = allowDebugKey;
+    @NonNull private final Uri mRegistrationUri;
+    /**
+     * Used by the browser to indicate whether the debug key obtained from the registration URI is
+     * allowed to be used.
+     */
+    private final boolean mDebugKeyAllowed;
+
+    private WebTriggerParams(@NonNull Builder builder) {
+        mRegistrationUri = builder.mRegistrationUri;
+        mDebugKeyAllowed = builder.mDebugKeyAllowed;
     }
 
     /** Unpack a TriggerRegistration from a Parcel. */
     private WebTriggerParams(@NonNull Parcel in) {
         mRegistrationUri = Uri.CREATOR.createFromParcel(in);
-        mAllowDebugKey = in.readBoolean();
+        mDebugKeyAllowed = in.readBoolean();
     }
 
     @Override
@@ -66,13 +66,13 @@ public final class WebTriggerParams implements Parcelable {
         if (this == o) return true;
         if (!(o instanceof WebTriggerParams)) return false;
         WebTriggerParams that = (WebTriggerParams) o;
-        return mAllowDebugKey == that.mAllowDebugKey
+        return mDebugKeyAllowed == that.mDebugKeyAllowed
                 && Objects.equals(mRegistrationUri, that.mRegistrationUri);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mRegistrationUri, mAllowDebugKey);
+        return Objects.hash(mRegistrationUri, mDebugKeyAllowed);
     }
 
     /** Getter for registration Uri. */
@@ -85,8 +85,8 @@ public final class WebTriggerParams implements Parcelable {
      * Getter for debug allowed/disallowed flag. Its value as {@code true} means to allow parsing
      * debug keys from registration responses and their addition in the generated reports.
      */
-    public boolean isAllowDebugKey() {
-        return mAllowDebugKey;
+    public boolean isDebugKeyAllowed() {
+        return mDebugKeyAllowed;
     }
 
     @Override
@@ -98,58 +98,57 @@ public final class WebTriggerParams implements Parcelable {
     public void writeToParcel(@NonNull Parcel out, int flags) {
         Objects.requireNonNull(out);
         mRegistrationUri.writeToParcel(out, flags);
-        out.writeBoolean(mAllowDebugKey);
+        out.writeBoolean(mDebugKeyAllowed);
     }
 
     /** A builder for {@link WebTriggerParams}. */
     public static final class Builder {
-        /** Used to fetch registration metadata. */
-        private Uri mRegistrationUri;
-        /** True, if debugKey should be allowed in reports. */
-        private boolean mAllowDebugKey;
-
-        /** Builder for {@link WebTriggerParams}. */
-        public Builder() {
-            mAllowDebugKey = false;
-        }
+        /**
+         * URI that the Attribution Reporting API sends a request to in order to obtain trigger
+         * registration parameters.
+         */
+        @NonNull private final Uri mRegistrationUri;
+        /**
+         * Used by the browser to indicate whether the debug key obtained from the registration URI
+         * is allowed to be used.
+         */
+        private boolean mDebugKeyAllowed;
 
         /**
-         * Setter for registration Uri. It is a required parameter.
+         * Builder constructor for {@link WebTriggerParams}. {@code mIsDebugKeyAllowed} is assigned
+         * false by default.
          *
-         * @param registrationUri registration URI
-         * @return builder
+         * @param registrationUri URI that the Attribution Reporting API sends a request to in order
+         *     to obtain trigger registration parameters
          */
-        @NonNull
-        public Builder setRegistrationUri(@NonNull Uri registrationUri) {
+        public Builder(@NonNull Uri registrationUri) {
+            Objects.requireNonNull(registrationUri);
             mRegistrationUri = registrationUri;
-            return this;
+            mDebugKeyAllowed = false;
         }
 
         /**
          * Setter for debug allow/disallow flag. Setting it to true will allow parsing debug keys
          * from registration responses and their addition in the generated reports.
          *
-         * @param allowDebugKey debug allow/disallow flag
+         * @param debugKeyAllowed used by the browser to indicate whether the debug key obtained
+         *     from the registration URI is allowed to be used
          * @return builder
          */
         @NonNull
-        public Builder setAllowDebugKey(boolean allowDebugKey) {
-            mAllowDebugKey = allowDebugKey;
+        public Builder setDebugKeyAllowed(boolean debugKeyAllowed) {
+            mDebugKeyAllowed = debugKeyAllowed;
             return this;
         }
 
         /**
-         * Built immutable {@link WebTriggerParams}.
+         * Builds immutable {@link WebTriggerParams}.
          *
          * @return immutable {@link WebTriggerParams}
          */
         @NonNull
         public WebTriggerParams build() {
-            if (mRegistrationUri == null) {
-                throw new IllegalArgumentException("registration URI unset");
-            }
-
-            return new WebTriggerParams(mRegistrationUri, mAllowDebugKey);
+            return new WebTriggerParams(this);
         }
     }
 }

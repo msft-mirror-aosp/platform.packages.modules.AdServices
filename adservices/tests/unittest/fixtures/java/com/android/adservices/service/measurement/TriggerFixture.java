@@ -18,6 +18,15 @@ package com.android.adservices.service.measurement;
 
 import android.net.Uri;
 
+import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
+import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
+import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
+
+import java.math.BigInteger;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 public final class TriggerFixture {
     private TriggerFixture() { }
 
@@ -61,7 +70,7 @@ public final class TriggerFixture {
                 "[\n"
                         + "{\n"
                         + "  \"trigger_data\": \"5\",\n"
-                        + "  \"priority\": \"123\"\n"
+                        + "  \"priority\": \"123\",\n"
                         + "  \"filters\": {\n"
                         + "    \"source_type\": [\"navigation\"],\n"
                         + "    \"key_1\": [\"value_1\"] \n"
@@ -69,11 +78,11 @@ public final class TriggerFixture {
                         + "},\n"
                         + "{\n"
                         + "  \"trigger_data\": \"0\",\n"
-                        + "  \"priority\": \"124\"\n"
-                        + "  \"deduplication_key\": \"101\"\n"
+                        + "  \"priority\": \"124\",\n"
+                        + "  \"deduplication_key\": \"101\",\n"
                         + "  \"filters\": {\n"
                         + "     \"source_type\": [\"event\"]\n"
-                        + "   },\n"
+                        + "   }\n"
                         + "}\n"
                         + "]\n";
 
@@ -90,5 +99,29 @@ public final class TriggerFixture {
                     + "\"campaignCounts\":32768,"
                     + "\"geoValue\":1664"
                 + "}";
+
+        public static final Long DEBUG_KEY = 27836L;
+
+        public static final AggregatableAttributionTrigger buildAggregatableAttributionTrigger() {
+            final AggregateFilterData filter =
+                    new AggregateFilterData.Builder()
+                            .setAttributionFilterMap(
+                                    Map.of(
+                                            "product",
+                                            List.of("1234", "4321"),
+                                            "conversion_subdomain",
+                                            List.of("electronics.megastore")))
+                            .build();
+            return new AggregatableAttributionTrigger.Builder()
+                    .setValues(Map.of("x", 1))
+                    .setTriggerData(
+                            List.of(
+                                    new AggregateTriggerData.Builder()
+                                            .setKey(BigInteger.ONE)
+                                            .setSourceKeys(Set.of("sourceKey"))
+                                            .setFilter(filter)
+                                            .build()))
+                    .build();
+        }
     }
 }

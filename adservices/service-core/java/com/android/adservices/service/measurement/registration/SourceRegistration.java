@@ -23,7 +23,7 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
 
-import com.android.adservices.service.measurement.validation.Validation;
+import com.android.adservices.service.measurement.util.Validation;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -41,6 +41,7 @@ public final class SourceRegistration {
     private final long mSourcePriority;
     private final long mInstallAttributionWindow;
     private final long mInstallCooldownWindow;
+    @Nullable private final Long mDebugKey;
     private final String mAggregateSource;
     private final String mAggregateFilterData;
 
@@ -55,6 +56,7 @@ public final class SourceRegistration {
             long sourcePriority,
             long installAttributionWindow,
             long installCooldownWindow,
+            @Nullable Long debugKey,
             @Nullable String aggregateSource,
             @Nullable String aggregateFilterData) {
         mTopOrigin = topOrigin;
@@ -68,6 +70,7 @@ public final class SourceRegistration {
         mInstallCooldownWindow = installCooldownWindow;
         mAggregateSource = aggregateSource;
         mAggregateFilterData = aggregateFilterData;
+        mDebugKey = debugKey;
     }
 
     @Override
@@ -85,7 +88,8 @@ public final class SourceRegistration {
                 && Objects.equals(mAppDestination, that.mAppDestination)
                 && Objects.equals(mWebDestination, that.mWebDestination)
                 && Objects.equals(mAggregateSource, that.mAggregateSource)
-                && Objects.equals(mAggregateFilterData, that.mAggregateFilterData);
+                && Objects.equals(mAggregateFilterData, that.mAggregateFilterData)
+                && Objects.equals(mDebugKey, that.mDebugKey);
     }
 
     @Override
@@ -101,7 +105,8 @@ public final class SourceRegistration {
                 mInstallAttributionWindow,
                 mInstallCooldownWindow,
                 mAggregateSource,
-                mAggregateFilterData);
+                mAggregateFilterData,
+                mDebugKey);
     }
 
     /** Top level origin. */
@@ -132,6 +137,11 @@ public final class SourceRegistration {
     @NonNull
     public long getSourceEventId() {
         return mSourceEventId;
+    }
+
+    /** Source debug key. */
+    public @Nullable Long getDebugKey() {
+        return mDebugKey;
     }
 
     /** Expiration. */
@@ -187,6 +197,7 @@ public final class SourceRegistration {
         private long mSourcePriority;
         private long mInstallAttributionWindow;
         private long mInstallCooldownWindow;
+        private @Nullable Long mDebugKey;
         private String mAggregateSource;
         private String mAggregateFilterData;
 
@@ -238,6 +249,12 @@ public final class SourceRegistration {
         @NonNull
         public Builder setSourceEventId(long sourceEventId) {
             mSourceEventId = sourceEventId;
+            return this;
+        }
+
+        /** See {@link SourceRegistration#getDebugKey()}. */
+        public @NonNull Builder setDebugKey(@Nullable Long debugKey) {
+            mDebugKey = debugKey;
             return this;
         }
 
@@ -303,6 +320,7 @@ public final class SourceRegistration {
                     mSourcePriority,
                     mInstallAttributionWindow,
                     mInstallCooldownWindow,
+                    mDebugKey,
                     mAggregateSource,
                     mAggregateFilterData);
         }

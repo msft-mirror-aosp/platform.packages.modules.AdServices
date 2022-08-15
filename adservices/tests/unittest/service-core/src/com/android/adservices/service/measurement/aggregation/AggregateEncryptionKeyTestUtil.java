@@ -35,8 +35,9 @@ import javax.net.ssl.HttpsURLConnection;
 class AggregateEncryptionKeyTestUtil {
     static final Uri DEFAULT_TARGET = Uri.parse("https://foo.com");
     static final String DEFAULT_MAX_AGE = "max-age=604800";
+    static final String DEFAULT_CACHED_AGE = "800";
     static final long DEFAULT_EVENT_TIME = 1653681612892L;
-    static final long DEFAULT_EXPIRY = 1654286412892L; // 1653681612892L + 604800000L
+    static final long DEFAULT_EXPIRY = 1654285612892L; // 1653681612892L + (604000000L - 800000L)
 
     interface DEFAULT_KEY_1 {
         String KEY_ID = "38b1d571-f924-4dc0-abe1-e2bac9b6a6be";
@@ -61,7 +62,8 @@ class AggregateEncryptionKeyTestUtil {
         doReturn(urlConnection).when(fetcher).openUrl(any());
         when(urlConnection.getResponseCode()).thenReturn(200);
         when(urlConnection.getHeaderFields()).thenReturn(Map.of(
-                "cache-control", List.of(DEFAULT_MAX_AGE)));
+                "cache-control", List.of(DEFAULT_MAX_AGE),
+                "age", List.of(DEFAULT_CACHED_AGE)));
         when(urlConnection.getInputStream()).thenReturn(inputStream);
     }
 

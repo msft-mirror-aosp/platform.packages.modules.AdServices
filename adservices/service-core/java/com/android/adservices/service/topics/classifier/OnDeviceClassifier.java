@@ -18,7 +18,6 @@ package com.android.adservices.service.topics.classifier;
 
 import android.annotation.NonNull;
 import android.content.Context;
-import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
 
 import com.android.adservices.LogUtil;
@@ -34,10 +33,7 @@ import com.google.common.collect.Iterables;
 import org.tensorflow.lite.support.label.Category;
 import org.tensorflow.lite.task.text.nlclassifier.BertNLClassifier;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -58,11 +54,6 @@ public class OnDeviceClassifier implements Classifier {
     private static final String EMPTY = "";
     private static final AppInfo EMPTY_APP_INFO = new AppInfo(EMPTY, EMPTY);
 
-    private static final String MODEL_FILE_PATH = "classifier/model.tflite";
-    private static final String LABELS_FILE_PATH = "classifier/labels_topics.txt";
-    private static final String CLASSIFIER_ASSETS_METADATA_PATH =
-            "classifier/classifier_assets_metadata.json";
-
     private static final String MODEL_ASSET_FIELD = "tflite_model";
     private static final String LABELS_ASSET_FIELD = "labels_topics";
     private static final String ASSET_VERSION_FIELD = "asset_version";
@@ -73,6 +64,7 @@ public class OnDeviceClassifier implements Classifier {
     private final PackageManagerUtil mPackageManagerUtil;
     private final AssetManager mAssetManager;
     private final Random mRandom;
+    private final ModelManager mModelManager;
 
     private BertNLClassifier mBertNLClassifier;
     private ImmutableList<Integer> mLabels;
@@ -85,13 +77,15 @@ public class OnDeviceClassifier implements Classifier {
             @NonNull Preprocessor preprocessor,
             @NonNull PackageManagerUtil packageManagerUtil1,
             @NonNull AssetManager assetManager,
-            @NonNull Random random) {
+            @NonNull Random random,
+            @NonNull ModelManager modelManager) {
         mPreprocessor = preprocessor;
         mPackageManagerUtil = packageManagerUtil1;
         mAssetManager = assetManager;
         mRandom = random;
         mLoaded = false;
         mAppInfoMap = ImmutableMap.of();
+        mModelManager = modelManager;
     }
 
     /** Returns the singleton instance of the {@link OnDeviceClassifier} given a context. */
@@ -104,7 +98,8 @@ public class OnDeviceClassifier implements Classifier {
                                 new Preprocessor(context),
                                 new PackageManagerUtil(context),
                                 context.getAssets(),
-                                new Random());
+                                new Random(),
+                                ModelManager.getInstance(context));
             }
         }
         return sSingleton;
@@ -113,6 +108,10 @@ public class OnDeviceClassifier implements Classifier {
     @Override
     @NonNull
     public ImmutableMap<String, List<Topic>> classify(@NonNull Set<String> appPackageNames) {
+        if (appPackageNames.isEmpty()) {
+            return ImmutableMap.of();
+        }
+
         // Load the assets if not loaded already.
         if (!isLoaded()) {
             mLoaded = load();
@@ -258,19 +257,18 @@ public class OnDeviceClassifier implements Classifier {
 
         // Load Bert model.
         try {
-            mBertNLClassifier = loadModel(MODEL_FILE_PATH);
+            mBertNLClassifier = loadModel();
         } catch (IOException e) {
             LogUtil.e(e, "Loading ML model failed.");
             return false;
         }
 
         // Load labels.
-        mLabels = CommonClassifierHelper.retrieveLabels(mAssetManager, LABELS_FILE_PATH);
+        mLabels = mModelManager.retrieveLabels();
 
         // Load classifier assets metadata.
         ImmutableMap<String, ImmutableMap<String, String>> classifierAssetsMetadata =
-                CommonClassifierHelper.getAssetsMetadata(
-                        mAssetManager, CLASSIFIER_ASSETS_METADATA_PATH);
+                mModelManager.retrieveClassifierAssetsMetadata();
         mModelVersion =
                 Long.parseLong(
                         classifierAssetsMetadata.get(MODEL_ASSET_FIELD).get(ASSET_VERSION_FIELD));
@@ -282,18 +280,7 @@ public class OnDeviceClassifier implements Classifier {
     }
 
     // Load BertNLClassifier Model from the corresponding modelFilePath.
-    private BertNLClassifier loadModel(String modelFilePath) throws IOException {
-        return BertNLClassifier.createFromBuffer(getModel(modelFilePath));
-    }
-
-    // Load model as a ByteBuffer from the asset manager.
-    private ByteBuffer getModel(String modelFilePath) throws IOException {
-        AssetFileDescriptor fileDescriptor = mAssetManager.openFd(modelFilePath);
-        FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
-        FileChannel fileChannel = inputStream.getChannel();
-
-        long startOffset = fileDescriptor.getStartOffset();
-        long declaredLength = fileDescriptor.getDeclaredLength();
-        return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
+    private BertNLClassifier loadModel() throws IOException {
+        return BertNLClassifier.createFromBuffer(mModelManager.retrieveModel());
     }
 }

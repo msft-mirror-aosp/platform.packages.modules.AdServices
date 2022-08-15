@@ -39,7 +39,8 @@ public class PermissionsNoPermTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final String CALLER_NOT_AUTHORIZED =
-            "java.lang.SecurityException: Caller is not authorized to call this API.";
+            "java.lang.SecurityException: Caller is not authorized to call this API. "
+                    + "Permission was not requested.";
 
     @Test
     // In the manifest file, the topics permission is not declared for this test.

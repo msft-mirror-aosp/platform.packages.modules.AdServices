@@ -63,7 +63,22 @@ public class OnDeviceClassifierTest {
         sPreprocessor = new Preprocessor(sContext);
         mOnDeviceClassifier =
                 new OnDeviceClassifier(
-                        sPreprocessor, mPackageManagerUtil, sContext.getAssets(), new Random());
+                        sPreprocessor,
+                        mPackageManagerUtil,
+                        sContext.getAssets(),
+                        new Random(),
+                        ModelManager.getInstance(sContext));
+    }
+
+    @Test
+    public void testGetInstance() {
+        OnDeviceClassifier firstInstance = OnDeviceClassifier.getInstance(sContext);
+        OnDeviceClassifier secondInstance = OnDeviceClassifier.getInstance(sContext);
+
+        assertThat(firstInstance).isNotNull();
+        assertThat(secondInstance).isNotNull();
+        // Verify singleton behaviour.
+        assertThat(firstInstance).isEqualTo(secondInstance);
     }
 
     @Test
@@ -82,7 +97,8 @@ public class OnDeviceClassifierTest {
         assertThat(classifications.get(appPackage1)).hasSize(MAX_LABELS_PER_APP);
         // Check all the returned labels for default empty string descriptions.
         assertThat(classifications.get(appPackage1))
-                .isEqualTo(createTopics(Arrays.asList(20, 183, 96, 6, 13, 286, 112, 194, 242, 17)));
+                .isEqualTo(createTopics(Arrays.asList(
+                        10230, 10253, 10227, 10250, 10257, 10225, 10249, 10009, 10223, 10228)));
     }
 
     @Test
@@ -116,12 +132,14 @@ public class OnDeviceClassifierTest {
 
         // Check if the first 10 categories contains at least the top 5.
         // Scores can differ a little on devices. Using this to reduce flakiness.
-        // Expected top 10: 43, 140, 151, 189, 193, 208, 271, 262, 6, 136
+        // Expected top 10: 10253, 10230, 10284, 10237, 10227, 10257, 10165, 10028, 10330, 10047
         assertThat(classifications.get(appPackage1))
-                .containsAtLeastElementsIn(createTopics(Arrays.asList(43, 140, 151, 189, 193)));
-        // Expected top 10: 93, 88, 90, 99, 101, 96, 1, 232, 91, 3
+                .containsAtLeastElementsIn(createTopics(Arrays.asList(
+                        10237, 10227, 10257, 10165, 10330)));
+        // Expected top 10: 10227, 10225, 10235, 10230, 10238, 10253, 10247, 10254, 10234, 10229
         assertThat(classifications.get(appPackage2))
-                .containsAtLeastElementsIn(createTopics(Arrays.asList(93, 88, 90, 99, 101)));
+                .containsAtLeastElementsIn(createTopics(
+                        Arrays.asList(10227, 10225, 10235, 10230, 10254)));
     }
 
     @Test
@@ -163,12 +181,19 @@ public class OnDeviceClassifierTest {
         // Check if the first 10 categories contains at least the top 5.
         // Scores can differ a little on devices. Using this to reduce flakiness.
         // Check different expected scores for different descriptions.
-        // Expected top 10: 43, 140, 151, 189, 193, 208, 271, 262, 6, 136
+        // Expected top 10: 10253, 10230, 10284, 10237, 10227, 10257, 10165, 10028, 10330, 10047
         assertThat(firstClassifications.get(appPackage1))
-                .containsAtLeastElementsIn(createTopics(Arrays.asList(43, 140, 151, 189, 193)));
-        // Expected top 10: 93, 88, 90, 99, 101, 96, 1, 232, 91, 3
+                .containsAtLeastElementsIn(createTopics(Arrays.asList(
+                        10253, 10230, 10284, 10028, 10330)));
+        // Expected top 10: 10227, 10225, 10235, 10230, 10238, 10253, 10247, 10254, 10234, 10229
         assertThat(secondClassifications.get(appPackage1))
-                .containsAtLeastElementsIn(createTopics(Arrays.asList(93, 88, 90, 99, 101)));
+                .containsAtLeastElementsIn(createTopics(
+                        Arrays.asList(10238, 10253, 10247, 10254, 10234)));
+    }
+
+    @Test
+    public void testClassify_emptyInput_emptyOutput() {
+        assertThat(mOnDeviceClassifier.classify(ImmutableSet.of())).isEmpty();
     }
 
     @Test
@@ -205,7 +230,7 @@ public class OnDeviceClassifierTest {
         assertThat(topTopics).hasSize(numberOfTopTopics + numberOfRandomTopics);
         // Verify the top topics are from the description that was repeated.
         List<Topic> expectedLabelsForCommonDescription =
-                createTopics(Arrays.asList(96, 1, 99, 3, 10, 251, 300, 231, 123, 56));
+                createTopics(Arrays.asList(10220, 10235, 10247, 10225));
         assertThat(topTopics.subList(0, numberOfTopTopics))
                 .containsAnyIn(expectedLabelsForCommonDescription);
     }

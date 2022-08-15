@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.customaudience;
 
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -53,11 +56,11 @@ public abstract class CustomAudienceUpdatableData {
             "%s Data validation failed while parsing %s found in JSON response";
 
     /**
-     * @return the user bidding signals as a JSON object serialized as a string that were sent in
-     *     the update response. If there were no valid user bidding signals, returns {@code null}.
+     * @return the user bidding signals that were sent in the update response. If there were no
+     *     valid user bidding signals, returns {@code null}.
      */
     @Nullable
-    public abstract String getUserBiddingSignals();
+    public abstract AdSelectionSignals getUserBiddingSignals();
 
     /**
      * @return trusted bidding data that was sent in the update response. If no valid trusted
@@ -79,8 +82,8 @@ public abstract class CustomAudienceUpdatableData {
 
     /**
      * @return the result type for the update attempt before {@link
-     *     #createFromResponseString(Instant, BackgroundFetchRunner.UpdateResultType, String,
-     *     Flags)} was called
+     *     #createFromResponseString(Instant, AdTechIdentifier,
+     *     BackgroundFetchRunner.UpdateResultType, String, Flags)} was called
      */
     public abstract BackgroundFetchRunner.UpdateResultType getInitialUpdateResult();
 
@@ -121,6 +124,7 @@ public abstract class CustomAudienceUpdatableData {
      *
      * @param attemptedUpdateTime the time at which the update for this custom audience was
      *     attempted
+     * @param buyer the buyer ad tech's eTLD+1
      * @param initialUpdateResult the result type of the fetch attempt prior to parsing the {@code
      *     response}
      * @param response the String response returned from querying the custom audience's daily fetch
@@ -131,10 +135,12 @@ public abstract class CustomAudienceUpdatableData {
     @NonNull
     public static CustomAudienceUpdatableData createFromResponseString(
             @NonNull Instant attemptedUpdateTime,
+            @NonNull AdTechIdentifier buyer,
             BackgroundFetchRunner.UpdateResultType initialUpdateResult,
             @NonNull final String response,
             @NonNull Flags flags) {
         Objects.requireNonNull(attemptedUpdateTime);
+        Objects.requireNonNull(buyer);
         Objects.requireNonNull(response);
         Objects.requireNonNull(flags);
 
@@ -175,6 +181,7 @@ public abstract class CustomAudienceUpdatableData {
                 new CustomAudienceUpdatableDataReader(
                         responseObject,
                         responseHash,
+                        buyer,
                         flags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         flags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         flags.getFledgeCustomAudienceMaxAdsSizeB(),
@@ -210,7 +217,7 @@ public abstract class CustomAudienceUpdatableData {
             @NonNull String responseHash,
             @NonNull CustomAudienceUpdatableData.Builder dataBuilder) {
         try {
-            String userBiddingSignals = reader.getUserBiddingSignalsFromJsonObject();
+            AdSelectionSignals userBiddingSignals = reader.getUserBiddingSignalsFromJsonObject();
             dataBuilder.setUserBiddingSignals(userBiddingSignals);
 
             if (userBiddingSignals == null) {
@@ -306,7 +313,7 @@ public abstract class CustomAudienceUpdatableData {
     }
 
     /**
-     * Gets a Builder to make {@link #createFromResponseString(Instant,
+     * Gets a Builder to make {@link #createFromResponseString(Instant, AdTechIdentifier,
      * BackgroundFetchRunner.UpdateResultType, String, Flags)} easier.
      */
     @VisibleForTesting
@@ -317,15 +324,15 @@ public abstract class CustomAudienceUpdatableData {
 
     /**
      * This is a hidden (visible for testing) AutoValue builder to make {@link
-     * #createFromResponseString(Instant, BackgroundFetchRunner.UpdateResultType, String, Flags)}
-     * easier.
+     * #createFromResponseString(Instant, AdTechIdentifier, BackgroundFetchRunner.UpdateResultType,
+     * String, Flags)} easier.
      */
     @VisibleForTesting
     @AutoValue.Builder
     public abstract static class Builder {
         /** Sets the user bidding signals found in the response string. */
         @NonNull
-        public abstract Builder setUserBiddingSignals(@Nullable String value);
+        public abstract Builder setUserBiddingSignals(@Nullable AdSelectionSignals value);
 
         /** Sets the trusted bidding data found in the response string. */
         @NonNull

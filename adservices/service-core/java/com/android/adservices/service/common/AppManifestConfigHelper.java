@@ -17,6 +17,7 @@
 package com.android.adservices.service.common;
 
 import android.annotation.NonNull;
+import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
@@ -28,12 +29,13 @@ import com.android.adservices.service.exception.XmlParseException;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
+import java.util.Objects;
 
 /** Helper class for parsing and checking the app manifest config (<ad-services-config>). */
 // TODO(b/213488783): Add persistence, so that lookup/parse is not on every request.
 // Also consider if this should execute in the background.
 public class AppManifestConfigHelper {
-    private static final String AD_SERVICES_CONFIG_PROPERTY =
+    public static final String AD_SERVICES_CONFIG_PROPERTY =
             "android.adservices.AD_SERVICES_CONFIG";
 
     private static XmlResourceParser getXmlParser(
@@ -57,17 +59,22 @@ public class AppManifestConfigHelper {
      * @param context the context for the API call. This needs to be the context where the calling
      *     UID is that of the API caller.
      * @param appPackageName the package name of the app whose manifest config will be read.
-     * @param sdk the name of the sdk that will be checked against app's manifest config.
+     * @param enrollmentId the enrollment ID of the sdk that will be checked against the app's
+     *     manifest config.
      */
     // TODO(b/237444140): Update for adtech enrollment.
     public static boolean isAllowedAttributionAccess(
-            @NonNull Context context, @NonNull String appPackageName, @NonNull String sdk) {
+            @NonNull Context context,
+            @NonNull String appPackageName,
+            @NonNull String enrollmentId) {
+        Objects.requireNonNull(appPackageName);
+        Objects.requireNonNull(enrollmentId);
         try {
             XmlResourceParser in = getXmlParser(context, appPackageName);
             AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(in);
-            return appManifestConfig.isAllowedAttributionAccess(sdk);
+            return appManifestConfig.isAllowedAttributionAccess(enrollmentId);
         } catch (PackageManager.NameNotFoundException e) {
-            LogUtil.e(e, "App manifest parse failed.");
+            LogUtil.e(e, "App manifest parse failed: NameNotFound.");
         } catch (XmlParseException | XmlPullParserException | IOException e) {
             LogUtil.e(e, "App manifest parse failed.");
         }
@@ -83,17 +90,20 @@ public class AppManifestConfigHelper {
      * @param context the context for the API call. This needs to be the context where the calling
      *     UID is that of the API caller.
      * @param appPackageName the package name of the app whose manifest config will be read.
-     * @param sdk the name of the sdk that will be checked against app's manifest config. // TODO:
-     *     Update for adtech enrollment.
+     * @param enrollmentId the enrollment id associate with the ad tech identifier.
      */
     public static boolean isAllowedCustomAudiencesAccess(
-            @NonNull Context context, @NonNull String appPackageName, @NonNull String sdk) {
+            @NonNull Context context,
+            @NonNull String appPackageName,
+            @NonNull String enrollmentId) {
+        Objects.requireNonNull(appPackageName);
+        Objects.requireNonNull(enrollmentId);
         try {
             XmlResourceParser in = getXmlParser(context, appPackageName);
             AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(in);
-            return appManifestConfig.isAllowedCustomAudiencesAccess(sdk);
+            return appManifestConfig.isAllowedCustomAudiencesAccess(enrollmentId);
         } catch (PackageManager.NameNotFoundException e) {
-            LogUtil.e(e, "App manifest parse failed.");
+            LogUtil.e(e, "App manifest parse failed: NameNotFound.");
         } catch (XmlParseException | XmlPullParserException | IOException e) {
             LogUtil.e(e, "App manifest parse failed.");
         }
@@ -109,17 +119,86 @@ public class AppManifestConfigHelper {
      * @param context the context for the API call. This needs to be the context where the calling
      *     UID is that of the API caller.
      * @param appPackageName the package name of the app whose manifest config will be read.
+     * @param enrollmentId the enrollment ID of the sdk that will be checked against the app's
+     *     manifest config.
+     */
+    public static boolean isAllowedTopicsAccess(
+            @NonNull Context context,
+            @NonNull String appPackageName,
+            @NonNull String enrollmentId) {
+        Objects.requireNonNull(appPackageName);
+        Objects.requireNonNull(enrollmentId);
+        try {
+            XmlResourceParser in = getXmlParser(context, appPackageName);
+            AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(in);
+
+            // If the request comes directly from the app, check that the app has declared that it
+            // includes this Sdk library.
+            if (!(context instanceof SandboxedSdkContext)) {
+                return appManifestConfig
+                                .getIncludesSdkLibraryConfig()
+                                .getIncludesSdkLibraries()
+                                .contains(enrollmentId)
+                        && appManifestConfig.isAllowedTopicsAccess(enrollmentId);
+            }
+
+            // If the request comes from the SdkRuntime, then the app had to have declared the Sdk
+            // using <uses-sdk-library>, so no need to check.
+            return appManifestConfig.isAllowedTopicsAccess(enrollmentId);
+        } catch (PackageManager.NameNotFoundException e) {
+            LogUtil.e(e, "App manifest parse failed: NameNotFound.");
+        } catch (XmlParseException | XmlPullParserException | IOException e) {
+            LogUtil.e(e, "App manifest parse failed.");
+        }
+        return false;
+    }
+
+    /**
+     * Parses the app's manifest config to determine whether this sdk is permitted to use the AdId
+     * API.
+     *
+     * <p>If there is a parse error, it returns false.
+     *
+     * @param context the context for the API call. This needs to be the context where the calling
+     *     UID is that of the API caller.
+     * @param appPackageName the package name of the app whose manifest config will be read.
      * @param sdk the name of the sdk that will be checked against app's manifest config. // TODO:
      *     Update for adtech enrollment.
      */
-    public static boolean isAllowedTopicsAccess(
+    public static boolean isAllowedAdIdAccess(
             @NonNull Context context, @NonNull String appPackageName, @NonNull String sdk) {
         try {
             XmlResourceParser in = getXmlParser(context, appPackageName);
             AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(in);
-            return appManifestConfig.isAllowedTopicsAccess(sdk);
+            return appManifestConfig.isAllowedAdIdAccess(sdk);
         } catch (PackageManager.NameNotFoundException e) {
+            LogUtil.e(e, "App manifest parse failed: NameNotFound.");
+        } catch (XmlParseException | XmlPullParserException | IOException e) {
             LogUtil.e(e, "App manifest parse failed.");
+        }
+        return false;
+    }
+
+    /**
+     * Parses the app's manifest config to determine whether this sdk is permitted to use the
+     * AppSetId API.
+     *
+     * <p>If there is a parse error, it returns false.
+     *
+     * @param context the context for the API call. This needs to be the context where the calling
+     *     UID is that of the API caller.
+     * @param appPackageName the package name of the app whose manifest config will be read.
+     * @param sdk the name of the sdk that will be checked against app's manifest config. // TODO:
+     *     Update for adtech enrollment.
+     */
+    public static boolean isAllowedAppSetIdAccess(
+            @NonNull Context context, @NonNull String appPackageName, @NonNull String sdk) {
+        try {
+            XmlResourceParser in = getXmlParser(context, appPackageName);
+            AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(in);
+            return appManifestConfig.isAllowedAppSetIdAccess(sdk);
+        } catch (PackageManager.NameNotFoundException e) {
+            LogUtil.e(e, "App manifest parse failed: NameNotFound.");
         } catch (XmlParseException | XmlPullParserException | IOException e) {
             LogUtil.e(e, "App manifest parse failed.");
         }

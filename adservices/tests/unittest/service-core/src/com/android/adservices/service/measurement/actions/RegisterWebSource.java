@@ -61,27 +61,25 @@ public final class RegisterWebSource implements Action {
                         regParamsJson.optString(TestFormatJsonMapping.ATTRIBUTION_SOURCE_KEY));
 
         WebSourceRegistrationRequest registrationRequest =
-                new WebSourceRegistrationRequest.Builder()
-                        .setTopOriginUri(
+                new WebSourceRegistrationRequest.Builder(
+                                createSourceParams(sourceParamsArray),
                                 Uri.parse(
                                         regParamsJson.getString(
                                                 TestFormatJsonMapping.SOURCE_TOP_ORIGIN_URI_KEY)))
-                        .setSourceParams(createSourceParams(sourceParamsArray))
                         .setInputEvent(
                                 regParamsJson
                                                 .getString(TestFormatJsonMapping.INPUT_EVENT_KEY)
                                                 .equals(TestFormatJsonMapping.SOURCE_VIEW_TYPE)
                                         ? null
                                         : getInputEvent())
-                        .setOsDestination(appDestination)
+                        .setAppDestination(appDestination)
                         .setWebDestination(webDestination)
                         .setVerifiedDestination(verifiedDestination)
                         .build();
 
         mRegistrationRequest =
-                new WebSourceRegistrationRequestInternal.Builder()
-                        .setSourceRegistrationRequest(registrationRequest)
-                        .setAttributionSource(attributionSource)
+                new WebSourceRegistrationRequestInternal.Builder(
+                                registrationRequest, attributionSource.getPackageName(), 2000L)
                         .build();
 
         mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);
@@ -100,12 +98,11 @@ public final class RegisterWebSource implements Action {
         for (int i = 0; i < sourceParamsArray.length(); i++) {
             JSONObject sourceParams = sourceParamsArray.getJSONObject(i);
             sourceParamsList.add(
-                    new WebSourceParams.Builder()
-                            .setRegistrationUri(
+                    new WebSourceParams.Builder(
                                     Uri.parse(
                                             sourceParams.getString(
                                                     TestFormatJsonMapping.REGISTRATION_URI_KEY)))
-                            .setAllowDebugKey(
+                            .setDebugKeyAllowed(
                                     sourceParams.optBoolean(TestFormatJsonMapping.DEBUG_KEY, false))
                             .build());
         }

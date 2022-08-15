@@ -91,11 +91,13 @@
         "sourceType": "navigation"
       }
     ],
-    "attribution_rate_limits": [
+    "attributions": [
       {
         "id": "A1",
         "sourceSite": "android-app://com.site1",
+        "sourceOrigin": "android-app://com.site1",
         "destinationSite": "android-app://com.site3",
+        "destinationOrigin": "android-app://com.site3",
         "adTechDomain": "https://ad-tech.example.com",
         "triggerTime": 10,
         "registrant": "android-app://com.registrant.toBeDeleted"
@@ -103,7 +105,9 @@
       {
         "id": "A2",
         "sourceSite": "android-app://com.site1",
+        "sourceOrigin": "android-app://com.site1",
         "destinationSite": "android-app://com.site3",
+        "destinationOrigin": "android-app://com.site3",
         "adTechDomain": "https://ad-tech.example.com",
         "triggerTime": 10,
         "registrant": "android-app://com.registrant2"
@@ -159,11 +163,13 @@
         "sourceType": "navigation"
       }
     ],
-    "attribution_rate_limits": [
+    "attributions": [
       {
         "id": "A2",
         "sourceSite": "android-app://com.site1",
+        "sourceOrigin": "android-app://com.site1",
         "destinationSite": "android-app://com.site3",
+        "destinationOrigin": "android-app://com.site3",
         "adTechDomain": "https://ad-tech.example.com",
         "triggerTime": 10,
         "registrant": "android-app://com.registrant2"

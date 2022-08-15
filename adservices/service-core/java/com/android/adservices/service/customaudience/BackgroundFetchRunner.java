@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.customaudience;
 
+import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.net.Uri;
 
@@ -46,7 +47,7 @@ public class BackgroundFetchRunner {
         UNKNOWN,
         K_ANON_FAILURE,
         // TODO(b/237342352): Consolidate if we don't need to distinguish network timeouts
-        NETWORK_CONNECT_TIMEOUT_FAILURE,
+        NETWORK_FAILURE,
         NETWORK_READ_TIMEOUT_FAILURE,
         RESPONSE_VALIDATION_FAILURE
     }
@@ -61,7 +62,8 @@ public class BackgroundFetchRunner {
                 new AdServicesHttpsClient(
                         AdServicesExecutors.getBlockingExecutor(),
                         flags.getFledgeBackgroundFetchNetworkConnectTimeoutMs(),
-                        flags.getFledgeBackgroundFetchNetworkReadTimeoutMs());
+                        flags.getFledgeBackgroundFetchNetworkReadTimeoutMs(),
+                        flags.getFledgeBackgroundFetchMaxResponseSizeB());
     }
 
     /**
@@ -71,13 +73,11 @@ public class BackgroundFetchRunner {
      */
     public void deleteExpiredCustomAudiences(@NonNull Instant jobStartTime) {
         Objects.requireNonNull(jobStartTime);
+
         LogUtil.d("Starting custom audience garbage collection");
-        // TODO(b/221862020): Garbage collection of expired custom audiences
-        //  Two options for synchronized deletion across two tables:
-        //  A) Transactions (with @Transaction) in DAO to delete entries in both the main table and
-        //     the BgF table based on the expiration time in the main CA table.
-        //  B) Create a unique foreign key to use @ForeignKey relationship to automatically cascade
-        //     deletion in the main table to the BgF table.
+        int numCustomAudiencesDeleted =
+                mCustomAudienceDao.deleteAllExpiredCustomAudienceData(jobStartTime);
+        LogUtil.d("Deleted %d expired custom audiences", numCustomAudiencesDeleted);
     }
 
     /** Updates a single given custom audience and persists the results. */
@@ -88,7 +88,7 @@ public class BackgroundFetchRunner {
 
         CustomAudienceUpdatableData updatableData =
                 fetchAndValidateCustomAudienceUpdatableData(
-                        jobStartTime, fetchData.getDailyUpdateUrl());
+                        jobStartTime, fetchData.getBuyer(), fetchData.getDailyUpdateUrl());
         fetchData = fetchData.copyWithUpdatableData(updatableData);
 
         if (updatableData.getContainsSuccessfulUpdate()) {
@@ -106,8 +106,11 @@ public class BackgroundFetchRunner {
      */
     @NonNull
     public CustomAudienceUpdatableData fetchAndValidateCustomAudienceUpdatableData(
-            @NonNull Instant jobStartTime, @NonNull Uri dailyFetchUri) {
+            @NonNull Instant jobStartTime,
+            @NonNull AdTechIdentifier buyer,
+            @NonNull Uri dailyFetchUri) {
         Objects.requireNonNull(jobStartTime);
+        Objects.requireNonNull(buyer);
         Objects.requireNonNull(dailyFetchUri);
 
         UpdateResultType fetchResult = UpdateResultType.SUCCESS;
@@ -125,7 +128,7 @@ public class BackgroundFetchRunner {
                         exception,
                         "Timed out while fetching custom audience update from %s",
                         dailyFetchUri.toSafeString());
-                fetchResult = UpdateResultType.NETWORK_CONNECT_TIMEOUT_FAILURE;
+                fetchResult = UpdateResultType.NETWORK_FAILURE;
             } else {
                 LogUtil.e(
                         exception,
@@ -149,16 +152,7 @@ public class BackgroundFetchRunner {
             Thread.currentThread().interrupt();
         }
 
-        int maxResponseSizeBytes = mFlags.getFledgeBackgroundFetchMaxResponseSizeB();
-        if (fetchResult == UpdateResultType.SUCCESS
-                && updateResponse.length() > maxResponseSizeBytes) {
-            LogUtil.e(
-                    "Custom audience update response is greater than configured max %d bytes",
-                    maxResponseSizeBytes);
-            fetchResult = UpdateResultType.RESPONSE_VALIDATION_FAILURE;
-        }
-
         return CustomAudienceUpdatableData.createFromResponseString(
-                jobStartTime, fetchResult, updateResponse, mFlags);
+                jobStartTime, buyer, fetchResult, updateResponse, mFlags);
     }
 }

@@ -23,31 +23,40 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
 import com.android.adservices.common.DBAdDataFixture;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
+import com.android.adservices.data.common.DBAdData;
+import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 
 import org.json.JSONException;
 import org.junit.Test;
 
+import java.util.List;
 
 public class CustomAudienceUpdatableDataTest {
+    private static final DBTrustedBiddingData VALID_DB_TRUSTED_BIDDING_DATA =
+            DBTrustedBiddingDataFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER).build();
+    private static final List<DBAdData> VALID_DB_AD_DATA_LIST =
+            DBAdDataFixture.getValidDbAdDataListByBuyer(CommonFixture.VALID_BUYER);
+
     @Test
     public void testBuildUpdatableDataSuccess() throws JSONException {
-        String validUserBiddingSignalsAsJsonObjectString =
-                CustomAudienceUpdatableDataFixture.formatAsOrgJsonJSONObjectString(
-                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
+        AdSelectionSignals validUserBiddingSignalsAsJsonObjectString =
+                AdSelectionSignals.fromString(
+                        CustomAudienceUpdatableDataFixture.formatAsOrgJsonJSONObjectString(
+                                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString()));
         boolean expectedContainsSuccessfulUpdate = true;
         CustomAudienceUpdatableData updatableDataFromBuilder =
                 CustomAudienceUpdatableData.builder()
                         .setUserBiddingSignals(validUserBiddingSignalsAsJsonObjectString)
-                        .setTrustedBiddingData(
-                                DBTrustedBiddingDataFixture.VALID_DB_TRUSTED_BIDDING_DATA)
-                        .setAds(DBAdDataFixture.VALID_DB_AD_DATA_LIST)
+                        .setTrustedBiddingData(VALID_DB_TRUSTED_BIDDING_DATA)
+                        .setAds(VALID_DB_AD_DATA_LIST)
                         .setAttemptedUpdateTime(CommonFixture.FIXED_NOW)
                         .setInitialUpdateResult(BackgroundFetchRunner.UpdateResultType.SUCCESS)
                         .setContainsSuccessfulUpdate(expectedContainsSuccessfulUpdate)
@@ -57,9 +66,8 @@ public class CustomAudienceUpdatableDataTest {
                 validUserBiddingSignalsAsJsonObjectString,
                 updatableDataFromBuilder.getUserBiddingSignals());
         assertEquals(
-                DBTrustedBiddingDataFixture.VALID_DB_TRUSTED_BIDDING_DATA,
-                updatableDataFromBuilder.getTrustedBiddingData());
-        assertEquals(DBAdDataFixture.VALID_DB_AD_DATA_LIST, updatableDataFromBuilder.getAds());
+                VALID_DB_TRUSTED_BIDDING_DATA, updatableDataFromBuilder.getTrustedBiddingData());
+        assertEquals(VALID_DB_AD_DATA_LIST, updatableDataFromBuilder.getAds());
         assertEquals(CommonFixture.FIXED_NOW, updatableDataFromBuilder.getAttemptedUpdateTime());
         assertEquals(
                 BackgroundFetchRunner.UpdateResultType.SUCCESS,
@@ -70,12 +78,13 @@ public class CustomAudienceUpdatableDataTest {
 
         final String jsonResponse =
                 CustomAudienceUpdatableDataFixture.toJsonResponseString(
-                        validUserBiddingSignalsAsJsonObjectString,
-                        DBTrustedBiddingDataFixture.VALID_DB_TRUSTED_BIDDING_DATA,
-                        DBAdDataFixture.VALID_DB_AD_DATA_LIST);
+                        validUserBiddingSignalsAsJsonObjectString.toString(),
+                        VALID_DB_TRUSTED_BIDDING_DATA,
+                        VALID_DB_AD_DATA_LIST);
         CustomAudienceUpdatableData updatableDataFromResponseString =
                 CustomAudienceUpdatableData.createFromResponseString(
                         CommonFixture.FIXED_NOW,
+                        CommonFixture.VALID_BUYER,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         jsonResponse,
                         FlagsFactory.getFlagsForTest());
@@ -116,6 +125,7 @@ public class CustomAudienceUpdatableDataTest {
         CustomAudienceUpdatableData updatableDataFromResponseString =
                 CustomAudienceUpdatableData.createFromResponseString(
                         CommonFixture.FIXED_NOW,
+                        CommonFixture.VALID_BUYER,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         jsonResponse,
                         FlagsFactory.getFlagsForTest());
@@ -130,6 +140,7 @@ public class CustomAudienceUpdatableDataTest {
         CustomAudienceUpdatableData updatableDataFromEmptyString =
                 CustomAudienceUpdatableData.createFromResponseString(
                         CommonFixture.FIXED_NOW,
+                        CommonFixture.VALID_BUYER,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         "",
                         FlagsFactory.getFlagsForTest());
@@ -174,6 +185,7 @@ public class CustomAudienceUpdatableDataTest {
         CustomAudienceUpdatableData updatableDataFromResponseString =
                 CustomAudienceUpdatableData.createFromResponseString(
                         CommonFixture.FIXED_NOW,
+                        CommonFixture.VALID_BUYER,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         jsonResponse,
                         FlagsFactory.getFlagsForTest());
@@ -191,12 +203,13 @@ public class CustomAudienceUpdatableDataTest {
         // In this case, a regular full response was parsed without any extra fields
         final String jsonResponseWithoutHarmlessJunk =
                 CustomAudienceUpdatableDataFixture.toJsonResponseString(
-                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS,
+                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString(),
                         null,
-                        DBAdDataFixture.VALID_DB_AD_DATA_LIST);
+                        VALID_DB_AD_DATA_LIST);
         CustomAudienceUpdatableData updatableDataWithoutHarmlessJunk =
                 CustomAudienceUpdatableData.createFromResponseString(
                         CommonFixture.FIXED_NOW,
+                        CommonFixture.VALID_BUYER,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         jsonResponseWithoutHarmlessJunk,
                         FlagsFactory.getFlagsForTest());
@@ -204,12 +217,13 @@ public class CustomAudienceUpdatableDataTest {
         // Harmless junk was added to the same response
         final String jsonResponseWithHarmlessJunk =
                 CustomAudienceUpdatableDataFixture.toJsonResponseStringWithHarmlessJunk(
-                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS,
+                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString(),
                         null,
-                        DBAdDataFixture.VALID_DB_AD_DATA_LIST);
+                        VALID_DB_AD_DATA_LIST);
         CustomAudienceUpdatableData updatableDataWithHarmlessJunk =
                 CustomAudienceUpdatableData.createFromResponseString(
                         CommonFixture.FIXED_NOW,
+                        CommonFixture.VALID_BUYER,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         jsonResponseWithHarmlessJunk,
                         FlagsFactory.getFlagsForTest());
@@ -236,9 +250,8 @@ public class CustomAudienceUpdatableDataTest {
                         CustomAudienceUpdatableData.builder()
                                 .setUserBiddingSignals(
                                         CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
-                                .setTrustedBiddingData(
-                                        DBTrustedBiddingDataFixture.VALID_DB_TRUSTED_BIDDING_DATA)
-                                .setAds(DBAdDataFixture.VALID_DB_AD_DATA_LIST)
+                                .setTrustedBiddingData(VALID_DB_TRUSTED_BIDDING_DATA)
+                                .setAds(VALID_DB_AD_DATA_LIST)
                                 .setAttemptedUpdateTime(CommonFixture.FIXED_NOW)
                                 .setInitialUpdateResult(
                                         BackgroundFetchRunner.UpdateResultType.SUCCESS)
@@ -255,6 +268,7 @@ public class CustomAudienceUpdatableDataTest {
             CustomAudienceUpdatableData updatableData =
                     CustomAudienceUpdatableData.createFromResponseString(
                             CommonFixture.FIXED_NOW,
+                            CommonFixture.VALID_BUYER,
                             initialUpdateResult,
                             CustomAudienceUpdatableDataFixture.getEmptyJsonResponseString(),
                             FlagsFactory.getFlagsForTest());
@@ -271,6 +285,7 @@ public class CustomAudienceUpdatableDataTest {
         CustomAudienceUpdatableData updatableData =
                 CustomAudienceUpdatableData.createFromResponseString(
                         CommonFixture.FIXED_NOW,
+                        CommonFixture.VALID_BUYER,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         "this (input ,string .is -not real json'",
                         FlagsFactory.getFlagsForTest());
@@ -297,15 +312,16 @@ public class CustomAudienceUpdatableDataTest {
 
         String validUserBiddingSignalsAsJsonObjectString =
                 CustomAudienceUpdatableDataFixture.formatAsOrgJsonJSONObjectString(
-                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
+                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString());
         final String jsonResponse =
                 CustomAudienceUpdatableDataFixture.toJsonResponseString(
                         validUserBiddingSignalsAsJsonObjectString,
-                        DBTrustedBiddingDataFixture.VALID_DB_TRUSTED_BIDDING_DATA,
-                        DBAdDataFixture.VALID_DB_AD_DATA_LIST);
+                        VALID_DB_TRUSTED_BIDDING_DATA,
+                        VALID_DB_AD_DATA_LIST);
         CustomAudienceUpdatableData updatableDataFromResponseString =
                 CustomAudienceUpdatableData.createFromResponseString(
                         CommonFixture.FIXED_NOW,
+                        CommonFixture.VALID_BUYER,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         jsonResponse,
                         new FlagsWithSmallLimits());
@@ -315,10 +331,9 @@ public class CustomAudienceUpdatableDataTest {
         assertTrue(updatableDataFromResponseString.getContainsSuccessfulUpdate());
         assertNull(updatableDataFromResponseString.getUserBiddingSignals());
         assertEquals(
-                DBTrustedBiddingDataFixture.VALID_DB_TRUSTED_BIDDING_DATA,
+                VALID_DB_TRUSTED_BIDDING_DATA,
                 updatableDataFromResponseString.getTrustedBiddingData());
-        assertEquals(
-                DBAdDataFixture.VALID_DB_AD_DATA_LIST, updatableDataFromResponseString.getAds());
+        assertEquals(VALID_DB_AD_DATA_LIST, updatableDataFromResponseString.getAds());
     }
 
     @Test
@@ -343,15 +358,16 @@ public class CustomAudienceUpdatableDataTest {
 
         String validUserBiddingSignalsAsJsonObjectString =
                 CustomAudienceUpdatableDataFixture.formatAsOrgJsonJSONObjectString(
-                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
+                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString());
         final String jsonResponse =
                 CustomAudienceUpdatableDataFixture.toJsonResponseString(
                         validUserBiddingSignalsAsJsonObjectString,
-                        DBTrustedBiddingDataFixture.VALID_DB_TRUSTED_BIDDING_DATA,
-                        DBAdDataFixture.VALID_DB_AD_DATA_LIST);
+                        VALID_DB_TRUSTED_BIDDING_DATA,
+                        VALID_DB_AD_DATA_LIST);
         CustomAudienceUpdatableData updatableDataFromResponseString =
                 CustomAudienceUpdatableData.createFromResponseString(
                         CommonFixture.FIXED_NOW,
+                        CommonFixture.VALID_BUYER,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         jsonResponse,
                         new FlagsWithSmallLimits());

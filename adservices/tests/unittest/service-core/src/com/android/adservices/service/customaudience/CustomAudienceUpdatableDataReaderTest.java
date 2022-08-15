@@ -20,6 +20,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
 import com.android.adservices.common.DBAdDataFixture;
@@ -37,6 +40,10 @@ import java.util.List;
 
 public class CustomAudienceUpdatableDataReaderTest {
     private static final String RESPONSE_IDENTIFIER = "[1]";
+    private static final DBTrustedBiddingData VALID_TRUSTED_BIDDING_DATA =
+            DBTrustedBiddingDataFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER).build();
+    private static final List<DBAdData> VALID_DB_AD_DATA_LIST =
+            DBAdDataFixture.getValidDbAdDataListByBuyer(CommonFixture.VALID_BUYER);
 
     private final Flags mFlags = FlagsFactory.getFlagsForTest();
 
@@ -44,7 +51,7 @@ public class CustomAudienceUpdatableDataReaderTest {
     public void testGetUserBiddingSignalsFromFullJsonObjectSuccess() throws JSONException {
         String validUserBiddingSignalsAsJsonObjectString =
                 CustomAudienceUpdatableDataFixture.formatAsOrgJsonJSONObjectString(
-                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
+                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString());
 
         JSONObject responseObject =
                 CustomAudienceUpdatableDataFixture.addToJsonObject(
@@ -53,13 +60,14 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         responseObject,
                         RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxNumAds());
 
         assertEquals(
-                validUserBiddingSignalsAsJsonObjectString,
+                AdSelectionSignals.fromString(validUserBiddingSignalsAsJsonObjectString),
                 reader.getUserBiddingSignalsFromJsonObject());
     }
 
@@ -68,7 +76,7 @@ public class CustomAudienceUpdatableDataReaderTest {
             throws JSONException {
         String validUserBiddingSignalsAsJsonObjectString =
                 CustomAudienceUpdatableDataFixture.formatAsOrgJsonJSONObjectString(
-                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
+                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString());
 
         JSONObject responseObject =
                 CustomAudienceUpdatableDataFixture.addToJsonObject(
@@ -77,13 +85,14 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         responseObject,
                         RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxNumAds());
 
         assertEquals(
-                validUserBiddingSignalsAsJsonObjectString,
+                AdSelectionSignals.fromString(validUserBiddingSignalsAsJsonObjectString),
                 reader.getUserBiddingSignalsFromJsonObject());
     }
 
@@ -98,6 +107,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         responseObject,
                         RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
@@ -112,6 +122,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         CustomAudienceUpdatableDataFixture.getMalformedJsonObject(),
                         RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
@@ -125,6 +136,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         CustomAudienceUpdatableDataFixture.getMalformedNullJsonObject(),
                         RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
@@ -136,7 +148,7 @@ public class CustomAudienceUpdatableDataReaderTest {
     public void testGetUserBiddingSignalsFromJsonObjectInvalidSize() throws JSONException {
         String validUserBiddingSignalsAsJsonObjectString =
                 CustomAudienceUpdatableDataFixture.formatAsOrgJsonJSONObjectString(
-                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
+                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString());
 
         JSONObject responseObject =
                 CustomAudienceUpdatableDataFixture.addToJsonObject(
@@ -145,6 +157,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         responseObject,
                         RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER,
                         1,
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
@@ -155,8 +168,7 @@ public class CustomAudienceUpdatableDataReaderTest {
 
     @Test
     public void testGetTrustedBiddingDataFromFullJsonObjectSuccess() throws JSONException {
-        DBTrustedBiddingData expectedTrustedBiddingData =
-                DBTrustedBiddingDataFixture.getValidBuilder().build();
+        DBTrustedBiddingData expectedTrustedBiddingData = VALID_TRUSTED_BIDDING_DATA;
 
         JSONObject responseObject =
                 CustomAudienceUpdatableDataFixture.addToJsonObject(
@@ -165,6 +177,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         responseObject,
                         RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
@@ -176,8 +189,7 @@ public class CustomAudienceUpdatableDataReaderTest {
     @Test
     public void testGetTrustedBiddingDataFromFullJsonObjectWithHarmlessJunkSuccess()
             throws JSONException {
-        DBTrustedBiddingData expectedTrustedBiddingData =
-                DBTrustedBiddingDataFixture.getValidBuilder().build();
+        DBTrustedBiddingData expectedTrustedBiddingData = VALID_TRUSTED_BIDDING_DATA;
 
         JSONObject responseObject =
                 CustomAudienceUpdatableDataFixture.addToJsonObject(
@@ -186,6 +198,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         responseObject,
                         RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
@@ -208,6 +221,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         responseObject,
                         RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
@@ -222,6 +236,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         CustomAudienceUpdatableDataFixture.getMalformedJsonObject(),
                         RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
@@ -235,6 +250,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         CustomAudienceUpdatableDataFixture.getMalformedNullJsonObject(),
                         RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
@@ -243,9 +259,8 @@ public class CustomAudienceUpdatableDataReaderTest {
     }
 
     @Test
-    public void testGetTrustedBiddingDataFromJsonObjectInvalidSize() throws JSONException {
-        DBTrustedBiddingData expectedTrustedBiddingData =
-                DBTrustedBiddingDataFixture.getValidBuilder().build();
+    public void testGetTrustedBiddingDataFromJsonObjectMismatchedUri() throws JSONException {
+        DBTrustedBiddingData expectedTrustedBiddingData = VALID_TRUSTED_BIDDING_DATA;
 
         JSONObject responseObject =
                 CustomAudienceUpdatableDataFixture.addToJsonObject(
@@ -254,6 +269,27 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         responseObject,
                         RESPONSE_IDENTIFIER,
+                        AdTechIdentifier.fromString("other.domain"),
+                        mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
+                        mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
+                        mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
+                        mFlags.getFledgeCustomAudienceMaxNumAds());
+
+        assertThrows(IllegalArgumentException.class, reader::getTrustedBiddingDataFromJsonObject);
+    }
+
+    @Test
+    public void testGetTrustedBiddingDataFromJsonObjectInvalidSize() throws JSONException {
+        DBTrustedBiddingData expectedTrustedBiddingData = VALID_TRUSTED_BIDDING_DATA;
+
+        JSONObject responseObject =
+                CustomAudienceUpdatableDataFixture.addToJsonObject(
+                        null, expectedTrustedBiddingData, false);
+        CustomAudienceUpdatableDataReader reader =
+                new CustomAudienceUpdatableDataReader(
+                        responseObject,
+                        RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         1,
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
@@ -264,7 +300,7 @@ public class CustomAudienceUpdatableDataReaderTest {
 
     @Test
     public void testGetAdsFromFullJsonObjectSuccess() throws JSONException {
-        List<DBAdData> expectedAds = DBAdDataFixture.VALID_DB_AD_DATA_LIST;
+        List<DBAdData> expectedAds = VALID_DB_AD_DATA_LIST;
 
         JSONObject responseObject =
                 CustomAudienceUpdatableDataFixture.addToJsonObject(null, expectedAds, false);
@@ -272,6 +308,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         responseObject,
                         RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
@@ -282,7 +319,7 @@ public class CustomAudienceUpdatableDataReaderTest {
 
     @Test
     public void testGetAdsFromFullJsonObjectWithHarmlessJunkSuccess() throws JSONException {
-        List<DBAdData> expectedAds = DBAdDataFixture.VALID_DB_AD_DATA_LIST;
+        List<DBAdData> expectedAds = VALID_DB_AD_DATA_LIST;
 
         JSONObject responseObject =
                 CustomAudienceUpdatableDataFixture.addToJsonObject(null, expectedAds, true);
@@ -290,6 +327,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         responseObject,
                         RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
@@ -312,6 +350,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         responseObject,
                         RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
@@ -326,6 +365,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         CustomAudienceUpdatableDataFixture.getMalformedJsonObject(),
                         RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
@@ -339,6 +379,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         CustomAudienceUpdatableDataFixture.getMalformedNullJsonObject(),
                         RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
@@ -348,7 +389,7 @@ public class CustomAudienceUpdatableDataReaderTest {
 
     @Test
     public void testGetAdsFromJsonObjectInvalidTotalSize() throws JSONException {
-        List<DBAdData> expectedAds = DBAdDataFixture.VALID_DB_AD_DATA_LIST;
+        List<DBAdData> expectedAds = VALID_DB_AD_DATA_LIST;
 
         JSONObject responseObject =
                 CustomAudienceUpdatableDataFixture.addToJsonObject(null, expectedAds, false);
@@ -356,6 +397,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         responseObject,
                         RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         1,
@@ -366,7 +408,7 @@ public class CustomAudienceUpdatableDataReaderTest {
 
     @Test
     public void testGetAdsFromJsonObjectInvalidNumAds() throws JSONException {
-        List<DBAdData> expectedAds = DBAdDataFixture.VALID_DB_AD_DATA_LIST;
+        List<DBAdData> expectedAds = VALID_DB_AD_DATA_LIST;
 
         JSONObject responseObject =
                 CustomAudienceUpdatableDataFixture.addToJsonObject(null, expectedAds, false);
@@ -374,6 +416,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         responseObject,
                         RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),

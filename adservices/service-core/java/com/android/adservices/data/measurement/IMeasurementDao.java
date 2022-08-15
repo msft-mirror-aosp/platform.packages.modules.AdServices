@@ -22,13 +22,13 @@ import android.net.Uri;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.android.adservices.service.measurement.AdtechUrl;
+import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
+import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
-import com.android.adservices.service.measurement.enrollment.EnrollmentData;
 
 import java.time.Instant;
 import java.util.List;
@@ -61,17 +61,42 @@ public interface IMeasurementDao {
     /**
      * Gets the number of sources a registrant has registered.
      */
-    long getNumTriggersPerRegistrant(Uri registrant) throws DatastoreException;
-
-    /**
-     * Updates the {@link Trigger.Status} value for the provided {@link Trigger}.
-     */
-    void updateTriggerStatus(Trigger trigger) throws DatastoreException;
+    long getNumSourcesPerRegistrant(Uri registrant) throws DatastoreException;
 
     /**
      * Gets the number of triggers a registrant has registered.
      */
-    long getNumSourcesPerRegistrant(Uri registrant) throws DatastoreException;
+    long getNumTriggersPerRegistrant(Uri registrant) throws DatastoreException;
+
+    /**
+     * Gets the count of distinct Uri's of ad-techs in the Attribution table in a time window with
+     * matching publisher and destination, excluding a given ad-tech.
+     */
+    Integer countDistinctAdTechsPerPublisherXDestinationInAttribution(Uri sourceSite,
+            Uri destination, Uri excludedAdTech, long windowStartTime, long windowEndTime)
+            throws DatastoreException;
+
+    /**
+     * Gets the count of distinct Uri's of destinations in the Source table in a time window with
+     * matching publisher and ACTIVE status, excluding a given destination.
+     */
+    Integer countDistinctDestinationsPerPublisherXAdTechInActiveSource(Uri publisher,
+            @EventSurfaceType int publisherType, Uri adTechDomain, Uri excludedDestination,
+            @EventSurfaceType int destinationType, long windowStartTime, long windowEndTime)
+            throws DatastoreException;
+
+    /**
+     * Gets the count of distinct Uri's of ad-techs in the Source table in a time window with
+     * matching publisher and destination, excluding a given ad-tech.
+     */
+    Integer countDistinctAdTechsPerPublisherXDestinationInSource(Uri publisher,
+            @EventSurfaceType int publisherType, Uri destination, Uri excludedAdTech,
+            long windowStartTime, long windowEndTime) throws DatastoreException;
+
+     /**
+     * Updates the {@link Trigger.Status} value for the provided {@link Trigger}.
+     */
+    void updateTriggerStatus(Trigger trigger) throws DatastoreException;
 
     /**
      * Add an entry to the Source datastore.
@@ -170,80 +195,16 @@ public interface IMeasurementDao {
     List<String> getPendingEventReportIdsForGivenApp(Uri appName) throws DatastoreException;
 
     /**
-     * Find the number of entries for a rate limit window using the {@link Source} and
-     * {@link Trigger}.
-     * Rate-Limit Window: (Source Site, Destination Site, Window) from triggerTime.
+     * Find the number of entries for a rate limit window using the {@link Source} and {@link
+     * Trigger}. Rate-Limit Window: (Source Site, Destination Site, Window) from triggerTime.
      *
      * @return the number of entries for the window.
      */
-    long getAttributionsPerRateLimitWindow(Source source, Trigger trigger)
+    long getAttributionsPerRateLimitWindow(@NonNull Source source, @NonNull Trigger trigger)
             throws DatastoreException;
 
-    /**
-     * Add an entry in AttributionRateLimit datastore for the provided {@link Source} and
-     * {@link Trigger}
-     */
-    void insertAttributionRateLimit(Source source, Trigger trigger) throws DatastoreException;
-
-    /**
-     * Given one postback urls, queries and returns all the postback urls with the same adtech id.
-     *
-     * @param postbackUrl the postback url of the request AdtechUrl
-     * @return all the postback urls with the same adtech id; Null in case of SQL failure
-     */
-    List<String> getAllAdtechUrls(String postbackUrl) throws DatastoreException;
-
-    /**
-     * Queries and returns the {@link AdtechUrl}.
-     *
-     * @param postbackUrl the postback Url of the request AdtechUrl
-     * @return the requested AdtechUrl; Null in case of SQL failure
-     */
-    @Nullable
-    AdtechUrl getAdtechEnrollmentData(String postbackUrl) throws DatastoreException;
-
-    /**
-     * Saves the {@link AdtechUrl} to datastore.
-     */
-    void insertAdtechUrl(AdtechUrl adtechUrl) throws DatastoreException;
-
-    /**
-     * Deletes the {@link AdtechUrl} from datastore using the given postback url.
-     */
-    void deleteAdtechUrl(String postbackUrl) throws DatastoreException;
-
-    /**
-     * Queries and returns the {@link EnrollmentData}.
-     *
-     * @param enrollmentId ID provided to the adtech at the end of the enrollment process.
-     * @return the EnrollmentData; Null in case of SQL failure
-     */
-    @Nullable
-    EnrollmentData getEnrollmentData(String enrollmentId) throws DatastoreException;
-
-    /**
-     * Queries and returns the {@link EnrollmentData}.
-     *
-     * @param url could be source registration url or trigger registration url.
-     * @return the EnrollmentData; Null in case of SQL failure.
-     */
-    @Nullable
-    EnrollmentData getEnrollmentDataGivenUrl(String url) throws DatastoreException;
-
-    /**
-     * Queries and returns the {@link EnrollmentData}.
-     *
-     * @param sdkName List of SDKs belonging to the same enrollment.
-     * @return the EnrollmentData; Null in case of SQL failure
-     */
-    @Nullable
-    EnrollmentData getEnrollmentDataGivenSdkName(String sdkName) throws DatastoreException;
-
-    /** Saves the {@link EnrollmentData} to datastore. */
-    void insertEnrollmentData(EnrollmentData enrollmentData) throws DatastoreException;
-
-    /** Deletes the {@link EnrollmentData} from datastore using the given enrollment id. */
-    void deleteEnrollmentData(String enrollmentId) throws DatastoreException;
+    /** Add an entry in Attribution datastore. */
+    void insertAttribution(@NonNull Attribution attribution) throws DatastoreException;
 
     /**
      * Deletes all records in measurement tables that correspond with the provided Uri.

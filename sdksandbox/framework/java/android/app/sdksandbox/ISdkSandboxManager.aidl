@@ -21,13 +21,20 @@ import android.os.IBinder;
 
 import android.app.sdksandbox.ILoadSdkCallback;
 import android.app.sdksandbox.IRequestSurfacePackageCallback;
+import android.app.sdksandbox.ISdkSandboxLifecycleCallback;
 import android.app.sdksandbox.ISendDataCallback;
 import android.content.pm.SharedLibraryInfo;
 
 /** @hide */
 interface ISdkSandboxManager {
-    void loadSdk(in String callingPackageName, in String sdkName, in Bundle params, in ILoadSdkCallback callback);
-    void requestSurfacePackage(in String callingPackageName, in String sdkName, in IBinder hostToken, int displayId, in int width, in int height, in Bundle params, IRequestSurfacePackageCallback callback);
+    void addSdkSandboxLifecycleCallback(in String callingPackageName, in ISdkSandboxLifecycleCallback callback);
+    void removeSdkSandboxLifecycleCallback(in String callingPackageName, in ISdkSandboxLifecycleCallback callback);
+    void loadSdk(in String callingPackageName, in String sdkName, long timeAppCalledSystemServer, in Bundle params, in ILoadSdkCallback callback);
+    void unloadSdk(in String callingPackageName, in String sdkName, long timeAppCalledSystemServer);
+    // TODO(b/242031240): wrap the many input params in one parcelable object
+    void requestSurfacePackage(in String callingPackageName, in String sdkName, in IBinder hostToken, int displayId, int width, int height, long timeAppCalledSystemServer, in Bundle params, IRequestSurfacePackageCallback callback);
     void sendData(in String callingPackageName, in String sdkName, in Bundle data, in ISendDataCallback callback);
-    List<SharedLibraryInfo> getLoadedSdkLibrariesInfo(in String callingPackageName);
+    List<SharedLibraryInfo> getLoadedSdkLibrariesInfo(in String callingPackageName, long timeAppCalledSystemServer);
+    void syncDataFromClient(in String callingPackageName, long timeAppCalledSystemServer, in Bundle data);
+    void stopSdkSandbox(in String callingPackageName);
 }

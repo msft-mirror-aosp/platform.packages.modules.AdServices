@@ -16,36 +16,59 @@
 
 package com.android.adservices.ui.notifications;
 
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
+
 import static com.google.common.truth.Truth.assertThat;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.content.pm.PackageManager;
 
+import androidx.core.app.NotificationManagerCompat;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
+
+import com.android.adservices.api.R;
+import com.android.adservices.service.consent.ConsentManager;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
 @RunWith(AndroidJUnit4.class)
 public class ConsentNotificationTriggerTest {
     private static final String NOTIFICATION_CHANNEL_ID = "PRIVACY_SANDBOX_CHANNEL";
 
+    @Mock private NotificationManagerCompat mNotificationManagerCompat;
+    @Mock private ConsentManager mConsentManager;
     private NotificationManager mNotificationManager;
     private Context mContext;
 
+    private MockitoSession mStaticMockSession = null;
+
     @Before
     public void setUp() {
+        MockitoAnnotations.initMocks(this);
         mContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
     }
 
     @Test
     public void testEuNotification() throws InterruptedException {
         mNotificationManager = mContext.getSystemService(NotificationManager.class);
-        final String expectedTitle = "Join the ads privacy beta";
-        final String expectedContent = "Test new features that will restrict cross-app tracking";
+        final String expectedTitle =
+                mContext.getString(R.string.notificationUI_notification_title_eu);
+        final String expectedContent =
+                mContext.getString(R.string.notificationUI_notification_content_eu);
 
         ConsentNotificationTrigger.showConsentNotification(mContext, true);
         Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
@@ -64,9 +87,9 @@ public class ConsentNotificationTriggerTest {
     @Test
     public void testNonEuNotifications() throws InterruptedException {
         mNotificationManager = mContext.getSystemService(NotificationManager.class);
-        final String expectedTitle = "Android's ads privacy beta";
+        final String expectedTitle = mContext.getString(R.string.notificationUI_notification_title);
         final String expectedContent =
-                "You're testing new features that restrict cross-app tracking";
+                mContext.getString(R.string.notificationUI_notification_content);
 
         ConsentNotificationTrigger.showConsentNotification(mContext, false);
         Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
@@ -80,5 +103,30 @@ public class ConsentNotificationTriggerTest {
         assertThat(notification.extras.getCharSequence(Notification.EXTRA_TEXT))
                 .isEqualTo(expectedContent);
         Thread.sleep(5000); // wait 5s to make sure that Notification disappears.
+    }
+
+    @Test
+    public void testNotificationsDisabled() {
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(NotificationManagerCompat.class)
+                        .spyStatic(ConsentManager.class)
+                        .strictness(Strictness.WARN)
+                        .initMocks(this)
+                        .startMocking();
+        try {
+
+            doReturn(mNotificationManagerCompat)
+                    .when(() -> NotificationManagerCompat.from(any(Context.class)));
+            doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any(Context.class)));
+            doReturn(false).when(mNotificationManagerCompat).areNotificationsEnabled();
+
+            ConsentNotificationTrigger.showConsentNotification(mContext, true);
+
+            verify(mConsentManager).recordNotificationDisplayed(any(PackageManager.class));
+            verifyNoMoreInteractions(mConsentManager);
+        } finally {
+            mStaticMockSession.finishMocking();
+        }
     }
 }

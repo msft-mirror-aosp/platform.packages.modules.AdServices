@@ -16,7 +16,6 @@
 
 package com.android.getloadedsdklibinfosuccessfully;
 
-import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
 import android.os.Bundle;
@@ -28,7 +27,6 @@ public class SdkProvider extends SandboxedSdkProvider {
 
     @Override
     public void onLoadSdk(
-            SandboxedSdkContext context,
             Bundle params,
             Executor executor,
             OnLoadSdkCallback callback) {
@@ -36,7 +34,7 @@ public class SdkProvider extends SandboxedSdkProvider {
     }
 
     @Override
-    public View getView(Context windowContext, Bundle params) {
+    public View getView(Context windowContext, Bundle params, int width, int height) {
         return null;
     }
 

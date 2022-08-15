@@ -23,6 +23,7 @@ import static com.android.adservices.service.measurement.PrivacyParams.NAVIGATIO
 import static com.android.adservices.service.measurement.PrivacyParams.NAVIGATION_NOISE_PROBABILITY;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 
 import android.net.Uri;
@@ -33,6 +34,7 @@ import org.json.JSONException;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /** Unit tests for {@link EventReport} */
@@ -265,7 +267,7 @@ public final class EventReportTest {
         assertEquals(source.getAdTechDomain(), report.getAdTechDomain());
         assertEquals(trigger.getAttributionDestination(), report.getAttributionDestination());
         assertEquals(
-                source.getReportingTime(trigger.getTriggerTime(), DestinationType.WEB),
+                source.getReportingTime(trigger.getTriggerTime(), EventSurfaceType.WEB),
                 report.getReportTime());
         assertEquals(source.getSourceType(), report.getSourceType());
         assertEquals(
@@ -340,6 +342,41 @@ public final class EventReportTest {
         assertEquals(source.getSourceType(), report.getSourceType());
         assertEquals(
                 NAVIGATION_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
+    }
+
+    @Test
+    public void testHashCode_equals() {
+        final EventReport eventReport1 = createExample();
+        final EventReport eventReport2 = createExample();
+        final Set<EventReport> eventReportSet1 = Set.of(eventReport1);
+        final Set<EventReport> eventReportSet2 = Set.of(eventReport2);
+        assertEquals(eventReport1.hashCode(), eventReport2.hashCode());
+        assertEquals(eventReport1, eventReport2);
+        assertEquals(eventReportSet1, eventReportSet2);
+    }
+
+    @Test
+    public void testHashCode_notEquals() {
+        final EventReport eventReport1 = createExample();
+        final EventReport eventReport2 =
+                new EventReport.Builder()
+                        .setId("1")
+                        .setSourceId(22)
+                        .setAdTechDomain(Uri.parse("https://foo.com"))
+                        .setAttributionDestination(Uri.parse("https://bar.com"))
+                        .setTriggerTime(1000L)
+                        .setTriggerData(8L)
+                        .setTriggerPriority(2L)
+                        .setTriggerDedupKey(3L)
+                        .setReportTime(2000L)
+                        .setStatus(EventReport.Status.PENDING)
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .build();
+        final Set<EventReport> eventReportSet1 = Set.of(eventReport1);
+        final Set<EventReport> eventReportSet2 = Set.of(eventReport2);
+        assertNotEquals(eventReport1.hashCode(), eventReport2.hashCode());
+        assertNotEquals(eventReport1, eventReport2);
+        assertNotEquals(eventReportSet1, eventReportSet2);
     }
 
     private Source createSourceForTest(

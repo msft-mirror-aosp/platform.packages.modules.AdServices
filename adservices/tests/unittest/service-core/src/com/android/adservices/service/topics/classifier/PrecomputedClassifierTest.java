@@ -40,38 +40,50 @@ import java.util.stream.Collectors;
  * Precomputed Topics Classifier Test {@link PrecomputedClassifier}.
  */
 public class PrecomputedClassifierTest {
-    private static final String TEST_LABELS_FILE_PATH = "classifier/labels_test_topics.txt";
-    private static final String TEST_APPS_FILE_PATH =
-            "classifier/precomputed_test_app_list.csv";
-    private static final String TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH =
-            "classifier/classifier_test_assets_metadata.json";
-
     private static final Context sContext = ApplicationProvider.getApplicationContext();
-    private static final PrecomputedLoader sPrecomputedLoader =
-            new PrecomputedLoader(
-                    sContext,
-                    TEST_LABELS_FILE_PATH,
-                    TEST_APPS_FILE_PATH,
-                    TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH);
+    private static final String LABELS_FILE_PATH = "classifier/labels_topics.txt";
+    private static final String APPS_FILE_PATH = "classifier/precomputed_app_list.csv";
+    private static final String CLASSIFIER_ASSETS_METADATA_FILE_PATH =
+            "classifier/classifier_assets_metadata.json";
+    private static final String MODEL_FILE_PATH = "classifier/model.tflite";
     private PrecomputedClassifier sPrecomputedClassifier;
+    private ModelManager mModelManager;
 
     @Before
     public void setUp() throws IOException {
-        sPrecomputedClassifier = new PrecomputedClassifier(sPrecomputedLoader);
+        mModelManager = new ModelManager(
+                sContext,
+                LABELS_FILE_PATH,
+                APPS_FILE_PATH,
+                CLASSIFIER_ASSETS_METADATA_FILE_PATH,
+                MODEL_FILE_PATH);
+        sPrecomputedClassifier = new PrecomputedClassifier(mModelManager);
+    }
 
+    @Test
+    public void testGetInstance() {
+        PrecomputedClassifier firstInstance = PrecomputedClassifier.getInstance(sContext);
+        PrecomputedClassifier secondInstance = PrecomputedClassifier.getInstance(sContext);
+
+        assertThat(firstInstance).isNotNull();
+        assertThat(secondInstance).isNotNull();
+        // Verify singleton behaviour.
+        assertThat(firstInstance).isEqualTo(secondInstance);
     }
 
     @Test
     public void testClassify_existingApp() {
-        // Using What's App. This app has 1 classification topic.
-        List<Topic> expectedWhatsAppTopics = createTopics(Arrays.asList(222));
+        // Using sample App. This app has 5 classification topic.
+        List<Topic> expectedSampleAppTopics = createTopics(
+                Arrays.asList(10222,10223,10116,10243,10254));
 
         Map<String, List<Topic>> expectedAppTopicsResponse = new HashMap<>();
-        expectedAppTopicsResponse.put("com.whatsapp", expectedWhatsAppTopics);
+        expectedAppTopicsResponse.put(
+                "com.example.adservices.samples.topics.sampleapp", expectedSampleAppTopics);
 
-        // TODO(b/226470370): Convert the app to lower case in Epoch Processing
         Map<String, List<Topic>> testResponse =
-                sPrecomputedClassifier.classify(new HashSet<>(Arrays.asList("com.whatsapp")));
+                sPrecomputedClassifier.classify(new HashSet<>(Arrays.asList(
+                        "com.example.adservices.samples.topics.sampleapp")));
 
         // The correct response body should be exactly the same as expectedAppTopicsResponse
         assertThat(testResponse).isEqualTo(expectedAppTopicsResponse);

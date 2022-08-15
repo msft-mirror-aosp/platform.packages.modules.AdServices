@@ -18,9 +18,14 @@ package com.android.tests.sandbox.topics;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import android.annotation.NonNull;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.content.pm.ServiceInfo;
 import android.os.Bundle;
 
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -32,6 +37,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -41,8 +47,9 @@ import java.util.concurrent.Executors;
 @RunWith(JUnit4.class)
 public class SandboxedTopicsManagerTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
-    private static final String SERVICE_APK_NAME = "com.google.android.adservices.api";
     private static final String SDK_NAME = "com.android.tests.providers.sdk1";
+    // Used to get the package name. Copied over from com.android.adservices.AdServicesCommon
+    private static final String TOPICS_SERVICE_NAME = "android.adservices.TOPICS_SERVICE";
 
     // The JobId of the Epoch Computation.
     private static final int EPOCH_JOB_ID = 2;
@@ -66,6 +73,8 @@ public class SandboxedTopicsManagerTest {
 
     @Test
     public void loadSdkAndRunTopicsApi() throws Exception {
+        overrideEnforceForegroundStatusForTopics(false);
+        overrideDisableTopicsEnrollmentCheck("1");
         // The setup for this test:
         // SandboxedTopicsManagerTest is the test app. It will load the Sdk1 into the Sandbox.
         // The Sdk1 (running within the Sandbox) will query Topics API and verify that the correct
@@ -101,8 +110,23 @@ public class SandboxedTopicsManagerTest {
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
 
         // Reset back the original values.
+        overrideEnforceForegroundStatusForTopics(true);
+        overrideDisableTopicsEnrollmentCheck("0");
         overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
         overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+    }
+
+    // Override the flag to disable enforcing foreground.
+    private void overrideEnforceForegroundStatusForTopics(boolean enforce) {
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.topics_enforce_foreground_status " + enforce);
+    }
+
+    // Override the flag to disable Topics enrollment check.
+    private void overrideDisableTopicsEnrollmentCheck(String val) {
+        // Setting it to 1 here disables the Topics enrollment check.
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.disable_topics_enrollment_check " + val);
     }
 
     // Override the Epoch Period to shorten the Epoch Length in the test.
@@ -121,6 +145,35 @@ public class SandboxedTopicsManagerTest {
     /** Forces JobScheduler to run the Epoch Computation job */
     private void forceEpochComputationJob() {
         ShellUtils.runShellCommand(
-                "cmd jobscheduler run -f" + " " + SERVICE_APK_NAME + " " + EPOCH_JOB_ID);
+                "cmd jobscheduler run -f" + " " + getAdServicesPackageName() + " " + EPOCH_JOB_ID);
+    }
+
+    // Used to get the package name. Copied over from com.android.adservices.AndroidServiceBinder
+    @NonNull
+    private static String getAdServicesPackageName() {
+        final Intent intent = new Intent(TOPICS_SERVICE_NAME);
+        final List<ResolveInfo> resolveInfos =
+                sContext.getPackageManager()
+                        .queryIntentServices(intent, PackageManager.MATCH_SYSTEM_ONLY);
+
+        if (resolveInfos == null || resolveInfos.isEmpty()) {
+            String errorMsg =
+                    "Failed to find resolveInfo for adServices service. Intent action: "
+                            + TOPICS_SERVICE_NAME;
+            throw new IllegalStateException(errorMsg);
+        }
+
+        if (resolveInfos.size() > 1) {
+            String errorMsg = "Found multiple services for the same intent action. ";
+            throw new IllegalStateException(errorMsg);
+        }
+
+        final ServiceInfo serviceInfo = resolveInfos.get(0).serviceInfo;
+        if (serviceInfo == null) {
+            String errorMsg = "Failed to find serviceInfo for adServices service. ";
+            throw new IllegalStateException(errorMsg);
+        }
+
+        return serviceInfo.packageName;
     }
 }

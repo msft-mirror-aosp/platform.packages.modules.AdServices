@@ -33,7 +33,7 @@
         ],
         "triggers": [],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -53,7 +53,7 @@
         ],
         "triggers": [],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       }
     },
     {
@@ -101,7 +101,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [],
@@ -127,7 +127,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       }
     },
     {
@@ -161,7 +161,7 @@
             "sourceType": "navigation"
           }
         ],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [],
@@ -180,20 +180,22 @@
             "sourceType": "navigation"
           }
         ],
-        "attribution_rate_limits": []
+        "attributions": []
       }
     },
     {
-      "name": "1 expired AttributionRateLimit and 1 non-expired AttributionRateLimit",
+      "name": "1 expired Attribution and 1 non-expired Attribution",
       "input": {
         "sources": [],
         "triggers": [],
         "event_reports": [],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "old1",
             "sourceSite": "android-app://remove.me",
+            "sourceOrigin": "android-app://remove.me",
             "destinationSite": "android-app://remove.me",
+            "destinationOrigin": "android-app://remove.me",
             "adTechDomain": "android-app://example.one",
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
@@ -201,7 +203,9 @@
           {
             "id": "young1",
             "sourceSite": "android-app://dont.remove.me",
+            "sourceOrigin": "android-app://dont.remove.me",
             "destinationSite": "android-app://dont.remove.me",
+            "destinationOrigin": "android-app://dont.remove.me",
             "adTechDomain": "android-app://example.one",
             "triggerTime": 33203622330000,
             "registrant": "android-app://com.example.xyz"
@@ -212,11 +216,13 @@
         "sources": [],
         "triggers": [],
         "event_reports": [],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "young1",
             "sourceSite": "android-app://dont.remove.me",
+            "sourceOrigin": "android-app://dont.remove.me",
             "destinationSite": "android-app://dont.remove.me",
+            "destinationOrigin": "android-app://dont.remove.me",
             "adTechDomain": "android-app://example.one",
             "triggerTime": 33203622330000,
             "registrant": "android-app://com.example.xyz"

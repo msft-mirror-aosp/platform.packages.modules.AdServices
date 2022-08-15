@@ -20,6 +20,7 @@ import static com.android.adservices.service.AdServicesConfig.MAINTENANCE_JOB_ID
 
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 
+import android.annotation.NonNull;
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
@@ -40,11 +41,16 @@ public final class MaintenanceJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
-        LogUtil.d("MaintenanceJobService.onStartJob");
+        if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
+            LogUtil.e("Topics API is disabled");
+            // Returning false means that this job has completed its work.
+            return false;
+        }
 
+        LogUtil.d("MaintenanceJobService.onStartJob");
         ListenableFuture<Void> appReconciliationFuture =
                 Futures.submit(
-                        () -> TopicsWorker.getInstance(this).reconcileUninstalledApps(this),
+                        () -> TopicsWorker.getInstance(this).reconcileApplicationUpdate(this),
                         AdServicesExecutors.getBackgroundExecutor());
 
         Futures.addCallback(
@@ -52,14 +58,14 @@ public final class MaintenanceJobService extends JobService {
                 new FutureCallback<Void>() {
                     @Override
                     public void onSuccess(Void result) {
-                        LogUtil.d("App Unhandled Uninstallation Reconciliation is done!");
+                        LogUtil.d("App Update Reconciliation is done!");
                         jobFinished(params, /* wantsReschedule = */ false);
                     }
 
                     @Override
                     public void onFailure(Throwable t) {
                         LogUtil.e(
-                                "Failed to handle MaintenanceJobService: " + params.getJobId(), t);
+                                t, "Failed to handle MaintenanceJobService: " + params.getJobId());
                         jobFinished(params, /* wantsReschedule = */ false);
                     }
                 },
@@ -73,19 +79,58 @@ public final class MaintenanceJobService extends JobService {
         return false;
     }
 
-    /** Schedule the Job */
-    public static void schedule(Context context) {
-        final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
+    private static void schedule(
+            Context context,
+            @NonNull JobScheduler jobScheduler,
+            long maintenanceJobPeriodMs,
+            long maintenanceJobFlexMs) {
         final JobInfo job =
                 new JobInfo.Builder(
                                 MAINTENANCE_JOB_ID,
                                 new ComponentName(context, MaintenanceJobService.class))
                         .setRequiresCharging(true)
-                        .setPeriodic(
-                                FlagsFactory.getFlags().getMaintenanceJobPeriodMs(),
-                                FlagsFactory.getFlags().getMaintenanceJobFlexMs())
+                        .setPeriodic(maintenanceJobPeriodMs, maintenanceJobFlexMs)
                         .build();
+
         jobScheduler.schedule(job);
         LogUtil.d("Scheduling maintenance job ...");
+    }
+
+    // TODO(b/241866524): Support Killswitch in scheduling
+    /**
+     * Schedule Maintenance Job Service if needed: there is no scheduled job with same job
+     * parameters.
+     *
+     * @param context the context
+     * @param forceSchedule a flag to indicate whether to force rescheduling the job.
+     * @return a {@code boolean} to indicate if the service job is actually scheduled.
+     */
+    public static boolean scheduleIfNeeded(Context context, boolean forceSchedule) {
+        final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
+        if (jobScheduler == null) {
+            LogUtil.e("Cannot fetch Job Scheduler!");
+            return false;
+        }
+
+        long flagsMaintenanceJobPeriodMs = FlagsFactory.getFlags().getMaintenanceJobPeriodMs();
+        long flagsMaintenanceJobFlexMs = FlagsFactory.getFlags().getMaintenanceJobFlexMs();
+
+        JobInfo job = jobScheduler.getPendingJob(MAINTENANCE_JOB_ID);
+        // Skip to reschedule the job if there is same scheduled job with same parameters.
+        if (job != null && !forceSchedule) {
+            long maintenanceJobPeriodMs = job.getIntervalMillis();
+            long maintenanceJobFlexMs = job.getFlexMillis();
+
+            if (flagsMaintenanceJobPeriodMs == maintenanceJobPeriodMs
+                    && flagsMaintenanceJobFlexMs == maintenanceJobFlexMs) {
+                LogUtil.i(
+                        "Maintenance Job Service has been scheduled with same parameters, skip"
+                                + " rescheduling!");
+                return false;
+            }
+        }
+
+        schedule(context, jobScheduler, flagsMaintenanceJobPeriodMs, flagsMaintenanceJobFlexMs);
+        return true;
     }
 }

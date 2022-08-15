@@ -24,6 +24,7 @@ import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.topics.TopicsWorker;
 import com.android.internal.annotations.VisibleForTesting;
@@ -64,14 +65,15 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                 Uri packageUri = Uri.parse(intent.getData().getSchemeSpecificPart());
                 switch (intent.getStringExtra(ACTION_KEY)) {
                     case PACKAGE_FULLY_REMOVED:
-                        onPackageFullyRemoved(context, packageUri);
+                        measurementOnPackageFullyRemoved(context, packageUri);
                         topicsOnPackageFullyRemoved(context, packageUri);
                         break;
                     case PACKAGE_ADDED:
-                        onPackageAdded(context, packageUri);
+                        measurementOnPackageAdded(context, packageUri);
+                        topicsOnPackageAdded(context, packageUri);
                         break;
                     case PACKAGE_DATA_CLEARED:
-                        onPackageDataCleared(context, packageUri);
+                        measurementOnPackageDataCleared(context, packageUri);
                         break;
                 }
                 break;
@@ -79,20 +81,36 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     }
 
     @VisibleForTesting
-    void onPackageFullyRemoved(Context context, Uri packageUri) {
+    void measurementOnPackageFullyRemoved(Context context, Uri packageUri) {
+        if (FlagsFactory.getFlags().getMeasurementReceiverDeletePackagesKillSwitch()) {
+            LogUtil.e("Measurement Delete Packages Receiver is disabled");
+            return;
+        }
+
         LogUtil.i("Package Fully Removed:" + packageUri);
         sBackgroundExecutor.execute(
                 () -> MeasurementImpl.getInstance(context).deletePackageRecords(packageUri));
     }
 
-    void onPackageDataCleared(Context context, Uri packageUri) {
+    @VisibleForTesting
+    void measurementOnPackageDataCleared(Context context, Uri packageUri) {
+        if (FlagsFactory.getFlags().getMeasurementReceiverDeletePackagesKillSwitch()) {
+            LogUtil.e("Measurement Delete Packages Receiver is disabled");
+            return;
+        }
+
         LogUtil.i("Package Data Cleared: " + packageUri);
         sBackgroundExecutor.execute(
                 () -> MeasurementImpl.getInstance(context).deletePackageRecords(packageUri));
     }
 
     @VisibleForTesting
-    void onPackageAdded(Context context, Uri packageUri) {
+    void measurementOnPackageAdded(Context context, Uri packageUri) {
+        if (FlagsFactory.getFlags().getMeasurementReceiverInstallAttributionKillSwitch()) {
+            LogUtil.e("Measurement Install Attribution Receiver is disabled");
+            return;
+        }
+
         LogUtil.i("Package Added: " + packageUri);
         sBackgroundExecutor.execute(
                 () ->
@@ -100,9 +118,22 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                                 .doInstallAttribution(packageUri, System.currentTimeMillis()));
     }
 
-    private void topicsOnPackageFullyRemoved(Context context, @NonNull Uri packageUri) {
+    @VisibleForTesting
+    void topicsOnPackageFullyRemoved(Context context, @NonNull Uri packageUri) {
+        if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
+            LogUtil.e("Topics API is disabled");
+            return;
+        }
+
         LogUtil.d("Deleting topics data for package: " + packageUri.toString());
         sBackgroundExecutor.execute(
                 () -> TopicsWorker.getInstance(context).deletePackageData(packageUri));
+    }
+
+    @VisibleForTesting
+    void topicsOnPackageAdded(Context context, @NonNull Uri packageUri) {
+        LogUtil.d("Package Added for topics API: " + packageUri.toString());
+        sBackgroundExecutor.execute(
+                () -> TopicsWorker.getInstance(context).handleAppInstallation(packageUri));
     }
 }

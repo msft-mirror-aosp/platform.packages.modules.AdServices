@@ -17,6 +17,8 @@
 package com.android.adservices.service.devapi;
 
 import android.adservices.adselection.AdSelectionConfig;
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 
 import androidx.annotation.Nullable;
@@ -62,25 +64,19 @@ public class AdSelectionDevOverridesHelper {
             @NonNull AdSelectionConfig adSelectionConfig) {
         // See go/hashing#java
         Hasher hasher = sHashFunction.newHasher();
-        hasher.putUnencodedChars(adSelectionConfig.getSeller())
+        hasher.putUnencodedChars(adSelectionConfig.getSeller().toString())
                 .putUnencodedChars(adSelectionConfig.getDecisionLogicUri().toString())
-                .putUnencodedChars(adSelectionConfig.getAdSelectionSignals())
-                .putUnencodedChars(adSelectionConfig.getSellerSignals());
+                .putUnencodedChars(adSelectionConfig.getAdSelectionSignals().toString())
+                .putUnencodedChars(adSelectionConfig.getSellerSignals().toString());
 
-        adSelectionConfig.getCustomAudienceBuyers().stream().forEach(hasher::putUnencodedChars);
-        adSelectionConfig.getContextualAds().stream()
-                .forEach(
-                        adWithBid -> {
-                            hasher.putUnencodedChars(
-                                            adWithBid.getAdData().getRenderUri().toString())
-                                    .putUnencodedChars(adWithBid.getAdData().getMetadata())
-                                    .putDouble(adWithBid.getBid());
-                        });
+        adSelectionConfig.getCustomAudienceBuyers().stream()
+                .map(AdTechIdentifier::toString)
+                .forEach(hasher::putUnencodedChars);
         adSelectionConfig.getPerBuyerSignals().entrySet().stream()
                 .forEach(
                         buyerAndSignals -> {
-                            hasher.putUnencodedChars(buyerAndSignals.getKey())
-                                    .putUnencodedChars(buyerAndSignals.getValue());
+                            hasher.putUnencodedChars(buyerAndSignals.getKey().toString())
+                                    .putUnencodedChars(buyerAndSignals.getValue().toString());
                         });
         return hasher.hash().toString();
     }
@@ -110,15 +106,18 @@ public class AdSelectionDevOverridesHelper {
      * {@link DevContext#getCallingAppPackageName()}.
      */
     @Nullable
-    public String getTrustedScoringSignalsOverride(@NonNull AdSelectionConfig adSelectionConfig) {
+    public AdSelectionSignals getTrustedScoringSignalsOverride(
+            @NonNull AdSelectionConfig adSelectionConfig) {
         Objects.requireNonNull(adSelectionConfig);
 
         if (!mDevContext.getDevOptionsEnabled()) {
             return null;
         }
-        return mAdSelectionEntryDao.getTrustedScoringSignalsOverride(
-                calculateAdSelectionConfigId(adSelectionConfig),
-                mDevContext.getCallingAppPackageName());
+        String overrideSignals =
+                mAdSelectionEntryDao.getTrustedScoringSignalsOverride(
+                        calculateAdSelectionConfigId(adSelectionConfig),
+                        mDevContext.getCallingAppPackageName());
+        return overrideSignals == null ? null : AdSelectionSignals.fromString(overrideSignals);
     }
 
     /**
@@ -131,7 +130,7 @@ public class AdSelectionDevOverridesHelper {
     public void addAdSelectionSellerOverride(
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJS,
-            @NonNull String trustedScoringSignals) {
+            @NonNull AdSelectionSignals trustedScoringSignals) {
         Objects.requireNonNull(adSelectionConfig);
         Objects.requireNonNull(decisionLogicJS);
 
@@ -143,7 +142,7 @@ public class AdSelectionDevOverridesHelper {
                         .setAdSelectionConfigId(calculateAdSelectionConfigId(adSelectionConfig))
                         .setAppPackageName(mDevContext.getCallingAppPackageName())
                         .setDecisionLogicJS(decisionLogicJS)
-                        .setTrustedScoringSignals(trustedScoringSignals)
+                        .setTrustedScoringSignals(trustedScoringSignals.toString())
                         .build());
     }
 

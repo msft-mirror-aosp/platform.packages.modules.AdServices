@@ -48,24 +48,45 @@ public class AppManifestConfigParserTest {
         AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(parser);
         assertThat(appManifestConfig).isNotNull();
 
+        // Verify IncludesSdkLibrary tags.
+        assertThat(appManifestConfig.getIncludesSdkLibraryConfig()).isNotNull();
+        assertThat(appManifestConfig.getIncludesSdkLibraryConfig().getIncludesSdkLibraries())
+                .contains("1234567");
+
         // Verify Attribution tags.
         assertEquals(appManifestConfig.getAttributionConfig().getAllowAllToAccess(), false);
-        assertEquals(appManifestConfig.getAttributionConfig().getAllowSdksToAccess().size(), 1);
-        assertThat(appManifestConfig.getAttributionConfig().getAllowSdksToAccess())
-                .contains("com.xyz");
+        assertEquals(
+                appManifestConfig.getAttributionConfig().getAllowAdPartnersToAccess().size(), 1);
+        assertThat(appManifestConfig.getAttributionConfig().getAllowAdPartnersToAccess())
+                .contains("1234");
 
         // Verify Custom Audience tags.
         assertEquals(appManifestConfig.getCustomAudiencesConfig().getAllowAllToAccess(), false);
-        assertEquals(appManifestConfig.getCustomAudiencesConfig().getAllowSdksToAccess().size(), 2);
-        assertThat(appManifestConfig.getCustomAudiencesConfig().getAllowSdksToAccess())
-                .contains("com.abc");
-        assertThat(appManifestConfig.getCustomAudiencesConfig().getAllowSdksToAccess())
-                .contains("com.xyz");
+        assertEquals(
+                appManifestConfig.getCustomAudiencesConfig().getAllowAdPartnersToAccess().size(),
+                2);
+        assertThat(appManifestConfig.getCustomAudiencesConfig().getAllowAdPartnersToAccess())
+                .contains("1234");
+        assertThat(appManifestConfig.getCustomAudiencesConfig().getAllowAdPartnersToAccess())
+                .contains("4567");
 
         // Verify Topics tags.
-        assertEquals(appManifestConfig.getTopicsConfig().getAllowAllToAccess(), true);
-        assertThat(appManifestConfig.getTopicsConfig().getAllowSdksToAccess()).isNotNull();
-        assertEquals(appManifestConfig.getTopicsConfig().getAllowSdksToAccess().size(), 0);
+        assertEquals(appManifestConfig.getTopicsConfig().getAllowAllToAccess(), false);
+        assertThat(appManifestConfig.getTopicsConfig().getAllowAdPartnersToAccess())
+                .contains("1234567");
+    }
+
+    @Test
+    public void testInvalidXml_missingSdkLibrary() throws Exception {
+        XmlResourceParser parser =
+                mContext.getPackageManager()
+                        .getResourcesForApplication(mPackageName)
+                        .getXml(R.xml.ad_services_config_missing_sdk_name);
+
+        Exception e =
+                assertThrows(
+                        XmlParseException.class, () -> AppManifestConfigParser.getConfig(parser));
+        assertEquals("Sdk name not mentioned in <includes-sdk-library>", e.getMessage());
     }
 
     @Test
@@ -78,7 +99,8 @@ public class AppManifestConfigParserTest {
         Exception e =
                 assertThrows(
                         XmlParseException.class, () -> AppManifestConfigParser.getConfig(parser));
-        assertEquals("allowAll cannot be set to true when allowSdk is also set", e.getMessage());
+        assertEquals(
+                "allowAll cannot be set to true when allowAdPartners is also set", e.getMessage());
     }
 
     @Test

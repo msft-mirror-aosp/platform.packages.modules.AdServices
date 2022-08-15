@@ -51,7 +51,7 @@ public class MainViewModel extends AndroidViewModel {
     }
 
     @VisibleForTesting
-    MainViewModel(@NonNull Application application, ConsentManager consentManager) {
+    public MainViewModel(@NonNull Application application, ConsentManager consentManager) {
         super(application);
         mConsentManager = consentManager;
         mAdServicesConsent = new MutableLiveData<>(getConsentFromConsentManager());
@@ -73,12 +73,12 @@ public class MainViewModel extends AndroidViewModel {
      * @param newConsentValue the new value that user consent should be set to for PP APIs.
      */
     public void setConsent(Boolean newConsentValue) {
-        mAdServicesConsent.postValue(newConsentValue);
         if (newConsentValue) {
             mConsentManager.enable(getApplication().getPackageManager());
         } else {
-            mConsentManager.disable(getApplication().getPackageManager());
+            mConsentManager.disable(getApplication());
         }
+        mAdServicesConsent.postValue(getConsentFromConsentManager());
     }
 
     /** Returns an observable but immutable event enum representing an view action on UI. */

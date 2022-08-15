@@ -16,16 +16,19 @@
 
 package com.android.adservices.service.adselection;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__FLEDGE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES;
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
+import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.AdSelectionOverrideCallback;
 import android.adservices.adselection.AdSelectionService;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
+import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
 import android.content.Context;
@@ -39,6 +42,11 @@ import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdServicesHttpsClient;
+import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.CallingAppUidSupplier;
+import com.android.adservices.service.common.CallingAppUidSupplierBinderImpl;
+import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.AdSelectionOverrider;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
@@ -63,9 +71,13 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull private final ExecutorService mExecutor;
     @NonNull private final Context mContext;
+    @NonNull private final ConsentManager mConsentManager;
     @NonNull private final DevContextFilter mDevContextFilter;
+    @NonNull private final AppImportanceFilter mAppImportanceFilter;
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final Flags mFlags;
+    @NonNull private final CallingAppUidSupplier mCallingAppUidSupplier;
+    @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
 
     private static final String API_NOT_AUTHORIZED_MSG =
             "This API is not enabled for the given app because either dev options are disabled or"
@@ -77,53 +89,86 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull CustomAudienceDao customAudienceDao,
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull DevContextFilter devContextFilter,
+            @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull ExecutorService executorService,
             @NonNull Context context,
+            ConsentManager consentManager,
             @NonNull AdServicesLogger adServicesLogger,
-            @NonNull Flags flags) {
+            @NonNull Flags flags,
+            @NonNull CallingAppUidSupplier callingAppUidSupplier,
+            @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter) {
         Objects.requireNonNull(context, "Context must be provided.");
+        Objects.requireNonNull(adSelectionEntryDao);
+        Objects.requireNonNull(customAudienceDao);
+        Objects.requireNonNull(adServicesHttpsClient);
+        Objects.requireNonNull(devContextFilter);
+        Objects.requireNonNull(appImportanceFilter);
+        Objects.requireNonNull(executorService);
+        Objects.requireNonNull(consentManager);
         Objects.requireNonNull(adServicesLogger);
+        Objects.requireNonNull(flags);
+        Objects.requireNonNull(callingAppUidSupplier);
+        Objects.requireNonNull(fledgeAuthorizationFilter);
+
         mAdSelectionEntryDao = adSelectionEntryDao;
         mCustomAudienceDao = customAudienceDao;
         mAdServicesHttpsClient = adServicesHttpsClient;
         mDevContextFilter = devContextFilter;
+        mAppImportanceFilter = appImportanceFilter;
         mExecutor = executorService;
         mContext = context;
+        mConsentManager = consentManager;
         mAdServicesLogger = adServicesLogger;
         mFlags = flags;
+        mCallingAppUidSupplier = callingAppUidSupplier;
+        mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
+    }
+
+    /** Creates a new instance of {@link AdSelectionServiceImpl}. */
+    public static AdSelectionServiceImpl create(@NonNull Context context) {
+        return new AdSelectionServiceImpl(context);
     }
 
     /** Creates an instance of {@link AdSelectionServiceImpl} to be used. */
-    public AdSelectionServiceImpl(@NonNull Context context) {
+    private AdSelectionServiceImpl(@NonNull Context context) {
         this(
                 AdSelectionDatabase.getInstance(context).adSelectionEntryDao(),
                 CustomAudienceDatabase.getInstance(context).customAudienceDao(),
                 new AdServicesHttpsClient(AdServicesExecutors.getBackgroundExecutor()),
                 DevContextFilter.create(context),
+                AppImportanceFilter.create(
+                        context,
+                        AD_SERVICES_API_CALLED__API_CLASS__FLEDGE,
+                        () -> FlagsFactory.getFlags().getForegroundStatuslLevelForValidation()),
                 AdServicesExecutors.getBackgroundExecutor(),
                 context,
+                ConsentManager.getInstance(context),
                 AdServicesLoggerImpl.getInstance(),
-                FlagsFactory.getFlags());
+                FlagsFactory.getFlags(),
+                CallingAppUidSupplierBinderImpl.create(),
+                FledgeAuthorizationFilter.create(context, AdServicesLoggerImpl.getInstance()));
     }
 
     // TODO(b/233116758): Validate all the fields inside the adSelectionConfig.
     @Override
     public void runAdSelection(
-            @NonNull AdSelectionConfig adSelectionConfig, @NonNull AdSelectionCallback callback) {
+            @NonNull AdSelectionInput inputParams, @NonNull AdSelectionCallback callback) {
+        int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
         try {
-            Objects.requireNonNull(adSelectionConfig);
+            Objects.requireNonNull(inputParams);
             Objects.requireNonNull(callback);
 
             AdSelectionConfigValidator adSelectionConfigValidator =
                     new AdSelectionConfigValidator();
-            adSelectionConfigValidator.validate(adSelectionConfig);
+            adSelectionConfigValidator.validate(inputParams.getAdSelectionConfig());
         } catch (NullPointerException | IllegalArgumentException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
-                    AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
+                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
             // Rethrow because we want to fail fast
             throw exception;
         }
+
+        assertCallingPackageName(inputParams.getCallerPackageName(), apiName);
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
@@ -133,18 +178,21 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
                         mExecutor,
+                        mConsentManager,
                         mAdServicesLogger,
                         devContext,
-                        mFlags);
+                        mAppImportanceFilter,
+                        mFlags,
+                        getCallingUid(apiName));
 
-        adSelectionRunner.runAdSelection(adSelectionConfig, callback);
+        adSelectionRunner.runAdSelection(inputParams, callback);
     }
 
     @Override
     public void reportImpression(
             @NonNull ReportImpressionInput requestParams,
             @NonNull ReportImpressionCallback callback) {
-        // TODO(b/225990194): Add end to end test
+        int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
         try {
             Objects.requireNonNull(requestParams);
             Objects.requireNonNull(callback);
@@ -153,11 +201,12 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             adSelectionConfigValidator.validate(requestParams.getAdSelectionConfig());
         } catch (NullPointerException | IllegalArgumentException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                    AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
+                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
             // Rethrow because we want to fail fast
             throw exception;
         }
+
+        assertCallingPackageName(requestParams.getCallerPackageName(), apiName);
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
@@ -167,8 +216,12 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mExecutor,
                         mAdSelectionEntryDao,
                         mAdServicesHttpsClient,
+                        mConsentManager,
                         devContext,
-                        mAdServicesLogger);
+                        mAdServicesLogger,
+                        mAppImportanceFilter,
+                        mFlags,
+                        getCallingUid(apiName));
         reporter.reportImpression(requestParams, callback);
     }
 
@@ -176,16 +229,16 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     public void overrideAdSelectionConfigRemoteInfo(
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJS,
-            @NonNull String trustedScoringSignals,
+            @NonNull AdSelectionSignals trustedScoringSignals,
             @NonNull AdSelectionOverrideCallback callback) {
+        int apiName = AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
         try {
             Objects.requireNonNull(adSelectionConfig);
             Objects.requireNonNull(decisionLogicJS);
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO,
-                    AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
+                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -194,16 +247,38 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         if (!devContext.getDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO,
-                    AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
+                    apiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
         AdSelectionOverrider overrider =
                 new AdSelectionOverrider(
-                        devContext, mAdSelectionEntryDao, mExecutor, mAdServicesLogger);
+                        devContext,
+                        mAdSelectionEntryDao,
+                        mExecutor,
+                        mContext.getPackageManager(),
+                        mConsentManager,
+                        mAdServicesLogger,
+                        mAppImportanceFilter,
+                        mFlags,
+                        getCallingUid(apiName));
 
         overrider.addOverride(adSelectionConfig, decisionLogicJS, trustedScoringSignals, callback);
+    }
+
+    private int getCallingUid(int apiNameLoggingId) {
+        try {
+            return mCallingAppUidSupplier.getCallingAppUid();
+        } catch (IllegalStateException illegalStateException) {
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiNameLoggingId, AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
+            throw illegalStateException;
+        }
+    }
+
+    private void assertCallingPackageName(String callingPackageName, int apiNameLoggingId) {
+        mFledgeAuthorizationFilter.assertCallingPackageName(
+                callingPackageName, getCallingUid(apiNameLoggingId), apiNameLoggingId);
     }
 
     @Override
@@ -211,7 +286,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull AdSelectionOverrideCallback callback) {
         // Auto-generated variable name is too long for lint check
-        int shortApiName =
+        int apiName =
                 AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
 
         try {
@@ -219,7 +294,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    shortApiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
+                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -228,13 +303,21 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         if (!devContext.getDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    shortApiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
+                    apiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
         AdSelectionOverrider overrider =
                 new AdSelectionOverrider(
-                        devContext, mAdSelectionEntryDao, mExecutor, mAdServicesLogger);
+                        devContext,
+                        mAdSelectionEntryDao,
+                        mExecutor,
+                        mContext.getPackageManager(),
+                        mConsentManager,
+                        mAdServicesLogger,
+                        mAppImportanceFilter,
+                        mFlags,
+                        getCallingUid(apiName));
 
         overrider.removeOverride(adSelectionConfig, callback);
     }
@@ -243,14 +326,14 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     public void resetAllAdSelectionConfigRemoteOverrides(
             @NonNull AdSelectionOverrideCallback callback) {
         // Auto-generated variable name is too long for lint check
-        int shortApiName =
+        int apiName =
                 AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES;
 
         try {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    shortApiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
+                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -259,13 +342,21 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         if (!devContext.getDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    shortApiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
+                    apiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
         AdSelectionOverrider overrider =
                 new AdSelectionOverrider(
-                        devContext, mAdSelectionEntryDao, mExecutor, mAdServicesLogger);
+                        devContext,
+                        mAdSelectionEntryDao,
+                        mExecutor,
+                        mContext.getPackageManager(),
+                        mConsentManager,
+                        mAdServicesLogger,
+                        mAppImportanceFilter,
+                        mFlags,
+                        getCallingUid(apiName));
 
         overrider.removeAllOverrides(callback);
     }

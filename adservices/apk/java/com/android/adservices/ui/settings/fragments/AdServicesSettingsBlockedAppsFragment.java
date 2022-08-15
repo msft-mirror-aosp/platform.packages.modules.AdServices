@@ -26,6 +26,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.adservices.api.R;
+import com.android.adservices.ui.settings.ActionDelegate;
 import com.android.adservices.ui.settings.AdServicesSettingsActivity;
 import com.android.adservices.ui.settings.viewadatpors.AppsListViewAdapter;
 import com.android.adservices.ui.settings.viewmodels.AppsViewModel;
@@ -39,8 +40,16 @@ public class AdServicesSettingsBlockedAppsFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.blocked_apps_fragment, container, false);
 
         setupViewModel(rootView);
+        initActionListeners();
 
         return rootView;
+    }
+
+    // initialize all action listeners except for actions in blocked apps list
+    private void initActionListeners() {
+        ActionDelegate actionDelegate =
+                ((AdServicesSettingsActivity) requireActivity()).getActionDelegate();
+        actionDelegate.initBlockedAppsFragment();
     }
 
     /**
@@ -57,8 +66,14 @@ public class AdServicesSettingsBlockedAppsFragment extends Fragment {
         AppsListViewAdapter adapter = new AppsListViewAdapter(viewModel, true);
         recyclerView.setAdapter(adapter);
 
+        View noBlockedAppsMessage = rootView.findViewById(R.id.no_blocked_apps_message);
+
         viewModel
                 .getBlockedApps()
-                .observe(getViewLifecycleOwner(), apps -> adapter.notifyDataSetChanged());
+                .observe(getViewLifecycleOwner(), blockedAppsList -> {
+                    noBlockedAppsMessage.setVisibility(
+                            blockedAppsList.isEmpty() ? View.VISIBLE : View.GONE);
+                    adapter.notifyDataSetChanged();
+                });
     }
 }

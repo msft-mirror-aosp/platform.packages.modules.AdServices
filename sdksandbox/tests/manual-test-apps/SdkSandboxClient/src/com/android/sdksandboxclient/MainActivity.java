@@ -16,16 +16,23 @@
 
 package com.android.sdksandboxclient;
 
+import static android.app.sdksandbox.SdkSandboxManager.EXTRA_DISPLAY_ID;
+import static android.app.sdksandbox.SdkSandboxManager.EXTRA_HEIGHT_IN_PIXELS;
+import static android.app.sdksandbox.SdkSandboxManager.EXTRA_HOST_TOKEN;
+import static android.app.sdksandbox.SdkSandboxManager.EXTRA_SURFACE_PACKAGE;
+import static android.app.sdksandbox.SdkSandboxManager.EXTRA_WIDTH_IN_PIXELS;
+
 import android.app.Activity;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.LoadSdkResponse;
 import android.app.sdksandbox.RequestSurfacePackageException;
-import android.app.sdksandbox.RequestSurfacePackageResponse;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.OutcomeReceiver;
+import android.util.Log;
+import android.view.SurfaceControlViewHost.SurfacePackage;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
@@ -35,6 +42,7 @@ import androidx.annotation.NonNull;
 
 public class MainActivity extends Activity {
     private static final String SDK_NAME = "com.android.sdksandboxcode";
+    private static final String TAG = "SdkSandboxClientMainActivity";
 
     private boolean mSdkLoaded = false;
     private SdkSandboxManager mSdkSandboxManager;
@@ -63,35 +71,44 @@ public class MainActivity extends Activity {
     private void registerLoadSdkProviderButton() {
         mLoadButton.setOnClickListener(
                 v -> {
-                    Bundle params = new Bundle();
-                    OutcomeReceiver<LoadSdkResponse, LoadSdkException> receiver =
-                            new OutcomeReceiver<LoadSdkResponse, LoadSdkException>() {
-                                @Override
-                                public void onResult(LoadSdkResponse response) {
-                                    mSdkLoaded = true;
-                                    makeToast("Loaded successfully!");
-                                }
+                    if (!mSdkLoaded) {
+                        Bundle params = new Bundle();
+                        OutcomeReceiver<LoadSdkResponse, LoadSdkException> receiver =
+                                new OutcomeReceiver<LoadSdkResponse, LoadSdkException>() {
+                                    @Override
+                                    public void onResult(LoadSdkResponse response) {
+                                        mSdkLoaded = true;
+                                        makeToast("Loaded successfully!");
+                                        mLoadButton.setText("Unload SDK");
+                                    }
 
-                                @Override
-                                public void onError(LoadSdkException error) {
-                                    makeToast("Failed: " + error);
-                                }
-                            };
-                    mSdkSandboxManager.loadSdk(SDK_NAME, params, Runnable::run, receiver);
+                                    @Override
+                                    public void onError(LoadSdkException error) {
+                                        makeToast("Failed: " + error);
+                                    }
+                                };
+                        mSdkSandboxManager.loadSdk(SDK_NAME, params, Runnable::run, receiver);
+                    } else {
+                        mSdkSandboxManager.unloadSdk(SDK_NAME);
+                        mLoadButton.setText("Load SDK");
+                        mSdkLoaded = false;
+                    }
                 });
     }
 
     private void registerLoadSurfacePackageButton() {
-        OutcomeReceiver<RequestSurfacePackageResponse, RequestSurfacePackageException> receiver =
-                new OutcomeReceiver<
-                        RequestSurfacePackageResponse, RequestSurfacePackageException>() {
+        OutcomeReceiver<Bundle, RequestSurfacePackageException> receiver =
+                new OutcomeReceiver<Bundle, RequestSurfacePackageException>() {
                     @Override
-                    public void onResult(@NonNull RequestSurfacePackageResponse result) {
+                    public void onResult(@NonNull Bundle result) {
                         new Handler(Looper.getMainLooper())
                                 .post(
                                         () -> {
-                                            mRenderedView.setChildSurfacePackage(
-                                                    result.getSurfacePackage());
+                                            SurfacePackage surfacePackage =
+                                                    result.getParcelable(
+                                                            EXTRA_SURFACE_PACKAGE,
+                                                            SurfacePackage.class);
+                                            mRenderedView.setChildSurfacePackage(surfacePackage);
                                             mRenderedView.setVisibility(View.VISIBLE);
                                         });
                         makeToast("Rendered surface view");
@@ -100,6 +117,7 @@ public class MainActivity extends Activity {
                     @Override
                     public void onError(@NonNull RequestSurfacePackageException error) {
                         makeToast("Failed: " + error);
+                        Log.e(TAG, error.getMessage(), error);
                     }
                 };
         mRenderButton.setOnClickListener(
@@ -107,15 +125,21 @@ public class MainActivity extends Activity {
                     if (mSdkLoaded) {
                         new Handler(Looper.getMainLooper())
                                 .post(
-                                        () ->
-                                                mSdkSandboxManager.requestSurfacePackage(
-                                                        SDK_NAME,
-                                                        getDisplay().getDisplayId(),
-                                                        mRenderedView.getWidth(),
-                                                        mRenderedView.getHeight(),
-                                                        new Bundle(),
-                                                        Runnable::run,
-                                                        receiver));
+                                        () -> {
+                                            Bundle params = new Bundle();
+                                            params.putInt(
+                                                    EXTRA_WIDTH_IN_PIXELS,
+                                                    mRenderedView.getWidth());
+                                            params.putInt(
+                                                    EXTRA_HEIGHT_IN_PIXELS,
+                                                    mRenderedView.getHeight());
+                                            params.putInt(
+                                                    EXTRA_DISPLAY_ID, getDisplay().getDisplayId());
+                                            params.putBinder(
+                                                    EXTRA_HOST_TOKEN, mRenderedView.getHostToken());
+                                            mSdkSandboxManager.requestSurfacePackage(
+                                                    SDK_NAME, params, Runnable::run, receiver);
+                                        });
                     } else {
                         makeToast("Sdk is not loaded");
                     }
