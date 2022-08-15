@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.topics.classifier;
 
-import static com.android.adservices.service.topics.classifier.OnDeviceClassifier.MAX_LABELS_PER_APP;
+import static com.android.adservices.service.Flags.CLASSIFIER_NUMBER_OF_TOP_LABELS;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -26,17 +26,20 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.content.Context;
+import android.provider.DeviceConfig;
 
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.topics.AppInfo;
 import com.android.adservices.service.topics.PackageManagerUtil;
+import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -49,6 +52,10 @@ import java.util.stream.Collectors;
 
 /** Topic Classifier Test {@link OnDeviceClassifier}. */
 public class OnDeviceClassifierTest {
+    @Rule
+    public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
+            new TestableDeviceConfig.TestableDeviceConfigRule();
+
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static Preprocessor sPreprocessor;
 
@@ -93,7 +100,7 @@ public class OnDeviceClassifierTest {
         verify(mPackageManagerUtil).getAppInformation(eq(appPackages));
         assertThat(classifications).hasSize(1);
         // Verify default classification.
-        assertThat(classifications.get(appPackage1)).hasSize(MAX_LABELS_PER_APP);
+        assertThat(classifications.get(appPackage1)).hasSize(CLASSIFIER_NUMBER_OF_TOP_LABELS);
         // Check all the returned labels for default empty string descriptions.
         assertThat(classifications.get(appPackage1))
                 .isEqualTo(createTopics(Arrays.asList(
@@ -125,9 +132,9 @@ public class OnDeviceClassifierTest {
         verify(mPackageManagerUtil).getAppInformation(eq(appPackages));
         // Two values for two input package names.
         assertThat(classifications).hasSize(2);
-        // Verify size of the labels returned is MAX_LABELS_PER_APP.
-        assertThat(classifications.get(appPackage1)).hasSize(MAX_LABELS_PER_APP);
-        assertThat(classifications.get(appPackage2)).hasSize(MAX_LABELS_PER_APP);
+        // Verify size of the labels returned is CLASSIFIER_NUMBER_OF_TOP_LABELS.
+        assertThat(classifications.get(appPackage1)).hasSize(CLASSIFIER_NUMBER_OF_TOP_LABELS);
+        assertThat(classifications.get(appPackage2)).hasSize(CLASSIFIER_NUMBER_OF_TOP_LABELS);
 
         // Check if the first 10 categories contains at least the top 5.
         // Scores can differ a little on devices. Using this to reduce flakiness.
@@ -139,6 +146,29 @@ public class OnDeviceClassifierTest {
         assertThat(classifications.get(appPackage2))
                 .containsAtLeastElementsIn(createTopics(
                         Arrays.asList(10227, 10225, 10235, 10230, 10254)));
+    }
+
+    @Test
+    public void testClassify_successfulClassifications_overrideNumberOfTopLabels() {
+        // Check getClassification for sample descriptions.
+        String appPackage1 = "com.example.adservices.samples.topics.sampleapp1";
+        ImmutableMap<String, AppInfo> appInfoMap =
+                ImmutableMap.<String, AppInfo>builder()
+                        .put(appPackage1, new AppInfo("appName1", "Sample app description."))
+                        .build();
+        ImmutableSet<String> appPackages = ImmutableSet.of(appPackage1);
+        when(mPackageManagerUtil.getAppInformation(eq(appPackages))).thenReturn(appInfoMap);
+        // Override classifierNumberOfTopLabels.
+        int overrideNumberOfTopLabels = 2;
+        setClassifierNumberOfTopLabels(overrideNumberOfTopLabels);
+
+        ImmutableMap<String, List<Topic>> classifications =
+                mOnDeviceClassifier.classify(appPackages);
+
+        verify(mPackageManagerUtil).getAppInformation(eq(appPackages));
+        assertThat(classifications).hasSize(1);
+        // Verify size of the labels returned is equal to the override value.
+        assertThat(classifications.get(appPackage1)).hasSize(overrideNumberOfTopLabels);
     }
 
     @Test
@@ -174,8 +204,8 @@ public class OnDeviceClassifierTest {
         verify(mPackageManagerUtil, times(2)).getAppInformation(eq(appPackages));
         // Two values for two input package names.
         assertThat(secondClassifications).hasSize(1);
-        // Verify size of the labels returned is MAX_LABELS_PER_APP.
-        assertThat(secondClassifications.get(appPackage1)).hasSize(MAX_LABELS_PER_APP);
+        // Verify size of the labels returned is CLASSIFIER_NUMBER_OF_TOP_LABELS.
+        assertThat(secondClassifications.get(appPackage1)).hasSize(CLASSIFIER_NUMBER_OF_TOP_LABELS);
 
         // Check if the first 10 categories contains at least the top 5.
         // Scores can differ a little on devices. Using this to reduce flakiness.
@@ -293,5 +323,13 @@ public class OnDeviceClassifierTest {
 
     private List<Topic> createTopics(List<Integer> topicIds) {
         return topicIds.stream().map(this::createTopic).collect(Collectors.toList());
+    }
+
+    private void setClassifierNumberOfTopLabels(int overrideValue) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "classifier_number_of_top_labels",
+                Integer.toString(overrideValue),
+                /* makeDefault */ false);
     }
 }
