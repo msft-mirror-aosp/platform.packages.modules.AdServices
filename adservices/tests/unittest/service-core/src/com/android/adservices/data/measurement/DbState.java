@@ -342,7 +342,7 @@ public class DbState {
                 .setAttributionDestination(Uri.parse(rJSON.getString("attributionDestination")))
                 .setSourceRegistrationTime(rJSON.getLong("sourceRegistrationTime"))
                 .setScheduledReportTime(rJSON.getLong("scheduledReportTime"))
-                .setReportingOrigin(Uri.parse(rJSON.getString("reportingOrigin")))
+                .setAdTechDomain(Uri.parse(rJSON.getString("adTechDomain")))
                 .setDebugCleartextPayload(rJSON.getString("debugCleartextPayload"))
                 .setStatus(rJSON.getInt("status"))
                 .build();

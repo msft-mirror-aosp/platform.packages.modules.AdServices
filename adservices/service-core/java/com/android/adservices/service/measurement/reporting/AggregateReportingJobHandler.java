@@ -162,7 +162,7 @@ public class AggregateReportingJobHandler {
         }
         try {
             JSONObject aggregateReportJsonBody = createReportJsonPayload(aggregateReport, key);
-            int returnCode = makeHttpPostRequest(aggregateReport.getReportingOrigin(),
+            int returnCode = makeHttpPostRequest(aggregateReport.getAdTechDomain(),
                     aggregateReportJsonBody);
 
             if (returnCode >= HttpURLConnection.HTTP_OK
@@ -198,7 +198,7 @@ public class AggregateReportingJobHandler {
                                 TimeUnit.MILLISECONDS.toSeconds(
                                         aggregateReport.getScheduledReportTime())))
                 .setApiVersion(aggregateReport.getApiVersion())
-                .setReportingOrigin(aggregateReport.getReportingOrigin().toString())
+                .setReportingOrigin(aggregateReport.getAdTechDomain().toString())
                 .setDebugCleartextPayload(aggregateReport.getDebugCleartextPayload())
                 .build()
                 .toJson(key);
