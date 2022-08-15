@@ -140,7 +140,7 @@ public final class TriggerFetcherTest {
         List<TriggerRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals(TOP_ORIGIN, result.get(0).getTopOrigin().toString());
-        assertEquals(TRIGGER_URI, result.get(0).getReportingOrigin().toString());
+        assertEquals(TRIGGER_URI, result.get(0).getRegistrationUri().toString());
         assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.get(0).getEventTriggers());
         verify(mUrlConnection).setRequestMethod("POST");
     }
@@ -171,7 +171,7 @@ public final class TriggerFetcherTest {
         List<TriggerRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals(TOP_ORIGIN, result.get(0).getTopOrigin().toString());
-        assertEquals(TRIGGER_URI, result.get(0).getReportingOrigin().toString());
+        assertEquals(TRIGGER_URI, result.get(0).getRegistrationUri().toString());
         assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.get(0).getEventTriggers());
         assertEquals(DEBUG_KEY, result.get(0).getDebugKey()); // todo
 
@@ -204,7 +204,7 @@ public final class TriggerFetcherTest {
         List<TriggerRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals(TOP_ORIGIN, result.get(0).getTopOrigin().toString());
-        assertEquals(TRIGGER_URI, result.get(0).getReportingOrigin().toString());
+        assertEquals(TRIGGER_URI, result.get(0).getRegistrationUri().toString());
         assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.get(0).getEventTriggers());
         assertNull(result.get(0).getDebugKey());
 
@@ -259,7 +259,7 @@ public final class TriggerFetcherTest {
         List<TriggerRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals(TOP_ORIGIN, result.get(0).getTopOrigin().toString());
-        assertEquals(TRIGGER_URI, result.get(0).getReportingOrigin().toString());
+        assertEquals(TRIGGER_URI, result.get(0).getRegistrationUri().toString());
         assertEquals("[{}]", result.get(0).getEventTriggers());
         verify(mUrlConnection).setRequestMethod("POST");
     }
@@ -291,7 +291,7 @@ public final class TriggerFetcherTest {
         List<TriggerRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals(TOP_ORIGIN, result.get(0).getTopOrigin().toString());
-        assertEquals(TRIGGER_URI, result.get(0).getReportingOrigin().toString());
+        assertEquals(TRIGGER_URI, result.get(0).getRegistrationUri().toString());
         assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.get(0).getEventTriggers());
         verify(mUrlConnection, times(2)).setRequestMethod("POST");
     }
@@ -337,7 +337,7 @@ public final class TriggerFetcherTest {
         List<TriggerRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
-        assertEquals("https://foo.com", result.get(0).getReportingOrigin().toString());
+        assertEquals("https://foo.com", result.get(0).getRegistrationUri().toString());
         assertEquals(
                 new JSONArray(aggregatable_trigger_data).toString(),
                 result.get(0).getAggregateTriggerData());
@@ -390,7 +390,7 @@ public final class TriggerFetcherTest {
         List<TriggerRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
-        assertEquals("https://foo.com", result.get(0).getReportingOrigin().toString());
+        assertEquals("https://foo.com", result.get(0).getRegistrationUri().toString());
         assertEquals(
                 new JSONObject(aggregatable_values).toString(), result.get(0).getAggregateValues());
         verify(mUrlConnection).setRequestMethod("POST");
@@ -440,7 +440,7 @@ public final class TriggerFetcherTest {
         List<TriggerRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
-        assertEquals("https://foo.com", result.get(0).getReportingOrigin().toString());
+        assertEquals("https://foo.com", result.get(0).getRegistrationUri().toString());
         assertEquals(new JSONObject(filters).toString(), result.get(0).getFilters());
         verify(mUrlConnection).setRequestMethod("POST");
     }
@@ -452,14 +452,14 @@ public final class TriggerFetcherTest {
                 new TriggerRegistration.Builder()
                         .setTopOrigin(Uri.parse(TOP_ORIGIN))
                         .setEventTriggers(new JSONArray(EVENT_TRIGGERS_1).toString())
-                        .setReportingOrigin(REGISTRATION_URI_1)
+                        .setRegistrationUri(REGISTRATION_URI_1)
                         .setDebugKey(DEBUG_KEY)
                         .build();
         TriggerRegistration expectedResult2 =
                 new TriggerRegistration.Builder()
                         .setTopOrigin(Uri.parse(TOP_ORIGIN))
                         .setEventTriggers(new JSONArray(EVENT_TRIGGERS_2).toString())
-                        .setReportingOrigin(REGISTRATION_URI_2)
+                        .setRegistrationUri(REGISTRATION_URI_2)
                         .build();
 
         WebTriggerRegistrationRequest request =
@@ -541,7 +541,7 @@ public final class TriggerFetcherTest {
                 new TriggerRegistration.Builder()
                         .setTopOrigin(Uri.parse(TOP_ORIGIN))
                         .setEventTriggers(new JSONArray(EVENT_TRIGGERS_1).toString())
-                        .setReportingOrigin(REGISTRATION_URI_1)
+                        .setRegistrationUri(REGISTRATION_URI_1)
                         .setFilters(new JSONObject(filters).toString())
                         .setAggregateTriggerData(new JSONArray(aggregatableTriggerData).toString())
                         .setAggregateValues(new JSONObject(aggregatableValues).toString())
@@ -578,7 +578,7 @@ public final class TriggerFetcherTest {
                 new TriggerRegistration.Builder()
                         .setTopOrigin(Uri.parse(TOP_ORIGIN))
                         .setEventTriggers(new JSONArray(EVENT_TRIGGERS_1).toString())
-                        .setReportingOrigin(REGISTRATION_URI_1)
+                        .setRegistrationUri(REGISTRATION_URI_1)
                         .build();
 
         // Execution
