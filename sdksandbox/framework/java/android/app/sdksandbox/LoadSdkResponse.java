@@ -18,9 +18,11 @@ package android.app.sdksandbox;
 
 import android.annotation.NonNull;
 import android.os.Bundle;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 /** The response returned from {@link SdkSandboxManager#loadSdk} on success. */
-public final class LoadSdkResponse {
+public final class LoadSdkResponse implements Parcelable {
     private final Bundle mExtraInformation;
 
     /**
@@ -33,8 +35,35 @@ public final class LoadSdkResponse {
         mExtraInformation = extraInfo;
     }
 
+    private LoadSdkResponse(@NonNull Parcel in) {
+        mExtraInformation = in.readBundle();
+    }
+
+    public static final @NonNull Creator<LoadSdkResponse> CREATOR =
+            new Creator<LoadSdkResponse>() {
+                @Override
+                public LoadSdkResponse createFromParcel(Parcel in) {
+                    return new LoadSdkResponse(in);
+                }
+
+                @Override
+                public LoadSdkResponse[] newArray(int size) {
+                    return new LoadSdkResponse[size];
+                }
+            };
+
     /** Returns extra information from the SDK in response to {@link SdkSandboxManager#loadSdk} */
     public @NonNull Bundle getExtraInformation() {
         return mExtraInformation;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(@android.annotation.NonNull Parcel destination, int flags) {
+        destination.writeBundle(mExtraInformation);
     }
 }

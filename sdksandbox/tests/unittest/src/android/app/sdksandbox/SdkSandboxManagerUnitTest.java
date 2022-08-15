@@ -100,7 +100,7 @@ public class SdkSandboxManagerUnitTest {
 
         // Simulate the success callback
         final Bundle extraInfo = new Bundle();
-        callbackArgumentCaptor.getValue().onLoadSdkSuccess(extraInfo);
+        callbackArgumentCaptor.getValue().onLoadSdkSuccess(new LoadSdkResponse(extraInfo));
         ArgumentCaptor<LoadSdkResponse> responseCapture =
                 ArgumentCaptor.forClass(LoadSdkResponse.class);
         Mockito.verify(outcomeReceiver).onResult(responseCapture.capture());
@@ -127,7 +127,9 @@ public class SdkSandboxManagerUnitTest {
                         callbackArgumentCaptor.capture());
 
         // Simulate the error callback
-        callbackArgumentCaptor.getValue().onLoadSdkFailure(LOAD_SDK_NOT_FOUND, ERROR_MSG);
+        callbackArgumentCaptor
+                .getValue()
+                .onLoadSdkFailure(new LoadSdkException(LOAD_SDK_NOT_FOUND, ERROR_MSG));
         ArgumentCaptor<LoadSdkException> exceptionCapture =
                 ArgumentCaptor.forClass(LoadSdkException.class);
         Mockito.verify(outcomeReceiver).onError(exceptionCapture.capture());
