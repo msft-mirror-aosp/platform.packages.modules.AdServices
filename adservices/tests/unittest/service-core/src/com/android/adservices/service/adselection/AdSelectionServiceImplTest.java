@@ -19,7 +19,9 @@ package com.android.adservices.service.adselection;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
+import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
 import static com.android.adservices.service.adselection.AdSelectionConfigValidator.DECISION_LOGIC_URI_TYPE;
 import static com.android.adservices.service.adselection.ImpressionReporter.UNABLE_TO_FIND_AD_SELECTION_WITH_GIVEN_ID;
@@ -52,11 +54,12 @@ import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.CallingAppUidSupplierProcessImpl;
+import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.http.MockWebServerRule;
 import android.content.Context;
 import android.net.Uri;
-import android.os.Binder;
 import android.os.Process;
 import android.os.RemoteException;
 
@@ -76,6 +79,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
+import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.ValidatorTestUtil;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
@@ -174,6 +178,11 @@ public class AdSelectionServiceImplTest {
                 public long getReportImpressionOverallTimeoutMs() {
                     return 500;
                 }
+
+                @Override
+                public boolean getEnforceIsolateMaxHeapSize() {
+                    return false;
+                }
             };
     private MockitoSession mStaticMockSession = null;
     @Spy private final AdServicesLogger mAdServicesLoggerSpy = AdServicesLoggerImpl.getInstance();
@@ -190,7 +199,6 @@ public class AdSelectionServiceImplTest {
     public void setUp() {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
-                        .spyStatic(Binder.class)
                         .spyStatic(JSScriptEngine.class)
                         // mAdServicesLoggerSpy is not referenced in many tests
                         .strictness(Strictness.LENIENT)
@@ -218,8 +226,6 @@ public class AdSelectionServiceImplTest {
                         .setDecisionLogicUri(mMockWebServerRule.uriForPath(mFetchJavaScriptPath))
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(mFetchTrustedScoringSignalsPath));
-
-        ExtendedMockito.doReturn(Process.myUid()).when(Binder::getCallingUidOrThrow);
     }
 
     @After
@@ -278,6 +284,7 @@ public class AdSelectionServiceImplTest {
                         .setWinningAdRenderUri(RENDER_URL)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
                         .build();
 
         mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
@@ -299,12 +306,15 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
-                        mFlags);
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerSpy));
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
                         .build();
         ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
 
@@ -369,6 +379,7 @@ public class AdSelectionServiceImplTest {
                         .setWinningAdRenderUri(RENDER_URL)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
                         .build();
 
         mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
@@ -390,12 +401,15 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
-                        mFlags);
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerSpy));
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
                         .build();
         ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
 
@@ -465,6 +479,7 @@ public class AdSelectionServiceImplTest {
                         .setWinningAdRenderUri(RENDER_URL)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
                         .build();
 
         mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
@@ -486,12 +501,15 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
-                        mFlags);
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerSpy));
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
                         .build();
         ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
 
@@ -561,6 +579,7 @@ public class AdSelectionServiceImplTest {
                         .setWinningAdRenderUri(RENDER_URL)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
                         .build();
 
         mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
@@ -582,12 +601,15 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
-                        mFlags);
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerSpy));
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
                         .build();
         ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
 
@@ -663,6 +685,7 @@ public class AdSelectionServiceImplTest {
                         .setWinningAdRenderUri(RENDER_URL)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
                         .build();
 
         mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
@@ -684,12 +707,15 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
-                        mFlags);
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerSpy));
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
                         .build();
         ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
 
@@ -760,6 +786,7 @@ public class AdSelectionServiceImplTest {
                         .setWinningAdRenderUri(RENDER_URL)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
                         .build();
 
         mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
@@ -781,12 +808,15 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
-                        mFlags);
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerSpy));
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
                         .build();
         ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
 
@@ -852,6 +882,7 @@ public class AdSelectionServiceImplTest {
                         .setWinningAdRenderUri(RENDER_URL)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
                         .build();
 
         mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
@@ -873,12 +904,15 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
-                        mFlags);
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerSpy));
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(INCORRECT_AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
                         .build();
 
         ReportImpressionTestCallback callback = callReportImpression(adSelectionService, request);
@@ -921,13 +955,11 @@ public class AdSelectionServiceImplTest {
                         + "' } };\n"
                         + "}";
 
-        MockWebServer server =
-                mMockWebServerRule.startMockWebServer(
-                        List.of(
-                                new MockResponse()
-                                        .setBody(invalidSellerDecisionLogicJsMissingCurlyBracket),
-                                new MockResponse(),
-                                new MockResponse()));
+        mMockWebServerRule.startMockWebServer(
+                List.of(
+                        new MockResponse().setBody(invalidSellerDecisionLogicJsMissingCurlyBracket),
+                        new MockResponse(),
+                        new MockResponse()));
 
         DBBuyerDecisionLogic dbBuyerDecisionLogic =
                 new DBBuyerDecisionLogic.Builder()
@@ -947,6 +979,7 @@ public class AdSelectionServiceImplTest {
                         .setWinningAdRenderUri(RENDER_URL)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
                         .build();
 
         mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
@@ -967,12 +1000,15 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
-                        mFlags);
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerSpy));
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
                         .build();
 
         ReportImpressionTestCallback callback = callReportImpression(adSelectionService, request);
@@ -1014,12 +1050,11 @@ public class AdSelectionServiceImplTest {
                         + "' } };\n"
                         + "}";
 
-        MockWebServer server =
-                mMockWebServerRule.startMockWebServer(
-                        List.of(
-                                new MockResponse().setBody(sellerDecisionLogicJs),
-                                new MockResponse(),
-                                new MockResponse()));
+        mMockWebServerRule.startMockWebServer(
+                List.of(
+                        new MockResponse().setBody(sellerDecisionLogicJs),
+                        new MockResponse(),
+                        new MockResponse()));
 
         DBBuyerDecisionLogic dbBuyerDecisionLogic =
                 new DBBuyerDecisionLogic.Builder()
@@ -1039,6 +1074,7 @@ public class AdSelectionServiceImplTest {
                         .setWinningAdRenderUri(RENDER_URL)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
                         .build();
 
         mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
@@ -1060,12 +1096,15 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
-                        mFlags);
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerSpy));
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
                         .build();
 
         ReportImpressionTestCallback callback = callReportImpression(adSelectionService, request);
@@ -1131,6 +1170,7 @@ public class AdSelectionServiceImplTest {
                         .setWinningAdRenderUri(RENDER_URL)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
                         .build();
 
         mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
@@ -1142,13 +1182,13 @@ public class AdSelectionServiceImplTest {
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         // Set dev override for this AdSelection
-        String myAppPackageName = "com.google.ppapi.test";
+
         DBAdSelectionOverride adSelectionOverride =
                 DBAdSelectionOverride.builder()
                         .setAdSelectionConfigId(
                                 AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(
                                         adSelectionConfig))
-                        .setAppPackageName(myAppPackageName)
+                        .setAppPackageName(TEST_PACKAGE_NAME)
                         .setDecisionLogicJS(sellerDecisionLogicJs)
                         .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
                         .build();
@@ -1158,7 +1198,7 @@ public class AdSelectionServiceImplTest {
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(myAppPackageName)
+                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
                                 .build());
 
         AdSelectionServiceImpl adSelectionService =
@@ -1172,11 +1212,14 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
-                        mFlags);
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerSpy));
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
                         .build();
         ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
 
@@ -1199,14 +1242,11 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testOverrideAdSelectionConfigRemoteInfoSuccess() throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
-
-        String myAppPackageName = "com.google.ppapi.test";
-
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(myAppPackageName)
+                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
                                 .build());
 
         AdSelectionServiceImpl adSelectionService =
@@ -1220,7 +1260,9 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
-                        mFlags);
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerSpy));
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -1236,7 +1278,7 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(
                                 adSelectionConfig),
-                        myAppPackageName));
+                        TEST_PACKAGE_NAME));
 
         verify(mAdServicesLoggerSpy).logFledgeApiCallStats(SHORT_API_NAME_OVERRIDE, STATUS_SUCCESS);
         verify(mAdServicesLoggerSpy)
@@ -1249,13 +1291,11 @@ public class AdSelectionServiceImplTest {
             throws Exception {
         doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent(any());
 
-        String myAppPackageName = "com.google.ppapi.test";
-
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(myAppPackageName)
+                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
                                 .build());
 
         AdSelectionServiceImpl adSelectionService =
@@ -1269,7 +1309,9 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
-                        mFlags);
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerSpy));
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -1285,7 +1327,7 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(
                                 adSelectionConfig),
-                        myAppPackageName));
+                        TEST_PACKAGE_NAME));
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(SHORT_API_NAME_OVERRIDE, STATUS_USER_CONSENT_REVOKED);
@@ -1298,9 +1340,6 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testOverrideAdSelectionConfigRemoteInfoFailsWithDevOptionsDisabled() {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
-
-        String myAppPackageName = "com.google.ppapi.test";
-
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
@@ -1315,7 +1354,9 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
-                        mFlags);
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerSpy));
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -1332,7 +1373,7 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(
                                 adSelectionConfig),
-                        myAppPackageName));
+                        TEST_PACKAGE_NAME));
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(SHORT_API_NAME_OVERRIDE, STATUS_INTERNAL_ERROR);
@@ -1345,14 +1386,11 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testRemoveAdSelectionConfigRemoteInfoOverrideSuccess() throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
-
-        String myAppPackageName = "com.google.ppapi.test";
-
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(myAppPackageName)
+                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
                                 .build());
 
         AdSelectionServiceImpl adSelectionService =
@@ -1366,7 +1404,9 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
-                        mFlags);
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerSpy));
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -1376,7 +1416,7 @@ public class AdSelectionServiceImplTest {
         DBAdSelectionOverride dbAdSelectionOverride =
                 DBAdSelectionOverride.builder()
                         .setAdSelectionConfigId(adSelectionConfigId)
-                        .setAppPackageName(myAppPackageName)
+                        .setAppPackageName(TEST_PACKAGE_NAME)
                         .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
                         .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
                         .build();
@@ -1385,7 +1425,7 @@ public class AdSelectionServiceImplTest {
 
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId, myAppPackageName));
+                        adSelectionConfigId, TEST_PACKAGE_NAME));
 
         AdSelectionOverrideTestCallback callback =
                 callRemoveOverride(adSelectionService, adSelectionConfig);
@@ -1393,7 +1433,7 @@ public class AdSelectionServiceImplTest {
         assertTrue(callback.mIsSuccess);
         assertFalse(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId, myAppPackageName));
+                        adSelectionConfigId, TEST_PACKAGE_NAME));
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(SHORT_API_NAME_REMOVE_OVERRIDE, STATUS_SUCCESS);
@@ -1408,13 +1448,11 @@ public class AdSelectionServiceImplTest {
             throws Exception {
         doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent(any());
 
-        String myAppPackageName = "com.google.ppapi.test";
-
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(myAppPackageName)
+                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
                                 .build());
 
         AdSelectionServiceImpl adSelectionService =
@@ -1428,7 +1466,9 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
-                        mFlags);
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerSpy));
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -1438,7 +1478,7 @@ public class AdSelectionServiceImplTest {
         DBAdSelectionOverride dbAdSelectionOverride =
                 DBAdSelectionOverride.builder()
                         .setAdSelectionConfigId(adSelectionConfigId)
-                        .setAppPackageName(myAppPackageName)
+                        .setAppPackageName(TEST_PACKAGE_NAME)
                         .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
                         .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
                         .build();
@@ -1447,7 +1487,7 @@ public class AdSelectionServiceImplTest {
 
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId, myAppPackageName));
+                        adSelectionConfigId, TEST_PACKAGE_NAME));
 
         AdSelectionOverrideTestCallback callback =
                 callRemoveOverride(adSelectionService, adSelectionConfig);
@@ -1455,7 +1495,7 @@ public class AdSelectionServiceImplTest {
         assertTrue(callback.mIsSuccess);
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId, myAppPackageName));
+                        adSelectionConfigId, TEST_PACKAGE_NAME));
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(SHORT_API_NAME_REMOVE_OVERRIDE, STATUS_USER_CONSENT_REVOKED);
@@ -1468,9 +1508,6 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testRemoveAdSelectionConfigRemoteInfoOverrideFailsWithDevOptionsDisabled() {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
-
-        String myAppPackageName = "com.google.ppapi.test";
-
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
@@ -1485,7 +1522,9 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
-                        mFlags);
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerSpy));
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -1495,7 +1534,7 @@ public class AdSelectionServiceImplTest {
         DBAdSelectionOverride dbAdSelectionOverride =
                 DBAdSelectionOverride.builder()
                         .setAdSelectionConfigId(adSelectionConfigId)
-                        .setAppPackageName(myAppPackageName)
+                        .setAppPackageName(TEST_PACKAGE_NAME)
                         .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
                         .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
                         .build();
@@ -1504,14 +1543,14 @@ public class AdSelectionServiceImplTest {
 
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId, myAppPackageName));
+                        adSelectionConfigId, TEST_PACKAGE_NAME));
 
         assertThrows(
                 SecurityException.class,
                 () -> callRemoveOverride(adSelectionService, adSelectionConfig));
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId, myAppPackageName));
+                        adSelectionConfigId, TEST_PACKAGE_NAME));
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(SHORT_API_NAME_REMOVE_OVERRIDE, STATUS_INTERNAL_ERROR);
@@ -1525,8 +1564,6 @@ public class AdSelectionServiceImplTest {
     public void testRemoveAdSelectionConfigRemoteInfoOverrideDoesNotDeleteWithIncorrectPackageName()
             throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
-
-        String myAppPackageName = "com.google.ppapi.test";
         String incorrectPackageName = "com.google.ppapi.test.incorrect";
 
         when(mDevContextFilter.createDevContext())
@@ -1547,7 +1584,9 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
-                        mFlags);
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerSpy));
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -1557,7 +1596,7 @@ public class AdSelectionServiceImplTest {
         DBAdSelectionOverride dbAdSelectionOverride =
                 DBAdSelectionOverride.builder()
                         .setAdSelectionConfigId(adSelectionConfigId)
-                        .setAppPackageName(myAppPackageName)
+                        .setAppPackageName(TEST_PACKAGE_NAME)
                         .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
                         .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
                         .build();
@@ -1566,7 +1605,7 @@ public class AdSelectionServiceImplTest {
 
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId, myAppPackageName));
+                        adSelectionConfigId, TEST_PACKAGE_NAME));
 
         AdSelectionOverrideTestCallback callback =
                 callRemoveOverride(adSelectionService, adSelectionConfig);
@@ -1574,7 +1613,7 @@ public class AdSelectionServiceImplTest {
         assertTrue(callback.mIsSuccess);
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId, myAppPackageName));
+                        adSelectionConfigId, TEST_PACKAGE_NAME));
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(SHORT_API_NAME_REMOVE_OVERRIDE, STATUS_SUCCESS);
@@ -1588,8 +1627,6 @@ public class AdSelectionServiceImplTest {
     public void testResetAllAdSelectionConfigRemoteOverridesDoesNotDeleteWithIncorrectPackageName()
             throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
-
-        String myAppPackageName = "com.google.ppapi.test";
         String incorrectPackageName = "com.google.ppapi.test.incorrect";
 
         when(mDevContextFilter.createDevContext())
@@ -1610,7 +1647,9 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
-                        mFlags);
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerSpy));
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
@@ -1634,7 +1673,7 @@ public class AdSelectionServiceImplTest {
         DBAdSelectionOverride dbAdSelectionOverride1 =
                 DBAdSelectionOverride.builder()
                         .setAdSelectionConfigId(adSelectionConfigId1)
-                        .setAppPackageName(myAppPackageName)
+                        .setAppPackageName(TEST_PACKAGE_NAME)
                         .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
                         .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
                         .build();
@@ -1642,7 +1681,7 @@ public class AdSelectionServiceImplTest {
         DBAdSelectionOverride dbAdSelectionOverride2 =
                 DBAdSelectionOverride.builder()
                         .setAdSelectionConfigId(adSelectionConfigId2)
-                        .setAppPackageName(myAppPackageName)
+                        .setAppPackageName(TEST_PACKAGE_NAME)
                         .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
                         .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
                         .build();
@@ -1650,7 +1689,7 @@ public class AdSelectionServiceImplTest {
         DBAdSelectionOverride dbAdSelectionOverride3 =
                 DBAdSelectionOverride.builder()
                         .setAdSelectionConfigId(adSelectionConfigId3)
-                        .setAppPackageName(myAppPackageName)
+                        .setAppPackageName(TEST_PACKAGE_NAME)
                         .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
                         .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
                         .build();
@@ -1661,13 +1700,13 @@ public class AdSelectionServiceImplTest {
 
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId1, myAppPackageName));
+                        adSelectionConfigId1, TEST_PACKAGE_NAME));
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId2, myAppPackageName));
+                        adSelectionConfigId2, TEST_PACKAGE_NAME));
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId3, myAppPackageName));
+                        adSelectionConfigId3, TEST_PACKAGE_NAME));
 
         AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
 
@@ -1675,13 +1714,13 @@ public class AdSelectionServiceImplTest {
 
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId1, myAppPackageName));
+                        adSelectionConfigId1, TEST_PACKAGE_NAME));
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId2, myAppPackageName));
+                        adSelectionConfigId2, TEST_PACKAGE_NAME));
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId3, myAppPackageName));
+                        adSelectionConfigId3, TEST_PACKAGE_NAME));
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(SHORT_API_NAME_RESET_ALL_OVERRIDES, STATUS_SUCCESS);
@@ -1694,14 +1733,11 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testResetAllAdSelectionConfigRemoteOverridesSuccess() throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
-
-        String myAppPackageName = "com.google.ppapi.test";
-
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(myAppPackageName)
+                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
                                 .build());
 
         AdSelectionServiceImpl adSelectionService =
@@ -1715,7 +1751,9 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
-                        mFlags);
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerSpy));
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
@@ -1739,7 +1777,7 @@ public class AdSelectionServiceImplTest {
         DBAdSelectionOverride dbAdSelectionOverride1 =
                 DBAdSelectionOverride.builder()
                         .setAdSelectionConfigId(adSelectionConfigId1)
-                        .setAppPackageName(myAppPackageName)
+                        .setAppPackageName(TEST_PACKAGE_NAME)
                         .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
                         .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
                         .build();
@@ -1747,7 +1785,7 @@ public class AdSelectionServiceImplTest {
         DBAdSelectionOverride dbAdSelectionOverride2 =
                 DBAdSelectionOverride.builder()
                         .setAdSelectionConfigId(adSelectionConfigId2)
-                        .setAppPackageName(myAppPackageName)
+                        .setAppPackageName(TEST_PACKAGE_NAME)
                         .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
                         .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
                         .build();
@@ -1755,7 +1793,7 @@ public class AdSelectionServiceImplTest {
         DBAdSelectionOverride dbAdSelectionOverride3 =
                 DBAdSelectionOverride.builder()
                         .setAdSelectionConfigId(adSelectionConfigId3)
-                        .setAppPackageName(myAppPackageName)
+                        .setAppPackageName(TEST_PACKAGE_NAME)
                         .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
                         .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
                         .build();
@@ -1766,13 +1804,13 @@ public class AdSelectionServiceImplTest {
 
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId1, myAppPackageName));
+                        adSelectionConfigId1, TEST_PACKAGE_NAME));
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId2, myAppPackageName));
+                        adSelectionConfigId2, TEST_PACKAGE_NAME));
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId3, myAppPackageName));
+                        adSelectionConfigId3, TEST_PACKAGE_NAME));
 
         AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
 
@@ -1780,13 +1818,13 @@ public class AdSelectionServiceImplTest {
 
         assertFalse(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId1, myAppPackageName));
+                        adSelectionConfigId1, TEST_PACKAGE_NAME));
         assertFalse(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId2, myAppPackageName));
+                        adSelectionConfigId2, TEST_PACKAGE_NAME));
         assertFalse(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId3, myAppPackageName));
+                        adSelectionConfigId3, TEST_PACKAGE_NAME));
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(SHORT_API_NAME_RESET_ALL_OVERRIDES, STATUS_SUCCESS);
@@ -1801,13 +1839,11 @@ public class AdSelectionServiceImplTest {
             throws Exception {
         doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent(any());
 
-        String myAppPackageName = "com.google.ppapi.test";
-
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(myAppPackageName)
+                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
                                 .build());
 
         AdSelectionServiceImpl adSelectionService =
@@ -1821,7 +1857,9 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
-                        mFlags);
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerSpy));
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
@@ -1845,7 +1883,7 @@ public class AdSelectionServiceImplTest {
         DBAdSelectionOverride dbAdSelectionOverride1 =
                 DBAdSelectionOverride.builder()
                         .setAdSelectionConfigId(adSelectionConfigId1)
-                        .setAppPackageName(myAppPackageName)
+                        .setAppPackageName(TEST_PACKAGE_NAME)
                         .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
                         .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
                         .build();
@@ -1853,7 +1891,7 @@ public class AdSelectionServiceImplTest {
         DBAdSelectionOverride dbAdSelectionOverride2 =
                 DBAdSelectionOverride.builder()
                         .setAdSelectionConfigId(adSelectionConfigId2)
-                        .setAppPackageName(myAppPackageName)
+                        .setAppPackageName(TEST_PACKAGE_NAME)
                         .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
                         .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
                         .build();
@@ -1861,7 +1899,7 @@ public class AdSelectionServiceImplTest {
         DBAdSelectionOverride dbAdSelectionOverride3 =
                 DBAdSelectionOverride.builder()
                         .setAdSelectionConfigId(adSelectionConfigId3)
-                        .setAppPackageName(myAppPackageName)
+                        .setAppPackageName(TEST_PACKAGE_NAME)
                         .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
                         .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
                         .build();
@@ -1872,13 +1910,13 @@ public class AdSelectionServiceImplTest {
 
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId1, myAppPackageName));
+                        adSelectionConfigId1, TEST_PACKAGE_NAME));
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId2, myAppPackageName));
+                        adSelectionConfigId2, TEST_PACKAGE_NAME));
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId3, myAppPackageName));
+                        adSelectionConfigId3, TEST_PACKAGE_NAME));
 
         AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
 
@@ -1886,13 +1924,13 @@ public class AdSelectionServiceImplTest {
 
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId1, myAppPackageName));
+                        adSelectionConfigId1, TEST_PACKAGE_NAME));
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId2, myAppPackageName));
+                        adSelectionConfigId2, TEST_PACKAGE_NAME));
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId3, myAppPackageName));
+                        adSelectionConfigId3, TEST_PACKAGE_NAME));
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
@@ -1906,9 +1944,6 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testResetAllAdSelectionConfigRemoteOverridesFailsWithDevOptionsDisabled() {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
-
-        String myAppPackageName = "com.google.ppapi.test";
-
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
@@ -1923,7 +1958,9 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
-                        mFlags);
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerSpy));
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
@@ -1947,7 +1984,7 @@ public class AdSelectionServiceImplTest {
         DBAdSelectionOverride dbAdSelectionOverride1 =
                 DBAdSelectionOverride.builder()
                         .setAdSelectionConfigId(adSelectionConfigId1)
-                        .setAppPackageName(myAppPackageName)
+                        .setAppPackageName(TEST_PACKAGE_NAME)
                         .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
                         .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
                         .build();
@@ -1955,7 +1992,7 @@ public class AdSelectionServiceImplTest {
         DBAdSelectionOverride dbAdSelectionOverride2 =
                 DBAdSelectionOverride.builder()
                         .setAdSelectionConfigId(adSelectionConfigId2)
-                        .setAppPackageName(myAppPackageName)
+                        .setAppPackageName(TEST_PACKAGE_NAME)
                         .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
                         .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
                         .build();
@@ -1963,7 +2000,7 @@ public class AdSelectionServiceImplTest {
         DBAdSelectionOverride dbAdSelectionOverride3 =
                 DBAdSelectionOverride.builder()
                         .setAdSelectionConfigId(adSelectionConfigId3)
-                        .setAppPackageName(myAppPackageName)
+                        .setAppPackageName(TEST_PACKAGE_NAME)
                         .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
                         .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.toString())
                         .build();
@@ -1974,25 +2011,25 @@ public class AdSelectionServiceImplTest {
 
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId1, myAppPackageName));
+                        adSelectionConfigId1, TEST_PACKAGE_NAME));
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId2, myAppPackageName));
+                        adSelectionConfigId2, TEST_PACKAGE_NAME));
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId3, myAppPackageName));
+                        adSelectionConfigId3, TEST_PACKAGE_NAME));
 
         assertThrows(SecurityException.class, () -> callResetAllOverrides(adSelectionService));
 
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId1, myAppPackageName));
+                        adSelectionConfigId1, TEST_PACKAGE_NAME));
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId2, myAppPackageName));
+                        adSelectionConfigId2, TEST_PACKAGE_NAME));
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
-                        adSelectionConfigId3, myAppPackageName));
+                        adSelectionConfigId3, TEST_PACKAGE_NAME));
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(SHORT_API_NAME_RESET_ALL_OVERRIDES, STATUS_INTERNAL_ERROR);
@@ -2018,7 +2055,9 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
-                        mFlags);
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerSpy));
 
         adSelectionService.destroy();
         verify(jsScriptEngineMock).shutdown();
@@ -2049,12 +2088,15 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
-                        mFlags);
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerSpy));
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(INCORRECT_AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
                         .build();
 
         ReportImpressionTestCallback callback = callReportImpression(adSelectionService, request);
@@ -2100,12 +2142,15 @@ public class AdSelectionServiceImplTest {
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
                         FlagsWithOverriddenAppImportanceCheck
-                                .createFlagsWithAppImportanceCheckDisabled());
+                                .createFlagsWithAppImportanceCheckDisabled(),
+                        CallingAppUidSupplierProcessImpl.create(),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerSpy));
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(INCORRECT_AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
                         .build();
 
         ReportImpressionTestCallback callback = callReportImpression(adSelectionService, request);
@@ -2122,13 +2167,11 @@ public class AdSelectionServiceImplTest {
             throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
-        String myAppPackageName = "com.google.ppapi.test";
-
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(myAppPackageName)
+                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
                                 .build());
 
         doThrow(new WrongCallingApplicationStateException())
@@ -2149,7 +2192,9 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
-                        mFlags);
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerSpy));
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -2177,13 +2222,11 @@ public class AdSelectionServiceImplTest {
 
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
-        String myAppPackageName = "com.google.ppapi.test";
-
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(myAppPackageName)
+                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
                                 .build());
 
         doThrow(new WrongCallingApplicationStateException())
@@ -2205,7 +2248,9 @@ public class AdSelectionServiceImplTest {
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
                         FlagsWithOverriddenAppImportanceCheck
-                                .createFlagsWithAppImportanceCheckDisabled());
+                                .createFlagsWithAppImportanceCheckDisabled(),
+                        CallingAppUidSupplierProcessImpl.create(),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerSpy));
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -2223,13 +2268,11 @@ public class AdSelectionServiceImplTest {
     public void testRemoveOverrideForegroundCheckEnabledFails_throwsException() throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
-        String myAppPackageName = "com.google.ppapi.test";
-
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(myAppPackageName)
+                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
                                 .build());
 
         int apiName =
@@ -2249,7 +2292,9 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
-                        mFlags);
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerSpy));
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -2270,13 +2315,11 @@ public class AdSelectionServiceImplTest {
     public void testRemoveOverrideForegroundCheckDisabled_acceptBackgroundApp() throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
-        String myAppPackageName = "com.google.ppapi.test";
-
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(myAppPackageName)
+                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
                                 .build());
 
         int apiName =
@@ -2297,7 +2340,9 @@ public class AdSelectionServiceImplTest {
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
                         FlagsWithOverriddenAppImportanceCheck
-                                .createFlagsWithAppImportanceCheckDisabled());
+                                .createFlagsWithAppImportanceCheckDisabled(),
+                        CallingAppUidSupplierProcessImpl.create(),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerSpy));
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -2312,13 +2357,11 @@ public class AdSelectionServiceImplTest {
             throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
-        String myAppPackageName = "com.google.ppapi.test";
-
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(myAppPackageName)
+                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
                                 .build());
 
         int apiName =
@@ -2338,7 +2381,9 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
-                        mFlags);
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerSpy));
 
         AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
 
@@ -2357,13 +2402,11 @@ public class AdSelectionServiceImplTest {
             throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
-        String myAppPackageName = "com.google.ppapi.test";
-
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(myAppPackageName)
+                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
                                 .build());
 
         int apiName =
@@ -2384,11 +2427,109 @@ public class AdSelectionServiceImplTest {
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
                         FlagsWithOverriddenAppImportanceCheck
-                                .createFlagsWithAppImportanceCheckDisabled());
+                                .createFlagsWithAppImportanceCheckDisabled(),
+                        CallingAppUidSupplierProcessImpl.create(),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerSpy));
 
         AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
 
         assertTrue(callback.mIsSuccess);
+    }
+
+    @Test
+    public void testReportImpressionFailsWithInvalidPackageName() throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+
+        String otherPackageName = CommonFixture.TEST_PACKAGE_NAME + "incorrectPackage";
+
+        Uri sellerReportingUrl = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUrl = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+
+        String sellerDecisionLogicJs =
+                "function reportResult(ad_selection_config, render_url, bid, contextual_signals) {"
+                        + " \n"
+                        + " return {'status': 0, 'results': {'signals_for_buyer':"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
+                        + sellerReportingUrl
+                        + "' } };\n"
+                        + "}";
+
+        String buyerDecisionLogicJs =
+                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
+                        + " contextual_signals, custom_audience_signals) { \n"
+                        + " return {'status': 0, 'results': {'reporting_url': '"
+                        + buyerReportingUrl
+                        + "' } };\n"
+                        + "}";
+
+        mMockWebServerRule.startMockWebServer(
+                List.of(
+                        new MockResponse().setBody(sellerDecisionLogicJs),
+                        new MockResponse(),
+                        new MockResponse()));
+
+        DBBuyerDecisionLogic dbBuyerDecisionLogic =
+                new DBBuyerDecisionLogic.Builder()
+                        .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
+                        .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
+                        .build();
+
+        CustomAudienceSignals customAudienceSignals =
+                CustomAudienceSignalsFixture.aCustomAudienceSignals();
+
+        DBAdSelection dbAdSelection =
+                new DBAdSelection.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCustomAudienceSignals(customAudienceSignals)
+                        .setContextualSignals(mContextualSignals.toString())
+                        .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
+                        .setWinningAdRenderUri(RENDER_URL)
+                        .setWinningAdBid(BID)
+                        .setCreationTimestamp(ACTIVATION_TIME)
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
+
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mAppImportanceFilter,
+                        mExecutorService,
+                        CONTEXT,
+                        mConsentManagerMock,
+                        mAdServicesLoggerSpy,
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerSpy));
+
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(otherPackageName)
+                        .build();
+
+        assertThrows(
+                SecurityException.class, () -> callReportImpression(adSelectionService, input));
+
+        verify(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(
+                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, STATUS_UNAUTHORIZED);
+        verify(mAdServicesLoggerSpy)
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                                STATUS_UNAUTHORIZED));
     }
 
     private AdSelectionOverrideTestCallback callAddOverride(
@@ -2475,6 +2616,7 @@ public class AdSelectionServiceImplTest {
                         .setWinningAdRenderUri(RENDER_URL)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
                         .build();
 
         mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
@@ -2498,11 +2640,14 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
-                        mFlags);
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerSpy));
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(INCORRECT_AD_SELECTION_ID)
                         .setAdSelectionConfig(invalidAdSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
                         .build();
 
         IllegalArgumentException thrown =

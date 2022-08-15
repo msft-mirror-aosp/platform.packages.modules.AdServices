@@ -41,7 +41,7 @@
       "param": {
         "responseCode": 200,
         "action": "SINGLE_REPORT",
-        "result": "SUCCESS",
+        "result": 0,
         "id": "AR1"
       }
     },
@@ -86,7 +86,7 @@
       "param": {
         "responseCode": 400,
         "action": "SINGLE_REPORT",
-        "result": "POST_REQUEST_ERROR",
+        "result": 4,
         "id": "AR1"
       }
     },
@@ -131,7 +131,7 @@
       "param": {
         "responseCode": 200,
         "action": "SINGLE_REPORT",
-        "result": "ALREADY_DELIVERED",
+        "result": 2,
         "id": "AR1"
       }
     },

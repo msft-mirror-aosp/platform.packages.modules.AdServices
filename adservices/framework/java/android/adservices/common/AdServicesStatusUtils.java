@@ -23,6 +23,7 @@ import android.os.LimitExceededException;
 import java.io.IOException;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Utility class containing status codes and functions used by various response objects.
@@ -90,7 +91,8 @@ public class AdServicesStatusUtils {
      */
     public static final int STATUS_PERMISSION_NOT_REQUESTED = 9;
     /**
-     * The caller is not authorized to make this call. Caller is not allowed.
+     * The caller is not authorized to make this call. Caller is not allowed (not present in the
+     * allowed list).
      *
      * <p>This error may be considered similar to {@link SecurityException}.
      */
@@ -107,7 +109,12 @@ public class AdServicesStatusUtils {
      * <p>This error may be considered similar to {@link SecurityException}.
      */
     public static final int STATUS_UNAUTHORIZED = 12;
-
+    /**
+     * There was an internal Timeout within the API, which is non-recoverable by the caller
+     *
+     * <p>This error may be considered similar to {@link java.util.concurrent.TimeoutException}
+     */
+    public static final int STATUS_TIMEOUT = 13;
 
     /** The error message to be returned along with {@link IllegalStateException}. */
     public static final String ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE = "Service is not available.";
@@ -137,7 +144,10 @@ public class AdServicesStatusUtils {
      * to perform this operation on behalf of the given package.
      */
     public static final String SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE =
-            "Caller not allowed to perform this operation on behalf of the given package.";
+            "Caller is not allowed to perform this operation on behalf of the given package.";
+
+    /** The error message to be returned along with {@link TimeoutException}. */
+    public static final String TIMED_OUT_ERROR_MESSAGE = "API timed out.";
 
     /** Returns true for a successful status. */
     public static boolean isSuccess(@StatusCode int statusCode) {
@@ -162,6 +172,11 @@ public class AdServicesStatusUtils {
                 return new SecurityException(SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE);
             case STATUS_BACKGROUND_CALLER:
                 return new IllegalStateException(ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE);
+            case STATUS_UNAUTHORIZED:
+                return new SecurityException(
+                        SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE);
+            case STATUS_TIMEOUT:
+                return new TimeoutException(TIMED_OUT_ERROR_MESSAGE);
             default:
                 return new IllegalStateException();
         }
@@ -194,6 +209,7 @@ public class AdServicesStatusUtils {
                 STATUS_CALLER_NOT_ALLOWED,
                 STATUS_BACKGROUND_CALLER,
                 STATUS_UNAUTHORIZED,
+                STATUS_TIMEOUT
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface StatusCode {}

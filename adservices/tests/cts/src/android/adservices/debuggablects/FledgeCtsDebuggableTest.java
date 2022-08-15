@@ -166,6 +166,8 @@ public class FledgeCtsDebuggableTest {
         PhFlagsFixture.overrideForegroundStatusForFledgeOverrides(false);
         PhFlagsFixture.overrideForegroundStatusForFledgeRunAdSelection(false);
         PhFlagsFixture.overrideForegroundStatusForFledgeReportImpression(false);
+        PhFlagsFixture.overrideEnforceIsolateMaxHeapSize(false);
+        PhFlagsFixture.overrideIsolateMaxHeapSizeBytes(0);
     }
 
     @Test
@@ -251,10 +253,7 @@ public class FledgeCtsDebuggableTest {
                 CommonFixture.getUri(BUYER_2, AD_URL_PREFIX + "/ad3"), outcome.getRenderUri());
 
         ReportImpressionRequest reportImpressionRequest =
-                new ReportImpressionRequest.Builder()
-                        .setAdSelectionId(outcome.getAdSelectionId())
-                        .setAdSelectionConfig(AD_SELECTION_CONFIG)
-                        .build();
+                new ReportImpressionRequest(outcome.getAdSelectionId(), AD_SELECTION_CONFIG);
 
         // Performing reporting, and asserting that no exception is thrown
         mAdSelectionClient.reportImpression(reportImpressionRequest).get(10, TimeUnit.SECONDS);

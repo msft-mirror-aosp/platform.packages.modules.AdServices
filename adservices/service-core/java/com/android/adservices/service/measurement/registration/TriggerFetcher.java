@@ -71,89 +71,54 @@ public class TriggerFetcher {
             @NonNull List<TriggerRegistration> addToResults,
             boolean isWebSource,
             boolean isAllowDebugKey) {
-        boolean additionalResult = false;
         TriggerRegistration.Builder result = new TriggerRegistration.Builder();
         result.setTopOrigin(topOrigin);
         result.setReportingOrigin(reportingOrigin);
         List<String> field;
-        field = headers.get("Attribution-Reporting-Register-Event-Trigger");
-        if (field != null) {
-            if (field.size() != 1) {
-                LogUtil.d("Expected one event trigger header element!");
-                return false;
-            }
-            // Parses in event triggers data, which is a list of event metadata containing
-            // trigger data, priority, de-dup key and event-level filters.
-            result.setEventTriggers(field.get(0));
-            additionalResult = true;
+        field = headers.get("Attribution-Reporting-Register-Trigger");
+        if (field == null || field.size() != 1) {
+            return false;
         }
-        field = headers.get("Attribution-Reporting-Register-Aggregatable-Trigger-Data");
-        if (field != null) {
-            if (field.size() != 1) {
-                LogUtil.d("Expected one aggregate trigger data!");
-                return false;
+        try {
+            JSONObject json = new JSONObject(field.get(0));
+            if (!json.isNull(TriggerHeaderContract.EVENT_TRIGGER_DATA)) {
+                result.setEventTriggers(json.getString(TriggerHeaderContract.EVENT_TRIGGER_DATA));
             }
-            try {
-                if (isValidAggregateTriggerData(field.get(0))) {
-                    result.setAggregateTriggerData(field.get(0));
-                    additionalResult = true;
-                } else {
+            if (!json.isNull(TriggerHeaderContract.AGGREGATABLE_TRIGGER_DATA)) {
+                if (!isValidAggregateTriggerData(
+                        json.getJSONArray(TriggerHeaderContract.AGGREGATABLE_TRIGGER_DATA))) {
                     return false;
                 }
-            } catch (JSONException e) {
-                LogUtil.d(e, "Invalid JSON");
-                return false;
+                result.setAggregateTriggerData(
+                        json.getString(TriggerHeaderContract.AGGREGATABLE_TRIGGER_DATA));
             }
-        }
-        field = headers.get("Attribution-Reporting-Register-Aggregatable-Values");
-        if (field != null) {
-            if (field.size() != 1) {
-                LogUtil.d("Expected one aggregatable value!");
-                return false;
-            }
-            try {
-                if (isValidAggregateValues(field.get(0))) {
-                    result.setAggregateValues(field.get(0));
-                    additionalResult = true;
-                } else {
+            if (!json.isNull(TriggerHeaderContract.AGGREGATABLE_VALUES)) {
+                if (!isValidAggregateValues(
+                        json.getJSONObject(TriggerHeaderContract.AGGREGATABLE_VALUES))) {
                     return false;
                 }
-            } catch (JSONException e) {
-                LogUtil.d(e, "Invalid JSON");
-                return false;
+                result.setAggregateValues(
+                        json.getString(TriggerHeaderContract.AGGREGATABLE_VALUES));
             }
-        }
-
-        field = headers.get("Attribution-Reporting-Filters");
-        if (field != null) {
-            if (field.size() != 1) {
-                LogUtil.d("Expected one reporting filter value!");
-                return false;
+            if (!json.isNull(TriggerHeaderContract.FILTERS)) {
+                result.setFilters(json.getString(TriggerHeaderContract.FILTERS));
             }
-            result.setFilters(field.get(0));
-            additionalResult = true;
-        }
-
-        boolean isWebAllow = isWebSource && isAllowDebugKey;
-        boolean isAppAllow = !isWebSource && mAdIdPermissionFetcher.isAdIdPermissionEnabled();
-        field = headers.get("Attribution-Reporting-Trigger-Debug-Key");
-        if (field != null && (isWebAllow || isAppAllow)) {
-            if (field.size() != 1) {
-                LogUtil.d("Expected one trigger debug value!");
-                return false;
+            boolean isWebAllow = isWebSource && isAllowDebugKey;
+            boolean isAppAllow = !isWebSource && mAdIdPermissionFetcher.isAdIdPermissionEnabled();
+            if (!json.isNull(TriggerHeaderContract.DEBUG_KEY) && (isWebAllow || isAppAllow)) {
+                try {
+                    result.setDebugKey(
+                            Long.parseLong(json.getString(TriggerHeaderContract.DEBUG_KEY)));
+                } catch (NumberFormatException e) {
+                    LogUtil.e(e, "Parsing debug key failed");
+                }
             }
-            try {
-                result.setDebugKey(Long.parseLong(field.get(0)));
-            } catch (NumberFormatException e) {
-                LogUtil.e(e, "Parsing debug key failed");
-            }
-        }
-
-        if (additionalResult) {
             addToResults.add(result.build());
             return true;
+        } catch (JSONException e) {
+            LogUtil.e("Trigger Parsing failed", e);
+            return false;
         }
-        return false;
     }
 
     /** Provided a testing hook. */
@@ -300,23 +265,30 @@ public class TriggerFetcher {
                 mIoExecutor);
     }
 
-    private boolean isValidAggregateTriggerData(String aggregateTriggerData) throws JSONException {
-        JSONArray jsonArray = new JSONArray(aggregateTriggerData);
-        if (jsonArray.length() > MAX_AGGREGATE_KEYS_PER_REGISTRATION) {
-            LogUtil.d("Aggregate trigger data has more keys than permitted. %s",
-                    jsonArray.length());
+    private boolean isValidAggregateTriggerData(JSONArray aggregateTriggerData) {
+        if (aggregateTriggerData.length() > MAX_AGGREGATE_KEYS_PER_REGISTRATION) {
+            LogUtil.d(
+                    "Aggregate trigger data has more keys than permitted. %s",
+                    aggregateTriggerData.length());
             return false;
         }
         return true;
     }
 
-    private boolean isValidAggregateValues(String aggregateValues) throws JSONException {
-        JSONObject jsonObj = new JSONObject(aggregateValues);
-        if (jsonObj.length() > MAX_AGGREGATE_KEYS_PER_REGISTRATION) {
-            LogUtil.d("Aggregate values have more keys than permitted. %s",
-                    jsonObj.length());
+    private boolean isValidAggregateValues(JSONObject aggregateValues) {
+        if (aggregateValues.length() > MAX_AGGREGATE_KEYS_PER_REGISTRATION) {
+            LogUtil.d(
+                    "Aggregate values have more keys than permitted. %s", aggregateValues.length());
             return false;
         }
         return true;
+    }
+
+    private interface TriggerHeaderContract {
+        String EVENT_TRIGGER_DATA = "event_trigger_data";
+        String FILTERS = "filters";
+        String AGGREGATABLE_TRIGGER_DATA = "aggregatable_trigger_data";
+        String AGGREGATABLE_VALUES = "aggregatable_values";
+        String DEBUG_KEY = "debug_key";
     }
 }

@@ -24,6 +24,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import android.adservices.common.AdServicesStatusUtils;
 import android.content.Context;
 import android.net.Uri;
 
@@ -105,7 +106,7 @@ public class EventReportingJobHandlerTest {
 
         doNothing().when(mMeasurementDao).markAggregateReportDelivered(eventReport.getId());
         Assert.assertEquals(
-                EventReportingJobHandler.PerformReportResult.SUCCESS,
+                AdServicesStatusUtils.STATUS_SUCCESS,
                 mSpyEventReportingJobHandler.performReport(eventReport.getId()));
 
         verify(mMeasurementDao, times(1)).markEventReportDelivered(any());
@@ -134,7 +135,7 @@ public class EventReportingJobHandlerTest {
                 .createReportJsonPayload(Mockito.any());
 
         Assert.assertEquals(
-                EventReportingJobHandler.PerformReportResult.POST_REQUEST_ERROR,
+                AdServicesStatusUtils.STATUS_IO_ERROR,
                 mSpyEventReportingJobHandler.performReport(eventReport.getId()));
 
         verify(mMeasurementDao, never()).markEventReportDelivered(any());
@@ -153,7 +154,7 @@ public class EventReportingJobHandlerTest {
 
         when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
         Assert.assertEquals(
-                EventReportingJobHandler.PerformReportResult.ALREADY_DELIVERED,
+                AdServicesStatusUtils.STATUS_INVALID_ARGUMENT,
                 mSpyEventReportingJobHandler.performReport(eventReport.getId()));
 
         verify(mMeasurementDao, never()).markEventReportDelivered(any());

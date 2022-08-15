@@ -21,6 +21,10 @@ import android.annotation.Nullable;
 import android.annotation.SuppressLint;
 import android.content.Context;
 
+import androidx.javascriptengine.IsolateStartupParameters;
+import androidx.javascriptengine.JavaScriptIsolate;
+import androidx.javascriptengine.JavaScriptSandbox;
+
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.exception.JSExecutionException;
@@ -37,9 +41,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
-import org.chromium.android_webview.js_sandbox.client.JsIsolate;
-import org.chromium.android_webview.js_sandbox.client.JsSandbox;
-
 import java.io.Closeable;
 import java.util.List;
 import java.util.Objects;
@@ -49,8 +50,8 @@ import javax.annotation.concurrent.GuardedBy;
 
 /**
  * A convenience class to execute JS scripts using a WebView. Because arguments to the {@link
- * #evaluate(String, List)} methods are set at WebView level, calls to that methods are serialized
- * to avoid one scripts being able to interfere one another.
+ * #evaluate(String, List, IsolateSettings)} methods are set at WebView level, calls to that methods
+ * are serialized to avoid one scripts being able to interfere one another.
  *
  * <p>The class is re-entrant, for best performance when using it on multiple thread is better to
  * have every thread using its own instance.
@@ -62,51 +63,55 @@ public class JSScriptEngine {
     public static final String WASM_MODULE_BYTES_ID = "__wasmModuleBytes";
     public static final String WASM_MODULE_ARG_NAME = "wasmModule";
 
+    public static final String NON_SUPPORTED_MAX_HEAP_SIZE_ERROR =
+            "JS isolate does not support Max heap size";
+
     @SuppressLint("StaticFieldLeak")
     private static JSScriptEngine sSingleton;
 
     @NonNull private final Context mContext;
-    @NonNull private final JsSandboxProvider mJsSandboxProvider;
+    @NonNull private final JavaScriptSandboxProvider mJsSandboxProvider;
     @NonNull private final ListeningExecutorService mExecutorService;
     @NonNull private final Profiler mProfiler;
 
     /**
-     * Extracting the logic to create the JsSandbox in a factory class for better testability. This
-     * factory class creates a single instance of `JsSandbox` until the instance is invalidated by
-     * calling {@link JsSandboxProvider#destroyCurrentInstance()}. The instance is returned wrapped
-     * in a {@code Future}
+     * Extracting the logic to create the JavaScriptSandbox in a factory class for better
+     * testability. This factory class creates a single instance of {@link JavaScriptSandbox} until
+     * the instance is invalidated by calling {@link
+     * JavaScriptSandboxProvider#destroyCurrentInstance()}. The instance is returned wrapped in a
+     * {@code Future}
      */
     @VisibleForTesting
-    static class JsSandboxProvider {
+    static class JavaScriptSandboxProvider {
         private final Object mSandboxLock = new Object();
         private StopWatch mSandboxInitStopWatch;
         private Profiler mProfiler;
 
         @GuardedBy("mSandboxLock")
-        private FluentFuture<JsSandbox> mFutureSandbox;
+        private FluentFuture<JavaScriptSandbox> mFutureSandbox;
 
-        JsSandboxProvider(Profiler profiler) {
+        JavaScriptSandboxProvider(Profiler profiler) {
             mProfiler = profiler;
         }
 
-        public FluentFuture<JsSandbox> getFutureInstance(Context context) {
+        public FluentFuture<JavaScriptSandbox> getFutureInstance(Context context) {
             synchronized (mSandboxLock) {
                 if (mFutureSandbox == null) {
-                    LogUtil.i("Creating JsSandbox");
+                    LogUtil.i("Creating JavaScriptSandbox");
                     mSandboxInitStopWatch =
                             mProfiler.start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME);
 
                     mFutureSandbox =
                             FluentFuture.from(
-                                    JsSandbox.newConnectedInstanceAsync(
+                                    JavaScriptSandbox.createConnectedInstanceAsync(
                                             // This instance will have the same lifetime
                                             // of the PPAPI process
                                             context.getApplicationContext()));
 
                     mFutureSandbox.addCallback(
-                            new FutureCallback<JsSandbox>() {
+                            new FutureCallback<JavaScriptSandbox>() {
                                 @Override
-                                public void onSuccess(JsSandbox result) {
+                                public void onSuccess(JavaScriptSandbox result) {
                                     mSandboxInitStopWatch.stop();
                                     LogUtil.i("JSScriptEngine created.");
                                 }
@@ -114,7 +119,7 @@ public class JSScriptEngine {
                                 @Override
                                 public void onFailure(Throwable t) {
                                     mSandboxInitStopWatch.stop();
-                                    LogUtil.e(t, "JsSandbox initialization failed");
+                                    LogUtil.e(t, "JavaScriptSandbox initialization failed");
                                 }
                             },
                             AdServicesExecutors.getLightWeightExecutor());
@@ -125,8 +130,8 @@ public class JSScriptEngine {
         }
 
         /**
-         * Closes the connection with {@code JsSandbox}. Any running computation will fail. A new
-         * call to {@link #getFutureInstance(Context)} will create the instance again.
+         * Closes the connection with {@code JavaScriptSandbox}. Any running computation will fail.
+         * A new call to {@link #getFutureInstance(Context)} will create the instance again.
          */
         public ListenableFuture<Void> destroyCurrentInstance() {
             synchronized (mSandboxLock) {
@@ -146,8 +151,8 @@ public class JSScriptEngine {
                                             Throwable.class,
                                             t -> {
                                                 LogUtil.i(
-                                                        "JsSandbox initialization failed, won't"
-                                                                + " close");
+                                                        "JavaScriptSandbox initialization failed,"
+                                                                + " won't close");
                                                 return null;
                                             },
                                             AdServicesExecutors.getLightWeightExecutor());
@@ -165,7 +170,7 @@ public class JSScriptEngine {
     public JSScriptEngine(@NonNull Context context) {
         this(
                 context,
-                new JsSandboxProvider(Profiler.createNoOpInstance(TAG)),
+                new JavaScriptSandboxProvider(Profiler.createNoOpInstance(TAG)),
                 Profiler.createNoOpInstance(TAG),
                 AdServicesExecutors.getLightWeightExecutor());
     }
@@ -178,7 +183,7 @@ public class JSScriptEngine {
                 sSingleton =
                         new JSScriptEngine(
                                 context,
-                                new JsSandboxProvider(profiler),
+                                new JavaScriptSandboxProvider(profiler),
                                 profiler,
                                 // There is no blocking call or IO code in the service logic
                                 AdServicesExecutors.getLightWeightExecutor());
@@ -200,13 +205,13 @@ public class JSScriptEngine {
             if (sSingleton != null) {
                 throw new IllegalStateException(
                         "Unable to initialize test JSScriptEngine multiple times using"
-                                + "the real JsSandboxProvider.");
+                                + "the real JavaScriptSandboxProvider.");
             }
 
             sSingleton =
                     new JSScriptEngine(
                             context,
-                            new JsSandboxProvider(profiler),
+                            new JavaScriptSandboxProvider(profiler),
                             profiler,
                             AdServicesExecutors.getLightWeightExecutor());
         }
@@ -216,15 +221,15 @@ public class JSScriptEngine {
 
     /**
      * This method will instantiate a new instance of JSScriptEngine every time. It is intended to
-     * be used with a fake/mock {@link JsSandboxProvider}. Using a real one would cause exception
-     * when trying to create the second instance of {@link JsSandbox}.
+     * be used with a fake/mock {@link JavaScriptSandboxProvider}. Using a real one would cause
+     * exception when trying to create the second instance of {@link JavaScriptSandbox}.
      *
      * @return a new JSScriptEngine instance
      */
     @VisibleForTesting
     public static JSScriptEngine createNewInstanceForTesting(
             @NonNull Context context,
-            @NonNull JsSandboxProvider jsSandboxProvider,
+            @NonNull JavaScriptSandboxProvider jsSandboxProvider,
             @NonNull Profiler profiler) {
         return new JSScriptEngine(
                 context, jsSandboxProvider, profiler, AdServicesExecutors.getLightWeightExecutor());
@@ -246,7 +251,7 @@ public class JSScriptEngine {
     @SuppressWarnings("FutureReturnValueIgnored")
     JSScriptEngine(
             @NonNull Context context,
-            @NonNull JsSandboxProvider jsSandboxProvider,
+            @NonNull JavaScriptSandboxProvider jsSandboxProvider,
             @NonNull Profiler profiler,
             @NonNull ListeningExecutorService executorService) {
         Objects.requireNonNull(context);
@@ -263,13 +268,30 @@ public class JSScriptEngine {
     }
 
     /**
-     * Same as {@link #evaluate(String, List, String)} where the entry point function name is {@link
-     * #ENTRY_POINT_FUNC_NAME}.
+     * Same as {@link #evaluate(String, List, String, IsolateSettings)} where the entry point
+     * function name is {@link #ENTRY_POINT_FUNC_NAME}.
      */
     @NonNull
     public ListenableFuture<String> evaluate(
+            @NonNull String jsScript,
+            @NonNull List<JSScriptArgument> args,
+            @NonNull IsolateSettings isolateSettings) {
+        return evaluate(jsScript, args, ENTRY_POINT_FUNC_NAME, isolateSettings);
+    }
+
+    /**
+     * Same as {@link #evaluate(String, List, String, IsolateSettings)} where the entry point
+     * function name is {@link #ENTRY_POINT_FUNC_NAME}.
+     */
+    // TODO(b/242358625): remove this method post updating the perf test
+    @NonNull
+    public ListenableFuture<String> evaluate(
             @NonNull String jsScript, @NonNull List<JSScriptArgument> args) {
-        return evaluate(jsScript, args, ENTRY_POINT_FUNC_NAME);
+        return evaluate(
+                jsScript,
+                args,
+                ENTRY_POINT_FUNC_NAME,
+                IsolateSettings.forMaxHeapSizeEnforcementDisabled());
     }
 
     /**
@@ -287,8 +309,34 @@ public class JSScriptEngine {
     public ListenableFuture<String> evaluate(
             @NonNull String jsScript,
             @NonNull List<JSScriptArgument> args,
+            @NonNull String entryFunctionName,
+            @NonNull IsolateSettings isolateSettings) {
+        return evaluateInternal(jsScript, args, entryFunctionName, null, isolateSettings);
+    }
+
+    /**
+     * Invokes the function {@code entryFunctionName} defined by the JS code in {@code jsScript} and
+     * return the result. It will reset the WebView status after evaluating the script.
+     *
+     * @param jsScript The JS script
+     * @param args The arguments to pass when invoking {@code entryFunctionName}
+     * @param entryFunctionName The name of a function defined in {@code jsScript} that should be
+     *     invoked.
+     * @return A {@link ListenableFuture} containing the JS string representation of the result of
+     *     {@code entryFunctionName}'s invocation
+     */
+    // TODO(b/242358625): remove this method post updating the perf test
+    @NonNull
+    public ListenableFuture<String> evaluate(
+            @NonNull String jsScript,
+            @NonNull List<JSScriptArgument> args,
             @NonNull String entryFunctionName) {
-        return evaluateInternal(jsScript, args, entryFunctionName, null);
+        return evaluateInternal(
+                jsScript,
+                args,
+                entryFunctionName,
+                null,
+                IsolateSettings.forMaxHeapSizeEnforcementDisabled());
     }
 
     /**
@@ -310,10 +358,42 @@ public class JSScriptEngine {
             @NonNull String jsScript,
             @NonNull byte[] wasmBinary,
             @NonNull List<JSScriptArgument> args,
+            @NonNull String entryFunctionName,
+            @NonNull IsolateSettings isolateSettings) {
+        Objects.requireNonNull(wasmBinary);
+
+        return evaluateInternal(jsScript, args, entryFunctionName, wasmBinary, isolateSettings);
+    }
+
+    /**
+     * Loads the WASM module defined by {@code wasmBinary}, invokes the function {@code
+     * entryFunctionName} defined by the JS code in {@code jsScript} and return the result. It will
+     * reset the WebView status after evaluating the script. The function is expected to accept all
+     * the arguments defined in {@code args} plus an extra final parameter of type {@code
+     * WebAssembly.Module}.
+     *
+     * @param jsScript The JS script
+     * @param args The arguments to pass when invoking {@code entryFunctionName}
+     * @param entryFunctionName The name of a function defined in {@code jsScript} that should be
+     *     invoked.
+     * @return A {@link ListenableFuture} containing the JS string representation of the result of
+     *     {@code entryFunctionName}'s invocation
+     */
+    // TODO(b/242358625): remove this method post updating the perf test
+    @NonNull
+    public ListenableFuture<String> evaluate(
+            @NonNull String jsScript,
+            @NonNull byte[] wasmBinary,
+            @NonNull List<JSScriptArgument> args,
             @NonNull String entryFunctionName) {
         Objects.requireNonNull(wasmBinary);
 
-        return evaluateInternal(jsScript, args, entryFunctionName, wasmBinary);
+        return evaluateInternal(
+                jsScript,
+                args,
+                entryFunctionName,
+                wasmBinary,
+                IsolateSettings.forMaxHeapSizeEnforcementDisabled());
     }
 
     @NonNull
@@ -321,7 +401,8 @@ public class JSScriptEngine {
             @NonNull String jsScript,
             @NonNull List<JSScriptArgument> args,
             @NonNull String entryFunctionName,
-            @Nullable byte[] wasmBinary) {
+            @Nullable byte[] wasmBinary,
+            @NonNull IsolateSettings isolateSettings) {
         Objects.requireNonNull(jsScript);
         Objects.requireNonNull(args);
         Objects.requireNonNull(entryFunctionName);
@@ -335,7 +416,8 @@ public class JSScriptEngine {
                                         jsScript,
                                         args,
                                         entryFunctionName,
-                                        wasmBinary),
+                                        wasmBinary,
+                                        isolateSettings),
                         mExecutorService)
                 .finishToFuture();
     }
@@ -343,11 +425,12 @@ public class JSScriptEngine {
     @NonNull
     private ClosingFuture<String> evaluateOnSandbox(
             @NonNull ClosingFuture.DeferredCloser closer,
-            @NonNull JsSandbox jsSandbox,
+            @NonNull JavaScriptSandbox jsSandbox,
             @NonNull String jsScript,
             @NonNull List<JSScriptArgument> args,
             @NonNull String entryFunctionName,
-            @Nullable byte[] wasmBinary) {
+            @Nullable byte[] wasmBinary,
+            @NonNull IsolateSettings isolateSettings) {
 
         boolean hasWasmModule = wasmBinary != null;
         if (hasWasmModule) {
@@ -357,7 +440,7 @@ public class JSScriptEngine {
                             + " Sandbox available on this device");
         }
 
-        JsIsolate jsIsolate = createIsolate(jsSandbox);
+        JavaScriptIsolate jsIsolate = createIsolate(jsSandbox, isolateSettings);
         closer.eventuallyClose(new CloseableIsolateWrapper(jsIsolate), mExecutorService);
 
         if (hasWasmModule) {
@@ -379,7 +462,7 @@ public class JSScriptEngine {
 
         StopWatch jsExecutionStopWatch =
                 mProfiler.start(JSScriptEngineLogConstants.JAVA_EXECUTION_TIME);
-        return ClosingFuture.from(jsIsolate.evaluateJavascriptAsync(fullScript))
+        return ClosingFuture.from(jsIsolate.evaluateJavaScriptAsync(fullScript))
                 .transform(
                         (ignoredCloser, result) -> {
                             jsExecutionStopWatch.stop();
@@ -398,16 +481,19 @@ public class JSScriptEngine {
                         mExecutorService);
     }
 
-    private boolean isWasmSupported(JsSandbox jsSandbox) {
-        boolean wasmCompilationSupported = jsSandbox.isFeatureSupported(JsSandbox.WASM_COMPILATION);
+    private boolean isWasmSupported(JavaScriptSandbox jsSandbox) {
+        boolean wasmCompilationSupported =
+                jsSandbox.isFeatureSupported(JavaScriptSandbox.JS_FEATURE_WASM_COMPILATION);
         // We will pass the WASM binary via `provideNamesData`
         // The JS will read the data using android.consumeNamedDataAsArrayBuffer
         boolean provideConsumeArrayBufferSupported =
-                jsSandbox.isFeatureSupported(JsSandbox.PROVIDE_CONSUME_ARRAY_BUFFER);
+                jsSandbox.isFeatureSupported(
+                        JavaScriptSandbox.JS_FEATURE_PROVIDE_CONSUME_ARRAY_BUFFER);
         // The call android.consumeNamedDataAsArrayBuffer to read the WASM byte array
         // returns a promises so all our code will be in a promise chain
-        boolean promiseReturnSupported = jsSandbox.isFeatureSupported(JsSandbox.PROMISE_RETURN);
-        LogUtil.d(
+        boolean promiseReturnSupported =
+                jsSandbox.isFeatureSupported(JavaScriptSandbox.JS_FEATURE_PROMISE_RETURN);
+        LogUtil.v(
                 String.format(
                         "Is WASM supported? WASM_COMPILATION: %b  PROVIDE_CONSUME_ARRAY_BUFFER: %b,"
                                 + " PROMISE_RETURN: %b",
@@ -420,7 +506,7 @@ public class JSScriptEngine {
     }
 
     /**
-     * @return a future value inidicating if the JS Sandbox installed on the device supports WASM
+     * @return a future value indicating if the JS Sandbox installed on the device supports WASM
      *     execution or an error if the connection to the JS Sandbox failed.
      */
     public ListenableFuture<Boolean> isWasmSupported() {
@@ -429,20 +515,61 @@ public class JSScriptEngine {
                 .transform(jsSandbox -> isWasmSupported(jsSandbox), mExecutorService);
     }
 
+    boolean isConfigurableHeapSizeSupported(JavaScriptSandbox jsSandbox) {
+        boolean isConfigurableHeapSupported =
+                jsSandbox.isFeatureSupported(JavaScriptSandbox.JS_FEATURE_ISOLATE_MAX_HEAP_SIZE);
+        LogUtil.v("Is configurable max heap size supported? : %b", isConfigurableHeapSupported);
+        return isConfigurableHeapSupported;
+    }
+
     /**
-     * Creates a new isolate. This method handles the case where the `JsSandbox` process has been
-     * terminated by closing this connection. The ongoing call will fail, we won't try to recover it
-     * to keep the code simple.
+     * Creates a new isolate. This method handles the case where the `JavaScriptSandbox` process has
+     * been terminated by closing this connection. The ongoing call will fail, we won't try to
+     * recover it to keep the code simple.
+     *
+     * <p>Throws error in case, we have enforced max heap memory restrictions and isolate does not
+     * support that feature
      */
-    private JsIsolate createIsolate(JsSandbox jsSandbox) {
+    private JavaScriptIsolate createIsolate(
+            JavaScriptSandbox jsSandbox, IsolateSettings isolateSettings) {
         StopWatch isolateStopWatch =
                 mProfiler.start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
         try {
-            return jsSandbox.createIsolate();
+            if (!isConfigurableHeapSizeSupported(jsSandbox)
+                    && isolateSettings.getEnforceMaxHeapSizeFeature()) {
+                LogUtil.e("Memory limit enforcement required, but not supported by Isolate");
+                throw new IllegalStateException(NON_SUPPORTED_MAX_HEAP_SIZE_ERROR);
+            }
+
+            JavaScriptIsolate javaScriptIsolate;
+            if (isolateSettings.getEnforceMaxHeapSizeFeature()
+                    && isolateSettings.getMaxHeapSizeBytes() > 0) {
+                LogUtil.d(
+                        "Creating JS isolate with memory limit: %d bytes",
+                        isolateSettings.getMaxHeapSizeBytes());
+                IsolateStartupParameters startupParams = new IsolateStartupParameters();
+                startupParams.setMaxHeapSizeBytes(isolateSettings.getMaxHeapSizeBytes());
+                javaScriptIsolate = jsSandbox.createIsolate(startupParams);
+                if (javaScriptIsolate == null) {
+                    throw new IllegalStateException(
+                            "JS Isolate does not support setting max heap size");
+                }
+            } else {
+                LogUtil.d("Creating JS isolate with unbounded memory limit");
+                javaScriptIsolate = jsSandbox.createIsolate();
+            }
+            return javaScriptIsolate;
+        } catch (IllegalStateException isolateMemoryLimitUnsupported) {
+            LogUtil.e(
+                    "JavaScriptIsolate does not support setting max heap size, cannot create an"
+                            + " isolate to run JS code into.");
+            throw new JSScriptEngineConnectionException(
+                    "Unable to create isolate", isolateMemoryLimitUnsupported);
         } catch (RuntimeException jsSandboxIsDisconnected) {
             LogUtil.e(
-                    "JSSandboxProcess is disconnected, cannot create an isolate to run JS code"
-                        + " into. Resetting connection with AwJsSandbox to enable future calls.");
+                    "JavaScriptSandboxProcess is disconnected, cannot create an isolate to run JS"
+                            + " code into. Resetting connection with AwJavaScriptSandbox to enable"
+                            + " future calls.");
             mJsSandboxProvider.destroyCurrentInstance();
             throw new JSScriptEngineConnectionException(
                     "Unable to create isolate", jsSandboxIsDisconnected);
@@ -499,13 +626,13 @@ public class JSScriptEngine {
     }
 
     /**
-     * Wrapper class required to convert an {@link java.lang.AutoCloseable} {@link JsIsolate} into a
-     * {@link Closeable} type.
+     * Wrapper class required to convert an {@link java.lang.AutoCloseable} {@link
+     * JavaScriptIsolate} into a {@link Closeable} type.
      */
     private static class CloseableIsolateWrapper implements Closeable {
-        @NonNull final JsIsolate mIsolate;
+        @NonNull final JavaScriptIsolate mIsolate;
 
-        CloseableIsolateWrapper(@NonNull JsIsolate isolate) {
+        CloseableIsolateWrapper(@NonNull JavaScriptIsolate isolate) {
             Objects.requireNonNull(isolate);
             mIsolate = isolate;
         }

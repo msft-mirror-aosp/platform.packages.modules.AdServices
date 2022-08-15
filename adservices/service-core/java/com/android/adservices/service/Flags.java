@@ -232,6 +232,9 @@ public interface Flags extends Dumpable {
     long FLEDGE_CUSTOM_AUDIENCE_MAX_ACTIVATION_DELAY_IN_MS =
             60L * 24L * 60L * 60L * 1000L; // 60 days
     long FLEDGE_CUSTOM_AUDIENCE_MAX_EXPIRE_IN_MS = 60L * 24L * 60L * 60L * 1000L; // 60 days
+    int FLEDGE_CUSTOM_AUDIENCE_MAX_NAME_SIZE_B = 200;
+    int FLEDGE_CUSTOM_AUDIENCE_MAX_DAILY_UPDATE_URI_SIZE_B = 400;
+    int FLEDGE_CUSTOM_AUDIENCE_MAX_BIDDING_LOGIC_URI_SIZE_B = 400;
     int FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B = 10 * 1024; // 10 KiB
     int FLEDGE_CUSTOM_AUDIENCE_MAX_TRUSTED_BIDDING_DATA_SIZE_B = 10 * 1024; // 10 KiB
     int FLEDGE_CUSTOM_AUDIENCE_MAX_ADS_SIZE_B = 10 * 1024; // 10 KiB
@@ -276,6 +279,27 @@ public interface Flags extends Dumpable {
      */
     default long getFledgeCustomAudienceMaxExpireInMs() {
         return FLEDGE_CUSTOM_AUDIENCE_MAX_EXPIRE_IN_MS;
+    }
+
+    /** Returns the maximum size in bytes allowed for name in each FLEDGE custom audience. */
+    default int getFledgeCustomAudienceMaxNameSizeB() {
+        return FLEDGE_CUSTOM_AUDIENCE_MAX_NAME_SIZE_B;
+    }
+
+    /**
+     * Returns the maximum size in bytes allowed for daily update uri in each FLEDGE custom
+     * audience.
+     */
+    default int getFledgeCustomAudienceMaxDailyUpdateUriSizeB() {
+        return FLEDGE_CUSTOM_AUDIENCE_MAX_DAILY_UPDATE_URI_SIZE_B;
+    }
+
+    /**
+     * Returns the maximum size in bytes allowed for bidding logic uri in each FLEDGE custom
+     * audience.
+     */
+    default int getFledgeCustomAudienceMaxBiddingLogicUriSizeB() {
+        return FLEDGE_CUSTOM_AUDIENCE_MAX_BIDDING_LOGIC_URI_SIZE_B;
     }
 
     /**
@@ -1006,5 +1030,21 @@ public interface Flags extends Dumpable {
 
     default String getWebContextRegistrationClientAppAllowList() {
         return WEB_CONTEXT_REGISTRATION_CLIENT_ALLOW_LIST;
+    }
+
+    boolean ENFORCE_ISOLATE_MAX_HEAP_SIZE = true;
+    long ISOLATE_MAX_HEAP_SIZE_BYTES = 2 * 1024 * 1024L; // 2 MB
+
+    /**
+     * @return true if we enforce to check that JavaScriptIsolate supports limiting the max heap
+     *     size
+     */
+    default boolean getEnforceIsolateMaxHeapSize() {
+        return ENFORCE_ISOLATE_MAX_HEAP_SIZE;
+    }
+
+    /** @return size in bytes we bound the heap memory for JavaScript isolate */
+    default long getIsolateMaxHeapSizeBytes() {
+        return ISOLATE_MAX_HEAP_SIZE_BYTES;
     }
 }

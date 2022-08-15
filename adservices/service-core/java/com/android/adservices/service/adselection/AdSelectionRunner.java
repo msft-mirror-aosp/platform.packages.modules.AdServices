@@ -20,6 +20,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
+import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.AdSelectionResponse;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
@@ -57,8 +58,10 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 
 import java.time.Clock;
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -70,6 +73,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+
 
 /**
  * Orchestrator that runs the Ads Auction/Bidding and Scoring logic The class expects the caller to
@@ -98,6 +102,8 @@ public final class AdSelectionRunner {
 
     @VisibleForTesting
     static final String AD_SELECTION_TIMED_OUT = "Ad selection exceeded allowed time limit";
+
+    public static final long DAY_IN_SECONDS = 60 * 60 * 24;
 
     @NonNull private final Context mContext;
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
@@ -138,7 +144,10 @@ public final class AdSelectionRunner {
         mAdServicesLogger = adServicesLogger;
         mAdsScoreGenerator =
                 new AdsScoreGeneratorImpl(
-                        new AdSelectionScriptEngine(mContext),
+                        new AdSelectionScriptEngine(
+                                mContext,
+                                () -> flags.getEnforceIsolateMaxHeapSize(),
+                                () -> flags.getIsolateMaxHeapSizeBytes()),
                         mExecutorService,
                         new AdServicesHttpsClient(mExecutorService),
                         devContext,
@@ -199,13 +208,12 @@ public final class AdSelectionRunner {
     /**
      * Runs the ad selection for a given seller
      *
-     * @param adSelectionConfig set of signals and other bidding and scoring information provided by
-     *     the seller
+     * @param inputParams containing {@link AdSelectionConfig} and {@code callerPackageName}
      * @param callback used to notify the result back to the calling seller
      */
     public void runAdSelection(
-            @NonNull AdSelectionConfig adSelectionConfig, @NonNull AdSelectionCallback callback) {
-        Objects.requireNonNull(adSelectionConfig);
+            @NonNull AdSelectionInput inputParams, @NonNull AdSelectionCallback callback) {
+        Objects.requireNonNull(inputParams);
         Objects.requireNonNull(callback);
 
         try {
@@ -217,7 +225,10 @@ public final class AdSelectionRunner {
                             .transform(
                                     ignoredVoid -> maybeAssertForegroundCaller(), mExecutorService)
                             .transformAsync(
-                                    ignoredVoid -> orchestrateAdSelection(adSelectionConfig),
+                                    ignoredVoid ->
+                                            orchestrateAdSelection(
+                                                    inputParams.getAdSelectionConfig(),
+                                                    inputParams.getCallerPackageName()),
                                     mExecutorService);
 
             Futures.addCallback(
@@ -226,6 +237,8 @@ public final class AdSelectionRunner {
                         @Override
                         public void onSuccess(DBAdSelection result) {
                             notifySuccessToCaller(result, callback);
+                            // TODO(242280808): Schedule a clear for stale data instead of this hack
+                            clearExpiredAdSelectionData();
                         }
 
                         @Override
@@ -237,6 +250,8 @@ public final class AdSelectionRunner {
                             } else {
                                 notifyFailureToCaller(callback, t);
                             }
+                            // TODO(242280808): Schedule a clear for stale data instead of this hack
+                            clearExpiredAdSelectionData();
                         }
                     },
                     mExecutorService);
@@ -290,6 +305,8 @@ public final class AdSelectionRunner {
         try {
             if (t instanceof WrongCallingApplicationStateException) {
                 resultCode = AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
+            } else if (t instanceof UncheckedTimeoutException) {
+                resultCode = AdServicesStatusUtils.STATUS_TIMEOUT;
             } else {
                 resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
             }
@@ -321,7 +338,8 @@ public final class AdSelectionRunner {
      * @return {@link AdSelectionResponse}
      */
     private ListenableFuture<DBAdSelection> orchestrateAdSelection(
-            @NonNull final AdSelectionConfig adSelectionConfig) {
+            @NonNull final AdSelectionConfig adSelectionConfig,
+            @NonNull final String callerPackageName) {
         LogUtil.v("Beginning Ad Selection Orchestration");
 
         ListenableFuture<List<DBCustomAudience>> buyerCustomAudience =
@@ -361,7 +379,8 @@ public final class AdSelectionRunner {
 
         AsyncFunction<Pair<DBAdSelection.Builder, String>, DBAdSelection> saveResultToPersistence =
                 adSelectionAndJs -> {
-                    return persistAdSelection(adSelectionAndJs.first, adSelectionAndJs.second);
+                    return persistAdSelection(
+                            adSelectionAndJs.first, adSelectionAndJs.second, callerPackageName);
                 };
 
         return FluentFuture.from(dbAdSelectionBuilder)
@@ -381,7 +400,7 @@ public final class AdSelectionRunner {
     @Nullable
     private DBAdSelection handleTimeoutError(TimeoutException e) {
         LogUtil.e(e, "Ad Selection exceeded time limit");
-        throw new IllegalStateException(AD_SELECTION_TIMED_OUT);
+        throw new UncheckedTimeoutException(AD_SELECTION_TIMED_OUT);
     }
 
     private ListenableFuture<List<DBCustomAudience>> getBuyersCustomAudience(
@@ -540,7 +559,8 @@ public final class AdSelectionRunner {
 
     private ListenableFuture<DBAdSelection> persistAdSelection(
             @NonNull DBAdSelection.Builder dbAdSelectionBuilder,
-            @NonNull String buyerDecisionLogicJS) {
+            @NonNull String buyerDecisionLogicJS,
+            @NonNull String callerPackageName) {
         ListeningExecutorService listeningExecutorService =
                 MoreExecutors.listeningDecorator(mExecutorService);
 
@@ -552,7 +572,8 @@ public final class AdSelectionRunner {
                     DBAdSelection dbAdSelection;
                     dbAdSelectionBuilder
                             .setAdSelectionId(adSelectionId)
-                            .setCreationTimestamp(mClock.instant());
+                            .setCreationTimestamp(mClock.instant())
+                            .setCallerPackageName(callerPackageName);
                     dbAdSelection = dbAdSelectionBuilder.build();
                     mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
                     mAdSelectionEntryDao.persistBuyerDecisionLogic(
@@ -590,5 +611,10 @@ public final class AdSelectionRunner {
                     mCallerUid, AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, null);
         }
         return null;
+    }
+
+    private void clearExpiredAdSelectionData() {
+        Instant expirationTime = mClock.instant().minusSeconds(DAY_IN_SECONDS);
+        mAdSelectionEntryDao.removeExpiredAdSelection(expirationTime);
     }
 }

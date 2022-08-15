@@ -106,6 +106,9 @@ public class CustomAudienceDevOverridesHelper {
      * {@link DevContext#getCallingAppPackageName()} for the given combination of {@code owner},
      * {@code buyer}, and {@code name}.
      *
+     * <p>If the given {@code owner} does not match the package name that corresponds to the calling
+     * UID, fail silently.
+     *
      * @throws SecurityException if {@link DevContext#getDevOptionsEnabled()} returns false for the
      *     {@link DevContext}
      */
@@ -141,8 +144,8 @@ public class CustomAudienceDevOverridesHelper {
     }
 
     /**
-     * Removes an override for the given combination of {@code owner}, {@code buyer}, and {@code
-     * name}.
+     * Removes an override for the given combination of {@code owner}, {@code buyer}, {@code name},
+     * and the package name derived from the calling UID.
      *
      * @throws SecurityException if{@link DevContext#getDevOptionsEnabled()} returns false for the
      *     {@link DevContext}
@@ -167,7 +170,7 @@ public class CustomAudienceDevOverridesHelper {
      * Removes all custom audience overrides that match {@link
      * DevContext#getCallingAppPackageName()}.
      *
-     * @throws SecurityException if{@link DevContext#getDevOptionsEnabled()} returns false for the
+     * @throws SecurityException if {@link DevContext#getDevOptionsEnabled()} returns false for the
      *     {@link DevContext}
      */
     public void removeAllOverrides() {
@@ -175,6 +178,7 @@ public class CustomAudienceDevOverridesHelper {
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
-        mCustomAudienceDao.removeAllCustomAudienceOverrides(mDevContext.getCallingAppPackageName());
+        mCustomAudienceDao.removeCustomAudienceOverridesByPackageName(
+                mDevContext.getCallingAppPackageName());
     }
 }

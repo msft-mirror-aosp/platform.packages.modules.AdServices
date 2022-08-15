@@ -37,6 +37,8 @@ import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
+import java.util.Optional;
+
 /**
  * Unit test for {@link AttributionJobService
  */
@@ -93,6 +95,9 @@ public class AttributionJobServiceTest {
                         .startMocking();
         try {
             DatastoreManager mockDatastoreManager = ExtendedMockito.mock(DatastoreManager.class);
+            ExtendedMockito.doReturn(Optional.empty())
+                    .when(mockDatastoreManager)
+                    .runInTransactionWithResult(any());
             ExtendedMockito.doReturn(mockDatastoreManager)
                     .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
             AttributionJobService spyService = Mockito.spy(new AttributionJobService());
