@@ -18,6 +18,8 @@ package com.android.sdksandbox;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import android.app.sdksandbox.LoadSdkException;
+import android.app.sdksandbox.LoadSdkResponse;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
@@ -265,28 +267,29 @@ public class SdkSandboxTest {
 
         private ISdkSandboxManagerToSdkSandboxCallback mCallback;
 
+        private ISdkSandboxManagerToSdkSandboxCallback getCallback() {
+            return mCallback;
+        }
+
         RemoteCode(CountDownLatch latch) {
             mLatch = latch;
         }
 
         @Override
         public void onLoadSdkSuccess(
-                Bundle params, ISdkSandboxManagerToSdkSandboxCallback callback)  {
+                LoadSdkResponse loadSdkResponse, ISdkSandboxManagerToSdkSandboxCallback callback) {
             mLatch.countDown();
             mCallback = callback;
             mSuccessful = true;
         }
 
         @Override
-        public void onLoadSdkError(int errorCode, String message) {
+        public void onLoadSdkError(LoadSdkException exception) {
             mLatch.countDown();
-            mErrorCode = errorCode;
+            mErrorCode = exception.getLoadSdkErrorCode();
             mSuccessful = false;
         }
 
-        private ISdkSandboxManagerToSdkSandboxCallback getCallback() {
-            return mCallback;
-        }
     }
 
     private static class RequestSurfacePackageCallbackImpl

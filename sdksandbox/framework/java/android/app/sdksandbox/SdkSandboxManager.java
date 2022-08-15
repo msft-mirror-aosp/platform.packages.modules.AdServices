@@ -73,6 +73,7 @@ public final class SdkSandboxManager {
      * SdkSandboxManager#loadSdk(String, Bundle, Executor, OutcomeReceiver)}.
      */
     public static final int LOAD_SDK_NOT_FOUND = 100;
+
     /**
      * SDK is already loaded.
      *
@@ -81,6 +82,16 @@ public final class SdkSandboxManager {
      * successfully loaded.
      */
     public static final int LOAD_SDK_ALREADY_LOADED = 101;
+
+    /**
+     * SDK error after being loaded.
+     *
+     * <p>This indicates that the SDK encountered an error during post-load initialization. The
+     * details of this can be obtained from the Bundle returned in {@link LoadSdkException} through
+     * the {@link OutcomeReceiver} passed in to {@link SdkSandboxManager#loadSdk}.
+     */
+    public static final int LOAD_SDK_SDK_DEFINED_ERROR = 102;
+
     /** Internal error while loading SDK.
      *
      * <p>This indicates a generic internal error happened while applying the call from
@@ -89,11 +100,14 @@ public final class SdkSandboxManager {
     public static final int LOAD_SDK_INTERNAL_ERROR = 500;
 
     /** @hide */
-    @IntDef(prefix = "LOAD_SDK_", value = {
-            LOAD_SDK_NOT_FOUND,
-            LOAD_SDK_ALREADY_LOADED,
-            LOAD_SDK_INTERNAL_ERROR,
-    })
+    @IntDef(
+            prefix = "LOAD_SDK_",
+            value = {
+                LOAD_SDK_NOT_FOUND,
+                LOAD_SDK_ALREADY_LOADED,
+                LOAD_SDK_SDK_DEFINED_ERROR,
+                LOAD_SDK_INTERNAL_ERROR,
+            })
     @Retention(RetentionPolicy.SOURCE)
     public @interface LoadSdkErrorCode {}
 
@@ -532,13 +546,13 @@ public final class SdkSandboxManager {
         }
 
         @Override
-        public void onLoadSdkSuccess(Bundle params) {
-            mExecutor.execute(() -> mCallback.onResult(new LoadSdkResponse(params)));
+        public void onLoadSdkSuccess(LoadSdkResponse response) {
+            mExecutor.execute(() -> mCallback.onResult(response));
         }
 
         @Override
-        public void onLoadSdkFailure(int errorCode, String errorMsg) {
-            mExecutor.execute(() -> mCallback.onError(new LoadSdkException(errorCode, errorMsg)));
+        public void onLoadSdkFailure(LoadSdkException exception) {
+            mExecutor.execute(() -> mCallback.onError(exception));
         }
     }
 

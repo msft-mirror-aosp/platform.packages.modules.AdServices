@@ -32,6 +32,7 @@ import com.android.adservices.service.devapi.DevContextFilter;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -86,6 +87,7 @@ public class SandboxedFledgeManagerTest {
     }
 
     @Test
+    @Ignore("b/242540363")
     public void loadSdkAndRunFledgeFlow() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 
