@@ -22,6 +22,7 @@ import android.annotation.NonNull;
 import android.content.Context;
 import android.content.pm.PackageManager;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -70,10 +71,16 @@ public class FledgeAuthorizationFilter {
             @NonNull String callingPackageName, int callingUid, int apiNameLoggingId) {
         Objects.requireNonNull(callingPackageName);
 
+        LogUtil.v(
+                "Asserting package name '%s' is valid for uid %d", callingPackageName, callingUid);
+
         String[] packageNamesForUid = mPackageManager.getPackagesForUid(callingUid);
         for (String packageNameForUid : packageNamesForUid) {
+            LogUtil.v("Candidate package name '%s'", packageNameForUid);
             if (callingPackageName.equals(packageNameForUid)) return;
         }
+
+        LogUtil.v("No match found, failing");
         mAdServicesLogger.logFledgeApiCallStats(
                 apiNameLoggingId, AdServicesStatusUtils.STATUS_UNAUTHORIZED);
         throw new SecurityException(
