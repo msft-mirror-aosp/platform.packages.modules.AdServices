@@ -52,4 +52,5 @@ android_app {
     defaults: [
         "sdksandbox-java-defaults",
     ],
+    jarjar_rules: "sdksandbox_app_jarjar_rules.txt",
 }
