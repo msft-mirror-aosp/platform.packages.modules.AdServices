@@ -104,7 +104,7 @@ public final class Preprocessor {
         }
         mStopWords = setBuilder.build();
 
-        LogUtil.d("Read %d stop words for pre-processing.", countWords);
+        LogUtil.v("Read %d stop words for pre-processing.", countWords);
     }
 
     /**

@@ -34,6 +34,7 @@ android_app {
     srcs: [
         ":sdksandbox-sources",
         ":sdksandbox_aidl",
+        ":framework-sdksandbox-aidl-sources",
     ],
     libs: [
         "framework-annotations-lib",
@@ -45,7 +46,6 @@ android_app {
         "//packages/modules/AdServices:__subpackages__",
     ],
     sdk_version: "module_current",
-    min_sdk_version: "Tiramisu",
     updatable: true,
     certificate: "sdk_sandbox",
     apex_available: ["com.android.adservices"],

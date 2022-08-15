@@ -16,9 +16,6 @@
 
 package com.android.adservices.data;
 
-import static com.android.adservices.data.measurement.MeasurementMigrations.migrationScriptVersion2;
-import static com.android.adservices.data.measurement.MeasurementMigrations.migrationScriptVersion3;
-
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
@@ -27,9 +24,15 @@ import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.data.enrollment.EnrollmentTables;
 import com.android.adservices.data.measurement.MeasurementTables;
+import com.android.adservices.data.measurement.migration.IMeasurementDbMigrator;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.internal.annotations.VisibleForTesting;
+
+import com.google.common.collect.ImmutableList;
+
+import java.util.List;
 
 /**
  * Helper to manage the PP API database. Designed as a singleton to make sure that all PP API usages
@@ -37,7 +40,7 @@ import com.android.internal.annotations.VisibleForTesting;
  */
 public final class DbHelper extends SQLiteOpenHelper {
 
-    private static final int DATABASE_VERSION = 3;
+    static final int LATEST_DATABASE_VERSION = 1;
     private static final String DATABASE_NAME = "adservices.db";
 
     private static DbHelper sSingleton = null;
@@ -47,10 +50,11 @@ public final class DbHelper extends SQLiteOpenHelper {
      *
      * @param context the context
      * @param dbName Name of database to query
+     * @param dbVersion db version
      */
     @VisibleForTesting
-    public DbHelper(@NonNull Context context, @NonNull String dbName) {
-        super(context, dbName, null, DATABASE_VERSION);
+    public DbHelper(@NonNull Context context, @NonNull String dbName, int dbVersion) {
+        super(context, dbName, null, dbVersion);
     }
 
     /** Returns an instance of the DbHelper given a context. */
@@ -58,7 +62,7 @@ public final class DbHelper extends SQLiteOpenHelper {
     public static DbHelper getInstance(@NonNull Context ctx) {
         synchronized (DbHelper.class) {
             if (sSingleton == null) {
-                sSingleton = new DbHelper(ctx, DATABASE_NAME);
+                sSingleton = new DbHelper(ctx, DATABASE_NAME, LATEST_DATABASE_VERSION);
             }
             return sSingleton;
         }
@@ -66,6 +70,7 @@ public final class DbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(@NonNull SQLiteDatabase db) {
+        LogUtil.d("DbHelper.onCreate.");
         for (String sql : TopicsTables.CREATE_STATEMENTS) {
             db.execSQL(sql);
         }
@@ -75,14 +80,9 @@ public final class DbHelper extends SQLiteOpenHelper {
         for (String sql : MeasurementTables.CREATE_INDEXES) {
             db.execSQL(sql);
         }
-        onUpgrade(db, 0, DATABASE_VERSION);
-    }
-
-    @Override
-    public void onUpgrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
-        LogUtil.d("DbHelper.onUpgrade.");
-        migrate(db, migrationScriptVersion2(), oldVersion, /* scriptVersion = */ 2);
-        migrate(db, migrationScriptVersion3(), oldVersion, /* scriptVersion = */ 3);
+        for (String sql : EnrollmentTables.CREATE_STATEMENTS) {
+            db.execSQL(sql);
+        }
     }
 
     /**
@@ -93,7 +93,7 @@ public final class DbHelper extends SQLiteOpenHelper {
         try {
             return super.getReadableDatabase();
         } catch (SQLiteException e) {
-            LogUtil.e("Failed to get a readable database", e);
+            LogUtil.e(e, "Failed to get a readable database");
             return null;
         }
     }
@@ -106,18 +106,21 @@ public final class DbHelper extends SQLiteOpenHelper {
         try {
             return super.getWritableDatabase();
         } catch (SQLiteException e) {
-            LogUtil.e("Failed to get a writeable database", e);
+            LogUtil.e(e, "Failed to get a writeable database");
             return null;
         }
     }
 
-    private void migrate(
-            @NonNull SQLiteDatabase db, String[] scripts, int deviceVersion, int scriptVersion) {
-        if (deviceVersion < scriptVersion) {
-            LogUtil.d("Migration executing script version %d", scriptVersion);
-            for (String sql : scripts) {
-                db.execSQL(sql);
-            }
-        }
+    @Override
+    public void onUpgrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
+        LogUtil.d("DbHelper.onUpgrade.");
+        getOrderedDbMigrators()
+                .forEach(dbMigrator -> dbMigrator.performMigration(db, oldVersion, newVersion));
+    }
+
+    private static List<IMeasurementDbMigrator> getOrderedDbMigrators() {
+        return ImmutableList.of(
+                // Include migration implementations in ascending order
+                );
     }
 }

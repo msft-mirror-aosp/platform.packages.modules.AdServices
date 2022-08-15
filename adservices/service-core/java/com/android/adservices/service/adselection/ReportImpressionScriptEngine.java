@@ -23,11 +23,13 @@ import static com.android.adservices.service.js.JSScriptArgument.stringArg;
 import static com.google.common.util.concurrent.Futures.transform;
 
 import android.adservices.adselection.AdSelectionConfig;
+import android.adservices.common.AdSelectionSignals;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.net.Uri;
 
 import com.android.adservices.data.adselection.CustomAudienceSignals;
+import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.internal.util.Preconditions;
@@ -42,6 +44,7 @@ import org.json.JSONObject;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executor;
+import java.util.function.Supplier;
 
 /**
  * Utility class to execute a reporting script. Current implementation is thread safe but relies on
@@ -75,9 +78,16 @@ public class ReportImpressionScriptEngine {
     private final JSScriptEngine mJsEngine;
     // Used for the Futures.transform calls to compose futures.
     private final Executor mExecutor = MoreExecutors.directExecutor();
+    private final Supplier<Boolean> mEnforceMaxHeapSizeFeatureSupplier;
+    private final Supplier<Long> mMaxHeapSizeBytesSupplier;
 
-    public ReportImpressionScriptEngine(Context context) {
-        mJsEngine = new JSScriptEngine(context);
+    public ReportImpressionScriptEngine(
+            Context context,
+            Supplier<Boolean> enforceMaxHeapSizeFeatureSupplier,
+            Supplier<Long> maxHeapSizeBytesSupplier) {
+        mJsEngine = JSScriptEngine.getInstance(context);
+        mEnforceMaxHeapSizeFeatureSupplier = enforceMaxHeapSizeFeatureSupplier;
+        mMaxHeapSizeBytesSupplier = maxHeapSizeBytesSupplier;
     }
 
     /**
@@ -97,7 +107,7 @@ public class ReportImpressionScriptEngine {
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull Uri renderUrl,
             @NonNull double bid,
-            @NonNull String contextualSignals)
+            @NonNull AdSelectionSignals contextualSignals)
             throws JSONException, IllegalStateException {
         Objects.requireNonNull(decisionLogicJS);
         Objects.requireNonNull(adSelectionConfig);
@@ -111,7 +121,7 @@ public class ReportImpressionScriptEngine {
                                         adSelectionConfig, AD_SELECTION_CONFIG_ARG_NAME))
                         .add(stringArg(RENDER_URL_ARG_NAME, renderUrl.toString()))
                         .add(numericArg(BID_ARG_NAME, bid))
-                        .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals))
+                        .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals.toString()))
                         .build();
 
         return transform(
@@ -138,10 +148,10 @@ public class ReportImpressionScriptEngine {
      */
     public ListenableFuture<Uri> reportWin(
             @NonNull String biddingLogicJS,
-            @NonNull String adSelectionSignals,
-            @NonNull String perBuyerSignals,
-            @NonNull String signalsForBuyer,
-            @NonNull String contextualSignals,
+            @NonNull AdSelectionSignals adSelectionSignals,
+            @NonNull AdSelectionSignals perBuyerSignals,
+            @NonNull AdSelectionSignals signalsForBuyer,
+            @NonNull AdSelectionSignals contextualSignals,
             @NonNull CustomAudienceSignals customAudienceSignals)
             throws JSONException, IllegalStateException {
         Objects.requireNonNull(biddingLogicJS);
@@ -153,13 +163,13 @@ public class ReportImpressionScriptEngine {
 
         ImmutableList<JSScriptArgument> arguments =
                 ImmutableList.<JSScriptArgument>builder()
-                        .add(jsonArg(AD_SELECTION_SIGNALS_ARG_NAME, adSelectionSignals))
-                        .add(jsonArg(PER_BUYER_SIGNALS_ARG_NAME, perBuyerSignals))
-                        .add(jsonArg(SIGNALS_FOR_BUYER_ARG_NAME, signalsForBuyer))
-                        .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals))
+                        .add(jsonArg(AD_SELECTION_SIGNALS_ARG_NAME, adSelectionSignals.toString()))
+                        .add(jsonArg(PER_BUYER_SIGNALS_ARG_NAME, perBuyerSignals.toString()))
+                        .add(jsonArg(SIGNALS_FOR_BUYER_ARG_NAME, signalsForBuyer.toString()))
+                        .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals.toString()))
                         .add(
-                                CustomAudienceSignalsArgument.asScriptArgument(
-                                        customAudienceSignals, CUSTOM_AUDIENCE_SIGNALS_ARG_NAME))
+                                CustomAudienceBiddingSignalsArgument.asScriptArgument(
+                                        CUSTOM_AUDIENCE_SIGNALS_ARG_NAME, customAudienceSignals))
                         .build();
 
         return transform(
@@ -195,8 +205,12 @@ public class ReportImpressionScriptEngine {
     private ListenableFuture<String> callReportingScript(
             String jsScript, String functionName, List<JSScriptArgument> args)
             throws JSONException {
-
-        return mJsEngine.evaluate(jsScript, args, functionName);
+        IsolateSettings isolateSettings =
+                mEnforceMaxHeapSizeFeatureSupplier.get()
+                        ? IsolateSettings.forMaxHeapSizeEnforcementEnabled(
+                                mMaxHeapSizeBytesSupplier.get())
+                        : IsolateSettings.forMaxHeapSizeEnforcementDisabled();
+        return mJsEngine.evaluate(jsScript, args, functionName, isolateSettings);
     }
 
     /**
@@ -220,7 +234,8 @@ public class ReportImpressionScriptEngine {
                 reportResult.results.length() == 2, "Result does not match expected structure!");
         try {
             return new SellerReportingResult(
-                    reportResult.results.getString(SIGNALS_FOR_BUYER_RESPONSE_NAME),
+                    AdSelectionSignals.fromString(
+                            reportResult.results.getString(SIGNALS_FOR_BUYER_RESPONSE_NAME)),
                     Uri.parse(reportResult.results.getString(REPORTING_URL_RESPONSE_NAME)));
         } catch (Exception e) {
             throw new IllegalStateException("Result does not match expected structure!");
@@ -284,10 +299,11 @@ public class ReportImpressionScriptEngine {
     }
 
     static class SellerReportingResult {
-        @NonNull private final String mSignalsForBuyer;
+        @NonNull private final AdSelectionSignals mSignalsForBuyer;
         @NonNull private final Uri mReportingUrl;
 
-        SellerReportingResult(@NonNull String signalsForBuyer, @NonNull Uri reportingUrl) {
+        SellerReportingResult(
+                @NonNull AdSelectionSignals signalsForBuyer, @NonNull Uri reportingUrl) {
             Objects.requireNonNull(signalsForBuyer);
             Objects.requireNonNull(reportingUrl);
 
@@ -295,7 +311,7 @@ public class ReportImpressionScriptEngine {
             this.mReportingUrl = reportingUrl;
         }
 
-        public String getSignalsForBuyer() {
+        public AdSelectionSignals getSignalsForBuyer() {
             return mSignalsForBuyer;
         }
 

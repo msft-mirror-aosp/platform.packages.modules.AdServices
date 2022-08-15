@@ -18,12 +18,16 @@ package com.android.adservices.service.adselection;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdWithBid;
+import android.adservices.common.AdSelectionSignals;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.internal.annotations.VisibleForTesting;
@@ -35,12 +39,14 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-
-import org.json.JSONException;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 /**
@@ -49,22 +55,36 @@ import java.util.stream.Collectors;
  */
 public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
 
+    @VisibleForTesting static final String QUERY_PARAM_RENDER_URLS = "renderurls";
+
+    @VisibleForTesting
+    static final String MISSING_TRUSTED_SCORING_SIGNALS = "Error fetching trusted scoring signals";
+
+    @VisibleForTesting
+    static final String MISSING_SCORING_LOGIC = "Error fetching scoring decision logic";
+
+    @VisibleForTesting
+    static final String SCORING_TIMED_OUT = "Scoring exceeded allowed time limit";
+
     @NonNull private final AdSelectionScriptEngine mAdSelectionScriptEngine;
     @NonNull private final ListeningExecutorService mListeningExecutorService;
-    @NonNull private final AdSelectionHttpClient mAdSelectionHttpClient;
+    @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull private final AdSelectionDevOverridesHelper mAdSelectionDevOverridesHelper;
+    @NonNull private final Flags mFlags;
 
     public AdsScoreGeneratorImpl(
             @NonNull AdSelectionScriptEngine adSelectionScriptEngine,
             @NonNull ExecutorService executor,
-            @NonNull AdSelectionHttpClient adSelectionHttpClient,
+            @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull DevContext devContext,
-            @NonNull AdSelectionEntryDao adSelectionEntryDao) {
+            @NonNull AdSelectionEntryDao adSelectionEntryDao,
+            @NonNull Flags flags) {
         mAdSelectionScriptEngine = adSelectionScriptEngine;
         mListeningExecutorService = MoreExecutors.listeningDecorator(executor);
-        mAdSelectionHttpClient = adSelectionHttpClient;
+        mAdServicesHttpsClient = adServicesHttpsClient;
         mAdSelectionDevOverridesHelper =
                 new AdSelectionDevOverridesHelper(devContext, adSelectionEntryDao);
+        mFlags = flags;
     }
 
     /**
@@ -80,8 +100,9 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
             @NonNull final AdSelectionConfig adSelectionConfig)
             throws AdServicesException {
 
+        LogUtil.v("Starting Ad scoring for #%d bidding outcomes", adBiddingOutcomes.size());
         ListenableFuture<String> scoreAdJs =
-                getAdSelectionLogic(adSelectionConfig.getDecisionLogicUrl(), adSelectionConfig);
+                getAdSelectionLogic(adSelectionConfig.getDecisionLogicUri(), adSelectionConfig);
 
         AsyncFunction<String, List<Double>> getScoresFromLogic =
                 adScoringLogic -> {
@@ -96,7 +117,24 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                     return mapAdsToScore(adBiddingOutcomes, scores);
                 };
 
-        return FluentFuture.from(adScores).transform(adsToScore, mListeningExecutorService);
+        return FluentFuture.from(adScores)
+                .transform(adsToScore, mListeningExecutorService)
+                .withTimeout(
+                        mFlags.getAdSelectionScoringTimeoutMs(),
+                        TimeUnit.MILLISECONDS,
+                        // TODO(b/237103033): Comply with thread usage policy for AdServices;
+                        //  use a global scheduled executor
+                        new ScheduledThreadPoolExecutor(1))
+                .catching(
+                        TimeoutException.class,
+                        this::handleTimeoutError,
+                        mListeningExecutorService);
+    }
+
+    @Nullable
+    private List<AdScoringOutcome> handleTimeoutError(TimeoutException e) {
+        LogUtil.e(e, "Scoring exceeded time limit");
+        throw new UncheckedTimeoutException(SCORING_TIMED_OUT);
     }
 
     private ListenableFuture<String> getAdSelectionLogic(
@@ -107,63 +145,118 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                                 () ->
                                         mAdSelectionDevOverridesHelper.getDecisionLogicOverride(
                                                 adSelectionConfig)));
-        return jsOverrideFuture.transformAsync(
-                jsOverride -> {
-                    if (jsOverride == null) {
-                        return mAdSelectionHttpClient.fetchJavascript(decisionLogicUri);
-                    } else {
-                        LogUtil.d(
-                                "Developer options enabled and an override JS is provided "
-                                        + "for the current ad selection config. "
-                                        + "Skipping call to server.");
-                        return Futures.immediateFuture(jsOverride);
-                    }
-                },
-                mListeningExecutorService);
+        return jsOverrideFuture
+                .transformAsync(
+                        jsOverride -> {
+                            if (jsOverride == null) {
+                                LogUtil.v("Fetching Ad Scoring Logic from the server");
+                                return mAdServicesHttpsClient.fetchPayload(decisionLogicUri);
+                            } else {
+                                LogUtil.d(
+                                        "Developer options enabled and an override JS is provided "
+                                                + "for the current ad selection config. "
+                                                + "Skipping call to server.");
+                                return Futures.immediateFuture(jsOverride);
+                            }
+                        },
+                        mListeningExecutorService)
+                .catching(
+                        Exception.class,
+                        e -> {
+                            LogUtil.e(e, "Exception encountered when fetching scoring logic");
+                            throw new IllegalStateException(MISSING_SCORING_LOGIC);
+                        },
+                        mListeningExecutorService);
     }
 
     private ListenableFuture<List<Double>> getAdScores(
             @NonNull String scoringLogic,
             @NonNull List<AdBiddingOutcome> adBiddingOutcomes,
-            @NonNull final AdSelectionConfig adSelectionConfig)
-            throws AdServicesException {
-        final String sellerSignals = adSelectionConfig.getSellerSignals();
-        final String trustedScoringSignals = adSelectionConfig.getAdSelectionSignals();
-        final String contextualSignals = getContextualSignals();
+            @NonNull final AdSelectionConfig adSelectionConfig) {
+        final AdSelectionSignals sellerSignals = adSelectionConfig.getSellerSignals();
+        final FluentFuture<AdSelectionSignals> trustedScoringSignals =
+                getTrustedScoringSignals(adSelectionConfig, adBiddingOutcomes);
+        final AdSelectionSignals contextualSignals = getContextualSignals();
+        ListenableFuture<List<Double>> adScores =
+                trustedScoringSignals.transformAsync(
+                        trustedSignals -> {
+                            LogUtil.v("Invoking JS engine to generate Ad Scores");
+                            return mAdSelectionScriptEngine.scoreAds(
+                                    scoringLogic,
+                                    adBiddingOutcomes.stream()
+                                            .map(a -> a.getAdWithBid())
+                                            .collect(Collectors.toList()),
+                                    adSelectionConfig,
+                                    sellerSignals,
+                                    trustedSignals,
+                                    contextualSignals,
+                                    adBiddingOutcomes.stream()
+                                            .map(
+                                                    a ->
+                                                            a.getCustomAudienceBiddingInfo()
+                                                                    .getCustomAudienceSignals())
+                                            .collect(Collectors.toList()));
+                        },
+                        mListeningExecutorService);
 
-        try {
-            ListenableFuture<List<Double>> adScores =
-                    mAdSelectionScriptEngine.scoreAds(
-                            scoringLogic,
-                            adBiddingOutcomes.stream()
-                                    .map(a -> a.getAdWithBid())
-                                    .collect(Collectors.toList()),
-                            adSelectionConfig,
-                            sellerSignals,
-                            getTrustedScoringSignals(adBiddingOutcomes, trustedScoringSignals),
-                            contextualSignals,
-                            // TODO(b/230432251): align JS logic to use multi CA signals
-                            adBiddingOutcomes
-                                    .get(0)
-                                    .getCustomAudienceBiddingInfo()
-                                    .getCustomAudienceSignals());
-            return adScores;
-        } catch (JSONException e) {
-            throw new AdServicesException("Invalid results obtained from Ad Scoring");
-        }
+        return adScores;
     }
 
     @VisibleForTesting
-    String getContextualSignals() {
+    AdSelectionSignals getContextualSignals() {
         // TODO(b/230569187): get the contextualSignal securely = "invoking app name"
-        return "{}";
+        return AdSelectionSignals.EMPTY;
     }
 
-    private String getTrustedScoringSignals(
-            @NonNull final List<AdBiddingOutcome> adBiddingOutcomes,
-            @NonNull final String sellerSignals) {
-        // TODO(b/230436736): Invoke the server to get trusted Scoring signals
-        return "{}";
+    private FluentFuture<AdSelectionSignals> getTrustedScoringSignals(
+            @NonNull final AdSelectionConfig adSelectionConfig,
+            @NonNull final List<AdBiddingOutcome> adBiddingOutcomes) {
+        final List<String> adRenderUrls =
+                adBiddingOutcomes.stream()
+                        .map(a -> a.getAdWithBid().getAdData().getRenderUri().toString())
+                        .collect(Collectors.toList());
+        final String queryParams = String.join(",", adRenderUrls);
+        final Uri trustedScoringSignalUri = adSelectionConfig.getTrustedScoringSignalsUri();
+
+        Uri trustedScoringSignalsUri =
+                Uri.parse(trustedScoringSignalUri.toString())
+                        .buildUpon()
+                        .appendQueryParameter(QUERY_PARAM_RENDER_URLS, queryParams)
+                        .build();
+
+        FluentFuture<AdSelectionSignals> jsOverrideFuture =
+                FluentFuture.from(
+                        mListeningExecutorService.submit(
+                                () ->
+                                        mAdSelectionDevOverridesHelper
+                                                .getTrustedScoringSignalsOverride(
+                                                        adSelectionConfig)));
+        return jsOverrideFuture
+                .transformAsync(
+                        jsOverride -> {
+                            if (jsOverride == null) {
+                                LogUtil.v("Fetching trusted scoring signals from server");
+                                return Futures.transform(
+                                        mAdServicesHttpsClient.fetchPayload(
+                                                trustedScoringSignalsUri),
+                                        s -> s == null ? null : AdSelectionSignals.fromString(s),
+                                        mListeningExecutorService);
+                            } else {
+                                LogUtil.d(
+                                        "Developer options enabled and an override trusted scoring"
+                                                + " signals are is provided for the current ad"
+                                                + " selection config. Skipping call to server.");
+                                return Futures.immediateFuture(jsOverride);
+                            }
+                        },
+                        mListeningExecutorService)
+                .catching(
+                        Exception.class,
+                        e -> {
+                            LogUtil.e(e, "Exception encountered when fetching trusted signals");
+                            throw new IllegalStateException(MISSING_TRUSTED_SCORING_SIGNALS);
+                        },
+                        mListeningExecutorService);
     }
 
     /**
@@ -175,7 +268,9 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
     private List<AdScoringOutcome> mapAdsToScore(
             List<AdBiddingOutcome> adBiddingOutcomes, List<Double> adScores) {
         List<AdScoringOutcome> adScoringOutcomes = new ArrayList<>();
-
+        LogUtil.v(
+                "Mapping #%d bidding outcomes to #%d ads with scores",
+                adBiddingOutcomes.size(), adScores.size());
         for (int i = 0; i < adScores.size(); i++) {
             final Double score = adScores.get(i);
             final AdWithBid adWithBid = adBiddingOutcomes.get(i).getAdWithBid();
@@ -190,6 +285,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                             .setCustomAudienceBiddingInfo(customAudienceBiddingInfo)
                             .build());
         }
+        LogUtil.v("Returning Ad Scoring Outcome");
         return adScoringOutcomes;
     }
 }

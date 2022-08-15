@@ -19,6 +19,7 @@ import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 
 import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
+import android.adservices.topics.Topic;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -69,11 +70,11 @@ public class TopicsApiLogActivity extends AppCompatActivity {
                 directExecutor());
     }
 
-    private String getTopics(List<Integer> arr) {
+    private String getTopics(List<Topic> arr) {
         StringBuilder sb = new StringBuilder();
         int index = 1;
-        for (int topic : arr) {
-            sb.append(index++).append(". ").append(topic).append(NEWLINE);
+        for (Topic topic : arr) {
+            sb.append(index++).append(". ").append(topic.toString()).append(NEWLINE);
         }
         return sb.toString();
     }

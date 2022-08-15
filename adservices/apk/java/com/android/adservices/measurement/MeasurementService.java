@@ -19,13 +19,17 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 
-import com.android.adservices.service.measurement.AggregateFallbackReportingJobService;
-import com.android.adservices.service.measurement.AggregateReportingJobService;
+import com.android.adservices.LogUtil;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
-import com.android.adservices.service.measurement.EventFallbackReportingJobService;
-import com.android.adservices.service.measurement.EventReportingJobService;
 import com.android.adservices.service.measurement.MeasurementServiceImpl;
 import com.android.adservices.service.measurement.attribution.AttributionJobService;
+import com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService;
+import com.android.adservices.service.measurement.reporting.AggregateReportingJobService;
+import com.android.adservices.service.measurement.reporting.EventFallbackReportingJobService;
+import com.android.adservices.service.measurement.reporting.EventReportingJobService;
 
 import java.util.Objects;
 
@@ -38,8 +42,14 @@ public class MeasurementService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        Flags flags = FlagsFactory.getFlags();
+        if (flags.getMeasurementKillSwitch()) {
+            LogUtil.e("Measurement API is disabled");
+            return;
+        }
         if (mMeasurementService == null) {
-            mMeasurementService = new MeasurementServiceImpl(this);
+            mMeasurementService =
+                    new MeasurementServiceImpl(this, ConsentManager.getInstance(this), flags);
         }
         schedulePeriodicJobs();
     }
@@ -55,6 +65,11 @@ public class MeasurementService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
+        if (FlagsFactory.getFlags().getMeasurementKillSwitch()) {
+            LogUtil.e("Measurement API is disabled");
+            // Return null so that clients can not bind to the service.
+            return null;
+        }
         return Objects.requireNonNull(mMeasurementService);
     }
 }

@@ -16,11 +16,15 @@
 
 package com.android.adservices.data.adselection;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertEquals;
 
+import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
 import org.junit.Test;
+
 
 public class DBBuyerDecisionLogicTest {
 
@@ -32,11 +36,82 @@ public class DBBuyerDecisionLogicTest {
     public void testBuildDBBuyerDecisionLogic() {
         DBBuyerDecisionLogic dbBuyerDecisionLogic =
                 new DBBuyerDecisionLogic.Builder()
-                        .setBiddingLogicUrl(BIDDING_LOGIC_URL)
+                        .setBiddingLogicUri(BIDDING_LOGIC_URL)
                         .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS)
                         .build();
 
-        assertEquals(dbBuyerDecisionLogic.getBiddingLogicUrl(), BIDDING_LOGIC_URL);
+        assertEquals(dbBuyerDecisionLogic.getBiddingLogicUri(), BIDDING_LOGIC_URL);
         assertEquals(dbBuyerDecisionLogic.getBuyerDecisionLogicJs(), BUYER_DECISION_LOGIC_JS);
+    }
+
+    @Test
+    public void testBuyerDecisionLogicsWithSameValuesAreEqual() {
+        DBBuyerDecisionLogic obj1 =
+                new DBBuyerDecisionLogic.Builder()
+                        .setBiddingLogicUri(BIDDING_LOGIC_URL)
+                        .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS)
+                        .build();
+
+        DBBuyerDecisionLogic obj2 =
+                new DBBuyerDecisionLogic.Builder()
+                        .setBiddingLogicUri(BIDDING_LOGIC_URL)
+                        .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS)
+                        .build();
+
+        assertThat(obj1).isEqualTo(obj2);
+    }
+
+    @Test
+    public void testBuyerDecisionLogicsWithDifferentValuesAreNotEqual() {
+        DBBuyerDecisionLogic obj1 =
+                new DBBuyerDecisionLogic.Builder()
+                        .setBiddingLogicUri(BIDDING_LOGIC_URL)
+                        .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS)
+                        .build();
+
+        DBBuyerDecisionLogic obj2 =
+                new DBBuyerDecisionLogic.Builder()
+                        .setBiddingLogicUri(Uri.parse("http://www.differenturl.com/logic/1"))
+                        .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS)
+                        .build();
+
+        assertThat(obj1).isNotEqualTo(obj2);
+    }
+
+    @Test
+    public void testEqualBuyerDecisionLogicObjectsHaveSameHashCode() {
+        DBBuyerDecisionLogic obj1 =
+                new DBBuyerDecisionLogic.Builder()
+                        .setBiddingLogicUri(BIDDING_LOGIC_URL)
+                        .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS)
+                        .build();
+        DBBuyerDecisionLogic obj2 =
+                new DBBuyerDecisionLogic.Builder()
+                        .setBiddingLogicUri(BIDDING_LOGIC_URL)
+                        .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS)
+                        .build();
+
+        CommonFixture.assertHaveSameHashCode(obj1, obj2);
+    }
+
+    @Test
+    public void testNotEqualBuyerDecisionLogicObjectsHaveDifferentHashCode() {
+        DBBuyerDecisionLogic obj1 =
+                new DBBuyerDecisionLogic.Builder()
+                        .setBiddingLogicUri(BIDDING_LOGIC_URL)
+                        .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS)
+                        .build();
+        DBBuyerDecisionLogic obj2 =
+                new DBBuyerDecisionLogic.Builder()
+                        .setBiddingLogicUri(Uri.parse("http://www.differenturl.com/logic/1"))
+                        .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS)
+                        .build();
+        DBBuyerDecisionLogic obj3 =
+                new DBBuyerDecisionLogic.Builder()
+                        .setBiddingLogicUri(BIDDING_LOGIC_URL)
+                        .setBuyerDecisionLogicJs("function test() { return \"different world\"; }")
+                        .build();
+
+        CommonFixture.assertDifferentHashCode(obj1, obj2, obj3);
     }
 }

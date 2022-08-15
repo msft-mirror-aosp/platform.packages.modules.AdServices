@@ -27,6 +27,28 @@ public class FlagsFactory {
     /** Ad Services Flags backed by hard coded constants. This should be used in unit tests only */
     public static Flags getFlagsForTest() {
         // Use the Flags that has constant values.
-        return new Flags() {};
+        return new Flags() {
+            // Using tolerant timeouts for tests to avoid flakiness.
+            // Tests that need to validate timeout behaviours will override these values too.
+            @Override
+            public long getAdSelectionBiddingTimeoutPerCaMs() {
+                return 10000;
+            }
+
+            @Override
+            public long getAdSelectionScoringTimeoutMs() {
+                return 10000;
+            }
+
+            @Override
+            public long getAdSelectionOverallTimeoutMs() {
+                return 600000;
+            }
+
+            @Override
+            public boolean getEnforceIsolateMaxHeapSize() {
+                return false;
+            }
+        };
     }
 }

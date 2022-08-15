@@ -34,36 +34,34 @@ import java.util.Objects;
 // TODO (b/229660121): Ad unit tests for this class
 @Entity(tableName = "buyer_decision_logic")
 public final class DBBuyerDecisionLogic {
-    @ColumnInfo(name = "bidding_logic_url")
+    @ColumnInfo(name = "bidding_logic_uri")
     @PrimaryKey
     @NonNull
-    private final Uri mBiddingLogicUrl;
+    private final Uri mBiddingLogicUri;
 
     @ColumnInfo(name = "buyer_decision_logic_js")
     @NonNull
     private final String mBuyerDecisionLogicJs;
 
     /**
-     * @param biddingLogicUrl An {@link Uri} object defining the URL to fetch the buyer-provided
+     * @param biddingLogicUri An {@link Uri} object defining the URI to fetch the buyer-provided
      *     bidding and reporting javascript.
      * @param buyerDecisionLogicJs A {@link String} object contains both the generateBid() and
-     *     reportResult() javascript fetched from the biddingLogicUrl.
+     *     reportResult() javascript fetched from the biddingLogicUri.
      */
     public DBBuyerDecisionLogic(
-            @NonNull Uri biddingLogicUrl, @NonNull String buyerDecisionLogicJs) {
-        Objects.requireNonNull(biddingLogicUrl);
+            @NonNull Uri biddingLogicUri, @NonNull String buyerDecisionLogicJs) {
+        Objects.requireNonNull(biddingLogicUri);
         Objects.requireNonNull(buyerDecisionLogicJs);
 
-        mBiddingLogicUrl = biddingLogicUrl;
+        mBiddingLogicUri = biddingLogicUri;
         mBuyerDecisionLogicJs = buyerDecisionLogicJs;
     }
 
-    /**
-     * @return the bidding logic url.
-     */
+    /** @return the bidding logic uri. */
     @NonNull
-    public Uri getBiddingLogicUrl() {
-        return mBiddingLogicUrl;
+    public Uri getBiddingLogicUri() {
+        return mBiddingLogicUri;
     }
 
     /**
@@ -80,29 +78,29 @@ public final class DBBuyerDecisionLogic {
         if (this == o) return true;
         if (!(o instanceof DBBuyerDecisionLogic)) return false;
         DBBuyerDecisionLogic buyerDecisionLogic = (DBBuyerDecisionLogic) o;
-        return mBiddingLogicUrl.equals(buyerDecisionLogic.mBiddingLogicUrl)
+        return mBiddingLogicUri.equals(buyerDecisionLogic.mBiddingLogicUri)
                 && mBuyerDecisionLogicJs.equals(buyerDecisionLogic.mBuyerDecisionLogicJs);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mBiddingLogicUrl, mBuyerDecisionLogicJs);
+        return Objects.hash(mBiddingLogicUri, mBuyerDecisionLogicJs);
     }
 
     /** Builder for {@link DBBuyerDecisionLogic} object. */
     public static final class Builder {
-        @NonNull private Uri mBiddingLogicUrl;
+        @NonNull private Uri mBiddingLogicUri;
 
         @NonNull private String mBuyerDecisionLogicJs;
 
         public Builder() {}
 
-        /** Sets the Bidding Logic Url. */
+        /** Sets the Bidding Logic Uri. */
         @NonNull
-        public DBBuyerDecisionLogic.Builder setBiddingLogicUrl(@NonNull Uri biddingLogicUrl) {
-            Objects.requireNonNull(biddingLogicUrl);
+        public DBBuyerDecisionLogic.Builder setBiddingLogicUri(@NonNull Uri biddingLogicUri) {
+            Objects.requireNonNull(biddingLogicUri);
 
-            this.mBiddingLogicUrl = biddingLogicUrl;
+            this.mBiddingLogicUri = biddingLogicUri;
             return this;
         }
 
@@ -123,10 +121,10 @@ public final class DBBuyerDecisionLogic {
          */
         @NonNull
         public DBBuyerDecisionLogic build() {
-            Objects.requireNonNull(mBiddingLogicUrl);
+            Objects.requireNonNull(mBiddingLogicUri);
             Objects.requireNonNull(mBuyerDecisionLogicJs);
 
-            return new DBBuyerDecisionLogic(mBiddingLogicUrl, mBuyerDecisionLogicJs);
+            return new DBBuyerDecisionLogic(mBiddingLogicUri, mBuyerDecisionLogicJs);
         }
     }
 }

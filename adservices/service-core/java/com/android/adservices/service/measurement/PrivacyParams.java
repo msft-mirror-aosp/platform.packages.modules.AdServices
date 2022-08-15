@@ -71,11 +71,10 @@ public final class PrivacyParams {
     public static final long[] EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS = new long[]{ };
 
     /**
-     * Early reporting window for Install Attributed 'Navigation' {@link Source}.
-     * 2 days and 7 days.
+     * Early reporting window for Install Attributed 'Navigation' {@link Source}. 2 days and 7 days.
      */
     public static final long[] INSTALL_ATTR_NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS =
-            new long[]{ TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7) };
+            NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS;
 
     /**
      * Early reporting window for Install Attributed 'Event' {@link Source}.
@@ -84,14 +83,10 @@ public final class PrivacyParams {
     public static final long[] INSTALL_ATTR_EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS =
             new long[]{ TimeUnit.DAYS.toMillis(2) };
 
-    /**
-     * {@link Source} Noise probability for 'Event'
-     */
+    /** {@link Source} Noise probability for 'Event'. */
     public static final double EVENT_NOISE_PROBABILITY = 0.0000025D;
 
-    /**
-     * {@link Source} Noise probability for 'Navigation'
-     */
+    /** {@link Source} Noise probability for 'Navigation'. */
     public static final double NAVIGATION_NOISE_PROBABILITY = 0.0024263D;
 
     /**
@@ -106,6 +101,31 @@ public final class PrivacyParams {
                 NAVIGATION_NOISE_PROBABILITY;
 
     /**
+     * {@link Source} Noise probability for 'Event', when both destinations (app and web) are
+     * available on the source.
+     */
+    public static final double DUAL_DESTINATION_EVENT_NOISE_PROBABILITY = 0.0000042D;
+
+    /**
+     * {@link Source} Noise probability for 'Navigation', when both destinations (app and web) are
+     * available on the source.
+     */
+    public static final double DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY = 0.017022D;
+
+    /**
+     * {@link Source} Noise probability for 'Event', when both destinations (app and web) are
+     * available on the source and supports install attribution.
+     */
+    public static final double INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY = 0.0000208D;
+
+    /**
+     * {@link Source} Noise probability for 'Navigation', when both destinations (app and web) are
+     * available on the source and supports install attribution.
+     */
+    public static final double INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY =
+            DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
+
+    /**
      * Trigger data cardinality for 'Event' {@link Source} attribution.
      */
     public static final int EVENT_TRIGGER_DATA_CARDINALITY = 2;
@@ -115,15 +135,13 @@ public final class PrivacyParams {
      */
     public static final int NAVIGATION_TRIGGER_DATA_CARDINALITY = 8;
 
-    /**
-     * Min expiration value in seconds for attribution reporting register source.
-     */
+    /** Min expiration value in seconds for attribution reporting register source. */
     public static final long MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS =
             TimeUnit.DAYS.toSeconds(2);
 
     /**
-     * Max expiration value in seconds for attribution reporting register source. This value is
-     * also the default no expiration was specified.
+     * Max expiration value in seconds for attribution reporting register source. This value is also
+     * the default no expiration was specified.
      */
     public static final long MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS =
             TimeUnit.DAYS.toSeconds(30);
@@ -147,6 +165,38 @@ public final class PrivacyParams {
      * Maximum acceptable install cooldown period.
      */
     public static final long MAX_POST_INSTALL_EXCLUSIVITY_WINDOW = TimeUnit.DAYS.toSeconds(30);
+
+    /**
+     * L1, the maximum sum of the contributions (values) across all buckets for a given source
+     * event.
+     */
+    public static final int MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE = 65536;
+
+    /**
+     * Maximum number of aggregation keys allowed during source or trigger registration.
+     */
+    public static final int MAX_AGGREGATE_KEYS_PER_REGISTRATION = 50;
+
+    /** Amount of bytes allocated for aggregate histogram bucket */
+    public static final int AGGREGATE_HISTOGRAM_BUCKET_BYTE_SIZE = 16;
+
+    /** Amount of bytes allocated for aggregate histogram value */
+    public static final int AGGREGATE_HISTOGRAM_VALUE_BYTE_SIZE = 4;
+
+    /**
+     * Max distinct ad-techs for attribution per { Advertiser X Publisher X TimePeriod }.
+     */
+    public static final int MAX_DISTINCT_AD_TECHS_PER_PUBLISHER_X_DESTINATION_IN_ATTRIBUTION = 10;
+
+    /**
+     * Max distinct advertisers with pending impressions per { Publisher X TimePeriod }.
+     */
+    public static final int MAX_DISTINCT_DESTINATIONS_PER_PUBLISHER_IN_ACTIVE_SOURCE = 100;
+
+    /**
+     * Max distinct ad-techs with source registration per { Publisher X Advertiser X TimePeriod }.
+     */
+    public static final int MAX_DISTINCT_AD_TECHS_PER_PUBLISHER_X_DESTINATION_IN_SOURCE = 100;
 
     private PrivacyParams() {
     }

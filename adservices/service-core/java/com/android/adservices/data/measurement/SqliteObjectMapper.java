@@ -21,21 +21,18 @@ import static java.util.function.Predicate.not;
 import android.database.Cursor;
 import android.net.Uri;
 
-import com.android.adservices.service.measurement.AdtechUrl;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
-import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
+import com.android.adservices.service.measurement.aggregation.AggregateReport;
 
 import java.util.Arrays;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-/**
- * Helper class for SQLite operations.
- */
-class SqliteObjectMapper {
+/** Helper class for SQLite operations. */
+public class SqliteObjectMapper {
 
     /**
      * Create {@link EventReport} object from SQLite datastore.
@@ -84,8 +81,16 @@ class SqliteObjectMapper {
                 builder::setAdTechDomain);
         setUriColumn(cursor, MeasurementTables.SourceContract.PUBLISHER,
                 builder::setPublisher);
-        setUriColumn(cursor, MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION,
-                builder::setAttributionDestination);
+        setIntColumn(cursor, MeasurementTables.SourceContract.PUBLISHER_TYPE,
+                builder::setPublisherType);
+        setUriColumn(
+                cursor,
+                MeasurementTables.SourceContract.APP_DESTINATION,
+                builder::setAppDestination);
+        setUriColumn(
+                cursor,
+                MeasurementTables.SourceContract.WEB_DESTINATION,
+                builder::setWebDestination);
         setTextColumn(cursor, MeasurementTables.SourceContract.SOURCE_TYPE,
                 (enumValue) -> builder.setSourceType(Source.SourceType.valueOf(enumValue)));
         setLongColumn(cursor, MeasurementTables.SourceContract.EXPIRY_TIME,
@@ -114,28 +119,28 @@ class SqliteObjectMapper {
                 builder::setAggregateFilterData);
         setTextColumn(cursor, MeasurementTables.SourceContract.AGGREGATE_SOURCE,
                 builder::setAggregateSource);
+        setIntColumn(cursor, MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS,
+                builder::setAggregateContributions);
         return builder.build();
     }
 
-    /**
-     * Create {@link Trigger} object from SQLite datastore.
-     */
-    static Trigger constructTriggerFromCursor(Cursor cursor) {
+    /** Create {@link Trigger} object from SQLite datastore. */
+    public static Trigger constructTriggerFromCursor(Cursor cursor) {
         Trigger.Builder builder = new Trigger.Builder();
         setTextColumn(cursor, MeasurementTables.TriggerContract.ID,
                 builder::setId);
-        setLongColumn(cursor, MeasurementTables.TriggerContract.PRIORITY,
-                builder::setPriority);
+        setTextColumn(
+                cursor,
+                MeasurementTables.TriggerContract.EVENT_TRIGGERS,
+                builder::setEventTriggers);
         setUriColumn(cursor, MeasurementTables.TriggerContract.ATTRIBUTION_DESTINATION,
                 builder::setAttributionDestination);
+        setIntColumn(cursor, MeasurementTables.TriggerContract.DESTINATION_TYPE,
+                builder::setDestinationType);
         setUriColumn(cursor, MeasurementTables.TriggerContract.AD_TECH_DOMAIN,
                 builder::setAdTechDomain);
         setIntColumn(cursor, MeasurementTables.TriggerContract.STATUS,
                 builder::setStatus);
-        setLongColumn(cursor, MeasurementTables.TriggerContract.EVENT_TRIGGER_DATA,
-                builder::setEventTriggerData);
-        setLongColumn(cursor, MeasurementTables.TriggerContract.DEDUP_KEY,
-                builder::setDedupKey);
         setLongColumn(cursor, MeasurementTables.TriggerContract.TRIGGER_TIME,
                 builder::setTriggerTime);
         setUriColumn(cursor, MeasurementTables.TriggerContract.REGISTRANT,
@@ -149,22 +154,10 @@ class SqliteObjectMapper {
     }
 
     /**
-     * Create {@link AdtechUrl} object from SQLite datastore.
+     * Create {@link AggregateReport} object from SQLite datastore.
      */
-    static AdtechUrl constructAdtechUrlFromCursor(Cursor cursor) {
-        AdtechUrl.Builder builder = new AdtechUrl.Builder();
-        setTextColumn(cursor, MeasurementTables.AdTechUrlsContract.POSTBACK_URL,
-                builder::setPostbackUrl);
-        setTextColumn(cursor, MeasurementTables.AdTechUrlsContract.AD_TECH_ID,
-                builder::setAdtechId);
-        return builder.build();
-    }
-
-    /**
-     * Create {@link CleartextAggregatePayload} object from SQLite datastore.
-     */
-    static CleartextAggregatePayload constructCleartextAggregatePayload(Cursor cursor) {
-        CleartextAggregatePayload.Builder builder = new CleartextAggregatePayload.Builder();
+    static AggregateReport constructAggregateReport(Cursor cursor) {
+        AggregateReport.Builder builder = new AggregateReport.Builder();
         setTextColumn(cursor, MeasurementTables.AggregateReport.ID,
                 builder::setId);
         setUriColumn(cursor, MeasurementTables.AggregateReport.PUBLISHER,
@@ -175,14 +168,14 @@ class SqliteObjectMapper {
                 builder::setSourceRegistrationTime);
         setLongColumn(cursor, MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME,
                 builder::setScheduledReportTime);
-        setTextColumn(cursor, MeasurementTables.AggregateReport.PRIVACY_BUDGET_KEY,
-                builder::setPrivacyBudgetKey);
         setUriColumn(cursor, MeasurementTables.AggregateReport.REPORTING_ORIGIN,
                 builder::setReportingOrigin);
         setTextColumn(cursor, MeasurementTables.AggregateReport.DEBUG_CLEARTEXT_PAYLOAD,
                 builder::setDebugCleartextPayload);
         setIntColumn(cursor, MeasurementTables.AggregateReport.STATUS,
                 builder::setStatus);
+        setTextColumn(cursor, MeasurementTables.AggregateReport.API_VERSION,
+                builder::setApiVersion);
         return builder.build();
     }
 

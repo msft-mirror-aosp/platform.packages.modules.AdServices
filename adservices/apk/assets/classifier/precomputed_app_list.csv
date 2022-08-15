@@ -1,0 +1,13 @@
+app_id	topics
+com.example.adservices.samples.topics.sampleapp	10222,10223,10116,10243,10254
+com.example.adservices.samples.topics.sampleapp1	10043,10129,10116,10243,10254
+com.example.adservices.samples.topics.sampleapp2	10253,10141,10033,10254,10286
+com.example.adservices.samples.topics.sampleapp3	10253,10186,10249,10254,10440
+com.example.adservices.samples.topics.sampleapp4	10253,10146,10227,10390,10413
+com.example.adservices.samples.topics.sampleapp5	10192,10136,10389,10390,10440
+com.example.adservices.samples.topics.sampleapp6	10143,10436,10389,10330,10414
+com.example.adservices.samples.topics.sampleapp7	10291,10136,10359,10098,10001
+com.example.adservices.samples.topics.sampleapp8	10432,10132,10386,10344,10440
+com.example.adservices.samples.topics.sampleapp9	10123,10163,10249,10246,10422
+com.example.adservices.samples.topics.sampleapp10	10192,10136,10389,10332,10412
+com.android.adservices.tests.cts.endtoendtest	10147,10253,10175,10254,10333

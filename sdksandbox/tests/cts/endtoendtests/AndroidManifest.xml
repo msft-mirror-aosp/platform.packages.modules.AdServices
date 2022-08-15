@@ -20,12 +20,16 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="com.android.app.sdksandbox.permission.STOP_SDK_SANDBOX" />
     <application android:debuggable="true">
         <uses-library android:name="android.test.runner" />
         <uses-sdk-library android:name="com.android.loadSdkSuccessfullySdkProvider"
                           android:versionMajor="1"
                           android:certDigest="0B:44:2D:88:FA:A7:B3:AD:23:8D:DE:29:8A:A1:9B:D5:62:03:92:0B:BF:D8:D3:EB:C8:99:33:2C:8E:E1:15:99" />
-        <uses-sdk-library android:name="com.android.retryLoadSameSdkShouldFailSdkProvider"
+        <uses-sdk-library android:name="com.android.getLoadedSdkLibInfoSuccessfully"
+                          android:versionMajor="1"
+                          android:certDigest="0B:44:2D:88:FA:A7:B3:AD:23:8D:DE:29:8A:A1:9B:D5:62:03:92:0B:BF:D8:D3:EB:C8:99:33:2C:8E:E1:15:99" />
+        <uses-sdk-library android:name="com.android.loadSdkSuccessfullySdkProviderTwo"
                           android:versionMajor="1"
                           android:certDigest="0B:44:2D:88:FA:A7:B3:AD:23:8D:DE:29:8A:A1:9B:D5:62:03:92:0B:BF:D8:D3:EB:C8:99:33:2C:8E:E1:15:99" />
         <uses-sdk-library android:name="com.android.loadSdkWithInternalErrorSdkProvider"
@@ -37,9 +41,21 @@
         <uses-sdk-library android:name="com.android.requestSurfacePackageWithInternalErrorSdkProvider"
                           android:versionMajor="1"
                           android:certDigest="0B:44:2D:88:FA:A7:B3:AD:23:8D:DE:29:8A:A1:9B:D5:62:03:92:0B:BF:D8:D3:EB:C8:99:33:2C:8E:E1:15:99" />
+        <uses-sdk-library android:name="com.android.sendDataSdkProvider"
+                          android:versionMajor="1"
+                          android:certDigest="0B:44:2D:88:FA:A7:B3:AD:23:8D:DE:29:8A:A1:9B:D5:62:03:92:0B:BF:D8:D3:EB:C8:99:33:2C:8E:E1:15:99" />
         <uses-sdk-library android:name="com.android.codeproviderresources"
                           android:versionMajor="1"
                           android:certDigest="0B:44:2D:88:FA:A7:B3:AD:23:8D:DE:29:8A:A1:9B:D5:62:03:92:0B:BF:D8:D3:EB:C8:99:33:2C:8E:E1:15:99" />
+        <activity android:name=".TestActivity" android:exported="true"
+                  android:turnScreenOn="true"
+                  android:keepScreenOn="true"
+                  android:showWhenLocked="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
     </application>
 
     <instrumentation android:name="androidx.test.runner.AndroidJUnitRunner"

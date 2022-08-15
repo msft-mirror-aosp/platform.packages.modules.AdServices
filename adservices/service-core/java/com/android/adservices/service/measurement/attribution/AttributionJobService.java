@@ -24,9 +24,10 @@ import android.content.ComponentName;
 import android.content.Context;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.AdServicesConfig;
-import com.android.adservices.service.AdServicesExecutors;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.measurement.Trigger;
 
@@ -48,6 +49,11 @@ public class AttributionJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
+        if (FlagsFactory.getFlags().getMeasurementJobAttributionKillSwitch()) {
+            LogUtil.e("Attribution Job is disabled");
+            return false;
+        }
+
         LogUtil.d("AttributionJobService: onStartJob");
         sBackgroundExecutor.execute(() -> {
             boolean success =
