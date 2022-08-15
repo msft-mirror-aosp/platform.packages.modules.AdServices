@@ -77,6 +77,8 @@ public class CustomAudienceOverrider {
         Objects.requireNonNull(packageManager);
         Objects.requireNonNull(consentManager);
         Objects.requireNonNull(adServicesLogger);
+        Objects.requireNonNull(appImportanceFilter);
+        Objects.requireNonNull(flags);
 
         this.mDevContext = devContext;
         this.mCustomAudienceDao = customAudienceDao;
@@ -93,7 +95,10 @@ public class CustomAudienceOverrider {
     /**
      * Configures our fetching logic relating to the combination of {@code owner}, {@code buyer},
      * and {@code name} to use {@code biddingLogicJS} and {@code trustedBiddingSignals} instead of
-     * fetching from remote servers
+     * fetching from remote servers.
+     *
+     * <p>If the {@code owner} does not match the package name derived from the calling UID, fail
+     * silently.
      *
      * @param callback callback function to be called in case of success or failure
      */
@@ -107,7 +112,8 @@ public class CustomAudienceOverrider {
         Objects.requireNonNull(callback);
 
         // Auto-generated variable name is too long for lint check
-        int shortApiName = AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO;
+        final int shortApiName =
+                AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO;
 
         FluentFuture.from(
                         mListeningExecutorService.submit(
@@ -148,7 +154,7 @@ public class CustomAudienceOverrider {
 
     /**
      * Removes a bidding logic override matching the combination of {@code owner}, {@code buyer},
-     * {@code name} and {@code appPackageName}
+     * {@code name}, and {@code appPackageName} derived from the calling UID.
      *
      * @param callback callback function to be called in case of success or failure
      */
@@ -160,7 +166,7 @@ public class CustomAudienceOverrider {
         Objects.requireNonNull(callback);
 
         // Auto-generated variable name is too long for lint check
-        int shortApiName =
+        final int shortApiName =
                 AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE;
 
         FluentFuture.from(
@@ -183,7 +189,7 @@ public class CustomAudienceOverrider {
                         new FutureCallback<Integer>() {
                             @Override
                             public void onSuccess(Integer result) {
-                                LogUtil.d("Removing dev override succeeded!");
+                                LogUtil.d("Removing dev override succeeded with status %d", result);
                                 invokeSuccess(callback, shortApiName, result);
                             }
 
@@ -197,7 +203,8 @@ public class CustomAudienceOverrider {
     }
 
     /**
-     * Removes all custom audience overrides matching the {@code appPackageName}
+     * Removes all custom audience overrides matching the {@code appPackageName} associated with the
+     * {@code callerUid}.
      *
      * @param callback callback function to be called in case of success or failure
      */
@@ -206,7 +213,8 @@ public class CustomAudienceOverrider {
         Objects.requireNonNull(callback);
 
         // Auto-generated variable name is too long for lint check
-        int shortApiName = AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES;
+        final int shortApiName =
+                AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES;
 
         FluentFuture.from(
                         mListeningExecutorService.submit(
@@ -246,6 +254,7 @@ public class CustomAudienceOverrider {
                         () -> {
                             if (mConsentManager.isFledgeConsentRevokedForApp(
                                     mPackageManager, mDevContext.getCallingAppPackageName())) {
+                                LogUtil.v("User consent is revoked!");
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                             }
 

@@ -41,7 +41,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="48dp"
-                android:layout_marginBottom="36dp"
+                android:layout_marginBottom="16dp"
                 android:gravity="center"
                 android:visibility="gone"
                 android:orientation="vertical">
@@ -64,6 +64,7 @@
                 android:id="@+id/apps_list"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
                 android:clipToPadding="false"
                 android:paddingHorizontal="24dp"
                 android:scrollbars="none" />
@@ -108,24 +109,29 @@
                         android:drawablePadding="28dp"/>
                 </LinearLayout>
 
-                <ImageView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
-                    android:layout_marginStart="2dp"
                     android:paddingHorizontal="24dp"
-                    android:src="@drawable/ic_info_icon"
-                    tools:ignore="ContentDescription" />
+                    android:paddingBottom="48dp"
+                    android:orientation="vertical"
+                    android:focusableInTouchMode="true" >
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="24dp"
+                        android:layout_marginStart="2dp"
+                        android:src="@drawable/ic_info_icon"
+                        tools:ignore="ContentDescription" />
 
-                <TextView
-                    android:layout_marginStart="0dp"
-                    android:paddingHorizontal="24dp"
-                    android:text="@string/settingsUI_apps_view_info_text1"
-                    style="@style/MainStyle.Body1BoldBullet" />
-                <TextView
-                    android:paddingHorizontal="24dp"
-                    android:text="@string/settingsUI_apps_view_info_text2"
-                    style="@style/MainStyle.Body1" />
+                    <TextView
+                        android:layout_marginStart="0dp"
+                        android:text="@string/settingsUI_apps_view_info_text1"
+                        style="@style/MainStyle.Body1BoldBullet" />
+                    <TextView
+                        android:text="@string/settingsUI_apps_view_info_text2"
+                        style="@style/MainStyle.Body1" />
+                </LinearLayout>
             </LinearLayout>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

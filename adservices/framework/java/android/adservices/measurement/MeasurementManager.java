@@ -17,6 +17,7 @@ package android.adservices.measurement;
 
 import android.adservices.AdServicesState;
 import android.adservices.common.AdServicesStatusUtils;
+import android.adservices.common.CallerMetadata;
 import android.annotation.CallbackExecutor;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
@@ -112,6 +113,7 @@ public class MeasurementManager {
         try {
             service.register(
                     registrationRequest,
+                    generateCallerMetadataWithCurrentTime(),
                     new IMeasurementCallback.Stub() {
                         @Override
                         public void onResult() {
@@ -192,6 +194,7 @@ public class MeasurementManager {
                     new WebSourceRegistrationRequestInternal.Builder(
                                     request, getPackageName(), SystemClock.uptimeMillis())
                             .build(),
+                    generateCallerMetadataWithCurrentTime(),
                     new IMeasurementCallback.Stub() {
                         @Override
                         public void onResult() {
@@ -242,6 +245,7 @@ public class MeasurementManager {
             service.registerWebTrigger(
                     new WebTriggerRegistrationRequestInternal.Builder(request, getPackageName())
                             .build(),
+                    generateCallerMetadataWithCurrentTime(),
                     new IMeasurementCallback.Stub() {
                         @Override
                         public void onResult() {
@@ -309,6 +313,7 @@ public class MeasurementManager {
         try {
             service.deleteRegistrations(
                     deletionParam,
+                    generateCallerMetadataWithCurrentTime(),
                     new IMeasurementCallback.Stub() {
                         @Override
                         public void onResult() {
@@ -382,6 +387,7 @@ public class MeasurementManager {
 
         try {
             service.getMeasurementApiStatus(
+                    generateCallerMetadataWithCurrentTime(),
                     new IMeasurementApiStatusCallback.Stub() {
                         @Override
                         public void onResult(int result) {
@@ -412,5 +418,11 @@ public class MeasurementManager {
         } else {
             return mContext.getPackageName();
         }
+    }
+
+    private CallerMetadata generateCallerMetadataWithCurrentTime() {
+        return new CallerMetadata.Builder()
+                .setBinderElapsedTimestamp(System.currentTimeMillis())
+                .build();
     }
 }

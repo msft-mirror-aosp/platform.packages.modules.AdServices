@@ -22,6 +22,7 @@ import android.net.Uri;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Source;
@@ -194,20 +195,16 @@ public interface IMeasurementDao {
     List<String> getPendingEventReportIdsForGivenApp(Uri appName) throws DatastoreException;
 
     /**
-     * Find the number of entries for a rate limit window using the {@link Source} and
-     * {@link Trigger}.
-     * Rate-Limit Window: (Source Site, Destination Site, Window) from triggerTime.
+     * Find the number of entries for a rate limit window using the {@link Source} and {@link
+     * Trigger}. Rate-Limit Window: (Source Site, Destination Site, Window) from triggerTime.
      *
      * @return the number of entries for the window.
      */
-    long getAttributionsPerRateLimitWindow(Source source, Trigger trigger)
+    long getAttributionsPerRateLimitWindow(@NonNull Source source, @NonNull Trigger trigger)
             throws DatastoreException;
 
-    /**
-     * Add an entry in Attribution datastore for the provided {@link Source} and
-     * {@link Trigger}
-     */
-    void insertAttribution(Source source, Trigger trigger) throws DatastoreException;
+    /** Add an entry in Attribution datastore. */
+    void insertAttribution(@NonNull Attribution attribution) throws DatastoreException;
 
     /**
      * Deletes all records in measurement tables that correspond with the provided Uri.

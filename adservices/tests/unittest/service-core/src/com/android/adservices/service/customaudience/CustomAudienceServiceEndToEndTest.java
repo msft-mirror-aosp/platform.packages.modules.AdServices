@@ -34,6 +34,8 @@ import static org.junit.Assert.assertTrue;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.CallingAppUidSupplierFailureImpl;
+import android.adservices.common.CallingAppUidSupplierProcessImpl;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.customaudience.CustomAudience;
@@ -41,9 +43,7 @@ import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.CustomAudienceOverrideCallback;
 import android.adservices.customaudience.ICustomAudienceCallback;
 import android.content.Context;
-import android.os.Binder;
 import android.os.IBinder;
-import android.os.Process;
 import android.os.RemoteException;
 
 import androidx.room.Room;
@@ -130,7 +130,6 @@ public class CustomAudienceServiceEndToEndTest {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
-                        .mockStatic(Binder.class)
                         .mockStatic(BackgroundFetchJobService.class)
                         .initMocks(this)
                         .startMocking();
@@ -165,7 +164,8 @@ public class CustomAudienceServiceEndToEndTest {
                         MoreExecutors.newDirectExecutorService(),
                         mAdServicesLogger,
                         mAppImportanceFilter,
-                        FlagsFactory.getFlagsForTest());
+                        FlagsFactory.getFlagsForTest(),
+                        CallingAppUidSupplierProcessImpl.create());
     }
 
     @After
@@ -175,7 +175,33 @@ public class CustomAudienceServiceEndToEndTest {
 
     @Test
     public void testJoinCustomAudience_notInBinderThread_fail() {
-        when(Binder.getCallingUidOrThrow()).thenThrow(IllegalStateException.class);
+        CustomAudienceQuantityChecker customAudienceQuantityChecker =
+                new CustomAudienceQuantityChecker(mCustomAudienceDao, CommonFixture.FLAGS_FOR_TEST);
+
+        CustomAudienceValidator customAudienceValidator =
+                new CustomAudienceValidator(
+                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI, CommonFixture.FLAGS_FOR_TEST);
+
+        mService =
+                new CustomAudienceServiceImpl(
+                        CONTEXT,
+                        new CustomAudienceImpl(
+                                mCustomAudienceDao,
+                                customAudienceQuantityChecker,
+                                customAudienceValidator,
+                                CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
+                                CommonFixture.FLAGS_FOR_TEST),
+                        new FledgeAuthorizationFilter(
+                                CONTEXT.getPackageManager(),
+                                EnrollmentDao.getInstance(CONTEXT),
+                                mAdServicesLogger),
+                        mConsentManagerMock,
+                        mDevContextFilter,
+                        MoreExecutors.newDirectExecutorService(),
+                        mAdServicesLogger,
+                        mAppImportanceFilter,
+                        FlagsFactory.getFlagsForTest(),
+                        CallingAppUidSupplierFailureImpl.create());
 
         ResultCapturingCallback callback = new ResultCapturingCallback();
         assertThrows(
@@ -191,19 +217,19 @@ public class CustomAudienceServiceEndToEndTest {
     }
 
     @Test
-    public void testJoinCustomAudience_notAuthorized_fail() {
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
-
+    public void testJoinCustomAudience_callerPackageNameMismatch_fail() {
         ResultCapturingCallback callback = new ResultCapturingCallback();
-        assertThrows(
-                SecurityException.class,
-                () -> {
-                    mService.joinCustomAudience(
-                            CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
-                                    .setOwnerPackageName("other_owner")
-                                    .build(),
-                            callback);
-                });
+        mService.joinCustomAudience(
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                        .setOwnerPackageName("other_owner")
+                        .build(),
+                callback);
+
+        assertFalse(callback.isSuccess());
+        assertTrue(callback.getException() instanceof SecurityException);
+        assertEquals(
+                AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE,
+                callback.getException().getMessage());
         assertNull(
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
@@ -214,7 +240,6 @@ public class CustomAudienceServiceEndToEndTest {
     @Test
     public void testJoinCustomAudience_joinTwice_secondJoinOverrideValues() {
         doReturn(CommonFixture.FLAGS_FOR_TEST).when(FlagsFactory::getFlags);
-        doReturn(Process.myUid()).when(Binder::getCallingUidOrThrow);
         doNothing()
                 .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
         doReturn(false)
@@ -246,7 +271,6 @@ public class CustomAudienceServiceEndToEndTest {
 
     @Test
     public void testJoinCustomAudienceWithRevokedUserConsentForAppSuccess() {
-        doReturn(Process.myUid()).when(Binder::getCallingUidOrThrow);
         doReturn(true)
                 .when(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
@@ -263,7 +287,6 @@ public class CustomAudienceServiceEndToEndTest {
 
     @Test
     public void testJoinCustomAudience_beyondMaxExpirationTime_fail() {
-        doReturn(Process.myUid()).when(Binder::getCallingUidOrThrow);
         doReturn(false)
                 .when(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
@@ -281,7 +304,33 @@ public class CustomAudienceServiceEndToEndTest {
 
     @Test
     public void testLeaveCustomAudience_notInBinderThread_fail() {
-        when(Binder.getCallingUidOrThrow()).thenThrow(IllegalStateException.class);
+        CustomAudienceQuantityChecker customAudienceQuantityChecker =
+                new CustomAudienceQuantityChecker(mCustomAudienceDao, CommonFixture.FLAGS_FOR_TEST);
+
+        CustomAudienceValidator customAudienceValidator =
+                new CustomAudienceValidator(
+                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI, CommonFixture.FLAGS_FOR_TEST);
+
+        mService =
+                new CustomAudienceServiceImpl(
+                        CONTEXT,
+                        new CustomAudienceImpl(
+                                mCustomAudienceDao,
+                                customAudienceQuantityChecker,
+                                customAudienceValidator,
+                                CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
+                                CommonFixture.FLAGS_FOR_TEST),
+                        new FledgeAuthorizationFilter(
+                                CONTEXT.getPackageManager(),
+                                EnrollmentDao.getInstance(CONTEXT),
+                                mAdServicesLogger),
+                        mConsentManagerMock,
+                        mDevContextFilter,
+                        MoreExecutors.newDirectExecutorService(),
+                        mAdServicesLogger,
+                        mAppImportanceFilter,
+                        FlagsFactory.getFlagsForTest(),
+                        CallingAppUidSupplierFailureImpl.create());
 
         ResultCapturingCallback callback = new ResultCapturingCallback();
         assertThrows(
@@ -296,25 +345,24 @@ public class CustomAudienceServiceEndToEndTest {
     }
 
     @Test
-    public void testLeaveCustomAudience_notAuthorized_fail() {
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
-
+    public void testLeaveCustomAudience_callerPackageNameMismatch_fail() {
         ResultCapturingCallback callback = new ResultCapturingCallback();
-        assertThrows(
-                SecurityException.class,
-                () -> {
-                    mService.leaveCustomAudience(
-                            "other_owner",
-                            CommonFixture.VALID_BUYER,
-                            CustomAudienceFixture.VALID_NAME,
-                            callback);
-                });
+        mService.leaveCustomAudience(
+                "other_owner",
+                CommonFixture.VALID_BUYER,
+                CustomAudienceFixture.VALID_NAME,
+                callback);
+
+        assertFalse(callback.isSuccess());
+        assertTrue(callback.getException() instanceof SecurityException);
+        assertEquals(
+                AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE,
+                callback.getException().getMessage());
     }
 
     @Test
     public void testLeaveCustomAudience_leaveJoinedCustomAudience() {
         doReturn(CommonFixture.FLAGS_FOR_TEST).when(FlagsFactory::getFlags);
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         doNothing()
                 .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
         doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any(), any());
@@ -351,7 +399,6 @@ public class CustomAudienceServiceEndToEndTest {
     @Test
     public void testLeaveCustomAudienceWithRevokedUserConsentForAppSuccess() {
         doReturn(CommonFixture.FLAGS_FOR_TEST).when(FlagsFactory::getFlags);
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         doReturn(true).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any(), any());
         doReturn(false)
                 .when(mConsentManagerMock)
@@ -384,7 +431,6 @@ public class CustomAudienceServiceEndToEndTest {
 
     @Test
     public void testLeaveCustomAudience_leaveNotJoinedCustomAudience_doesNotFail() {
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any(), any());
 
         ResultCapturingCallback callback = new ResultCapturingCallback();

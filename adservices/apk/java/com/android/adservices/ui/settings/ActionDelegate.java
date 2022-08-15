@@ -61,7 +61,7 @@ public class ActionDelegate {
     private final MainViewModel mMainViewModel;
     private final TopicsViewModel mTopicsViewModel;
     private final AppsViewModel mAppsViewModel;
-    private final boolean mIsEUDevice;
+    private final int mDeviceLoggingRegion;
 
     public ActionDelegate(
             AdServicesSettingsActivity adServicesSettingsActivity,
@@ -74,7 +74,10 @@ public class ActionDelegate {
         mMainViewModel = mainViewModel;
         mTopicsViewModel = topicsViewModel;
         mAppsViewModel = appsViewModel;
-        mIsEUDevice = adServicesSettingsActivity.getPackageManager().hasSystemFeature(EEA_DEVICE);
+        mDeviceLoggingRegion =
+                adServicesSettingsActivity.getPackageManager().hasSystemFeature(EEA_DEVICE)
+                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU
+                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
 
         listenToMainViewModelUiEvents();
         listenToTopicsViewModelUiEvents();
@@ -202,42 +205,57 @@ public class ActionDelegate {
                             if (event == null) {
                                 return;
                             }
-                            switch (event) {
-                                    // TODO(b/241605477): add RESET_APP with logging
-                                case BLOCK_APP:
-                                    logBlockAppSelected();
-                                    try {
-                                        mAppsViewModel.revokeAppConsent(app);
-                                    } catch (IOException e) {
-                                        Toast.makeText(
-                                                mMainViewModel.getApplication(),
-                                                "Block app failed",
-                                                Toast.LENGTH_SHORT);
-                                    }
-                                    break;
-                                case RESTORE_APP:
-                                    logUnblockAppSelected();
-                                    try {
-                                        mAppsViewModel.restoreAppConsent(app);
-                                    } catch (IOException e) {
-                                        Toast.makeText(
-                                                mMainViewModel.getApplication(),
-                                                "Unblock app failed",
-                                                Toast.LENGTH_SHORT);
-                                    }
-                                    break;
-                                case DISPLAY_BLOCKED_APPS_FRAGMENT:
-                                    mFragmentManager
-                                            .beginTransaction()
-                                            .replace(
-                                                    R.id.fragment_container_view,
-                                                    AdServicesSettingsBlockedAppsFragment.class,
-                                                    null)
-                                            .setReorderingAllowed(true)
-                                            .addToBackStack(null)
-                                            .commit();
-                                    mAppsViewModel.refresh();
-                                    break;
+                            try {
+                                switch (event) {
+                                        // TODO(b/241605477): add RESET_APP with logging
+                                    case BLOCK_APP:
+                                        logBlockAppSelected();
+                                        try {
+                                            mAppsViewModel.revokeAppConsent(app);
+                                        } catch (IOException e) {
+                                            Toast.makeText(
+                                                    mMainViewModel.getApplication(),
+                                                    "Block app failed",
+                                                    Toast.LENGTH_SHORT);
+                                        }
+                                        break;
+                                    case RESTORE_APP:
+                                        logUnblockAppSelected();
+                                        try {
+                                            mAppsViewModel.restoreAppConsent(app);
+                                        } catch (IOException e) {
+                                            Toast.makeText(
+                                                    mMainViewModel.getApplication(),
+                                                    "Unblock app failed",
+                                                    Toast.LENGTH_SHORT);
+                                        }
+                                        break;
+                                    case RESET_APPS:
+                                        logResetAppSelected();
+                                        try {
+                                            mAppsViewModel.resetApps();
+                                        } catch (IOException e) {
+                                            Toast.makeText(
+                                                    mMainViewModel.getApplication(),
+                                                    "Reset app failed",
+                                                    Toast.LENGTH_SHORT);
+                                        }
+                                        break;
+                                    case DISPLAY_BLOCKED_APPS_FRAGMENT:
+                                        mFragmentManager
+                                                .beginTransaction()
+                                                .replace(
+                                                        R.id.fragment_container_view,
+                                                        AdServicesSettingsBlockedAppsFragment.class,
+                                                        null)
+                                                .setReorderingAllowed(true)
+                                                .addToBackStack(null)
+                                                .commit();
+                                        mAppsViewModel.refresh();
+                                        break;
+                                }
+                            } finally {
+                                mAppsViewModel.uiEventHandled();
                             }
                         });
     }
@@ -325,6 +343,7 @@ public class ActionDelegate {
     public void initAppsFragment(AdServicesSettingsAppsFragment fragment) {
         mAdServicesSettingsActivity.setTitle(R.string.settingsUI_apps_view_title);
         configureBlockedAppsFragmentButton(fragment);
+        configureResetAppsButton(fragment);
     }
 
     private void configureBlockedAppsFragmentButton(AdServicesSettingsAppsFragment fragment) {
@@ -333,6 +352,15 @@ public class ActionDelegate {
         blockedAppsButton.setOnClickListener(
                 view -> {
                     mAppsViewModel.blockedAppsFragmentButtonClickHandler();
+                });
+    }
+
+    private void configureResetAppsButton(AdServicesSettingsAppsFragment fragment) {
+        View resetAppsButton = fragment.requireView().findViewById(R.id.reset_apps_button);
+
+        resetAppsButton.setOnClickListener(
+                view -> {
+                    mAppsViewModel.resetAppsButtonClickHandler();
                 });
     }
 
@@ -368,10 +396,7 @@ public class ActionDelegate {
         UIStats uiStats =
                 new UIStats.Builder()
                         .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
-                        .setRegion(
-                                mIsEUDevice
-                                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU
-                                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW)
+                        .setRegion(mDeviceLoggingRegion)
                         .setAction(
                                 AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MANAGE_TOPICS_SELECTED)
                         .build();
@@ -382,10 +407,7 @@ public class ActionDelegate {
         UIStats uiStats =
                 new UIStats.Builder()
                         .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
-                        .setRegion(
-                                mIsEUDevice
-                                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU
-                                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW)
+                        .setRegion(mDeviceLoggingRegion)
                         .setAction(
                                 AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MANAGE_APPS_SELECTED)
                         .build();
@@ -396,10 +418,7 @@ public class ActionDelegate {
         UIStats uiStats =
                 new UIStats.Builder()
                         .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
-                        .setRegion(
-                                mIsEUDevice
-                                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU
-                                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW)
+                        .setRegion(mDeviceLoggingRegion)
                         .setAction(
                                 AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__RESET_TOPIC_SELECTED)
                         .build();
@@ -410,10 +429,7 @@ public class ActionDelegate {
         UIStats uiStats =
                 new UIStats.Builder()
                         .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
-                        .setRegion(
-                                mIsEUDevice
-                                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU
-                                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW)
+                        .setRegion(mDeviceLoggingRegion)
                         .setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__RESET_APP_SELECTED)
                         .build();
         AdServicesLoggerImpl.getInstance().logUIStats(uiStats);
@@ -423,10 +439,7 @@ public class ActionDelegate {
         UIStats uiStats =
                 new UIStats.Builder()
                         .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
-                        .setRegion(
-                                mIsEUDevice
-                                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU
-                                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW)
+                        .setRegion(mDeviceLoggingRegion)
                         .setAction(
                                 AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__BLOCK_TOPIC_SELECTED)
                         .build();
@@ -437,10 +450,7 @@ public class ActionDelegate {
         UIStats uiStats =
                 new UIStats.Builder()
                         .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
-                        .setRegion(
-                                mIsEUDevice
-                                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU
-                                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW)
+                        .setRegion(mDeviceLoggingRegion)
                         .setAction(
                                 AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__UNBLOCK_TOPIC_SELECTED)
                         .build();
@@ -451,10 +461,7 @@ public class ActionDelegate {
         UIStats uiStats =
                 new UIStats.Builder()
                         .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
-                        .setRegion(
-                                mIsEUDevice
-                                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU
-                                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW)
+                        .setRegion(mDeviceLoggingRegion)
                         .setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__BLOCK_APP_SELECTED)
                         .build();
         AdServicesLoggerImpl.getInstance().logUIStats(uiStats);
@@ -464,10 +471,7 @@ public class ActionDelegate {
         UIStats uiStats =
                 new UIStats.Builder()
                         .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
-                        .setRegion(
-                                mIsEUDevice
-                                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU
-                                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW)
+                        .setRegion(mDeviceLoggingRegion)
                         .setAction(
                                 AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__UNBLOCK_APP_SELECTED)
                         .build();

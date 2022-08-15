@@ -56,11 +56,13 @@ import com.android.adservices.service.measurement.registration.SourceFetcher;
 import com.android.adservices.service.measurement.registration.SourceRegistration;
 import com.android.adservices.service.measurement.registration.TriggerFetcher;
 import com.android.adservices.service.measurement.registration.TriggerRegistration;
+import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Web;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -439,20 +441,41 @@ public final class MeasurementImpl {
                 .build();
     }
 
-    private void insertSource(Source source) {
-        List<EventReport> eventReports = getSourceEventReports(source);
+    @VisibleForTesting
+    void insertSource(Source source) {
+        List<EventReport> fakeEventReports = generateFakeEventReports(source);
         mDatastoreManager.runInTransaction(
                 (dao) -> {
                     dao.insertSource(source);
-                    for (EventReport report : eventReports) {
+                    for (EventReport report : fakeEventReports) {
                         dao.insertEventReport(report);
+                    }
+
+                    // We want to account for attribution if fake report generation was considered
+                    // based on the probability. In that case the attribution mode will be NEVER
+                    // (empty fake reports state) or FALSELY (non-empty fake reports).
+                    if (source.getAttributionMode() != Source.AttributionMode.TRUTHFULLY) {
+                        // Attribution rate limits for app and web destinations are counted
+                        // separately, so add a fake report entry for each type of destination if
+                        // non-null.
+                        if (!Objects.isNull(source.getAppDestination())) {
+                            dao.insertAttribution(
+                                    createFakeAttributionRateLimit(
+                                            source, source.getAppDestination()));
+                        }
+
+                        if (!Objects.isNull(source.getWebDestination())) {
+                            dao.insertAttribution(
+                                    createFakeAttributionRateLimit(
+                                            source, source.getWebDestination()));
+                        }
                     }
                 });
     }
 
     @VisibleForTesting
-    List<EventReport> getSourceEventReports(Source source) {
-        List<Source.FakeReport> fakeReports = source.assignAttributionModeAndGenerateFakeReport();
+    List<EventReport> generateFakeEventReports(Source source) {
+        List<Source.FakeReport> fakeReports = source.assignAttributionModeAndGenerateFakeReports();
         return fakeReports.stream()
                 .map(
                         fakeReport ->
@@ -460,9 +483,14 @@ public final class MeasurementImpl {
                                         .setSourceId(source.getEventId())
                                         .setReportTime(fakeReport.getReportingTime())
                                         .setTriggerData(fakeReport.getTriggerData())
-                                        .setAttributionDestination(source.getAppDestination())
+                                        .setAttributionDestination(fakeReport.getDestination())
                                         .setAdTechDomain(source.getAdTechDomain())
-                                        .setTriggerTime(0)
+                                        // The query for attribution check is from
+                                        // (triggerTime - 30 days) to triggerTime and max expiry is
+                                        // 30 days, so it's safe to choose triggerTime as source
+                                        // event time so that it gets considered when the query is
+                                        // fired for attribution rate limit check.
+                                        .setTriggerTime(source.getEventTime())
                                         .setTriggerPriority(0L)
                                         .setTriggerDedupKey(null)
                                         .setSourceType(source.getSourceType())
@@ -607,6 +635,38 @@ public final class MeasurementImpl {
         }
     }
 
+    /**
+     * {@link Attribution} generated from here will only be used for fake report attribution.
+     *
+     * @param source source to derive parameters from
+     * @param destination destination for attribution
+     * @return a fake {@link Attribution}
+     */
+    private Attribution createFakeAttributionRateLimit(Source source, Uri destination) {
+        Optional<Uri> publisherBaseUri = extractBaseUri(source.getPublisher());
+        Optional<Uri> destinationBaseUri = extractBaseUri(destination);
+
+        if (!publisherBaseUri.isPresent() || !destinationBaseUri.isPresent()) {
+            throw new IllegalArgumentException(
+                    String.format(
+                            "insertAttributionRateLimit: getSourceAndDestinationTopPrivateDomains"
+                                    + " failed. Publisher: %s; Attribution destination: %s",
+                            source.getPublisher(), destination));
+        }
+
+        String publisherTopPrivateDomain = publisherBaseUri.get().toString();
+        String triggerDestinationTopPrivateDomain = destinationBaseUri.get().toString();
+        return new Attribution.Builder()
+                .setSourceSite(publisherTopPrivateDomain)
+                .setSourceOrigin(BaseUriExtractor.getBaseUri(source.getPublisher()).toString())
+                .setDestinationSite(triggerDestinationTopPrivateDomain)
+                .setDestinationOrigin(BaseUriExtractor.getBaseUri(destination).toString())
+                .setAdTechDomain(source.getAdTechDomain().toString())
+                .setTriggerTime(source.getEventTime())
+                .setRegistrant(source.getRegistrant().toString())
+                .build();
+    }
+
     private static boolean isValid(WebTriggerRegistrationRequest triggerRegistrationRequest) {
         Uri destination = triggerRegistrationRequest.getDestination();
         return Web.topPrivateDomainAndScheme(destination).isPresent();
@@ -614,6 +674,17 @@ public final class MeasurementImpl {
 
     private static String getTargetPackageFromPlayStoreUri(Uri uri) {
         return uri.getQueryParameter("id");
+    }
+
+    private static Optional<Uri> extractBaseUri(Uri uri) {
+        return hasAndroidAppScheme(uri)
+                ? Optional.of(BaseUriExtractor.getBaseUri(uri))
+                : Web.topPrivateDomainAndScheme(uri);
+    }
+
+    private static boolean hasAndroidAppScheme(Uri uri) {
+        String scheme = uri.getScheme();
+        return scheme != null && scheme.equals(ANDROID_APP_SCHEME);
     }
 
     private interface AppVendorPackages {
