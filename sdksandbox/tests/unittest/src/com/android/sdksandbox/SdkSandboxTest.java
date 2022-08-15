@@ -23,6 +23,7 @@ import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SharedPreferencesKey;
 import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.app.sdksandbox.testutils.FakeSharedPreferencesSyncCallback;
+import android.app.sdksandbox.testutils.StubSdkToServiceLink;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
@@ -134,7 +135,8 @@ public class SdkSandboxTest {
                 null,
                 new Bundle(),
                 mRemoteCode,
-                SANDBOX_LATENCY_INFO);
+                SANDBOX_LATENCY_INFO,
+                new StubSdkToServiceLink());
         assertThat(latch.await(1, TimeUnit.MINUTES)).isTrue();
         assertThat(mRemoteCode.mSuccessful).isTrue();
     }
@@ -156,7 +158,8 @@ public class SdkSandboxTest {
                 null,
                 new Bundle(),
                 mRemoteCode1,
-                SANDBOX_LATENCY_INFO);
+                SANDBOX_LATENCY_INFO,
+                new StubSdkToServiceLink());
         assertThat(latch1.await(1, TimeUnit.MINUTES)).isTrue();
         assertThat(mRemoteCode1.mSuccessful).isTrue();
         mService.loadSdk(
@@ -169,7 +172,8 @@ public class SdkSandboxTest {
                 null,
                 new Bundle(),
                 mRemoteCode2,
-                SANDBOX_LATENCY_INFO);
+                SANDBOX_LATENCY_INFO,
+                new StubSdkToServiceLink());
         assertThat(latch2.await(1, TimeUnit.MINUTES)).isTrue();
         assertThat(mRemoteCode2.mSuccessful).isFalse();
         assertThat(mRemoteCode2.mErrorCode)
@@ -182,6 +186,7 @@ public class SdkSandboxTest {
         RemoteCode mRemoteCode1 = new RemoteCode(latch1);
         CountDownLatch latch2 = new CountDownLatch(1);
         RemoteCode mRemoteCode2 = new RemoteCode(latch2);
+        StubSdkToServiceLink sdkToServiceLink = new StubSdkToServiceLink();
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
                 new Binder(),
@@ -192,7 +197,8 @@ public class SdkSandboxTest {
                 null,
                 new Bundle(),
                 mRemoteCode1,
-                SANDBOX_LATENCY_INFO);
+                SANDBOX_LATENCY_INFO,
+                sdkToServiceLink);
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
                 new Binder(),
@@ -203,7 +209,8 @@ public class SdkSandboxTest {
                 null,
                 new Bundle(),
                 mRemoteCode2,
-                SANDBOX_LATENCY_INFO);
+                SANDBOX_LATENCY_INFO,
+                sdkToServiceLink);
         assertThat(latch1.await(1, TimeUnit.MINUTES)).isTrue();
         assertThat(mRemoteCode1.mSuccessful).isTrue();
         assertThat(latch2.await(1, TimeUnit.MINUTES)).isTrue();
@@ -224,7 +231,8 @@ public class SdkSandboxTest {
                 null,
                 new Bundle(),
                 mRemoteCode,
-                SANDBOX_LATENCY_INFO);
+                SANDBOX_LATENCY_INFO,
+                new StubSdkToServiceLink());
         assertThat(latch.await(1, TimeUnit.MINUTES)).isTrue();
 
         CountDownLatch surfaceLatch = new CountDownLatch(1);
@@ -258,7 +266,8 @@ public class SdkSandboxTest {
                 null,
                 new Bundle(),
                 mRemoteCode,
-                SANDBOX_LATENCY_INFO);
+                SANDBOX_LATENCY_INFO,
+                new StubSdkToServiceLink());
         assertThat(latch.await(1, TimeUnit.MINUTES)).isTrue();
 
         CountDownLatch surfaceLatch = new CountDownLatch(1);
@@ -309,7 +318,8 @@ public class SdkSandboxTest {
                 null,
                 new Bundle(),
                 new RemoteCode(new CountDownLatch(1)),
-                SANDBOX_LATENCY_INFO);
+                SANDBOX_LATENCY_INFO,
+                new StubSdkToServiceLink());
 
         final StringWriter stringWriter = new StringWriter();
         mService.dump(new FileDescriptor(), new PrintWriter(stringWriter), new String[0]);
@@ -431,7 +441,8 @@ public class SdkSandboxTest {
                 null,
                 new Bundle(),
                 mRemoteCode,
-                SANDBOX_LATENCY_INFO);
+                SANDBOX_LATENCY_INFO,
+                new StubSdkToServiceLink());
         assertThat(latch.await(1, TimeUnit.MINUTES)).isTrue();
         assertThat(mRemoteCode.mSandboxLatencyInfo.getLatencySystemServerToSandbox())
                 .isEqualTo(
@@ -478,7 +489,8 @@ public class SdkSandboxTest {
                 null,
                 new Bundle(),
                 mRemoteCode,
-                SANDBOX_LATENCY_INFO);
+                SANDBOX_LATENCY_INFO,
+                new StubSdkToServiceLink());
         assertThat(latch.await(1, TimeUnit.MINUTES)).isTrue();
 
         CountDownLatch surfaceLatch = new CountDownLatch(1);

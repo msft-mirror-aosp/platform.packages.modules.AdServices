@@ -24,6 +24,7 @@ import android.os.IBinder;
 import com.android.sdksandbox.SandboxLatencyInfo;
 
 import com.android.sdksandbox.ILoadSdkInSandboxCallback;
+import android.app.sdksandbox.ISdkToServiceCallback;
 
 /** @hide */
 oneway interface ISdkSandboxService {
@@ -32,7 +33,8 @@ oneway interface ISdkSandboxService {
                   in String sdkName, in String sdkProviderClassName,
                   in String sdkCeDataDir, in String sdkDeDataDir,
                   in Bundle params, in ILoadSdkInSandboxCallback callback,
-                  in SandboxLatencyInfo sandboxLatencyInfo);
+                  in SandboxLatencyInfo sandboxLatencyInfo,
+                  in ISdkToServiceCallback sdkToService);
     void unloadSdk(IBinder sdkToken);
     void syncDataFromClient(in SharedPreferencesUpdate update, in ISharedPreferencesSyncCallback callback);
 }

@@ -29,8 +29,10 @@ package android.app.sdksandbox {
   public abstract class SandboxedSdkProvider {
     ctor public SandboxedSdkProvider();
     method public final void attachContext(@NonNull android.content.Context);
+    method public final void attachSdkSandboxController(@NonNull android.app.sdksandbox.SdkSandboxController);
     method public void beforeUnloadSdk();
     method @Nullable public android.content.Context getContext();
+    method @Nullable public final android.app.sdksandbox.SdkSandboxController getSdkSandboxController();
     method @NonNull public abstract android.view.View getView(@NonNull android.content.Context, @NonNull android.os.Bundle, int, int);
     method public abstract void onDataReceived(@NonNull android.os.Bundle, @NonNull android.app.sdksandbox.SandboxedSdkProvider.DataReceivedCallback);
     method @NonNull public abstract android.app.sdksandbox.SandboxedSdk onLoadSdk(@NonNull android.os.Bundle) throws android.app.sdksandbox.LoadSdkException;
@@ -39,6 +41,9 @@ package android.app.sdksandbox {
   public static interface SandboxedSdkProvider.DataReceivedCallback {
     method public void onDataReceivedError(@NonNull String);
     method public void onDataReceivedSuccess(@NonNull android.os.Bundle);
+  }
+
+  public interface SdkSandboxController {
   }
 
   public final class SdkSandboxManager {
