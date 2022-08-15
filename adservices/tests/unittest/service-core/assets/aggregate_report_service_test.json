@@ -6,7 +6,7 @@
         "sources": [],
         "triggers": [],
         "event_reports": [],
-        "attribution_rate_limits": [],
+        "attributions": [],
         "aggregate_reports": [
           {
             "publisher": "https://source.site",
@@ -24,7 +24,7 @@
         "sources": [],
         "triggers": [],
         "event_reports": [],
-        "attribution_rate_limits": [],
+        "attributions": [],
         "aggregate_reports": [
           {
             "publisher": "https://source.site",
@@ -41,7 +41,7 @@
       "param": {
         "responseCode": 200,
         "action": "SINGLE_REPORT",
-        "result": "SUCCESS",
+        "result": 0,
         "id": "AR1"
       }
     },
@@ -51,7 +51,7 @@
         "sources": [],
         "triggers": [],
         "event_reports": [],
-        "attribution_rate_limits": [],
+        "attributions": [],
         "aggregate_reports": [
           {
             "publisher": "https://source.site",
@@ -69,7 +69,7 @@
         "sources": [],
         "triggers": [],
         "event_reports": [],
-        "attribution_rate_limits": [],
+        "attributions": [],
         "aggregate_reports": [
           {
             "publisher": "https://source.site",
@@ -86,7 +86,7 @@
       "param": {
         "responseCode": 400,
         "action": "SINGLE_REPORT",
-        "result": "POST_REQUEST_ERROR",
+        "result": 4,
         "id": "AR1"
       }
     },
@@ -96,7 +96,7 @@
         "sources": [],
         "triggers": [],
         "event_reports": [],
-        "attribution_rate_limits": [],
+        "attributions": [],
         "aggregate_reports": [
           {
             "publisher": "https://source.site",
@@ -114,7 +114,7 @@
         "sources": [],
         "triggers": [],
         "event_reports": [],
-        "attribution_rate_limits": [],
+        "attributions": [],
         "aggregate_reports": [
           {
             "publisher": "https://source.site",
@@ -131,7 +131,7 @@
       "param": {
         "responseCode": 200,
         "action": "SINGLE_REPORT",
-        "result": "ALREADY_DELIVERED",
+        "result": 2,
         "id": "AR1"
       }
     },
@@ -141,7 +141,7 @@
         "sources": [],
         "triggers": [],
         "event_reports": [],
-        "attribution_rate_limits": [],
+        "attributions": [],
         "aggregate_reports": [
           {
             "publisher": "https://source.site1",
@@ -179,7 +179,7 @@
         "sources": [],
         "triggers": [],
         "event_reports": [],
-        "attribution_rate_limits": [],
+        "attributions": [],
         "aggregate_reports": [
           {
             "publisher": "https://source.site1",
@@ -225,7 +225,7 @@
         "sources": [],
         "triggers": [],
         "event_reports": [],
-        "attribution_rate_limits": [],
+        "attributions": [],
         "aggregate_reports": [
           {
             "publisher": "https://source.site1",
@@ -253,7 +253,7 @@
         "sources": [],
         "triggers": [],
         "event_reports": [],
-        "attribution_rate_limits": [],
+        "attributions": [],
         "aggregate_reports": [
           {
             "publisher": "https://source.site1",
@@ -290,7 +290,7 @@
         "sources": [],
         "triggers": [],
         "event_reports": [],
-        "attribution_rate_limits": [],
+        "attributions": [],
         "aggregate_reports": [
           {
             "publisher": "https://source.site1",
@@ -328,7 +328,7 @@
         "sources": [],
         "triggers": [],
         "event_reports": [],
-        "attribution_rate_limits": [],
+        "attributions": [],
         "aggregate_reports": [
           {
             "publisher": "https://source.site1",

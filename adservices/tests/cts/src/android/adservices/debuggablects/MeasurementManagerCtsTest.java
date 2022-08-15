@@ -18,6 +18,10 @@ package android.adservices.debuggablects;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import android.adservices.clients.measurement.MeasurementClient;
 import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.MeasurementManager;
@@ -33,9 +37,9 @@ import android.test.suitebuilder.annotation.SmallTest;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.runner.AndroidJUnit4;
 
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.measurement.MeasurementServiceImpl;
 import com.android.modules.utils.testing.TestableDeviceConfig;
@@ -50,12 +54,16 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 @SmallTest
 @RunWith(AndroidJUnit4.class)
@@ -77,6 +85,7 @@ public class MeasurementManagerCtsTest {
     private static final Uri WEB_DESTINATION = Uri.parse("http://web-destination.com");
     private static final Uri ORIGIN_URI = Uri.parse("https://sample.example1.com");
     private static final Uri DOMAIN_URI = Uri.parse("https://example2.com");
+    private static final String ALLOW_LIST_ALL = "*";
     private final ExecutorService mExecutorService = Executors.newCachedThreadPool();
 
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
@@ -92,11 +101,17 @@ public class MeasurementManagerCtsTest {
 
         // Mocking context passed to measurement client so updated DeviceConfigs can be read
         final Context mockContext = Mockito.mock(Context.class);
+        final Flags mockFlags = Mockito.mock(Flags.class);
         final MeasurementManager mm = Mockito.spy(new MeasurementManager(sContext));
         Mockito.doReturn(mm).when(mockContext).getSystemService(MeasurementManager.class);
-        Mockito.doReturn(new MeasurementServiceImpl(sContext, ConsentManager.getInstance(sContext)))
+        Mockito.doReturn(
+                        new MeasurementServiceImpl(
+                                sContext, ConsentManager.getInstance(sContext), mockFlags))
                 .when(mm)
                 .getService();
+        Mockito.doReturn(ALLOW_LIST_ALL)
+                .when(mockFlags)
+                .getWebContextRegistrationClientAppAllowList();
 
         mMeasurementClient =
                 new MeasurementClient.Builder()
@@ -160,7 +175,7 @@ public class MeasurementManagerCtsTest {
             throws Exception {
         DeletionRequest deletionRequest = new DeletionRequest.Builder().build();
         ListenableFuture<Void> result = mMeasurementClient.deleteRegistrations(deletionRequest);
-        Assert.assertNull(result.get());
+        assertNull(result.get());
     }
 
     @Test
@@ -172,7 +187,7 @@ public class MeasurementManagerCtsTest {
                         .setDomainUris(Collections.singletonList(DOMAIN_URI))
                         .build();
         ListenableFuture<Void> result = mMeasurementClient.deleteRegistrations(deletionRequest);
-        Assert.assertNull(result.get());
+        assertNull(result.get());
     }
 
     @Test
@@ -186,7 +201,7 @@ public class MeasurementManagerCtsTest {
                         .setEnd(Instant.now())
                         .build();
         ListenableFuture<Void> result = mMeasurementClient.deleteRegistrations(deletionRequest);
-        Assert.assertNull(result.get());
+        assertNull(result.get());
     }
 
     @Test
@@ -200,14 +215,13 @@ public class MeasurementManagerCtsTest {
                         .setEnd(Instant.now())
                         .build();
         ListenableFuture<Void> result = mMeasurementClient.deleteRegistrations(deletionRequest);
-        Assert.assertNull(result.get());
+        assertNull(result.get());
     }
 
     @Test
     public void testDeleteRegistrations_withRequest_withInvalidArguments_withCallback_hasError()
             throws Exception {
-        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        final MeasurementManager manager = context.getSystemService(MeasurementManager.class);
+        final MeasurementManager manager = sContext.getSystemService(MeasurementManager.class);
         Objects.requireNonNull(manager);
 
         CompletableFuture<Void> future = new CompletableFuture<>();
@@ -215,13 +229,13 @@ public class MeasurementManagerCtsTest {
                 new OutcomeReceiver<Object, Exception>() {
                     @Override
                     public void onResult(@NonNull Object ignoredResult) {
-                        Assert.fail();
+                        fail();
                     }
 
                     @Override
                     public void onError(Exception error) {
                         future.complete(null);
-                        Assert.assertTrue(error.getCause() instanceof IllegalArgumentException);
+                        assertTrue(error instanceof IllegalArgumentException);
                     }
                 };
         DeletionRequest request =
@@ -230,7 +244,27 @@ public class MeasurementManagerCtsTest {
                         .setDomainUris(Collections.singletonList(DOMAIN_URI))
                         .setEnd(Instant.now())
                         .build();
+
         manager.deleteRegistrations(request, mExecutorService, callback);
+
         Assert.assertNull(future.get());
+    }
+
+    @Test
+    public void testMeasurementApiStatus_returnResultStatus() throws Exception {
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        final MeasurementManager manager = sContext.getSystemService(MeasurementManager.class);
+        List<Integer> resultCodes = new ArrayList<>();
+
+        manager.getMeasurementApiStatus(
+                mExecutorService,
+                result -> {
+                    resultCodes.add(result);
+                    countDownLatch.countDown();
+                });
+
+        assertThat(countDownLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
+        Assert.assertNotNull(resultCodes);
+        Assert.assertEquals(1, resultCodes.size());
     }
 }

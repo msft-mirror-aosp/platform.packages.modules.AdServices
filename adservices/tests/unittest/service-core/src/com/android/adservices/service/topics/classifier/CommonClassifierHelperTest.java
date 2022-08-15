@@ -17,9 +17,7 @@
 package com.android.adservices.service.topics.classifier;
 
 import static com.android.adservices.service.topics.classifier.CommonClassifierHelper.computeClassifierAssetChecksum;
-import static com.android.adservices.service.topics.classifier.CommonClassifierHelper.getAssetsMetadata;
 import static com.android.adservices.service.topics.classifier.CommonClassifierHelper.getTopTopics;
-import static com.android.adservices.service.topics.classifier.CommonClassifierHelper.retrieveLabels;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -62,11 +60,14 @@ public class CommonClassifierHelperTest {
     private static final String TEST_CLASSIFIER_ASSETS_METADATA_PATH =
             "classifier/classifier_test_assets_metadata.json";
     private static final String PRODUCTION_LABELS_FILE_PATH = "classifier/labels_topics.txt";
-    private static final String PRODUCTION_PRECOMPUTED_FILE_PATH =
+    private static final String PRODUCTION_APPS_FILE_PATH =
             "classifier/precomputed_app_list.csv";
     private static final String PRODUCTION_CLASSIFIER_ASSETS_METADATA_PATH =
             "classifier/classifier_assets_metadata.json";
+    private static final String BUNDLED_MODEL_FILE_PATH = "classifier/model.tflite";
 
+    private ModelManager mTestModelManager;
+    private ModelManager mProductionModelManager;
     private ImmutableList<Integer> testLabels;
     private ImmutableMap<String, ImmutableMap<String, String>> testClassifierAssetsMetadata;
     private long mTestTaxonomyVersion;
@@ -79,9 +80,22 @@ public class CommonClassifierHelperTest {
 
     @Before
     public void setUp() {
-        testLabels = retrieveLabels(sContext.getAssets(), TEST_LABELS_FILE_PATH);
-        testClassifierAssetsMetadata = getAssetsMetadata(
-                sContext.getAssets(), TEST_CLASSIFIER_ASSETS_METADATA_PATH);
+        mTestModelManager = new ModelManager(
+                sContext,
+                TEST_LABELS_FILE_PATH,
+                TEST_PRECOMPUTED_FILE_PATH,
+                TEST_CLASSIFIER_ASSETS_METADATA_PATH,
+                BUNDLED_MODEL_FILE_PATH);
+
+        mProductionModelManager = new ModelManager(
+                sContext,
+                PRODUCTION_LABELS_FILE_PATH,
+                PRODUCTION_APPS_FILE_PATH,
+                PRODUCTION_CLASSIFIER_ASSETS_METADATA_PATH,
+                BUNDLED_MODEL_FILE_PATH);
+
+        testLabels = mTestModelManager.retrieveLabels();
+        testClassifierAssetsMetadata = mTestModelManager.retrieveClassifierAssetsMetadata();
         mTestTaxonomyVersion =
                 Long.parseLong(
                         testClassifierAssetsMetadata.get("labels_topics").get("asset_version"));
@@ -89,9 +103,9 @@ public class CommonClassifierHelperTest {
                 Long.parseLong(
                         testClassifierAssetsMetadata.get("tflite_model").get("asset_version"));
 
-        productionLabels = retrieveLabels(sContext.getAssets(), PRODUCTION_LABELS_FILE_PATH);
-        productionClassifierAssetsMetadata = getAssetsMetadata(
-                sContext.getAssets(), PRODUCTION_CLASSIFIER_ASSETS_METADATA_PATH);
+        productionLabels = mProductionModelManager.retrieveLabels();
+        productionClassifierAssetsMetadata =
+                mProductionModelManager.retrieveClassifierAssetsMetadata();
         mProductionTaxonomyVersion =
                 Long.parseLong(
                         productionClassifierAssetsMetadata
@@ -102,34 +116,6 @@ public class CommonClassifierHelperTest {
                         productionClassifierAssetsMetadata
                                 .get("tflite_model")
                                 .get("asset_version"));
-    }
-
-    @Test
-    public void testRetrieveLabels_successfulRead() {
-        // Test the labels list in test assets
-        // Check size of list.
-        // The labels_test_topics.txt contains 349 topics.
-        assertThat(testLabels.size()).isEqualTo(349);
-
-        // Check some labels.
-        assertThat(testLabels).containsAtLeast(5, 100, 250, 349);
-
-
-        // Test the labels list in production assets
-        // Check size of list.
-        // The labels_topics.txt contains 349 topics.
-        assertThat(productionLabels.size()).isEqualTo(349);
-
-        // Check some labels.
-        assertThat(productionLabels).containsAtLeast(10, 200, 270, 320);
-    }
-
-    @Test
-    public void testRetrieveLabels_emptyListReturnedOnException() {
-        ImmutableList<Integer> labels =
-                retrieveLabels(sContext.getAssets(), "Incorrect File Name!");
-        // Check empty list returned.
-        assertThat(labels).isEmpty();
     }
 
     @Test
@@ -322,8 +308,8 @@ public class CommonClassifierHelperTest {
         // can match the correct topic in classifier/precomputed_test_app_list_chrome_topics.csv.
         // "random = n, topicId = m" means this topicId m is from the nth (0-indexed)
         // topicId in the topics list.
-        // random = 20, topicId = 21
-        assertThat(testResponse.get(5)).isEqualTo(getTestTopic(21));
+        // random = 20, topicId = 10021
+        assertThat(testResponse.get(5)).isEqualTo(getTestTopic(10021));
 
         Map<String, List<Topic>> productionAppTopics = new HashMap<>();
         // We label app1 with the same topic IDs as testAppTopics, but using production metadata.
@@ -345,8 +331,8 @@ public class CommonClassifierHelperTest {
         // can match the correct topic in classifier/precomputed_app_list_chrome_topics.csv.
         // "random = n, topicId = m" means this topicId m is from the nth (0-indexed)
         // topicId in the topics list.
-        // random = 20, topicId = 21
-        assertThat(productionResponse.get(5)).isEqualTo(getProductionTopic(51));
+        // random = 50, topicId = 10051
+        assertThat(productionResponse.get(5)).isEqualTo(getProductionTopic(10051));
     }
 
     @Test
@@ -382,27 +368,27 @@ public class CommonClassifierHelperTest {
         // can match the correct topic in classifier/precomputed_test_app_list_chrome_topics.csv.
         // "random = n, topicId = m" means this topicId m is from the nth (0-indexed)
         // topicId in the topics list.
-        // random = 10, topicId = 11
-        assertThat(testResponse.get(5)).isEqualTo(getTestTopic(11));
+        // random = 10, topicId = 10011
+        assertThat(testResponse.get(5)).isEqualTo(getTestTopic(10011));
 
-        // random = 20, topicId = 21
-        assertThat(testResponse.get(6)).isEqualTo(getTestTopic(21));
+        // random = 20, topicId = 10021
+        assertThat(testResponse.get(6)).isEqualTo(getTestTopic(10021));
 
-        // random = 50, topicId = 51
-        assertThat(testResponse.get(7)).isEqualTo(getTestTopic(51));
+        // random = 50, topicId = 10051
+        assertThat(testResponse.get(7)).isEqualTo(getTestTopic(10051));
 
-        // random = 75, topicId = 76
-        assertThat(testResponse.get(8)).isEqualTo(getTestTopic(76));
+        // random = 75, topicId = 10076
+        assertThat(testResponse.get(8)).isEqualTo(getTestTopic(10076));
 
-        // random = 100, topicId = 101
-        assertThat(testResponse.get(9)).isEqualTo(getTestTopic(101));
+        // random = 100, topicId = 10101
+        assertThat(testResponse.get(9)).isEqualTo(getTestTopic(10101));
 
-        // random = 300, topicId = 301
-        assertThat(testResponse.get(10)).isEqualTo(getTestTopic(301));
+        // random = 300, topicId = 10301
+        assertThat(testResponse.get(10)).isEqualTo(getTestTopic(10301));
 
-        // random = 500, size of labels list is 349,
-        // index should be 500 % 349 = 151, topicId = 152
-        assertThat(testResponse.get(11)).isEqualTo(getTestTopic(152));
+        // random = 500, size of labels list is 446,
+        // index should be 500 % 446 = 54, topicId = 10055
+        assertThat(testResponse.get(11)).isEqualTo(getTestTopic(10055));
     }
 
     @Test
@@ -442,151 +428,8 @@ public class CommonClassifierHelperTest {
         // topicId in the topics list.
         // In this test, if we want to select a random topic that does not repeat,
         // we should select the one corresponding to the sixth index
-        // in the MockRandom array topicId, i.e. random = 300, topicId = 301
-        assertThat(testResponse.get(5)).isEqualTo(getTestTopic(301));
-    }
-
-    @Test
-    public void testGetTestClassifierAssetsMetadata_correctFormat() {
-        // There should contain 6 assets and 1 property in classifier_test_assets_metadata.json.
-        // The asset without "asset_name" or "property" will not be stored in the map.
-        assertThat(testClassifierAssetsMetadata).hasSize(7);
-
-        // The property of metadata with correct format should contain 3 attributions:
-        // "taxonomy_type", "taxonomy_version", "updated_date".
-        // The key name of property is "version_info"
-        assertThat(testClassifierAssetsMetadata.get("version_info")).hasSize(3);
-        assertThat(testClassifierAssetsMetadata.get("version_info").keySet()).containsExactly(
-                "taxonomy_type", "taxonomy_version", "updated_date");
-
-        // The property "version_info" should have attribution "taxonomy_version"
-        // and its value should be "12".
-        assertThat(testClassifierAssetsMetadata.get("version_info").get("taxonomy_version"))
-                .isEqualTo("12");
-
-        // The property "version_info" should have attribution "taxonomy_type"
-        // and its value should be "chrome".
-        assertThat(testClassifierAssetsMetadata.get("version_info").get("taxonomy_type"))
-                .isEqualTo("chrome");
-
-        // The metadata of 1 asset with correct format should contain 4 attributions:
-        // "asset_version", "path", "checksum", "updated_date".
-        // Check if "labels_topics" asset has the correct format.
-        assertThat(testClassifierAssetsMetadata.get("labels_topics")).hasSize(4);
-        assertThat(testClassifierAssetsMetadata.get("labels_topics").keySet()).containsExactly(
-                "asset_version", "path", "checksum", "updated_date");
-
-        // The asset "labels_topics" should have attribution "asset_version" and its value should be
-        // "1"
-        assertThat(testClassifierAssetsMetadata.get("labels_topics").get("asset_version"))
-                .isEqualTo("34");
-
-        // The asset "labels_topics" should have attribution "path" and its value should be
-        // "assets/classifier/labels_test_topics.txt"
-        assertThat(testClassifierAssetsMetadata.get("labels_topics").get("path"))
-                .isEqualTo("assets/classifier/labels_test_topics.txt");
-
-        // The asset "labels_topics" should have attribution "updated_date" and its value should be
-        // "2022-06-15"
-        assertThat(testClassifierAssetsMetadata.get("labels_topics").get("updated_date"))
-                .isEqualTo("2022-06-15");
-
-        // There should contain 4 metadata attributions in asset "topic_id_to_name"
-        assertThat(testClassifierAssetsMetadata.get("topic_id_to_name")).hasSize(4);
-
-        // The asset "topic_id_to_name" should have attribution "path" and its value should be
-        // "assets/classifier/topic_id_to_name.csv"
-        assertThat(testClassifierAssetsMetadata.get("topic_id_to_name").get("path"))
-                .isEqualTo("assets/classifier/topic_id_to_name.csv");
-
-        // The asset "precomputed_app_list" should have attribution "checksum" and
-        // its value should be "5849fbee8a41ac7a5a5a02edc7544d6d19df2a9d067719da1e1b7f4da6e9cef8"
-        assertThat(testClassifierAssetsMetadata.get("precomputed_app_list").get("checksum"))
-                .isEqualTo("5849fbee8a41ac7a5a5a02edc7544d6d19df2a9d067719da1e1b7f4da6e9cef8");
-    }
-
-    @Test
-    public void testGetProductionClassifierAssetsMetadata_correctFormat() {
-        // There should contain 4 assets and 1 property in classifier_assets_metadata.json.
-        assertThat(productionClassifierAssetsMetadata).hasSize(5);
-
-        // The property of metadata in production metadata should contain 4 attributions:
-        // "taxonomy_type", "taxonomy_version", "updated_date".
-        // The key name of property is "version_info"
-        assertThat(productionClassifierAssetsMetadata.get("version_info")).hasSize(3);
-        assertThat(productionClassifierAssetsMetadata.get("version_info").keySet())
-                .containsExactly(
-                        "taxonomy_type", "taxonomy_version", "updated_date");
-
-        // The property "version_info" should have attribution "taxonomy_version"
-        // and its value should be "1".
-        assertThat(productionClassifierAssetsMetadata.get("version_info").get("taxonomy_version"))
-                .isEqualTo("1");
-
-        // The property "version_info" should have attribution "taxonomy_type"
-        // and its value should be "chrome".
-        assertThat(productionClassifierAssetsMetadata.get("version_info").get("taxonomy_type"))
-                .isEqualTo("chrome");
-
-        // The metadata of 1 asset in production metadata should contain 4 attributions:
-        // "asset_version", "path", "checksum", "updated_date".
-        // Check if "labels_topics" asset has the correct format.
-        assertThat(productionClassifierAssetsMetadata.get("labels_topics")).hasSize(4);
-        assertThat(productionClassifierAssetsMetadata.get("labels_topics").keySet())
-                .containsExactly("asset_version", "path", "checksum", "updated_date");
-
-        // The asset "labels_topics" should have attribution "asset_version" and its value should be
-        // "1"
-        assertThat(productionClassifierAssetsMetadata.get("labels_topics").get("asset_version"))
-                .isEqualTo("1");
-
-        // The asset "labels_topics" should have attribution "path" and its value should be
-        // "assets/classifier/labels_topics.txt"
-        assertThat(productionClassifierAssetsMetadata.get("labels_topics").get("path"))
-                .isEqualTo("assets/classifier/labels_topics.txt");
-
-        // The asset "labels_topics" should have attribution "updated_date" and its value should be
-        // "2022-06-15"
-        assertThat(productionClassifierAssetsMetadata.get("labels_topics").get("updated_date"))
-                .isEqualTo("2022-06-15");
-
-        // There should contain 5 metadata attributions in asset "topic_id_to_name"
-        assertThat(productionClassifierAssetsMetadata.get("topic_id_to_name")).hasSize(4);
-
-        // The asset "topic_id_to_name" should have attribution "path" and its value should be
-        // "assets/classifier/topic_id_to_name.csv"
-        assertThat(productionClassifierAssetsMetadata.get("topic_id_to_name").get("path"))
-                .isEqualTo("assets/classifier/topic_id_to_name.csv");
-
-        // The asset "precomputed_app_list" should have attribution "checksum" and
-        // its value should be "f155c15126a475f03329edda23d6cc90e1227d9d8fddb8318b9acc88b6d0fffe"
-        assertThat(productionClassifierAssetsMetadata.get("precomputed_app_list").get("checksum"))
-                .isEqualTo("f155c15126a475f03329edda23d6cc90e1227d9d8fddb8318b9acc88b6d0fffe");
-    }
-
-    @Test
-    public void testGetTestClassifierAssetsMetadata_wrongFormat() {
-        // There should contain 1 metadata attributions in asset "test_asset1",
-        // because it doesn't have "checksum" and "updated_date"
-        assertThat(testClassifierAssetsMetadata.get("test_asset1")).hasSize(1);
-
-        // The asset "test_asset1" should have attribution "path" and its value should be
-        // "assets/classifier/test1"
-        assertThat(testClassifierAssetsMetadata.get("test_asset1").get("path"))
-                .isEqualTo("assets/classifier/test1");
-
-        // There should contain 4 metadata attributions in asset "test_asset2",
-        // because "redundant_field1" and "redundant_field2" are not correct attributions.
-        assertThat(testClassifierAssetsMetadata.get("test_asset2")).hasSize(4);
-
-        // The asset "test_asset2" should have attribution "path" and its value should be
-        // "assets/classifier/test2"
-        assertThat(testClassifierAssetsMetadata.get("test_asset2").get("path"))
-                .isEqualTo("assets/classifier/test2");
-
-        // The asset "test_asset2" shouldn't have redundant attribution "redundant_field1"
-        assertThat(testClassifierAssetsMetadata.get("test_asset2"))
-                .doesNotContainKey("redundant_field1");
+        // in the MockRandom array topicId, i.e. random = 1, topicId = 10002
+        assertThat(testResponse.get(5)).isEqualTo(getTestTopic(10002));
     }
 
     @Test
@@ -618,7 +461,7 @@ public class CommonClassifierHelperTest {
         // Compute SHA256 checksum of precomputed apps topics file in production assets
         // and check the result can match the checksum saved in the classifier assets metadata file.
         String precomputedAppsProductionChecksum = computeClassifierAssetChecksum(
-                sContext.getAssets(), PRODUCTION_PRECOMPUTED_FILE_PATH);
+                sContext.getAssets(), PRODUCTION_APPS_FILE_PATH);
         assertThat(precomputedAppsProductionChecksum).isEqualTo(
                 productionClassifierAssetsMetadata.get("precomputed_app_list").get("checksum"));
     }

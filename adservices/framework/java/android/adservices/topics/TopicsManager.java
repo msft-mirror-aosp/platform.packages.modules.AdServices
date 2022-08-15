@@ -41,6 +41,9 @@ import java.util.concurrent.Executor;
 /**
  * TopicsManager provides APIs for App and Ad-Sdks to get the user interest topics in a privacy
  * preserving way.
+ *
+ * <p>The instance of the {@link TopicsManager} can be obtained using {@link
+ * Context#getSystemService} and {@link TopicsManager} class.
  */
 public final class TopicsManager {
     /**
@@ -102,7 +105,7 @@ public final class TopicsManager {
                 .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
                 .build();
         final ITopicsService service = getService();
-        String sdkName = getTopicsRequest.getSdkName();
+        String sdkName = getTopicsRequest.getAdsSdkName();
         String appPackageName = "";
         String sdkPackageName = "";
         // First check if context is SandboxedSdkContext or not

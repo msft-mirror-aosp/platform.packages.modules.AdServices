@@ -25,6 +25,8 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
+import com.android.compatibility.common.util.ShellUtils;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -39,6 +41,8 @@ public class PermissionsValidTest {
 
     @Test
     public void testValidPermissions_topics() throws Exception {
+        overrideDisableTopicsEnrollmentCheck("1");
+
         AdvertisingTopicsClient advertisingTopicsClient1 =
                 new AdvertisingTopicsClient.Builder()
                         .setContext(sContext)
@@ -50,5 +54,13 @@ public class PermissionsValidTest {
         // Not getting an error here indicates that permissions are valid. The valid case is also
         // tested in TopicsManagerTest.
         assertThat(sdk1Result.getTopics()).isEmpty();
+        overrideDisableTopicsEnrollmentCheck("0");
+    }
+
+    // Override the flag to disable Topics enrollment check.
+    private void overrideDisableTopicsEnrollmentCheck(String val) {
+        // Setting it to 1 here disables the Topics enrollment check.
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.disable_topics_enrollment_check " + val);
     }
 }

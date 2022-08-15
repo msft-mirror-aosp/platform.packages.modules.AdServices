@@ -81,6 +81,8 @@ public class SqliteObjectMapper {
                 builder::setAdTechDomain);
         setUriColumn(cursor, MeasurementTables.SourceContract.PUBLISHER,
                 builder::setPublisher);
+        setIntColumn(cursor, MeasurementTables.SourceContract.PUBLISHER_TYPE,
+                builder::setPublisherType);
         setUriColumn(
                 cursor,
                 MeasurementTables.SourceContract.APP_DESTINATION,
@@ -133,6 +135,8 @@ public class SqliteObjectMapper {
                 builder::setEventTriggers);
         setUriColumn(cursor, MeasurementTables.TriggerContract.ATTRIBUTION_DESTINATION,
                 builder::setAttributionDestination);
+        setIntColumn(cursor, MeasurementTables.TriggerContract.DESTINATION_TYPE,
+                builder::setDestinationType);
         setUriColumn(cursor, MeasurementTables.TriggerContract.AD_TECH_DOMAIN,
                 builder::setAdTechDomain);
         setIntColumn(cursor, MeasurementTables.TriggerContract.STATUS,

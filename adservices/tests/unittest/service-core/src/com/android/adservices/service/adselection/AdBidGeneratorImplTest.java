@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
+import static com.android.adservices.service.adselection.AdBidGeneratorImpl.BIDDING_TIMED_OUT;
+import static com.android.adservices.service.adselection.AdBidGeneratorImpl.MISSING_BIDDING_LOGIC;
 import static com.android.adservices.service.adselection.AdBidGeneratorImpl.MISSING_TRUSTED_BIDDING_SIGNALS;
 
 import static org.junit.Assert.assertEquals;
@@ -51,6 +53,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.js.IsolateSettings;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FluentFuture;
@@ -137,6 +140,7 @@ public class AdBidGeneratorImplTest {
     private CustomAudienceDao mCustomAudienceDao;
     private Flags mFlags;
     private MockWebServerRule.RequestMatcher<String> mRequestMatcherExactMatch;
+    private IsolateSettings mIsolateSettings;
 
     @Before
     public void setUp() throws Exception {
@@ -202,6 +206,8 @@ public class AdBidGeneratorImplTest {
 
         mFlags = FlagsFactory.getFlagsForTest();
 
+        mIsolateSettings = IsolateSettings.forMaxHeapSizeEnforcementDisabled();
+
         mRequestMatcherExactMatch =
                 (actualRequest, expectedRequest) -> actualRequest.equals(expectedRequest);
     }
@@ -221,7 +227,8 @@ public class AdBidGeneratorImplTest {
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
-                        mFlags);
+                        mFlags,
+                        mIsolateSettings);
 
         Mockito.when(
                         mAdSelectionScriptEngine.generateBids(
@@ -311,7 +318,8 @@ public class AdBidGeneratorImplTest {
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
-                        mFlags);
+                        mFlags,
+                        mIsolateSettings);
 
         // Given we are using a direct executor and mock the returned result from the
         // AdSelectionScriptEngine.generateBids for preparing the test,
@@ -371,7 +379,8 @@ public class AdBidGeneratorImplTest {
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
-                        mFlags);
+                        mFlags,
+                        mIsolateSettings);
 
         Mockito.when(
                         mAdSelectionScriptEngine.generateBids(
@@ -434,7 +443,8 @@ public class AdBidGeneratorImplTest {
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
-                        flagsWithSmallerLimits);
+                        flagsWithSmallerLimits,
+                        mIsolateSettings);
         Mockito.when(
                         mAdSelectionScriptEngine.generateBids(
                                 mBuyerDecisionLogicJs,
@@ -456,7 +466,7 @@ public class AdBidGeneratorImplTest {
                         AdSelectionConfigFixture.anAdSelectionConfig());
         // Then we can test the result by assertion
         ExecutionException thrown = assertThrows(ExecutionException.class, result::get);
-        assertTrue(thrown.getMessage().contains("TimeoutFuture$TimeoutFutureException"));
+        assertTrue(thrown.getMessage().contains(BIDDING_TIMED_OUT));
         Mockito.verify(mAdSelectionScriptEngine)
                 .generateBids(
                         mBuyerDecisionLogicJs,
@@ -489,7 +499,8 @@ public class AdBidGeneratorImplTest {
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
-                        mFlags);
+                        mFlags,
+                        mIsolateSettings);
 
         JSONException jsonException = new JSONException("");
         Mockito.when(
@@ -571,7 +582,8 @@ public class AdBidGeneratorImplTest {
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
-                        mFlags);
+                        mFlags,
+                        mIsolateSettings);
 
         Mockito.when(
                         mAdSelectionScriptEngine.generateBids(
@@ -617,6 +629,53 @@ public class AdBidGeneratorImplTest {
     }
 
     @Test
+    public void testMissingBiddingLogicException() throws Exception {
+        // Given we are using a direct executor and mock the returned result from the
+        // AdSelectionScriptEngine.generateBids for preparing the test,
+
+        // Send error response for JS logic fetch
+        Dispatcher dispatcher =
+                new Dispatcher() {
+                    @Override
+                    public MockResponse dispatch(RecordedRequest request) {
+                        switch (request.getPath()) {
+                            case mFetchJavaScriptPath:
+                                return new MockResponse().setResponseCode(404);
+                        }
+                        return new MockResponse().setResponseCode(404);
+                    }
+                };
+        mServer = mMockWebServerRule.startMockWebServer(dispatcher);
+        IllegalStateException missingJSLogicException =
+                new IllegalStateException(MISSING_BIDDING_LOGIC);
+
+        CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper =
+                new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
+        mAdBidGenerator =
+                new AdBidGeneratorImpl(
+                        mContext,
+                        mListeningExecutorService,
+                        mAdSelectionScriptEngine,
+                        mAdServicesHttpsClient,
+                        customAudienceDevOverridesHelper,
+                        mFlags,
+                        mIsolateSettings);
+
+        // When the call to runAdBiddingPerCA, and the computation of future is complete,
+        FluentFuture<AdBiddingOutcome> result =
+                mAdBidGenerator.runAdBiddingPerCA(
+                        mCustomAudienceWithAds,
+                        EMPTY_AD_SELECTION_SIGNALS,
+                        EMPTY_BUYER_SIGNALS,
+                        EMPTY_CONTEXTUAL_SIGNALS,
+                        AdSelectionConfigFixture.anAdSelectionConfig());
+        ExecutionException outException = assertThrows(ExecutionException.class, result::get);
+        assertEquals(outException.getCause().getMessage(), missingJSLogicException.getMessage());
+        mMockWebServerRule.verifyMockServerRequests(
+                mServer, 1, ImmutableList.of(mFetchJavaScriptPath), mRequestMatcherExactMatch);
+    }
+
+    @Test
     public void testMissingTrustedSignalsException() throws Exception {
         // Given we are using a direct executor and mock the returned result from the
         // AdSelectionScriptEngine.generateBids for preparing the test,
@@ -646,7 +705,8 @@ public class AdBidGeneratorImplTest {
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
-                        mFlags);
+                        mFlags,
+                        mIsolateSettings);
 
         // When the call to runAdBiddingPerCA, and the computation of future is complete,
         FluentFuture<AdBiddingOutcome> result =
@@ -678,7 +738,8 @@ public class AdBidGeneratorImplTest {
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
-                        mFlags);
+                        mFlags,
+                        mIsolateSettings);
 
         // Given we are using a direct executor and mock the returned result from the
         // AdSelectionScriptEngine.generateBids for preparing the test,
@@ -722,7 +783,8 @@ public class AdBidGeneratorImplTest {
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
-                        mFlags);
+                        mFlags,
+                        mIsolateSettings);
 
         FluentFuture<AdBiddingOutcome> result =
                 mAdBidGenerator.runAdBiddingPerCA(

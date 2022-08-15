@@ -46,16 +46,20 @@ public class WebSourceRegistrationRequestInternal implements Parcelable {
     @NonNull private final WebSourceRegistrationRequest mSourceRegistrationRequest;
     /** Holds package info of where the request is coming from. */
     @NonNull private final String mPackageName;
+    /** Time the request was created, as millis since boot excluding time in deep sleep. */
+    private final long mRequestTime;
 
     private WebSourceRegistrationRequestInternal(@NonNull Builder builder) {
         mSourceRegistrationRequest = builder.mSourceRegistrationRequest;
         mPackageName = builder.mPackageName;
+        mRequestTime = builder.mRequestTime;
     }
 
     private WebSourceRegistrationRequestInternal(Parcel in) {
         Objects.requireNonNull(in);
         mSourceRegistrationRequest = WebSourceRegistrationRequest.CREATOR.createFromParcel(in);
         mPackageName = in.readString();
+        mRequestTime = in.readLong();
     }
 
     /** Getter for {@link #mSourceRegistrationRequest}. */
@@ -68,13 +72,19 @@ public class WebSourceRegistrationRequestInternal implements Parcelable {
         return mPackageName;
     }
 
+    /** Getter for {@link #mRequestTime}. */
+    public long getRequestTime() {
+        return mRequestTime;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof WebSourceRegistrationRequestInternal)) return false;
         WebSourceRegistrationRequestInternal that = (WebSourceRegistrationRequestInternal) o;
         return Objects.equals(mSourceRegistrationRequest, that.mSourceRegistrationRequest)
-                && Objects.equals(mPackageName, that.mPackageName);
+                && Objects.equals(mPackageName, that.mPackageName)
+                && mRequestTime == that.mRequestTime;
     }
 
     @Override
@@ -92,6 +102,7 @@ public class WebSourceRegistrationRequestInternal implements Parcelable {
         Objects.requireNonNull(out);
         mSourceRegistrationRequest.writeToParcel(out, flags);
         out.writeString(mPackageName);
+        out.writeLong(mRequestTime);
     }
 
     /** Builder for {@link WebSourceRegistrationRequestInternal}. */
@@ -100,23 +111,28 @@ public class WebSourceRegistrationRequestInternal implements Parcelable {
         @NonNull private final WebSourceRegistrationRequest mSourceRegistrationRequest;
         /** Client's package name used for the registration. Used to determine the registrant. */
         @NonNull private final String mPackageName;
+        /** Time the request was created, as millis since boot excluding time in deep sleep. */
+        private final long mRequestTime;
 
         /**
          * Builder constructor for {@link WebSourceRegistrationRequestInternal}.
          *
          * @param sourceRegistrationRequest external source registration request
          * @param packageName that is calling PP API
+         * @param requestTime time that the request was created
          */
         public Builder(
                 @NonNull WebSourceRegistrationRequest sourceRegistrationRequest,
-                @NonNull String packageName) {
+                @NonNull String packageName,
+                long requestTime) {
             Objects.requireNonNull(sourceRegistrationRequest);
             Objects.requireNonNull(packageName);
             mSourceRegistrationRequest = sourceRegistrationRequest;
             mPackageName = packageName;
+            mRequestTime = requestTime;
         }
 
-        /** Pre-validates paramerters and builds {@link WebSourceRegistrationRequestInternal}. */
+        /** Pre-validates parameters and builds {@link WebSourceRegistrationRequestInternal}. */
         @NonNull
         public WebSourceRegistrationRequestInternal build() {
             return new WebSourceRegistrationRequestInternal(this);

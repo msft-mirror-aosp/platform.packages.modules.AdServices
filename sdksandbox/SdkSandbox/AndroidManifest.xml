@@ -26,6 +26,10 @@
         android:minSdkVersion="33"
         android:targetSdkVersion="33" />
 
+    <!-- @hide @TestApi -->
+    <permission android:name="com.android.app.sdksandbox.permission.STOP_SDK_SANDBOX"
+                android:protectionLevel="normal" />
+
     <!-- Allows SdkSandbox to start activities. -->
     <!-- TODO(b/209599396): temporary workaround, remove once proper solution is implemented. -->
     <uses-permission android:name="android.permission.START_ACTIVITIES_FROM_BACKGROUND"/>

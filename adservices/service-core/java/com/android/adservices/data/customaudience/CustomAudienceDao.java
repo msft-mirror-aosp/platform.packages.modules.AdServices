@@ -307,6 +307,81 @@ public abstract class CustomAudienceDao {
         return deleteAllExpiredCustomAudiences(expiryTime);
     }
 
+    /**
+     * Deletes ALL custom audiences from the table.
+     *
+     * <p>This method is not intended to be called on its own. Please use {@link
+     * #deleteAllCustomAudienceData()} instead.
+     */
+    @Query("DELETE FROM custom_audience")
+    protected abstract void deleteAllCustomAudiences();
+
+    /**
+     * Deletes ALL custom audience background fetch data from the table.
+     *
+     * <p>This method is not intended to be called on its own. Please use {@link
+     * #deleteAllCustomAudienceData()} instead.
+     */
+    @Query("DELETE FROM custom_audience_background_fetch_data")
+    protected abstract void deleteAllCustomAudienceBackgroundFetchData();
+
+    /**
+     * Deletes ALL custom audience overrides from the table.
+     *
+     * <p>This method is not intended to be called on its own. Please use {@link
+     * #deleteAllCustomAudienceData()} instead.
+     */
+    @Query("DELETE FROM custom_audience_overrides")
+    protected abstract void deleteAllCustomAudienceOverrides();
+
+    /** Deletes ALL custom audience data from the database in a single transaction. */
+    @Transaction
+    public void deleteAllCustomAudienceData() {
+        deleteAllCustomAudiences();
+        deleteAllCustomAudienceBackgroundFetchData();
+        deleteAllCustomAudienceOverrides();
+    }
+
+    /**
+     * Deletes all custom audiences belonging to the {@code owner} application from the table.
+     *
+     * <p>This method is not intended to be called on its own. Please use {@link
+     * #deleteCustomAudienceDataByOwner(String)} instead.
+     */
+    @Query("DELETE FROM custom_audience WHERE owner = :owner")
+    protected abstract void deleteCustomAudiencesByOwner(@NonNull String owner);
+
+    /**
+     * Deletes all custom audience background fetch data belonging to the {@code owner} application
+     * from the table.
+     *
+     * <p>This method is not intended to be called on its own. Please use {@link
+     * #deleteCustomAudienceDataByOwner(String)} instead.
+     */
+    @Query("DELETE FROM custom_audience_background_fetch_data WHERE owner = :owner")
+    protected abstract void deleteCustomAudienceBackgroundFetchDataByOwner(@NonNull String owner);
+
+    /**
+     * Deletes all custom audience overrides belonging to the {@code owner} application from the
+     * table.
+     *
+     * <p>This method is not intended to be called on its own. Please use {@link
+     * #deleteCustomAudienceDataByOwner(String)} instead.
+     */
+    @Query("DELETE FROM custom_audience_overrides WHERE owner = :owner")
+    protected abstract void deleteCustomAudienceOverridesByOwner(@NonNull String owner);
+
+    /**
+     * Deletes all custom audience data belonging to the {@code owner} application from the database
+     * in a single transaction.
+     */
+    @Transaction
+    public void deleteCustomAudienceDataByOwner(@NonNull String owner) {
+        deleteCustomAudiencesByOwner(owner);
+        deleteCustomAudienceBackgroundFetchDataByOwner(owner);
+        deleteCustomAudienceOverridesByOwner(owner);
+    }
+
     /** Clean up selected custom audience override data by its primary key */
     @Query(
             "DELETE FROM custom_audience_overrides WHERE owner = :owner AND buyer = :buyer "
@@ -317,9 +392,9 @@ public abstract class CustomAudienceDao {
             @NonNull String name,
             @NonNull String appPackageName);
 
-    /** Clean up all custom audience override data */
+    /** Clean up all custom audience override data for the given package name. */
     @Query("DELETE FROM custom_audience_overrides WHERE app_package_name = :appPackageName")
-    public abstract void removeAllCustomAudienceOverrides(@NonNull String appPackageName);
+    public abstract void removeCustomAudienceOverridesByPackageName(@NonNull String appPackageName);
 
     /**
      * Fetch all the Custom Audience corresponding to the buyers

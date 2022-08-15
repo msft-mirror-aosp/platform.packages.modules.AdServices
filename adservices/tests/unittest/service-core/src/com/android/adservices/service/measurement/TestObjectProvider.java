@@ -25,7 +25,9 @@ import android.annotation.IntDef;
 import android.test.mock.MockContentResolver;
 
 import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.attribution.AttributionJobHandlerWrapper;
+import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.registration.SourceFetcher;
 import com.android.adservices.service.measurement.registration.TriggerFetcher;
 
@@ -54,8 +56,13 @@ class TestObjectProvider {
         return new AttributionJobHandlerWrapper(datastoreManager);
     }
 
-    static MeasurementImpl getMeasurementImpl(@Type int type, DatastoreManager datastoreManager,
-            SourceFetcher sourceFetcher, TriggerFetcher triggerFetcher) {
+    static MeasurementImpl getMeasurementImpl(
+            @Type int type,
+            DatastoreManager datastoreManager,
+            SourceFetcher sourceFetcher,
+            TriggerFetcher triggerFetcher,
+            ClickVerifier clickVerifier,
+            Flags flags) {
         if (type == Type.DENOISED) {
             MeasurementImpl measurementImpl =
                     spy(
@@ -64,9 +71,10 @@ class TestObjectProvider {
                                     new MockContentResolver(),
                                     datastoreManager,
                                     sourceFetcher,
-                                    triggerFetcher));
+                                    triggerFetcher,
+                                    clickVerifier));
             // Disable Impression Noise
-            doReturn(Collections.emptyList()).when(measurementImpl).getSourceEventReports(any());
+            doReturn(Collections.emptyList()).when(measurementImpl).generateFakeEventReports(any());
             return measurementImpl;
         } else if (type == Type.NOISY) {
             MeasurementImpl measurementImpl =
@@ -76,7 +84,8 @@ class TestObjectProvider {
                                     new MockContentResolver(),
                                     datastoreManager,
                                     sourceFetcher,
-                                    triggerFetcher));
+                                    triggerFetcher,
+                                    clickVerifier));
             // Create impression noise with 100% probability
             Answer<?> answerSourceEventReports =
                     invocation -> {
@@ -96,11 +105,18 @@ class TestObjectProvider {
                                         .setStatus(EventReport.Status.PENDING)
                                         .build());
                     };
-            doAnswer(answerSourceEventReports).when(measurementImpl).getSourceEventReports(any());
+            doAnswer(answerSourceEventReports)
+                    .when(measurementImpl)
+                    .generateFakeEventReports(any());
             return measurementImpl;
         }
 
         return new MeasurementImpl(
-                null, new MockContentResolver(), datastoreManager, sourceFetcher, triggerFetcher);
+                null,
+                new MockContentResolver(),
+                datastoreManager,
+                sourceFetcher,
+                triggerFetcher,
+                clickVerifier);
     }
 }

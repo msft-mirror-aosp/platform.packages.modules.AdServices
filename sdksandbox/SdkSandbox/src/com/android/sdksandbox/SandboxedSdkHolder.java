@@ -16,7 +16,6 @@
 
 package com.android.sdksandbox;
 
-import android.annotation.SuppressLint;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
@@ -39,7 +38,6 @@ import java.util.Random;
 /**
  * A holder for loaded code.
  */
-@SuppressLint("NewApi") // TODO(b/227329631): remove this after T SDK is finalized
 class SandboxedSdkHolder {
 
     private static final String TAG = "SdkSandbox";

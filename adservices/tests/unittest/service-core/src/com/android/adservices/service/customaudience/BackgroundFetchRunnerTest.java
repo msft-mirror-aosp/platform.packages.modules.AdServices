@@ -252,8 +252,7 @@ public class BackgroundFetchRunnerTest {
         CustomAudienceUpdatableData expectedUpdatableData =
                 CustomAudienceUpdatableDataFixture.getValidBuilderEmptyFailedResponse()
                         .setInitialUpdateResult(
-                                BackgroundFetchRunner.UpdateResultType
-                                        .NETWORK_CONNECT_TIMEOUT_FAILURE)
+                                BackgroundFetchRunner.UpdateResultType.NETWORK_FAILURE)
                         .build();
 
         CustomAudienceUpdatableData updatableData =
@@ -314,7 +313,7 @@ public class BackgroundFetchRunnerTest {
         CustomAudienceUpdatableData expectedUpdatableData =
                 CustomAudienceUpdatableDataFixture.getValidBuilderEmptyFailedResponse()
                         .setInitialUpdateResult(
-                                BackgroundFetchRunner.UpdateResultType.RESPONSE_VALIDATION_FAILURE)
+                                BackgroundFetchRunner.UpdateResultType.NETWORK_FAILURE)
                         .build();
 
         CustomAudienceUpdatableData updatableData =

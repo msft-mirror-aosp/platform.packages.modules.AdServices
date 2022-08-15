@@ -15,15 +15,9 @@
  */
 package android.adservices.measurement;
 
-import static com.android.adservices.ResultCode.RESULT_INTERNAL_ERROR;
-import static com.android.adservices.ResultCode.RESULT_INVALID_ARGUMENT;
-import static com.android.adservices.ResultCode.RESULT_IO_ERROR;
-import static com.android.adservices.ResultCode.RESULT_OK;
-import static com.android.adservices.ResultCode.RESULT_UNAUTHORIZED_CALL;
-
-import android.adservices.AdServicesApiUtil;
-import android.adservices.exceptions.AdServicesException;
-import android.adservices.exceptions.MeasurementException;
+import android.adservices.AdServicesState;
+import android.adservices.common.AdServicesStatusUtils;
+import android.adservices.common.CallerMetadata;
 import android.annotation.CallbackExecutor;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
@@ -33,6 +27,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
+import android.os.SystemClock;
 import android.view.InputEvent;
 
 import com.android.adservices.AdServicesCommon;
@@ -49,24 +44,6 @@ import java.util.concurrent.Executor;
  * MeasurementManager.
  */
 public class MeasurementManager {
-
-    // TODO (b/237295093): Remove the codes and just surface the corresponding Java standatd
-    //  exceptions.
-    /**
-     * Result codes from {@link MeasurementManager} methods.
-     *
-     * @hide
-     */
-    @IntDef(
-            value = {
-                RESULT_OK,
-                RESULT_INTERNAL_ERROR,
-                RESULT_UNAUTHORIZED_CALL,
-                RESULT_INVALID_ARGUMENT,
-                RESULT_IO_ERROR,
-            })
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface ResultCode {}
 
     /** @hide */
     public static final String MEASUREMENT_SERVICE = "measurement_service";
@@ -129,13 +106,14 @@ public class MeasurementManager {
     private void register(
             @NonNull RegistrationRequest registrationRequest,
             @Nullable @CallbackExecutor Executor executor,
-            @Nullable OutcomeReceiver<Object, AdServicesException> callback) {
+            @Nullable OutcomeReceiver<Object, Exception> callback) {
         Objects.requireNonNull(registrationRequest);
         final IMeasurementService service = getService();
 
         try {
             service.register(
                     registrationRequest,
+                    generateCallerMetadataWithCurrentTime(),
                     new IMeasurementCallback.Stub() {
                         @Override
                         public void onResult() {
@@ -146,19 +124,19 @@ public class MeasurementManager {
 
                         @Override
                         public void onFailure(MeasurementErrorResponse failureParcel) {
-                            if (callback != null
-                                    && executor != null
-                                    && failureParcel.getStatusCode() == RESULT_UNAUTHORIZED_CALL) {
+                            if (callback != null && executor != null) {
                                 executor.execute(
-                                        () -> callback.onError(failureParcel.asException()));
+                                        () ->
+                                                callback.onError(
+                                                        AdServicesStatusUtils.asException(
+                                                                failureParcel)));
                             }
                         }
                     });
         } catch (RemoteException e) {
             LogUtil.e(e, "RemoteException");
             if (callback != null && executor != null) {
-                executor.execute(
-                        () -> callback.onError(new AdServicesException("Internal Error", e)));
+                executor.execute(() -> callback.onError(new IllegalStateException(e)));
             }
         }
     }
@@ -177,7 +155,7 @@ public class MeasurementManager {
             @NonNull Uri attributionSource,
             @Nullable InputEvent inputEvent,
             @Nullable @CallbackExecutor Executor executor,
-            @Nullable OutcomeReceiver<Object, AdServicesException> callback) {
+            @Nullable OutcomeReceiver<Object, Exception> callback) {
         Objects.requireNonNull(attributionSource);
         register(
                 new RegistrationRequest.Builder()
@@ -185,6 +163,7 @@ public class MeasurementManager {
                         .setRegistrationUri(attributionSource)
                         .setInputEvent(inputEvent)
                         .setPackageName(getPackageName())
+                        .setRequestTime(SystemClock.uptimeMillis())
                         .build(),
                 executor,
                 callback);
@@ -195,7 +174,7 @@ public class MeasurementManager {
      * redirects, all registration URLs should be supplied with the request. At least one of
      * appDestination or webDestination parameters are required to be provided. If the registration
      * is successful, {@code callback}'s {@link OutcomeReceiver#onResult} is invoked with null. In
-     * case of failure, a {@link MeasurementException} is sent through {@code callback}'s {@link
+     * case of failure, a {@link Exception} is sent through {@code callback}'s {@link
      * OutcomeReceiver#onError}. Both success and failure feedback are executed on the provided
      * {@link Executor}.
      *
@@ -212,8 +191,10 @@ public class MeasurementManager {
 
         try {
             service.registerWebSource(
-                    new WebSourceRegistrationRequestInternal.Builder(request, getPackageName())
+                    new WebSourceRegistrationRequestInternal.Builder(
+                                    request, getPackageName(), SystemClock.uptimeMillis())
                             .build(),
+                    generateCallerMetadataWithCurrentTime(),
                     new IMeasurementCallback.Stub() {
                         @Override
                         public void onResult() {
@@ -224,19 +205,19 @@ public class MeasurementManager {
 
                         @Override
                         public void onFailure(MeasurementErrorResponse failureParcel) {
-                            if (callback != null
-                                    && executor != null
-                                    && failureParcel.getStatusCode() == RESULT_UNAUTHORIZED_CALL) {
+                            if (callback != null && executor != null) {
                                 executor.execute(
-                                        () -> callback.onError(failureParcel.asException()));
+                                        () ->
+                                                callback.onError(
+                                                        AdServicesStatusUtils.asException(
+                                                                failureParcel)));
                             }
                         }
                     });
         } catch (RemoteException e) {
             LogUtil.e(e, "RemoteException");
             if (callback != null && executor != null) {
-                executor.execute(
-                        () -> callback.onError(new MeasurementException("Internal Error", e)));
+                executor.execute(() -> callback.onError(new IllegalStateException(e)));
             }
         }
     }
@@ -245,7 +226,7 @@ public class MeasurementManager {
      * Register an attribution trigger(click or view) from web context. This API will not process
      * any redirects, all registration URLs should be supplied with the request. If the registration
      * is successful, {@code callback}'s {@link OutcomeReceiver#onResult} is invoked with null. In
-     * case of failure, a {@link MeasurementException} is sent through {@code callback}'s {@link
+     * case of failure, a {@link Exception} is sent through {@code callback}'s {@link
      * OutcomeReceiver#onError}. Both success and failure feedback are executed on the provided
      * {@link Executor}.
      *
@@ -264,6 +245,7 @@ public class MeasurementManager {
             service.registerWebTrigger(
                     new WebTriggerRegistrationRequestInternal.Builder(request, getPackageName())
                             .build(),
+                    generateCallerMetadataWithCurrentTime(),
                     new IMeasurementCallback.Stub() {
                         @Override
                         public void onResult() {
@@ -274,19 +256,19 @@ public class MeasurementManager {
 
                         @Override
                         public void onFailure(MeasurementErrorResponse failureParcel) {
-                            if (callback != null
-                                    && executor != null
-                                    && failureParcel.getStatusCode() == RESULT_UNAUTHORIZED_CALL) {
+                            if (callback != null && executor != null) {
                                 executor.execute(
-                                        () -> callback.onError(failureParcel.asException()));
+                                        () ->
+                                                callback.onError(
+                                                        AdServicesStatusUtils.asException(
+                                                                failureParcel)));
                             }
                         }
                     });
         } catch (RemoteException e) {
             LogUtil.e(e, "RemoteException");
             if (callback != null && executor != null) {
-                executor.execute(
-                        () -> callback.onError(new MeasurementException("Internal Error", e)));
+                executor.execute(() -> callback.onError(new IllegalStateException(e)));
             }
         }
     }
@@ -302,7 +284,7 @@ public class MeasurementManager {
     public void registerTrigger(
             @NonNull Uri trigger,
             @Nullable @CallbackExecutor Executor executor,
-            @Nullable OutcomeReceiver<Object, AdServicesException> callback) {
+            @Nullable OutcomeReceiver<Object, Exception> callback) {
         Objects.requireNonNull(trigger);
         register(
                 new RegistrationRequest.Builder()
@@ -331,6 +313,7 @@ public class MeasurementManager {
         try {
             service.deleteRegistrations(
                     deletionParam,
+                    generateCallerMetadataWithCurrentTime(),
                     new IMeasurementCallback.Stub() {
                         @Override
                         public void onResult() {
@@ -339,12 +322,16 @@ public class MeasurementManager {
 
                         @Override
                         public void onFailure(MeasurementErrorResponse failureParcel) {
-                            executor.execute(() -> callback.onError(failureParcel.asException()));
+                            executor.execute(
+                                    () -> {
+                                        callback.onError(
+                                                AdServicesStatusUtils.asException(failureParcel));
+                                    });
                         }
                     });
         } catch (RemoteException e) {
             LogUtil.e(e, "RemoteException");
-            executor.execute(() -> callback.onError(new MeasurementException("Internal Error", e)));
+            executor.execute(() -> callback.onError(new IllegalStateException(e)));
         }
     }
 
@@ -391,8 +378,7 @@ public class MeasurementManager {
         Objects.requireNonNull(callback);
 
         // TODO (b/241149306): Remove here and apply across the board.
-        if (AdServicesApiUtil.getAdServicesApiState()
-                == AdServicesApiUtil.ADSERVICES_API_STATE_DISABLED) {
+        if (!AdServicesState.isAdServicesStateEnabled()) {
             executor.execute(() -> callback.onResult(MEASUREMENT_API_STATE_DISABLED));
             return;
         }
@@ -401,6 +387,7 @@ public class MeasurementManager {
 
         try {
             service.getMeasurementApiStatus(
+                    generateCallerMetadataWithCurrentTime(),
                     new IMeasurementApiStatusCallback.Stub() {
                         @Override
                         public void onResult(int result) {
@@ -409,7 +396,7 @@ public class MeasurementManager {
                     });
         } catch (RemoteException e) {
             LogUtil.e(e, "RemoteException");
-            executor.execute(() -> callback.onError(new AdServicesException("Internal Error", e)));
+            executor.execute(() -> callback.onError(new IllegalStateException(e)));
         }
     }
 
@@ -431,5 +418,11 @@ public class MeasurementManager {
         } else {
             return mContext.getPackageName();
         }
+    }
+
+    private CallerMetadata generateCallerMetadataWithCurrentTime() {
+        return new CallerMetadata.Builder()
+                .setBinderElapsedTimestamp(System.currentTimeMillis())
+                .build();
     }
 }

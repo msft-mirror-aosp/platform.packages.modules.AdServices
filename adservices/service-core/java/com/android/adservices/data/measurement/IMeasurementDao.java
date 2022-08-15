@@ -22,7 +22,9 @@ import android.net.Uri;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
+import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
@@ -59,17 +61,42 @@ public interface IMeasurementDao {
     /**
      * Gets the number of sources a registrant has registered.
      */
-    long getNumTriggersPerRegistrant(Uri registrant) throws DatastoreException;
-
-    /**
-     * Updates the {@link Trigger.Status} value for the provided {@link Trigger}.
-     */
-    void updateTriggerStatus(Trigger trigger) throws DatastoreException;
+    long getNumSourcesPerRegistrant(Uri registrant) throws DatastoreException;
 
     /**
      * Gets the number of triggers a registrant has registered.
      */
-    long getNumSourcesPerRegistrant(Uri registrant) throws DatastoreException;
+    long getNumTriggersPerRegistrant(Uri registrant) throws DatastoreException;
+
+    /**
+     * Gets the count of distinct Uri's of ad-techs in the Attribution table in a time window with
+     * matching publisher and destination, excluding a given ad-tech.
+     */
+    Integer countDistinctAdTechsPerPublisherXDestinationInAttribution(Uri sourceSite,
+            Uri destination, Uri excludedAdTech, long windowStartTime, long windowEndTime)
+            throws DatastoreException;
+
+    /**
+     * Gets the count of distinct Uri's of destinations in the Source table in a time window with
+     * matching publisher and ACTIVE status, excluding a given destination.
+     */
+    Integer countDistinctDestinationsPerPublisherXAdTechInActiveSource(Uri publisher,
+            @EventSurfaceType int publisherType, Uri adTechDomain, Uri excludedDestination,
+            @EventSurfaceType int destinationType, long windowStartTime, long windowEndTime)
+            throws DatastoreException;
+
+    /**
+     * Gets the count of distinct Uri's of ad-techs in the Source table in a time window with
+     * matching publisher and destination, excluding a given ad-tech.
+     */
+    Integer countDistinctAdTechsPerPublisherXDestinationInSource(Uri publisher,
+            @EventSurfaceType int publisherType, Uri destination, Uri excludedAdTech,
+            long windowStartTime, long windowEndTime) throws DatastoreException;
+
+     /**
+     * Updates the {@link Trigger.Status} value for the provided {@link Trigger}.
+     */
+    void updateTriggerStatus(Trigger trigger) throws DatastoreException;
 
     /**
      * Add an entry to the Source datastore.
@@ -168,20 +195,16 @@ public interface IMeasurementDao {
     List<String> getPendingEventReportIdsForGivenApp(Uri appName) throws DatastoreException;
 
     /**
-     * Find the number of entries for a rate limit window using the {@link Source} and
-     * {@link Trigger}.
-     * Rate-Limit Window: (Source Site, Destination Site, Window) from triggerTime.
+     * Find the number of entries for a rate limit window using the {@link Source} and {@link
+     * Trigger}. Rate-Limit Window: (Source Site, Destination Site, Window) from triggerTime.
      *
      * @return the number of entries for the window.
      */
-    long getAttributionsPerRateLimitWindow(Source source, Trigger trigger)
+    long getAttributionsPerRateLimitWindow(@NonNull Source source, @NonNull Trigger trigger)
             throws DatastoreException;
 
-    /**
-     * Add an entry in AttributionRateLimit datastore for the provided {@link Source} and
-     * {@link Trigger}
-     */
-    void insertAttributionRateLimit(Source source, Trigger trigger) throws DatastoreException;
+    /** Add an entry in Attribution datastore. */
+    void insertAttribution(@NonNull Attribution attribution) throws DatastoreException;
 
     /**
      * Deletes all records in measurement tables that correspond with the provided Uri.

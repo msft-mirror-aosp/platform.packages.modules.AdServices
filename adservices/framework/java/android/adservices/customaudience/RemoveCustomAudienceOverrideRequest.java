@@ -18,15 +18,15 @@ package android.adservices.customaudience;
 
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.os.OutcomeReceiver;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
 /**
- * This POJO represents the {@link
- * CustomAudienceManager#removeCustomAudienceRemoteInfoOverride(RemoveCustomAudienceOverrideRequest,
- * Executor, OutcomeReceiver)} request
+ * This POJO represents the {@link TestCustomAudienceManager#removeCustomAudienceRemoteInfoOverride(
+ * RemoveCustomAudienceOverrideRequest, Executor, OutcomeReceiver)} request
  *
  * <p>It contains 3 fields {@code ownerPackageName}, {@code buyer}, and {@code name} which will
  * serve as the identifier for the overrides
@@ -65,9 +65,9 @@ public class RemoveCustomAudienceOverrideRequest {
 
     /** Builder for {@link RemoveCustomAudienceOverrideRequest} objects. */
     public static final class Builder {
-        private String mOwnerPackageName;
-        private AdTechIdentifier mBuyer;
-        private String mName;
+        @Nullable private String mOwnerPackageName;
+        @Nullable private AdTechIdentifier mBuyer;
+        @Nullable private String mName;
 
         public Builder() {}
 

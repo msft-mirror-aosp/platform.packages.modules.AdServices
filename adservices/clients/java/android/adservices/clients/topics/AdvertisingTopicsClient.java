@@ -69,7 +69,7 @@ public class AdvertisingTopicsClient {
         return CallbackToFutureAdapter.getFuture(
                 completer -> {
                     mTopicsManager.getTopics(
-                            new GetTopicsRequest.Builder(mContext).setSdkName(mSdkName).build(),
+                            new GetTopicsRequest.Builder(mContext).setAdsSdkName(mSdkName).build(),
                             mExecutor,
                             new OutcomeReceiver<GetTopicsResponse, Exception>() {
                                 @Override
