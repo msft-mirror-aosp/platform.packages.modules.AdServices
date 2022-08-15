@@ -19,12 +19,25 @@ package android.app.sdksandbox;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.os.Bundle;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 /** Exception thrown by {@link SdkSandboxManager#loadSdk} */
-public final class LoadSdkException extends Exception {
+public final class LoadSdkException extends Exception implements Parcelable {
 
     private final @SdkSandboxManager.LoadSdkErrorCode int mLoadSdkErrorCode;
     private final Bundle mExtraInformation;
+
+    /**
+     * Initializes a {@link LoadSdkException} with a Throwable and a Bundle.
+     *
+     * @param cause The cause of the exception, which is saved for later retrieval by the {@link
+     *     #getCause()} method.
+     * @param extraInfo Extra error information. This is empty if there is no such information.
+     */
+    public LoadSdkException(@NonNull Throwable cause, @NonNull Bundle extraInfo) {
+        this(SdkSandboxManager.LOAD_SDK_SDK_DEFINED_ERROR, "", cause, extraInfo);
+    }
 
     /**
      * Initializes a {@link LoadSdkException} with a result code and a message
@@ -32,6 +45,7 @@ public final class LoadSdkException extends Exception {
      * @param loadSdkErrorCode The result code.
      * @param message The detailed message which is saved for later retrieval by the {@link
      *     #getMessage()} method.
+     * @hide
      */
     public LoadSdkException(
             @SdkSandboxManager.LoadSdkErrorCode int loadSdkErrorCode, @Nullable String message) {
@@ -47,6 +61,7 @@ public final class LoadSdkException extends Exception {
      * @param cause The cause of the exception, which is saved for later retrieval by the {@link
      *     #getCause()} method. A null value is permitted, and indicates that the cause is
      *     nonexistent or unknown.
+     * @hide
      */
     public LoadSdkException(
             @SdkSandboxManager.LoadSdkErrorCode int loadSdkErrorCode,
@@ -66,6 +81,7 @@ public final class LoadSdkException extends Exception {
      *     #getCause()} method. A null value is permitted, and indicates that the cause is
      *     nonexistent or unknown.
      * @param extraInfo Extra error information. This is empty if there is no such information.
+     * @hide
      */
     public LoadSdkException(
             @SdkSandboxManager.LoadSdkErrorCode int loadSdkErrorCode,
@@ -76,6 +92,25 @@ public final class LoadSdkException extends Exception {
         mLoadSdkErrorCode = loadSdkErrorCode;
         mExtraInformation = extraInfo;
     }
+
+    private LoadSdkException(@NonNull Parcel in) {
+        mLoadSdkErrorCode = in.readInt();
+        mExtraInformation = in.readBundle();
+    }
+
+    public static final @NonNull Creator<LoadSdkException> CREATOR =
+            new Creator<LoadSdkException>() {
+                @Override
+                public LoadSdkException createFromParcel(Parcel in) {
+                    return new LoadSdkException(in);
+                }
+
+                @Override
+                public LoadSdkException[] newArray(int size) {
+                    return new LoadSdkException[size];
+                }
+            };
+
     /**
      * Returns the result code this exception was constructed with.
      *
@@ -91,7 +126,18 @@ public final class LoadSdkException extends Exception {
      * @return The extra error information Bundle.
      */
     @NonNull
-    public Bundle getExtraErrorInformation() {
+    public Bundle getExtraInformation() {
         return mExtraInformation;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(@NonNull Parcel destination, int flags) {
+        destination.writeInt(mLoadSdkErrorCode);
+        destination.writeBundle(mExtraInformation);
     }
 }

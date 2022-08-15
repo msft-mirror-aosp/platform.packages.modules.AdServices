@@ -23,7 +23,6 @@ import android.os.Bundle;
 import android.view.SurfaceControlViewHost.SurfacePackage;
 import android.view.View;
 
-import java.util.concurrent.Executor;
 
 /**
  * Encapsulates API which SDK sandbox can use to interact with SDKs loaded into it.
@@ -74,15 +73,11 @@ public abstract class SandboxedSdkProvider {
      * SdkSandboxManager#sendData}. The SDK should not do any operations requiring a {@link Context}
      * object before this method has been called.
      *
-     * @param params list of params passed from App when it loads the SDK.
-     * @param executor the {@link Executor} on which to invoke the {@code callback}
-     * @param callback to notify App if the SDK successfully loaded
+     * @param params list of params passed from the client when it loads the SDK. This can be empty.
+     * @return Returns a LoadSdkResponse object, this is passed back to the client.
      */
-    public abstract void onLoadSdk(
-            @NonNull Bundle params,
-            @NonNull Executor executor,
-            @NonNull OnLoadSdkCallback callback);
-
+    public abstract @NonNull LoadSdkResponse onLoadSdk(@NonNull Bundle params)
+            throws LoadSdkException;
     /**
      * Does the work needed for the SDK to free its resources before being unloaded.
      *
@@ -119,8 +114,7 @@ public abstract class SandboxedSdkProvider {
      * Callback for tracking the status of initializing the SDK.
      *
      * <p>This callback is created by the SDK sandbox, SDKs should use it to notify the SDK sandbox
-     * about the status of {@link SandboxedSdkProvider#onLoadSdk(Bundle, Executor,
-     * OnLoadSdkCallback)}
+     * about the status of {@link SandboxedSdkProvider#onLoadSdk}
      */
     public interface OnLoadSdkCallback {
         /**

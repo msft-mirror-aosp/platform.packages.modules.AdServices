@@ -29,6 +29,7 @@ java_defaults {
         "mockito-target-extended-minus-junit4",
         "truth-prebuilt",
         "SdkSandboxTestUtils",
+        "SdkSandbox-java-lib",
     ],
     jni_libs: [
         // Required for ExtendedMockito
@@ -51,7 +52,7 @@ android_test {
     srcs: [
         "src/com/android/sdksandbox/*.java",
         ":sdksandbox_aidl",
-        ":sdksandbox-sources",
+        ":framework-sdksandbox-aidl-sources",
     ],
     defaults: ["SdkSandboxUnitTestsDefault"],
     manifest: "SdkSandboxManifest.xml",
@@ -71,6 +72,7 @@ android_test {
     name: "SdkSandboxManagerServiceUnitTests",
     srcs: [
         "src/com/android/server/sdksandbox/*.java",
+        ":framework-sdksandbox-aidl-sources",
     ],
     defaults: ["SdkSandboxUnitTestsDefault"],
     manifest: "SdkSandboxManagerServiceManifest.xml",
