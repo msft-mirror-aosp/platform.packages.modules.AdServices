@@ -84,4 +84,7 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
     @Override
     public void removeSdkSandboxLifecycleCallback(
             String callingPackageName, ISdkSandboxLifecycleCallback callback) {}
+
+    @Override
+    public void logLatencyFromSystemServerToApp(String method, int latency) {}
 }
