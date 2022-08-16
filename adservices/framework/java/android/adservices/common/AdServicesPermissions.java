@@ -72,4 +72,22 @@ public class AdServicesPermissions {
     @SystemApi
     public static final String ADSERVICES_ACCESS_CONSENT_SERVICE =
             "android.permission.ADSERVICES_ACCESS_CONSENT_SERVICE";
+
+    /**
+     * The permission that lets it modify AdService's enablement state modification API.
+     *
+     * @hide
+     */
+    @SystemApi
+    public static final String MODIFY_ADSERVICES_STATE =
+            "android.permission.MODIFY_ADSERVICES_STATE";
+
+    /**
+     * The permission that lets it access AdService's enablement state modification API.
+     *
+     * @hide
+     */
+    @SystemApi
+    public static final String ACCESS_ADSERVICES_STATE =
+            "android.permission.ACCESS_ADSERVICES_STATE";
 }
