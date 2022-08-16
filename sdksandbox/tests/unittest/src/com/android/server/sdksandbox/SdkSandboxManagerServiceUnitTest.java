@@ -18,6 +18,9 @@ package com.android.server.sdksandbox;
 
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND;
 
+import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SANDBOX_TO_SYSTEM_SERVER;
+import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_SANDBOX;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
@@ -62,6 +65,7 @@ import com.android.sdksandbox.ILoadSdkInSandboxCallback;
 import com.android.sdksandbox.IRequestSurfacePackageFromSdkCallback;
 import com.android.sdksandbox.ISdkSandboxManagerToSdkSandboxCallback;
 import com.android.sdksandbox.ISdkSandboxService;
+import com.android.sdksandbox.SandboxLatencyInfo;
 import com.android.sdksandbox.service.stats.SdkSandboxStatsLog;
 import com.android.server.LocalManagerRegistry;
 import com.android.server.pm.PackageManagerLocal;
@@ -107,10 +111,15 @@ public class SdkSandboxManagerServiceUnitTest {
     private static final long TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP = 3;
     private static final long START_TIME_TO_LOAD_SANDBOX = 5;
     private static final long END_TIME_TO_LOAD_SANDBOX = 7;
-    private static final long TIME_BEFORE_SYSTEM_SERVER_CALLS_SANDBOX = 9;
+    private static final long TIME_SYSTEM_SERVER_CALLS_SANDBOX = 9;
     private static final long TIME_FAILURE_HANDLED = 11;
     private static final long END_TIME_IN_SYSTEM_SERVER = 15;
     private static final long TIME_SYSTEM_SERVER_CALLED_SANDBOX = 17;
+    private static final long TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER = 18;
+    private static final long TIME_SANDBOX_CALLED_SDK = 19;
+    private static final long TIME_SDK_CALL_COMPLETED = 20;
+    private static final long TIME_SANDBOX_CALLED_SYSTEM_SERVER = 21;
+    private static final long TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_SANDBOX = 22;
 
     private static final String TEST_KEY = "key";
     private static final String TEST_VALUE = "value";
@@ -1247,7 +1256,7 @@ public class SdkSandboxManagerServiceUnitTest {
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
                         START_TIME_TO_LOAD_SANDBOX,
                         END_TIME_TO_LOAD_SANDBOX,
-                        TIME_BEFORE_SYSTEM_SERVER_CALLS_SANDBOX);
+                        TIME_SYSTEM_SERVER_CALLS_SANDBOX);
         loadSdk();
 
         final int timeToLoadSdk = (int) (END_TIME_TO_LOAD_SANDBOX - START_TIME_TO_LOAD_SANDBOX);
@@ -1263,7 +1272,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
         int timeSystemServerAppToSandbox =
                 (int)
-                        (TIME_BEFORE_SYSTEM_SERVER_CALLS_SANDBOX
+                        (TIME_SYSTEM_SERVER_CALLS_SANDBOX
                                 - TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP
                                 - timeToLoadSdk);
 
@@ -1279,6 +1288,104 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
+    public void testLatencyMetrics_SystemServerSandboxToApp_LoadSdk() throws Exception {
+        loadSdk();
+
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                Mockito.eq(SdkSandboxStatsLog.SANDBOX_API_CALLED),
+                                Mockito.eq(SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK),
+                                Mockito.anyInt(),
+                                Mockito.eq(/*success=*/ true),
+                                Mockito.eq(SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_SANDBOX)));
+
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                Mockito.eq(SdkSandboxStatsLog.SANDBOX_API_CALLED),
+                                Mockito.eq(SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK),
+                                Mockito.anyInt(),
+                                Mockito.eq(/*success=*/ true),
+                                Mockito.eq(SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SANDBOX)));
+
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                Mockito.eq(SdkSandboxStatsLog.SANDBOX_API_CALLED),
+                                Mockito.eq(SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK),
+                                Mockito.anyInt(),
+                                Mockito.eq(/*success=*/ true),
+                                Mockito.eq(SANDBOX_API_CALLED__STAGE__SANDBOX_TO_SYSTEM_SERVER)));
+    }
+
+    @Test
+    public void testLatencyMetrics_SystemServerSandboxToAppWithSandboxLatencyInfo_LoadSdk()
+            throws Exception {
+        disableNetworkPermissionChecks();
+        disableForegroundCheck();
+
+        Mockito.when(mInjector.getCurrentTime())
+                .thenReturn(
+                        TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
+                        START_TIME_TO_LOAD_SANDBOX,
+                        END_TIME_TO_LOAD_SANDBOX,
+                        TIME_SYSTEM_SERVER_CALLS_SANDBOX,
+                        TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_SANDBOX);
+
+        FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
+        mService.loadSdk(
+                TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
+        mSdkSandboxService.sendLoadCodeSuccessfulWithSandboxLatencies();
+
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK,
+                                (int)
+                                        (TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER
+                                                - TIME_SYSTEM_SERVER_CALLED_SANDBOX),
+                                /*success=*/ true,
+                                SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_SANDBOX));
+
+        int sandboxLatency =
+                (int)
+                        (TIME_SANDBOX_CALLED_SYSTEM_SERVER
+                                - TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER
+                                - (TIME_SDK_CALL_COMPLETED - TIME_SANDBOX_CALLED_SDK));
+
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK,
+                                sandboxLatency,
+                                /*success=*/ true,
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SANDBOX));
+
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK,
+                                (int) (TIME_SDK_CALL_COMPLETED - TIME_SANDBOX_CALLED_SDK),
+                                /*success=*/ true,
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SDK));
+
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK,
+                                (int)
+                                        (TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_SANDBOX
+                                                - TIME_SANDBOX_CALLED_SYSTEM_SERVER),
+                                /*success=*/ true,
+                                SANDBOX_API_CALLED__STAGE__SANDBOX_TO_SYSTEM_SERVER));
+    }
+
+    @Test
     public void testLatencyMetrics_SystemServerAppToSandbox_LoadSdk_FailureOnMultiLoad()
             throws Exception {
         disableNetworkPermissionChecks();
@@ -1288,7 +1395,8 @@ public class SdkSandboxManagerServiceUnitTest {
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
                         START_TIME_TO_LOAD_SANDBOX,
                         END_TIME_TO_LOAD_SANDBOX,
-                        TIME_BEFORE_SYSTEM_SERVER_CALLS_SANDBOX,
+                        TIME_SYSTEM_SERVER_CALLED_SANDBOX,
+                        TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_SANDBOX,
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
                         TIME_FAILURE_HANDLED);
 
@@ -1439,7 +1547,8 @@ public class SdkSandboxManagerServiceUnitTest {
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
                         START_TIME_TO_LOAD_SANDBOX,
                         END_TIME_TO_LOAD_SANDBOX,
-                        TIME_BEFORE_SYSTEM_SERVER_CALLS_SANDBOX,
+                        TIME_SYSTEM_SERVER_CALLED_SANDBOX,
+                        TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_SANDBOX,
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
                         TIME_SYSTEM_SERVER_CALLED_SANDBOX);
         loadSdk();
@@ -1481,9 +1590,7 @@ public class SdkSandboxManagerServiceUnitTest {
                                                 .SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE),
                                 Mockito.anyInt(),
                                 Mockito.eq(/*success=*/ true),
-                                Mockito.eq(
-                                        SdkSandboxStatsLog
-                                                .SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_SANDBOX)));
+                                Mockito.eq(SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_SANDBOX)));
 
         ExtendedMockito.verify(
                 () ->
@@ -1505,9 +1612,7 @@ public class SdkSandboxManagerServiceUnitTest {
                                                 .SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE),
                                 Mockito.anyInt(),
                                 Mockito.eq(/*success=*/ true),
-                                Mockito.eq(
-                                        SdkSandboxStatsLog
-                                                .SANDBOX_API_CALLED__STAGE__SANDBOX_TO_SYSTEM_SERVER)));
+                                Mockito.eq(SANDBOX_API_CALLED__STAGE__SANDBOX_TO_SYSTEM_SERVER)));
     }
 
     @Test
@@ -1519,7 +1624,8 @@ public class SdkSandboxManagerServiceUnitTest {
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
                         START_TIME_TO_LOAD_SANDBOX,
                         END_TIME_TO_LOAD_SANDBOX,
-                        TIME_BEFORE_SYSTEM_SERVER_CALLS_SANDBOX,
+                        TIME_SYSTEM_SERVER_CALLED_SANDBOX,
+                        TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_SANDBOX,
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
                         TIME_SYSTEM_SERVER_CALLED_SANDBOX);
         loadSdk();
@@ -1562,9 +1668,7 @@ public class SdkSandboxManagerServiceUnitTest {
                                                 .SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE),
                                 Mockito.anyInt(),
                                 Mockito.eq(/*success=*/ true),
-                                Mockito.eq(
-                                        SdkSandboxStatsLog
-                                                .SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_SANDBOX)));
+                                Mockito.eq(SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_SANDBOX)));
 
         ExtendedMockito.verify(
                 () ->
@@ -1597,9 +1701,7 @@ public class SdkSandboxManagerServiceUnitTest {
                                                 .SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE),
                                 Mockito.anyInt(),
                                 Mockito.eq(/*success=*/ true),
-                                Mockito.eq(
-                                        SdkSandboxStatsLog
-                                                .SANDBOX_API_CALLED__STAGE__SANDBOX_TO_SYSTEM_SERVER)));
+                                Mockito.eq(SANDBOX_API_CALLED__STAGE__SANDBOX_TO_SYSTEM_SERVER)));
     }
 
     @Test
@@ -1744,7 +1846,8 @@ public class SdkSandboxManagerServiceUnitTest {
                 String ceDataDir,
                 String deDataDir,
                 Bundle params,
-                ILoadSdkInSandboxCallback callback) {
+                ILoadSdkInSandboxCallback callback,
+                SandboxLatencyInfo sandboxLatencyInfo) {
             mLoadSdkInSandboxCallback = callback;
         }
 
@@ -1775,7 +1878,22 @@ public class SdkSandboxManagerServiceUnitTest {
 
         void sendLoadCodeSuccessful() throws RemoteException {
             mLoadSdkInSandboxCallback.onLoadSdkSuccess(
-                    new SandboxedSdk(new Binder()), mManagerToSdkCallback);
+                    new SandboxedSdk(new Binder()),
+                    mManagerToSdkCallback,
+                    new SandboxLatencyInfo(TIME_SYSTEM_SERVER_CALLED_SANDBOX));
+        }
+
+        void sendLoadCodeSuccessfulWithSandboxLatencies() throws RemoteException {
+            final SandboxLatencyInfo sandboxLatencyInfo =
+                    new SandboxLatencyInfo(TIME_SYSTEM_SERVER_CALLED_SANDBOX);
+            sandboxLatencyInfo.setTimeSandboxReceivedCallFromSystemServer(
+                    TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER);
+            sandboxLatencyInfo.setTimeSandboxCalledSdk(TIME_SANDBOX_CALLED_SDK);
+            sandboxLatencyInfo.setTimeSdkCallCompleted(TIME_SDK_CALL_COMPLETED);
+            sandboxLatencyInfo.setTimeSandboxCalledSystemServer(TIME_SANDBOX_CALLED_SYSTEM_SERVER);
+
+            mLoadSdkInSandboxCallback.onLoadSdkSuccess(
+                    new SandboxedSdk(new Binder()), mManagerToSdkCallback, sandboxLatencyInfo);
         }
 
         void sendLoadCodeError() throws Exception {
@@ -1786,11 +1904,11 @@ public class SdkSandboxManagerServiceUnitTest {
                                     .newInstance(
                                             SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR,
                                             "Internal error");
-            mLoadSdkInSandboxCallback.onLoadSdkError(exception);
+            mLoadSdkInSandboxCallback.onLoadSdkError(
+                    exception, new SandboxLatencyInfo(TIME_SYSTEM_SERVER_CALLED_SANDBOX));
         }
 
-        void sendSurfacePackageReady(Bundle sandboxLatencies)
-                throws RemoteException {
+        void sendSurfacePackageReady(Bundle sandboxLatencies) throws RemoteException {
             if (mSurfacePackageRequested) {
                 mRequestSurfacePackageFromSdkCallback.onSurfacePackageReady(
                         /*surfacePackage=*/ null,
