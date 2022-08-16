@@ -67,7 +67,7 @@
         android:protectionLevel="normal" />
 
     <!-- Allows an application to access AdServices Ad Id API. -->
-    <permission android:name="android.permission.ACCESS_ADSERVICES_ADID"
+    <permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID"
         android:label="@string/permlab_accessAdServicesAdId"
         android:description="@string/permdesc_accessAdServicesAdId"
         android:protectionLevel="normal" />
