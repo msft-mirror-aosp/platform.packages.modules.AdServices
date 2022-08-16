@@ -55,6 +55,8 @@ public class SqliteObjectMapper {
                 builder::setAttributionDestination);
         setUriColumn(cursor, MeasurementTables.EventReportContract.AD_TECH_DOMAIN,
                 builder::setAdTechDomain);
+        setTextColumn(cursor, MeasurementTables.EventReportContract.ENROLLMENT_ID,
+                builder::setEnrollmentId);
         setLongColumn(cursor, MeasurementTables.EventReportContract.REPORT_TIME,
                 builder::setReportTime);
         setLongColumn(cursor, MeasurementTables.EventReportContract.TRIGGER_TIME,
@@ -174,6 +176,8 @@ public class SqliteObjectMapper {
                 builder::setScheduledReportTime);
         setUriColumn(cursor, MeasurementTables.AggregateReport.AD_TECH_DOMAIN,
                 builder::setAdTechDomain);
+        setTextColumn(cursor, MeasurementTables.AggregateReport.ENROLLMENT_ID,
+                builder::setEnrollmentId);
         setTextColumn(cursor, MeasurementTables.AggregateReport.DEBUG_CLEARTEXT_PAYLOAD,
                 builder::setDebugCleartextPayload);
         setIntColumn(cursor, MeasurementTables.AggregateReport.STATUS,

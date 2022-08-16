@@ -79,6 +79,7 @@
         "sourceId": 1,
         "attributionDestination": "android-app://com.site2.toBeDeletedDueToSourceId1",
         "adTechDomain": "https://ad-tech.example.com",
+        "enrollmentId": "enrollment-id",
         "triggerData": 2,
         "triggerTime": 1648665733600,
         "status": 0,
@@ -91,6 +92,7 @@
         "sourceId": 1,
         "attributionDestination": "android-app://com.site2.toBeDeletedDueToSourceId1",
         "adTechDomain": "https://ad-tech.example.com",
+        "enrollmentId": "enrollment-id",
         "triggerData": 2,
         "triggerTime": 1648665733605,
         "status": 0,
@@ -103,6 +105,7 @@
         "sourceId": 2,
         "attributionDestination": "android-app://com.site2",
         "adTechDomain": "https://ad-tech.example.com",
+        "enrollmentId": "enrollment-id",
         "triggerData": 2,
         "triggerTime": 1648665733605,
         "status": 0,
@@ -119,6 +122,7 @@
         "destinationSite": "android-app://com.site2",
         "destinationOrigin": "android-app://com.site2",
         "adTechDomain": "https://ad-tech.example.com",
+        "enrollmentId": "enrollment-id",
         "triggerTime": 1648665733600,
         "registrant": "android-app://com.registrant.deleteCandidate"
       },
@@ -129,6 +133,7 @@
         "destinationSite": "android-app://com.site2",
         "destinationOrigin": "android-app://com.site2",
         "adTechDomain": "https://ad-tech.example.com",
+        "enrollmentId": "enrollment-id",
         "triggerTime": 1648665733605,
         "registrant": "android-app://com.registrant.deleteCandidate"
       }
@@ -179,6 +184,7 @@
         "sourceId": 2,
         "attributionDestination": "android-app://com.site2",
         "adTechDomain": "https://ad-tech.example.com",
+        "enrollmentId": "enrollment-id",
         "triggerData": 2,
         "triggerTime": 1648665733605,
         "status": 0,
@@ -195,6 +201,7 @@
         "destinationSite": "android-app://com.site2",
         "destinationOrigin": "android-app://com.site2",
         "adTechDomain": "https://ad-tech.example.com",
+        "enrollmentId": "enrollment-id",
         "triggerTime": 1648665733605,
         "registrant": "android-app://com.registrant.deleteCandidate"
       }

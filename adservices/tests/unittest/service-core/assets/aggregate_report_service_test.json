@@ -15,6 +15,7 @@
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
             "adTechDomain": "https://adtech.com",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0
           }
@@ -33,6 +34,7 @@
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
             "adTechDomain": "https://adtech.com",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 1
           }
@@ -60,6 +62,7 @@
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
             "adTechDomain": "https://adtech.com",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0
           }
@@ -78,6 +81,7 @@
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
             "adTechDomain": "https://adtech.com",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0
           }
@@ -105,6 +109,7 @@
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
             "adTechDomain": "https://adtech.com",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 1
           }
@@ -123,6 +128,7 @@
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
             "adTechDomain": "https://adtech.com",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 1
           }
@@ -150,6 +156,7 @@
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
             "adTechDomain": "https://adtech.com",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0
           },
@@ -160,6 +167,7 @@
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
             "adTechDomain": "https://adtech.com",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0
           },
@@ -170,6 +178,7 @@
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
             "adTechDomain": "https://adtech.com",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0
           }
@@ -188,6 +197,7 @@
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
             "adTechDomain": "https://adtech.com",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 1
           },
@@ -198,6 +208,7 @@
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
             "adTechDomain": "https://adtech.com",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0
           },
@@ -208,6 +219,7 @@
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
             "adTechDomain": "https://adtech.com",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 1
           }
@@ -234,6 +246,7 @@
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
             "adTechDomain": "https://adtech.com",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0
           },
@@ -244,6 +257,7 @@
             "scheduledReportTime": 19999000,
             "sourceRegistrationTime": 19998000,
             "adTechDomain": "https://adtech.com",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0
           }
@@ -262,6 +276,7 @@
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
             "adTechDomain": "https://adtech.com",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 1
           },
@@ -272,6 +287,7 @@
             "scheduledReportTime": 19999000,
             "sourceRegistrationTime": 19998000,
             "adTechDomain": "https://adtech.com",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 1
           }
@@ -299,6 +315,7 @@
             "scheduledReportTime": 10000000,
             "sourceRegistrationTime": 9999000,
             "adTechDomain": "https://adtech.com",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0
           },
@@ -309,6 +326,7 @@
             "scheduledReportTime": 23000000,
             "sourceRegistrationTime": 22100000,
             "adTechDomain": "https://adtech.com",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0
           },
@@ -319,6 +337,7 @@
             "scheduledReportTime": 19999000,
             "sourceRegistrationTime": 19998000,
             "adTechDomain": "https://adtech.com",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0
           }
@@ -337,6 +356,7 @@
             "scheduledReportTime": 10000000,
             "sourceRegistrationTime": 9999000,
             "adTechDomain": "https://adtech.com",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0
           },
@@ -347,6 +367,7 @@
             "scheduledReportTime": 23000000,
             "sourceRegistrationTime": 22100000,
             "adTechDomain": "https://adtech.com",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0
           },
@@ -357,6 +378,7 @@
             "scheduledReportTime": 19999000,
             "sourceRegistrationTime": 19998000,
             "adTechDomain": "https://adtech.com",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 1
           }

@@ -264,6 +264,7 @@ public class DbState {
                 .setSourceId(rJSON.getLong("sourceId"))
                 .setAttributionDestination(Uri.parse(rJSON.getString("attributionDestination")))
                 .setAdTechDomain(Uri.parse(rJSON.getString("adTechDomain")))
+                .setEnrollmentId(rJSON.getString("enrollmentId"))
                 .setTriggerData(rJSON.getLong("triggerData"))
                 .setTriggerTime(rJSON.getLong("triggerTime"))
                 .setReportTime(rJSON.getLong("reportTime"))
@@ -285,6 +286,7 @@ public class DbState {
                 .setDestinationSite(attrJSON.getString("destinationSite"))
                 .setDestinationOrigin(attrJSON.getString("destinationOrigin"))
                 .setAdTechDomain(attrJSON.getString("adTechDomain"))
+                .setEnrollmentId(attrJSON.getString("enrollmentId"))
                 .setTriggerTime(attrJSON.getLong("triggerTime"))
                 .setRegistrant(attrJSON.getString("registrant"))
                 .build();
@@ -325,6 +327,10 @@ public class DbState {
                         cursor.getString(
                                 cursor.getColumnIndex(
                                         MeasurementTables.AttributionContract.AD_TECH_DOMAIN)))
+                .setEnrollmentId(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AttributionContract.ENROLLMENT_ID)))
                 .setTriggerTime(
                         cursor.getLong(
                                 cursor.getColumnIndex(
@@ -345,6 +351,7 @@ public class DbState {
                 .setSourceRegistrationTime(rJSON.getLong("sourceRegistrationTime"))
                 .setScheduledReportTime(rJSON.getLong("scheduledReportTime"))
                 .setAdTechDomain(Uri.parse(rJSON.getString("adTechDomain")))
+                .setEnrollmentId(rJSON.getString("enrollmentId"))
                 .setDebugCleartextPayload(rJSON.getString("debugCleartextPayload"))
                 .setStatus(rJSON.getInt("status"))
                 .build();

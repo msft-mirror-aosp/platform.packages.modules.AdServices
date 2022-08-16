@@ -147,6 +147,7 @@
             "sourceId": 1,
             "attributionDestination": "https://www.example2.com/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000002,
             "status": 1,
@@ -159,6 +160,7 @@
             "sourceId": 1,
             "attributionDestination": "https://www.example2.com/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000002,
             "status": 0,
@@ -178,6 +180,7 @@
             "sourceId": 1,
             "attributionDestination": "https://www.example2.com/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000002,
             "status": 0,
@@ -203,6 +206,7 @@
             "destinationSite": "android-app://remove.me",
             "destinationOrigin": "android-app://remove.me",
             "adTechDomain": "android-app://example.one",
+            "enrollmentId": "enrollment-id-1",
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           },
@@ -213,6 +217,7 @@
             "destinationSite": "android-app://dont.remove.me",
             "destinationOrigin": "android-app://dont.remove.me",
             "adTechDomain": "android-app://example.one",
+            "enrollmentId": "enrollment-id-1",
             "triggerTime": 33203622330000,
             "registrant": "android-app://com.example.xyz"
           }
@@ -230,6 +235,7 @@
             "destinationSite": "android-app://dont.remove.me",
             "destinationOrigin": "android-app://dont.remove.me",
             "adTechDomain": "android-app://example.one",
+            "enrollmentId": "enrollment-id-1",
             "triggerTime": 33203622330000,
             "registrant": "android-app://com.example.xyz"
           }

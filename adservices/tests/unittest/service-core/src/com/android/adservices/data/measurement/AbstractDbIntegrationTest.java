@@ -300,6 +300,7 @@ public abstract class AbstractDbIntegrationTest {
         values.put(MeasurementTables.EventReportContract.SOURCE_ID, report.getSourceId());
         values.put(MeasurementTables.EventReportContract.AD_TECH_DOMAIN,
                 report.getAdTechDomain().toString());
+        values.put(MeasurementTables.EventReportContract.ENROLLMENT_ID, report.getEnrollmentId());
         values.put(MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
                 report.getAttributionDestination().toString());
         values.put(MeasurementTables.EventReportContract.REPORT_TIME, report.getReportTime());
@@ -336,6 +337,8 @@ public abstract class AbstractDbIntegrationTest {
                 attribution.getDestinationOrigin());
         values.put(MeasurementTables.AttributionContract.AD_TECH_DOMAIN,
                 attribution.getAdTechDomain());
+        values.put(MeasurementTables.AttributionContract.ENROLLMENT_ID,
+                attribution.getEnrollmentId());
         values.put(MeasurementTables.AttributionContract.TRIGGER_TIME,
                 attribution.getTriggerTime());
         values.put(MeasurementTables.AttributionContract.REGISTRANT,
@@ -366,6 +369,9 @@ public abstract class AbstractDbIntegrationTest {
         values.put(
                 MeasurementTables.AggregateReport.AD_TECH_DOMAIN,
                 aggregateReport.getAdTechDomain().toString());
+        values.put(
+                MeasurementTables.AggregateReport.ENROLLMENT_ID,
+                aggregateReport.getEnrollmentId());
         values.put(
                 MeasurementTables.AggregateReport.DEBUG_CLEARTEXT_PAYLOAD,
                 aggregateReport.getDebugCleartextPayload());

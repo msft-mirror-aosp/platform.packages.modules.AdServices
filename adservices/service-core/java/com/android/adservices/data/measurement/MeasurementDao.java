@@ -429,6 +429,8 @@ class MeasurementDao implements IMeasurementDao {
                 eventReport.getTriggerDedupKey());
         values.put(MeasurementTables.EventReportContract.AD_TECH_DOMAIN,
                 eventReport.getAdTechDomain().toString());
+        values.put(MeasurementTables.EventReportContract.ENROLLMENT_ID,
+                eventReport.getEnrollmentId());
         values.put(MeasurementTables.EventReportContract.STATUS,
                 eventReport.getStatus());
         values.put(MeasurementTables.EventReportContract.REPORT_TIME,
@@ -478,6 +480,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.AttributionContract.AD_TECH_DOMAIN,
                 attribution.getAdTechDomain());
+        values.put(
+                MeasurementTables.AttributionContract.ENROLLMENT_ID,
+                attribution.getEnrollmentId());
         values.put(
                 MeasurementTables.AttributionContract.TRIGGER_TIME, attribution.getTriggerTime());
         values.put(MeasurementTables.AttributionContract.REGISTRANT, attribution.getRegistrant());
@@ -1126,6 +1131,8 @@ class MeasurementDao implements IMeasurementDao {
                 aggregateReport.getScheduledReportTime());
         values.put(MeasurementTables.AggregateReport.AD_TECH_DOMAIN,
                 aggregateReport.getAdTechDomain().toString());
+        values.put(MeasurementTables.AggregateReport.ENROLLMENT_ID,
+                aggregateReport.getEnrollmentId());
         values.put(MeasurementTables.AggregateReport.DEBUG_CLEARTEXT_PAYLOAD,
                 aggregateReport.getDebugCleartextPayload());
         values.put(MeasurementTables.AggregateReport.STATUS,

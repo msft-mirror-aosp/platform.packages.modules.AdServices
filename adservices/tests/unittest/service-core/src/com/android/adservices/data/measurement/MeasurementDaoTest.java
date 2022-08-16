@@ -1356,6 +1356,7 @@ public class MeasurementDaoTest {
         Attribution attribution =
                 new Attribution.Builder()
                         .setAdTechDomain(source.getAdTechDomain().toString())
+                        .setEnrollmentId(source.getEnrollmentId())
                         .setDestinationOrigin(source.getWebDestination().toString())
                         .setDestinationSite(source.getAppDestination().toString())
                         .setSourceOrigin(source.getPublisher().toString())

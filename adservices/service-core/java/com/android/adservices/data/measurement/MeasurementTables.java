@@ -121,6 +121,7 @@ public final class MeasurementTables {
         String STATUS = "status";
         String SOURCE_TYPE = "source_type";
         String AD_TECH_DOMAIN = "ad_tech_domain";
+        String ENROLLMENT_ID = "enrollment_id";
         String RANDOMIZED_TRIGGER_RATE = "randomized_trigger_rate";
     }
 
@@ -135,6 +136,7 @@ public final class MeasurementTables {
         String TRIGGER_TIME = "trigger_time";
         String REGISTRANT = "registrant";
         String AD_TECH_DOMAIN = "ad_tech_domain";
+        String ENROLLMENT_ID = "enrollment_id";
     }
 
     /** Contract for Unencrypted aggregate payload. */
@@ -146,6 +148,7 @@ public final class MeasurementTables {
         String SOURCE_REGISTRATION_TIME = "source_registration_time";
         String SCHEDULED_REPORT_TIME = "scheduled_report_time";
         String AD_TECH_DOMAIN = "ad_tech_domain";
+        String ENROLLMENT_ID = "enrollment_id";
         String DEBUG_CLEARTEXT_PAYLOAD = "debug_cleartext_payload";
         String STATUS = "status";
         String API_VERSION = "api_version";
@@ -286,6 +289,8 @@ public final class MeasurementTables {
                     + " INTEGER, "
                     + EventReportContract.AD_TECH_DOMAIN
                     + " TEXT, "
+                    + EventReportContract.ENROLLMENT_ID
+                    + " TEXT, "
                     + EventReportContract.ATTRIBUTION_DESTINATION
                     + " TEXT, "
                     + EventReportContract.REPORT_TIME
@@ -322,6 +327,8 @@ public final class MeasurementTables {
                     + " TEXT, "
                     + AttributionContract.AD_TECH_DOMAIN
                     + " TEXT, "
+                    + AttributionContract.ENROLLMENT_ID
+                    + " TEXT, "
                     + AttributionContract.TRIGGER_TIME
                     + " INTEGER, "
                     + AttributionContract.REGISTRANT
@@ -343,6 +350,8 @@ public final class MeasurementTables {
                     + AggregateReport.SCHEDULED_REPORT_TIME
                     + " INTEGER, "
                     + AggregateReport.AD_TECH_DOMAIN
+                    + " TEXT, "
+                    + AggregateReport.ENROLLMENT_ID
                     + " TEXT, "
                     + AggregateReport.DEBUG_CLEARTEXT_PAYLOAD
                     + " TEXT, "
@@ -432,7 +441,7 @@ public final class MeasurementTables {
         "CREATE INDEX "
                 + INDEX_PREFIX
                 + AttributionContract.TABLE
-                + "_ss_so_ds_do_atd_tt"
+                + "_ss_so_ds_do_atd_ei_tt"
                 + " ON "
                 + AttributionContract.TABLE
                 + "("
@@ -445,6 +454,8 @@ public final class MeasurementTables {
                 + AttributionContract.DESTINATION_ORIGIN
                 + ", "
                 + AttributionContract.AD_TECH_DOMAIN
+                + ", "
+                + AttributionContract.ENROLLMENT_ID
                 + ", "
                 + AttributionContract.TRIGGER_TIME
                 + ")"
