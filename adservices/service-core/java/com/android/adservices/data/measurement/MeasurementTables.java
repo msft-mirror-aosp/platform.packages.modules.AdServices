@@ -77,6 +77,7 @@ public final class MeasurementTables {
         String STATUS = "status";
         String SOURCE_TYPE = "source_type";
         String AD_TECH_DOMAIN = "ad_tech_domain";
+        String ENROLLMENT_ID = "enrollment_id";
         String REGISTRANT = "registrant";
         String ATTRIBUTION_MODE = "attribution_mode";
         String INSTALL_ATTRIBUTION_WINDOW = "install_attribution_window";
@@ -205,6 +206,8 @@ public final class MeasurementTables {
                     + SourceContract.APP_DESTINATION
                     + " TEXT, "
                     + SourceContract.AD_TECH_DOMAIN
+                    + " TEXT, "
+                    + SourceContract.ENROLLMENT_ID
                     + " TEXT, "
                     + SourceContract.EVENT_TIME
                     + " INTEGER, "
@@ -360,7 +363,7 @@ public final class MeasurementTables {
         "CREATE INDEX "
                 + INDEX_PREFIX
                 + SourceContract.TABLE
-                + "_ad_atd_et "
+                + "_ad_atd_ei_et "
                 + "ON "
                 + SourceContract.TABLE
                 + "( "
@@ -368,22 +371,11 @@ public final class MeasurementTables {
                 + ", "
                 + SourceContract.AD_TECH_DOMAIN
                 + ", "
+                + SourceContract.ENROLLMENT_ID
+                + ", "
                 + SourceContract.EXPIRY_TIME
                 + " DESC "
                 + ")",
-        "CREATE INDEX "
-                + INDEX_PREFIX
-                + TriggerContract.TABLE
-                + "_ad_atd_tt "
-                + "ON "
-                + TriggerContract.TABLE
-                + "( "
-                + TriggerContract.ATTRIBUTION_DESTINATION
-                + ", "
-                + TriggerContract.AD_TECH_DOMAIN
-                + ", "
-                + TriggerContract.TRIGGER_TIME
-                + " ASC)",
         "CREATE INDEX "
                 + INDEX_PREFIX
                 + SourceContract.TABLE
@@ -410,6 +402,19 @@ public final class MeasurementTables {
                 + ", "
                 + SourceContract.EVENT_TIME
                 + ")",
+        "CREATE INDEX "
+                + INDEX_PREFIX
+                + TriggerContract.TABLE
+                + "_ad_atd_tt "
+                + "ON "
+                + TriggerContract.TABLE
+                + "( "
+                + TriggerContract.ATTRIBUTION_DESTINATION
+                + ", "
+                + TriggerContract.AD_TECH_DOMAIN
+                + ", "
+                + TriggerContract.TRIGGER_TIME
+                + " ASC)",
         "CREATE INDEX "
                 + INDEX_PREFIX
                 + TriggerContract.TABLE

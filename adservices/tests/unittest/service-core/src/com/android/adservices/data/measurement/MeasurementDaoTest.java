@@ -105,6 +105,7 @@ public class MeasurementDaoTest {
             assertEquals(validSource.getAppDestination(), source.getAppDestination());
             assertEquals(validSource.getWebDestination(), source.getWebDestination());
             assertEquals(validSource.getAdTechDomain(), source.getAdTechDomain());
+            assertEquals(validSource.getEnrollmentId(), source.getEnrollmentId());
             assertEquals(validSource.getRegistrant(), source.getRegistrant());
             assertEquals(validSource.getEventTime(), source.getEventTime());
             assertEquals(validSource.getExpiryTime(), source.getExpiryTime());

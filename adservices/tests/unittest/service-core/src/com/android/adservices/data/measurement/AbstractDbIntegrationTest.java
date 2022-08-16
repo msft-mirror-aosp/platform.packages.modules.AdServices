@@ -244,6 +244,7 @@ public abstract class AbstractDbIntegrationTest {
                 source.getAppDestination().toString());
         values.put(MeasurementTables.SourceContract.AD_TECH_DOMAIN,
                 source.getAdTechDomain().toString());
+        values.put(MeasurementTables.SourceContract.ENROLLMENT_ID, source.getEnrollmentId());
         values.put(MeasurementTables.SourceContract.STATUS, source.getStatus());
         values.put(MeasurementTables.SourceContract.EVENT_TIME, source.getEventTime());
         values.put(MeasurementTables.SourceContract.EXPIRY_TIME, source.getExpiryTime());

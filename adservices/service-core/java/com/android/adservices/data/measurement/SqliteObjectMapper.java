@@ -79,6 +79,8 @@ public class SqliteObjectMapper {
                 builder::setPriority);
         setUriColumn(cursor, MeasurementTables.SourceContract.AD_TECH_DOMAIN,
                 builder::setAdTechDomain);
+        setTextColumn(cursor, MeasurementTables.SourceContract.ENROLLMENT_ID,
+                builder::setEnrollmentId);
         setUriColumn(cursor, MeasurementTables.SourceContract.PUBLISHER,
                 builder::setPublisher);
         setIntColumn(cursor, MeasurementTables.SourceContract.PUBLISHER_TYPE,

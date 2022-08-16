@@ -227,6 +227,7 @@ public class DbState {
                 .setPublisherType(sJSON.optInt("publisherType"))
                 .setAppDestination(Uri.parse(sJSON.getString("appDestination")))
                 .setAdTechDomain(Uri.parse(sJSON.getString("adTechDomain")))
+                .setEnrollmentId(sJSON.getString("enrollmentId"))
                 .setEventTime(sJSON.getLong("eventTime"))
                 .setExpiryTime(sJSON.getLong("expiryTime"))
                 .setPriority(sJSON.getLong("priority"))

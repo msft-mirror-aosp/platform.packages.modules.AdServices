@@ -189,6 +189,7 @@ class MeasurementDao implements IMeasurementDao {
                 getNullableUriString(source.getWebDestination()));
         values.put(MeasurementTables.SourceContract.AD_TECH_DOMAIN,
                 source.getAdTechDomain().toString());
+        values.put(MeasurementTables.SourceContract.ENROLLMENT_ID, source.getEnrollmentId());
         values.put(MeasurementTables.SourceContract.EVENT_TIME, source.getEventTime());
         values.put(MeasurementTables.SourceContract.EXPIRY_TIME, source.getExpiryTime());
         values.put(MeasurementTables.SourceContract.PRIORITY, source.getPriority());

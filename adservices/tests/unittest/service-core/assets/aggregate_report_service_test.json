@@ -14,7 +14,7 @@
             "id": "AR1",
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
-            "adTechDomain": "https://adtech.domain",
+            "adTechDomain": "https://adtech.com",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0
           }
@@ -32,7 +32,7 @@
             "id": "AR1",
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
-            "adTechDomain": "https://adtech.domain",
+            "adTechDomain": "https://adtech.com",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 1
           }
@@ -59,7 +59,7 @@
             "id": "AR1",
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
-            "adTechDomain": "https://adtech.domain",
+            "adTechDomain": "https://adtech.com",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0
           }
@@ -77,7 +77,7 @@
             "id": "AR1",
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
-            "adTechDomain": "https://adtech.domain",
+            "adTechDomain": "https://adtech.com",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0
           }
@@ -104,7 +104,7 @@
             "id": "AR1",
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
-            "adTechDomain": "https://adtech.domain",
+            "adTechDomain": "https://adtech.com",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 1
           }
@@ -122,7 +122,7 @@
             "id": "AR1",
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
-            "adTechDomain": "https://adtech.domain",
+            "adTechDomain": "https://adtech.com",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 1
           }
@@ -149,7 +149,7 @@
             "id": "AR1",
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
-            "adTechDomain": "https://adtech.domain",
+            "adTechDomain": "https://adtech.com",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0
           },
@@ -159,7 +159,7 @@
             "id": "AR2",
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
-            "adTechDomain": "https://adtech.domain",
+            "adTechDomain": "https://adtech.com",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0
           },
@@ -169,7 +169,7 @@
             "id": "AR3",
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
-            "adTechDomain": "https://adtech.domain",
+            "adTechDomain": "https://adtech.com",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0
           }
@@ -187,7 +187,7 @@
             "id": "AR1",
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
-            "adTechDomain": "https://adtech.domain",
+            "adTechDomain": "https://adtech.com",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 1
           },
@@ -197,7 +197,7 @@
             "id": "AR2",
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
-            "adTechDomain": "https://adtech.domain",
+            "adTechDomain": "https://adtech.com",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0
           },
@@ -207,7 +207,7 @@
             "id": "AR3",
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
-            "adTechDomain": "https://adtech.domain",
+            "adTechDomain": "https://adtech.com",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 1
           }
@@ -233,7 +233,7 @@
             "id": "AR1",
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
-            "adTechDomain": "https://adtech.domain",
+            "adTechDomain": "https://adtech.com",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0
           },
@@ -243,7 +243,7 @@
             "id": "AR2",
             "scheduledReportTime": 19999000,
             "sourceRegistrationTime": 19998000,
-            "adTechDomain": "https://adtech.domain",
+            "adTechDomain": "https://adtech.com",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0
           }
@@ -261,7 +261,7 @@
             "id": "AR1",
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
-            "adTechDomain": "https://adtech.domain",
+            "adTechDomain": "https://adtech.com",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 1
           },
@@ -271,7 +271,7 @@
             "id": "AR2",
             "scheduledReportTime": 19999000,
             "sourceRegistrationTime": 19998000,
-            "adTechDomain": "https://adtech.domain",
+            "adTechDomain": "https://adtech.com",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 1
           }
@@ -298,7 +298,7 @@
             "id": "AR1",
             "scheduledReportTime": 10000000,
             "sourceRegistrationTime": 9999000,
-            "adTechDomain": "https://adtech.domain",
+            "adTechDomain": "https://adtech.com",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0
           },
@@ -308,7 +308,7 @@
             "id": "AR2",
             "scheduledReportTime": 23000000,
             "sourceRegistrationTime": 22100000,
-            "adTechDomain": "https://adtech.domain",
+            "adTechDomain": "https://adtech.com",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0
           },
@@ -318,7 +318,7 @@
             "id": "AR3",
             "scheduledReportTime": 19999000,
             "sourceRegistrationTime": 19998000,
-            "adTechDomain": "https://adtech.domain",
+            "adTechDomain": "https://adtech.com",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0
           }
@@ -336,7 +336,7 @@
             "id": "AR1",
             "scheduledReportTime": 10000000,
             "sourceRegistrationTime": 9999000,
-            "adTechDomain": "https://adtech.domain",
+            "adTechDomain": "https://adtech.com",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0
           },
@@ -346,7 +346,7 @@
             "id": "AR2",
             "scheduledReportTime": 23000000,
             "sourceRegistrationTime": 22100000,
-            "adTechDomain": "https://adtech.domain",
+            "adTechDomain": "https://adtech.com",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0
           },
@@ -356,7 +356,7 @@
             "id": "AR3",
             "scheduledReportTime": 19999000,
             "sourceRegistrationTime": 19998000,
-            "adTechDomain": "https://adtech.domain",
+            "adTechDomain": "https://adtech.com",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 1
           }
