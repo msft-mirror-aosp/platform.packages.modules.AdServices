@@ -65,7 +65,6 @@ public class OnDeviceClassifierTest {
                 new OnDeviceClassifier(
                         sPreprocessor,
                         mPackageManagerUtil,
-                        sContext.getAssets(),
                         new Random(),
                         ModelManager.getInstance(sContext));
     }
