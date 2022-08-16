@@ -18,10 +18,8 @@ package com.android.adservices.service.adselection;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
-import static com.android.adservices.service.adselection.AdSelectionConfigValidator.DECISION_LOGIC_URI_TYPE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_AD_SELECTION_FAILURE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_BUYERS_AVAILABLE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_CA_AVAILABLE;
@@ -40,7 +38,6 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import android.adservices.adselection.AdSelectionCallback;
@@ -79,7 +76,6 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
-import com.android.adservices.service.common.ValidatorTestUtil;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
@@ -1409,6 +1405,18 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testAdSelectionConfigInvalidInput() throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+
+        // Logger calls come after the callback is returned
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerSpy)
+                .logApiCallStats(any());
+
         AdSelectionConfig invalidAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setSeller(SELLER_VALID)
@@ -1418,26 +1426,17 @@ public class AdSelectionE2ETest {
         Mockito.lenient()
                 .when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
-        IllegalArgumentException thrown =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () ->
-                                invokeRunAdSelection(
-                                        mAdSelectionService,
-                                        invalidAdSelectionConfig,
-                                        CALLER_PACKAGE_NAME));
 
-        ValidatorTestUtil.assertValidationFailuresMatch(
-                thrown,
-                String.format(
-                        "Invalid object of type %s. The violations are:",
-                        AdSelectionConfig.class.getName()),
-                ImmutableList.of(
-                        String.format(
-                                AdSelectionConfigValidator.SELLER_AND_URI_HOST_ARE_INCONSISTENT,
-                                Uri.parse("https://" + SELLER_VALID).getHost(),
-                                DECISION_LOGIC_URI_INCONSISTENT.getHost(),
-                                DECISION_LOGIC_URI_TYPE)));
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelection(
+                        mAdSelectionService, invalidAdSelectionConfig, CALLER_PACKAGE_NAME);
+
+        loggerLatch.await();
+        assertFalse(resultsCallback.mIsSuccess);
+
+        FledgeErrorResponse response = resultsCallback.mFledgeErrorResponse;
+        assertEquals(
+                "Error response code mismatch", STATUS_INVALID_ARGUMENT, response.getStatusCode());
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
@@ -1675,21 +1674,27 @@ public class AdSelectionE2ETest {
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
-        assertThrows(
-                SecurityException.class,
-                () ->
-                        invokeRunAdSelection(
-                                mAdSelectionService,
-                                mAdSelectionConfig,
-                                CALLER_PACKAGE_NAME + "invalidPackageName"));
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelection(
+                        mAdSelectionService,
+                        mAdSelectionConfig,
+                        CALLER_PACKAGE_NAME + "invalidPackageName");
+        loggerLatch.await();
+        Assert.assertFalse(resultsCallback.mIsSuccess);
 
-        verify(mAdServicesLoggerSpy)
-                .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, STATUS_UNAUTHORIZED);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, STATUS_UNAUTHORIZED));
+        FledgeErrorResponse response = resultsCallback.mFledgeErrorResponse;
+        assertEquals(
+                "Error response code mismatch",
+                AdServicesStatusUtils.STATUS_UNAUTHORIZED,
+                response.getStatusCode());
+
+        verifyErrorMessageIsCorrect(
+                resultsCallback.mFledgeErrorResponse.getErrorMessage(),
+                String.format(
+                        AdSelectionRunner.AD_SELECTION_ERROR_PATTERN,
+                        AdSelectionRunner.ERROR_AD_SELECTION_FAILURE,
+                        AdServicesStatusUtils
+                                .SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE));
     }
 
     /**

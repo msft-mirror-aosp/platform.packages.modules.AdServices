@@ -23,7 +23,6 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZE
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
-import static com.android.adservices.service.adselection.AdSelectionConfigValidator.DECISION_LOGIC_URI_TYPE;
 import static com.android.adservices.service.adselection.ImpressionReporter.UNABLE_TO_FIND_AD_SELECTION_WITH_GIVEN_ID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
@@ -80,7 +79,6 @@ import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
-import com.android.adservices.service.common.ValidatorTestUtil;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
@@ -2519,17 +2517,14 @@ public class AdSelectionServiceImplTest {
                         .setCallerPackageName(otherPackageName)
                         .build();
 
-        assertThrows(
-                SecurityException.class, () -> callReportImpression(adSelectionService, input));
+        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
 
-        verify(mAdServicesLoggerSpy)
-                .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, STATUS_UNAUTHORIZED);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                STATUS_UNAUTHORIZED));
+        assertFalse(callback.mIsSuccess);
+        assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_UNAUTHORIZED);
+        assertEquals(
+                callback.mFledgeErrorResponse.getErrorMessage(),
+                AdServicesStatusUtils
+                        .SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE);
     }
 
     private AdSelectionOverrideTestCallback callAddOverride(
@@ -2577,7 +2572,9 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    public void testAdSelectionConfigInvalidSellerAndSellerUrls() {
+    public void testAdSelectionConfigInvalidSellerAndSellerUrls() throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+
         Uri sellerReportingUrl = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUrl = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -2650,22 +2647,14 @@ public class AdSelectionServiceImplTest {
                         .setCallerPackageName(TEST_PACKAGE_NAME)
                         .build();
 
-        IllegalArgumentException thrown =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () -> callReportImpression(adSelectionService, request));
+        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, request);
 
-        ValidatorTestUtil.assertValidationFailuresMatch(
-                thrown,
-                String.format(
-                        "Invalid object of type %s. The violations are:",
-                        AdSelectionConfig.class.getName()),
-                ImmutableList.of(
-                        String.format(
-                                AdSelectionConfigValidator.SELLER_AND_URI_HOST_ARE_INCONSISTENT,
-                                Uri.parse("https://" + SELLER_VALID).getHost(),
-                                DECISION_LOGIC_URI_INCONSISTENT.getHost(),
-                                DECISION_LOGIC_URI_TYPE)));
+        assertFalse(callback.mIsSuccess);
+
+        FledgeErrorResponse response = callback.mFledgeErrorResponse;
+        assertEquals(
+                "Error response code mismatch", STATUS_INVALID_ARGUMENT, response.getStatusCode());
+
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
                         AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
