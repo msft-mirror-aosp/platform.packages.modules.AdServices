@@ -31,6 +31,7 @@ import com.android.adservices.service.measurement.reporting.AggregateFallbackRep
 import com.android.adservices.service.measurement.reporting.AggregateReportingJobService;
 import com.android.adservices.service.measurement.reporting.EventFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.EventReportingJobService;
+import com.android.adservices.service.stats.Clock;
 
 import java.util.Objects;
 
@@ -52,6 +53,7 @@ public class MeasurementService extends Service {
             mMeasurementService =
                     new MeasurementServiceImpl(
                             this,
+                            Clock.SYSTEM_CLOCK,
                             ConsentManager.getInstance(this),
                             EnrollmentDao.getInstance(this),
                             flags);
