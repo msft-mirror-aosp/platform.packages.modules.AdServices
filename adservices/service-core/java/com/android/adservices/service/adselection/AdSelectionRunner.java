@@ -44,6 +44,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
+import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -118,6 +119,7 @@ public final class AdSelectionRunner {
     @NonNull private final Flags mFlags;
     @NonNull private final AppImportanceFilter mAppImportanceFilter;
     private final int mCallerUid;
+    @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
 
     public AdSelectionRunner(
             @NonNull final Context context,
@@ -129,13 +131,15 @@ public final class AdSelectionRunner {
             @NonNull final DevContext devContext,
             @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull final Flags flags,
-            int callerUid) {
+            int callerUid,
+            @NonNull final FledgeAuthorizationFilter fledgeAuthorizationFilter) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(executorService);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(fledgeAuthorizationFilter);
         mContext = context;
         mCustomAudienceDao = customAudienceDao;
         mAdSelectionEntryDao = adSelectionEntryDao;
@@ -161,6 +165,7 @@ public final class AdSelectionRunner {
         mFlags = flags;
         mAppImportanceFilter = appImportanceFilter;
         mCallerUid = callerUid;
+        mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
     }
 
     @VisibleForTesting
@@ -177,7 +182,8 @@ public final class AdSelectionRunner {
             @NonNull final AdServicesLogger adServicesLogger,
             @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull final Flags flags,
-            int callerUid) {
+            int callerUid,
+            @NonNull final FledgeAuthorizationFilter fledgeAuthorizationFilter) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(adSelectionEntryDao);
@@ -189,6 +195,7 @@ public final class AdSelectionRunner {
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(appImportanceFilter);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(fledgeAuthorizationFilter);
 
         mContext = context;
         mCustomAudienceDao = customAudienceDao;
@@ -203,6 +210,7 @@ public final class AdSelectionRunner {
         mFlags = flags;
         mAppImportanceFilter = appImportanceFilter;
         mCallerUid = callerUid;
+        mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
     }
 
     /**
@@ -217,13 +225,16 @@ public final class AdSelectionRunner {
         Objects.requireNonNull(callback);
 
         try {
-            ListenableFuture<Void> userConsentFuture =
-                    Futures.submit(this::assertCallerHasUserConsent, mExecutorService);
+            ListenableFuture<Void> validateRequestFuture =
+                    Futures.submit(
+                            () ->
+                                    validateRequest(
+                                            inputParams.getAdSelectionConfig(),
+                                            inputParams.getCallerPackageName()),
+                            mExecutorService);
 
             ListenableFuture<DBAdSelection> dbAdSelectionFuture =
-                    FluentFuture.from(userConsentFuture)
-                            .transform(
-                                    ignoredVoid -> maybeAssertForegroundCaller(), mExecutorService)
+                    FluentFuture.from(validateRequestFuture)
                             .transformAsync(
                                     ignoredVoid ->
                                             orchestrateAdSelection(
@@ -307,6 +318,10 @@ public final class AdSelectionRunner {
                 resultCode = AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
             } else if (t instanceof UncheckedTimeoutException) {
                 resultCode = AdServicesStatusUtils.STATUS_TIMEOUT;
+            } else if (t instanceof SecurityException) {
+                resultCode = AdServicesStatusUtils.STATUS_UNAUTHORIZED;
+            } else if (t instanceof IllegalArgumentException) {
+                resultCode = AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
             } else {
                 resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
             }
@@ -610,6 +625,56 @@ public final class AdSelectionRunner {
             mAppImportanceFilter.assertCallerIsInForeground(
                     mCallerUid, AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, null);
         }
+        return null;
+    }
+
+    /**
+     * Asserts that the package name provided by the caller is one of the packages of the calling
+     * uid.
+     *
+     * @param callerPackageName caller package name from the request
+     * @throws SecurityException if the provided {@code callerPackageName} is not valid
+     * @return an ignorable {@code null}
+     */
+    private Void assertCallerPackageName(String callerPackageName) throws SecurityException {
+        mFledgeAuthorizationFilter.assertCallingPackageName(
+                callerPackageName, mCallerUid, AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
+        return null;
+    }
+
+    /**
+     * Validates the {@code adSelectionConfig} from the request.
+     *
+     * @param adSelectionConfig the adSelectionConfig to be validated
+     * @throws IllegalArgumentException if the provided {@code adSelectionConfig} is not valid
+     * @return an ignorable {@code null}
+     */
+    private Void validateAdSelectionConfig(AdSelectionConfig adSelectionConfig)
+            throws IllegalArgumentException {
+        AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
+        adSelectionConfigValidator.validate(adSelectionConfig);
+
+        return null;
+    }
+
+    /**
+     * Validates the {@code runAdSelection} request.
+     *
+     * @param adSelectionConfig the adSelectionConfig to be validated
+     * @param callerPackageName caller package name to be validated
+     * @throws IllegalArgumentException if the provided {@code adSelectionConfig} is not valid
+     * @throws SecurityException if the {@code callerPackageName} is not valid
+     * @throws WrongCallingApplicationStateException if the foreground check is enabled and fails
+     * @throws ConsentManager.RevokedConsentException if FLEDGE or the Privacy Sandbox do not have
+     *     user consent
+     * @return an ignorable {@code null}
+     */
+    private Void validateRequest(AdSelectionConfig adSelectionConfig, String callerPackageName) {
+        assertCallerPackageName(callerPackageName);
+        maybeAssertForegroundCaller();
+        assertCallerHasUserConsent();
+        validateAdSelectionConfig(adSelectionConfig);
+
         return null;
     }
 
