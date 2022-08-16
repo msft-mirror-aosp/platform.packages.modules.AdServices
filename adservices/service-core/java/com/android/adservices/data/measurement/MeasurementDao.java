@@ -83,6 +83,7 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.TriggerContract.STATUS, Trigger.Status.PENDING);
         values.put(MeasurementTables.TriggerContract.AD_TECH_DOMAIN,
                 trigger.getAdTechDomain().toString());
+        values.put(MeasurementTables.TriggerContract.ENROLLMENT_ID, trigger.getEnrollmentId());
         values.put(MeasurementTables.TriggerContract.REGISTRANT,
                 trigger.getRegistrant().toString());
         values.put(MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA,

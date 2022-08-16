@@ -99,6 +99,7 @@ public final class MeasurementTables {
         String STATUS = "status";
         String REGISTRANT = "registrant";
         String AD_TECH_DOMAIN = "ad_tech_domain";
+        String ENROLLMENT_ID = "enrollment_id";
         String EVENT_TRIGGERS = "event_triggers";
         String AGGREGATE_TRIGGER_DATA = "aggregate_trigger_data";
         String AGGREGATE_VALUES = "aggregate_values";
@@ -255,6 +256,8 @@ public final class MeasurementTables {
                     + " INTEGER, "
                     + TriggerContract.AD_TECH_DOMAIN
                     + " TEXT, "
+                    + TriggerContract.ENROLLMENT_ID
+                    + " TEXT, "
                     + TriggerContract.TRIGGER_TIME
                     + " INTEGER, "
                     + TriggerContract.EVENT_TRIGGERS
@@ -405,13 +408,15 @@ public final class MeasurementTables {
         "CREATE INDEX "
                 + INDEX_PREFIX
                 + TriggerContract.TABLE
-                + "_ad_atd_tt "
+                + "_ad_atd_ei_tt "
                 + "ON "
                 + TriggerContract.TABLE
                 + "( "
                 + TriggerContract.ATTRIBUTION_DESTINATION
                 + ", "
                 + TriggerContract.AD_TECH_DOMAIN
+                + ", "
+                + TriggerContract.ENROLLMENT_ID
                 + ", "
                 + TriggerContract.TRIGGER_TIME
                 + " ASC)",

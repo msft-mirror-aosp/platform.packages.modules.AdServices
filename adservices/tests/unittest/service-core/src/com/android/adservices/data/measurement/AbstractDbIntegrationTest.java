@@ -277,6 +277,7 @@ public abstract class AbstractDbIntegrationTest {
                 trigger.getDestinationType());
         values.put(MeasurementTables.TriggerContract.AD_TECH_DOMAIN,
                 trigger.getAdTechDomain().toString());
+        values.put(MeasurementTables.TriggerContract.ENROLLMENT_ID, trigger.getEnrollmentId());
         values.put(MeasurementTables.TriggerContract.STATUS, trigger.getStatus());
         values.put(MeasurementTables.TriggerContract.TRIGGER_TIME, trigger.getTriggerTime());
         values.put(MeasurementTables.TriggerContract.EVENT_TRIGGERS, trigger.getEventTriggers());

@@ -249,6 +249,7 @@ public class DbState {
                 .setAttributionDestination(Uri.parse(tJSON.getString("attributionDestination")))
                 .setDestinationType(tJSON.optInt("destinationType"))
                 .setAdTechDomain(Uri.parse(tJSON.getString("adTechDomain")))
+                .setEnrollmentId(tJSON.getString("enrollmentId"))
                 .setEventTriggers(tJSON.getString("eventTriggers"))
                 .setTriggerTime(tJSON.getLong("triggerTime"))
                 .setStatus(tJSON.getInt("status"))

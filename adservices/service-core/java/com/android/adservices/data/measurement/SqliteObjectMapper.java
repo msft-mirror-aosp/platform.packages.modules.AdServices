@@ -141,6 +141,8 @@ public class SqliteObjectMapper {
                 builder::setDestinationType);
         setUriColumn(cursor, MeasurementTables.TriggerContract.AD_TECH_DOMAIN,
                 builder::setAdTechDomain);
+        setTextColumn(cursor, MeasurementTables.TriggerContract.ENROLLMENT_ID,
+                builder::setEnrollmentId);
         setIntColumn(cursor, MeasurementTables.TriggerContract.STATUS,
                 builder::setStatus);
         setLongColumn(cursor, MeasurementTables.TriggerContract.TRIGGER_TIME,

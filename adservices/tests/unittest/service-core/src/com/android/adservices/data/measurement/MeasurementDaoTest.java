@@ -140,6 +140,7 @@ public class MeasurementDaoTest {
                     validTrigger.getAttributionDestination(), trigger.getAttributionDestination());
             assertEquals(validTrigger.getDestinationType(), trigger.getDestinationType());
             assertEquals(validTrigger.getAdTechDomain(), trigger.getAdTechDomain());
+            assertEquals(validTrigger.getEnrollmentId(), trigger.getEnrollmentId());
             assertEquals(validTrigger.getRegistrant(), trigger.getRegistrant());
             assertEquals(validTrigger.getTriggerTime(), trigger.getTriggerTime());
             assertEquals(validTrigger.getEventTriggers(), trigger.getEventTriggers());
