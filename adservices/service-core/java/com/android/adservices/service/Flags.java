@@ -115,6 +115,14 @@ public interface Flags extends Dumpable {
         return DEFAULT_CLASSIFIER_TYPE;
     }
 
+    /** Number of top labels allowed for every app. */
+    int CLASSIFIER_NUMBER_OF_TOP_LABELS = 10;
+
+    /** Returns the number of top labels allowed for every app after the classification process. */
+    default int getClassifierNumberOfTopLabels() {
+        return CLASSIFIER_NUMBER_OF_TOP_LABELS;
+    }
+
     /* The default period for the Maintenance job. */
     long MAINTENANCE_JOB_PERIOD_MS = 86_400_000; // 1 day.
 
