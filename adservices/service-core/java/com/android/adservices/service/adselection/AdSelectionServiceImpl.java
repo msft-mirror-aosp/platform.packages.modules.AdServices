@@ -73,7 +73,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
-    @NonNull private final ExecutorService mExecutor;
+    @NonNull private final ExecutorService mLightweightExecutor;
+    @NonNull private final ExecutorService mBackgroundExecutor;
     @NonNull private final Context mContext;
     @NonNull private final ConsentManager mConsentManager;
     @NonNull private final DevContextFilter mDevContextFilter;
@@ -95,7 +96,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull DevContextFilter devContextFilter,
             @NonNull AppImportanceFilter appImportanceFilter,
-            @NonNull ExecutorService executorService,
+            @NonNull ExecutorService lightweightExecutorService,
+            @NonNull ExecutorService backgroundExecutorService,
             @NonNull Context context,
             ConsentManager consentManager,
             @NonNull AdServicesLogger adServicesLogger,
@@ -109,7 +111,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(devContextFilter);
         Objects.requireNonNull(appImportanceFilter);
-        Objects.requireNonNull(executorService);
+        Objects.requireNonNull(lightweightExecutorService);
+        Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(consentManager);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(flags);
@@ -121,7 +124,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         mAdServicesHttpsClient = adServicesHttpsClient;
         mDevContextFilter = devContextFilter;
         mAppImportanceFilter = appImportanceFilter;
-        mExecutor = executorService;
+        mLightweightExecutor = lightweightExecutorService;
+        mBackgroundExecutor = backgroundExecutorService;
         mContext = context;
         mConsentManager = consentManager;
         mAdServicesLogger = adServicesLogger;
@@ -141,12 +145,13 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         this(
                 AdSelectionDatabase.getInstance(context).adSelectionEntryDao(),
                 CustomAudienceDatabase.getInstance(context).customAudienceDao(),
-                new AdServicesHttpsClient(AdServicesExecutors.getBackgroundExecutor()),
+                new AdServicesHttpsClient(AdServicesExecutors.getBlockingExecutor()),
                 DevContextFilter.create(context),
                 AppImportanceFilter.create(
                         context,
                         AD_SERVICES_API_CALLED__API_CLASS__FLEDGE,
                         () -> FlagsFactory.getFlags().getForegroundStatuslLevelForValidation()),
+                AdServicesExecutors.getLightWeightExecutor(),
                 AdServicesExecutors.getBackgroundExecutor(),
                 context,
                 ConsentManager.getInstance(context),
@@ -185,7 +190,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
-                        mExecutor,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutor,
+                        mBackgroundExecutor,
                         mConsentManager,
                         mAdServicesLogger,
                         devContext,
@@ -223,7 +230,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         ImpressionReporter reporter =
                 new ImpressionReporter(
                         mContext,
-                        mExecutor,
+                        mLightweightExecutor,
+                        mBackgroundExecutor,
                         mAdSelectionEntryDao,
                         mAdServicesHttpsClient,
                         mConsentManager,
@@ -272,7 +280,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 new AdSelectionOverrider(
                         devContext,
                         mAdSelectionEntryDao,
-                        mExecutor,
+                        mLightweightExecutor,
+                        mBackgroundExecutor,
                         mContext.getPackageManager(),
                         mConsentManager,
                         mAdServicesLogger,
@@ -327,7 +336,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 new AdSelectionOverrider(
                         devContext,
                         mAdSelectionEntryDao,
-                        mExecutor,
+                        mLightweightExecutor,
+                        mBackgroundExecutor,
                         mContext.getPackageManager(),
                         mConsentManager,
                         mAdServicesLogger,
@@ -370,7 +380,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 new AdSelectionOverrider(
                         devContext,
                         mAdSelectionEntryDao,
-                        mExecutor,
+                        mLightweightExecutor,
+                        mBackgroundExecutor,
                         mContext.getPackageManager(),
                         mConsentManager,
                         mAdServicesLogger,
