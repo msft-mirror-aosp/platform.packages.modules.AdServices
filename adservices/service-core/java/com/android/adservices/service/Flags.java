@@ -123,6 +123,14 @@ public interface Flags extends Dumpable {
         return CLASSIFIER_NUMBER_OF_TOP_LABELS;
     }
 
+    /** Threshold value for classification values. */
+    float CLASSIFIER_THRESHOLD = 0.0f;
+
+    /** Returns the threshold value for classification values. */
+    default float getClassifierThreshold() {
+        return CLASSIFIER_THRESHOLD;
+    }
+
     /* The default period for the Maintenance job. */
     long MAINTENANCE_JOB_PERIOD_MS = 86_400_000; // 1 day.
 

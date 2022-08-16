@@ -19,6 +19,7 @@ package com.android.adservices.service;
 import static com.android.adservices.service.Flags.ADID_KILL_SWITCH;
 import static com.android.adservices.service.Flags.APPSETID_KILL_SWITCH;
 import static com.android.adservices.service.Flags.CLASSIFIER_NUMBER_OF_TOP_LABELS;
+import static com.android.adservices.service.Flags.CLASSIFIER_THRESHOLD;
 import static com.android.adservices.service.Flags.DEFAULT_CLASSIFIER_TYPE;
 import static com.android.adservices.service.Flags.DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.Flags.DISABLE_TOPICS_ENROLLMENT_CHECK;
@@ -107,6 +108,7 @@ import static com.android.adservices.service.Flags.TOPICS_PERCENTAGE_FOR_RANDOM_
 import static com.android.adservices.service.PhFlags.KEY_ADID_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_APPSETID_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS;
+import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_THRESHOLD;
 import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_TYPE;
 import static com.android.adservices.service.PhFlags.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.PhFlags.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK;
@@ -347,6 +349,23 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getClassifierType()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetClassifierThreshold() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getClassifierThreshold())
+                .isEqualTo(CLASSIFIER_THRESHOLD);
+
+        float phOverridingValue = 0.3f;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_CLASSIFIER_THRESHOLD,
+                Float.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getClassifierThreshold()).isEqualTo(phOverridingValue);
     }
 
     @Test
