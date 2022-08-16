@@ -24,5 +24,5 @@ import android.adservices.common.IsAdServicesEnabledResult;
   */
 oneway interface IAdServicesCommonCallback {
   void onResult(in IsAdServicesEnabledResult responseParcel);
-  void onFailure(String errorMessage);
+  void onFailure(int statusCode);
 }

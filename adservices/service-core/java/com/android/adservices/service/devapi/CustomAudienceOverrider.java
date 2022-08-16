@@ -189,7 +189,7 @@ public class CustomAudienceOverrider {
                         new FutureCallback<Integer>() {
                             @Override
                             public void onSuccess(Integer result) {
-                                LogUtil.d("Removing dev override succeeded!");
+                                LogUtil.d("Removing dev override succeeded with status %d", result);
                                 invokeSuccess(callback, shortApiName, result);
                             }
 
@@ -254,6 +254,7 @@ public class CustomAudienceOverrider {
                         () -> {
                             if (mConsentManager.isFledgeConsentRevokedForApp(
                                     mPackageManager, mDevContext.getCallingAppPackageName())) {
+                                LogUtil.v("User consent is revoked!");
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                             }
 

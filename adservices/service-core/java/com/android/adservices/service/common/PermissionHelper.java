@@ -99,4 +99,23 @@ public final class PermissionHelper {
                         AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
         return status == PackageManager.PERMISSION_GRANTED;
     }
+
+    /**
+     * @return {@code true} if the caller has the permission to invoke AdService's state
+     *     modification API.
+     */
+    public static boolean hasModifyAdServicesStatePermission(@NonNull Context context) {
+        int status =
+                context.checkCallingOrSelfPermission(AdServicesPermissions.MODIFY_ADSERVICES_STATE);
+        return status == PackageManager.PERMISSION_GRANTED;
+    }
+
+    /**
+     * @return {@code true} if the caller has the permission to invoke AdService's state access API.
+     */
+    public static boolean hasAccessAdServicesStatePermission(@NonNull Context context) {
+        int status =
+                context.checkCallingOrSelfPermission(AdServicesPermissions.ACCESS_ADSERVICES_STATE);
+        return status == PackageManager.PERMISSION_GRANTED;
+    }
 }

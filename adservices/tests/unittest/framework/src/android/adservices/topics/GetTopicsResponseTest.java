@@ -35,18 +35,10 @@ public final class GetTopicsResponseTest {
     @Test
     public void testGetTopicsResponseBuilder_nullableThrows() throws Exception {
         assertThrows(
-            IllegalArgumentException.class,
-            () -> {
-                GetTopicsResponse unusedResponse =
-                    new GetTopicsResponse.Builder().setTopics(null).build();
-            });
-
-
-        // This should not throw.
-        GetTopicsResponse unusedResponse =
-            new GetTopicsResponse.Builder()
-                // Not setting anything default to empty.
-                .build();
+                NullPointerException.class,
+                () -> {
+                    GetTopicsResponse unusedResponse = new GetTopicsResponse.Builder(null).build();
+                });
     }
 
     @Test
@@ -57,7 +49,7 @@ public final class GetTopicsResponseTest {
         topicList.add(topic);
 
         // Build GetTopicsResponse using topicList
-        GetTopicsResponse response = new GetTopicsResponse.Builder().setTopics(topicList).build();
+        GetTopicsResponse response = new GetTopicsResponse.Builder(topicList).build();
 
         // Validate the topicList is same to what we created
         assertEquals(topicList, response.getTopics());

@@ -16,18 +16,17 @@
 
 package com.android.testcode2_1;
 
+import android.app.sdksandbox.LoadSdkResponse;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
 
-import java.util.concurrent.Executor;
-
 public class TestSandboxedSdkProvider2 extends SandboxedSdkProvider {
 
     @Override
-    public void onLoadSdk(Bundle params, Executor executor, OnLoadSdkCallback callback) {
-        callback.onLoadSdkFinished(null);
+    public LoadSdkResponse onLoadSdk(Bundle params) {
+        return new LoadSdkResponse(new Bundle());
     }
 
     @Override

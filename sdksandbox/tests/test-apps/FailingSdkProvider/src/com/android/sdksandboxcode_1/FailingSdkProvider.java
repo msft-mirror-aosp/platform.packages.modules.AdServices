@@ -16,17 +16,17 @@
 
 package com.android.sdksandboxcode_1;
 
+import android.app.sdksandbox.LoadSdkException;
+import android.app.sdksandbox.LoadSdkResponse;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
 
-import java.util.concurrent.Executor;
-
 public class FailingSdkProvider extends SandboxedSdkProvider {
     @Override
-    public void onLoadSdk(Bundle params, Executor executor, OnLoadSdkCallback callback) {
-        callback.onLoadSdkError("Failed to initialize.");
+    public LoadSdkResponse onLoadSdk(Bundle params) throws LoadSdkException {
+        throw new LoadSdkException(new Throwable("Failed to initialize"), new Bundle());
     }
 
     @Override

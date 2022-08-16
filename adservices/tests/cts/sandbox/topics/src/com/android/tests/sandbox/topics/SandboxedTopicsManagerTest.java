@@ -33,6 +33,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -72,7 +73,9 @@ public class SandboxedTopicsManagerTest {
     }
 
     @Test
+    @Ignore("b/242300828")
     public void loadSdkAndRunTopicsApi() throws Exception {
+        overrideEnforceForegroundStatusForTopics(false);
         overrideDisableTopicsEnrollmentCheck("1");
         // The setup for this test:
         // SandboxedTopicsManagerTest is the test app. It will load the Sdk1 into the Sandbox.
@@ -95,8 +98,6 @@ public class SandboxedTopicsManagerTest {
 
         sdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), CALLBACK_EXECUTOR, callback);
 
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
-
         // Now force the Epoch Computation Job. This should be done in the same epoch for
         // callersCanLearnMap to have the entry for processing.
         forceEpochComputationJob();
@@ -109,9 +110,16 @@ public class SandboxedTopicsManagerTest {
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
 
         // Reset back the original values.
+        overrideEnforceForegroundStatusForTopics(true);
         overrideDisableTopicsEnrollmentCheck("0");
         overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
         overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+    }
+
+    // Override the flag to disable enforcing foreground.
+    private void overrideEnforceForegroundStatusForTopics(boolean enforce) {
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.topics_enforce_foreground_status " + enforce);
     }
 
     // Override the flag to disable Topics enrollment check.
