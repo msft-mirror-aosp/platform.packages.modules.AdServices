@@ -16,6 +16,11 @@
 
 package com.android.adservices.service.common;
 
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_STATE;
+import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
+
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.ADSERVICES_ENTRY_POINT_STATUS_DISABLE;
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.ADSERVICES_ENTRY_POINT_STATUS_ENABLE;
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.KEY_ADSERVICES_ENTRY_POINT_STATUS;
@@ -24,6 +29,7 @@ import android.adservices.common.IAdServicesCommonCallback;
 import android.adservices.common.IAdServicesCommonService;
 import android.adservices.common.IsAdServicesEnabledResult;
 import android.annotation.NonNull;
+import android.annotation.RequiresPermission;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.RemoteException;
@@ -53,17 +59,25 @@ public class AdServicesCommonServiceImpl extends
     }
 
     @Override
+    @RequiresPermission(ACCESS_ADSERVICES_STATE)
     public void isAdServicesEnabled(@NonNull IAdServicesCommonCallback callback) {
+        boolean hasAccessAdServicesStatePermission =
+                PermissionHelper.hasAccessAdServicesStatePermission(mContext);
+
         sBackgroundExecutor.execute(
                 () -> {
                     try {
+                        if (!hasAccessAdServicesStatePermission) {
+                            callback.onFailure(STATUS_UNAUTHORIZED);
+                            return;
+                        }
                         callback.onResult(
                                 new IsAdServicesEnabledResult.Builder()
                                         .setAdServicesEnabled(mFlags.getAdservicesEnableStatus())
                                         .build());
                     } catch (Exception e) {
                         try {
-                            callback.onFailure("getting AdServices status error");
+                            callback.onFailure(STATUS_INTERNAL_ERROR);
                         } catch (RemoteException re) {
                             LogUtil.e(re, "Unable to send result to the callback");
                         }
@@ -76,22 +90,31 @@ public class AdServicesCommonServiceImpl extends
      * Schedule notification if both adservices entry point enabled and adid not opt-out and
      * Adservice Is enabled
      */
-    public void setAdServicesNotificationConditions(
-            boolean adServicesEntryPointEnabled, boolean adIdEnabled) {
+    @Override
+    @RequiresPermission(MODIFY_ADSERVICES_STATE)
+    public void setAdServicesEnabled(boolean adServicesEntryPointEnabled, boolean adIdEnabled) {
+        boolean hasModifyAdServicesStatePermission =
+                PermissionHelper.hasModifyAdServicesStatePermission(mContext);
         sBackgroundExecutor.execute(
                 () -> {
                     try {
+                        if (!hasModifyAdServicesStatePermission) {
+                            // TODO(b/242578032): handle the security exception in a better way
+                            LogUtil.i("Caller is not authorized to control AdServices state");
+                            return;
+                        }
+
                         SharedPreferences preferences =
                                 mContext.getSharedPreferences(
                                         ADSERVICES_STATUS_SHARED_PREFERENCE, Context.MODE_PRIVATE);
 
-                        int adserviceEntryPointStatusInt =
+                        int adServiceEntryPointStatusInt =
                                 adServicesEntryPointEnabled
                                         ? ADSERVICES_ENTRY_POINT_STATUS_ENABLE
                                         : ADSERVICES_ENTRY_POINT_STATUS_DISABLE;
                         SharedPreferences.Editor editor = preferences.edit();
                         editor.putInt(
-                                KEY_ADSERVICES_ENTRY_POINT_STATUS, adserviceEntryPointStatusInt);
+                                KEY_ADSERVICES_ENTRY_POINT_STATUS, adServiceEntryPointStatusInt);
                         editor.apply();
                         LogUtil.i(
                                 "adid status is "

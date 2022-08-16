@@ -96,6 +96,18 @@
         android:description="@string/permdesc_adServicesAccessConsentService"
         android:protectionLevel="signature" />
 
+    <!-- Allows the caller to modify AdService's state via Common Service. -->
+    <permission android:name="android.permission.MODIFY_ADSERVICES_STATE"
+        android:label="@string/permlab_modifyAdServicesState"
+        android:description="@string/permdesc_modifyAdServicesState"
+        android:protectionLevel="signature|configurator" />
+
+    <!-- Allows the caller to get AdService's state via Common Service. -->
+    <permission android:name="android.permission.ACCESS_ADSERVICES_STATE"
+        android:label="@string/permlab_accessAdServicesState"
+        android:description="@string/permdesc_accessAdServicesState"
+        android:protectionLevel="signature|configurator" />
+
     <uses-permission android:name="android.permission.ADSERVICES_ACCESS_AD_ID" />
     <uses-permission android:name="android.permission.ADSERVICES_ACCESS_APP_SET_ID" />
     <uses-permission android:name="android.permission.ADSERVICES_ACCESS_CONSENT_SERVICE" />
