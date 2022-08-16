@@ -16,13 +16,25 @@
 
 package com.android.adservices;
 
+import android.adservices.common.AdServicesStatusUtils;
+
 /**
  * Result Code for log call result.
+ *
  * @hide
+ * @deprecated use {@link AdServicesStatusUtils} instead.
  */
 public class ResultCode {
     /** Result code for success */
     public static final int RESULT_OK = 0;
     /** Result code for fail. */
     public static final int RESULT_INTERNAL_ERROR = 1;
+    /** Result code for unauthorized API call. */
+    public static final int RESULT_UNAUTHORIZED_CALL = 2;
+    /** Result code for invalid argument. */
+    public static final int RESULT_INVALID_ARGUMENT = 3;
+    /** Result code for I/O error. */
+    public static final int RESULT_IO_ERROR = 4;
+    /** Result code for Rate Limit Reached. */
+    public static final int RESULT_RATE_LIMIT_REACHED = 5;
 }

@@ -17,16 +17,26 @@ package {
 }
 
 filegroup {
-    name: "framework-sdksandbox-sources",
+    name: "framework-sdksandbox-aidl-sources",
     srcs: [
       "java/**/*.aidl",
-      "java/**/*.java"
     ],
     visibility: [
         "//frameworks/base",
         "//packages/modules/AdServices:__subpackages__",
-        // TODO(b/222118402): remove after code is moved
-        "//packages/modules/SupplementalProcess:__subpackages__",
+    ],
+    path: "java",
+}
+
+filegroup {
+    name: "framework-sdksandbox-sources",
+    srcs: [
+      "java/**/*.java",
+      ":framework-sdksandbox-aidl-sources",
+    ],
+    visibility: [
+        "//frameworks/base",
+        "//packages/modules/AdServices:__subpackages__",
     ],
     path: "java",
 }
@@ -45,8 +55,6 @@ java_sdk_library {
     ],
     impl_library_visibility: [
         "//packages/modules/AdServices:__subpackages__",
-        // TODO(b/222118402): remove after code is moved
-        "//packages/modules/SupplementalProcess/service:__subpackages__",
     ],
     apex_available: ["com.android.adservices"],
 }

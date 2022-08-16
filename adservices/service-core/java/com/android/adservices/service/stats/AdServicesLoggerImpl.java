@@ -16,17 +16,17 @@
 
 package com.android.adservices.service.stats;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__FLEDGE;
+
 import javax.annotation.concurrent.ThreadSafe;
 
-/**
- * AdServicesLogger that delegate to the appropriate Logger Implementations.
- */
+/** AdServicesLogger that delegate to the appropriate Logger Implementations. */
 @ThreadSafe
 public class AdServicesLoggerImpl implements AdServicesLogger {
     private static volatile AdServicesLoggerImpl sAdServicesLogger;
 
-    private AdServicesLoggerImpl() {
-    }
+    private AdServicesLoggerImpl() {}
 
     /** Returns an instance of AdServicesLogger. */
     public static AdServicesLoggerImpl getInstance() {
@@ -48,5 +48,25 @@ public class AdServicesLoggerImpl implements AdServicesLogger {
     @Override
     public void logApiCallStats(ApiCallStats apiCallStats) {
         StatsdAdServicesLogger.getInstance().logApiCallStats(apiCallStats);
+    }
+
+    @Override
+    public void logUIStats(UIStats uiStats) {
+        StatsdAdServicesLogger.getInstance().logUIStats(uiStats);
+    }
+
+    @Override
+    public void logFledgeApiCallStats(int apiName, int resultCode) {
+        // TODO(b/233628316): Implement latency measurement
+        logApiCallStats(
+                new ApiCallStats.Builder()
+                        .setCode(AD_SERVICES_API_CALLED)
+                        .setApiClass(AD_SERVICES_API_CALLED__API_CLASS__FLEDGE)
+                        .setApiName(apiName)
+                        .setResultCode(resultCode)
+                        // TODO(b/233629557): Implement app/SDK reporting
+                        .setSdkPackageName("")
+                        .setAppPackageName("")
+                        .build());
     }
 }

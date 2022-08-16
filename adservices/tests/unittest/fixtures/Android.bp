@@ -41,7 +41,9 @@ java_library {
     static_libs: [
         "adservices-service-core",
         "androidx.test.rules",
+        "mockito-target-extended-minus-junit4",
         "mockwebserver",
+        "truth-prebuilt",
     ],
     apex_available: ["com.android.adservices"],
 }

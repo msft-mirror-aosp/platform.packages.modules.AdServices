@@ -29,27 +29,44 @@ filegroup {
     ],
 }
 
-android_app {
-    name: "SdkSandbox",
+java_library {
+    name: "SdkSandbox-java-lib",
     srcs: [
         ":sdksandbox-sources",
         ":sdksandbox_aidl",
+        ":framework-sdksandbox-aidl-sources",
     ],
     libs: [
         "framework-annotations-lib",
-        // TODO(b/212577961): switch to stubs
-        "framework-sdksandbox",
-    ],
-    static_libs: [], //do not add static libs to SdkSandbox
-    visibility: [
-        "//packages/modules/AdServices:__subpackages__",
+        "framework-sdksandbox.impl",
     ],
     sdk_version: "module_current",
-    min_sdk_version: "Tiramisu",
+    apex_available: ["com.android.adservices"],
+    defaults: [
+        "sdksandbox-java-defaults",
+    ],
+    static_libs: [], //do not add any other static libs to SdkSandbox, else proguard will shrink it.
+}
+
+android_app {
+    name: "SdkSandbox",
+    libs: [
+        "framework-annotations-lib",
+        "framework-sdksandbox.impl",
+    ],
+    static_libs: [
+        "SdkSandbox-java-lib",
+    ], //do not add any other static libs to SdkSandbox, else proguard will shrink it.
+    visibility: [
+        "//packages/modules/AdServices:__subpackages__",
+        "//packages/modules/AdServices/sdksandbox/SdkSandbox",
+    ],
+    sdk_version: "module_current",
     updatable: true,
     certificate: "sdk_sandbox",
     apex_available: ["com.android.adservices"],
     defaults: [
         "sdksandbox-java-defaults",
     ],
+    jarjar_rules: "sdksandbox_app_jarjar_rules.txt",
 }

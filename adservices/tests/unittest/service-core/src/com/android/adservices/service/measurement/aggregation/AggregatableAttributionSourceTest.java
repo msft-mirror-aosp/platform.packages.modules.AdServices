@@ -17,39 +17,39 @@
 package com.android.adservices.service.measurement.aggregation;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
 
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /** Unit tests for {@link AggregatableAttributionSource} */
 @SmallTest
 public final class AggregatableAttributionSourceTest {
 
+    private AggregatableAttributionSource createExample() {
+        Map<String, BigInteger> aggregatableSource = new HashMap<>();
+        aggregatableSource.put("campaignCounts", BigInteger.valueOf(159L));
+        aggregatableSource.put("geoValue", BigInteger.valueOf(5L));
+
+        return new AggregatableAttributionSource.Builder()
+                .setAggregatableSource(aggregatableSource)
+                .build();
+    }
+
     @Test
     public void testCreation() throws Exception {
-        Map<String, AttributionAggregatableKey> aggregatableSource = new HashMap<>();
-        aggregatableSource.put("campaignCounts",
-                new AttributionAggregatableKey.Builder().setHighBits(0L).setLowBits(159L).build());
-        aggregatableSource.put("geoValue",
-                new AttributionAggregatableKey.Builder().setHighBits(0L).setLowBits(5L).build());
-
-        AggregatableAttributionSource attributionSource =
-                new AggregatableAttributionSource.Builder()
-                        .setAggregatableSource(aggregatableSource).build();
+        AggregatableAttributionSource attributionSource = createExample();
 
         assertEquals(attributionSource.getAggregatableSource().size(), 2);
         assertEquals(attributionSource.getAggregatableSource().get("campaignCounts")
-                .getHighBits().longValue(), 0L);
-        assertEquals(attributionSource.getAggregatableSource().get("campaignCounts")
-                .getLowBits().longValue(), 159L);
-        assertEquals(attributionSource.getAggregatableSource().get("geoValue")
-                .getHighBits().longValue(), 0L);
-        assertEquals(attributionSource.getAggregatableSource().get("geoValue")
-                .getLowBits().longValue(), 5L);
+                .longValue(), 159L);
+        assertEquals(attributionSource.getAggregatableSource().get("geoValue").longValue(), 5L);
     }
 
     @Test
@@ -57,6 +57,36 @@ public final class AggregatableAttributionSourceTest {
         AggregatableAttributionSource attributionSource =
                 new AggregatableAttributionSource.Builder().build();
         assertEquals(attributionSource.getAggregatableSource().size(), 0);
+    }
+
+    @Test
+    public void testHashCode_equals() throws Exception {
+        final AggregatableAttributionSource attributionSource1 = createExample();
+        final AggregatableAttributionSource attributionSource2 = createExample();
+        final Set<AggregatableAttributionSource> attributionSourceSet1 = Set.of(attributionSource1);
+        final Set<AggregatableAttributionSource> attributionSourceSet2 = Set.of(attributionSource2);
+        assertEquals(attributionSource1.hashCode(), attributionSource2.hashCode());
+        assertEquals(attributionSource1, attributionSource2);
+        assertEquals(attributionSourceSet1, attributionSourceSet2);
+    }
+
+    @Test
+    public void testHashCode_notEquals() throws Exception {
+        final AggregatableAttributionSource attributionSource1 = createExample();
+
+        Map<String, BigInteger> aggregatableSource = new HashMap<>();
+        aggregatableSource.put("campaignCounts", BigInteger.valueOf(159L));
+        aggregatableSource.put("geoValue", BigInteger.valueOf(1L));
+
+        final AggregatableAttributionSource attributionSource2 =
+                new AggregatableAttributionSource.Builder()
+                        .setAggregatableSource(aggregatableSource)
+                        .build();
+        final Set<AggregatableAttributionSource> attributionSourceSet1 = Set.of(attributionSource1);
+        final Set<AggregatableAttributionSource> attributionSourceSet2 = Set.of(attributionSource2);
+        assertNotEquals(attributionSource1.hashCode(), attributionSource2.hashCode());
+        assertNotEquals(attributionSource1, attributionSource2);
+        assertNotEquals(attributionSourceSet1, attributionSourceSet2);
     }
 }
 

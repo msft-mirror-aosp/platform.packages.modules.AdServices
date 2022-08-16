@@ -20,14 +20,12 @@ import android.annotation.NonNull;
 import android.content.Context;
 
 import com.android.adservices.LogUtil;
-import com.android.internal.util.Preconditions;
+import com.android.adservices.data.topics.Topic;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,46 +38,42 @@ import javax.annotation.concurrent.NotThreadSafe;
 /**
  * Precomputed Classifier.
  *
- * This Classifier will classify app into list of Topics using the server side classifier. The
+ * <p>This Classifier will classify app into list of Topics using the server side classifier. The
  * classification results for the top K apps are computed on the server and stored on the device.
  *
- * This class is not thread safe.
+ * <p>This class is not thread safe.
  */
-
 @NotThreadSafe
 public class PrecomputedClassifier implements Classifier {
 
     private static PrecomputedClassifier sSingleton;
-    private static final String LABELS_FILE_PATH =
-            "classifier/labels_chrome_topics.txt";
-    private static final String TOP_APP_FILE_PATH =
-            "classifier/precomputed_app_list_chrome_topics.csv";
 
-    private final PrecomputedLoader mPrecomputedLoader;
-    private final Random mRandom;
+    private static final String MODEL_ASSET_FIELD = "tflite_model";
+    private static final String LABELS_ASSET_FIELD = "labels_topics";
+    private static final String ASSET_VERSION_FIELD = "asset_version";
+
+    private final ModelManager mModelManager;
 
     // Used to mark whether the assets are loaded
     private boolean mLoaded;
-    private ImmutableSet<Integer> mLabels;
+    private ImmutableList<Integer> mLabels;
     // The app topics map Map<App, List<Topic>>
     private Map<String, List<Integer>> mAppTopics = new HashMap<>();
+    private long mModelVersion;
+    private long mLabelsVersion;
 
-    private PrecomputedClassifier(
-            @NonNull PrecomputedLoader precomputedLoader,
-            @NonNull Random random) throws IOException {
-        mPrecomputedLoader = precomputedLoader;
-        mRandom = random;
+    PrecomputedClassifier(@NonNull ModelManager modelManager) throws IOException {
+        mModelManager = modelManager;
         mLoaded = false;
     }
 
-    /** Returns an instance of the Classifier given a context. */
+    /** Returns an instance of the PrecomputedClassifier given a context. */
     @NonNull
     public static PrecomputedClassifier getInstance(@NonNull Context context) {
         synchronized (PrecomputedClassifier.class) {
             if (sSingleton == null) {
                 try {
-                    sSingleton = new PrecomputedClassifier(new PrecomputedLoader(
-                            context, LABELS_FILE_PATH, TOP_APP_FILE_PATH), new Random());
+                    sSingleton = new PrecomputedClassifier(ModelManager.getInstance(context));
                 } catch (IOException e) {
                     LogUtil.e(e, "Unable to read precomputed labels and app topics list");
                 }
@@ -90,102 +84,77 @@ public class PrecomputedClassifier implements Classifier {
 
     @NonNull
     @Override
-    public Map<String, List<Integer>> classify(@NonNull Set<String> apps) {
+    public Map<String, List<Topic>> classify(@NonNull Set<String> apps) {
         if (!isLoaded()) {
             load();
         }
 
-        Map<String, List<Integer>> appsToTopicsClassification = new HashMap<>();
+        Map<String, List<Topic>> appsToClassifiedTopics = new HashMap<>(apps.size());
 
         for (String app : apps) {
-            if (app != null && app.length() > 0) {
-                appsToTopicsClassification.put(app,
-                        mAppTopics.getOrDefault(app, ImmutableList.of()));
+            if (app != null && !app.isEmpty()) {
+                List<Integer> topicIds = mAppTopics.getOrDefault(app, ImmutableList.of());
+                List<Topic> topics =
+                        topicIds.stream().map(this::createTopic).collect(Collectors.toList());
+
+                appsToClassifiedTopics.put(app, topics);
             }
         }
-        return appsToTopicsClassification;
+        return appsToClassifiedTopics;
     }
 
     @NonNull
     @Override
-    public List<Integer> getTopTopics(
-            @NonNull Map<String, List<Integer>> appTopics,
+    public List<Topic> getTopTopics(
+            @NonNull Map<String, List<Topic>> appTopics,
             @NonNull int numberOfTopTopics,
             @NonNull int numberOfRandomTopics) {
-        Preconditions.checkArgument(numberOfTopTopics > 0,
-                "numberOfTopTopics should larger than 0");
-        Preconditions.checkArgument(numberOfRandomTopics > 0,
-                "numberOfRandomTopics should larger than 0");
-
+        // Load assets if not loaded already.
         if (!isLoaded()) {
             load();
         }
 
-        // A map from Topics to the count of its occurrences
-        Map<Integer, Integer> topicsToAppTopicCount = new HashMap<>();
-        for (List<Integer> appTopic : appTopics.values()) {
-            for (Integer topic : appTopic) {
-                topicsToAppTopicCount.put(
-                        topic, topicsToAppTopicCount.getOrDefault(topic, 0) + 1);
-            }
-        }
-
-        // Sort the topics by their count
-        List<Integer> allSortedTopics = topicsToAppTopicCount.entrySet().stream()
-                .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
-
-        // The number of topics to pad in top topics
-        int numberOfRandomPaddingTopics = Math.max(0, numberOfTopTopics - allSortedTopics.size());
-        List<Integer> topTopics = allSortedTopics.subList(
-                0, Math.min(numberOfTopTopics, allSortedTopics.size()));
-
-        // If the size of topTopics smaller than numberOfTopTopics,
-        // the top topics list will be padded by numberOfRandomPaddingTopics random topics.
-        return getRandomTopics(topTopics,
-                numberOfRandomTopics + numberOfRandomPaddingTopics);
+        return CommonClassifierHelper.getTopTopics(
+                appTopics, mLabels, new Random(), numberOfTopTopics, numberOfRandomTopics);
     }
 
-    // This helper function will populate numOfRandomTopics random topics in the topTopics list.
-    @NonNull
-    private List<Integer> getRandomTopics(
-            @NonNull List<Integer> topTopics,
-            @NonNull int numberOfRandomTopics) {
-        if (numberOfRandomTopics <= 0) {
-            return topTopics;
+    long getModelVersion() {
+        // Load assets if not loaded already.
+        if (!isLoaded()) {
+            load();
         }
 
-        List<Integer> returnedTopics = new ArrayList<>();
+        return mModelVersion;
+    }
 
-        // First add all the top topics
-        returnedTopics.addAll(topTopics);
-
-        // Counter of how many random topics need to add
-        int topicsCounter = numberOfRandomTopics;
-
-        // Then add random topics
-        while (topicsCounter > 0 && returnedTopics.size() < mLabels.size()) {
-            // TODO(b/226457861): unit test for this random logic
-            int randInt = mRandom.nextInt(mLabels.size());
-            // mLabels is an immutable set,
-            // it should be converted to array before picking up one element randomly
-            Integer randTopic = Integer.parseInt(mLabels.toArray()[randInt].toString());
-            if (returnedTopics.contains(randTopic)) {
-                continue;
-            }
-
-            returnedTopics.add(randTopic);
-            topicsCounter--;
+    long getLabelsVersion() {
+        // Load assets if not loaded already.
+        if (!isLoaded()) {
+            load();
         }
 
-        return returnedTopics;
+        return mLabelsVersion;
+    }
+
+    private Topic createTopic(int topicId) {
+        return Topic.create(topicId, mLabelsVersion, mModelVersion);
     }
 
     // Load labels and app topics.
     private void load() {
-        mLabels = mPrecomputedLoader.retrieveLabels();
-        mAppTopics = mPrecomputedLoader.retrieveAppClassificationTopics();
+        mLabels = mModelManager.retrieveLabels();
+        mAppTopics = mModelManager.retrieveAppClassificationTopics();
+
+        // Load classifier assets metadata.
+        ImmutableMap<String, ImmutableMap<String, String>> classifierAssetsMetadata =
+                mModelManager.retrieveClassifierAssetsMetadata();
+        mModelVersion =
+                Long.parseLong(
+                        classifierAssetsMetadata.get(MODEL_ASSET_FIELD).get(ASSET_VERSION_FIELD));
+        mLabelsVersion =
+                Long.parseLong(
+                        classifierAssetsMetadata.get(LABELS_ASSET_FIELD).get(ASSET_VERSION_FIELD));
+
         mLoaded = true;
     }
 

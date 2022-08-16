@@ -17,9 +17,14 @@
 package com.android.adservices.data;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 import androidx.test.core.app.ApplicationProvider;
+
+import com.google.common.collect.ImmutableSet;
+
+import java.util.Set;
 
 public final class DbTestUtil {
     private static final Context sContext = ApplicationProvider.getApplicationContext();
@@ -27,7 +32,7 @@ public final class DbTestUtil {
 
     private static DbHelper sSingleton;
 
-    /**  Erases all data from the table rows */
+    /** Erases all data from the table rows */
     public static void deleteTable(String tableName) {
         SQLiteDatabase db = getDbHelperForTest().safeGetWritableDatabase();
         if (db == null) {
@@ -45,9 +50,46 @@ public final class DbTestUtil {
     public static DbHelper getDbHelperForTest() {
         synchronized (DbHelper.class) {
             if (sSingleton == null) {
-                sSingleton = new DbHelper(sContext, DATABASE_NAME_FOR_TEST);
+                sSingleton =
+                        new DbHelper(
+                                sContext, DATABASE_NAME_FOR_TEST, DbHelper.LATEST_DATABASE_VERSION);
             }
             return sSingleton;
         }
+    }
+
+    /** Return true if table exists in the DB and column count matches. */
+    public static boolean doesTableExistAndColumnCountMatch(
+            SQLiteDatabase db, String tableName, int columnCount) {
+        final Set<String> tableColumns = getTableColumns(db, tableName);
+        return tableColumns.size() == columnCount;
+    }
+
+    /** Returns column names of the table. */
+    public static Set<String> getTableColumns(SQLiteDatabase db, String tableName) {
+        String query =
+                "select p.name from sqlite_master s "
+                        + "join pragma_table_info(s.name) p "
+                        + "where s.tbl_name = '"
+                        + tableName
+                        + "'";
+        Cursor cursor = db.rawQuery(query, null);
+        if (cursor == null) {
+            throw new IllegalArgumentException("Cursor is null.");
+        }
+
+        ImmutableSet.Builder<String> tableColumns = ImmutableSet.builder();
+        while (cursor.moveToNext()) {
+            tableColumns.add(cursor.getString(0));
+        }
+
+        return tableColumns.build();
+    }
+
+    /** Return true if the given index exists in the DB. */
+    public static boolean doesIndexExist(SQLiteDatabase db, String index) {
+        String query = "SELECT * FROM sqlite_master WHERE type='index' and name='" + index + "'";
+        Cursor cursor = db.rawQuery(query, null);
+        return cursor != null && cursor.getCount() > 0;
     }
 }

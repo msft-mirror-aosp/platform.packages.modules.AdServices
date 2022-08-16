@@ -17,12 +17,14 @@
 package com.android.adservices.service.measurement;
 
 import android.annotation.IntDef;
+import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.net.Uri;
 
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
-import com.android.adservices.service.measurement.aggregation.AttributionAggregatableKey;
+import com.android.adservices.service.measurement.util.Validation;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -30,7 +32,6 @@ import org.json.JSONObject;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -48,17 +49,18 @@ import java.util.Set;
 public class Trigger {
 
     private String mId;
-    private Long mDedupKey;
     private Uri mAttributionDestination;
+    @EventSurfaceType private int mDestinationType;
     private Uri mAdTechDomain;
     private long mTriggerTime;
-    private long mPriority;
-    private long mEventTriggerData;
-    private @Status int mStatus;
+    private String mEventTriggers;
+    @Status private int mStatus;
     private Uri mRegistrant;
     private String mAggregateTriggerData;
     private String mAggregateValues;
     private AggregatableAttributionTrigger mAggregatableAttributionTrigger;
+    private String mFilters;
+    private @Nullable Long mDebugKey;
 
     @IntDef(value = {
             Status.PENDING,
@@ -73,8 +75,9 @@ public class Trigger {
     }
 
     private Trigger() {
-        mDedupKey = null;
         mStatus = Status.PENDING;
+        // Making this default explicit since it anyway occur on an uninitialised int field.
+        mDestinationType = EventSurfaceType.APP;
     }
 
     @Override
@@ -83,26 +86,37 @@ public class Trigger {
             return false;
         }
         Trigger trigger = (Trigger) obj;
-        return  Objects.equals(mId, trigger.getId())
+        return Objects.equals(mId, trigger.getId())
                 && Objects.equals(mAttributionDestination, trigger.mAttributionDestination)
+                && mDestinationType == trigger.mDestinationType
                 && Objects.equals(mAdTechDomain, trigger.mAdTechDomain)
                 && mTriggerTime == trigger.mTriggerTime
-                && mEventTriggerData == trigger.mEventTriggerData
-                && mPriority == trigger.mPriority
+                && Objects.equals(mDebugKey, trigger.mDebugKey)
+                && Objects.equals(mEventTriggers, trigger.mEventTriggers)
                 && mStatus == trigger.mStatus
-                && Objects.equals(mDedupKey, trigger.mDedupKey)
                 && Objects.equals(mRegistrant, trigger.mRegistrant)
                 && Objects.equals(mAggregateTriggerData, trigger.mAggregateTriggerData)
                 && Objects.equals(mAggregateValues, trigger.mAggregateValues)
-                && Objects.equals(mAggregatableAttributionTrigger,
-                trigger.mAggregatableAttributionTrigger);
+                && Objects.equals(
+                        mAggregatableAttributionTrigger, trigger.mAggregatableAttributionTrigger)
+                && Objects.equals(mFilters, trigger.mFilters);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mId, mAttributionDestination, mAdTechDomain, mTriggerTime,
-                mEventTriggerData, mPriority, mStatus, mDedupKey, mAggregateTriggerData,
-                mAggregateValues, mAggregatableAttributionTrigger);
+        return Objects.hash(
+                mId,
+                mAttributionDestination,
+                mDestinationType,
+                mAdTechDomain,
+                mTriggerTime,
+                mEventTriggers,
+                mStatus,
+                mAggregateTriggerData,
+                mAggregateValues,
+                mAggregatableAttributionTrigger,
+                mFilters,
+                mDebugKey);
     }
 
     /**
@@ -113,17 +127,16 @@ public class Trigger {
     }
 
     /**
-     * Deduplication key for distinguishing among different {@link Trigger} types.
-     */
-    public Long getDedupKey() {
-        return mDedupKey;
-    }
-
-    /**
      * Destination where {@link Trigger} occurred.
      */
     public Uri getAttributionDestination() {
         return mAttributionDestination;
+    }
+
+    /** Destination type of the {@link Trigger}. */
+    @EventSurfaceType
+    public int getDestinationType() {
+        return mDestinationType;
     }
 
     /**
@@ -141,9 +154,15 @@ public class Trigger {
     }
 
     /**
-     * Current state of the {@link Trigger}.
+     * Event triggers containing priority, de-dup key, trigger data and event-level filters info.
      */
-    public @Status int getStatus() {
+    public String getEventTriggers() {
+        return mEventTriggers;
+    }
+
+    /** Current state of the {@link Trigger}. */
+    @Status
+    public int getStatus() {
         return mStatus;
     }
 
@@ -152,20 +171,6 @@ public class Trigger {
      */
     public void setStatus(@Status int status) {
         mStatus = status;
-    }
-
-    /**
-     * Priority used for selecting among {@link Trigger}.
-     */
-    public long getPriority() {
-        return mPriority;
-    }
-
-    /**
-     * Metadata for the {@link Trigger}.
-     */
-    public long getEventTriggerData() {
-        return mEventTriggerData;
     }
 
     /**
@@ -224,15 +229,20 @@ public class Trigger {
     }
 
     /**
-     * Function to truncate trigger data to 3-bit or 1-bit based on {@link Source.SourceType}
+     * Returns top level filters. The value is in json format.
      *
-     * @param source for which trigger data is being retrieved
-     * @return truncated trigger data
+     * <p>Will be used for deciding if the trigger can be attributed to the source. If the source
+     * fails the filtering against these filters then no reports(event/aggregate) are generated.
+     * example: { "key1" : ["value11", "value12"], "key2" : ["value21", "value22"] }
      */
-    public long getTruncatedTriggerData(Source source) {
-        return mEventTriggerData % source.getTriggerDataCardinality();
+    public String getFilters() {
+        return mFilters;
     }
 
+    /** Debug key of {@link Trigger}. */
+    public @Nullable Long getDebugKey() {
+        return mDebugKey;
+    }
     /**
      * Generates AggregatableAttributionTrigger from aggregate trigger data string and aggregate
      * values string in Trigger.
@@ -250,8 +260,11 @@ public class Trigger {
             if (hexString.startsWith("0x")) {
                 hexString = hexString.substring(2);
             }
+            // Do not process trigger if a key exceeds 128 bits.
+            if (hexString.length() > 32) {
+                return Optional.empty();
+            }
             BigInteger bigInteger = new BigInteger(hexString, 16);
-            BigInteger divisor = BigDecimal.valueOf(Math.pow(2, 63)).toBigInteger();
             JSONArray sourceKeys = jsonObject.getJSONArray("source_keys");
             Set<String> sourceKeySet = new HashSet<>();
             for (int j = 0; j < sourceKeys.length(); j++) {
@@ -259,10 +272,7 @@ public class Trigger {
             }
             AggregateTriggerData.Builder builder =
                     new AggregateTriggerData.Builder()
-                            .setKey(new AttributionAggregatableKey.Builder()
-                                    .setHighBits(bigInteger.divide(divisor).longValue())
-                                    .setLowBits(bigInteger.mod(divisor).longValue())
-                                    .build())
+                            .setKey(bigInteger)
                             .setSourceKeys(sourceKeySet);
             if (jsonObject.has("filters") && !jsonObject.isNull("filters")) {
                 AggregateFilterData filters = new AggregateFilterData.Builder()
@@ -288,6 +298,60 @@ public class Trigger {
     }
 
     /**
+     * Parses the json array under {@link #mEventTriggers} to form a list of {@link EventTrigger}s.
+     *
+     * @return list of {@link EventTrigger}s
+     * @throws JSONException if JSON parsing fails
+     */
+    public List<EventTrigger> parseEventTriggers() throws JSONException {
+        JSONArray jsonArray = new JSONArray(this.mEventTriggers);
+        List<EventTrigger> eventTriggers = new ArrayList<>();
+
+        for (int i = 0; i < jsonArray.length(); i++) {
+            EventTrigger.Builder eventTriggerBuilder = new EventTrigger.Builder();
+            JSONObject eventTriggersJsonString = jsonArray.getJSONObject(i);
+
+            if (!eventTriggersJsonString.isNull(EventTriggerContract.TRIGGER_DATA)) {
+                eventTriggerBuilder.setTriggerData(
+                        eventTriggersJsonString.getLong(EventTriggerContract.TRIGGER_DATA));
+            }
+
+            if (!eventTriggersJsonString.isNull(EventTriggerContract.PRIORITY)) {
+                eventTriggerBuilder.setTriggerPriority(
+                        eventTriggersJsonString.getLong(EventTriggerContract.PRIORITY));
+            }
+
+            if (!eventTriggersJsonString.isNull(EventTriggerContract.DEDUPLICATION_KEY)) {
+                eventTriggerBuilder.setDedupKey(
+                        eventTriggersJsonString.getLong(EventTriggerContract.DEDUPLICATION_KEY));
+            }
+
+            if (!eventTriggersJsonString.isNull(EventTriggerContract.FILTERS)) {
+                AggregateFilterData filters =
+                        new AggregateFilterData.Builder()
+                                .buildAggregateFilterData(
+                                        eventTriggersJsonString.getJSONObject(
+                                                EventTriggerContract.FILTERS))
+                                .build();
+                eventTriggerBuilder.setFilter(filters);
+            }
+
+            if (!eventTriggersJsonString.isNull(EventTriggerContract.NOT_FILTERS)) {
+                AggregateFilterData notFilters =
+                        new AggregateFilterData.Builder()
+                                .buildAggregateFilterData(
+                                        eventTriggersJsonString.getJSONObject(
+                                                EventTriggerContract.NOT_FILTERS))
+                                .build();
+                eventTriggerBuilder.setNotFilter(notFilters);
+            }
+            eventTriggers.add(eventTriggerBuilder.build());
+        }
+
+        return eventTriggers;
+    }
+
+    /**
      * Builder for {@link Trigger}.
      */
     public static final class Builder {
@@ -298,108 +362,119 @@ public class Trigger {
             mBuilding = new Trigger();
         }
 
-        /**
-         * See {@link Trigger#getId()}.
-         */
+        /** See {@link Trigger#getId()}. */
+        @NonNull
         public Builder setId(String id) {
             mBuilding.mId = id;
             return this;
         }
 
-        /**
-         * See {@link Trigger#getPriority()}.
-         */
-        public Builder setPriority(long priority) {
-            mBuilding.mPriority = priority;
-            return this;
-        }
-
-        /**
-         * See {@link Trigger#getAttributionDestination()}.
-         */
+        /** See {@link Trigger#getAttributionDestination()}. */
+        @NonNull
         public Builder setAttributionDestination(Uri attributionDestination) {
+            Validation.validateUri(attributionDestination);
             mBuilding.mAttributionDestination = attributionDestination;
             return this;
         }
 
-        /**
-         * See {@link Trigger#getAdTechDomain()} ()}.
-         */
+        /** See {@link Trigger#getDestinationType()}. */
+        @NonNull
+        public Builder setDestinationType(@EventSurfaceType int destinationType) {
+            mBuilding.mDestinationType = destinationType;
+            return this;
+        }
+
+        /** See {@link Trigger#getAdTechDomain()} ()}. */
+        @NonNull
         public Builder setAdTechDomain(Uri adTechDomain) {
+            Validation.validateUri(adTechDomain);
             mBuilding.mAdTechDomain = adTechDomain;
             return this;
         }
 
-        /**
-         * See {@link Trigger#getStatus()}.
-         */
+        /** See {@link Trigger#getStatus()}. */
+        @NonNull
         public Builder setStatus(@Status int status) {
             mBuilding.mStatus = status;
             return this;
         }
 
-        /**
-         * See {@link Trigger#getEventTriggerData()} ()}.
-         */
-        public Builder setEventTriggerData(long eventTriggerData) {
-            mBuilding.mEventTriggerData = eventTriggerData;
-            return this;
-        }
-
-        /**
-         * See {@link Trigger#getDedupKey()}.
-         */
-        public Builder setDedupKey(Long dedupKey) {
-            mBuilding.mDedupKey = dedupKey;
-            return this;
-        }
-
-        /**
-         * See {@link Trigger#getTriggerTime()}.
-         */
+        /** See {@link Trigger#getTriggerTime()}. */
+        @NonNull
         public Builder setTriggerTime(long triggerTime) {
             mBuilding.mTriggerTime = triggerTime;
             return this;
         }
 
-        /**
-         * See {@link Trigger#getRegistrant()}
-         */
-        public Builder setRegistrant(Uri registrant) {
+        /** See {@link Trigger#getEventTriggers()}. */
+        @NonNull
+        public Builder setEventTriggers(@NonNull String eventTriggers) {
+            Validation.validateNonNull(eventTriggers);
+            mBuilding.mEventTriggers = eventTriggers;
+            return this;
+        }
+
+        /** See {@link Trigger#getRegistrant()} */
+        @NonNull
+        public Builder setRegistrant(@NonNull Uri registrant) {
+            Validation.validateUri(registrant);
             mBuilding.mRegistrant = registrant;
             return this;
         }
 
-        /**
-         * See {@link Trigger#getAggregateTriggerData()}.
-         */
-        public Builder setAggregateTriggerData(String aggregateTriggerData) {
+        /** See {@link Trigger#getAggregateTriggerData()}. */
+        @NonNull
+        public Builder setAggregateTriggerData(@Nullable String aggregateTriggerData) {
             mBuilding.mAggregateTriggerData = aggregateTriggerData;
             return this;
         }
 
-        /**
-         * See {@link Trigger#getAggregateValues()}
-         */
-        public Builder setAggregateValues(String aggregateValues) {
+        /** See {@link Trigger#getAggregateValues()} */
+        @NonNull
+        public Builder setAggregateValues(@Nullable String aggregateValues) {
             mBuilding.mAggregateValues = aggregateValues;
             return this;
         }
 
-        /**
-         * See {@link Trigger#getAggregatableAttributionTrigger()}
-         */
+        /** See {@link Trigger#getFilters()} */
+        @NonNull
+        public Builder setFilters(@Nullable String filters) {
+            mBuilding.mFilters = filters;
+            return this;
+        }
+
+        /** See {@link Trigger#getDebugKey()} ()} */
+        public Builder setDebugKey(@Nullable Long debugKey) {
+            mBuilding.mDebugKey = debugKey;
+            return this;
+        }
+
+        /** See {@link Trigger#getAggregatableAttributionTrigger()} */
+        @NonNull
         public Builder setAggregatableAttributionTrigger(
-                AggregatableAttributionTrigger aggregatableAttributionTrigger) {
+                @Nullable AggregatableAttributionTrigger aggregatableAttributionTrigger) {
             mBuilding.mAggregatableAttributionTrigger = aggregatableAttributionTrigger;
             return this;
         }
 
-        /**
-         * Build the {@link Trigger}.
-         */
+        /** Build the {@link Trigger}. */
+        @NonNull
         public Trigger build() {
+            Validation.validateNonNull(
+                    mBuilding.mAttributionDestination,
+                    mBuilding.mAdTechDomain,
+                    mBuilding.mRegistrant);
+
             return mBuilding;
         }
+    }
+
+    /** Event trigger field keys. */
+    public interface EventTriggerContract {
+        String TRIGGER_DATA = "trigger_data";
+        String PRIORITY = "priority";
+        String DEDUPLICATION_KEY = "deduplication_key";
+        String FILTERS = "filters";
+        String NOT_FILTERS = "not_filters";
     }
 }

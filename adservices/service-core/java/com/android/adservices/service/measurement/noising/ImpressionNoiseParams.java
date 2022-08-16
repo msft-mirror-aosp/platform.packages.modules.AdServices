@@ -25,20 +25,30 @@ public class ImpressionNoiseParams {
     private final int mReportCount;
     private final int mTriggerDataCardinality;
     private final int mReportingWindowCount;
+    private final int mDestinationMultiplier;
 
     public ImpressionNoiseParams(
-            int reportCount, int triggerDataCardinality, int reportingWindowCount) {
+            int reportCount,
+            int triggerDataCardinality,
+            int reportingWindowCount,
+            int destinationMultiplier) {
         mReportCount = reportCount;
         mTriggerDataCardinality = triggerDataCardinality;
         mReportingWindowCount = reportingWindowCount;
+        mDestinationMultiplier = destinationMultiplier;
     }
 
     @Override
     public String toString() {
         return "ImpressionNoiseParams{"
-                + "mReportCount=" + mReportCount
-                + ", mTriggerDataCardinality=" + mTriggerDataCardinality
-                + ", mReportingWindowCount=" + mReportingWindowCount
+                + "mReportCount="
+                + mReportCount
+                + ", mTriggerDataCardinality="
+                + mTriggerDataCardinality
+                + ", mReportingWindowCount="
+                + mReportingWindowCount
+                + ", mDestinationMultiplier="
+                + mDestinationMultiplier
                 + '}';
     }
 
@@ -49,6 +59,7 @@ public class ImpressionNoiseParams {
         ImpressionNoiseParams that = (ImpressionNoiseParams) o;
         return mReportCount == that.mReportCount
                 && mTriggerDataCardinality == that.mTriggerDataCardinality
+                && mDestinationMultiplier == that.mDestinationMultiplier
                 && mReportingWindowCount == that.mReportingWindowCount;
     }
 
@@ -76,5 +87,13 @@ public class ImpressionNoiseParams {
      */
     public int getReportingWindowCount() {
         return mReportingWindowCount;
+    }
+
+    /**
+     * Its value depends on number of destinations to consider for report generation. Helps to
+     * increase possible states count accordingly.
+     */
+    public int getDestinationMultiplier() {
+        return mDestinationMultiplier;
     }
 }

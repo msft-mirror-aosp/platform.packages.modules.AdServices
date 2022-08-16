@@ -16,7 +16,7 @@
 
 package com.android.tests.sdkprovider.restrictionstest;
 
-import android.app.sdksandbox.SandboxedSdkContext;
+import android.app.sdksandbox.LoadSdkResponse;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -25,32 +25,24 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.view.View;
 
-import java.util.concurrent.Executor;
-
 public class RestrictionsTestSandboxedSdkProvider extends SandboxedSdkProvider {
 
     private static final String BUNDLE_KEY_PHASE_NAME = "phase-name";
-    private SandboxedSdkContext mSdkContext;
 
     @Override
-    public void initSdk(SandboxedSdkContext sandboxedSdkContext, Bundle params, Executor executor,
-            InitSdkCallback callback) {
-        mSdkContext = sandboxedSdkContext;
-        callback.onInitSdkFinished(new Bundle());
+    public LoadSdkResponse onLoadSdk(Bundle params) {
+        return new LoadSdkResponse(new Bundle());
     }
 
     @Override
-    public View getView(Context windowContext, Bundle params) {
+    public View getView(Context windowContext, Bundle params, int width, int height) {
 
         handlePhase(params);
         return new View(windowContext);
     }
 
     @Override
-    public void onExtraDataReceived(Bundle extraData) {
-
-    }
-
+    public void onDataReceived(Bundle data, DataReceivedCallback callback) {}
 
     private void handlePhase(Bundle params) {
         String phaseName = params.getString(BUNDLE_KEY_PHASE_NAME, "");
@@ -65,10 +57,12 @@ public class RestrictionsTestSandboxedSdkProvider extends SandboxedSdkProvider {
     // Tries to register a broadcast receiver. An exception will be thrown if broadcast restrictions
     // are being enforced.
     void testSdkSandboxBroadcastRestrictions() {
-        mSdkContext.registerReceiver(new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-            }
-        }, new IntentFilter(Intent.ACTION_SEND));
+        getContext()
+                .registerReceiver(
+                        new BroadcastReceiver() {
+                            @Override
+                            public void onReceive(Context context, Intent intent) {}
+                        },
+                        new IntentFilter(Intent.ACTION_SEND));
     }
 }

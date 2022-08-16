@@ -18,7 +18,9 @@ package android.adservices.adselection;
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
+import android.adservices.common.AdSelectionSignals;
 import android.adservices.adselection.ReportImpressionInput;
+import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.AdSelectionOverrideCallback;
 
@@ -41,6 +43,9 @@ interface AdSelectionService {
     * 3. Sell-side decision logic execution to determine a winning ad based on bidding loigic
     * outputs and business logic.
     *
+    * An AdSelectionInput is a request object that contains a {@link AdSelectionConfig}
+    * and a String callerPackageName
+    *
     * The {@link AdSelectionConfig} is provided by the SDK and contains the required information
     * to execute the on-device ad selection and impression reporting.
     *
@@ -52,14 +57,15 @@ interface AdSelectionService {
     * {@link AdSelectionId} and {@link AdData}
     * If the ad selection fails, the response contains only
     * {@link FledgeErrorResponse#RESULT_INTERNAL_ERROR} if an internal server error is encountered,
-    * or {@link FledgeErrorResponse#RESULT_INVALID_ARGUMENT} if invalid
-    * argument is provided.
+    * or {@link FledgeErrorResponse#RESULT_INVALID_ARGUMENT} if:
+    * 1. The supplied {@link AdSelectionConfig} is invalid
+    * 2. The {@link AdSelectionInput#getCallerPackageName} does not match the package name of the application calling this API
     *
     * Otherwise, this call fails to send the response to the callback and throws a RemoteException.
     *
     * {@hide}
     */
-    void runAdSelection(in AdSelectionConfig adSelectionConfig, in AdSelectionCallback callback);
+    void runAdSelection(in AdSelectionInput request, in AdSelectionCallback callback);
 
     /**
     * Notifies PPAPI that there is a new impression to report for the
@@ -68,9 +74,10 @@ interface AdSelectionService {
     * reporting could be delayed and events could be batched.
     *
     * The call will fail with a status of
-    * {@link FledgeErrorResponse#STATUS_INVALID_ARGUMENT} if there is no
-    * auction matching the provided {@link ReportImpressionInput#getAdSelectionId()} or if
-    * the supplied {@link ReportImpressionInput#getAdSelectionConfig()} is invalid.
+    * {@link FledgeErrorResponse#STATUS_INVALID_ARGUMENT} if:
+    * 1. There is no ad selection matching the provided {@link ReportImpressionInput#getAdSelectionId()}
+    * 2. The supplied {@link ReportImpressionInput#getAdSelectionConfig()} is invalid
+    * 3. The {@link AdSelectionConfig#getCallerPackageName} does not match the package name of the application calling this API
     * The call will fail with status
     * {@link FledgeErrorResponse#STATUS_INTERNAL_ERROR} if an
     * internal server error is encountered.
@@ -92,14 +99,14 @@ interface AdSelectionService {
     * PPAPI to avoid to fetch info from remote servers and use the
     * data provided.
     *
-    * The call will fail with status
-    * {@link FledgeErrorResponse#STATUS_UNAUTHORIZED} if the API hasn't been enabled
+    * The call will throw a SecurityException if the API hasn't been enabled
     * by developer options or by an adb command or if the calling
     * application manifest is not setting Android:debuggable to true.
     */
     void overrideAdSelectionConfigRemoteInfo(
         in AdSelectionConfig adSelectionConfig,
         in String decisionLogicJS,
+        in AdSelectionSignals trustedScoringSignals,
         in AdSelectionOverrideCallback callback);
 
    /**
@@ -107,8 +114,7 @@ interface AdSelectionService {
     * {@code overrideAdSelectionConfigRemoteInfo} for the given
     * AdSelectionConfig
     *
-    * The call will fail with status
-    * {@link FledgeErrorResponse#STATUS_UNAUTHORIZED} if:
+    * The call will throw a SecurityException if:
     * the API hasn't been enabled by developer options or by an adb command
     * or if the calling application manifest is not setting Android:debuggable to true.
     */
@@ -120,8 +126,7 @@ interface AdSelectionService {
     * Deletes any override created by calling
     * {@code overrideAdSelectionConfigRemoteInfo} from this application
     *
-    * The call will fail with status
-    * {@link FledgeErrorResponse#STATUS_UNAUTHORIZED} if:
+    * The call will throw a SecurityException if:
     * the API hasn't been enabled by developer options or by an adb command
     * or if the calling application manifest is not setting Android:debuggable to true.
     */

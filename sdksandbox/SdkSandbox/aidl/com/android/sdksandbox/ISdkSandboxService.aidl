@@ -20,12 +20,15 @@ import android.content.pm.ApplicationInfo;
 import android.os.Bundle;
 import android.os.IBinder;
 
-import com.android.sdksandbox.ISdkSandboxToSdkSandboxManagerCallback;
+import com.android.sdksandbox.ILoadSdkInSandboxCallback;
 
 /** @hide */
 oneway interface ISdkSandboxService {
     // TODO(b/228045863): Wrap parameters in a parcelable
-    void loadSdk(IBinder sdkToken, in ApplicationInfo info, in String sdkName,
-                  in String sdkProviderClassName, in Bundle params,
-                  in ISdkSandboxToSdkSandboxManagerCallback callback);
+    void loadSdk(in String callingPackageName, IBinder sdkToken, in ApplicationInfo info,
+                  in String sdkName, in String sdkProviderClassName,
+                  in String sdkCeDataDir, in String sdkDeDataDir,
+                  in Bundle params, in ILoadSdkInSandboxCallback callback);
+    void unloadSdk(IBinder sdkToken);
+    void syncDataFromClient(in Bundle data);
 }

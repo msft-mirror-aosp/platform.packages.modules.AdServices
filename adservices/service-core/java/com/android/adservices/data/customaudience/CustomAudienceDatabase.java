@@ -17,33 +17,30 @@
 package com.android.adservices.data.customaudience;
 
 import android.content.Context;
-import android.net.Uri;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
-import androidx.room.TypeConverter;
 import androidx.room.TypeConverters;
 
+import com.android.adservices.data.common.FledgeRoomConverters;
 import com.android.internal.annotations.GuardedBy;
 
-import java.time.Instant;
 import java.util.Objects;
-import java.util.Optional;
 
-/**
- * Room based database for custom audience.
- */
+/** Room based database for custom audience. */
 @Database(
         // Set exportSchema to true to see generated schema file.
         // File location is defined in Android.bp -Aroom.schemaLocation.
         exportSchema = false,
-        entities = {DBCustomAudience.class, DBCustomAudienceOverride.class},
-        version = CustomAudienceDatabase.DATABASE_VERSION
-)
-@TypeConverters({CustomAudienceDatabase.Converters.class})
+        entities = {
+            DBCustomAudience.class,
+            DBCustomAudienceBackgroundFetchData.class,
+            DBCustomAudienceOverride.class
+        },
+        version = CustomAudienceDatabase.DATABASE_VERSION)
+@TypeConverters({FledgeRoomConverters.class})
 public abstract class CustomAudienceDatabase extends RoomDatabase {
     private static final Object SINGLETON_LOCK = new Object();
 
@@ -75,43 +72,4 @@ public abstract class CustomAudienceDatabase extends RoomDatabase {
      * @return Dao to access custom audience storage.
      */
     public abstract CustomAudienceDao customAudienceDao();
-
-    /**
-     * Room DB type converters.
-     *
-     * <p>Register custom type converters here.
-     */
-    public static class Converters {
-
-        private Converters() {
-        }
-
-        /** Serialize {@link Instant} to Long. */
-        @TypeConverter
-        @Nullable
-        public static Long serializeInstant(@Nullable Instant instant) {
-            return Optional.ofNullable(instant).map(Instant::toEpochMilli).orElse(null);
-        }
-
-        /** Deserialize {@link Instant} from long. */
-        @TypeConverter
-        @Nullable
-        public static Instant deserializeInstant(@Nullable Long epochMilli) {
-            return Optional.ofNullable(epochMilli).map(Instant::ofEpochMilli).orElse(null);
-        }
-
-        /** Deserialize {@link Uri} from String. */
-        @TypeConverter
-        @Nullable
-        public static Uri deserializeUrl(@Nullable String uri) {
-            return Optional.ofNullable(uri).map(Uri::parse).orElse(null);
-        }
-
-        /** Serialize {@link Uri} to String. */
-        @TypeConverter
-        @Nullable
-        public static String serializeUrl(@Nullable Uri uri) {
-            return Optional.ofNullable(uri).map(Uri::toString).orElse(null);
-        }
-    }
 }

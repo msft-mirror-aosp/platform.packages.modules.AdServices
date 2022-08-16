@@ -20,21 +20,18 @@ android_test {
     name: "AdServicesEndToEndTests",
     srcs: [
         "src/**/*.java",
-        ":framework-adservices-sources",
     ],
-    // TODO(b/223684663): remove when unhide Topics API.
-    // We use hidden APIs in this test
-    // sdk_version: "current",
+    sdk_version: "module_current",
     static_libs: [
         "adservices-clients",
         "androidx.concurrent_concurrent-futures",
         "androidx.test.rules",
         "compatibility-device-util-axt",
         "mockito-target-extended-minus-junit4",
-        "adservices-service-core",
         "truth-prebuilt",
         "ub-uiautomator",
         "framework-adservices.impl",
+        "framework-sdksandbox.impl",
         "adservices-test-fixtures",
     ],
     libs: [

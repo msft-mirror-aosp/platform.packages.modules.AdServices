@@ -16,17 +16,17 @@
 
 package com.android.adservices.service.stats;
 
-/**
- * Interface for Adservices logger.
- */
+/** Interface for Adservices logger. */
 public interface AdServicesLogger {
-    /**
-     * log method for MeasurementReportsStats.
-     */
+    /** log method for MeasurementReportsStats. */
     void logMeasurementReports(MeasurementReportsStats measurementReportsStats);
 
-    /**
-     * log ApiCallStats which has stats about the API call such as the status.
-     */
+    /** log ApiCallStats which has stats about the API call such as the status. */
     void logApiCallStats(ApiCallStats apiCallStats);
+
+    /** log UIStats which has stats about UI events. */
+    void logUIStats(UIStats uiStats);
+
+    /** Logs API call stats specific to the FLEDGE APIs as an {@link ApiCallStats} object. */
+    void logFledgeApiCallStats(int apiName, int resultCode);
 }

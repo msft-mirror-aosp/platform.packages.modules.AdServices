@@ -27,6 +27,72 @@ import java.util.Random;
  */
 public final class ImpressionNoiseUtil {
 
+    /**
+     * This is used in the scenario where both app and web destinations are available with the
+     * {@link com.android.adservices.service.measurement.Source} and the source is of {@link
+     * com.android.adservices.service.measurement.Source.SourceType#EVENT} type and post-install
+     * detection is enabled (cooldown window being available). It's a special case because in this
+     * condition an extra early window is added only if install detection is enabled (install
+     * cool-down window is available) and only app conversions are relevant in that window.
+     *
+     * <p>Reading guide - The outermost array signifies different states of reporting - one of them
+     * will be picked at a time. The middle array holds reports in 1st and 2nd window, so there will
+     * be either 0 elements (no conversions in either window), 1 element (a conversion report in one
+     * of the windows) and 2 elements (conversions in both windows). The innermost array represents
+     * a single report. 3 elements in the innermost array are trigger metadata (0 - trigger1 or 1 -
+     * trigger2), window index (0 - window1, 1 - window2) and destination type (0 - app or 1 - web).
+     *
+     * <p>E.g. The element at index 5 is {{0, 1, 0}, {0, 1, 0}}, it means 2 conversions with trigger
+     * metadata as 0 in window2 (1) of app destination type(0).
+     */
+    public static final int[][][] DUAL_DESTINATION_POST_INSTALL_FAKE_REPORT_CONFIG =
+            new int[][][] {
+                // window1 - no conversion, window 2 - no conversion
+                {},
+                // window1 - no conversion, window 2 - 1 conversion with metadata 0
+                {{0, 1, 0}},
+                {{0, 1, 1}},
+                // window1 - no conversion, window 2 - 1 conversion with metadata 1
+                {{1, 1, 0}},
+                {{1, 1, 1}},
+                // window1 - no conversion, window 2 - 2 conversions with metadata 0 and 0
+                {{0, 1, 0}, {0, 1, 0}},
+                {{0, 1, 0}, {0, 1, 1}},
+                // window1 - no conversion, window 2 - 2 conversions with metadata 0 and 1
+                {{0, 1, 0}, {1, 1, 0}},
+                {{0, 1, 0}, {1, 1, 1}},
+                {{0, 1, 1}, {1, 1, 0}},
+                // window1 - no conversion, window 2 - 2 conversions with metadata 1 and 1
+                {{1, 1, 0}, {1, 1, 0}},
+                {{1, 1, 0}, {1, 1, 1}},
+                // window1 - 1 app conversion with metadata 0, window 2 - no conversion
+                {{0, 0, 0}},
+                // window1 - 1 app conversion with metadata 1, window 2 - no conversion
+                {{1, 0, 0}},
+                // window1 - 2 conversions with metadata 0 and 0, window 2 - no conversion
+                {{0, 0, 0}, {0, 0, 0}},
+                // window1 - 2 app conversions with metadata 0 and 1, window 2 - no conversion
+                {{0, 0, 0}, {1, 0, 0}},
+                // window1 - 2 app conversions with metadata 1 and 1, window 2 - no conversion
+                {{1, 0, 0}, {1, 0, 0}},
+                // window1 - 1 app conversion with metadata 0, window 2 - 1 conversion with
+                // metadata 0
+                {{0, 0, 0}, {0, 1, 0}},
+                {{0, 0, 0}, {0, 1, 1}},
+                // window1 - 1 app conversion with metadata 0, window 2 - 1 conversion with
+                // metadata 1
+                {{0, 0, 0}, {1, 1, 0}},
+                {{0, 0, 0}, {1, 1, 1}},
+                // window1 - 1 app conversion with metadata 1, window 2 - 1 conversions with
+                // metadata 0
+                {{1, 0, 0}, {0, 1, 0}},
+                {{1, 0, 0}, {0, 1, 1}},
+                // window1 - 1 app conversion with metadata 1, window 2 - 1 conversions with
+                // metadata 1
+                {{1, 0, 0}, {1, 1, 0}},
+                {{1, 0, 0}, {1, 1, 1}}
+            };
+
     private ImpressionNoiseUtil() {}
 
     /**
@@ -39,10 +105,12 @@ public final class ImpressionNoiseUtil {
     public static List<int[]> selectRandomStateAndGenerateReportConfigs(
             ImpressionNoiseParams noiseParams, Random rand) {
         // Get total possible combinations
-        int numCombinations = Combinatorics.getNumberOfStarsAndBarsSequences(
-                /*numStars=*/noiseParams.getReportCount(),
-                /*numBars=*/noiseParams.getTriggerDataCardinality()
-                        * noiseParams.getReportingWindowCount());
+        int numCombinations =
+                Combinatorics.getNumberOfStarsAndBarsSequences(
+                        /*numStars=*/ noiseParams.getReportCount(),
+                        /*numBars=*/ noiseParams.getTriggerDataCardinality()
+                                * noiseParams.getReportingWindowCount()
+                                * noiseParams.getDestinationMultiplier());
         // Choose a sequence index
         int sequenceIndex = rand.nextInt(numCombinations);
         return getReportConfigsForSequenceIndex(noiseParams, sequenceIndex);
@@ -52,7 +120,6 @@ public final class ImpressionNoiseUtil {
     static List<int[]> getReportConfigsForSequenceIndex(
             ImpressionNoiseParams noiseParams, int sequenceIndex) {
         List<int[]> reportConfigs = new ArrayList<>();
-        int triggerDataCardinality = noiseParams.getTriggerDataCardinality();
         // Get the configuration for the sequenceIndex
         int[] starIndices = Combinatorics.getStarIndices(
                 /*numStars=*/noiseParams.getReportCount(),
@@ -60,15 +127,32 @@ public final class ImpressionNoiseUtil {
         int[] barsPrecedingEachStar = Combinatorics.getBarsPrecedingEachStar(starIndices);
         // Generate fake reports
         // Stars: number of reports
-        // Bars: (Number of windows) * (Trigger Data Cardinality)
+        // Bars: (Number of windows) * (Trigger data cardinality) * (Destination multiplier)
         for (int numBars : barsPrecedingEachStar) {
             if (numBars == 0) {
                 continue;
             }
-            int windowIndex = (numBars - 1) / triggerDataCardinality;
-            int triggerData = (numBars - 1) % triggerDataCardinality;
-            reportConfigs.add(new int[] { triggerData, windowIndex });
+
+            // Extract bits for trigger data, destination type and windowIndex from encoded numBars
+            int[] reportConfig = createReportingConfig(numBars, noiseParams);
+            reportConfigs.add(reportConfig);
         }
         return reportConfigs;
+    }
+
+    /**
+     * Extract bits for trigger data, destination type and windowIndex from encoded numBars.
+     *
+     * @param numBars data encoding triggerData, destinationType and window index
+     * @param noiseParams noise params
+     * @return array having triggerData, destinationType and windowIndex
+     */
+    private static int[] createReportingConfig(int numBars, ImpressionNoiseParams noiseParams) {
+        int triggerData = (numBars - 1) % noiseParams.getTriggerDataCardinality();
+        int remainingData = (numBars - 1) / noiseParams.getTriggerDataCardinality();
+
+        int reportingWindowIndex = remainingData % noiseParams.getReportingWindowCount();
+        int destinationTypeIndex = remainingData / noiseParams.getReportingWindowCount();
+        return new int[] {triggerData, reportingWindowIndex, destinationTypeIndex};
     }
 }

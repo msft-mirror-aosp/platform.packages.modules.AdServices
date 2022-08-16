@@ -16,14 +16,14 @@
 
 package com.android.adservices.service.adselection;
 
-import static com.android.adservices.service.js.JSScriptArgument.arrayArg;
 import static com.android.adservices.service.js.JSScriptArgument.jsonArg;
 import static com.android.adservices.service.js.JSScriptArgument.recordArg;
 import static com.android.adservices.service.js.JSScriptArgument.stringArg;
 import static com.android.adservices.service.js.JSScriptArgument.stringArrayArg;
 
 import android.adservices.adselection.AdSelectionConfig;
-import android.adservices.adselection.AdWithBid;
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 
 import com.android.adservices.service.js.JSScriptArgument;
 
@@ -32,6 +32,7 @@ import com.google.common.collect.ImmutableList;
 import org.json.JSONException;
 
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * A utility class to convert instances of {@link AdSelectionConfig} into {@link JSScriptArgument}
@@ -40,12 +41,12 @@ public class AdSelectionConfigArgument {
 
     // TODO: (b/228094391): Put these common constants in a separate class
     public static final String SELLER_FIELD_NAME = "seller";
-    public static final String DECISION_LOGIC_URL_FIELD_NAME = "decision_logic_url";
-    public static final String CUSTOM_AUDIENCE_BYERS_FIELD_NAME = "custom_audience_byers";
+    public static final String DECISION_LOGIC_URI_FIELD_NAME = "decision_logic_url";
+    public static final String TRUSTED_SCORING_SIGNAL_URI_FIELD_NAME = "trusted_scoring_signal_uri";
+    public static final String CUSTOM_AUDIENCE_BUYERS_FIELD_NAME = "custom_audience_buyers";
     public static final String AUCTION_SIGNALS_FIELD_NAME = "auction_signals";
     public static final String SELLER_SIGNALS_FIELD_NAME = "seller_signals";
     public static final String PER_BUYER_SIGNALS_FIELD_NAME = "per_buyer_signals";
-    public static final String CONTEXTUAL_ADS_FIELD_NAME = "contextual_ads";
 
     // No instance of this class is supposed to be created
     private AdSelectionConfigArgument() {}
@@ -58,28 +59,29 @@ public class AdSelectionConfigArgument {
     public static JSScriptArgument asScriptArgument(
             AdSelectionConfig adSelectionConfig, String name) throws JSONException {
         ImmutableList.Builder<JSScriptArgument> perBuyerSignalsArg = ImmutableList.builder();
-        for (Map.Entry<String, String> buyerSignal :
+        for (Map.Entry<AdTechIdentifier, AdSelectionSignals> buyerSignal :
                 adSelectionConfig.getPerBuyerSignals().entrySet()) {
-            perBuyerSignalsArg.add(jsonArg(buyerSignal.getKey(), buyerSignal.getValue()));
-        }
-
-        final ImmutableList.Builder<JSScriptArgument> contextualAdsArgsBuilder =
-                new ImmutableList.Builder<>();
-        for (AdWithBid adWithBid : adSelectionConfig.getContextualAds()) {
-            contextualAdsArgsBuilder.add(AdWithBidArgument.asScriptArgument("ignored", adWithBid));
+            perBuyerSignalsArg.add(
+                    jsonArg(buyerSignal.getKey().toString(), buyerSignal.getValue().toString()));
         }
         return recordArg(
                 name,
-                stringArg(SELLER_FIELD_NAME, adSelectionConfig.getSeller()),
+                stringArg(SELLER_FIELD_NAME, adSelectionConfig.getSeller().toString()),
                 stringArg(
-                        DECISION_LOGIC_URL_FIELD_NAME,
-                        adSelectionConfig.getDecisionLogicUrl().toString()),
+                        DECISION_LOGIC_URI_FIELD_NAME,
+                        adSelectionConfig.getDecisionLogicUri().toString()),
                 stringArrayArg(
-                        CUSTOM_AUDIENCE_BYERS_FIELD_NAME,
-                        adSelectionConfig.getCustomAudienceBuyers()),
-                jsonArg(AUCTION_SIGNALS_FIELD_NAME, adSelectionConfig.getAdSelectionSignals()),
-                jsonArg(SELLER_SIGNALS_FIELD_NAME, adSelectionConfig.getSellerSignals()),
+                        CUSTOM_AUDIENCE_BUYERS_FIELD_NAME,
+                        adSelectionConfig.getCustomAudienceBuyers().stream()
+                                .map(AdTechIdentifier::toString)
+                                .collect(Collectors.toList())),
+                jsonArg(
+                        AUCTION_SIGNALS_FIELD_NAME,
+                        adSelectionConfig.getAdSelectionSignals().toString()),
+                jsonArg(SELLER_SIGNALS_FIELD_NAME, adSelectionConfig.getSellerSignals().toString()),
                 recordArg(PER_BUYER_SIGNALS_FIELD_NAME, perBuyerSignalsArg.build()),
-                arrayArg(CONTEXTUAL_ADS_FIELD_NAME, contextualAdsArgsBuilder.build()));
+                stringArg(
+                        TRUSTED_SCORING_SIGNAL_URI_FIELD_NAME,
+                        adSelectionConfig.getTrustedScoringSignalsUri().toString()));
     }
 }

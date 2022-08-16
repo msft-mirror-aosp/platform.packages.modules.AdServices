@@ -18,10 +18,8 @@ package com.android.adservices.service.measurement.registration;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-import android.content.Context;
 import android.net.Uri;
 
-import androidx.test.InstrumentationRegistry;
 import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
@@ -32,37 +30,55 @@ import org.junit.Test;
  */
 @SmallTest
 public final class TriggerRegistrationTest {
-    private static final String TAG = "TriggerRegistrationTest";
+    private static final Uri TOP_ORIGIN = Uri.parse("https://foo.com");
+    private static final Uri REPORTING_ORIGIN = Uri.parse("https://bar.com");
+    private static final String TOP_LEVEL_FILTERS_JSON_STRING =
+            "{\n"
+                    + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
+                    + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
+                    + "}\n";
+    private static final String EVENT_TRIGGERS =
+            "[\n"
+                    + "{\n"
+                    + "  \"trigger_data\": \"1\",\n"
+                    + "  \"priority\": \"345678\",\n"
+                    + "  \"deduplication_key\": \"2345678\",\n"
+                    + "  \"filters\": {\n"
+                    + "    \"source_type\": [\"navigation\"],\n"
+                    + "    \"key_1\": [\"value_1\"] \n"
+                    + "   }\n"
+                    + "}"
+                    + "]\n";
 
-    private static final Context sContext = InstrumentationRegistry.getTargetContext();
+    private static final Long DEBUG_KEY = 23478951L;
+
+    private static final String AGGREGATE_TRIGGER_DATA =
+            "[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\"],"
+                    + "\"not_filters\":{\"product\":[\"1\"]}},"
+                    + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
 
     private TriggerRegistration createExampleResponse() {
         return new TriggerRegistration.Builder()
-            .setTopOrigin(Uri.parse("https://foo.com"))
-            .setReportingOrigin(Uri.parse("https://bar.com"))
-            .setTriggerData(1)
-            .setTriggerPriority(345678)
-            .setDeduplicationKey(2345678)
-                .setAggregateTriggerData(
-                        "[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\"],"
-                                + "\"not_filters\":{\"product\":[\"1\"]}},"
-                                + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]")
+                .setTopOrigin(TOP_ORIGIN)
+                .setReportingOrigin(REPORTING_ORIGIN)
+                .setEventTriggers(EVENT_TRIGGERS)
+                .setAggregateTriggerData(AGGREGATE_TRIGGER_DATA)
                 .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
-            .build();
+                .setFilters(TOP_LEVEL_FILTERS_JSON_STRING)
+                .setDebugKey(DEBUG_KEY)
+                .build();
     }
 
-    void verifyExampleResponse(TriggerRegistration response) {
-        assertEquals("https://foo.com", response.getTopOrigin().toString());
-        assertEquals("https://bar.com", response.getReportingOrigin().toString());
-        assertEquals(1, response.getTriggerData());
-        assertEquals(345678, response.getTriggerPriority());
-        assertEquals(2345678, response.getDeduplicationKey().longValue());
-        assertEquals("[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\"],"
-                + "\"not_filters\":{\"product\":[\"1\"]}},"
-                + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]",
-                response.getAggregateTriggerData());
-        assertEquals("{\"campaignCounts\":32768,\"geoValue\":1644}",
-                response.getAggregateValues());
+    void verifyExampleResponse(TriggerRegistration triggerRegistration) {
+        assertEquals("https://foo.com", triggerRegistration.getTopOrigin().toString());
+        assertEquals("https://bar.com", triggerRegistration.getReportingOrigin().toString());
+        assertEquals(EVENT_TRIGGERS, triggerRegistration.getEventTriggers());
+        assertEquals(AGGREGATE_TRIGGER_DATA, triggerRegistration.getAggregateTriggerData());
+        assertEquals(
+                "{\"campaignCounts\":32768,\"geoValue\":1644}",
+                triggerRegistration.getAggregateValues());
+        assertEquals(TOP_LEVEL_FILTERS_JSON_STRING, triggerRegistration.getFilters());
+        assertEquals(DEBUG_KEY, triggerRegistration.getDebugKey());
     }
 
     @Test
@@ -72,13 +88,21 @@ public final class TriggerRegistrationTest {
 
     @Test
     public void testDefaults() throws Exception {
-        TriggerRegistration response = new TriggerRegistration.Builder().build();
-        assertEquals("", response.getTopOrigin().toString());
-        assertEquals("", response.getReportingOrigin().toString());
-        assertEquals(0, response.getTriggerData());
-        assertEquals(0, response.getTriggerPriority());
-        assertNull(response.getDeduplicationKey());
+        TriggerRegistration response =
+                new TriggerRegistration.Builder()
+                        .setTopOrigin(TOP_ORIGIN)
+                        .setReportingOrigin(REPORTING_ORIGIN)
+                        .build();
+        assertEquals(TOP_ORIGIN, response.getTopOrigin());
+        assertEquals(REPORTING_ORIGIN, response.getReportingOrigin());
+        assertNull(response.getEventTriggers());
         assertNull(response.getAggregateTriggerData());
         assertNull(response.getAggregateValues());
+        assertNull(response.getFilters());
+    }
+
+    @Test
+    public void equals_success() {
+        assertEquals(createExampleResponse(), createExampleResponse());
     }
 }

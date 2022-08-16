@@ -16,14 +16,18 @@
 
 package com.android.adservices.service.measurement.attribution;
 
-import android.annotation.Nullable;
+import android.annotation.NonNull;
+import android.net.Uri;
+import android.util.Pair;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
-import com.android.adservices.service.measurement.AdtechUrl;
+import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
+import com.android.adservices.service.measurement.EventSurfaceType;
+import com.android.adservices.service.measurement.EventTrigger;
 import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SystemHealthParams;
@@ -31,58 +35,35 @@ import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateAttributionData;
+import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
 import com.android.adservices.service.measurement.aggregation.AggregatePayloadGenerator;
-import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
+import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.util.BaseUriExtractor;
+import com.android.adservices.service.measurement.util.Filter;
+import com.android.adservices.service.measurement.util.Web;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 class AttributionJobHandler {
 
-    private final DatastoreManager mDatastoreManager;
+    private static final String API_VERSION = "0.1";
     private static final long MIN_TIME_MS = TimeUnit.MINUTES.toMillis(10L);
     private static final long MAX_TIME_MS = TimeUnit.MINUTES.toMillis(60L);
+    private final DatastoreManager mDatastoreManager;
 
     AttributionJobHandler(DatastoreManager datastoreManager) {
         mDatastoreManager = datastoreManager;
-    }
-
-    /**
-     * Finds the {@link AdtechUrl} when given a postback url.
-     *
-     * @param postbackUrl the postback url of the request AdtechUrl
-     * @return the requested AdtechUrl; Null in case of SQL failure
-     */
-    @Nullable
-    synchronized AdtechUrl findAdtechUrl(String postbackUrl) {
-        if (postbackUrl == null) {
-            return null;
-        }
-        return mDatastoreManager
-                .runInTransactionWithResult((dao) -> dao.getAdtechEnrollmentData(postbackUrl))
-                .orElse(null);
-    }
-
-    /**
-     * Queries and returns all the postback urls with the same adtech id as the given postback url.
-     *
-     * @param postbackUrl the postback url of the request AdtechUrl
-     * @return all the postback urls with the same adtech id; Null in case of SQL failure
-     */
-    public List<String> getAllAdtechUrls(String postbackUrl) {
-        if (postbackUrl == null) {
-            return new ArrayList<>();
-        }
-        return mDatastoreManager
-                .runInTransactionWithResult((dao) -> dao.getAllAdtechUrls(postbackUrl))
-                .orElse(null);
     }
 
     /**
@@ -121,35 +102,42 @@ class AttributionJobHandler {
      * @return success
      */
     private boolean performAttribution(String triggerId) {
-        return mDatastoreManager.runInTransaction(measurementDao -> {
-            Trigger trigger = measurementDao.getTrigger(triggerId);
-            if (trigger.getStatus() != Trigger.Status.PENDING) {
-                return;
-            }
-            Optional<Source> sourceOpt = getMatchingSource(trigger, measurementDao);
-            if (sourceOpt.isEmpty()) {
-                ignoreTrigger(trigger, measurementDao);
-                return;
-            }
-            Source source = sourceOpt.get();
+        return mDatastoreManager.runInTransaction(
+                measurementDao -> {
+                    Trigger trigger = measurementDao.getTrigger(triggerId);
+                    if (trigger.getStatus() != Trigger.Status.PENDING) {
+                        return;
+                    }
+                    Optional<Source> sourceOpt = getMatchingSource(trigger, measurementDao);
+                    if (sourceOpt.isEmpty()) {
+                        ignoreTrigger(trigger, measurementDao);
+                        return;
+                    }
+                    Source source = sourceOpt.get();
 
-            if (!hasAttributionQuota(source, trigger, measurementDao)) {
-                ignoreTrigger(trigger, measurementDao);
-                return;
-            }
+                    if (!doTopLevelFiltersMatch(source, trigger)) {
+                        ignoreTrigger(trigger, measurementDao);
+                        return;
+                    }
 
-            boolean aggregateReportGenerated =
-                    maybeGenerateAggregateReport(source, trigger, measurementDao);
+                    if (!hasAttributionQuota(source, trigger, measurementDao)
+                            || !isAdTechWithinPrivacyBounds(source, trigger, measurementDao)) {
+                        ignoreTrigger(trigger, measurementDao);
+                        return;
+                    }
 
-            boolean eventReportGenerated =
-                    maybeGenerateEventReport(source, trigger, measurementDao);
+                    boolean aggregateReportGenerated =
+                            maybeGenerateAggregateReport(source, trigger, measurementDao);
 
-            if (eventReportGenerated || aggregateReportGenerated) {
-                attributeTriggerAndIncrementRateLimit(trigger, source, measurementDao);
-            } else {
-                ignoreTrigger(trigger, measurementDao);
-            }
-        });
+                    boolean eventReportGenerated =
+                            maybeGenerateEventReport(source, trigger, measurementDao);
+
+                    if (eventReportGenerated || aggregateReportGenerated) {
+                        attributeTriggerAndInsertAttribution(trigger, source, measurementDao);
+                    } else {
+                        ignoreTrigger(trigger, measurementDao);
+                    }
+                });
     }
 
     private boolean maybeGenerateAggregateReport(Source source, Trigger trigger,
@@ -165,23 +153,39 @@ class AttributionJobHandler {
                                 aggregateAttributionSource.get(),
                                 aggregateAttributionTrigger.get());
                 if (contributions.isPresent()) {
+                    OptionalInt newAggregateContributions =
+                            validateAndGetUpdatedAggregateContributions(
+                                    contributions.get(), source);
+                    if (newAggregateContributions.isPresent()) {
+                        source.setAggregateContributions(newAggregateContributions.getAsInt());
+                    } else {
+                        LogUtil.d("Aggregate contributions exceeded bound. Source ID: %s ; "
+                                + "Trigger ID: %s ", source.getId(), trigger.getId());
+                        return false;
+                    }
+
                     long randomTime = (long) ((Math.random() * (MAX_TIME_MS - MIN_TIME_MS))
                             + MIN_TIME_MS);
-                    CleartextAggregatePayload aggregateReport =
-                            new CleartextAggregatePayload.Builder()
+                    AggregateReport aggregateReport =
+                            new AggregateReport.Builder()
                                     .setPublisher(source.getRegistrant())
-                                    .setAttributionDestination(source.getAttributionDestination())
-                                    .setSourceRegistrationTime(source.getEventTime())
+                                    .setAttributionDestination(source.getAppDestination())
+                                    .setSourceRegistrationTime(
+                                            roundDownToDay(source.getEventTime()))
                                     .setScheduledReportTime(trigger.getTriggerTime() + randomTime)
                                     .setReportingOrigin(source.getAdTechDomain())
                                     .setDebugCleartextPayload(
-                                            CleartextAggregatePayload.generateDebugPayload(
+                                            AggregateReport.generateDebugPayload(
                                                     contributions.get()))
                                     .setAggregateAttributionData(
                                             new AggregateAttributionData.Builder()
-                                                    .setContributions(contributions.get()).build())
-                                    .setStatus(CleartextAggregatePayload.Status.PENDING).build();
+                                                    .setContributions(contributions.get())
+                                                    .build())
+                                    .setStatus(AggregateReport.Status.PENDING)
+                                    .setApiVersion(API_VERSION)
+                                    .build();
 
+                    measurementDao.updateSourceAggregateContributions(source);
                     measurementDao.insertAggregateReport(aggregateReport);
                     // TODO (b/230618328): read from DB and upload unencrypted aggregate report.
                     return true;
@@ -223,36 +227,50 @@ class AttributionJobHandler {
         return Optional.of(selectedSource);
     }
 
-    private boolean maybeGenerateEventReport(Source source, Trigger trigger,
-            IMeasurementDao measurementDao) throws DatastoreException {
+    private boolean maybeGenerateEventReport(
+            Source source, Trigger trigger, IMeasurementDao measurementDao)
+            throws DatastoreException {
         // Do not generate event reports for source which have attributionMode != Truthfully.
         // TODO: Handle attribution rate limit consideration for non-truthful cases.
         if (source.getAttributionMode() != Source.AttributionMode.TRUTHFULLY) {
             return false;
         }
+
+        Optional<EventTrigger> matchingEventTrigger =
+                findFirstMatchingEventTrigger(source, trigger);
+        if (!matchingEventTrigger.isPresent()) {
+            return false;
+        }
+
+        EventTrigger eventTrigger = matchingEventTrigger.get();
         // Check if deduplication key clashes with existing reports.
-        if (trigger.getDedupKey() != null
-                && source.getDedupKeys().contains(trigger.getDedupKey())) {
+        if (eventTrigger.getDedupKey() != null
+                && source.getDedupKeys().contains(eventTrigger.getDedupKey())) {
             return false;
         }
 
-        EventReport newEventReport = new EventReport.Builder()
-                .populateFromSourceAndTrigger(source, trigger).build();
+        EventReport newEventReport =
+                new EventReport.Builder()
+                        .populateFromSourceAndTrigger(source, trigger, eventTrigger)
+                        .build();
 
-        if (!provisionEventReportQuota(source, newEventReport, measurementDao)) {
+        if (!provisionEventReportQuota(source, trigger, newEventReport, measurementDao)) {
             return false;
         }
 
-        finalizeEventReportCreation(source, trigger, newEventReport, measurementDao);
+        finalizeEventReportCreation(source, eventTrigger, newEventReport, measurementDao);
         return true;
     }
 
-    private boolean provisionEventReportQuota(Source source,
-            EventReport newEventReport, IMeasurementDao measurementDao) throws DatastoreException {
-        List<EventReport> sourceEventReports =
-                measurementDao.getSourceEventReports(source);
+    private boolean provisionEventReportQuota(Source source, Trigger trigger,
+            EventReport newEventReport, IMeasurementDao measurementDao)
+            throws DatastoreException {
+        List<EventReport> sourceEventReports = measurementDao.getSourceEventReports(source);
 
-        if (isWithinReportLimit(source, sourceEventReports.size())) {
+        if (isWithinReportLimit(
+                source,
+                sourceEventReports.size(),
+                trigger.getDestinationType())) {
             return true;
         }
 
@@ -281,22 +299,25 @@ class AttributionJobHandler {
     }
 
     private void finalizeEventReportCreation(
-            Source source, Trigger trigger, EventReport eventReport, IMeasurementDao measurementDao)
+            Source source,
+            EventTrigger eventTrigger,
+            EventReport eventReport,
+            IMeasurementDao measurementDao)
             throws DatastoreException {
-        if (trigger.getDedupKey() != null) {
-            source.getDedupKeys().add(trigger.getDedupKey());
+        if (eventTrigger.getDedupKey() != null) {
+            source.getDedupKeys().add(eventTrigger.getDedupKey());
         }
         measurementDao.updateSourceDedupKeys(source);
 
         measurementDao.insertEventReport(eventReport);
     }
 
-    private void attributeTriggerAndIncrementRateLimit(Trigger trigger, Source source,
+    private void attributeTriggerAndInsertAttribution(Trigger trigger, Source source,
             IMeasurementDao measurementDao)
             throws DatastoreException {
         trigger.setStatus(Trigger.Status.ATTRIBUTED);
         measurementDao.updateTriggerStatus(trigger);
-        measurementDao.insertAttributionRateLimit(source, trigger);
+        measurementDao.insertAttribution(createAttribution(source, trigger));
     }
 
     private void ignoreTrigger(Trigger trigger, IMeasurementDao measurementDao)
@@ -312,12 +333,207 @@ class AttributionJobHandler {
         return attributionCount < PrivacyParams.MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
     }
 
-    private boolean isWithinReportLimit(Source source, int existingReportCount) {
-        return source.getMaxReportCount() > existingReportCount;
+    private boolean isWithinReportLimit(
+            Source source, int existingReportCount, @EventSurfaceType int destinationType) {
+        return source.getMaxReportCount(destinationType) > existingReportCount;
     }
 
     private boolean isWithinInstallCooldownWindow(Source source, Trigger trigger) {
         return trigger.getTriggerTime()
                 < (source.getEventTime() + source.getInstallCooldownWindow());
+    }
+
+    /**
+     * The logic works as following - 1. If source OR trigger filters are empty, we call it a match
+     * since there is no restriction. 2. If source and trigger filters have no common keys, it's a
+     * match. 3. All common keys between source and trigger filters should have intersection between
+     * their list of values.
+     *
+     * @return true for a match, false otherwise
+     */
+    private boolean doTopLevelFiltersMatch(@NonNull Source source, @NonNull Trigger trigger) {
+        String triggerFilters = trigger.getFilters();
+        String sourceFilters = source.getAggregateFilterData();
+        if (triggerFilters == null
+                || sourceFilters == null
+                || triggerFilters.isEmpty()
+                || sourceFilters.isEmpty()) {
+            // Nothing to match
+            return true;
+        }
+
+        try {
+            AggregateFilterData sourceFiltersData = extractFilterMap(sourceFilters);
+            AggregateFilterData triggerFiltersData = extractFilterMap(triggerFilters);
+            return Filter.isFilterMatch(sourceFiltersData, triggerFiltersData, true);
+        } catch (JSONException e) {
+            // If JSON is malformed, we shall consider as not matched.
+            LogUtil.e(e, "Malformed JSON string.");
+            return false;
+        }
+    }
+
+    private Optional<EventTrigger> findFirstMatchingEventTrigger(Source source, Trigger trigger) {
+        try {
+            String sourceFilters = source.getAggregateFilterData();
+
+            AggregateFilterData sourceFiltersData;
+            if (sourceFilters == null || sourceFilters.isEmpty()) {
+                // Initialize an empty map to add source_type to it later
+                sourceFiltersData = new AggregateFilterData.Builder().build();
+            } else {
+                sourceFiltersData = extractFilterMap(sourceFilters);
+            }
+
+            // Add source type
+            appendToAggregateFilterData(
+                    sourceFiltersData,
+                    "source_type",
+                    Collections.singletonList(source.getSourceType().getValue()));
+
+            List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
+            return eventTriggers.stream()
+                    .filter(
+                            eventTrigger ->
+                                    doEventLevelFiltersMatch(sourceFiltersData, eventTrigger))
+                    .findFirst();
+        } catch (JSONException e) {
+            // If JSON is malformed, we shall consider as not matched.
+            LogUtil.e(e, "Malformed JSON string.");
+            return Optional.empty();
+        }
+    }
+
+    private boolean doEventLevelFiltersMatch(
+            AggregateFilterData sourceFiltersData, EventTrigger eventTrigger) {
+        if (eventTrigger.getFilterData().isPresent()
+                && !Filter.isFilterMatch(
+                        sourceFiltersData, eventTrigger.getFilterData().get(), true)) {
+            return false;
+        }
+
+        if (eventTrigger.getNotFilterData().isPresent()
+                && !Filter.isFilterMatch(
+                        sourceFiltersData, eventTrigger.getNotFilterData().get(), false)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private AggregateFilterData extractFilterMap(String object) throws JSONException {
+        JSONObject sourceFilterObject = new JSONObject(object);
+        return new AggregateFilterData.Builder()
+                .buildAggregateFilterData(sourceFilterObject)
+                .build();
+    }
+
+    private void appendToAggregateFilterData(
+            AggregateFilterData filterData, String key, List<String> value) {
+        Map<String, List<String>> attributeFilterMap = filterData.getAttributionFilterMap();
+        attributeFilterMap.put(key, value);
+    }
+
+    private static OptionalInt validateAndGetUpdatedAggregateContributions(
+            List<AggregateHistogramContribution> contributions, Source source) {
+        int newAggregateContributions = source.getAggregateContributions();
+        for (AggregateHistogramContribution contribution : contributions) {
+            try {
+                newAggregateContributions =
+                        Math.addExact(newAggregateContributions, contribution.getValue());
+                if (newAggregateContributions
+                        > PrivacyParams.MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE) {
+                    return OptionalInt.empty();
+                }
+            } catch (ArithmeticException e) {
+                LogUtil.e(e, "Error adding aggregate contribution values.");
+                return OptionalInt.empty();
+            }
+        }
+        return OptionalInt.of(newAggregateContributions);
+    }
+
+    private static long roundDownToDay(long timestamp) {
+        return Math.floorDiv(timestamp, TimeUnit.DAYS.toMillis(1)) * TimeUnit.DAYS.toMillis(1);
+    }
+
+    private static boolean isAdTechWithinPrivacyBounds(Source source, Trigger trigger,
+            IMeasurementDao measurementDao) throws DatastoreException {
+        Optional<Pair<Uri, Uri>> publisherAndDestination =
+                getPublisherAndDestinationTopPrivateDomains(source, trigger);
+        if (publisherAndDestination.isPresent()) {
+            Integer count =
+                    measurementDao.countDistinctAdTechsPerPublisherXDestinationInAttribution(
+                            publisherAndDestination.get().first,
+                            publisherAndDestination.get().second,
+                            trigger.getAdTechDomain(), // TODO: will be replaced with enrollment ID
+                            trigger.getTriggerTime()
+                                    - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS,
+                            trigger.getTriggerTime());
+
+            return count < PrivacyParams
+                    .MAX_DISTINCT_AD_TECHS_PER_PUBLISHER_X_DESTINATION_IN_ATTRIBUTION;
+        } else {
+            LogUtil.d("isAdTechWithinPrivacyBounds: getPublisherAndDestinationTopPrivateDomains"
+                    + " failed. %s %s", source.getPublisher(), trigger.getAttributionDestination());
+            return true;
+        }
+    }
+
+    private static Optional<Pair<Uri, Uri>> getPublisherAndDestinationTopPrivateDomains(
+            Source source, Trigger trigger) {
+        Uri attributionDestination = trigger.getAttributionDestination();
+        Optional<Uri> triggerDestinationTopPrivateDomain =
+                trigger.getDestinationType() == EventSurfaceType.APP
+                        ? Optional.of(BaseUriExtractor.getBaseUri(attributionDestination))
+                        : Web.topPrivateDomainAndScheme(attributionDestination);
+        Uri publisher = source.getPublisher();
+        Optional<Uri> publisherTopPrivateDomain =
+                source.getPublisherType() == EventSurfaceType.APP
+                ? Optional.of(publisher)
+                : Web.topPrivateDomainAndScheme(publisher);
+        if (!triggerDestinationTopPrivateDomain.isPresent()
+                || !publisherTopPrivateDomain.isPresent()) {
+            return Optional.empty();
+        } else {
+            return Optional.of(Pair.create(
+                    publisherTopPrivateDomain.get(),
+                    triggerDestinationTopPrivateDomain.get()));
+        }
+    }
+
+    public Attribution createAttribution(@NonNull Source source, @NonNull Trigger trigger) {
+        Optional<Uri> publisherBaseUri =
+                extractBaseUri(source.getPublisher(), source.getPublisherType());
+        Uri destination = trigger.getAttributionDestination();
+        Optional<Uri> destinationBaseUri =
+                extractBaseUri(destination, trigger.getDestinationType());
+
+        if (!publisherBaseUri.isPresent() || !destinationBaseUri.isPresent()) {
+            throw new IllegalArgumentException(
+                    String.format(
+                            "insertAttributionRateLimit: "
+                                    + "getSourceAndDestinationTopPrivateDomains"
+                                    + " failed. Publisher: %s; Attribution destination: %s",
+                            source.getPublisher(), destination));
+        }
+
+        String publisherTopPrivateDomain = publisherBaseUri.get().toString();
+        String triggerDestinationTopPrivateDomain = destinationBaseUri.get().toString();
+        return new Attribution.Builder()
+                .setSourceSite(publisherTopPrivateDomain)
+                .setSourceOrigin(BaseUriExtractor.getBaseUri(source.getPublisher()).toString())
+                .setDestinationSite(triggerDestinationTopPrivateDomain)
+                .setDestinationOrigin(BaseUriExtractor.getBaseUri(destination).toString())
+                .setAdTechDomain(trigger.getAdTechDomain().toString())
+                .setTriggerTime(trigger.getTriggerTime())
+                .setRegistrant(trigger.getRegistrant().toString())
+                .build();
+    }
+
+    private static Optional<Uri> extractBaseUri(Uri uri, @EventSurfaceType int eventSurfaceType) {
+        return eventSurfaceType == EventSurfaceType.APP
+                ? Optional.of(BaseUriExtractor.getBaseUri(uri))
+                : Web.topPrivateDomainAndScheme(uri);
     }
 }
