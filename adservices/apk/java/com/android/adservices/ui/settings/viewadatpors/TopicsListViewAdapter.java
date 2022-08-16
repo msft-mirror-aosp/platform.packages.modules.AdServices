@@ -103,9 +103,7 @@ public class TopicsListViewAdapter extends RecyclerView.Adapter {
             int resourceId = TopicsMapper.getResourceIdByTopic(topic, context);
             if (resourceId == 0) {
                 throw new IllegalArgumentException(
-                        String.format(
-                                "Android resource id for topic %d doesn't exist.",
-                                topic.getTopic()));
+                        String.format("Android resource id for topic %s doesn't exist.", topic));
             }
             mTopicTextView.setText(resourceId);
             if (mIsBlockedTopicsListItem) {
