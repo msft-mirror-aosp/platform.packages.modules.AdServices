@@ -24,7 +24,7 @@ import com.android.sdksandbox.IRequestSurfacePackageFromSdkCallback;
 
 /** @hide */
 oneway interface ISdkSandboxManagerToSdkSandboxCallback {
-    void onSurfacePackageRequested(in IBinder hostToken, int displayId, in int width, in int height, in Bundle extraParams, IRequestSurfacePackageFromSdkCallback callback);
+    void onSurfacePackageRequested(in IBinder hostToken, int displayId, int width, int height, long timeSystemServerCalledSandbox, in Bundle extraParams, IRequestSurfacePackageFromSdkCallback callback);
     void onDataReceived(in Bundle data, IDataReceivedCallback callback);
 }
 
