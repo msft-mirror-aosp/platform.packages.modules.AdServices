@@ -113,8 +113,10 @@ public class SdkSandboxTest {
 
     @Test
     public void testDuplicateLoadingFails() throws Exception {
-        CountDownLatch latch = new CountDownLatch(2);
-        RemoteCode mRemoteCode = new RemoteCode(latch);
+        CountDownLatch latch1 = new CountDownLatch(1);
+        RemoteCode mRemoteCode1 = new RemoteCode(latch1);
+        CountDownLatch latch2 = new CountDownLatch(1);
+        RemoteCode mRemoteCode2 = new RemoteCode(latch2);
         IBinder duplicateToken = new Binder();
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
@@ -125,7 +127,8 @@ public class SdkSandboxTest {
                 null,
                 null,
                 new Bundle(),
-                mRemoteCode);
+                mRemoteCode1);
+        assertThat(latch1.await(1, TimeUnit.MINUTES)).isTrue();
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
                 duplicateToken,
@@ -135,10 +138,10 @@ public class SdkSandboxTest {
                 null,
                 null,
                 new Bundle(),
-                mRemoteCode);
-        assertThat(latch.await(1, TimeUnit.MINUTES)).isTrue();
-        assertThat(mRemoteCode.mSuccessful).isFalse();
-        assertThat(mRemoteCode.mErrorCode)
+                mRemoteCode2);
+        assertThat(latch2.await(1, TimeUnit.MINUTES)).isTrue();
+        assertThat(mRemoteCode2.mSuccessful).isFalse();
+        assertThat(mRemoteCode2.mErrorCode)
                 .isEqualTo(ILoadSdkInSandboxCallback.LOAD_SDK_ALREADY_LOADED);
     }
 
