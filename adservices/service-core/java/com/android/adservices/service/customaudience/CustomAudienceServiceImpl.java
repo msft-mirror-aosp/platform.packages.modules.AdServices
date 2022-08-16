@@ -134,6 +134,8 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
     @Override
     public void joinCustomAudience(
             @NonNull CustomAudience customAudience, @NonNull ICustomAudienceCallback callback) {
+        LogUtil.v("Entering joinCustomAudience");
+
         final int apiName = AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE;
         try {
             Objects.requireNonNull(customAudience);
@@ -146,6 +148,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         }
 
         final int callerUid = getCallingUid(apiName);
+        LogUtil.v("Running service");
         mExecutorService.execute(() -> doJoinCustomAudience(customAudience, callback, callerUid));
     }
 
@@ -157,16 +160,20 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         Objects.requireNonNull(customAudience);
         Objects.requireNonNull(callback);
 
+        LogUtil.v("Entering doJoinCustomAudience");
+
         final int apiName = AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE;
         int resultCode = AdServicesStatusUtils.STATUS_UNSET;
         // The filters log internally, so don't accidentally log again
         boolean shouldLog = false;
         try {
             try {
+                LogUtil.v("Validating caller package name");
                 mFledgeAuthorizationFilter.assertCallingPackageName(
                         customAudience.getOwnerPackageName(), callerUid, apiName);
 
                 if (mFlags.getEnforceForegroundStatusForFledgeCustomAudience()) {
+                    LogUtil.v("Checking caller is in foreground");
                     mAppImportanceFilter.assertCallerIsInForeground(
                             customAudience.getOwnerPackageName(), apiName, null);
                 }
@@ -176,12 +183,14 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 // Fail silently for revoked user consent
                 if (!mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
                         mContext.getPackageManager(), customAudience.getOwnerPackageName())) {
+                    LogUtil.v("Joining custom audience");
                     mCustomAudienceImpl.joinCustomAudience(customAudience);
                     BackgroundFetchJobService.scheduleIfNeeded(mContext, mFlags, false);
                     // TODO(b/233681870): Investigate implementation of actual failures
                     //  in logs/metrics
                     resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
                 } else {
+                    LogUtil.v("Consent revoked");
                     resultCode = AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                 }
 

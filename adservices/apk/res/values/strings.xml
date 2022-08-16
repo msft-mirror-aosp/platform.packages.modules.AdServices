@@ -151,7 +151,7 @@
     <!-- Sub title text of the main view. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_main_view_subtitle">Participate in Android’s ads privacy beta</string>
     <!-- Text for the Privacy Sandbox beta toggle. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_privacy_sandbox_beta_switch_title">Privacy Sandbox beta</string>
+    <string name="settingsUI_privacy_sandbox_beta_switch_title">Privacy Sandbox</string>
     <!-- Text for the button to open the topics view. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_topics_title">Interests estimated by Android</string>
     <!-- Text for the button to open the apps view. [CHAR LIMIT=NONE] -->
@@ -171,15 +171,15 @@
     <!-- Info text at the bottom of the main view. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_main_view_info_text7" translatable="false">@string/notificationUI_how_it_works_expanded_text6</string>
     <!-- Info text at the bottom of the main view. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_main_view_info_text8">Ads measurement</string>
+    <string name="settingsUI_main_view_info_text8">Ad measurement</string>
     <!-- Info text at the bottom of the main view. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_main_view_info_text9">Apps can use the Privacy Sandbox to measure the effectiveness of their ads. To do this, advertisers can temporarily save data with Android about your interactions between their ads and apps.  The amount of data they can save is restricted and will be deleted regularly.\n\nYou can delete this data at any time by turning off the Privacy Sandbox beta.</string>
+    <string name="settingsUI_main_view_info_text9">Apps can use the Privacy Sandbox to measure the effectiveness of their ads. To do this, advertisers can temporarily save data with Android about your interactions between their ads and apps.  The amount of data they can save is restricted and will be deleted regularly.\n\nYou can delete this data at any time by turning off the Privacy Sandbox.</string>
 
     <!-- Settings App UI topics view strings ****************************************************-->
     <!-- Title text of the topics view. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_topics_view_title" translatable="false">@string/settingsUI_topics_title</string>
     <!-- Sub title text of the topics view. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_topics_view_subtitle">Android periodically estimates your top interests based on the apps you use. Apps can ask Android to use those interests to show you more relevant ads.\n\nIf you block an interest, it won’t be added to the list again unless you unblock it. You may still see some related ads.</string>
+    <string name="settingsUI_topics_view_subtitle">Android periodically estimates your top interests based on the apps you use. Apps can ask Android to use those interests to show you more relevant ads.\n\nIf you block an interest, it won’t be added to the list again unless you unblock it. You might still see some related ads.</string>
     <!-- Text for the button to block a topic. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_block_topic_title">Block</string>
     <!-- Text for the button to unblock a topic. [CHAR LIMIT=NONE] -->
@@ -193,7 +193,7 @@
     <!-- Info text at the bottom of the topics view. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_topics_view_info_text1">Privacy Sandbox</string>
     <!-- Info text at the bottom of the topics view. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_topics_view_info_text2">Android’s ads privacy beta provides new technologies that apps can use to show you relevant ads. These technologies don’t use device identifiers that can be used to track your activity across apps from other developers.</string>
+    <string name="settingsUI_topics_view_info_text2">Android’s ads privacy beta provides new features that apps can use to show you ads you might like. These technologies don’t use device identifiers.\n\nAndroid can estimate the kinds of ads you might be interested in, and save these interests temporarily on your device. This allows apps to show you relevant ads, without tracking your activity across websites and apps from other developers.</string>
 
     <!-- TODO(b/242242693): add texts for topics confirmation dialogue.-->
 
@@ -201,7 +201,7 @@
     <!-- Title text of the apps view. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_apps_view_title">@string/settingsUI_apps_title</string>
     <!-- Sub title text of the apps view. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_apps_view_subtitle">Apps can estimate your interests and temporarily save these with Android. Later, a different app can show you an ad based on these interests.\n\nIf you block an app, it won’t estimate any more interests. It won’t be added to this list of apps again unless you unblock it. Interests already estimated by the app will be deleted, but you may still see some related ads.</string>
+    <string name="settingsUI_apps_view_subtitle">Apps can estimate your interests and temporarily save these with Android. Later, a different app can show you an ad based on these interests.\n\nIf you block an app, it won’t estimate any more interests. It won’t be added to this list of apps again unless you unblock it. Interests already estimated by the app will be deleted, but you might still see some related ads.</string>
     <!-- Text for the button to block an app. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_block_app_title" translatable="false">@string/settingsUI_block_topic_title</string>
     <!-- Text for the button to unblock an app. [CHAR LIMIT=NONE] -->
@@ -215,7 +215,7 @@
     <!-- Info text at the bottom of the apps view. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_apps_view_info_text1">Privacy Sandbox</string>
     <!-- Info text at the bottom of the apps view. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_apps_view_info_text2">Android’s ads privacy beta provides new technologies that apps can use to show you relevant ads. These technologies don’t use device identifiers that can be used to track your activity across apps from other developers.</string>
+    <string name="settingsUI_apps_view_info_text2">Android’s ads privacy beta provides new features that apps can use to show you ads you might like. These technologies don’t use device identifiers.\n\nApps can estimate the kinds of ads you might be interested in, and save these interests temporarily on your device. This allows apps to show you relevant ads, without tracking your activity across websites and apps from other developers.</string>
 
     <!-- TODO(b/242242693): add texts for apps confirmation dialogue.-->
 
