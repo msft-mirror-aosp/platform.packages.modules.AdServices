@@ -143,7 +143,7 @@ public final class MeasurementTables {
         String ATTRIBUTION_DESTINATION = "attribution_destination";
         String SOURCE_REGISTRATION_TIME = "source_registration_time";
         String SCHEDULED_REPORT_TIME = "scheduled_report_time";
-        String REPORTING_ORIGIN = "reporting_origin";
+        String AD_TECH_DOMAIN = "ad_tech_domain";
         String DEBUG_CLEARTEXT_PAYLOAD = "debug_cleartext_payload";
         String STATUS = "status";
         String API_VERSION = "api_version";
@@ -336,7 +336,7 @@ public final class MeasurementTables {
                     + " INTEGER, "
                     + AggregateReport.SCHEDULED_REPORT_TIME
                     + " INTEGER, "
-                    + AggregateReport.REPORTING_ORIGIN
+                    + AggregateReport.AD_TECH_DOMAIN
                     + " TEXT, "
                     + AggregateReport.DEBUG_CLEARTEXT_PAYLOAD
                     + " TEXT, "

@@ -362,8 +362,8 @@ public abstract class AbstractDbIntegrationTest {
                 MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME,
                 aggregateReport.getScheduledReportTime());
         values.put(
-                MeasurementTables.AggregateReport.REPORTING_ORIGIN,
-                aggregateReport.getReportingOrigin().toString());
+                MeasurementTables.AggregateReport.AD_TECH_DOMAIN,
+                aggregateReport.getAdTechDomain().toString());
         values.put(
                 MeasurementTables.AggregateReport.DEBUG_CLEARTEXT_PAYLOAD,
                 aggregateReport.getDebugCleartextPayload());
