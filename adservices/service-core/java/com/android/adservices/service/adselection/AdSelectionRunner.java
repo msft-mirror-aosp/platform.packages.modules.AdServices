@@ -44,6 +44,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
+import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
@@ -120,6 +121,7 @@ public final class AdSelectionRunner {
     @NonNull private final AppImportanceFilter mAppImportanceFilter;
     private final int mCallerUid;
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
+    @NonNull private final FledgeAllowListsFilter mFledgeAllowListsFilter;
 
     public AdSelectionRunner(
             @NonNull final Context context,
@@ -132,7 +134,8 @@ public final class AdSelectionRunner {
             @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull final Flags flags,
             int callerUid,
-            @NonNull final FledgeAuthorizationFilter fledgeAuthorizationFilter) {
+            @NonNull final FledgeAuthorizationFilter fledgeAuthorizationFilter,
+            @NonNull final FledgeAllowListsFilter fledgeAllowListsFilter) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(adSelectionEntryDao);
@@ -140,6 +143,7 @@ public final class AdSelectionRunner {
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(fledgeAuthorizationFilter);
+        Objects.requireNonNull(fledgeAllowListsFilter);
         mContext = context;
         mCustomAudienceDao = customAudienceDao;
         mAdSelectionEntryDao = adSelectionEntryDao;
@@ -166,6 +170,7 @@ public final class AdSelectionRunner {
         mAppImportanceFilter = appImportanceFilter;
         mCallerUid = callerUid;
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
+        mFledgeAllowListsFilter = fledgeAllowListsFilter;
     }
 
     @VisibleForTesting
@@ -183,7 +188,8 @@ public final class AdSelectionRunner {
             @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull final Flags flags,
             int callerUid,
-            @NonNull final FledgeAuthorizationFilter fledgeAuthorizationFilter) {
+            @NonNull final FledgeAuthorizationFilter fledgeAuthorizationFilter,
+            @NonNull final FledgeAllowListsFilter fledgeAllowListsFilter) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(adSelectionEntryDao);
@@ -211,6 +217,7 @@ public final class AdSelectionRunner {
         mAppImportanceFilter = appImportanceFilter;
         mCallerUid = callerUid;
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
+        mFledgeAllowListsFilter = fledgeAllowListsFilter;
     }
 
     /**
@@ -318,7 +325,10 @@ public final class AdSelectionRunner {
                 resultCode = AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
             } else if (t instanceof UncheckedTimeoutException) {
                 resultCode = AdServicesStatusUtils.STATUS_TIMEOUT;
-            } else if (t instanceof SecurityException) {
+            } else if (t instanceof FledgeAuthorizationFilter.AdTechNotAllowedException
+                    || t instanceof FledgeAllowListsFilter.AppNotAllowedException) {
+                resultCode = AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
+            } else if (t instanceof FledgeAuthorizationFilter.CallerMismatchException) {
                 resultCode = AdServicesStatusUtils.STATUS_UNAUTHORIZED;
             } else if (t instanceof IllegalArgumentException) {
                 resultCode = AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
@@ -633,10 +643,12 @@ public final class AdSelectionRunner {
      * uid.
      *
      * @param callerPackageName caller package name from the request
-     * @throws SecurityException if the provided {@code callerPackageName} is not valid
+     * @throws FledgeAuthorizationFilter.CallerMismatchException if the provided {@code
+     *     callerPackageName} is not valid
      * @return an ignorable {@code null}
      */
-    private Void assertCallerPackageName(String callerPackageName) throws SecurityException {
+    private Void assertCallerPackageName(String callerPackageName)
+            throws FledgeAuthorizationFilter.CallerMismatchException {
         mFledgeAuthorizationFilter.assertCallingPackageName(
                 callerPackageName, mCallerUid, AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
         return null;
@@ -658,20 +670,63 @@ public final class AdSelectionRunner {
     }
 
     /**
+     * Check if a certain ad tech is enrolled and authorized to perform the operation for the
+     * package.
+     *
+     * @param callerPackageName the package name to check against
+     * @param adSelectionConfig contains the ad tech to check against
+     * @throws FledgeAuthorizationFilter.AdTechNotAllowedException if the ad tech is not authorized
+     *     to perform the operation
+     */
+    private Void assertFledgeEnrollment(
+            AdSelectionConfig adSelectionConfig, String callerPackageName)
+            throws FledgeAuthorizationFilter.AdTechNotAllowedException {
+        if (!mFlags.getDisableFledgeEnrollmentCheck()) {
+            mFledgeAuthorizationFilter.assertAdTechAllowed(
+                    mContext,
+                    callerPackageName,
+                    adSelectionConfig.getSeller(),
+                    AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
+        }
+
+        return null;
+    }
+
+    /**
+     * Asserts the package is allowed to call PPAPI.
+     *
+     * @param callerPackageName the package name to be validated.
+     * @throws FledgeAllowListsFilter.AppNotAllowedException if the package is not authorized.
+     */
+    private Void assertAppInAllowList(String callerPackageName)
+            throws FledgeAllowListsFilter.AppNotAllowedException {
+        mFledgeAllowListsFilter.assertAppCanUsePpapi(
+                callerPackageName, AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
+
+        return null;
+    }
+
+    /**
      * Validates the {@code runAdSelection} request.
      *
      * @param adSelectionConfig the adSelectionConfig to be validated
      * @param callerPackageName caller package name to be validated
-     * @throws IllegalArgumentException if the provided {@code adSelectionConfig} is not valid
-     * @throws SecurityException if the {@code callerPackageName} is not valid
+     * @throws FledgeAuthorizationFilter.CallerMismatchException if the {@code callerPackageName} is
+     *     not valid
      * @throws WrongCallingApplicationStateException if the foreground check is enabled and fails
+     * @throws FledgeAuthorizationFilter.AdTechNotAllowedException if the ad tech is not authorized
+     *     to perform the operation
+     * @throws FledgeAllowListsFilter.AppNotAllowedException if the package is not authorized.
      * @throws ConsentManager.RevokedConsentException if FLEDGE or the Privacy Sandbox do not have
      *     user consent
+     * @throws IllegalArgumentException if the provided {@code adSelectionConfig} is not valid
      * @return an ignorable {@code null}
      */
     private Void validateRequest(AdSelectionConfig adSelectionConfig, String callerPackageName) {
         assertCallerPackageName(callerPackageName);
         maybeAssertForegroundCaller();
+        assertFledgeEnrollment(adSelectionConfig, callerPackageName);
+        assertAppInAllowList(callerPackageName);
         assertCallerHasUserConsent();
         validateAdSelectionConfig(adSelectionConfig);
 

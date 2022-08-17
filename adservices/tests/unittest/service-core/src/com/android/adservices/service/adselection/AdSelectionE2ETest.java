@@ -32,7 +32,9 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.stats.FledgeApiCallStatsMatcher.aCallStatForFledgeApiWithStatus;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
@@ -75,6 +77,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
@@ -171,12 +174,17 @@ public class AdSelectionE2ETest {
     @Spy private final AdServicesLogger mAdServicesLoggerSpy = AdServicesLoggerImpl.getInstance();
     private static final String MY_APP_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
+    private Context mContext = ApplicationProvider.getApplicationContext();
     // Mocking DevContextFilter to test behavior with and without override api authorization
     @Mock DevContextFilter mDevContextFilter;
     @Mock AppImportanceFilter mAppImportanceFilter;
     @Mock private ConsentManager mConsentManagerMock;
+
+    @Spy
+    FledgeAuthorizationFilter mFledgeAuthorizationFilterSpy =
+            FledgeAuthorizationFilter.create(mContext, mAdServicesLoggerSpy);
+
     private MockitoSession mStaticMockSession = null;
-    private Context mContext;
     private ExecutorService mExecutorService;
     private CustomAudienceDao mCustomAudienceDao;
     private AdSelectionEntryDao mAdSelectionEntryDao;
@@ -184,7 +192,11 @@ public class AdSelectionE2ETest {
     private AdSelectionConfig mAdSelectionConfig;
     private AdSelectionServiceImpl mAdSelectionService;
     private Dispatcher mDispatcher;
-    private final Flags mFlags = new FledgeE2ETestFlags();
+    private final Flags mFlags = new AdSelectionE2ETestFlags();
+
+    @Spy
+    FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
+            new FledgeAllowListsFilter(mFlags, mAdServicesLoggerSpy);
 
     @Before
     public void setUp() throws Exception {
@@ -198,7 +210,6 @@ public class AdSelectionE2ETest {
                         .startMocking();
 
         // Initialize dependencies for the AdSelectionService
-        mContext = ApplicationProvider.getApplicationContext();
         mExecutorService = Executors.newFixedThreadPool(10);
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(mContext, CustomAudienceDatabase.class)
@@ -229,7 +240,8 @@ public class AdSelectionE2ETest {
                         mAdServicesLoggerSpy,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        FledgeAuthorizationFilter.create(mContext, mAdServicesLoggerSpy));
+                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAllowListsFilterSpy);
 
         // Create a dispatcher that helps map a request -> response in mockWebServer
         mDispatcher =
@@ -288,7 +300,7 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionSuccess() throws Exception {
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
         // Logger calls come after the callback is returned
@@ -346,7 +358,7 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionWithRevokedUserConsentSuccess() throws Exception {
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent(any());
 
         // Logger calls come after the callback is returned
@@ -384,7 +396,6 @@ public class AdSelectionE2ETest {
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
-
         loggerLatch.await();
         assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
@@ -405,7 +416,7 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionMultipleCAsSuccess() throws Exception {
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
         mMockWebServerRule.startMockWebServer(mDispatcher);
@@ -469,6 +480,8 @@ public class AdSelectionE2ETest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
 
+
+
         assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
@@ -479,7 +492,7 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionSucceedsWithOverride() throws Exception {
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
@@ -543,7 +556,8 @@ public class AdSelectionE2ETest {
                         mAdServicesLoggerSpy,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        FledgeAuthorizationFilter.create(mContext, mAdServicesLoggerSpy));
+                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAllowListsFilterSpy);
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
@@ -566,7 +580,7 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionActiveCAs() throws Exception {
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
         mMockWebServerRule.startMockWebServer(mDispatcher);
@@ -616,7 +630,7 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionNoCAsActive() throws Exception {
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
         mMockWebServerRule.startMockWebServer(mDispatcher);
@@ -716,7 +730,7 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionPartialAdsExcludedBidding() throws Exception {
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
         mMockWebServerRule.startMockWebServer(mDispatcher);
@@ -771,7 +785,7 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionMissingBiddingLogicFailure() throws Exception {
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
         // Setting bids->scores
@@ -838,7 +852,7 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionMissingScoringLogicFailure() throws Exception {
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
         // Setting bids->scores
@@ -905,7 +919,7 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionErrorFetchingScoringLogicFailure() throws Exception {
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
         // Setting bids->scores
@@ -971,7 +985,7 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionPartialMissingBiddingLogic() throws Exception {
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
         // Setting bids->scores
@@ -1041,7 +1055,7 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionPartialNonPositiveScoring() throws Exception {
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
         // Setting bids, in this case the odd bids will be made negative by scoring logic
@@ -1117,7 +1131,7 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionNonPositiveScoringFailure() throws Exception {
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
         // Setting bids, in this case the odd bids will be made negative by scoring logic
@@ -1190,7 +1204,7 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionBiddingTimesOut() throws Exception {
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
         Flags flagsWithSmallerLimits =
@@ -1220,7 +1234,8 @@ public class AdSelectionE2ETest {
                         mAdServicesLoggerSpy,
                         flagsWithSmallerLimits,
                         CallingAppUidSupplierProcessImpl.create(),
-                        FledgeAuthorizationFilter.create(mContext, mAdServicesLoggerSpy));
+                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAllowListsFilterSpy);
 
         String jsWaitMoreThanAllowedForBiddingPerCa =
                 insertJsWait(2 * mFlags.getAdSelectionBiddingTimeoutPerCaMs());
@@ -1297,7 +1312,7 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionScoringTimesOut() throws Exception {
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
         Flags flagsWithSmallerLimits =
@@ -1327,7 +1342,8 @@ public class AdSelectionE2ETest {
                         mAdServicesLoggerSpy,
                         flagsWithSmallerLimits,
                         CallingAppUidSupplierProcessImpl.create(),
-                        FledgeAuthorizationFilter.create(mContext, mAdServicesLoggerSpy));
+                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAllowListsFilterSpy);
 
         String jsWaitMoreThanAllowedForScoring =
                 insertJsWait(2 * mFlags.getAdSelectionScoringTimeoutMs());
@@ -1406,7 +1422,17 @@ public class AdSelectionE2ETest {
     @Test
     public void testAdSelectionConfigInvalidInput() throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
-
+        doNothing()
+                .when(mFledgeAuthorizationFilterSpy)
+                .assertAdTechAllowed(
+                        mContext,
+                        MY_APP_PACKAGE_NAME,
+                        SELLER_VALID,
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
+        doNothing()
+                .when(mFledgeAllowListsFilterSpy)
+                .assertAppCanUsePpapi(
+                        MY_APP_PACKAGE_NAME, AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
         // Logger calls come after the callback is returned
         CountDownLatch loggerLatch = new CountDownLatch(1);
         doAnswer(
@@ -1450,7 +1476,7 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionMissingBiddingSignalsFailure() throws Exception {
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
         // Create a dispatcher without buyer trusted Signal end point
@@ -1512,7 +1538,7 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionMissingScoringSignalsFailure() throws Exception {
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
         // Create a dispatcher without buyer trusted Signal end point
@@ -1568,7 +1594,7 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionMissingPartialBiddingSignalsSuccess() throws Exception {
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
         // Create a dispatcher with valid end points
@@ -1638,7 +1664,7 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionFailsWithInvalidPackageName() throws Exception {
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
         // Logger calls come after the callback is returned
@@ -1695,6 +1721,279 @@ public class AdSelectionE2ETest {
                         AdSelectionRunner.ERROR_AD_SELECTION_FAILURE,
                         AdServicesStatusUtils
                                 .SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE));
+
+        // TODO(b/242139312): Remove atLeastOnce once this the double logging is addressed
+        verify(mAdServicesLoggerSpy, Mockito.atLeastOnce())
+                .logFledgeApiCallStats(
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                        AdServicesStatusUtils.STATUS_UNAUTHORIZED);
+        verify(mAdServicesLoggerSpy, Mockito.atLeastOnce())
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                                AdServicesStatusUtils.STATUS_UNAUTHORIZED));
+    }
+
+    @Test
+    public void testRunAdSelectionFailsWhenAppCannotUsePPApi() throws Exception {
+        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doNothing()
+                .when(mFledgeAuthorizationFilterSpy)
+                .assertAdTechAllowed(
+                        mContext,
+                        MY_APP_PACKAGE_NAME,
+                        mAdSelectionConfig.getSeller(),
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
+        doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
+                .when(mFledgeAllowListsFilterSpy)
+                .assertAppCanUsePpapi(
+                        MY_APP_PACKAGE_NAME, AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
+
+        // Logger calls come after the callback is returned
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerSpy)
+                .logApiCallStats(any());
+
+        mMockWebServerRule.startMockWebServer(mDispatcher);
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+        DBCustomAudience dBCustomAudienceForBuyer1 =
+                createDBCustomAudience(
+                        BUYER_1,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1),
+                        bidsForBuyer1);
+        DBCustomAudience dBCustomAudienceForBuyer2 =
+                createDBCustomAudience(
+                        BUYER_2,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2),
+                        bidsForBuyer2);
+
+        // Populating the Custom Audience DB
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+        loggerLatch.await();
+        Assert.assertFalse(resultsCallback.mIsSuccess);
+
+        FledgeErrorResponse response = resultsCallback.mFledgeErrorResponse;
+        assertEquals(
+                "Error response code mismatch",
+                AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED,
+                response.getStatusCode());
+
+        verifyErrorMessageIsCorrect(
+                resultsCallback.mFledgeErrorResponse.getErrorMessage(),
+                String.format(
+                        AdSelectionRunner.AD_SELECTION_ERROR_PATTERN,
+                        AdSelectionRunner.ERROR_AD_SELECTION_FAILURE,
+                        AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE));
+
+        // TODO(b/242139312): Remove atLeastOnce once this the double logging is addressed
+        verify(mAdServicesLoggerSpy, Mockito.atLeastOnce())
+                .logFledgeApiCallStats(
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                        AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED);
+        verify(mAdServicesLoggerSpy, Mockito.atLeastOnce())
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                                AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED));
+    }
+
+    @Test
+    public void testRunAdSelectionFailsWhenAdTechFailsEnrollmentCheck() throws Exception {
+        Flags flagsWithEnrollmentCheckEnabled =
+                new Flags() {
+                    @Override
+                    public boolean getDisableFledgeEnrollmentCheck() {
+                        return false;
+                    }
+                };
+
+        doReturn(flagsWithEnrollmentCheckEnabled).when(FlagsFactory::getFlags);
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+
+        // Create an instance of AdSelection Service with real dependencies
+        mAdSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mAdServicesHttpsClient,
+                        mDevContextFilter,
+                        mAppImportanceFilter,
+                        mExecutorService,
+                        mContext,
+                        mConsentManagerMock,
+                        mAdServicesLoggerSpy,
+                        flagsWithEnrollmentCheckEnabled,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAllowListsFilterSpy);
+
+        // Logger calls come after the callback is returned
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerSpy)
+                .logApiCallStats(any());
+
+        mMockWebServerRule.startMockWebServer(mDispatcher);
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+        DBCustomAudience dBCustomAudienceForBuyer1 =
+                createDBCustomAudience(
+                        BUYER_1,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1),
+                        bidsForBuyer1);
+        DBCustomAudience dBCustomAudienceForBuyer2 =
+                createDBCustomAudience(
+                        BUYER_2,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2),
+                        bidsForBuyer2);
+
+        // Populating the Custom Audience DB
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+        loggerLatch.await();
+        Assert.assertFalse(resultsCallback.mIsSuccess);
+
+        FledgeErrorResponse response = resultsCallback.mFledgeErrorResponse;
+        assertEquals(
+                "Error response code mismatch",
+                AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED,
+                response.getStatusCode());
+
+        verifyErrorMessageIsCorrect(
+                resultsCallback.mFledgeErrorResponse.getErrorMessage(),
+                String.format(
+                        AdSelectionRunner.AD_SELECTION_ERROR_PATTERN,
+                        AdSelectionRunner.ERROR_AD_SELECTION_FAILURE,
+                        AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE));
+
+        // TODO(b/242139312): Remove atLeastOnce once this the double logging is addressed
+        verify(mAdServicesLoggerSpy, Mockito.atLeastOnce())
+                .logFledgeApiCallStats(
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                        AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED);
+        verify(mAdServicesLoggerSpy, Mockito.atLeastOnce())
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                                AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED));
+    }
+
+    @Test
+    public void testRunAdSelectionSucceedsWhenAdTechPassesEnrollmentCheck() throws Exception {
+        Flags flagsWithEnrollmentCheckEnabled =
+                new AdSelectionE2ETestFlags() {
+                    @Override
+                    public boolean getDisableFledgeEnrollmentCheck() {
+                        return false;
+                    }
+                };
+
+        doReturn(flagsWithEnrollmentCheckEnabled).when(FlagsFactory::getFlags);
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doNothing()
+                .when(mFledgeAuthorizationFilterSpy)
+                .assertAdTechAllowed(
+                        mContext,
+                        MY_APP_PACKAGE_NAME,
+                        mAdSelectionConfig.getSeller(),
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
+
+        // Create an instance of AdSelection Service with real dependencies
+        mAdSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mAdServicesHttpsClient,
+                        mDevContextFilter,
+                        mAppImportanceFilter,
+                        mExecutorService,
+                        mContext,
+                        mConsentManagerMock,
+                        mAdServicesLoggerSpy,
+                        flagsWithEnrollmentCheckEnabled,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAllowListsFilterSpy);
+
+        // Logger calls come after the callback is returned
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerSpy)
+                .logApiCallStats(any());
+
+        mMockWebServerRule.startMockWebServer(mDispatcher);
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+        DBCustomAudience dBCustomAudienceForBuyer1 =
+                createDBCustomAudience(
+                        BUYER_1,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1),
+                        bidsForBuyer1);
+        DBCustomAudience dBCustomAudienceForBuyer2 =
+                createDBCustomAudience(
+                        BUYER_2,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2),
+                        bidsForBuyer2);
+
+        // Populating the Custom Audience DB
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+
+        loggerLatch.await();
+        assertCallbackIsSuccessful(resultsCallback);
+        long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
+        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
+        assertEquals(
+                AD_URI_PREFIX + BUYER_2 + "/ad3",
+                resultsCallback.mAdSelectionResponse.getRenderUri().toString());
+
+        verify(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, STATUS_SUCCESS);
+        verify(mAdServicesLoggerSpy)
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, STATUS_SUCCESS));
     }
 
     /**
@@ -1841,7 +2140,7 @@ public class AdSelectionE2ETest {
         }
     }
 
-    private static class FledgeE2ETestFlags implements Flags {
+    private static class AdSelectionE2ETestFlags implements Flags {
         @Override
         public boolean getEnforceIsolateMaxHeapSize() {
             return false;
