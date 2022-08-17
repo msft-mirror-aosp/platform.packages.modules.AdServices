@@ -401,9 +401,8 @@ package android.adservices.topics {
   }
 
   public static final class GetTopicsResponse.Builder {
-    ctor public GetTopicsResponse.Builder();
+    ctor public GetTopicsResponse.Builder(@NonNull java.util.List<android.adservices.topics.Topic>);
     method @NonNull public android.adservices.topics.GetTopicsResponse build();
-    method @NonNull public android.adservices.topics.GetTopicsResponse.Builder setTopics(@NonNull java.util.List<android.adservices.topics.Topic>);
   }
 
   public final class Topic {

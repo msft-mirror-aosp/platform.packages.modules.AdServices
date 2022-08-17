@@ -30,6 +30,8 @@ import android.app.sdksandbox.IRequestSurfacePackageCallback;
 import android.app.sdksandbox.ISdkSandboxLifecycleCallback;
 import android.app.sdksandbox.ISdkSandboxManager;
 import android.app.sdksandbox.ISendDataCallback;
+import android.app.sdksandbox.LoadSdkException;
+import android.app.sdksandbox.LoadSdkResponse;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -312,9 +314,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 new AppAndRemoteSdkLink(callingInfo, sdkToken, callback, sdkProviderInfo);
         synchronized (mLock) {
             if (mAppAndRemoteSdkLinks.putIfAbsent(sdkToken, link) != null) {
-                link.handleLoadSdkError(
-                        SdkSandboxManager.LOAD_SDK_ALREADY_LOADED,
-                        sdkName + " is being loaded or has been loaded already",
+                link.handleLoadSdkException(
+                        new LoadSdkException(
+                                SdkSandboxManager.LOAD_SDK_ALREADY_LOADED,
+                                sdkName + " is being loaded or has been loaded already"),
                         /*cleanUpInternalState=*/ false,
                         /*startTimeOfStageWhereErrorOccurred=*/ timeSystemServerReceivedCallFromApp,
                         SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX);
@@ -323,9 +326,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
         if (!TextUtils.isEmpty(errorMsg)) {
             Log.w(TAG, errorMsg);
-            link.handleLoadSdkError(
-                    SdkSandboxManager.LOAD_SDK_NOT_FOUND,
-                    errorMsg,
+            link.handleLoadSdkException(
+                    new LoadSdkException(SdkSandboxManager.LOAD_SDK_NOT_FOUND, errorMsg),
                     /*cleanUpInternalState=*/ true,
                     /*startTimeOfStageWhereErrorOccurred=*/ timeSystemServerReceivedCallFromApp,
                     SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX);
@@ -718,9 +720,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
                     @Override
                     public void onBindingFailed() {
-                        link.handleLoadSdkError(
-                                SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR,
-                                "Failed to bind the service",
+                        link.handleLoadSdkException(
+                                new LoadSdkException(
+                                        SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR,
+                                        "Failed to bind the service"),
                                 /*cleanUpInternalState=*/ true,
                                 /*startTimeOfStageWhereErrorOccurred=*/ startTimeForLoadingSandbox,
                                 /*stage*/ SdkSandboxStatsLog
@@ -828,10 +831,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         } catch (RemoteException e) {
             String errorMsg = "Failed to load code";
             Log.w(TAG, errorMsg, e);
-            link.handleLoadSdkError(
-                    SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR,
-                    errorMsg,
-                    /*cleanUpInternalState=*/ true,
+            link.handleLoadSdkException(
+                    new LoadSdkException(SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR, errorMsg),
+                    /*cleanupInternalState=*/ true,
                     /*startTimeOfStageWhereErrorOccurred=*/ timeSystemServerReceivedCallFromApp,
                     /*stage*/ SdkSandboxStatsLog
                             .SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX);
@@ -1087,38 +1089,36 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         @Override
         public void onLoadSdkSuccess(
-                Bundle params, ISdkSandboxManagerToSdkSandboxCallback callback) {
+                LoadSdkResponse response, ISdkSandboxManagerToSdkSandboxCallback callback) {
             // Keep reference to callback so that manager service can
             // callback to remote code loaded.
             synchronized (this) {
                 mManagerToCodeCallback = callback;
             }
 
-            sendLoadSdkSuccessToApp(params);
+            sendLoadSdkSuccessToApp(response);
         }
 
         @Override
-        public void onLoadSdkError(int errorCode, String errorMsg) {
-            handleLoadSdkError(
-                    toSdkSandboxManagerLoadSdkErrorCode(errorCode),
-                    errorMsg,
+        public void onLoadSdkError(LoadSdkException exception) {
+            handleLoadSdkException(
+                    updateLoadSdkErrorCode(exception),
                     /*cleanUpInternalState=*/ true,
                     /*startTimeOfStageWhereErrorOccurred=*/ mInjector.getCurrentTime(),
                     // TODO(b/242264479): Update this with the stage passed as a parameter
                     /*stage*/ SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED);
         }
 
-        private void sendLoadSdkSuccessToApp(Bundle params) {
+        private void sendLoadSdkSuccessToApp(LoadSdkResponse response) {
             try {
-                mManagerToAppCallback.onLoadSdkSuccess(params);
+                mManagerToAppCallback.onLoadSdkSuccess(response);
             } catch (RemoteException e) {
                 Log.w(TAG, "Failed to send onLoadCodeSuccess", e);
             }
         }
 
-        void handleLoadSdkError(
-                int errorCode,
-                String errorMsg,
+        void handleLoadSdkException(
+                LoadSdkException exception,
                 boolean cleanUpInternalState,
                 long startTimeOfStageWhereErrorOccurred,
                 int stage) {
@@ -1137,7 +1137,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         stage);
             }
             try {
-                mManagerToAppCallback.onLoadSdkFailure(errorCode, errorMsg);
+                mManagerToAppCallback.onLoadSdkFailure(exception);
             } catch (RemoteException e) {
                 Log.w(TAG, "Failed to send onLoadCodeFailure", e);
             }
@@ -1254,21 +1254,40 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
         }
 
-        @SdkSandboxManager.LoadSdkErrorCode
-        private int toSdkSandboxManagerLoadSdkErrorCode(int sdkSandboxErrorCode) {
-            switch (sdkSandboxErrorCode) {
+        private LoadSdkException updateLoadSdkErrorCode(LoadSdkException exception) {
+            switch (exception.getLoadSdkErrorCode()) {
                 case ILoadSdkInSandboxCallback.LOAD_SDK_ALREADY_LOADED:
-                    return SdkSandboxManager.LOAD_SDK_ALREADY_LOADED;
+                    return new LoadSdkException(
+                            SdkSandboxManager.LOAD_SDK_ALREADY_LOADED,
+                            exception.getMessage(),
+                            exception.getCause(),
+                            exception.getExtraInformation());
                 case ILoadSdkInSandboxCallback.LOAD_SDK_NOT_FOUND:
-                    return SdkSandboxManager.LOAD_SDK_NOT_FOUND;
+                    return new LoadSdkException(
+                            SdkSandboxManager.LOAD_SDK_NOT_FOUND,
+                            exception.getMessage(),
+                            exception.getCause(),
+                            exception.getExtraInformation());
                 case ILoadSdkInSandboxCallback.LOAD_SDK_PROVIDER_INIT_ERROR:
-                    return SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR;
                 case ILoadSdkInSandboxCallback.LOAD_SDK_INSTANTIATION_ERROR:
-                    return SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR;
+                    return new LoadSdkException(
+                            SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR,
+                            exception.getMessage(),
+                            exception.getCause(),
+                            exception.getExtraInformation());
+                case SdkSandboxManager.LOAD_SDK_SDK_DEFINED_ERROR:
+                    return exception;
                 default:
-                    Log.e(TAG, "Error code" + sdkSandboxErrorCode
-                            + "has no mapping to the SdkSandboxManager error codes");
-                    return SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR;
+                    Log.e(
+                            TAG,
+                            "Error code "
+                                    + exception.getLoadSdkErrorCode()
+                                    + " has no mapping to the SdkSandboxManager error codes");
+                    return new LoadSdkException(
+                            SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR,
+                            exception.getMessage(),
+                            exception.getCause(),
+                            exception.getExtraInformation());
             }
         }
 
