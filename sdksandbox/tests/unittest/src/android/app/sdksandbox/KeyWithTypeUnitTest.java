@@ -29,6 +29,12 @@ import org.junit.runners.JUnit4;
 public class KeyWithTypeUnitTest {
 
     @Test
+    public void testKeyWithType_DescribeContents() throws Exception {
+        final KeyWithType keyWithType = new KeyWithType("key", KeyWithType.KEY_TYPE_LONG);
+        assertThat(keyWithType.describeContents()).isEqualTo(0);
+    }
+
+    @Test
     public void testKeyWithType_GetName() throws Exception {
         final KeyWithType keyWithType = new KeyWithType("key", KeyWithType.KEY_TYPE_LONG);
         assertThat(keyWithType.getName()).isEqualTo("key");

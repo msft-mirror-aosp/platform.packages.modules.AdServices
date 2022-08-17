@@ -20,6 +20,7 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.annotation.RequiresPermission;
 import android.app.Service;
+import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.content.Intent;
@@ -70,6 +71,10 @@ public class SdkSandboxServiceImpl extends Service {
 
         Context getContext() {
             return mContext;
+        }
+
+        long getCurrentTime() {
+            return System.currentTimeMillis();
         }
     }
 
@@ -212,7 +217,8 @@ public class SdkSandboxServiceImpl extends Service {
                     callback,
                     sdkProviderClassName,
                     loader,
-                    sandboxedSdkContext);
+                    sandboxedSdkContext,
+                    mInjector);
             synchronized (mHeldSdk) {
                 mHeldSdk.put(sdkToken, sandboxedSdkHolder);
             }
@@ -241,7 +247,7 @@ public class SdkSandboxServiceImpl extends Service {
 
     private void sendLoadError(ILoadSdkInSandboxCallback callback, int errorCode, String message) {
         try {
-            callback.onLoadSdkError(errorCode, message);
+            callback.onLoadSdkError(new LoadSdkException(errorCode, message));
         } catch (RemoteException e) {
             Log.e(TAG, "Could not send onLoadCodeError");
         }

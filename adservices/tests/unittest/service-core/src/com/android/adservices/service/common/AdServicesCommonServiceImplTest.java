@@ -103,7 +103,7 @@ public class AdServicesCommonServiceImplTest {
                     }
 
                     @Override
-                    public void onFailure(String errorMessage) {
+                    public void onFailure(int statusCode) {
                         Assert.fail();
                     }
 
@@ -122,14 +122,14 @@ public class AdServicesCommonServiceImplTest {
         when(mEditor.putInt(anyString(), anyInt())).thenReturn(mEditor);
         Mockito.doNothing().when(mEditor).apply();
         mCommonService = new AdServicesCommonServiceImpl(mContext, mFlags);
-        mCommonService.setAdServicesNotificationConditions(true, false);
+        mCommonService.setAdServicesEnabled(true, false);
         Thread.sleep(1000);
         Mockito.verify(mEditor)
                 .putInt(mStringArgumentCaptor.capture(), mIntegerArgumentCaptor.capture());
         assertThat(mStringArgumentCaptor.getValue()).isEqualTo(KEY_ADSERVICES_ENTRY_POINT_STATUS);
         assertThat(mIntegerArgumentCaptor.getValue())
                 .isEqualTo(ADSERVICES_ENTRY_POINT_STATUS_ENABLE);
-        mCommonService.setAdServicesNotificationConditions(false, false);
+        mCommonService.setAdServicesEnabled(false, false);
         Thread.sleep(1000);
         Mockito.verify(mEditor, times(2))
                 .putInt(mStringArgumentCaptor.capture(), mIntegerArgumentCaptor.capture());

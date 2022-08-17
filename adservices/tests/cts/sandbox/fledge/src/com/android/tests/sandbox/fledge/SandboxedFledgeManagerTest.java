@@ -43,7 +43,8 @@ public class SandboxedFledgeManagerTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final String SDK_NAME = "com.android.tests.providers.sdkfledge";
 
-    private static Context sContext;
+    private static final Context sContext =
+            InstrumentationRegistry.getInstrumentation().getContext();
 
     private DevContext mDevContext;
 
@@ -64,8 +65,6 @@ public class SandboxedFledgeManagerTest {
 
     @Before
     public void setup() throws TimeoutException {
-        sContext = InstrumentationRegistry.getInstrumentation().getContext();
-
         DevContextFilter devContextFilter = DevContextFilter.create(sContext);
         mDevContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
         boolean isDebuggable =
@@ -76,7 +75,14 @@ public class SandboxedFledgeManagerTest {
                 String.format("Debuggable: %b\n", isDebuggable)
                         + String.format("Developer options on: %b", isDeveloperMode);
 
-        // Start a foreground activity
+        makeTestProcessForeground();
+    }
+
+    /**
+     * Starts a foreground activity to make the test process a foreground one to pass PPAPI and SDK
+     * Sandbox checks
+     */
+    private void makeTestProcessForeground() throws TimeoutException {
         SimpleActivity.startAndWaitForSimpleActivity(sContext, Duration.ofMillis(500));
     }
 

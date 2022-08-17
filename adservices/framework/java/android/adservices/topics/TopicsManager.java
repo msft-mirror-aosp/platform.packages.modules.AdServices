@@ -101,9 +101,10 @@ public final class TopicsManager {
         Objects.requireNonNull(getTopicsRequest);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(callback);
-        CallerMetadata callerMetadata = new CallerMetadata.Builder()
-                .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
-                .build();
+        CallerMetadata callerMetadata =
+                new CallerMetadata.Builder()
+                        .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
+                        .build();
         final ITopicsService service = getService();
         String sdkName = getTopicsRequest.getAdsSdkName();
         String appPackageName = "";
@@ -132,8 +133,8 @@ public final class TopicsManager {
                                     () -> {
                                         if (resultParcel.isSuccess()) {
                                             callback.onResult(
-                                                    new GetTopicsResponse.Builder()
-                                                            .setTopics(getTopicList(resultParcel))
+                                                    new GetTopicsResponse.Builder(
+                                                                    getTopicList(resultParcel))
                                                             .build());
                                         } else {
                                             // TODO: Errors should be returned in onFailure method.

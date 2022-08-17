@@ -51,7 +51,8 @@
                 android:id="@+id/main_switch_bar"
                 android:layout_height="wrap_content"
                 android:layout_width="match_parent"
-                android:title="@string/settingsUI_privacy_sandbox_beta_switch_title" />
+                android:title="@string/settingsUI_privacy_sandbox_beta_switch_title"
+                android:textDirection="locale" />
             <LinearLayout
                 android:id="@+id/privacy_sandbox_controls"
                 android:layout_width="match_parent"
@@ -59,24 +60,18 @@
                 android:orientation="vertical" >
                 <TextView
                     android:id="@+id/topics_preference"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="20dp"
-                    android:key="topics_preference"
                     android:background="?android:attr/selectableItemBackground"
+                    android:layout_marginTop="0dp"
+                    android:padding="20dp"
                     android:text="@string/settingsUI_topics_title"
-                    android:textAppearance="@style/TextAppearance.H5" />
+                    style="@style/MainStyle.H5" />
                 <TextView
                     android:id="@+id/apps_preference"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="20dp"
-                    android:key="topics_preference"
                     android:background="?android:attr/selectableItemBackground"
+                    android:layout_marginTop="0dp"
+                    android:padding="20dp"
                     android:text="@string/settingsUI_apps_title"
-                    android:textAppearance="@style/TextAppearance.H5" />
+                    style="@style/MainStyle.H5" />
             </LinearLayout>
 
             <LinearLayout

@@ -111,7 +111,7 @@ public class SdkSandboxManagerTest {
         mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isFalse();
         assertThat(callback.getLoadSdkErrorCode())
-                .isEqualTo(SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR);
+                .isEqualTo(SdkSandboxManager.LOAD_SDK_SDK_DEFINED_ERROR);
     }
 
     @Test

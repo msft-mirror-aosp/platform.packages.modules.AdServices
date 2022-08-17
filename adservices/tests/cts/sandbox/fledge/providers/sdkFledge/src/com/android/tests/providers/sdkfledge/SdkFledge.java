@@ -30,6 +30,8 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.AddCustomAudienceOverrideRequest;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.TrustedBiddingData;
+import android.app.sdksandbox.LoadSdkException;
+import android.app.sdksandbox.LoadSdkResponse;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
 import android.net.Uri;
@@ -110,35 +112,15 @@ public class SdkFledge extends SandboxedSdkProvider {
     private AdvertisingCustomAudienceClient mCustomAudienceClient;
     private TestAdvertisingCustomAudienceClient mTestCustomAudienceClient;
 
-    private Executor mExecutor;
-    private OnLoadSdkCallback mCallback;
-
     @Override
-    public void onLoadSdk(Bundle params, Executor executor, OnLoadSdkCallback callback) {
-        mExecutor = executor;
-        mCallback = callback;
-        executeTest();
-        callback.onLoadSdkFinished(null);
-    }
-
-    @Override
-    public View getView(
-            @NonNull Context windowContext, @NonNull Bundle params, int width, int height) {
-        return null;
-    }
-
-    @Override
-    public void onDataReceived(Bundle data, DataReceivedCallback callback) {}
-
-    private void executeTest() {
+    public LoadSdkResponse onLoadSdk(Bundle params) throws LoadSdkException {
         try {
             setup();
         } catch (Exception e) {
             String errorMessage =
                     String.format("Error setting up the test: message is %s", e.getMessage());
             Log.e(TAG, errorMessage);
-            mExecutor.execute(() -> mCallback.onLoadSdkError(errorMessage));
-            return;
+            throw new LoadSdkException(e, new Bundle());
         }
         String decisionLogicJs =
                 "function scoreAd(ad, bid, auction_config, seller_signals,"
@@ -182,8 +164,7 @@ public class SdkFledge extends SandboxedSdkProvider {
             String errorMessage =
                     String.format("Error setting up the test: message is %s", e.getMessage());
             Log.e(TAG, errorMessage);
-            mExecutor.execute(() -> mCallback.onLoadSdkError(errorMessage));
-            return;
+            throw new LoadSdkException(e, new Bundle());
         }
 
         try {
@@ -198,8 +179,7 @@ public class SdkFledge extends SandboxedSdkProvider {
                     String.format(
                             "Error adding ad selection override: message is %s", e.getMessage());
             Log.e(TAG, errorMessage);
-            mExecutor.execute(() -> mCallback.onLoadSdkError(errorMessage));
-            return;
+            throw new LoadSdkException(e, new Bundle());
         }
 
         try {
@@ -220,8 +200,7 @@ public class SdkFledge extends SandboxedSdkProvider {
                     String.format(
                             "Error adding custom audience override: message is %s", e.getMessage());
             Log.e(TAG, errorMessage);
-            mExecutor.execute(() -> mCallback.onLoadSdkError(errorMessage));
-            return;
+            throw new LoadSdkException(e, new Bundle());
         }
 
         Log.i(
@@ -244,15 +223,14 @@ public class SdkFledge extends SandboxedSdkProvider {
                     .equals(getUri(BUYER_2.toString(), AD_URL_PREFIX + "/ad3"))) {
                 String errorMessage = String.format("Ad selection failed to select the correct ad");
                 Log.e(TAG, errorMessage);
-                mExecutor.execute(() -> mCallback.onLoadSdkError(errorMessage));
+                throw new LoadSdkException(new Exception(errorMessage), new Bundle());
             }
         } catch (Exception e) {
             String errorMessage =
                     String.format(
                             "Error encountered during ad selection: message is %s", e.getMessage());
             Log.e(TAG, errorMessage);
-            mExecutor.execute(() -> mCallback.onLoadSdkError(errorMessage));
-            return;
+            throw new LoadSdkException(e, new Bundle());
         }
 
         try {
@@ -266,13 +244,21 @@ public class SdkFledge extends SandboxedSdkProvider {
                     String.format(
                             "Error encountered during reporting: message is %s", e.getMessage());
             Log.e(TAG, errorMessage);
-            mExecutor.execute(() -> mCallback.onLoadSdkError(errorMessage));
-            return;
+            throw new LoadSdkException(e, new Bundle());
         }
 
         // If we got this far, that means the test succeeded
-        mExecutor.execute(() -> mCallback.onLoadSdkFinished(null));
+        return new LoadSdkResponse(new Bundle());
     }
+
+    @Override
+    public View getView(
+            @NonNull Context windowContext, @NonNull Bundle params, int width, int height) {
+        return null;
+    }
+
+    @Override
+    public void onDataReceived(Bundle data, DataReceivedCallback callback) {}
 
     private void setup() {
         mAdSelectionClient =

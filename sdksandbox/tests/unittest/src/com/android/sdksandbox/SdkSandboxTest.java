@@ -18,6 +18,8 @@ package com.android.sdksandbox;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import android.app.sdksandbox.LoadSdkException;
+import android.app.sdksandbox.LoadSdkResponse;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
@@ -37,6 +39,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.mockito.Mockito;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
@@ -54,11 +57,17 @@ public class SdkSandboxTest {
     private static final String SDK_NAME = "com.android.testprovider";
     private static final String SDK_PACKAGE = "com.android.testprovider";
     private static final String SDK_PROVIDER_CLASS = "com.android.testprovider.TestProvider";
+    private static final long TIME_SYSTEM_SERVER_CALLED_SANDBOX = 3;
+    private static final long TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER = 5;
+    private static final long TIME_SANDBOX_CALLED_SDK = 7;
+    private static final long TIME_SDK_CALL_COMPLETED = 9;
+    private static final long TIME_SANDBOX_CALLED_SYSTEM_SERVER = 11;
 
     private static final Map<String, String> TEST_DATA =
             Map.of("hello1", "world1", "hello2", "world2", "empty", "");
 
     private Context mContext;
+    private InjectorForTest mInjector;
 
     static class InjectorForTest extends SdkSandboxServiceImpl.Injector {
 
@@ -81,8 +90,8 @@ public class SdkSandboxTest {
     @Before
     public void setup() throws Exception {
         mContext = InstrumentationRegistry.getContext();
-        InjectorForTest injector = new InjectorForTest(mContext);
-        mService = new SdkSandboxServiceImpl(injector);
+        mInjector = Mockito.spy(new InjectorForTest(mContext));
+        mService = new SdkSandboxServiceImpl(mInjector);
         mApplicationInfo = mContext.getPackageManager().getApplicationInfo(SDK_PACKAGE, 0);
     }
 
@@ -111,8 +120,10 @@ public class SdkSandboxTest {
 
     @Test
     public void testDuplicateLoadingFails() throws Exception {
-        CountDownLatch latch = new CountDownLatch(2);
-        RemoteCode mRemoteCode = new RemoteCode(latch);
+        CountDownLatch latch1 = new CountDownLatch(1);
+        RemoteCode mRemoteCode1 = new RemoteCode(latch1);
+        CountDownLatch latch2 = new CountDownLatch(1);
+        RemoteCode mRemoteCode2 = new RemoteCode(latch2);
         IBinder duplicateToken = new Binder();
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
@@ -123,7 +134,8 @@ public class SdkSandboxTest {
                 null,
                 null,
                 new Bundle(),
-                mRemoteCode);
+                mRemoteCode1);
+        assertThat(latch1.await(1, TimeUnit.MINUTES)).isTrue();
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
                 duplicateToken,
@@ -133,10 +145,10 @@ public class SdkSandboxTest {
                 null,
                 null,
                 new Bundle(),
-                mRemoteCode);
-        assertThat(latch.await(1, TimeUnit.MINUTES)).isTrue();
-        assertThat(mRemoteCode.mSuccessful).isFalse();
-        assertThat(mRemoteCode.mErrorCode)
+                mRemoteCode2);
+        assertThat(latch2.await(1, TimeUnit.MINUTES)).isTrue();
+        assertThat(mRemoteCode2.mSuccessful).isFalse();
+        assertThat(mRemoteCode2.mErrorCode)
                 .isEqualTo(ILoadSdkInSandboxCallback.LOAD_SDK_ALREADY_LOADED);
     }
 
@@ -194,7 +206,13 @@ public class SdkSandboxTest {
         mRemoteCode
                 .getCallback()
                 .onSurfacePackageRequested(
-                        new Binder(), mContext.getDisplayId(), 500, 500, new Bundle(), callback);
+                        new Binder(),
+                        mContext.getDisplayId(),
+                        500,
+                        500,
+                        System.currentTimeMillis(),
+                        new Bundle(),
+                        callback);
         assertThat(surfaceLatch.await(1, TimeUnit.MINUTES)).isTrue();
         assertThat(callback.mSurfacePackage).isNotNull();
     }
@@ -221,7 +239,13 @@ public class SdkSandboxTest {
         mRemoteCode
                 .getCallback()
                 .onSurfacePackageRequested(
-                        new Binder(), 111111 /* invalid displayId */, 500, 500, null, callback);
+                        new Binder(),
+                        111111 /* invalid displayId */,
+                        500,
+                        500,
+                        System.currentTimeMillis(),
+                        null,
+                        callback);
         assertThat(surfaceLatch.await(1, TimeUnit.MINUTES)).isTrue();
         assertThat(callback.mSurfacePackage).isNull();
         assertThat(callback.mSuccessful).isFalse();
@@ -265,28 +289,85 @@ public class SdkSandboxTest {
 
         private ISdkSandboxManagerToSdkSandboxCallback mCallback;
 
+        private ISdkSandboxManagerToSdkSandboxCallback getCallback() {
+            return mCallback;
+        }
+
         RemoteCode(CountDownLatch latch) {
             mLatch = latch;
         }
 
         @Override
         public void onLoadSdkSuccess(
-                Bundle params, ISdkSandboxManagerToSdkSandboxCallback callback)  {
+                LoadSdkResponse loadSdkResponse, ISdkSandboxManagerToSdkSandboxCallback callback) {
             mLatch.countDown();
             mCallback = callback;
             mSuccessful = true;
         }
 
         @Override
-        public void onLoadSdkError(int errorCode, String message) {
+        public void onLoadSdkError(LoadSdkException exception) {
             mLatch.countDown();
-            mErrorCode = errorCode;
+            mErrorCode = exception.getLoadSdkErrorCode();
             mSuccessful = false;
         }
 
-        private ISdkSandboxManagerToSdkSandboxCallback getCallback() {
-            return mCallback;
-        }
+    }
+
+    @Test
+    public void testLatencyMetrics_requestSurfacePackage_success() throws Exception {
+        final CountDownLatch latch = new CountDownLatch(1);
+        final RemoteCode mRemoteCode = new RemoteCode(latch);
+
+        Mockito.when(mInjector.getCurrentTime())
+                .thenReturn(
+                        TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER,
+                        TIME_SANDBOX_CALLED_SDK,
+                        TIME_SDK_CALL_COMPLETED,
+                        TIME_SANDBOX_CALLED_SYSTEM_SERVER);
+
+        mService.loadSdk(
+                CLIENT_PACKAGE_NAME,
+                new Binder(),
+                mApplicationInfo,
+                SDK_NAME,
+                SDK_PROVIDER_CLASS,
+                null,
+                null,
+                new Bundle(),
+                mRemoteCode);
+        assertThat(latch.await(1, TimeUnit.MINUTES)).isTrue();
+
+        CountDownLatch surfaceLatch = new CountDownLatch(1);
+        RequestSurfacePackageCallbackImpl callback =
+                new RequestSurfacePackageCallbackImpl(surfaceLatch);
+        mRemoteCode
+                .getCallback()
+                .onSurfacePackageRequested(
+                        new Binder(),
+                        mContext.getDisplayId(),
+                        500,
+                        500,
+                        TIME_SYSTEM_SERVER_CALLED_SANDBOX,
+                        new Bundle(),
+                        callback);
+        assertThat(surfaceLatch.await(1, TimeUnit.MINUTES)).isTrue();
+        assertThat(callback.mSurfacePackage).isNotNull();
+        assertThat(callback.mLatencySystemServerToSandbox)
+                .isEqualTo(
+                        (int)
+                                (TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER
+                                        - TIME_SYSTEM_SERVER_CALLED_SANDBOX));
+        assertThat(callback.mLatencySdk)
+                .isEqualTo((int) (TIME_SDK_CALL_COMPLETED - TIME_SANDBOX_CALLED_SDK));
+        assertThat(callback.mLatencySandbox)
+                .isEqualTo(
+                        (int)
+                                (TIME_SANDBOX_CALLED_SYSTEM_SERVER
+                                        - TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER
+                                        - (TIME_SDK_CALL_COMPLETED - TIME_SANDBOX_CALLED_SDK)));
+        assertThat(callback.mTimeSandboxCalledSystemServer)
+                .isEqualTo(TIME_SANDBOX_CALLED_SYSTEM_SERVER);
     }
 
     private static class RequestSurfacePackageCallbackImpl
@@ -295,6 +376,10 @@ public class SdkSandboxTest {
         private SurfaceControlViewHost.SurfacePackage mSurfacePackage;
         boolean mSuccessful = false;
         int mErrorCode = -1;
+        private int mLatencySystemServerToSandbox;
+        private int mLatencySandbox;
+        private int mLatencySdk;
+        private long mTimeSandboxCalledSystemServer;
 
         RequestSurfacePackageCallbackImpl(CountDownLatch latch) {
             mLatch = latch;
@@ -304,13 +389,27 @@ public class SdkSandboxTest {
         public void onSurfacePackageReady(
                 SurfaceControlViewHost.SurfacePackage surfacePackage,
                 int displayId,
-                Bundle params) {
+                long timeSandboxCalledSystemServer,
+                Bundle params,
+                Bundle latencies) {
             mLatch.countDown();
             mSurfacePackage = surfacePackage;
+            mLatencySystemServerToSandbox =
+                    latencies.getInt(
+                            IRequestSurfacePackageFromSdkCallback.LATENCY_SYSTEM_SERVER_TO_SANDBOX);
+            mLatencySandbox =
+                    latencies.getInt(IRequestSurfacePackageFromSdkCallback.LATENCY_SANDBOX);
+            mLatencySdk = latencies.getInt(IRequestSurfacePackageFromSdkCallback.LATENCY_SDK);
+            mTimeSandboxCalledSystemServer = timeSandboxCalledSystemServer;
         }
 
         @Override
-        public void onSurfacePackageError(int errorCode, String message) {
+        public void onSurfacePackageError(
+                int errorCode,
+                String message,
+                long timeSandboxCalledSystemServer,
+                boolean failedAtSdk,
+                Bundle sandboxLatencies) {
             mLatch.countDown();
             mErrorCode = errorCode;
             mSuccessful = false;
