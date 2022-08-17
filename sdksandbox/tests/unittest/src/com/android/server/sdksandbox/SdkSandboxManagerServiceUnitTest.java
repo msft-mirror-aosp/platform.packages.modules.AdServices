@@ -363,7 +363,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
         assertThat(callback.isLoadSdkSuccessful()).isFalse();
         assertThat(callback.getLoadSdkErrorCode())
-                .isEqualTo(SdkSandboxManager.SANDBOX_NOT_AVAILABLE);
+                .isEqualTo(SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE);
     }
 
     @Test
@@ -417,7 +417,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 callback);
         assertThat(callback.isRequestSurfacePackageSuccessful()).isFalse();
         assertThat(callback.getSurfacePackageErrorCode())
-                .isEqualTo(SdkSandboxManager.SANDBOX_NOT_AVAILABLE);
+                .isEqualTo(SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE);
     }
 
     @Test
@@ -479,7 +479,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 requestSurfacePackageCallback);
         assertThat(requestSurfacePackageCallback.isRequestSurfacePackageSuccessful()).isFalse();
         assertThat(requestSurfacePackageCallback.getSurfacePackageErrorCode())
-                .isEqualTo(SdkSandboxManager.SANDBOX_NOT_AVAILABLE);
+                .isEqualTo(SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE);
     }
 
     @Test
@@ -534,7 +534,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
         assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isFalse();
         assertThat(surfacePackageCallback.getSurfacePackageErrorCode())
-                .isEqualTo(SdkSandboxManager.SANDBOX_NOT_AVAILABLE);
+                .isEqualTo(SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE);
     }
 
     @Test
@@ -590,7 +590,7 @@ public class SdkSandboxManagerServiceUnitTest {
         mService.sendData(TEST_PACKAGE, SDK_NAME, new Bundle(), callback);
         assertThat(callback.isSendDataSuccessful()).isFalse();
         assertThat(callback.getSendDataErrorCode())
-                .isEqualTo(SdkSandboxManager.SANDBOX_NOT_AVAILABLE);
+                .isEqualTo(SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE);
     }
 
     @Test
@@ -619,7 +619,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
         assertThat(sendDataCallback.isSendDataSuccessful()).isFalse();
         assertThat(sendDataCallback.getSendDataErrorCode())
-                .isEqualTo(SdkSandboxManager.SANDBOX_NOT_AVAILABLE);
+                .isEqualTo(SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE);
     }
 
     @Test
