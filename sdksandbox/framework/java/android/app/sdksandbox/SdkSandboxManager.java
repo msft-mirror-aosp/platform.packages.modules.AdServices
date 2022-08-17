@@ -67,6 +67,14 @@ public final class SdkSandboxManager {
     public static final String SDK_SANDBOX_SERVICE = "sdk_sandbox";
 
     /**
+     * Sandbox is not available.
+     *
+     * <p>This indicates that the sandbox process is not available, either because it has died,
+     * disconnected or was not created in the first place.
+     */
+    public static final int SANDBOX_NOT_AVAILABLE = 503;
+
+    /**
      * SDK not found.
      *
      * <p>This indicates that client application tried to load a non-existing SDK by calling {@link
