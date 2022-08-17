@@ -566,6 +566,8 @@ public final class MeasurementImplTest {
                                         DEFAULT_CONTEXT.getAttributionSource().getPackageName())
                                 .setDomainUris(Collections.emptyList())
                                 .setOriginUris(Collections.emptyList())
+                                .setStart(Instant.ofEpochMilli(Long.MIN_VALUE))
+                                .setEnd(Instant.ofEpochMilli(Long.MAX_VALUE))
                                 .build());
         assertEquals(STATUS_SUCCESS, result);
     }
@@ -598,39 +600,10 @@ public final class MeasurementImplTest {
                                 .setOriginUris(Collections.singletonList(DEFAULT_URI))
                                 .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
                                 .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
+                                .setStart(Instant.ofEpochMilli(Long.MIN_VALUE))
+                                .setEnd(Instant.ofEpochMilli(Long.MAX_VALUE))
                                 .build());
         assertEquals(STATUS_SUCCESS, result);
-    }
-    @Test
-    public void testDeleteRegistrations_invalidParameterStartButNoEnd() {
-        final int result =
-                mMeasurementImpl.deleteRegistrations(
-                        new DeletionParam.Builder()
-                                .setPackageName(
-                                        DEFAULT_CONTEXT.getAttributionSource().getPackageName())
-                                .setDomainUris(Collections.emptyList())
-                                .setOriginUris(Collections.emptyList())
-                                .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
-                                .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
-                                .setStart(Instant.now())
-                                .build());
-        assertEquals(STATUS_INVALID_ARGUMENT, result);
-    }
-
-    @Test
-    public void testDeleteRegistrations_invalidParameterEndButNoStart() {
-        final int result =
-                mMeasurementImpl.deleteRegistrations(
-                        new DeletionParam.Builder()
-                                .setPackageName(
-                                        DEFAULT_CONTEXT.getAttributionSource().getPackageName())
-                                .setDomainUris(Collections.emptyList())
-                                .setOriginUris(Collections.emptyList())
-                                .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
-                                .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
-                                .setEnd(Instant.now())
-                                .build());
-        assertEquals(STATUS_INVALID_ARGUMENT, result);
     }
 
     @Test
@@ -645,6 +618,8 @@ public final class MeasurementImplTest {
                                 .setOriginUris(Collections.emptyList())
                                 .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
                                 .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
+                                .setStart(Instant.MIN)
+                                .setEnd(Instant.MAX)
                                 .build());
         assertEquals(STATUS_INTERNAL_ERROR, result);
     }
