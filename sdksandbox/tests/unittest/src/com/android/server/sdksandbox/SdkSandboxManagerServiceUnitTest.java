@@ -46,6 +46,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Process;
 import android.os.RemoteException;
+import android.os.ServiceManager;
 import android.util.ArrayMap;
 
 import androidx.annotation.Nullable;
@@ -157,6 +158,11 @@ public class SdkSandboxManagerServiceUnitTest {
                 Mockito.eq("android.permission.INTERNET"), Mockito.anyString());
         Mockito.doNothing().when(mSpyContext).enforceCallingPermission(
                 Mockito.eq("android.permission.ACCESS_NETWORK_STATE"), Mockito.anyString());
+    }
+
+    @Test
+    public void testSdkSandboxManagerIsRegistered() throws Exception {
+        ServiceManager.getServiceOrThrow(SdkSandboxManager.SDK_SANDBOX_SERVICE);
     }
 
     @Test
