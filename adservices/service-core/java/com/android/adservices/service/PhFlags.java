@@ -220,7 +220,7 @@ public final class PhFlags implements Flags {
     static final String KEY_CONSENT_NOTIFICATION_DEBUG_MODE = "consent_notification_debug_mode";
 
     // App/SDK AllowList/DenyList keys that have access to the web registration APIs
-    static final String KEY_WEB_CONTEXT_REGISTRATION_CLIENT_ALLOW_LIST =
+    static final String KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST =
             "web_context_registration_client_allow_list";
 
     private static final PhFlags sSingleton = new PhFlags();
@@ -1188,11 +1188,11 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public String getWebContextRegistrationClientAppAllowList() {
+    public String getWebContextClientAppAllowList() {
         return DeviceConfig.getString(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_WEB_CONTEXT_REGISTRATION_CLIENT_ALLOW_LIST,
-                /* defaultValue */ WEB_CONTEXT_REGISTRATION_CLIENT_ALLOW_LIST);
+                /* flagName */ KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST,
+                /* defaultValue */ WEB_CONTEXT_CLIENT_ALLOW_LIST);
     }
 
     @VisibleForTesting
