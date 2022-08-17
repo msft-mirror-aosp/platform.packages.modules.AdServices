@@ -73,7 +73,7 @@ public final class PermissionHelper {
         if (useSandboxCheck) {
             // TODO(b/240718367): Add check for SDK permission.
         }
-        return (context.checkCallingOrSelfPermission(AdServicesPermissions.ACCESS_ADSERVICES_ADID)
+        return (context.checkCallingOrSelfPermission(AdServicesPermissions.ACCESS_ADSERVICES_AD_ID)
                 == PackageManager.PERMISSION_GRANTED);
     }
 
