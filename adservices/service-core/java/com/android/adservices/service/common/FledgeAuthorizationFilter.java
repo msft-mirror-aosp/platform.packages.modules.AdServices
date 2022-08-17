@@ -65,39 +65,41 @@ public class FledgeAuthorizationFilter {
      * @param callingPackageName the caller-supplied package name
      * @param callingUid the uid get from the Binder
      * @param apiNameLoggingId the id of the api being called
-     * @throws SecurityException if the package name provided does not associate with the uid.
+     * @throws CallerMismatchException if the package name provided does not associate with the uid.
      */
     public void assertCallingPackageName(
-            @NonNull String callingPackageName, int callingUid, int apiNameLoggingId) {
+            @NonNull String callingPackageName, int callingUid, int apiNameLoggingId)
+            throws CallerMismatchException {
         Objects.requireNonNull(callingPackageName);
 
         LogUtil.v(
-                "Asserting package name '%s' is valid for uid %d", callingPackageName, callingUid);
+                "Asserting package name \"%s\" is valid for uid %d",
+                callingPackageName, callingUid);
 
         String[] packageNamesForUid = mPackageManager.getPackagesForUid(callingUid);
         for (String packageNameForUid : packageNamesForUid) {
-            LogUtil.v("Candidate package name '%s'", packageNameForUid);
+            LogUtil.v("Candidate package name \"%s\"", packageNameForUid);
             if (callingPackageName.equals(packageNameForUid)) return;
         }
 
-        LogUtil.v("No match found, failing");
+        LogUtil.v("No match found, failing calling package name match in API %d", apiNameLoggingId);
         mAdServicesLogger.logFledgeApiCallStats(
                 apiNameLoggingId, AdServicesStatusUtils.STATUS_UNAUTHORIZED);
-        throw new SecurityException(
-                AdServicesStatusUtils
-                        .SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE);
+        throw new CallerMismatchException();
     }
 
     /**
      * Check if the app had declared custom audience permission.
      *
-     * @param context api service context.
+     * @param context api service context
      * @param apiNameLoggingId the id of the api being called
-     * @throws SecurityException if the package did not declare custom audience permission.
+     * @throws SecurityException if the package did not declare custom audience permission
      */
-    public void assertAppHasPermission(@NonNull Context context, int apiNameLoggingId) {
+    public void assertAppDeclaredPermission(@NonNull Context context, int apiNameLoggingId)
+            throws SecurityException {
         Objects.requireNonNull(context);
         if (!PermissionHelper.hasCustomAudiencesPermission(context)) {
+            LogUtil.v("Permission not declared by caller in API %d", apiNameLoggingId);
             mAdServicesLogger.logFledgeApiCallStats(
                     apiNameLoggingId, AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED);
             throw new SecurityException(
@@ -107,19 +109,21 @@ public class FledgeAuthorizationFilter {
     }
 
     /**
-     * Check if a certain ad tech is authorized to perform the operation for the package.
+     * Check if a certain ad tech is enrolled and authorized to perform the operation for the
+     * package.
      *
      * @param context api service context
      * @param appPackageName the package name to check against
      * @param adTechIdentifier the ad tech to check against
      * @param apiNameLoggingId the id of the api being called
-     * @throws SecurityException if the ad tech are not authorized to perform the operation.
+     * @throws AdTechNotAllowedException if the ad tech is not authorized to perform the operation
      */
-    public void assertAdTechHasPermission(
+    public void assertAdTechAllowed(
             @NonNull Context context,
             @NonNull String appPackageName,
             @NonNull AdTechIdentifier adTechIdentifier,
-            int apiNameLoggingId) {
+            int apiNameLoggingId)
+            throws AdTechNotAllowedException {
         Objects.requireNonNull(context);
         Objects.requireNonNull(appPackageName);
         Objects.requireNonNull(adTechIdentifier);
@@ -128,18 +132,57 @@ public class FledgeAuthorizationFilter {
                 mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(adTechIdentifier);
 
         if (enrollmentData == null) {
+            LogUtil.v("Enrollment data load error in API %d", apiNameLoggingId);
             mAdServicesLogger.logFledgeApiCallStats(
                     apiNameLoggingId, AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED);
-            throw new SecurityException(
-                    AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE);
+            throw new AdTechNotAllowedException();
         }
 
         if (!AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
                 context, appPackageName, enrollmentData.getEnrollmentId())) {
+            LogUtil.v(
+                    "App package name \"%s\" with ad tech identifier \"%s\" not authorized to call"
+                            + " API %d",
+                    appPackageName, adTechIdentifier.toString(), apiNameLoggingId);
             mAdServicesLogger.logFledgeApiCallStats(
                     apiNameLoggingId, AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED);
-            throw new SecurityException(
-                    AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE);
+            throw new AdTechNotAllowedException();
+        }
+    }
+
+    /**
+     * Internal exception for easy assertion catches specific to checking that a caller matches the
+     * given package name.
+     *
+     * <p>This exception is not meant to be exposed externally and should not be passed outside of
+     * the service.
+     */
+    public static class CallerMismatchException extends SecurityException {
+        /**
+         * Creates a {@link CallerMismatchException}, used in cases where a caller should match the
+         * package name provided to the API.
+         */
+        public CallerMismatchException() {
+            super(
+                    AdServicesStatusUtils
+                            .SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE);
+        }
+    }
+
+    /**
+     * Internal exception for easy assertion catches specific to checking that an ad tech is allowed
+     * to use the PP APIs.
+     *
+     * <p>This exception is not meant to be exposed externally and should not be passed outside of
+     * the service.
+     */
+    public static class AdTechNotAllowedException extends SecurityException {
+        /**
+         * Creates a {@link AdTechNotAllowedException}, used in cases where an ad tech should have
+         * been allowed to use the PP APIs.
+         */
+        public AdTechNotAllowedException() {
+            super(AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE);
         }
     }
 }

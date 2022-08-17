@@ -96,6 +96,20 @@ public class PhFlagsFixture {
                 false);
     }
 
+    /**
+     * Enables test to override the flag enabling the enrollment check for callers of the Custom
+     * Audience API.
+     *
+     * @param enable whether enable or disable the check
+     */
+    public static void overrideFledgeCustomAudienceEnrollmentCheck(boolean enable) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                PhFlags.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK,
+                Boolean.toString(!enable),
+                false);
+    }
+
     public static void overrideEnforceIsolateMaxHeapSize(boolean value) {
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
