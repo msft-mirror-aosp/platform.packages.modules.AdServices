@@ -109,9 +109,7 @@ public class MeasurementManagerCtsTest {
                                 sContext, ConsentManager.getInstance(sContext), mockFlags))
                 .when(mm)
                 .getService();
-        Mockito.doReturn(ALLOW_LIST_ALL)
-                .when(mockFlags)
-                .getWebContextRegistrationClientAppAllowList();
+        Mockito.doReturn(ALLOW_LIST_ALL).when(mockFlags).getWebContextClientAppAllowList();
 
         mMeasurementClient =
                 new MeasurementClient.Builder()
