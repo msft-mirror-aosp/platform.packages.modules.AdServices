@@ -51,6 +51,7 @@ import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.exceptions.AdServicesException;
 import android.content.Context;
 import android.net.Uri;
+import android.os.Process;
 import android.os.RemoteException;
 
 import androidx.room.Room;
@@ -67,6 +68,7 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -110,8 +112,15 @@ public class AdSelectionRunnerTest {
     private static final AdTechIdentifier BUYER_2 = AdSelectionConfigFixture.BUYER_2;
     private static final Long AD_SELECTION_ID = 1234L;
     private static final String ERROR_INVALID_JSON = "Invalid Json Exception";
-    private static final int CALLER_UID = 100;
+    private static final int CALLER_UID = Process.myUid();
     private static final String MY_APP_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
+
+    private static final AdTechIdentifier SELLER_VALID =
+            AdTechIdentifier.fromString("developer.android.com");
+    private static final Uri DECISION_LOGIC_URI =
+            Uri.parse("https://developer.android.com/test/decisions_logic_urls");
+    private static final Uri TRUSTED_SIGNALS_URI =
+            Uri.parse("https://developer.android.com/test/trusted_signals_uri");
 
     private MockitoSession mStaticMockSession = null;
     @Mock private AdsScoreGenerator mMockAdsScoreGenerator;
@@ -168,7 +177,10 @@ public class AdSelectionRunnerTest {
 
         mAdSelectionConfigBuilder =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                        .setCustomAudienceBuyers(Arrays.asList(BUYER_1, BUYER_2));
+                        .setSeller(SELLER_VALID)
+                        .setCustomAudienceBuyers(Arrays.asList(BUYER_1, BUYER_2))
+                        .setDecisionLogicUri(DECISION_LOGIC_URI)
+                        .setTrustedScoringSignalsUri(TRUSTED_SIGNALS_URI);
 
         mDBCustomAudienceForBuyer1 = createDBCustomAudience(BUYER_1);
         mDBCustomAudienceForBuyer2 = createDBCustomAudience(BUYER_2);
@@ -211,7 +223,6 @@ public class AdSelectionRunnerTest {
         when(mClock.instant()).thenReturn(Clock.systemUTC().instant());
         doReturn(mFlags).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
-
         // Creating ad selection config for happy case with all the buyers in place
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -292,7 +303,8 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
-                        CALLER_UID);
+                        CALLER_UID,
+                        FledgeAuthorizationFilter.create(mContext, mAdServicesLoggerSpy));
 
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
@@ -374,7 +386,8 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
-                        CALLER_UID);
+                        CALLER_UID,
+                        FledgeAuthorizationFilter.create(mContext, mAdServicesLoggerSpy));
 
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
@@ -482,7 +495,8 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
-                        CALLER_UID);
+                        CALLER_UID,
+                        FledgeAuthorizationFilter.create(mContext, mAdServicesLoggerSpy));
 
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
@@ -554,7 +568,8 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
-                        CALLER_UID);
+                        CALLER_UID,
+                        FledgeAuthorizationFilter.create(mContext, mAdServicesLoggerSpy));
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
 
@@ -600,7 +615,8 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
-                        CALLER_UID);
+                        CALLER_UID,
+                        FledgeAuthorizationFilter.create(mContext, mAdServicesLoggerSpy));
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
 
@@ -637,7 +653,8 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
-                        CALLER_UID);
+                        CALLER_UID,
+                        FledgeAuthorizationFilter.create(mContext, mAdServicesLoggerSpy));
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
 
@@ -715,7 +732,8 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
-                        CALLER_UID);
+                        CALLER_UID,
+                        FledgeAuthorizationFilter.create(mContext, mAdServicesLoggerSpy));
 
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
@@ -843,7 +861,8 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
-                        CALLER_UID);
+                        CALLER_UID,
+                        FledgeAuthorizationFilter.create(mContext, mAdServicesLoggerSpy));
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
@@ -941,7 +960,8 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
-                        CALLER_UID);
+                        CALLER_UID,
+                        FledgeAuthorizationFilter.create(mContext, mAdServicesLoggerSpy));
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
@@ -1046,7 +1066,8 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
-                        CALLER_UID);
+                        CALLER_UID,
+                        FledgeAuthorizationFilter.create(mContext, mAdServicesLoggerSpy));
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
@@ -1153,7 +1174,8 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
-                        CALLER_UID);
+                        CALLER_UID,
+                        FledgeAuthorizationFilter.create(mContext, mAdServicesLoggerSpy));
 
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
@@ -1285,7 +1307,8 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
-                        CALLER_UID);
+                        CALLER_UID,
+                        FledgeAuthorizationFilter.create(mContext, mAdServicesLoggerSpy));
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
@@ -1398,7 +1421,8 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         flagsWithSmallerLimits,
-                        CALLER_UID);
+                        CALLER_UID,
+                        FledgeAuthorizationFilter.create(mContext, mAdServicesLoggerSpy));
 
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 

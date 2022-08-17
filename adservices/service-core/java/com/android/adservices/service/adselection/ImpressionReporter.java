@@ -39,6 +39,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
+import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
@@ -77,6 +78,7 @@ public class ImpressionReporter {
     @NonNull private final Flags mFlags;
     @NonNull private final AppImportanceFilter mAppImportanceFilter;
     private final int mCallerUid;
+    @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
 
     public ImpressionReporter(
             @NonNull Context context,
@@ -88,7 +90,8 @@ public class ImpressionReporter {
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull final Flags flags,
-            int callerUid) {
+            int callerUid,
+            @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(adSelectionEntryDao);
@@ -98,6 +101,7 @@ public class ImpressionReporter {
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(appImportanceFilter);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(fledgeAuthorizationFilter);
 
         mContext = context;
         mListeningExecutorService = MoreExecutors.listeningDecorator(executor);
@@ -115,6 +119,7 @@ public class ImpressionReporter {
         mFlags = flags;
         mAppImportanceFilter = appImportanceFilter;
         mCallerUid = callerUid;
+        mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
     }
 
     /** Invokes the onFailure function from the callback and handles the exception. */
@@ -196,11 +201,14 @@ public class ImpressionReporter {
         long adSelectionId = requestParams.getAdSelectionId();
         AdSelectionConfig adSelectionConfig = requestParams.getAdSelectionConfig();
 
-        ListenableFuture<Void> userConsentFuture =
-                Futures.submit(this::assertCallerHasUserConsent, mListeningExecutorService);
+        ListenableFuture<Void> validateRequestFuture =
+                Futures.submit(
+                        () ->
+                                validateRequest(
+                                        adSelectionConfig, requestParams.getCallerPackageName()),
+                        mListeningExecutorService);
 
-        FluentFuture.from(userConsentFuture)
-                .transform(ignoredVoid -> maybeAssertForegroundCaller(), mListeningExecutorService)
+        FluentFuture.from(validateRequestFuture)
                 .transformAsync(
                         ignoredVoid ->
                                 computeReportingUrls(
@@ -252,6 +260,8 @@ public class ImpressionReporter {
             invokeFailure(callback, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, t.getMessage());
         } else if (t instanceof WrongCallingApplicationStateException) {
             invokeFailure(callback, AdServicesStatusUtils.STATUS_BACKGROUND_CALLER, t.getMessage());
+        } else if (t instanceof SecurityException) {
+            invokeFailure(callback, AdServicesStatusUtils.STATUS_UNAUTHORIZED, t.getMessage());
         } else {
             invokeFailure(callback, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, t.getMessage());
         }
@@ -427,6 +437,56 @@ public class ImpressionReporter {
             mAppImportanceFilter.assertCallerIsInForeground(
                     mCallerUid, AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, null);
         }
+        return null;
+    }
+
+    /**
+     * Asserts that the package name provided by the caller is one of the packages of the calling
+     * uid.
+     *
+     * @param callerPackageName caller package name from the request
+     * @throws SecurityException if the provided {@code callerPackageName} is not valid
+     * @return an ignorable {@code null}
+     */
+    private Void assertCallerPackageName(String callerPackageName) throws SecurityException {
+        mFledgeAuthorizationFilter.assertCallingPackageName(
+                callerPackageName, mCallerUid, AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION);
+        return null;
+    }
+
+    /**
+     * Validates the {@code adSelectionConfig} from the request.
+     *
+     * @param adSelectionConfig the adSelectionConfig to be validated
+     * @throws IllegalArgumentException if the provided {@code adSelectionConfig} is not valid
+     * @return an ignorable {@code null}
+     */
+    private Void validateAdSelectionConfig(AdSelectionConfig adSelectionConfig)
+            throws IllegalArgumentException {
+        AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
+        adSelectionConfigValidator.validate(adSelectionConfig);
+
+        return null;
+    }
+
+    /**
+     * Validates the {@code reportImpression} request.
+     *
+     * @param adSelectionConfig the adSelectionConfig to be validated
+     * @param callerPackageName caller package name to be validated
+     * @throws IllegalArgumentException if the provided {@code adSelectionConfig} is not valid
+     * @throws SecurityException if the {@code callerPackageName} is not valid
+     * @throws WrongCallingApplicationStateException if the foreground check is enabled and fails
+     * @throws ConsentManager.RevokedConsentException if FLEDGE or the Privacy Sandbox do not have
+     *     user consent
+     * @return an ignorable {@code null}
+     */
+    private Void validateRequest(AdSelectionConfig adSelectionConfig, String callerPackageName) {
+        assertCallerPackageName(callerPackageName);
+        maybeAssertForegroundCaller();
+        assertCallerHasUserConsent();
+        validateAdSelectionConfig(adSelectionConfig);
+
         return null;
     }
 
