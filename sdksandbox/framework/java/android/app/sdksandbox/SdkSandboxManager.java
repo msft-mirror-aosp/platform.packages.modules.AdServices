@@ -320,11 +320,12 @@ public final class SdkSandboxManager {
      * <p>This API may only be called while the caller is running in the foreground. Calls from the
      * background will result in a {@link SecurityException} being thrown.
      *
-     * @param sdkName name of the SDK to be loaded
-     * @param params the parameters App passes to SDK
+     * @param sdkName name of the SDK to be loaded.
+     * @param params additional parameters to be passed to the SDK in the form of a {@link Bundle}
+     *     as agreed between the client and the SDK.
      * @param executor the {@link Executor} on which to invoke the receiver.
-     * @param receiver This either returns a Bundle of params on a successful run, or {@link
-     *     LoadSdkException}.
+     * @param receiver This either returns a {@link LoadSdkResponse} on a successful run, or a
+     *     {@link LoadSdkException}.
      */
     public void loadSdk(
             @NonNull String sdkName,
@@ -398,11 +399,12 @@ public final class SdkSandboxManager {
      * <p>This API may only be called while the caller is running in the foreground. Calls from the
      * background will result in a {@link SecurityException} being thrown.
      *
-     * @param sdkName name of the SDK loaded into sdk sandbox
+     * @param sdkName name of the SDK loaded into sdk sandbox.
      * @param params the parameters which the client application passes to the SDK, it should
      *     contain the following params: (EXTRA_WIDTH_IN_PIXELS, EXTRA_HEIGHT_IN_PIXELS,
      *     EXTRA_DISPLAY_ID, EXTRA_HOST_TOKEN). If any of these params is missing, an
-     *     IllegalArgumentException will be thrown.
+     *     IllegalArgumentException will be thrown. Any additional parameters may be passed as
+     *     agreed between the client and the SDK.
      * @param callbackExecutor the {@link Executor} on which to invoke the callback
      * @param receiver This either returns a {@link Bundle} on success which should contain the key
      *     EXTRA_SURFACE_PACKAGE with value of {@link SurfacePackage} response, or {@link
