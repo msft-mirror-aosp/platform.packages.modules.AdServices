@@ -48,9 +48,9 @@ public class DBCustomAudienceTest {
     @Test
     public void testFromServiceObject_passThrough() {
         assertEquals(
-                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER).build(),
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1).build(),
                 DBCustomAudience.fromServiceObject(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .build(),
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                         DEFAULT_EXPIRE_IN));
@@ -74,7 +74,7 @@ public class DBCustomAudienceTest {
                 () ->
                         DBCustomAudience.fromServiceObject(
                                 CustomAudienceFixture.getValidBuilderForBuyer(
-                                                CommonFixture.VALID_BUYER)
+                                                CommonFixture.VALID_BUYER_1)
                                         .build(),
                                 null,
                                 DEFAULT_EXPIRE_IN));
@@ -87,7 +87,7 @@ public class DBCustomAudienceTest {
                 () ->
                         DBCustomAudience.fromServiceObject(
                                 CustomAudienceFixture.getValidBuilderForBuyer(
-                                                CommonFixture.VALID_BUYER)
+                                                CommonFixture.VALID_BUYER_1)
                                         .build(),
                                 CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                                 null));
@@ -96,12 +96,12 @@ public class DBCustomAudienceTest {
     @Test
     public void testFromServiceObject_noAdsData_lastUpdatedSetToZero() {
         assertEquals(
-                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER)
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
                         .setLastAdsAndBiddingDataUpdatedTime(Instant.EPOCH)
                         .setAds(null)
                         .build(),
                 DBCustomAudience.fromServiceObject(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .setAds(null)
                                 .build(),
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
@@ -111,11 +111,11 @@ public class DBCustomAudienceTest {
     @Test
     public void testFromServiceObject_activationTimeBeforeCurrentTime_setToNow() {
         assertEquals(
-                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER)
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
                         .setActivationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
                         .build(),
                 DBCustomAudience.fromServiceObject(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .setActivationTime(
                                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(
                                                 200))
@@ -127,11 +127,11 @@ public class DBCustomAudienceTest {
     @Test
     public void testFromServiceObject_nullActivationTime() {
         assertEquals(
-                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER)
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
                         .setActivationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
                         .build(),
                 DBCustomAudience.fromServiceObject(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .setActivationTime(null)
                                 .build(),
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
@@ -141,12 +141,12 @@ public class DBCustomAudienceTest {
     @Test
     public void testFromServiceObject_nullExpirationTime() {
         assertEquals(
-                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER)
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
                         .setExpirationTime(
                                 CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.plus(DEFAULT_EXPIRE_IN))
                         .build(),
                 DBCustomAudience.fromServiceObject(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .setExpirationTime(null)
                                 .build(),
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
@@ -156,7 +156,7 @@ public class DBCustomAudienceTest {
     @Test
     public void testCopyWithNullUpdatableDataThrowsException() {
         DBCustomAudience customAudience =
-                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER).build();
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1).build();
 
         assertThrows(NullPointerException.class, () -> customAudience.copyWithUpdatableData(null));
     }
@@ -165,16 +165,16 @@ public class DBCustomAudienceTest {
     public void testCopyWithUnsuccessfulUpdatableDataDoesNotChange() {
         Instant originalUpdateTime = CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI;
         DBCustomAudience originalCustomAudience =
-                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER)
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
                         .setLastAdsAndBiddingDataUpdatedTime(originalUpdateTime)
                         .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                         .setTrustedBiddingData(
                                 DBTrustedBiddingDataFixture.getValidBuilderByBuyer(
-                                                CommonFixture.VALID_BUYER)
+                                                CommonFixture.VALID_BUYER_1)
                                         .build())
                         .setAds(
                                 DBAdDataFixture.getValidDbAdDataListByBuyer(
-                                        CommonFixture.VALID_BUYER))
+                                        CommonFixture.VALID_BUYER_1))
                         .build();
 
         Instant attemptedUpdateTime = originalUpdateTime.plusSeconds(10);
@@ -193,16 +193,16 @@ public class DBCustomAudienceTest {
     public void testCopyWithSuccessfulEmptyUpdatableDataOnlyUpdatesTime() {
         Instant originalUpdateTime = CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI;
         DBCustomAudience originalCustomAudience =
-                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER)
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
                         .setLastAdsAndBiddingDataUpdatedTime(originalUpdateTime)
                         .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                         .setTrustedBiddingData(
                                 DBTrustedBiddingDataFixture.getValidBuilderByBuyer(
-                                                CommonFixture.VALID_BUYER)
+                                                CommonFixture.VALID_BUYER_1)
                                         .build())
                         .setAds(
                                 DBAdDataFixture.getValidDbAdDataListByBuyer(
-                                        CommonFixture.VALID_BUYER))
+                                        CommonFixture.VALID_BUYER_1))
                         .build();
 
         Instant attemptedUpdateTime = originalUpdateTime.plusSeconds(10);
@@ -226,22 +226,22 @@ public class DBCustomAudienceTest {
     public void testCopyWithSuccessfulFullUpdatableDataUpdatesAll() {
         Instant originalUpdateTime = CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI;
         DBCustomAudience originalCustomAudience =
-                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER)
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
                         .setLastAdsAndBiddingDataUpdatedTime(originalUpdateTime)
                         .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                         .setTrustedBiddingData(
                                 DBTrustedBiddingDataFixture.getValidBuilderByBuyer(
-                                                CommonFixture.VALID_BUYER)
+                                                CommonFixture.VALID_BUYER_1)
                                         .build())
                         .setAds(
                                 DBAdDataFixture.getValidDbAdDataListByBuyer(
-                                        CommonFixture.VALID_BUYER))
+                                        CommonFixture.VALID_BUYER_1))
                         .build();
 
         Instant attemptedUpdateTime = originalUpdateTime.plusSeconds(10);
         AdSelectionSignals updatedUserBiddingSignals = AdSelectionSignals.fromString("{'new':1}");
         DBTrustedBiddingData updatedTrustedBiddingData =
-                DBTrustedBiddingDataFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER)
+                DBTrustedBiddingDataFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
                         .setKeys(Arrays.asList("new", "updated"))
                         .build();
         List<DBAdData> updatedAds = Collections.emptyList();
