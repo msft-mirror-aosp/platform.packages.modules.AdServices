@@ -40,6 +40,8 @@ public class SdkProvider extends SandboxedSdkProvider {
             Bundle returnData = new Bundle();
             returnData.putChar("Completed", 'C');
             callback.onDataReceivedSuccess(returnData);
+        } else if (data.getChar("Error") == 'E') {
+            throw new RuntimeException();
         } else {
             callback.onDataReceivedError("Unable to process data.");
         }
