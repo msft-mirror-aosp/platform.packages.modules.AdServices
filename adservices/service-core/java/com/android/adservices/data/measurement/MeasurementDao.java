@@ -1122,8 +1122,8 @@ class MeasurementDao implements IMeasurementDao {
                 aggregateReport.getSourceRegistrationTime());
         values.put(MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME,
                 aggregateReport.getScheduledReportTime());
-        values.put(MeasurementTables.AggregateReport.REPORTING_ORIGIN,
-                aggregateReport.getReportingOrigin().toString());
+        values.put(MeasurementTables.AggregateReport.AD_TECH_DOMAIN,
+                aggregateReport.getAdTechDomain().toString());
         values.put(MeasurementTables.AggregateReport.DEBUG_CLEARTEXT_PAYLOAD,
                 aggregateReport.getDebugCleartextPayload());
         values.put(MeasurementTables.AggregateReport.STATUS,
