@@ -371,13 +371,13 @@ public final class MeasurementImpl {
             if (!isDestinationWithinPrivacyBounds(
                     publisher.get(),
                     publisherType,
-                    registration.getReportingOrigin(),
+                    registration.getRegistrationUri(),
                     sourceEventTime,
                     appDestination,
                     webDestination)) {
                 LogUtil.d("insertSources: destination exceeds privacy bound. %s %s %s %s",
                         appDestination, webDestination, publisher.get(),
-                        registration.getReportingOrigin());
+                        registration.getRegistrationUri());
                 continue;
             }
             if (!isAdTechWithinPrivacyBounds(
@@ -386,9 +386,9 @@ public final class MeasurementImpl {
                     sourceEventTime,
                     appDestination,
                     webDestination,
-                    registration.getReportingOrigin())) {
+                    registration.getRegistrationUri())) {
                 LogUtil.d("insertSources: ad-tech exceeds privacy bound. %s %s %s %s",
-                        registration.getReportingOrigin(), publisher.get(), appDestination,
+                        registration.getRegistrationUri(), publisher.get(), appDestination,
                         webDestination);
                 continue;
             }
@@ -421,7 +421,7 @@ public final class MeasurementImpl {
                 .setPublisherType(publisherType)
                 .setAppDestination(destination)
                 .setWebDestination(webDestination)
-                .setAdTechDomain(getBaseUri(registration.getReportingOrigin()))
+                .setAdTechDomain(getBaseUri(registration.getRegistrationUri()))
                 .setRegistrant(registrant)
                 .setSourceType(sourceType)
                 .setPriority(registration.getSourcePriority())
@@ -548,7 +548,7 @@ public final class MeasurementImpl {
         return new Trigger.Builder()
                 .setAttributionDestination(topOrigin)
                 .setDestinationType(destinationType)
-                .setAdTechDomain(getBaseUri(registration.getReportingOrigin()))
+                .setAdTechDomain(getBaseUri(registration.getRegistrationUri()))
                 .setRegistrant(registrant)
                 .setTriggerTime(triggerTime)
                 .setEventTriggers(registration.getEventTriggers())
@@ -694,7 +694,7 @@ public final class MeasurementImpl {
     private boolean isDestinationWithinPrivacyBounds(
             Uri publisher,
             @EventSurfaceType int publisherType,
-            Uri reportingOrigin,
+            Uri registrationUri,
             long requestTime,
             @Nullable Uri appDestination,
             @Nullable Uri webDestination) {
@@ -702,7 +702,7 @@ public final class MeasurementImpl {
         if (appDestination != null && !isDestinationWithinPrivacyBounds(
                 publisher,
                 publisherType,
-                reportingOrigin,
+                registrationUri,
                 appDestination,
                 EventSurfaceType.APP,
                 windowStartTime,
@@ -712,7 +712,7 @@ public final class MeasurementImpl {
         if (webDestination != null && !isDestinationWithinPrivacyBounds(
                 publisher,
                 publisherType,
-                reportingOrigin,
+                registrationUri,
                 webDestination,
                 EventSurfaceType.WEB,
                 windowStartTime,
@@ -725,7 +725,7 @@ public final class MeasurementImpl {
     private boolean isDestinationWithinPrivacyBounds(
             Uri publisher,
             @EventSurfaceType int publisherType,
-            Uri reportingOrigin,
+            Uri registrationUri,
             Uri destination,
             @EventSurfaceType int destinationType,
             long windowStartTime,
@@ -735,7 +735,7 @@ public final class MeasurementImpl {
                         dao.countDistinctDestinationsPerPublisherXAdTechInActiveSource(
                                 publisher,
                                 publisherType,
-                                reportingOrigin,
+                                registrationUri,
                                 destination,
                                 destinationType,
                                 windowStartTime,
@@ -759,14 +759,14 @@ public final class MeasurementImpl {
             long requestTime,
             @Nullable Uri appDestination,
             @Nullable Uri webDestination,
-            Uri reportingOrigin) {
+            Uri registrationUri) {
         long windowStartTime = requestTime - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS;
         if (appDestination != null && !isAdTechWithinPrivacyBounds(
                 publisher,
                 publisherType,
                 appDestination,
                 // TODO: will be replaced with enrollment ID
-                reportingOrigin,
+                registrationUri,
                 windowStartTime,
                 requestTime)) {
             return false;
@@ -776,7 +776,7 @@ public final class MeasurementImpl {
                 publisherType,
                 webDestination,
                 // TODO: will be replaced with enrollment ID
-                reportingOrigin,
+                registrationUri,
                 windowStartTime,
                 requestTime)) {
             return false;
@@ -788,7 +788,7 @@ public final class MeasurementImpl {
             Uri publisher,
             @EventSurfaceType int publisherType,
             Uri destination,
-            Uri reportingOrigin,
+            Uri registrationUri,
             long windowStartTime,
             long requestTime) {
         Optional<Integer> adTechCount =
@@ -798,7 +798,7 @@ public final class MeasurementImpl {
                                 publisherType,
                                 destination,
                                 // TODO: will be replaced with enrollment ID
-                                reportingOrigin,
+                                registrationUri,
                                 windowStartTime,
                                 requestTime));
 
@@ -809,7 +809,7 @@ public final class MeasurementImpl {
             LogUtil.e("isAdTechWithinPrivacyBounds: "
                     + "dao.countDistinctAdTechsPerPublisherXDestinationInSource not present"
                     + ". %s ::: %s ::: %s ::: %s ::: $s", publisher, destination,
-                    reportingOrigin, windowStartTime, requestTime);
+                    registrationUri, windowStartTime, requestTime);
             return false;
         }
     }

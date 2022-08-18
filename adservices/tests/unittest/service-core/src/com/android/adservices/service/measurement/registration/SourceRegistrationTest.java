@@ -34,14 +34,14 @@ import org.junit.Test;
 @SmallTest
 public final class SourceRegistrationTest {
     private static final Uri TOP_ORIGIN = Uri.parse("https://foo.com");
-    private static final Uri REPORTING_ORIGIN = Uri.parse("https://bar.com");
+    private static final Uri REGISTRATION_URI = Uri.parse("https://bar.com");
     private static final Long DEBUG_KEY = 2376843L;
 
     private SourceRegistration createExampleResponse() {
 
         return new SourceRegistration.Builder()
                 .setTopOrigin(TOP_ORIGIN)
-                .setReportingOrigin(REPORTING_ORIGIN)
+                .setRegistrationUri(REGISTRATION_URI)
                 .setAppDestination(Uri.parse("android-app://baz.com"))
                 .setSourceEventId(1234567)
                 .setExpiry(2345678)
@@ -56,7 +56,7 @@ public final class SourceRegistrationTest {
 
     void verifyExampleResponse(SourceRegistration response) {
         assertEquals("https://foo.com", response.getTopOrigin().toString());
-        assertEquals("https://bar.com", response.getReportingOrigin().toString());
+        assertEquals("https://bar.com", response.getRegistrationUri().toString());
         assertEquals("android-app://baz.com", response.getAppDestination().toString());
         assertEquals(1234567, response.getSourceEventId());
         assertEquals(2345678, response.getExpiry());
@@ -81,11 +81,11 @@ public final class SourceRegistrationTest {
         SourceRegistration response =
                 new SourceRegistration.Builder()
                         .setTopOrigin(TOP_ORIGIN)
-                        .setReportingOrigin(REPORTING_ORIGIN)
+                        .setRegistrationUri(REGISTRATION_URI)
                         .setAppDestination(destination)
                         .build();
         assertEquals(TOP_ORIGIN, response.getTopOrigin());
-        assertEquals(REPORTING_ORIGIN, response.getReportingOrigin());
+        assertEquals(REGISTRATION_URI, response.getRegistrationUri());
         assertEquals(destination, response.getAppDestination());
         assertNull(response.getWebDestination());
         assertEquals(0, response.getSourceEventId());
@@ -101,11 +101,11 @@ public final class SourceRegistrationTest {
         SourceRegistration response =
                 new SourceRegistration.Builder()
                         .setTopOrigin(TOP_ORIGIN)
-                        .setReportingOrigin(REPORTING_ORIGIN)
+                        .setRegistrationUri(REGISTRATION_URI)
                         .setWebDestination(destination)
                         .build();
         assertEquals(TOP_ORIGIN, response.getTopOrigin());
-        assertEquals(REPORTING_ORIGIN, response.getReportingOrigin());
+        assertEquals(REGISTRATION_URI, response.getRegistrationUri());
         assertEquals(destination, response.getWebDestination());
         assertNull(response.getAppDestination());
         assertEquals(0, response.getSourceEventId());
@@ -122,12 +122,12 @@ public final class SourceRegistrationTest {
         SourceRegistration response =
                 new SourceRegistration.Builder()
                         .setTopOrigin(TOP_ORIGIN)
-                        .setReportingOrigin(REPORTING_ORIGIN)
+                        .setRegistrationUri(REGISTRATION_URI)
                         .setAppDestination(destination)
                         .setWebDestination(webDestination)
                         .build();
         assertEquals(TOP_ORIGIN, response.getTopOrigin());
-        assertEquals(REPORTING_ORIGIN, response.getReportingOrigin());
+        assertEquals(REGISTRATION_URI, response.getRegistrationUri());
         assertEquals(webDestination, response.getWebDestination());
         assertEquals(destination, response.getAppDestination());
         assertEquals(0, response.getSourceEventId());
