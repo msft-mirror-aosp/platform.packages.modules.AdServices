@@ -31,7 +31,7 @@ import android.os.Process;
 import android.preference.PreferenceManager;
 import android.view.SurfaceControlViewHost;
 
-import androidx.test.InstrumentationRegistry;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import org.junit.After;
 import org.junit.Before;
@@ -89,7 +89,8 @@ public class SdkSandboxTest {
 
     @Before
     public void setup() throws Exception {
-        mContext = InstrumentationRegistry.getContext();
+        Context context = InstrumentationRegistry.getInstrumentation().getContext();
+        mContext = Mockito.spy(context);
         mInjector = Mockito.spy(new InjectorForTest(mContext));
         mService = new SdkSandboxServiceImpl(mInjector);
         mApplicationInfo = mContext.getPackageManager().getApplicationInfo(SDK_PACKAGE, 0);
@@ -253,8 +254,42 @@ public class SdkSandboxTest {
                 .isEqualTo(IRequestSurfacePackageFromSdkCallback.SURFACE_PACKAGE_INTERNAL_ERROR);
     }
 
+    @Test
+    public void testDump_NoSdk() {
+        Mockito.doNothing()
+                .when(mContext)
+                .enforceCallingPermission(
+                        Mockito.eq("android.permission.DUMP"), Mockito.anyString());
+        final StringWriter stringWriter = new StringWriter();
+        mService.dump(new FileDescriptor(), new PrintWriter(stringWriter), new String[0]);
+        assertThat(stringWriter.toString()).contains("mHeldSdk is empty");
+    }
+
+    @Test
+    public void testDump_WithSdk() {
+        Mockito.doNothing()
+                .when(mContext)
+                .enforceCallingPermission(
+                        Mockito.eq("android.permission.DUMP"), Mockito.anyString());
+
+        mService.loadSdk(
+                CLIENT_PACKAGE_NAME,
+                new Binder(),
+                mApplicationInfo,
+                SDK_NAME,
+                SDK_PROVIDER_CLASS,
+                null,
+                null,
+                new Bundle(),
+                new RemoteCode(new CountDownLatch(1)));
+
+        final StringWriter stringWriter = new StringWriter();
+        mService.dump(new FileDescriptor(), new PrintWriter(stringWriter), new String[0]);
+        assertThat(stringWriter.toString()).contains("mHeldSdk size:");
+    }
+
     @Test(expected = SecurityException.class)
-    public void testDumpWithoutPermission() {
+    public void testDump_WithoutPermission() {
         mService.dump(new FileDescriptor(), new PrintWriter(new StringWriter()), new String[0]);
     }
 

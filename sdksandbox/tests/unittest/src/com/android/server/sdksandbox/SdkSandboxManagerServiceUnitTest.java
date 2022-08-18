@@ -1055,6 +1055,23 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
+    public void testDump() throws Exception {
+        Mockito.doNothing()
+                .when(mSpyContext)
+                .enforceCallingPermission(
+                        Mockito.eq("android.permission.DUMP"), Mockito.anyString());
+
+        final StringWriter stringWriter = new StringWriter();
+        mService.dump(new FileDescriptor(), new PrintWriter(stringWriter), null);
+        assertThat(stringWriter.toString()).contains("FakeDump");
+    }
+
+    @Test(expected = SecurityException.class)
+    public void testDump_WithoutPermission() {
+        mService.dump(new FileDescriptor(), new PrintWriter(new StringWriter()), new String[0]);
+    }
+
+    @Test
     public void testLatencyMetrics_IpcFromAppToSystemServer_LoadSdk() throws Exception {
         loadSdk();
 
@@ -1607,6 +1624,11 @@ public class SdkSandboxManagerServiceUnitTest {
         public void setBoundServiceForApp(CallingInfo callingInfo,
                 @Nullable ISdkSandboxService service) {
             mService.put(callingInfo, service);
+        }
+
+        @Override
+        public void dump(PrintWriter writer) {
+            writer.println("FakeDump");
         }
     }
 
