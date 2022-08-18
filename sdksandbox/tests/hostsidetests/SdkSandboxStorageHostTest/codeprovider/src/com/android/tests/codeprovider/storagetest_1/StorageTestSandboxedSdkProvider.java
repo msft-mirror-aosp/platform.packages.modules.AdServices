@@ -38,19 +38,17 @@ public class StorageTestSandboxedSdkProvider extends SandboxedSdkProvider {
 
     @Override
     public View getView(Context windowContext, Bundle params, int width, int height) {
+        try {
+            handlePhase(params);
+        } catch (Throwable e) {
+            Log.e(TAG, e.getMessage(), e);
+            throw new RuntimeException();
+        }
         return null;
     }
 
     @Override
-    public void onDataReceived(Bundle data, DataReceivedCallback callback) {
-        try {
-            handlePhase(data);
-            callback.onDataReceivedSuccess(new Bundle());
-        } catch (Throwable e) {
-            Log.e(TAG, e.getMessage(), e);
-            callback.onDataReceivedError(e.getMessage());
-        }
-    }
+    public void onDataReceived(Bundle data, DataReceivedCallback callback) {}
 
     private void handlePhase(Bundle params) throws Exception {
         String phaseName = params.getString(BUNDLE_KEY_PHASE_NAME, "");
