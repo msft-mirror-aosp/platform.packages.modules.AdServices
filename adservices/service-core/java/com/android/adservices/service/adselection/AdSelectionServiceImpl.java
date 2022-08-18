@@ -157,18 +157,12 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         try {
             Objects.requireNonNull(inputParams);
             Objects.requireNonNull(callback);
-
-            AdSelectionConfigValidator adSelectionConfigValidator =
-                    new AdSelectionConfigValidator();
-            adSelectionConfigValidator.validate(inputParams.getAdSelectionConfig());
-        } catch (NullPointerException | IllegalArgumentException exception) {
+        } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
             // Rethrow because we want to fail fast
             throw exception;
         }
-
-        assertCallingPackageName(inputParams.getCallerPackageName(), apiName);
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
@@ -183,7 +177,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         devContext,
                         mAppImportanceFilter,
                         mFlags,
-                        getCallingUid(apiName));
+                        getCallingUid(apiName),
+                        mFledgeAuthorizationFilter);
 
         adSelectionRunner.runAdSelection(inputParams, callback);
     }
@@ -196,17 +191,12 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         try {
             Objects.requireNonNull(requestParams);
             Objects.requireNonNull(callback);
-            AdSelectionConfigValidator adSelectionConfigValidator =
-                    new AdSelectionConfigValidator();
-            adSelectionConfigValidator.validate(requestParams.getAdSelectionConfig());
-        } catch (NullPointerException | IllegalArgumentException exception) {
+        } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
             // Rethrow because we want to fail fast
             throw exception;
         }
-
-        assertCallingPackageName(requestParams.getCallerPackageName(), apiName);
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
@@ -221,7 +211,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mAdServicesLogger,
                         mAppImportanceFilter,
                         mFlags,
-                        getCallingUid(apiName));
+                        getCallingUid(apiName),
+                        mFledgeAuthorizationFilter);
         reporter.reportImpression(requestParams, callback);
     }
 
@@ -274,11 +265,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     apiNameLoggingId, AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
             throw illegalStateException;
         }
-    }
-
-    private void assertCallingPackageName(String callingPackageName, int apiNameLoggingId) {
-        mFledgeAuthorizationFilter.assertCallingPackageName(
-                callingPackageName, getCallingUid(apiNameLoggingId), apiNameLoggingId);
     }
 
     @Override

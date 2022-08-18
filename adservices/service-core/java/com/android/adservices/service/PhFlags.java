@@ -51,6 +51,7 @@ public final class PhFlags implements Flags {
 
     // Topics classifier keys
     static final String KEY_CLASSIFIER_TYPE = "classifier_type";
+    static final String KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS = "classifier_number_of_top_labels";
 
     // Measurement keys
     static final String KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS =
@@ -303,6 +304,18 @@ public final class PhFlags implements Flags {
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_CLASSIFIER_TYPE,
                         /* defaultValue */ DEFAULT_CLASSIFIER_TYPE));
+    }
+
+    @Override
+    public int getClassifierNumberOfTopLabels() {
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        return SystemProperties.getInt(
+                getSystemPropertyName(KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS),
+                DeviceConfig.getInt(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS,
+                        /* defaultValue */ CLASSIFIER_NUMBER_OF_TOP_LABELS));
     }
 
     @Override
