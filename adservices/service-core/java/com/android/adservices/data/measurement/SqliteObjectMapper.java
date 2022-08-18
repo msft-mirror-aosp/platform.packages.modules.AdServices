@@ -168,8 +168,8 @@ public class SqliteObjectMapper {
                 builder::setSourceRegistrationTime);
         setLongColumn(cursor, MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME,
                 builder::setScheduledReportTime);
-        setUriColumn(cursor, MeasurementTables.AggregateReport.REPORTING_ORIGIN,
-                builder::setReportingOrigin);
+        setUriColumn(cursor, MeasurementTables.AggregateReport.AD_TECH_DOMAIN,
+                builder::setAdTechDomain);
         setTextColumn(cursor, MeasurementTables.AggregateReport.DEBUG_CLEARTEXT_PAYLOAD,
                 builder::setDebugCleartextPayload);
         setIntColumn(cursor, MeasurementTables.AggregateReport.STATUS,
