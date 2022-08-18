@@ -52,15 +52,15 @@ import java.util.concurrent.TimeoutException;
 public class SharedPreferencesSyncManagerUnitTest {
 
     private static final String KEY_TO_UPDATE = "hello1";
-    private static final KeyWithType KEY_WITH_TYPE_TO_UPDATE =
-            new KeyWithType(KEY_TO_UPDATE, KeyWithType.KEY_TYPE_STRING);
+    private static final SharedPreferencesKey KEY_WITH_TYPE_TO_UPDATE =
+            new SharedPreferencesKey(KEY_TO_UPDATE, SharedPreferencesKey.KEY_TYPE_STRING);
     private static final Map<String, String> TEST_DATA =
             Map.of(KEY_TO_UPDATE, "world1", "hello2", "world2", "empty", "");
-    private static final Set<KeyWithType> KEYS_TO_SYNC =
+    private static final Set<SharedPreferencesKey> KEYS_TO_SYNC =
             Set.of(
-                    new KeyWithType(KEY_TO_UPDATE, KeyWithType.KEY_TYPE_STRING),
-                    new KeyWithType("hello2", KeyWithType.KEY_TYPE_STRING),
-                    new KeyWithType("empty", KeyWithType.KEY_TYPE_STRING));
+                    new SharedPreferencesKey(KEY_TO_UPDATE, SharedPreferencesKey.KEY_TYPE_STRING),
+                    new SharedPreferencesKey("hello2", SharedPreferencesKey.KEY_TYPE_STRING),
+                    new SharedPreferencesKey("empty", SharedPreferencesKey.KEY_TYPE_STRING));
 
     private static final int INTERNAL_ERROR_CODE = ISharedPreferencesSyncCallback.INTERNAL_ERROR;
     private static final String INTERNAL_ERROR_MSG = "Some error occurred";
@@ -158,14 +158,14 @@ public class SharedPreferencesSyncManagerUnitTest {
         editor.commit();
 
         // Set keys to sync and then sync data
-        final Set<KeyWithType> keysToSync =
+        final Set<SharedPreferencesKey> keysToSync =
                 Set.of(
-                        new KeyWithType("string", KeyWithType.KEY_TYPE_STRING),
-                        new KeyWithType("boolean", KeyWithType.KEY_TYPE_BOOLEAN),
-                        new KeyWithType("float", KeyWithType.KEY_TYPE_FLOAT),
-                        new KeyWithType("int", KeyWithType.KEY_TYPE_INTEGER),
-                        new KeyWithType("long", KeyWithType.KEY_TYPE_LONG),
-                        new KeyWithType("set", KeyWithType.KEY_TYPE_STRING_SET));
+                        new SharedPreferencesKey("string", SharedPreferencesKey.KEY_TYPE_STRING),
+                        new SharedPreferencesKey("boolean", SharedPreferencesKey.KEY_TYPE_BOOLEAN),
+                        new SharedPreferencesKey("float", SharedPreferencesKey.KEY_TYPE_FLOAT),
+                        new SharedPreferencesKey("int", SharedPreferencesKey.KEY_TYPE_INTEGER),
+                        new SharedPreferencesKey("long", SharedPreferencesKey.KEY_TYPE_LONG),
+                        new SharedPreferencesKey("set", SharedPreferencesKey.KEY_TYPE_STRING_SET));
         mSyncManager.startSharedPreferencesSync(keysToSync, mCallback);
 
         // Verify that sync manager passes the correct data to SdkSandboxManager
@@ -213,14 +213,14 @@ public class SharedPreferencesSyncManagerUnitTest {
     @Test
     public void test_startSync_updateListener_supportsAllTypesOfValues() throws Exception {
         // Set keys to sync and then sync data to register listener
-        final Set<KeyWithType> keysToSync =
+        final Set<SharedPreferencesKey> keysToSync =
                 Set.of(
-                        new KeyWithType("string", KeyWithType.KEY_TYPE_STRING),
-                        new KeyWithType("boolean", KeyWithType.KEY_TYPE_BOOLEAN),
-                        new KeyWithType("float", KeyWithType.KEY_TYPE_FLOAT),
-                        new KeyWithType("int", KeyWithType.KEY_TYPE_INTEGER),
-                        new KeyWithType("long", KeyWithType.KEY_TYPE_LONG),
-                        new KeyWithType("set", KeyWithType.KEY_TYPE_STRING_SET));
+                        new SharedPreferencesKey("string", SharedPreferencesKey.KEY_TYPE_STRING),
+                        new SharedPreferencesKey("boolean", SharedPreferencesKey.KEY_TYPE_BOOLEAN),
+                        new SharedPreferencesKey("float", SharedPreferencesKey.KEY_TYPE_FLOAT),
+                        new SharedPreferencesKey("int", SharedPreferencesKey.KEY_TYPE_INTEGER),
+                        new SharedPreferencesKey("long", SharedPreferencesKey.KEY_TYPE_LONG),
+                        new SharedPreferencesKey("set", SharedPreferencesKey.KEY_TYPE_STRING_SET));
         mSyncManager.startSharedPreferencesSync(keysToSync, mCallback);
         mSdkSandboxManagerService.getLastCallback().onSuccess();
 
@@ -355,7 +355,8 @@ public class SharedPreferencesSyncManagerUnitTest {
         mSyncManager.stopSharedPreferencesSync();
 
         // Start with new set of keys
-        final KeyWithType newKey = new KeyWithType("new", KeyWithType.KEY_TYPE_STRING);
+        final SharedPreferencesKey newKey =
+                new SharedPreferencesKey("new", SharedPreferencesKey.KEY_TYPE_STRING);
         mSyncManager.startSharedPreferencesSync(Set.of(newKey), mCallback);
         final SharedPreferencesUpdate update = mSdkSandboxManagerService.getLastUpdate();
         assertThat(update.getKeysInUpdate()).containsExactly(newKey);
