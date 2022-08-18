@@ -44,13 +44,12 @@ public final class EpochJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
-        if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
-            LogUtil.e("Topics API is disabled");
-            // Returning false means that this job has completed its work.
-            return false;
-        }
-
         LogUtil.d("EpochJobService.onStartJob");
+
+        if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
+            LogUtil.e("Topics API is disabled, skipping and cancelling EpochJobService");
+            return skipAndCancelBackgroundJob(params);
+        }
 
         // This service executes each incoming job on a Handler running on the application's
         // main thread. This means that we must offload the execution logic to background executor.
@@ -109,7 +108,6 @@ public final class EpochJobService extends JobService {
         LogUtil.d("Scheduling Epoch job ...");
     }
 
-    // TODO(b/241866524): Support Killswitch in scheduling
     /**
      * Schedule Epoch Job Service if needed: there is no scheduled job with same job parameters.
      *
@@ -118,6 +116,11 @@ public final class EpochJobService extends JobService {
      * @return a {@code boolean} to indicate if the service job is actually scheduled.
      */
     public static boolean scheduleIfNeeded(Context context, boolean forceSchedule) {
+        if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
+            LogUtil.e("Topics API is disabled, skip scheduling the EpochJobService");
+            return false;
+        }
+
         final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
         if (jobScheduler == null) {
             LogUtil.e("Cannot fetch Job Scheduler!");
@@ -144,5 +147,16 @@ public final class EpochJobService extends JobService {
 
         schedule(context, jobScheduler, flagsEpochJobPeriodMs, flagsEpochJobFlexMs);
         return true;
+    }
+
+    private boolean skipAndCancelBackgroundJob(final JobParameters params) {
+        this.getSystemService(JobScheduler.class).cancel(TOPICS_EPOCH_JOB_ID);
+
+        // Tell the JobScheduler that the job has completed and does not need to be
+        // rescheduled.
+        jobFinished(params, false);
+
+        // Returning false means that this job has completed its work.
+        return false;
     }
 }
