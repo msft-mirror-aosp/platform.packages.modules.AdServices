@@ -21,9 +21,9 @@ import android.content.Context;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.topics.AppInfo;
 import com.android.adservices.service.topics.PackageManagerUtil;
-import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -46,9 +46,6 @@ import java.util.stream.Collectors;
 public class OnDeviceClassifier implements Classifier {
 
     private static OnDeviceClassifier sSingleton;
-
-    // TODO(b/235497008): Convert MAX_LABELS_PER_APP to a flag.
-    @VisibleForTesting static final int MAX_LABELS_PER_APP = 10;
 
     private static final String EMPTY = "";
     private static final AppInfo EMPTY_APP_INFO = new AppInfo(EMPTY, EMPTY);
@@ -157,10 +154,12 @@ public class OnDeviceClassifier implements Classifier {
 
         // Limit the number of entries to first MAX_LABELS_PER_APP.
         // TODO(b/235435229): Evaluate the strategy to use first x elements.
+        int numberOfTopLabels = FlagsFactory.getFlags().getClassifierNumberOfTopLabels();
         return classifications.stream()
+                .sorted((c1, c2) -> Float.compare(c2.getScore(), c1.getScore())) // Reverse sorted.
                 .map(OnDeviceClassifier::convertCategoryLabelToTopicId)
                 .map(this::createTopic)
-                .limit(MAX_LABELS_PER_APP)
+                .limit(numberOfTopLabels)
                 .collect(Collectors.toList());
     }
 
