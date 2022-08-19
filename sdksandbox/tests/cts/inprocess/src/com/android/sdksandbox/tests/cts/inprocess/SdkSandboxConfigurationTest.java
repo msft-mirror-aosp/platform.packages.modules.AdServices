@@ -42,6 +42,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.AdServicesCommon;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -168,6 +169,7 @@ public class SdkSandboxConfigurationTest {
 
     /** Tests that sdk sandbox process can resolve the package that provides AdServices APIs. */
     @Test
+    @Ignore("b/243146745")
     public void testCanResolveAndBindToAdServicesApiPackage() throws Exception {
         // Only run this test if sdk sandbox is enabled.
         assumeThat(
