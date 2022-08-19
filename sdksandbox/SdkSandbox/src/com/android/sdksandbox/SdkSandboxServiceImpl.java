@@ -20,8 +20,10 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.annotation.RequiresPermission;
 import android.app.Service;
+import android.app.sdksandbox.KeyWithType;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxedSdkContext;
+import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -34,6 +36,7 @@ import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.util.ArrayMap;
+import android.util.ArraySet;
 import android.util.Log;
 
 import com.android.internal.annotations.GuardedBy;
@@ -138,16 +141,70 @@ public class SdkSandboxServiceImpl extends Service {
     }
 
     /** Sync data from client. */
-    public void syncDataFromClient(Bundle data) {
+    public void syncDataFromClient(SharedPreferencesUpdate update) {
         SharedPreferences pref =
                 PreferenceManager.getDefaultSharedPreferences(mInjector.getContext());
         SharedPreferences.Editor editor = pref.edit();
-        for (String key : data.keySet()) {
-            // TODO(b/239403323): Add support for non-string keys
-            editor.putString(key, data.getString(key));
+        final Bundle data = update.getData();
+        for (KeyWithType keyInUpdate : update.getKeysInUpdate()) {
+            updateSharedPreferences(editor, data, keyInUpdate);
         }
         // TODO(b/239403323): What if writing to persistent storage fails?
         editor.apply();
+    }
+
+    private void updateSharedPreferences(
+            SharedPreferences.Editor editor, Bundle data, KeyWithType keyInUpdate) {
+        final String key = keyInUpdate.getName();
+
+        if (!data.containsKey(key)) {
+            // key was specified but bundle didn't have the key; meaning it has been removed.
+            editor.remove(key);
+            return;
+        }
+
+        final int type = keyInUpdate.getType();
+        try {
+            switch (type) {
+                case KeyWithType.KEY_TYPE_STRING:
+                    editor.putString(key, data.getString(key, ""));
+                    break;
+                case KeyWithType.KEY_TYPE_BOOLEAN:
+                    editor.putBoolean(key, data.getBoolean(key, false));
+                    break;
+                case KeyWithType.KEY_TYPE_INTEGER:
+                    editor.putInt(key, data.getInt(key, 0));
+                    break;
+                case KeyWithType.KEY_TYPE_FLOAT:
+                    editor.putFloat(key, data.getFloat(key, 0.0f));
+                    break;
+                case KeyWithType.KEY_TYPE_LONG:
+                    editor.putLong(key, data.getLong(key, 0L));
+                    break;
+                case KeyWithType.KEY_TYPE_STRING_SET:
+                    final ArraySet<String> castedValue =
+                            new ArraySet<>(data.getStringArrayList(key));
+                    editor.putStringSet(key, castedValue);
+                    break;
+                default:
+                    Log.e(
+                            TAG,
+                            "Unknown type found in default SharedPreferences for Key: "
+                                    + key
+                                    + " Type: "
+                                    + type);
+            }
+        } catch (ClassCastException ignore) {
+            editor.remove(key);
+            // TODO(b/239403323): Once error reporting is supported, we should return error to the
+            // user instead.
+            Log.e(
+                    TAG,
+                    "Wrong type found in default SharedPreferences for Key: "
+                            + key
+                            + " Type: "
+                            + type);
+        }
     }
 
     @Override
@@ -274,8 +331,7 @@ public class SdkSandboxServiceImpl extends Service {
             Objects.requireNonNull(sdkToken, "sdkToken should not be null");
             Objects.requireNonNull(applicationInfo, "applicationInfo should not be null");
             Objects.requireNonNull(sdkName, "sdkName should not be null");
-            Objects.requireNonNull(sdkProviderClassName,
-                    "sdkProviderClassName should not be null");
+            Objects.requireNonNull(sdkProviderClassName, "sdkProviderClassName should not be null");
             Objects.requireNonNull(params, "params should not be null");
             Objects.requireNonNull(callback, "callback should not be null");
             if (TextUtils.isEmpty(sdkProviderClassName)) {
@@ -300,9 +356,9 @@ public class SdkSandboxServiceImpl extends Service {
         }
 
         @Override
-        public void syncDataFromClient(@NonNull Bundle data) {
-            Objects.requireNonNull(data, "data should not be null");
-            SdkSandboxServiceImpl.this.syncDataFromClient(data);
+        public void syncDataFromClient(@NonNull SharedPreferencesUpdate update) {
+            Objects.requireNonNull(update, "update should not be null");
+            SdkSandboxServiceImpl.this.syncDataFromClient(update);
         }
     }
 }
