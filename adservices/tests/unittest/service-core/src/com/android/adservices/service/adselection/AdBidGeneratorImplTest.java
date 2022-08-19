@@ -68,6 +68,7 @@ import com.google.mockwebserver.RecordedRequest;
 
 import org.json.JSONException;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -421,6 +422,7 @@ public class AdBidGeneratorImplTest {
     }
 
     @Test
+    @Ignore("b/242895704")
     public void testRunAdBiddingPerCABiddingTimesOut() throws Exception {
         // Given we are using a direct executor and mock the returned result from the
         // AdSelectionScriptEngine.generateBids for preparing the test,
