@@ -34,7 +34,6 @@ public class EventReport {
     private long mTriggerTime;
     private long mTriggerPriority;
     private Uri mAttributionDestination;
-    private Uri mAdTechDomain;
     private String mEnrollmentId;
     private long mTriggerData;
     private Long mTriggerDedupKey;
@@ -65,7 +64,6 @@ public class EventReport {
         return mStatus == eventReport.mStatus
                 && mReportTime == eventReport.mReportTime
                 && Objects.equals(mAttributionDestination, eventReport.mAttributionDestination)
-                && Objects.equals(mAdTechDomain, eventReport.mAdTechDomain)
                 && Objects.equals(mEnrollmentId, eventReport.mEnrollmentId)
                 && mTriggerTime == eventReport.mTriggerTime
                 && mTriggerData == eventReport.mTriggerData
@@ -78,9 +76,9 @@ public class EventReport {
 
     @Override
     public int hashCode() {
-        return Objects.hash(mStatus, mReportTime, mAttributionDestination, mAdTechDomain,
-                mEnrollmentId, mTriggerTime, mTriggerData, mSourceId, mTriggerPriority,
-                mTriggerDedupKey, mSourceType, mRandomizedTriggerRate);
+        return Objects.hash(mStatus, mReportTime, mAttributionDestination, mEnrollmentId,
+                mTriggerTime, mTriggerData, mSourceId, mTriggerPriority, mTriggerDedupKey,
+                mSourceType, mRandomizedTriggerRate);
     }
 
     /**
@@ -123,13 +121,6 @@ public class EventReport {
      */
     public Uri getAttributionDestination() {
         return mAttributionDestination;
-    }
-
-    /**
-     * Ad Tech base endpoint for reports.
-     */
-    public Uri getAdTechDomain() {
-        return mAdTechDomain;
     }
 
     /**
@@ -198,14 +189,6 @@ public class EventReport {
          */
         public Builder setSourceId(long sourceId) {
             mBuilding.mSourceId = sourceId;
-            return this;
-        }
-
-        /**
-         * See {@link EventReport#getAdTechDomain()} ()}
-         */
-        public Builder setAdTechDomain(Uri adTechDomain) {
-            mBuilding.mAdTechDomain = adTechDomain;
             return this;
         }
 
@@ -298,7 +281,6 @@ public class EventReport {
             mBuilding.mTriggerData = getTruncatedTriggerData(source, eventTrigger);
             mBuilding.mTriggerTime = trigger.getTriggerTime();
             mBuilding.mSourceId = source.getEventId();
-            mBuilding.mAdTechDomain = source.getAdTechDomain();
             mBuilding.mEnrollmentId = source.getEnrollmentId();
             mBuilding.mStatus = Status.PENDING;
             mBuilding.mAttributionDestination = trigger.getAttributionDestination();
