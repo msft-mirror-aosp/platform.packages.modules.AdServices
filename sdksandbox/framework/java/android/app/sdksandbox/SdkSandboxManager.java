@@ -68,12 +68,12 @@ public final class SdkSandboxManager {
     public static final String SDK_SANDBOX_SERVICE = "sdk_sandbox";
 
     /**
-     * Sandbox is not available.
+     * Sdk sandbox process is not available.
      *
-     * <p>This indicates that the sandbox process is not available, either because it has died,
+     * <p>This indicates that the sdk sandbox process is not available, either because it has died,
      * disconnected or was not created in the first place.
      */
-    public static final int SANDBOX_NOT_AVAILABLE = 503;
+    public static final int SDK_SANDBOX_PROCESS_NOT_AVAILABLE = 503;
 
     /**
      * SDK not found.
@@ -112,12 +112,12 @@ public final class SdkSandboxManager {
 
     /** @hide */
     @IntDef(
-            prefix = "LOAD_SDK_",
             value = {
                 LOAD_SDK_NOT_FOUND,
                 LOAD_SDK_ALREADY_LOADED,
                 LOAD_SDK_SDK_DEFINED_ERROR,
                 LOAD_SDK_INTERNAL_ERROR,
+                SDK_SANDBOX_PROCESS_NOT_AVAILABLE
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface LoadSdkErrorCode {}
@@ -130,9 +130,7 @@ public final class SdkSandboxManager {
     public static final int REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR = 700;
 
     /** @hide */
-    @IntDef(prefix = "REQUEST_SURFACE_PACKAGE_", value = {
-            REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR
-    })
+    @IntDef(value = {REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR, SDK_SANDBOX_PROCESS_NOT_AVAILABLE})
     @Retention(RetentionPolicy.SOURCE)
     public @interface RequestSurfacePackageErrorCode {}
 
