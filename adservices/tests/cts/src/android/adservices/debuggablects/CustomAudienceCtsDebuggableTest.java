@@ -43,8 +43,10 @@ public class CustomAudienceCtsDebuggableTest {
 
     private TestAdvertisingCustomAudienceClient mTestClient;
 
-    private static final String OWNER = "owner";
-    private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("buyer");
+    protected static final Context sContext = ApplicationProvider.getApplicationContext();
+
+    private static final String OWNER = sContext.getPackageName();
+    private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("buyer.example.com");
     private static final String NAME = "name";
     private static final String BIDDING_LOGIC_JS = "function test() { return \"hello world\"; }";
     private static final AdSelectionSignals TRUSTED_BIDDING_SIGNALS =
@@ -56,14 +58,13 @@ public class CustomAudienceCtsDebuggableTest {
 
     @Before
     public void setup() {
-        Context context = ApplicationProvider.getApplicationContext();
         mTestClient =
                 new TestAdvertisingCustomAudienceClient.Builder()
-                        .setContext(context)
+                        .setContext(sContext)
                         .setExecutor(MoreExecutors.directExecutor())
                         .build();
-        DevContextFilter devContextFilter = DevContextFilter.create(context);
-        DevContext devContext = DevContextFilter.create(context).createDevContext(Process.myUid());
+        DevContextFilter devContextFilter = DevContextFilter.create(sContext);
+        DevContext devContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
         boolean isDebuggable = devContextFilter.isDebuggable(devContext.getCallingAppPackageName());
         boolean isDeveloperMode = devContextFilter.isDeveloperMode();
         mHasAccessToDevOverrides = devContext.getDevOptionsEnabled();

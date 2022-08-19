@@ -202,6 +202,7 @@ public class FledgeE2ETest {
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 mFlags),
                         FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger),
+                        new FledgeAllowListsFilter(mFlags, mAdServicesLogger),
                         mConsentManagerMock,
                         mDevContextFilter,
                         MoreExecutors.newDirectExecutorService(),

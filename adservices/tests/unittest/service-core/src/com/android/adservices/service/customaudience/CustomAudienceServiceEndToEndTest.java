@@ -57,6 +57,7 @@ import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
@@ -159,12 +160,13 @@ public class CustomAudienceServiceEndToEndTest {
                                 CONTEXT.getPackageManager(),
                                 EnrollmentDao.getInstance(CONTEXT),
                                 mAdServicesLogger),
+                        new FledgeAllowListsFilter(CommonFixture.FLAGS_FOR_TEST, mAdServicesLogger),
                         mConsentManagerMock,
                         mDevContextFilter,
                         MoreExecutors.newDirectExecutorService(),
                         mAdServicesLogger,
                         mAppImportanceFilter,
-                        FlagsFactory.getFlagsForTest(),
+                        CommonFixture.FLAGS_FOR_TEST,
                         CallingAppUidSupplierProcessImpl.create());
     }
 
@@ -195,12 +197,13 @@ public class CustomAudienceServiceEndToEndTest {
                                 CONTEXT.getPackageManager(),
                                 EnrollmentDao.getInstance(CONTEXT),
                                 mAdServicesLogger),
+                        new FledgeAllowListsFilter(CommonFixture.FLAGS_FOR_TEST, mAdServicesLogger),
                         mConsentManagerMock,
                         mDevContextFilter,
                         MoreExecutors.newDirectExecutorService(),
                         mAdServicesLogger,
                         mAppImportanceFilter,
-                        FlagsFactory.getFlagsForTest(),
+                        CommonFixture.FLAGS_FOR_TEST,
                         CallingAppUidSupplierFailureImpl.create());
 
         ResultCapturingCallback callback = new ResultCapturingCallback();
@@ -324,12 +327,13 @@ public class CustomAudienceServiceEndToEndTest {
                                 CONTEXT.getPackageManager(),
                                 EnrollmentDao.getInstance(CONTEXT),
                                 mAdServicesLogger),
+                        new FledgeAllowListsFilter(CommonFixture.FLAGS_FOR_TEST, mAdServicesLogger),
                         mConsentManagerMock,
                         mDevContextFilter,
                         MoreExecutors.newDirectExecutorService(),
                         mAdServicesLogger,
                         mAppImportanceFilter,
-                        FlagsFactory.getFlagsForTest(),
+                        CommonFixture.FLAGS_FOR_TEST,
                         CallingAppUidSupplierFailureImpl.create());
 
         ResultCapturingCallback callback = new ResultCapturingCallback();

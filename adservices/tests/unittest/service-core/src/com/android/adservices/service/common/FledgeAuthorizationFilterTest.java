@@ -158,7 +158,7 @@ public class FledgeAuthorizationFilterTest {
     public void testAssertAppHasPermission_appHasPermission() {
         when(PermissionHelper.hasCustomAudiencesPermission(CONTEXT)).thenReturn(true);
 
-        mChecker.assertAppHasPermission(CONTEXT, API_NAME_LOGGING_ID);
+        mChecker.assertAppDeclaredPermission(CONTEXT, API_NAME_LOGGING_ID);
 
         verifyZeroInteractions(mPackageManager, mEnrollmentDao, mAdServicesLoggerSpy);
     }
@@ -170,7 +170,7 @@ public class FledgeAuthorizationFilterTest {
         SecurityException exception =
                 assertThrows(
                         SecurityException.class,
-                        () -> mChecker.assertAppHasPermission(CONTEXT, API_NAME_LOGGING_ID));
+                        () -> mChecker.assertAppDeclaredPermission(CONTEXT, API_NAME_LOGGING_ID));
 
         assertEquals(
                 AdServicesStatusUtils.SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE,
@@ -191,7 +191,7 @@ public class FledgeAuthorizationFilterTest {
     public void testAssertAppHasPermission_nullContext_throwNpe() {
         assertThrows(
                 NullPointerException.class,
-                () -> mChecker.assertAppHasPermission(null, API_NAME_LOGGING_ID));
+                () -> mChecker.assertAppDeclaredPermission(null, API_NAME_LOGGING_ID));
 
         verifyZeroInteractions(mPackageManager, mEnrollmentDao, mAdServicesLoggerSpy);
     }
@@ -204,7 +204,7 @@ public class FledgeAuthorizationFilterTest {
                         CONTEXT, PACKAGE_NAME, ENROLLMENT_ID))
                 .thenReturn(true);
 
-        mChecker.assertAdTechHasPermission(
+        mChecker.assertAdTechAllowed(
                 CONTEXT, PACKAGE_NAME, CommonFixture.VALID_BUYER, API_NAME_LOGGING_ID);
         verify(mEnrollmentDao)
                 .getEnrollmentDataForFledgeByAdTechIdentifier(CommonFixture.VALID_BUYER);
@@ -221,7 +221,7 @@ public class FledgeAuthorizationFilterTest {
                 assertThrows(
                         SecurityException.class,
                         () ->
-                                mChecker.assertAdTechHasPermission(
+                                mChecker.assertAdTechAllowed(
                                         CONTEXT,
                                         PACKAGE_NAME,
                                         CommonFixture.VALID_BUYER,
@@ -256,7 +256,7 @@ public class FledgeAuthorizationFilterTest {
                 assertThrows(
                         SecurityException.class,
                         () ->
-                                mChecker.assertAdTechHasPermission(
+                                mChecker.assertAdTechAllowed(
                                         CONTEXT,
                                         PACKAGE_NAME,
                                         CommonFixture.VALID_BUYER,
@@ -284,7 +284,7 @@ public class FledgeAuthorizationFilterTest {
         assertThrows(
                 NullPointerException.class,
                 () ->
-                        mChecker.assertAdTechHasPermission(
+                        mChecker.assertAdTechAllowed(
                                 null,
                                 PACKAGE_NAME,
                                 CommonFixture.VALID_BUYER,
@@ -298,7 +298,7 @@ public class FledgeAuthorizationFilterTest {
         assertThrows(
                 NullPointerException.class,
                 () ->
-                        mChecker.assertAdTechHasPermission(
+                        mChecker.assertAdTechAllowed(
                                 CONTEXT, null, CommonFixture.VALID_BUYER, API_NAME_LOGGING_ID));
 
         verifyZeroInteractions(mPackageManager, mEnrollmentDao, mAdServicesLoggerSpy);
@@ -309,7 +309,7 @@ public class FledgeAuthorizationFilterTest {
         assertThrows(
                 NullPointerException.class,
                 () ->
-                        mChecker.assertAdTechHasPermission(
+                        mChecker.assertAdTechAllowed(
                                 CONTEXT, PACKAGE_NAME, null, API_NAME_LOGGING_ID));
 
         verifyZeroInteractions(mPackageManager, mEnrollmentDao, mAdServicesLoggerSpy);

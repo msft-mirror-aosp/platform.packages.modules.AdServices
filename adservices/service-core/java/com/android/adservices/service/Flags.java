@@ -930,7 +930,11 @@ public interface Flags extends Dumpable {
     String PPAPI_APP_ALLOW_LIST =
             "android.platform.test.scenario,"
                     + "android.adservices.crystalball,"
+                    + "android.adservices.cts,"
+                    + "android.adservices.debuggablects,"
+                    + "com.android.tests.sandbox.fledge,"
                     + "com.android.tests.sandbox.topics,"
+                    + "com.android.adservices.endtoendtest,"
                     + "com.android.adservices.tests.cts.endtoendtest,"
                     + "com.android.adservices.tests.cts.topics.testapp1," // CTS test sample app
                     + "com.android.adservices.tests.permissions.appoptout,"
@@ -941,7 +945,8 @@ public interface Flags extends Dumpable {
                     + "com.example.adservices.samples.topics.sampleapp3,"
                     + "com.example.adservices.samples.topics.sampleapp4,"
                     + "com.example.adservices.samples.topics.sampleapp5,"
-                    + "com.example.adservices.samples.topics.sampleapp6";
+                    + "com.example.adservices.samples.topics.sampleapp6,"
+                    + "com.android.adservices.servicecoretest";
 
     /**
      * The client app packages that are allowed to invoke web context APIs, i.e. {@link
@@ -982,8 +987,16 @@ public interface Flags extends Dumpable {
      */
     boolean DISABLE_TOPICS_ENROLLMENT_CHECK = false; // By default, enrollment check is enabled.
 
+    boolean DISABLE_FLEDGE_ENROLLMENT_CHECK = true; // By default, enrollment check is disabled
+
+    /** @return {@code true} if the Topics API should disable the ad tech enrollment check */
     default boolean isDisableTopicsEnrollmentCheck() {
         return DISABLE_TOPICS_ENROLLMENT_CHECK;
+    }
+
+    /** @return {@code true} if the FLEDGE APIs should disable the ad tech enrollment check */
+    default boolean getDisableFledgeEnrollmentCheck() {
+        return DISABLE_FLEDGE_ENROLLMENT_CHECK;
     }
 
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION = true;
