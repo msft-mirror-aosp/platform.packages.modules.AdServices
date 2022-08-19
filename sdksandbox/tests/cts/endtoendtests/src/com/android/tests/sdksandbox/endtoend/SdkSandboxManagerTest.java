@@ -23,8 +23,10 @@ import static android.app.sdksandbox.SdkSandboxManager.EXTRA_WIDTH_IN_PIXELS;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 
+import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallback;
@@ -75,6 +77,8 @@ public class SdkSandboxManagerTest {
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        assertNotNull(callback.getSandboxedSdk());
+        assertNotNull(callback.getSandboxedSdk().getInterface());
         mSdkSandboxManager.unloadSdk(sdkName);
     }
 
@@ -169,11 +173,16 @@ public class SdkSandboxManagerTest {
         mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
         // If the SDK provider has already been loaded from another test, ignore the error.
         assertThat(callback.isLoadSdkSuccessful(/*ignoreSdkAlreadyLoadedError=*/ true)).isTrue();
+        SandboxedSdk sandboxedSdk = callback.getSandboxedSdk();
+        assertNotNull(sandboxedSdk.getInterface());
 
         // Attempt to load the SDK again and see that it fails.
         final FakeLoadSdkCallback reloadCallback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, reloadCallback);
         assertThat(reloadCallback.isLoadSdkSuccessful()).isFalse();
+
+        // SDK's interface should still be obtainable.
+        assertNotNull(sandboxedSdk.getInterface());
 
         // Further calls to the SDK should still be valid.
         final FakeRequestSurfacePackageCallback surfacePackageCallback =

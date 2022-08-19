@@ -27,6 +27,7 @@ import static android.app.sdksandbox.SdkSandboxManager.SEND_DATA_INTERNAL_ERROR;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
@@ -85,7 +86,7 @@ public class SdkSandboxManagerUnitTest {
     public void testLoadSdkSuccess() throws Exception {
         final Bundle params = new Bundle();
 
-        OutcomeReceiver<LoadSdkResponse, LoadSdkException> outcomeReceiver =
+        OutcomeReceiver<SandboxedSdk, LoadSdkException> outcomeReceiver =
                 Mockito.spy(new FakeOutcomeReceiver<>());
         long beforeCallingTimeStamp = System.currentTimeMillis();
         mSdkSandboxManager.loadSdk(SDK_NAME, params, Runnable::run, outcomeReceiver);
@@ -106,20 +107,19 @@ public class SdkSandboxManagerUnitTest {
         Assert.assertTrue(callingTimeArgumentCaptor.getValue() <= afterCallingTimeStamp);
 
         // Simulate the success callback
-        final Bundle extraInfo = new Bundle();
-        callbackArgumentCaptor.getValue().onLoadSdkSuccess(new LoadSdkResponse(extraInfo));
-        ArgumentCaptor<LoadSdkResponse> responseCapture =
-                ArgumentCaptor.forClass(LoadSdkResponse.class);
-        Mockito.verify(outcomeReceiver).onResult(responseCapture.capture());
+        callbackArgumentCaptor.getValue().onLoadSdkSuccess(new SandboxedSdk(new Binder()));
+        ArgumentCaptor<SandboxedSdk> sandboxedSdkCapture =
+                ArgumentCaptor.forClass(SandboxedSdk.class);
+        Mockito.verify(outcomeReceiver).onResult(sandboxedSdkCapture.capture());
 
-        assertThat(responseCapture.getValue().getExtraInformation()).isEqualTo(extraInfo);
+        assertNotNull(sandboxedSdkCapture.getValue().getInterface());
     }
 
     @Test
     public void testLoadSdkFailed() throws Exception {
         final Bundle params = new Bundle();
 
-        OutcomeReceiver<LoadSdkResponse, LoadSdkException> outcomeReceiver =
+        OutcomeReceiver<SandboxedSdk, LoadSdkException> outcomeReceiver =
                 Mockito.spy(new FakeOutcomeReceiver<>());
         mSdkSandboxManager.loadSdk(SDK_NAME, params, Runnable::run, outcomeReceiver);
 

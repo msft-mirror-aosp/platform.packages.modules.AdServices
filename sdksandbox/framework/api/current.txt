@@ -10,20 +10,20 @@ package android.app.sdksandbox {
     field @NonNull public static final android.os.Parcelable.Creator<android.app.sdksandbox.LoadSdkException> CREATOR;
   }
 
-  public final class LoadSdkResponse implements android.os.Parcelable {
-    ctor public LoadSdkResponse(@NonNull android.os.Bundle);
-    method public int describeContents();
-    method @NonNull public android.os.Bundle getExtraInformation();
-    method public void writeToParcel(@NonNull android.os.Parcel, int);
-    field @NonNull public static final android.os.Parcelable.Creator<android.app.sdksandbox.LoadSdkResponse> CREATOR;
-  }
-
   public final class RequestSurfacePackageException extends java.lang.Exception {
     ctor public RequestSurfacePackageException(int, @Nullable String);
     ctor public RequestSurfacePackageException(int, @Nullable String, @Nullable Throwable);
     ctor public RequestSurfacePackageException(int, @Nullable String, @Nullable Throwable, @NonNull android.os.Bundle);
     method @NonNull public android.os.Bundle getExtraErrorInformation();
     method public int getRequestSurfacePackageErrorCode();
+  }
+
+  public final class SandboxedSdk implements android.os.Parcelable {
+    ctor public SandboxedSdk(@NonNull android.os.IBinder);
+    method public int describeContents();
+    method @Nullable public android.os.IBinder getInterface();
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @NonNull public static final android.os.Parcelable.Creator<android.app.sdksandbox.SandboxedSdk> CREATOR;
   }
 
   public abstract class SandboxedSdkProvider {
@@ -33,7 +33,7 @@ package android.app.sdksandbox {
     method @Nullable public android.content.Context getContext();
     method @NonNull public abstract android.view.View getView(@NonNull android.content.Context, @NonNull android.os.Bundle, int, int);
     method public abstract void onDataReceived(@NonNull android.os.Bundle, @NonNull android.app.sdksandbox.SandboxedSdkProvider.DataReceivedCallback);
-    method @NonNull public abstract android.app.sdksandbox.LoadSdkResponse onLoadSdk(@NonNull android.os.Bundle) throws android.app.sdksandbox.LoadSdkException;
+    method @NonNull public abstract android.app.sdksandbox.SandboxedSdk onLoadSdk(@NonNull android.os.Bundle) throws android.app.sdksandbox.LoadSdkException;
   }
 
   public static interface SandboxedSdkProvider.DataReceivedCallback {
@@ -41,16 +41,11 @@ package android.app.sdksandbox {
     method public void onDataReceivedSuccess(@NonNull android.os.Bundle);
   }
 
-  public static interface SandboxedSdkProvider.OnLoadSdkCallback {
-    method public void onLoadSdkError(@NonNull String);
-    method public void onLoadSdkFinished(@NonNull android.os.Bundle);
-  }
-
   public final class SdkSandboxManager {
     method public void addSdkSandboxLifecycleCallback(@NonNull java.util.concurrent.Executor, @NonNull android.app.sdksandbox.SdkSandboxManager.SdkSandboxLifecycleCallback);
     method @NonNull public java.util.List<android.content.pm.SharedLibraryInfo> getLoadedSdkLibrariesInfo();
     method public static int getSdkSandboxState();
-    method public void loadSdk(@NonNull String, @NonNull android.os.Bundle, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<android.app.sdksandbox.LoadSdkResponse,android.app.sdksandbox.LoadSdkException>);
+    method public void loadSdk(@NonNull String, @NonNull android.os.Bundle, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<android.app.sdksandbox.SandboxedSdk,android.app.sdksandbox.LoadSdkException>);
     method public void removeSdkSandboxLifecycleCallback(@NonNull android.app.sdksandbox.SdkSandboxManager.SdkSandboxLifecycleCallback);
     method public void requestSurfacePackage(@NonNull String, @NonNull android.os.Bundle, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<android.os.Bundle,android.app.sdksandbox.RequestSurfacePackageException>);
     method public void sendData(@NonNull String, @NonNull android.os.Bundle, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<android.app.sdksandbox.SendDataResponse,android.app.sdksandbox.SendDataException>);
