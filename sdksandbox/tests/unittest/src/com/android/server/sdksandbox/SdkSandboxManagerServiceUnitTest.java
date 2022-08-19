@@ -25,6 +25,7 @@ import static org.junit.Assert.assertThrows;
 import android.Manifest;
 import android.app.ActivityManager;
 import android.app.sdksandbox.ILoadSdkCallback;
+import android.app.sdksandbox.ISdkSandboxManager;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.LoadSdkResponse;
 import android.app.sdksandbox.SandboxedSdkContext;
@@ -1542,6 +1543,22 @@ public class SdkSandboxManagerServiceUnitTest {
                                         .SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX));
     }
 
+    @Test
+    public void testLatencyMetrics_IpcFromSystemServerToApp_RequestSurfacePackage() {
+        mService.logLatencyFromSystemServerToApp(
+                ISdkSandboxManager.REQUEST_SURFACE_PACKAGE, /*latency=*/ 1);
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                                SdkSandboxStatsLog
+                                        .SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE,
+                                /*latency=*/ 1,
+                                /*success=*/ true,
+                                SdkSandboxStatsLog
+                                        .SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_APP));
+    }
+
     private Bundle getFakedSandboxLatencies() {
         final Bundle sandboxLatencies = new Bundle();
         sandboxLatencies.putInt(
@@ -1682,7 +1699,7 @@ public class SdkSandboxManagerServiceUnitTest {
         void sendSurfacePackageError(
                 int errorCode, String errorMsg, FakeRequestSurfacePackageCallbackBinder callback)
                 throws RemoteException {
-            callback.onSurfacePackageError(errorCode, errorMsg);
+            callback.onSurfacePackageError(errorCode, errorMsg, System.currentTimeMillis());
         }
 
         void sendSendDataSuccessful(FakeSendDataCallbackBinder callback) throws RemoteException {
