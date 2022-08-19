@@ -16,17 +16,19 @@
 
 package com.android.codeproviderresources_1;
 
+import android.app.sdksandbox.LoadSdkException;
+import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
+import android.os.Binder;
 import android.os.Bundle;
 import android.view.View;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.concurrent.Executor;
 
 public class ResourceSandboxedSdkProvider extends SandboxedSdkProvider {
 
@@ -36,15 +38,20 @@ public class ResourceSandboxedSdkProvider extends SandboxedSdkProvider {
     private static final String ASSET_FILE = "test-asset.txt";
 
     @Override
-    public void onLoadSdk(Bundle params, Executor executor, OnLoadSdkCallback callback) {
+    public SandboxedSdk onLoadSdk(Bundle params) throws LoadSdkException {
         Resources resources = getContext().getResources();
         String stringRes = resources.getString(R.string.test_string);
         int integerRes = resources.getInteger(R.integer.test_integer);
         if (!stringRes.equals(STRING_RESOURCE)) {
-            sendError(callback, STRING_RESOURCE, stringRes);
+            throw new LoadSdkException(
+                    new Throwable(createErrorMessage(STRING_RESOURCE, stringRes)), new Bundle());
         }
         if (integerRes != INTEGER_RESOURCE) {
-            sendError(callback, String.valueOf(INTEGER_RESOURCE), String.valueOf(integerRes));
+            throw new LoadSdkException(
+                    new Throwable(
+                            createErrorMessage(
+                                    String.valueOf(INTEGER_RESOURCE), String.valueOf(integerRes))),
+                    new Bundle());
         }
 
         AssetManager assets = getContext().getAssets();
@@ -52,12 +59,14 @@ public class ResourceSandboxedSdkProvider extends SandboxedSdkProvider {
                 new InputStreamReader(assets.open(ASSET_FILE)))) {
             String readAsset = reader.readLine();
             if (!readAsset.equals(STRING_ASSET)) {
-                sendError(callback, STRING_ASSET, readAsset);
+                throw new LoadSdkException(
+                        new Throwable(createErrorMessage(STRING_ASSET, readAsset)), new Bundle());
             }
         } catch (IOException e) {
-            callback.onLoadSdkError("File not found: " + ASSET_FILE);
+            throw new LoadSdkException(
+                    new Throwable("File not found: " + ASSET_FILE), new Bundle());
         }
-        callback.onLoadSdkFinished(new Bundle());
+        return new SandboxedSdk(new Binder());
     }
 
     @Override
@@ -69,7 +78,7 @@ public class ResourceSandboxedSdkProvider extends SandboxedSdkProvider {
     public void onDataReceived(Bundle data, DataReceivedCallback callback) {}
 
     /* Sends an error if the expected resource/asset does not match the read value. */
-    private void sendError(OnLoadSdkCallback callback, String expected, String actual) {
-        callback.onLoadSdkError("Expected " + expected + ", actual " + actual);
+    private String createErrorMessage(String expected, String actual) {
+        return new String("Expected " + expected + ", actual " + actual);
     }
 }

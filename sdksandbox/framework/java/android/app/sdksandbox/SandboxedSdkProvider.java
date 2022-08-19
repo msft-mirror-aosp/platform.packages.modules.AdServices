@@ -23,7 +23,6 @@ import android.os.Bundle;
 import android.view.SurfaceControlViewHost.SurfacePackage;
 import android.view.View;
 
-import java.util.concurrent.Executor;
 
 /**
  * Encapsulates API which SDK sandbox can use to interact with SDKs loaded into it.
@@ -69,24 +68,21 @@ public abstract class SandboxedSdkProvider {
      * <p>This function is called by the SDK sandbox after it loads the SDK.
      *
      * <p>SDK should do any work to be ready to handle upcoming requests. It should not include the
-     * initialization logic that depends on other SDKs being loaded into the SDK sandbox. Any
-     * further initialization can be triggered by the client using {@link
-     * SdkSandboxManager#sendData}. The SDK should not do any operations requiring a {@link Context}
-     * object before this method has been called.
+     * initialization logic that depends on other SDKs being loaded into the SDK sandbox. The SDK
+     * should not do any operations requiring a {@link Context} object before this method has been
+     * called.
      *
-     * @param params list of params passed from App when it loads the SDK.
-     * @param executor the {@link Executor} on which to invoke the {@code callback}
-     * @param callback to notify App if the SDK successfully loaded
+     * @param params list of params passed from the client when it loads the SDK. This can be empty.
+     * @return Returns a {@link SandboxedSdk}, passed back to the client. The IBinder used to create
+     *     the {@link SandboxedSdk} object will be used by the client to call into the SDK.
      */
-    public abstract void onLoadSdk(
-            @NonNull Bundle params,
-            @NonNull Executor executor,
-            @NonNull OnLoadSdkCallback callback);
-
+    public abstract @NonNull SandboxedSdk onLoadSdk(@NonNull Bundle params) throws LoadSdkException;
     /**
      * Does the work needed for the SDK to free its resources before being unloaded.
      *
-     * <p>This function is called by the SDK sandbox manager before it unloads the SDK.
+     * <p>This function is called by the SDK sandbox manager before it unloads the SDK. The SDK
+     * should fail any invocations on the Binder previously returned to the client through {@link
+     * SandboxedSdk#getInterface}.
      */
     public void beforeUnloadSdk() {}
 
@@ -114,31 +110,6 @@ public abstract class SandboxedSdkProvider {
      */
     public abstract void onDataReceived(
             @NonNull Bundle data, @NonNull DataReceivedCallback callback);
-
-    /**
-     * Callback for tracking the status of initializing the SDK.
-     *
-     * <p>This callback is created by the SDK sandbox, SDKs should use it to notify the SDK sandbox
-     * about the status of {@link SandboxedSdkProvider#onLoadSdk(Bundle, Executor,
-     * OnLoadSdkCallback)}
-     */
-    public interface OnLoadSdkCallback {
-        /**
-         * Called when sdk is successfully loaded.
-         *
-         * <p>After SDK successfully initialized, it must call this method on the callback object.
-         *
-         * @param params list of params to be passed to the client application
-         */
-        void onLoadSdkFinished(@NonNull Bundle params);
-
-        /**
-         * If SDK failed to initialize, it must call this method on the callback object.
-         *
-         * @param errorMessage a String description of the error
-         */
-        void onLoadSdkError(@NonNull String errorMessage);
-    }
 
     /**
      * Callback for tracking the status of data received from the client application.

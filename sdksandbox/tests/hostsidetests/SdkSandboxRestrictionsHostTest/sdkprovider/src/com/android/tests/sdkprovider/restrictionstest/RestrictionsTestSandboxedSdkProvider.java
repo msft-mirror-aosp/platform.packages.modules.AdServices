@@ -16,23 +16,24 @@
 
 package com.android.tests.sdkprovider.restrictionstest;
 
+import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Binder;
 import android.os.Bundle;
 import android.view.View;
 
-import java.util.concurrent.Executor;
 
 public class RestrictionsTestSandboxedSdkProvider extends SandboxedSdkProvider {
 
     private static final String BUNDLE_KEY_PHASE_NAME = "phase-name";
 
     @Override
-    public void onLoadSdk(Bundle params, Executor executor, OnLoadSdkCallback callback) {
-        callback.onLoadSdkFinished(new Bundle());
+    public SandboxedSdk onLoadSdk(Bundle params) {
+        return new SandboxedSdk(new Binder());
     }
 
     @Override

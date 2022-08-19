@@ -42,7 +42,7 @@
 
     <!--
         Used to verify if the calling application is running in foreground.
-        Although this permission is deprecated, it is still checked for privileged apps (see
+        Although this permission is deprecated, it is still checked for c apps (see
         http://go/aocs/android/platform/superproject/+/master:frameworks/base/services/core/java/com/android/server/wm/ActivityTaskManagerService.java;l=3130?q=ActivityTaskManagerService)
         and we want to use privileged flags as REAL_GET_TASKS.
     -->
@@ -67,38 +67,37 @@
         android:protectionLevel="normal" />
 
     <!-- Allows an application to access AdServices Ad Id API. -->
-    <permission android:name="android.permission.ACCESS_ADSERVICES_ADID"
+    <permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID"
         android:label="@string/permlab_accessAdServicesAdId"
         android:description="@string/permdesc_accessAdServicesAdId"
         android:protectionLevel="normal" />
 
-    <!-- Allows Consent Service to access AdServices. -->
-    <permission android:name="android.permission.ACCESS_ADSERVICES_CONSENT"
-        android:label="@string/permlab_accessAdServicesConsent"
-        android:description="@string/permdesc_accessAdServicesConsent"
-        android:protectionLevel="signature|privileged" />
-
     <!-- Allows AdServices to access API for Ad ID. -->
-    <permission android:name="android.permission.ADSERVICES_ACCESS_AD_ID"
+    <permission android:name="android.permission.ACCESS_PRIVILEGED_AD_ID"
         android:label="@string/permlab_adServicesAccessAdId"
         android:description="@string/permdesc_adServicesAccessAdId"
         android:protectionLevel="signature" />
 
     <!-- Allows AdServices to access API for App set ID. -->
-    <permission android:name="android.permission.ADSERVICES_ACCESS_APP_SET_ID"
+    <permission android:name="android.permission.ACCESS_PRIVILEGED_APP_SET_ID"
         android:label="@string/permlab_adServicesAccessAppSetId"
         android:description="@string/permdesc_adServicesAccessAppSetId"
         android:protectionLevel="signature" />
 
-    <!-- Allows AdServices to access Consent Service. -->
-    <permission android:name="android.permission.ADSERVICES_ACCESS_CONSENT_SERVICE"
-        android:label="@string/permlab_adServicesAccessConsentService"
-        android:description="@string/permdesc_adServicesAccessConsentService"
-        android:protectionLevel="signature" />
+    <!-- Allows the caller to modify AdService's state via Common Service. -->
+    <permission android:name="android.permission.MODIFY_ADSERVICES_STATE"
+        android:label="@string/permlab_modifyAdServicesState"
+        android:description="@string/permdesc_modifyAdServicesState"
+        android:protectionLevel="signature|configurator" />
 
-    <uses-permission android:name="android.permission.ADSERVICES_ACCESS_AD_ID" />
-    <uses-permission android:name="android.permission.ADSERVICES_ACCESS_APP_SET_ID" />
-    <uses-permission android:name="android.permission.ADSERVICES_ACCESS_CONSENT_SERVICE" />
+    <!-- Allows the caller to get AdService's state via Common Service. -->
+    <permission android:name="android.permission.ACCESS_ADSERVICES_STATE"
+        android:label="@string/permlab_accessAdServicesState"
+        android:description="@string/permdesc_accessAdServicesState"
+        android:protectionLevel="signature|configurator" />
+
+    <uses-permission android:name="android.permission.ACCESS_PRIVILEGED_AD_ID" />
+    <uses-permission android:name="android.permission.ACCESS_PRIVILEGED_APP_SET_ID" />
 
     <!-- Allows JobScheduler to persist jobs across reboot. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />

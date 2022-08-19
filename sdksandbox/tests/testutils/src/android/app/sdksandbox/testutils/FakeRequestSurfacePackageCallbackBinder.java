@@ -36,7 +36,8 @@ public class FakeRequestSurfacePackageCallbackBinder extends IRequestSurfacePack
     }
 
     @Override
-    public void onSurfacePackageError(int errorCode, String errorMsg) {
+    public void onSurfacePackageError(
+            int errorCode, String errorMsg, long timeSystemServerCalledApp) {
         mFakeRequestSurfacePackageCallback.onError(
                 new RequestSurfacePackageException(errorCode, errorMsg));
     }
@@ -45,7 +46,8 @@ public class FakeRequestSurfacePackageCallbackBinder extends IRequestSurfacePack
     public void onSurfacePackageReady(
             SurfaceControlViewHost.SurfacePackage surfacePackage,
             int surfacePackageId,
-            Bundle params) {
+            Bundle params,
+            long timeSystemServerCalledApp) {
         params.putParcelable(EXTRA_SURFACE_PACKAGE, surfacePackage);
         mFakeRequestSurfacePackageCallback.onResult(params);
     }

@@ -30,6 +30,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
+import android.util.Log;
 import android.view.SurfaceControlViewHost.SurfacePackage;
 
 import com.android.internal.annotations.GuardedBy;
@@ -67,12 +68,21 @@ public final class SdkSandboxManager {
     public static final String SDK_SANDBOX_SERVICE = "sdk_sandbox";
 
     /**
+     * Sdk sandbox process is not available.
+     *
+     * <p>This indicates that the sdk sandbox process is not available, either because it has died,
+     * disconnected or was not created in the first place.
+     */
+    public static final int SDK_SANDBOX_PROCESS_NOT_AVAILABLE = 503;
+
+    /**
      * SDK not found.
      *
      * <p>This indicates that client application tried to load a non-existing SDK by calling {@link
      * SdkSandboxManager#loadSdk(String, Bundle, Executor, OutcomeReceiver)}.
      */
     public static final int LOAD_SDK_NOT_FOUND = 100;
+
     /**
      * SDK is already loaded.
      *
@@ -81,6 +91,16 @@ public final class SdkSandboxManager {
      * successfully loaded.
      */
     public static final int LOAD_SDK_ALREADY_LOADED = 101;
+
+    /**
+     * SDK error after being loaded.
+     *
+     * <p>This indicates that the SDK encountered an error during post-load initialization. The
+     * details of this can be obtained from the Bundle returned in {@link LoadSdkException} through
+     * the {@link OutcomeReceiver} passed in to {@link SdkSandboxManager#loadSdk}.
+     */
+    public static final int LOAD_SDK_SDK_DEFINED_ERROR = 102;
+
     /** Internal error while loading SDK.
      *
      * <p>This indicates a generic internal error happened while applying the call from
@@ -88,12 +108,17 @@ public final class SdkSandboxManager {
      */
     public static final int LOAD_SDK_INTERNAL_ERROR = 500;
 
+    private static final String TAG = "SdkSandboxManager";
+
     /** @hide */
-    @IntDef(prefix = "LOAD_SDK_", value = {
-            LOAD_SDK_NOT_FOUND,
-            LOAD_SDK_ALREADY_LOADED,
-            LOAD_SDK_INTERNAL_ERROR,
-    })
+    @IntDef(
+            value = {
+                LOAD_SDK_NOT_FOUND,
+                LOAD_SDK_ALREADY_LOADED,
+                LOAD_SDK_SDK_DEFINED_ERROR,
+                LOAD_SDK_INTERNAL_ERROR,
+                SDK_SANDBOX_PROCESS_NOT_AVAILABLE
+            })
     @Retention(RetentionPolicy.SOURCE)
     public @interface LoadSdkErrorCode {}
 
@@ -105,9 +130,7 @@ public final class SdkSandboxManager {
     public static final int REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR = 700;
 
     /** @hide */
-    @IntDef(prefix = "REQUEST_SURFACE_PACKAGE_", value = {
-            REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR
-    })
+    @IntDef(value = {REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR, SDK_SANDBOX_PROCESS_NOT_AVAILABLE})
     @Retention(RetentionPolicy.SOURCE)
     public @interface RequestSurfacePackageErrorCode {}
 
@@ -298,17 +321,18 @@ public final class SdkSandboxManager {
      * <p>This API may only be called while the caller is running in the foreground. Calls from the
      * background will result in a {@link SecurityException} being thrown.
      *
-     * @param sdkName name of the SDK to be loaded
-     * @param params the parameters App passes to SDK
+     * @param sdkName name of the SDK to be loaded.
+     * @param params additional parameters to be passed to the SDK in the form of a {@link Bundle}
+     *     as agreed between the client and the SDK.
      * @param executor the {@link Executor} on which to invoke the receiver.
-     * @param receiver This either returns a Bundle of params on a successful run, or {@link
+     * @param receiver This either returns a {@link SandboxedSdk} on a successful run, or {@link
      *     LoadSdkException}.
      */
     public void loadSdk(
             @NonNull String sdkName,
             @NonNull Bundle params,
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<LoadSdkResponse, LoadSdkException> receiver) {
+            @NonNull OutcomeReceiver<SandboxedSdk, LoadSdkException> receiver) {
         final LoadSdkReceiverProxy callbackProxy = new LoadSdkReceiverProxy(executor, receiver);
         try {
             mService.loadSdk(
@@ -376,11 +400,12 @@ public final class SdkSandboxManager {
      * <p>This API may only be called while the caller is running in the foreground. Calls from the
      * background will result in a {@link SecurityException} being thrown.
      *
-     * @param sdkName name of the SDK loaded into sdk sandbox
+     * @param sdkName name of the SDK loaded into sdk sandbox.
      * @param params the parameters which the client application passes to the SDK, it should
      *     contain the following params: (EXTRA_WIDTH_IN_PIXELS, EXTRA_HEIGHT_IN_PIXELS,
      *     EXTRA_DISPLAY_ID, EXTRA_HOST_TOKEN). If any of these params is missing, an
-     *     IllegalArgumentException will be thrown.
+     *     IllegalArgumentException will be thrown. Any additional parameters may be passed as
+     *     agreed between the client and the SDK.
      * @param callbackExecutor the {@link Executor} on which to invoke the callback
      * @param receiver This either returns a {@link Bundle} on success which should contain the key
      *     EXTRA_SURFACE_PACKAGE with value of {@link SurfacePackage} response, or {@link
@@ -432,7 +457,7 @@ public final class SdkSandboxManager {
             }
 
             final RequestSurfacePackageReceiverProxy callbackProxy =
-                    new RequestSurfacePackageReceiverProxy(callbackExecutor, receiver);
+                    new RequestSurfacePackageReceiverProxy(callbackExecutor, receiver, mService);
 
             mService.requestSurfacePackage(
                     mContext.getPackageName(),
@@ -523,22 +548,22 @@ public final class SdkSandboxManager {
     /** @hide */
     private static class LoadSdkReceiverProxy extends ILoadSdkCallback.Stub {
         private final Executor mExecutor;
-        private final OutcomeReceiver<LoadSdkResponse, LoadSdkException> mCallback;
+        private final OutcomeReceiver<SandboxedSdk, LoadSdkException> mCallback;
 
         LoadSdkReceiverProxy(
-                Executor executor, OutcomeReceiver<LoadSdkResponse, LoadSdkException> callback) {
+                Executor executor, OutcomeReceiver<SandboxedSdk, LoadSdkException> callback) {
             mExecutor = executor;
             mCallback = callback;
         }
 
         @Override
-        public void onLoadSdkSuccess(Bundle params) {
-            mExecutor.execute(() -> mCallback.onResult(new LoadSdkResponse(params)));
+        public void onLoadSdkSuccess(SandboxedSdk sandboxedSdk) {
+            mExecutor.execute(() -> mCallback.onResult(sandboxedSdk));
         }
 
         @Override
-        public void onLoadSdkFailure(int errorCode, String errorMsg) {
-            mExecutor.execute(() -> mCallback.onError(new LoadSdkException(errorCode, errorMsg)));
+        public void onLoadSdkFailure(LoadSdkException exception) {
+            mExecutor.execute(() -> mCallback.onError(exception));
         }
     }
 
@@ -547,17 +572,24 @@ public final class SdkSandboxManager {
             extends IRequestSurfacePackageCallback.Stub {
         private final Executor mExecutor;
         private final OutcomeReceiver<Bundle, RequestSurfacePackageException> mReceiver;
+        private final ISdkSandboxManager mService;
 
         RequestSurfacePackageReceiverProxy(
                 Executor executor,
-                OutcomeReceiver<Bundle, RequestSurfacePackageException> receiver) {
+                OutcomeReceiver<Bundle, RequestSurfacePackageException> receiver,
+                ISdkSandboxManager service) {
             mExecutor = executor;
             mReceiver = receiver;
+            mService = service;
         }
 
         @Override
-        public void onSurfacePackageReady(SurfacePackage surfacePackage,
-                int surfacePackageId, Bundle params) {
+        public void onSurfacePackageReady(
+                SurfacePackage surfacePackage,
+                int surfacePackageId,
+                Bundle params,
+                long timeSystemServerCalledApp) {
+            logLatencyFromSystemServerToApp(timeSystemServerCalledApp);
             mExecutor.execute(
                     () -> {
                         params.putParcelable(EXTRA_SURFACE_PACKAGE, surfacePackage);
@@ -566,11 +598,28 @@ public final class SdkSandboxManager {
         }
 
         @Override
-        public void onSurfacePackageError(int errorCode, String errorMsg) {
+        public void onSurfacePackageError(
+                int errorCode, String errorMsg, long timeSystemServerCalledApp) {
+            logLatencyFromSystemServerToApp(timeSystemServerCalledApp);
             mExecutor.execute(
                     () ->
                             mReceiver.onError(
                                     new RequestSurfacePackageException(errorCode, errorMsg)));
+        }
+
+        private void logLatencyFromSystemServerToApp(long timeSystemServerCalledApp) {
+            try {
+                mService.logLatencyFromSystemServerToApp(
+                        ISdkSandboxManager.REQUEST_SURFACE_PACKAGE,
+                        // TODO(b/242832156): Add Injector class for testing
+                        (int) (System.currentTimeMillis() - timeSystemServerCalledApp));
+            } catch (RemoteException e) {
+                Log.w(
+                        TAG,
+                        "Remote exception while calling logLatencyFromSystemServerToApp."
+                                + "Error: "
+                                + e.getMessage());
+            }
         }
     }
 

@@ -49,12 +49,9 @@ import java.util.concurrent.TimeoutException;
 @RunWith(JUnit4.class)
 public class SharedPreferencesSyncManagerUnitTest {
 
-    private SharedPreferencesSyncManager mSyncManager;
-    private FakeSdkSandboxManagerService mSdkSandboxManagerService;
-    private Context mContext;
-
-    // TODO(b/239403323): Write test where we try to sync non-string values like null or object.
     private static final String KEY_TO_UPDATE = "hello1";
+    private static final KeyWithType KEY_WITH_TYPE_TO_UPDATE =
+            new KeyWithType(KEY_TO_UPDATE, KeyWithType.KEY_TYPE_STRING);
     private static final Map<String, String> TEST_DATA =
             Map.of(KEY_TO_UPDATE, "world1", "hello2", "world2", "empty", "");
     private static final Set<KeyWithType> KEYS_TO_SYNC =
@@ -62,6 +59,10 @@ public class SharedPreferencesSyncManagerUnitTest {
                     new KeyWithType(KEY_TO_UPDATE, KeyWithType.KEY_TYPE_STRING),
                     new KeyWithType("hello2", KeyWithType.KEY_TYPE_STRING),
                     new KeyWithType("empty", KeyWithType.KEY_TYPE_STRING));
+
+    private SharedPreferencesSyncManager mSyncManager;
+    private FakeSdkSandboxManagerService mSdkSandboxManagerService;
+    private Context mContext;
 
     @Before
     public void setUp() throws Exception {
@@ -88,17 +89,6 @@ public class SharedPreferencesSyncManagerUnitTest {
     }
 
     @Test
-    public void test_syncData_doesNotSyncEmptyUpdates() throws Exception {
-        // Unpopulated shared preference. There is nothing to sync.
-        mSyncManager.setKeysToSync(KEYS_TO_SYNC);
-
-        mSyncManager.syncData();
-
-        // Verify that sync manager does not try to sync with empty data
-        assertThat(mSdkSandboxManagerService.getNumberOfUpdatesReceived()).isEqualTo(0);
-    }
-
-    @Test
     public void test_syncData_syncSpecifiedKeys() throws Exception {
         // Populate default shared preference with test data
         populateDefaultSharedPreference(TEST_DATA);
@@ -108,13 +98,26 @@ public class SharedPreferencesSyncManagerUnitTest {
         mSyncManager.syncData();
 
         // Verify that sync manager passes the correct data to SdkSandboxManager
-        final Bundle capturedData = mSdkSandboxManagerService.getLastUpdate();
+        final Bundle capturedData = mSdkSandboxManagerService.getLastUpdate().getData();
         assertThat(mSdkSandboxManagerService.getCallingPackageName())
                 .isEqualTo(mContext.getPackageName());
         assertThat(capturedData.keySet()).containsExactlyElementsIn(TEST_DATA.keySet());
         for (String key : TEST_DATA.keySet()) {
             assertThat(capturedData.getString(key)).isEqualTo(TEST_DATA.get(key));
         }
+    }
+
+    @Test
+    public void test_syncData_syncMissingKeys() throws Exception {
+        // Set specific shared keys that we want to sync without populating them at all
+        mSyncManager.setKeysToSync(KEYS_TO_SYNC);
+
+        mSyncManager.syncData();
+
+        // Verify that sync manager passes null for missing keys
+        final SharedPreferencesUpdate update = mSdkSandboxManagerService.getLastUpdate();
+        assertThat(update.getKeysInUpdate()).containsExactlyElementsIn(KEYS_TO_SYNC);
+        assertThat(update.getData().keySet()).isEmpty();
     }
 
     @Test
@@ -129,7 +132,7 @@ public class SharedPreferencesSyncManagerUnitTest {
         mSyncManager.syncData();
 
         // Verify that sync manager passes the correct data to SdkSandboxManager
-        final Bundle capturedData = mSdkSandboxManagerService.getLastUpdate();
+        final Bundle capturedData = mSdkSandboxManagerService.getLastUpdate().getData();
         assertThat(capturedData.keySet()).containsExactlyElementsIn(TEST_DATA.keySet());
     }
 
@@ -147,7 +150,7 @@ public class SharedPreferencesSyncManagerUnitTest {
         mSyncManager.syncData();
 
         // Verify that sync manager passes the correct data to SdkSandboxManager
-        final Bundle capturedData = mSdkSandboxManagerService.getLastUpdate();
+        final Bundle capturedData = mSdkSandboxManagerService.getLastUpdate().getData();
         assertThat(capturedData.keySet()).doesNotContain(KEY_TO_UPDATE);
     }
 
@@ -192,7 +195,7 @@ public class SharedPreferencesSyncManagerUnitTest {
         mSyncManager.syncData();
 
         // Verify that sync manager passes the correct data to SdkSandboxManager
-        final Bundle capturedData = mSdkSandboxManagerService.getLastUpdate();
+        final Bundle capturedData = mSdkSandboxManagerService.getLastUpdate().getData();
         assertThat(capturedData.keySet()).hasSize(6);
         assertThat(capturedData.getString("string")).isEqualTo(pref.getString("string", ""));
         assertThat(capturedData.getBoolean("boolean")).isEqualTo(pref.getBoolean("boolean", false));
@@ -217,7 +220,7 @@ public class SharedPreferencesSyncManagerUnitTest {
         mSyncManager.syncData();
 
         // Verify that sync manager is still using first set of keys
-        final Bundle capturedData = mSdkSandboxManagerService.getLastUpdate();
+        final Bundle capturedData = mSdkSandboxManagerService.getLastUpdate().getData();
         assertThat(capturedData.keySet()).containsExactlyElementsIn(TEST_DATA.keySet());
     }
 
@@ -230,9 +233,9 @@ public class SharedPreferencesSyncManagerUnitTest {
         // Update the SharedPreference to trigger listeners
         getDefaultSharedPreferences().edit().putString(KEY_TO_UPDATE, "update").commit();
 
-        // Verify we registered a listener that called SdkSandboxManagerService
-        mSdkSandboxManagerService.blockForReceivingUpdates(1);
-        final Bundle capturedData = mSdkSandboxManagerService.getLastUpdate();
+        // Verify that SyncManager tried to sync only twice: once for bulk and once for live update.
+        mSdkSandboxManagerService.blockForReceivingUpdates(2);
+        final Bundle capturedData = mSdkSandboxManagerService.getLastUpdate().getData();
         assertThat(capturedData.keySet()).containsExactly(KEY_TO_UPDATE);
         assertThat(capturedData.getString(KEY_TO_UPDATE)).isEqualTo("update");
     }
@@ -248,7 +251,7 @@ public class SharedPreferencesSyncManagerUnitTest {
 
         // Verify SdkSandboxManagerService does not receive the update for unspecified key
         Thread.sleep(5000);
-        assertThat(mSdkSandboxManagerService.getNumberOfUpdatesReceived()).isEqualTo(0);
+        assertThat(mSdkSandboxManagerService.getNumberOfUpdatesReceived()).isEqualTo(1);
     }
 
     @Test
@@ -265,6 +268,9 @@ public class SharedPreferencesSyncManagerUnitTest {
         mSyncManager.setKeysToSync(keysToSync);
         mSyncManager.syncData();
 
+        // Clear the bulk update for easier testing later
+        mSdkSandboxManagerService.clearUpdates();
+
         // Update the shared preference
         final SharedPreferences pref = getDefaultSharedPreferences();
         final SharedPreferences.Editor editor = pref.edit();
@@ -278,23 +284,25 @@ public class SharedPreferencesSyncManagerUnitTest {
 
         // Verify that sync manager receives one bundle for each key update
         mSdkSandboxManagerService.blockForReceivingUpdates(6);
-        final ArrayList<Bundle> allUpdates = mSdkSandboxManagerService.getAllUpdates();
+        final ArrayList<SharedPreferencesUpdate> allUpdates =
+                mSdkSandboxManagerService.getAllUpdates();
         assertThat(allUpdates).hasSize(6);
-        for (Bundle update : allUpdates) {
-            assertThat(update.keySet()).hasSize(1);
-            final String key = update.keySet().toArray()[0].toString();
+        for (SharedPreferencesUpdate update : allUpdates) {
+            final Bundle data = update.getData();
+            assertThat(data.keySet()).hasSize(1);
+            final String key = data.keySet().toArray()[0].toString();
             if (key.equals("string")) {
-                assertThat(update.getString(key)).isEqualTo(pref.getString(key, ""));
+                assertThat(data.getString(key)).isEqualTo(pref.getString(key, ""));
             } else if (key.equals("boolean")) {
-                assertThat(update.getBoolean(key)).isEqualTo(pref.getBoolean(key, false));
+                assertThat(data.getBoolean(key)).isEqualTo(pref.getBoolean(key, false));
             } else if (key.equals("float")) {
-                assertThat(update.getFloat(key)).isEqualTo(pref.getFloat(key, 0.0f));
+                assertThat(data.getFloat(key)).isEqualTo(pref.getFloat(key, 0.0f));
             } else if (key.equals("int")) {
-                assertThat(update.getInt(key)).isEqualTo(pref.getInt(key, 0));
+                assertThat(data.getInt(key)).isEqualTo(pref.getInt(key, 0));
             } else if (key.equals("long")) {
-                assertThat(update.getLong(key)).isEqualTo(pref.getLong(key, 0L));
+                assertThat(data.getLong(key)).isEqualTo(pref.getLong(key, 0L));
             } else if (key.equals("set")) {
-                assertThat(update.getStringArrayList(key))
+                assertThat(data.getStringArrayList(key))
                         .containsExactlyElementsIn(pref.getStringSet(key, Collections.emptySet()));
             } else {
                 fail("Unknown key found");
@@ -319,6 +327,62 @@ public class SharedPreferencesSyncManagerUnitTest {
         // Verify that SyncManager tried to sync only twice: once for bulk and once for live update.
         mSdkSandboxManagerService.blockForReceivingUpdates(2);
         assertThat(mSdkSandboxManagerService.getNumberOfUpdatesReceived()).isEqualTo(2);
+        final Bundle capturedData = mSdkSandboxManagerService.getLastUpdate().getData();
+        assertThat(capturedData.keySet()).containsExactly(KEY_TO_UPDATE);
+    }
+
+    /** Test that we can handle removal of keys */
+    @Test
+    public void test_updateListener_removeKey() throws Exception {
+        // Set specific keys for sycing and sync
+        populateDefaultSharedPreference(TEST_DATA);
+        mSyncManager.setKeysToSync(KEYS_TO_SYNC);
+        mSyncManager.syncData();
+
+        // Update the SharedPreference to trigger listeners
+        getDefaultSharedPreferences().edit().remove(KEY_TO_UPDATE).commit();
+
+        // Verify that SyncManager tried to sync only twice: once for bulk and once for live update.
+        mSdkSandboxManagerService.blockForReceivingUpdates(2);
+        final SharedPreferencesUpdate update = mSdkSandboxManagerService.getLastUpdate();
+        assertThat(update.getData().keySet()).doesNotContain(KEY_TO_UPDATE);
+        assertThat(update.getKeysInUpdate()).containsExactly(KEY_WITH_TYPE_TO_UPDATE);
+    }
+
+    /** Test that we can handle removal of keys by putting null */
+    @Test
+    public void test_updateListener_putNullValueForKey() throws Exception {
+        // Set specific keys for sycing
+        populateDefaultSharedPreference(TEST_DATA);
+        mSyncManager.setKeysToSync(KEYS_TO_SYNC);
+        mSyncManager.syncData();
+
+        // Update the SharedPreference to trigger listeners
+        getDefaultSharedPreferences().edit().putString(KEY_TO_UPDATE, null).commit();
+
+        // Verify that SyncManager tried to sync only twice: once for bulk and once for live update.
+        mSdkSandboxManagerService.blockForReceivingUpdates(2);
+        final SharedPreferencesUpdate update = mSdkSandboxManagerService.getLastUpdate();
+        assertThat(update.getData().keySet()).doesNotContain(KEY_TO_UPDATE);
+        assertThat(update.getKeysInUpdate()).containsExactly(KEY_WITH_TYPE_TO_UPDATE);
+    }
+
+    /** Test that we can handle removal of keys by putting null */
+    @Test
+    public void test_updateListener_removeAllKeys() throws Exception {
+        // Set specific keys for sycing
+        populateDefaultSharedPreference(TEST_DATA);
+        mSyncManager.setKeysToSync(KEYS_TO_SYNC);
+        mSyncManager.syncData();
+
+        // Clear all keys
+        getDefaultSharedPreferences().edit().clear().commit();
+
+        // Verify that SyncManager tried to sync only twice: once for bulk and once for live update.
+        mSdkSandboxManagerService.blockForReceivingUpdates(2);
+        final SharedPreferencesUpdate lastUpdate = mSdkSandboxManagerService.getLastUpdate();
+        assertThat(lastUpdate.getData().keySet()).isEmpty();
+        assertThat(lastUpdate.getKeysInUpdate()).containsExactlyElementsIn(KEYS_TO_SYNC);
     }
 
     /** Write all key-values provided in the map to app's default SharedPreferences */
@@ -337,7 +401,7 @@ public class SharedPreferencesSyncManagerUnitTest {
 
     private static class FakeSdkSandboxManagerService extends StubSdkSandboxManagerService {
         @GuardedBy("this")
-        private ArrayList<Bundle> mDataCache = new ArrayList<>();
+        private ArrayList<SharedPreferencesUpdate> mUpdateCache = new ArrayList<>();
 
         @GuardedBy("this")
         private String mCallingPackageName = null;
@@ -347,14 +411,16 @@ public class SharedPreferencesSyncManagerUnitTest {
 
         @Override
         public synchronized void syncDataFromClient(
-                String callingPackageName, long timeAppCalledSystemServer, Bundle data) {
+                String callingPackageName,
+                long timeAppCalledSystemServer,
+                SharedPreferencesUpdate update) {
             if (mCallingPackageName == null) {
                 mCallingPackageName = callingPackageName;
             } else {
                 assertThat(mCallingPackageName).isEqualTo(callingPackageName);
             }
 
-            mDataCache.add(data);
+            mUpdateCache.add(update);
             mWaitForMoreUpdates.countDown();
         }
 
@@ -363,20 +429,24 @@ public class SharedPreferencesSyncManagerUnitTest {
         }
 
         @Nullable
-        public synchronized Bundle getLastUpdate() {
-            if (mDataCache.isEmpty()) {
+        public synchronized SharedPreferencesUpdate getLastUpdate() {
+            if (mUpdateCache.isEmpty()) {
                 throw new AssertionError(
                         "Fake SdkSandboxManagerService did not receive any update");
             }
-            return new Bundle(mDataCache.get(mDataCache.size() - 1));
+            return mUpdateCache.get(mUpdateCache.size() - 1);
         }
 
-        public synchronized ArrayList<Bundle> getAllUpdates() {
-            return new ArrayList<>(mDataCache);
+        public synchronized ArrayList<SharedPreferencesUpdate> getAllUpdates() {
+            return new ArrayList<>(mUpdateCache);
         }
 
         public synchronized int getNumberOfUpdatesReceived() {
-            return mDataCache.size();
+            return mUpdateCache.size();
+        }
+
+        public synchronized void clearUpdates() {
+            mUpdateCache.clear();
         }
 
         public void blockForReceivingUpdates(int numberOfUpdates) throws Exception {

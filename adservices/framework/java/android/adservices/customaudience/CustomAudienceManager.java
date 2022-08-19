@@ -179,9 +179,11 @@ public class CustomAudienceManager {
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            // leaveCustomAudience() does not throw errors or exceptions in the
-                            // course of expected operation
-                            executor.execute(() -> receiver.onResult(new Object()));
+                            executor.execute(
+                                    () ->
+                                            receiver.onError(
+                                                    AdServicesStatusUtils.asException(
+                                                            failureParcel)));
                         }
                     });
         } catch (RemoteException e) {
