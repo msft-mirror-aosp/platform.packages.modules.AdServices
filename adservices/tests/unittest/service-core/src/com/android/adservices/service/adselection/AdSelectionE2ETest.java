@@ -64,6 +64,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.DBAdSelectionOverride;
@@ -110,7 +111,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * This test the actual flow of Ad Selection internal flow without any mocking. The dependencies in
@@ -185,7 +185,8 @@ public class AdSelectionE2ETest {
             FledgeAuthorizationFilter.create(mContext, mAdServicesLoggerSpy);
 
     private MockitoSession mStaticMockSession = null;
-    private ExecutorService mExecutorService;
+    private ExecutorService mLightweightExecutorService;
+    private ExecutorService mBackgroundExecutorService;
     private CustomAudienceDao mCustomAudienceDao;
     private AdSelectionEntryDao mAdSelectionEntryDao;
     private AdServicesHttpsClient mAdServicesHttpsClient;
@@ -210,7 +211,8 @@ public class AdSelectionE2ETest {
                         .startMocking();
 
         // Initialize dependencies for the AdSelectionService
-        mExecutorService = Executors.newFixedThreadPool(10);
+        mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
+        mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(mContext, CustomAudienceDatabase.class)
                         .build()
@@ -221,7 +223,8 @@ public class AdSelectionE2ETest {
                         .build()
                         .adSelectionEntryDao();
 
-        mAdServicesHttpsClient = new AdServicesHttpsClient(mExecutorService);
+        mAdServicesHttpsClient =
+                new AdServicesHttpsClient(AdServicesExecutors.getBlockingExecutor());
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
@@ -234,7 +237,8 @@ public class AdSelectionE2ETest {
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mAppImportanceFilter,
-                        mExecutorService,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mContext,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -292,7 +296,6 @@ public class AdSelectionE2ETest {
 
     @After
     public void tearDown() {
-        mExecutorService.shutdown();
         if (mStaticMockSession != null) {
             mStaticMockSession.finishMocking();
         }
@@ -550,7 +553,8 @@ public class AdSelectionE2ETest {
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mAppImportanceFilter,
-                        mExecutorService,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mContext,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -1228,7 +1232,8 @@ public class AdSelectionE2ETest {
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mAppImportanceFilter,
-                        mExecutorService,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mContext,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -1336,7 +1341,8 @@ public class AdSelectionE2ETest {
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mAppImportanceFilter,
-                        mExecutorService,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mContext,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -1834,7 +1840,8 @@ public class AdSelectionE2ETest {
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mAppImportanceFilter,
-                        mExecutorService,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mContext,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -1934,7 +1941,8 @@ public class AdSelectionE2ETest {
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mAppImportanceFilter,
-                        mExecutorService,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mContext,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,

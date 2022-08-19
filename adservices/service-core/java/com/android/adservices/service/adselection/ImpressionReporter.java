@@ -71,7 +71,8 @@ public class ImpressionReporter {
     @NonNull private final Context mContext;
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
-    @NonNull private final ListeningExecutorService mListeningExecutorService;
+    @NonNull private final ListeningExecutorService mLightweightExecutorService;
+    @NonNull private final ListeningExecutorService mBackgroundExecutorService;
     @NonNull private final ReportImpressionScriptEngine mJsEngine;
     @NonNull private final ConsentManager mConsentManager;
     @NonNull private final AdSelectionDevOverridesHelper mAdSelectionDevOverridesHelper;
@@ -84,7 +85,8 @@ public class ImpressionReporter {
 
     public ImpressionReporter(
             @NonNull Context context,
-            @NonNull ExecutorService executor,
+            @NonNull ExecutorService lightweightExecutor,
+            @NonNull ExecutorService backgroundExecutor,
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull ConsentManager consentManager,
@@ -96,7 +98,8 @@ public class ImpressionReporter {
             @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter,
             @NonNull final FledgeAllowListsFilter fledgeAllowListsFilter) {
         Objects.requireNonNull(context);
-        Objects.requireNonNull(executor);
+        Objects.requireNonNull(lightweightExecutor);
+        Objects.requireNonNull(backgroundExecutor);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(consentManager);
@@ -108,7 +111,8 @@ public class ImpressionReporter {
         Objects.requireNonNull(fledgeAllowListsFilter);
 
         mContext = context;
-        mListeningExecutorService = MoreExecutors.listeningDecorator(executor);
+        mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutor);
+        mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutor);
         mAdSelectionEntryDao = adSelectionEntryDao;
         mAdServicesHttpsClient = adServicesHttpsClient;
         mJsEngine =
@@ -181,7 +185,7 @@ public class ImpressionReporter {
         // Getting PH flags in a non binder thread
         FluentFuture<Long> timeoutFuture =
                 FluentFuture.from(
-                        mListeningExecutorService.submit(
+                        mLightweightExecutorService.submit(
                                 mFlags::getReportImpressionOverallTimeoutMs));
 
         timeoutFuture.addCallback(
@@ -197,7 +201,7 @@ public class ImpressionReporter {
                         notifyFailureToCaller(callback, t);
                     }
                 },
-                mListeningExecutorService);
+                mLightweightExecutorService);
     }
 
     private void invokeReporting(
@@ -211,7 +215,7 @@ public class ImpressionReporter {
                         () ->
                                 validateRequest(
                                         adSelectionConfig, requestParams.getCallerPackageName()),
-                        mListeningExecutorService);
+                        mLightweightExecutorService);
 
         FluentFuture.from(validateRequestFuture)
                 .transformAsync(
@@ -220,17 +224,17 @@ public class ImpressionReporter {
                                         adSelectionId,
                                         adSelectionConfig,
                                         requestParams.getCallerPackageName()),
-                        mListeningExecutorService)
+                        mLightweightExecutorService)
                 .transform(
                         reportingUrls -> notifySuccessToCaller(callback, reportingUrls),
-                        mListeningExecutorService)
+                        mLightweightExecutorService)
                 .withTimeout(
                         mFlags.getReportImpressionOverallTimeoutMs(),
                         TimeUnit.MILLISECONDS,
                         // TODO(b/237103033): Comply with thread usage policy for AdServices;
                         //  use a global scheduled executor
                         new ScheduledThreadPoolExecutor(1))
-                .transformAsync(this::doReport, mListeningExecutorService)
+                .transformAsync(this::doReport, mLightweightExecutorService)
                 .addCallback(
                         new FutureCallback<List<Void>>() {
                             @Override
@@ -250,7 +254,7 @@ public class ImpressionReporter {
                                 }
                             }
                         },
-                        mListeningExecutorService);
+                        mLightweightExecutorService);
     }
 
     private ReportingUrls notifySuccessToCaller(
@@ -301,24 +305,24 @@ public class ImpressionReporter {
                             ctx.mAdSelectionConfig = adSelectionConfig;
                             return fetchSellerDecisionLogic(ctx);
                         },
-                        mListeningExecutorService)
+                        mLightweightExecutorService)
                 .transformAsync(
                         decisionLogicJsAndCtx ->
                                 invokeSellerScript(
                                         decisionLogicJsAndCtx.first, decisionLogicJsAndCtx.second),
-                        mListeningExecutorService)
+                        mLightweightExecutorService)
                 .transformAsync(
                         sellerResultAndCtx ->
                                 invokeBuyerScript(
                                         sellerResultAndCtx.first, sellerResultAndCtx.second),
-                        mListeningExecutorService)
-                .transform(urlsAndContext -> urlsAndContext.first, mListeningExecutorService);
+                        mLightweightExecutorService)
+                .transform(urlsAndContext -> urlsAndContext.first, mLightweightExecutorService);
     }
 
     private FluentFuture<DBAdSelectionEntry> fetchAdSelectionEntry(
             long adSelectionId, String callerPackageName) {
         return FluentFuture.from(
-                mListeningExecutorService.submit(
+                mBackgroundExecutorService.submit(
                         () -> {
                             Preconditions.checkArgument(
                                     mAdSelectionEntryDao.doesAdSelectionIdExist(adSelectionId),
@@ -336,7 +340,7 @@ public class ImpressionReporter {
             ReportingContext ctx) {
         FluentFuture<String> jsOverrideFuture =
                 FluentFuture.from(
-                        mListeningExecutorService.submit(
+                        mBackgroundExecutorService.submit(
                                 () ->
                                         mAdSelectionDevOverridesHelper.getDecisionLogicOverride(
                                                 ctx.mAdSelectionConfig)));
@@ -355,9 +359,10 @@ public class ImpressionReporter {
                                 return Futures.immediateFuture(jsOverride);
                             }
                         },
-                        mListeningExecutorService)
+                        mLightweightExecutorService)
                 .transform(
-                        stringResult -> Pair.create(stringResult, ctx), mListeningExecutorService);
+                        stringResult -> Pair.create(stringResult, ctx),
+                        mLightweightExecutorService);
     }
 
     private FluentFuture<Pair<ReportImpressionScriptEngine.SellerReportingResult, ReportingContext>>
@@ -373,7 +378,7 @@ public class ImpressionReporter {
                                             ctx.mDBAdSelectionEntry.getContextualSignals())))
                     .transform(
                             sellerResult -> Pair.create(sellerResult, ctx),
-                            mListeningExecutorService);
+                            mLightweightExecutorService);
         } catch (JSONException e) {
             throw new IllegalArgumentException("Invalid JSON data", e);
         }
@@ -415,7 +420,7 @@ public class ImpressionReporter {
                                                     resultUri,
                                                     sellerReportingResult.getReportingUrl()),
                                             ctx),
-                            mListeningExecutorService);
+                            mLightweightExecutorService);
         } catch (JSONException e) {
             throw new IllegalArgumentException("Invalid JSON args", e);
         }
