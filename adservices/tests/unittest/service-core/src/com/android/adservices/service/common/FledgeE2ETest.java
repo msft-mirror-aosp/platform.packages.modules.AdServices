@@ -17,6 +17,7 @@
 package com.android.adservices.service.common;
 
 import static com.android.adservices.service.adselection.ImpressionReporter.CALLER_PACKAGE_NAME_MISMATCH;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyBoolean;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
@@ -164,6 +165,10 @@ public class FledgeE2ETest {
     private MockWebServerRule.RequestMatcher<String> mRequestMatcherPrefixMatch;
     private Uri mLocalhostBuyerDomain;
 
+    @Spy
+    FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
+            new FledgeAllowListsFilter(mFlags, mAdServicesLogger);
+
     @Before
     public void setUp() throws Exception {
         // Test applications don't have the required permissions to read config P/H flags, and
@@ -202,7 +207,7 @@ public class FledgeE2ETest {
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 mFlags),
                         FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger),
-                        new FledgeAllowListsFilter(mFlags, mAdServicesLogger),
+                        mFledgeAllowListsFilterSpy,
                         mConsentManagerMock,
                         mDevContextFilter,
                         MoreExecutors.newDirectExecutorService(),
@@ -228,7 +233,8 @@ public class FledgeE2ETest {
                         mAdServicesLogger,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger));
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger),
+                        mFledgeAllowListsFilterSpy);
 
         mRequestMatcherPrefixMatch = (a, b) -> !b.isEmpty() && a.startsWith(b);
     }
@@ -556,7 +562,14 @@ public class FledgeE2ETest {
                         mAdServicesLogger,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger));
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger),
+                        mFledgeAllowListsFilterSpy);
+
+        // Stubbing this check so it fails at matching validation
+        doNothing()
+                .when(mFledgeAllowListsFilterSpy)
+                .assertAppCanUsePpapi(
+                        otherPackageName, AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION);
 
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()

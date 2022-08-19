@@ -97,12 +97,11 @@ public class PhFlagsFixture {
     }
 
     /**
-     * Enables test to override the flag enabling the enrollment check for callers of the Custom
-     * Audience API.
+     * Enables test to override the flag enabling the enrollment check for callers of Fledge APIs.
      *
      * @param enable whether enable or disable the check
      */
-    public static void overrideFledgeCustomAudienceEnrollmentCheck(boolean enable) {
+    public static void overrideFledgeEnrollmentCheck(boolean enable) {
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 PhFlags.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK,

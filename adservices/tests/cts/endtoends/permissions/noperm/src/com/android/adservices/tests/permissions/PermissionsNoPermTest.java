@@ -20,6 +20,13 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
+import android.adservices.adselection.AdSelectionConfig;
+import android.adservices.adselection.AdSelectionConfigFixture;
+import android.adservices.adselection.AddAdSelectionOverrideRequest;
+import android.adservices.adselection.RemoveAdSelectionOverrideRequest;
+import android.adservices.adselection.ReportImpressionRequest;
+import android.adservices.clients.adselection.AdSelectionClient;
+import android.adservices.clients.adselection.TestAdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
 import android.adservices.clients.customaudience.TestAdvertisingCustomAudienceClient;
 import android.adservices.clients.topics.AdvertisingTopicsClient;
@@ -178,5 +185,116 @@ public class PermissionsNoPermTest {
         assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
-    // TODO(b/238195126): Add FLEDGE ad selection and impression reporting tests
+    @Test
+    public void testPermissionNotRequested_selectAds() {
+        AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
+
+        AdSelectionClient mAdSelectionClient =
+                new AdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> mAdSelectionClient.selectAds(adSelectionConfig).get());
+        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+    }
+
+    @Test
+    public void testPermissionNotRequested_reportImpression() {
+        AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
+
+        long adSelectionId = 1;
+
+        AdSelectionClient mAdSelectionClient =
+                new AdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        ReportImpressionRequest request =
+                new ReportImpressionRequest(adSelectionId, adSelectionConfig);
+
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> mAdSelectionClient.reportImpression(request).get());
+        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+    }
+
+    @Test
+    public void testPermissionNotRequested_fledgeOverrideAdSelectionConfigRemoteInfo() {
+        TestAdSelectionClient testAdSelectionClient =
+                new TestAdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        String decisionLogicJs = "function test() { return \"hello world\"; }";
+        AdSelectionSignals trustedScoringSignals =
+                AdSelectionSignals.fromString(
+                        "{\n"
+                                + "\t\"render_url_1\": \"signals_for_1\",\n"
+                                + "\t\"render_url_2\": \"signals_for_2\"\n"
+                                + "}");
+
+        AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
+
+        AddAdSelectionOverrideRequest request =
+                new AddAdSelectionOverrideRequest(
+                        adSelectionConfig, decisionLogicJs, trustedScoringSignals);
+
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> {
+                            testAdSelectionClient
+                                    .overrideAdSelectionConfigRemoteInfo(request)
+                                    .get();
+                        });
+        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+    }
+
+    @Test
+    public void testPermissionNotRequested_fledgeRemoveAdSelectionConfigRemoteInfo() {
+        TestAdSelectionClient testAdSelectionClient =
+                new TestAdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
+
+        RemoveAdSelectionOverrideRequest request =
+                new RemoveAdSelectionOverrideRequest(adSelectionConfig);
+
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> {
+                            testAdSelectionClient
+                                    .removeAdSelectionConfigRemoteInfoOverride(request)
+                                    .get();
+                        });
+        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+    }
+
+    @Test
+    public void testPermissionNotRequested_fledgeResetAllAdSelectionConfigRemoteOverrides() {
+        TestAdSelectionClient testAdSelectionClient =
+                new TestAdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> {
+                            testAdSelectionClient.resetAllAdSelectionConfigRemoteOverrides().get();
+                        });
+        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+    }
 }
