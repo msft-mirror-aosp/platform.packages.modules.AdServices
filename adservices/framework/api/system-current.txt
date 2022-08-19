@@ -29,11 +29,9 @@ package android.adservices.common {
   }
 
   public class AdServicesPermissions {
-    field public static final String ACCESS_ADSERVICES_CONSENT = "android.permission.ACCESS_ADSERVICES_CONSENT";
     field public static final String ACCESS_ADSERVICES_STATE = "android.permission.ACCESS_ADSERVICES_STATE";
-    field public static final String ADSERVICES_ACCESS_AD_ID = "android.permission.ADSERVICES_ACCESS_AD_ID";
-    field public static final String ADSERVICES_ACCESS_APP_SET_ID = "android.permission.ADSERVICES_ACCESS_APP_SET_ID";
-    field public static final String ADSERVICES_ACCESS_CONSENT_SERVICE = "android.permission.ADSERVICES_ACCESS_CONSENT_SERVICE";
+    field public static final String ACCESS_PRIVILEGED_AD_ID = "android.permission.ACCESS_PRIVILEGED_AD_ID";
+    field public static final String ACCESS_PRIVILEGED_APP_SET_ID = "android.permission.ACCESS_PRIVILEGED_APP_SET_ID";
     field public static final String MODIFY_ADSERVICES_STATE = "android.permission.MODIFY_ADSERVICES_STATE";
   }
 
