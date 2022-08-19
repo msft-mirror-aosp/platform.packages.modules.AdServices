@@ -34,6 +34,7 @@ import android.app.sdksandbox.ISendDataCallback;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.LoadSdkResponse;
 import android.app.sdksandbox.SdkSandboxManager;
+import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -624,7 +625,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     @Override
     public void syncDataFromClient(
-            String callingPackageName, long timeAppCalledSystemServer, Bundle data) {
+            String callingPackageName,
+            long timeAppCalledSystemServer,
+            SharedPreferencesUpdate update) {
         final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
 
         SdkSandboxStatsLog.write(
@@ -641,18 +644,19 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         final CallingInfo callingInfo = new CallingInfo(callingUid, callingPackageName);
         enforceCallingPackageBelongsToUid(callingInfo);
         try {
-            syncDataFromClientInternal(callingInfo, data);
+            syncDataFromClientInternal(callingInfo, update);
         } finally {
             Binder.restoreCallingIdentity(token);
         }
     }
 
-    private void syncDataFromClientInternal(CallingInfo callingInfo, Bundle data) {
+    private void syncDataFromClientInternal(
+            CallingInfo callingInfo, SharedPreferencesUpdate update) {
         // check first if service already bound
         ISdkSandboxService service = mServiceProvider.getBoundServiceForApp(callingInfo);
         if (service != null) {
             try {
-                service.syncDataFromClient(data);
+                service.syncDataFromClient(update);
             } catch (RemoteException ignore) {
                 // TODO(b/239403323): Sandbox has died. Register lifecycle callback to retry.
             }
