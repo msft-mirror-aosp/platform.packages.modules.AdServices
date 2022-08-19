@@ -1572,6 +1572,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                             exception.getExtraInformation());
                 case ILoadSdkInSandboxCallback.LOAD_SDK_PROVIDER_INIT_ERROR:
                 case ILoadSdkInSandboxCallback.LOAD_SDK_INSTANTIATION_ERROR:
+                case ILoadSdkInSandboxCallback.LOAD_SDK_INTERNAL_ERROR:
                     return new LoadSdkException(
                             SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR,
                             exception.getMessage(),

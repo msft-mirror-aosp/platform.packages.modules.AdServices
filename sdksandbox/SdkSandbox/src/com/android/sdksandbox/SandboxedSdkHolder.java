@@ -90,19 +90,19 @@ class SandboxedSdkHolder {
         } catch (ClassNotFoundException e) {
             sendLoadSdkError(
                     new LoadSdkException(
-                            IRequestSurfacePackageFromSdkCallback.SURFACE_PACKAGE_INTERNAL_ERROR,
+                            ILoadSdkInSandboxCallback.LOAD_SDK_INTERNAL_ERROR,
                             "Could not find class: " + sdkProviderClassName),
                     callback);
         } catch (Exception e) {
             sendLoadSdkError(
                     new LoadSdkException(
-                            IRequestSurfacePackageFromSdkCallback.SURFACE_PACKAGE_INTERNAL_ERROR,
+                            ILoadSdkInSandboxCallback.LOAD_SDK_INTERNAL_ERROR,
                             "Could not instantiate SandboxedSdkProvider: " + e),
                     callback);
         } catch (Throwable e) {
             sendLoadSdkError(
                     new LoadSdkException(
-                            IRequestSurfacePackageFromSdkCallback.SURFACE_PACKAGE_INTERNAL_ERROR,
+                            ILoadSdkInSandboxCallback.LOAD_SDK_INTERNAL_ERROR,
                             "Error thrown during init: " + e),
                     callback);
         }
