@@ -20,9 +20,10 @@ import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.Topic;
 import android.app.sdksandbox.LoadSdkException;
-import android.app.sdksandbox.LoadSdkResponse;
+import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
+import android.os.Binder;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -50,7 +51,7 @@ public class Sdk1 extends SandboxedSdkProvider {
             ImmutableSet.of(10009, 10225, 10249, 10223, 10253);
 
     @Override
-    public LoadSdkResponse onLoadSdk(Bundle params) throws LoadSdkException {
+    public SandboxedSdk onLoadSdk(Bundle params) throws LoadSdkException {
         try {
             // The first call to the Topics API. This will record the usage of the test app to
             // the Topics API.
@@ -90,7 +91,7 @@ public class Sdk1 extends SandboxedSdkProvider {
                     // API call got back some topic which is expected. This will tell the Test
                     // App to pass the test.
                     Log.i(TAG, "Get correct returned topic: " + topic.getTopicId());
-                    return new LoadSdkResponse(new Bundle());
+                    return new SandboxedSdk(new Binder());
                 } else {
                     // Throw an exception to tell the test app that we received
                     // a wrong topic. This will tell the Test App to fail the test.

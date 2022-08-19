@@ -16,4 +16,4 @@
 
 package android.app.sdksandbox;
 
-parcelable LoadSdkResponse;
+parcelable SandboxedSdk;

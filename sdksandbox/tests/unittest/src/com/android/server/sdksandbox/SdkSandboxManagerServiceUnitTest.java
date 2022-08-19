@@ -27,7 +27,7 @@ import android.app.ActivityManager;
 import android.app.sdksandbox.ILoadSdkCallback;
 import android.app.sdksandbox.ISdkSandboxManager;
 import android.app.sdksandbox.LoadSdkException;
-import android.app.sdksandbox.LoadSdkResponse;
+import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.SharedPreferencesUpdate;
@@ -1705,7 +1705,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
         void sendLoadCodeSuccessful() throws RemoteException {
             mLoadSdkInSandboxCallback.onLoadSdkSuccess(
-                    new LoadSdkResponse(new Bundle()), mManagerToSdkCallback);
+                    new SandboxedSdk(new Binder()), mManagerToSdkCallback);
         }
 
         void sendLoadCodeError() throws Exception {
