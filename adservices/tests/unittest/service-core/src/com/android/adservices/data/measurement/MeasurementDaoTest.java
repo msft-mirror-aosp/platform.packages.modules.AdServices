@@ -105,6 +105,7 @@ public class MeasurementDaoTest {
             assertEquals(validSource.getAppDestination(), source.getAppDestination());
             assertEquals(validSource.getWebDestination(), source.getWebDestination());
             assertEquals(validSource.getAdTechDomain(), source.getAdTechDomain());
+            assertEquals(validSource.getEnrollmentId(), source.getEnrollmentId());
             assertEquals(validSource.getRegistrant(), source.getRegistrant());
             assertEquals(validSource.getEventTime(), source.getEventTime());
             assertEquals(validSource.getExpiryTime(), source.getExpiryTime());
@@ -139,6 +140,7 @@ public class MeasurementDaoTest {
                     validTrigger.getAttributionDestination(), trigger.getAttributionDestination());
             assertEquals(validTrigger.getDestinationType(), trigger.getDestinationType());
             assertEquals(validTrigger.getAdTechDomain(), trigger.getAdTechDomain());
+            assertEquals(validTrigger.getEnrollmentId(), trigger.getEnrollmentId());
             assertEquals(validTrigger.getRegistrant(), trigger.getRegistrant());
             assertEquals(validTrigger.getTriggerTime(), trigger.getTriggerTime());
             assertEquals(validTrigger.getEventTriggers(), trigger.getEventTriggers());
@@ -1354,6 +1356,7 @@ public class MeasurementDaoTest {
         Attribution attribution =
                 new Attribution.Builder()
                         .setAdTechDomain(source.getAdTechDomain().toString())
+                        .setEnrollmentId(source.getEnrollmentId())
                         .setDestinationOrigin(source.getWebDestination().toString())
                         .setDestinationSite(source.getAppDestination().toString())
                         .setSourceOrigin(source.getPublisher().toString())

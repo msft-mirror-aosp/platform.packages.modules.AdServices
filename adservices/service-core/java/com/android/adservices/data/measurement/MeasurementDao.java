@@ -83,6 +83,7 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.TriggerContract.STATUS, Trigger.Status.PENDING);
         values.put(MeasurementTables.TriggerContract.AD_TECH_DOMAIN,
                 trigger.getAdTechDomain().toString());
+        values.put(MeasurementTables.TriggerContract.ENROLLMENT_ID, trigger.getEnrollmentId());
         values.put(MeasurementTables.TriggerContract.REGISTRANT,
                 trigger.getRegistrant().toString());
         values.put(MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA,
@@ -189,6 +190,7 @@ class MeasurementDao implements IMeasurementDao {
                 getNullableUriString(source.getWebDestination()));
         values.put(MeasurementTables.SourceContract.AD_TECH_DOMAIN,
                 source.getAdTechDomain().toString());
+        values.put(MeasurementTables.SourceContract.ENROLLMENT_ID, source.getEnrollmentId());
         values.put(MeasurementTables.SourceContract.EVENT_TIME, source.getEventTime());
         values.put(MeasurementTables.SourceContract.EXPIRY_TIME, source.getExpiryTime());
         values.put(MeasurementTables.SourceContract.PRIORITY, source.getPriority());
@@ -427,6 +429,8 @@ class MeasurementDao implements IMeasurementDao {
                 eventReport.getTriggerDedupKey());
         values.put(MeasurementTables.EventReportContract.AD_TECH_DOMAIN,
                 eventReport.getAdTechDomain().toString());
+        values.put(MeasurementTables.EventReportContract.ENROLLMENT_ID,
+                eventReport.getEnrollmentId());
         values.put(MeasurementTables.EventReportContract.STATUS,
                 eventReport.getStatus());
         values.put(MeasurementTables.EventReportContract.REPORT_TIME,
@@ -476,6 +480,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.AttributionContract.AD_TECH_DOMAIN,
                 attribution.getAdTechDomain());
+        values.put(
+                MeasurementTables.AttributionContract.ENROLLMENT_ID,
+                attribution.getEnrollmentId());
         values.put(
                 MeasurementTables.AttributionContract.TRIGGER_TIME, attribution.getTriggerTime());
         values.put(MeasurementTables.AttributionContract.REGISTRANT, attribution.getRegistrant());
@@ -1124,6 +1131,8 @@ class MeasurementDao implements IMeasurementDao {
                 aggregateReport.getScheduledReportTime());
         values.put(MeasurementTables.AggregateReport.AD_TECH_DOMAIN,
                 aggregateReport.getAdTechDomain().toString());
+        values.put(MeasurementTables.AggregateReport.ENROLLMENT_ID,
+                aggregateReport.getEnrollmentId());
         values.put(MeasurementTables.AggregateReport.DEBUG_CLEARTEXT_PAYLOAD,
                 aggregateReport.getDebugCleartextPayload());
         values.put(MeasurementTables.AggregateReport.STATUS,
