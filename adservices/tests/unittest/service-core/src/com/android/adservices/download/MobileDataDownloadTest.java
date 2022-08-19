@@ -37,6 +37,7 @@ import com.google.mobiledatadownload.DownloadConfigProto.DataFileGroup;
 import com.google.mobiledatadownload.DownloadConfigProto.DownloadConditions;
 import com.google.mobiledatadownload.DownloadConfigProto.DownloadConditions.DeviceNetworkPolicy;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.concurrent.ExecutionException;
@@ -101,6 +102,7 @@ public class MobileDataDownloadTest {
         assertThat(clientFileGroup.hasAccount()).isFalse();
     }
 
+    @Ignore
     @Test
     public void testTopicsManifestFileGroupPopulator()
             throws ExecutionException, InterruptedException, TimeoutException {
