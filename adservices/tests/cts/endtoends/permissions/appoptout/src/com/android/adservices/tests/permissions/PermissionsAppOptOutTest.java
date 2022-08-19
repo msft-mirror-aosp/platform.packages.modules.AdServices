@@ -21,6 +21,10 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import android.Manifest;
+import android.adservices.adselection.AdSelectionConfig;
+import android.adservices.adselection.AdSelectionConfigFixture;
+import android.adservices.adselection.ReportImpressionRequest;
+import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
 import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.common.AdTechIdentifier;
@@ -79,7 +83,7 @@ public class PermissionsAppOptOutTest {
 
     @Test
     public void testNoEnrollment_fledgeJoinCustomAudience() {
-        PhFlagsFixture.overrideFledgeCustomAudienceEnrollmentCheck(true);
+        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
         AdvertisingCustomAudienceClient customAudienceClient =
                 new AdvertisingCustomAudienceClient.Builder()
                         .setContext(sContext)
@@ -100,12 +104,12 @@ public class PermissionsAppOptOutTest {
                         ExecutionException.class,
                         () -> customAudienceClient.joinCustomAudience(customAudience).get());
         assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
-        PhFlagsFixture.overrideFledgeCustomAudienceEnrollmentCheck(false);
+        PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
     }
 
     @Test
     public void testNoEnrollment_fledgeLeaveCustomAudience() {
-        PhFlagsFixture.overrideFledgeCustomAudienceEnrollmentCheck(true);
+        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
         AdvertisingCustomAudienceClient customAudienceClient =
                 new AdvertisingCustomAudienceClient.Builder()
                         .setContext(sContext)
@@ -123,10 +127,53 @@ public class PermissionsAppOptOutTest {
                                                 "exampleCustomAudience")
                                         .get());
         assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
-        PhFlagsFixture.overrideFledgeCustomAudienceEnrollmentCheck(false);
+        PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
     }
 
-    // TODO(b/238195126): Add FLEDGE ad selection and impression reporting tests
+    @Test
+    public void testNoEnrollment_selectAds() {
+        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
+
+        AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
+
+        AdSelectionClient mAdSelectionClient =
+                new AdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> mAdSelectionClient.selectAds(adSelectionConfig).get());
+        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+        PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
+    }
+
+    @Test
+    public void testNoEnrollment_reportImpression() {
+        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
+
+        AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
+
+        long adSelectionId = 1;
+
+        AdSelectionClient mAdSelectionClient =
+                new AdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        ReportImpressionRequest request =
+                new ReportImpressionRequest(adSelectionId, adSelectionConfig);
+
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> mAdSelectionClient.reportImpression(request).get());
+        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+        PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
+    }
 
     // Override the flag to disable Topics enrollment check.
     private void overrideDisableTopicsEnrollmentCheck(String val) {
