@@ -19,33 +19,52 @@ import android.annotation.NonNull;
 
 import java.util.Objects;
 
-/** Represents the response from the {@link AdIdManager#getAdId(Executor, OutcomeReceiver)} API. */
+/**
+ * A unique, user-resettable, device-wide, per-profile ID for advertising.
+ *
+ * <p>Ad networks may use {@code AdId} to monetize for Interest Based Advertising (IBA), i.e.
+ * targeting and remarketing ads. The user may limit availability of this identifier.
+ *
+ * @see AdIdManager#getAdId(Executor, OutcomeReceiver)
+ */
 public class AdId {
     @NonNull private final String mAdId;
     private final boolean mLimitAdTrackingEnabled;
 
+    /**
+     * Creates an instance of {@link AdId}
+     *
+     * @param adId obtained from the provider service.
+     * @param limitAdTrackingEnabled value from the provider service which determines the value of
+     *     adId.
+     */
     public AdId(@NonNull String adId, boolean limitAdTrackingEnabled) {
         mAdId = adId;
         mLimitAdTrackingEnabled = limitAdTrackingEnabled;
     }
 
     /**
-     * Retrieves the advertising ID. When {@link #isLimitAdTrackingEnabled()} is true, the returned
-     * value of this API is 00000000-0000-0000-0000-000000000000 regardless of the app’s target SDK
-     * level. Apps with target API level set to 33 (Android 13) or later must declare the normal
-     * permission com.google.android.gms.permission.AD_ID in the AndroidManifest.xml in order to use
-     * this API. If this permission is not declared, the returned value is
-     * 00000000-0000-0000-0000-000000000000. On API level lower than 33, we can return empty adid
-     * from the provider side in situations when the provider cannot retrieve this information.
+     * The advertising ID.
+     *
+     * <p>The value of advertising Id depends on a combination of {@link
+     * #isLimitAdTrackingEnabled()} and {@link
+     * android.adservices.common.AdServicesPermissions#ACCESS_ADSERVICES_AD_ID}.
+     *
+     * <p>When the user is {@link #isLimitAdTrackingEnabled limiting ad tracking}, the API returns
+     * 00000000-0000-0000-0000-000000000000. This disallows a caller to track the user for
+     * monetization purposes.
+     *
+     * <p>Otherwise, a string unique to the device and user is returned, which can be used to track
+     * users for advertising.
      */
     public @NonNull String getAdId() {
         return mAdId;
     }
 
     /**
-     * Retrieves the limit ad tracking enabled setting, true if user has limit ad tracking enabled.
-     * False, otherwise. When the returned value is true, the returned value of {@link #getAdId}
-     * will always be 00000000-0000-0000-0000-000000000000".
+     * Retrieves the limit ad tracking enabled setting.
+     *
+     * <p>This value is true if user has limit ad tracking enabled, falseotherwise.
      */
     public boolean isLimitAdTrackingEnabled() {
         return mLimitAdTrackingEnabled;
