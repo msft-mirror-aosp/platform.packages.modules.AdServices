@@ -173,7 +173,7 @@ class AttributionJobHandler {
                                     .setSourceRegistrationTime(
                                             roundDownToDay(source.getEventTime()))
                                     .setScheduledReportTime(trigger.getTriggerTime() + randomTime)
-                                    .setReportingOrigin(source.getAdTechDomain())
+                                    .setAdTechDomain(source.getAdTechDomain())
                                     .setDebugCleartextPayload(
                                             AggregateReport.generateDebugPayload(
                                                     contributions.get()))

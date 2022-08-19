@@ -944,12 +944,12 @@ public interface Flags extends Dumpable {
                     + "com.example.adservices.samples.topics.sampleapp6";
 
     /**
-     * The client app packages that are allowed to invoke web context registration APIs, i.e. {@link
+     * The client app packages that are allowed to invoke web context APIs, i.e. {@link
      * android.adservices.measurement.MeasurementManager#registerWebSource} and {@link
-     * android.adservices.measurement.MeasurementManager#registerWebTrigger}. App packages that do
+     * android.adservices.measurement.MeasurementManager#deleteRegistrations}. App packages that do
      * not belong to the list will be responded back with an error response.
      */
-    String WEB_CONTEXT_REGISTRATION_CLIENT_ALLOW_LIST = "";
+    String WEB_CONTEXT_CLIENT_ALLOW_LIST = "";
 
     /**
      * Returns the The Allow List for PP APIs. Only App Package Name belongs to this Allow List can
@@ -1036,8 +1036,8 @@ public interface Flags extends Dumpable {
         return FOREGROUND_STATUS_LEVEL;
     }
 
-    default String getWebContextRegistrationClientAppAllowList() {
-        return WEB_CONTEXT_REGISTRATION_CLIENT_ALLOW_LIST;
+    default String getWebContextClientAppAllowList() {
+        return WEB_CONTEXT_CLIENT_ALLOW_LIST;
     }
 
     boolean ENFORCE_ISOLATE_MAX_HEAP_SIZE = true;
