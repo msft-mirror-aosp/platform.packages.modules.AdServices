@@ -110,7 +110,9 @@ public final class AdSelectionRunner {
     @NonNull private final Context mContext;
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
-    @NonNull private final ExecutorService mExecutorService;
+    @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
+    @NonNull private final ListeningExecutorService mLightweightExecutorService;
+    @NonNull private final ListeningExecutorService mBackgroundExecutorService;
     @NonNull private final AdsScoreGenerator mAdsScoreGenerator;
     @NonNull private final AdBidGenerator mAdBidGenerator;
     @NonNull private final AdSelectionIdGenerator mAdSelectionIdGenerator;
@@ -127,7 +129,9 @@ public final class AdSelectionRunner {
             @NonNull final Context context,
             @NonNull final CustomAudienceDao customAudienceDao,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
-            @NonNull final ExecutorService executorService,
+            @NonNull final AdServicesHttpsClient adServicesHttpsClient,
+            @NonNull final ExecutorService lightweightExecutorService,
+            @NonNull final ExecutorService backgroundExecutorService,
             @NonNull final ConsentManager consentManager,
             @NonNull final AdServicesLogger adServicesLogger,
             @NonNull final DevContext devContext,
@@ -139,15 +143,22 @@ public final class AdSelectionRunner {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(adSelectionEntryDao);
-        Objects.requireNonNull(executorService);
+        Objects.requireNonNull(adServicesHttpsClient);
+        Objects.requireNonNull(lightweightExecutorService);
+        Objects.requireNonNull(backgroundExecutorService);
+        Objects.requireNonNull(consentManager);
         Objects.requireNonNull(adServicesLogger);
+        Objects.requireNonNull(devContext);
+        Objects.requireNonNull(appImportanceFilter);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(fledgeAuthorizationFilter);
         Objects.requireNonNull(fledgeAllowListsFilter);
         mContext = context;
         mCustomAudienceDao = customAudienceDao;
         mAdSelectionEntryDao = adSelectionEntryDao;
-        mExecutorService = executorService;
+        mAdServicesHttpsClient = adServicesHttpsClient;
+        mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
+        mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
         mConsentManager = consentManager;
         mAdServicesLogger = adServicesLogger;
         mAdsScoreGenerator =
@@ -156,14 +167,21 @@ public final class AdSelectionRunner {
                                 mContext,
                                 () -> flags.getEnforceIsolateMaxHeapSize(),
                                 () -> flags.getIsolateMaxHeapSizeBytes()),
-                        mExecutorService,
-                        new AdServicesHttpsClient(mExecutorService),
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mAdServicesHttpsClient,
                         devContext,
                         mAdSelectionEntryDao,
                         flags);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
-                        context, executorService, devContext, mCustomAudienceDao, flags);
+                        context,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        devContext,
+                        mCustomAudienceDao,
+                        flags);
         mAdSelectionIdGenerator = new AdSelectionIdGenerator();
         mClock = Clock.systemUTC();
         mFlags = flags;
@@ -178,7 +196,9 @@ public final class AdSelectionRunner {
             @NonNull final Context context,
             @NonNull final CustomAudienceDao customAudienceDao,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
-            @NonNull final ExecutorService executorService,
+            @NonNull final AdServicesHttpsClient adServicesHttpsClient,
+            @NonNull final ExecutorService lightweightExecutorService,
+            @NonNull final ExecutorService backgroundExecutorService,
             @NonNull final ConsentManager consentManager,
             @NonNull final AdsScoreGenerator adsScoreGenerator,
             @NonNull final AdBidGenerator adBidGenerator,
@@ -193,7 +213,10 @@ public final class AdSelectionRunner {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(adSelectionEntryDao);
-        Objects.requireNonNull(executorService);
+        Objects.requireNonNull(adServicesHttpsClient);
+        Objects.requireNonNull(lightweightExecutorService);
+        Objects.requireNonNull(backgroundExecutorService);
+        Objects.requireNonNull(consentManager);
         Objects.requireNonNull(adsScoreGenerator);
         Objects.requireNonNull(adBidGenerator);
         Objects.requireNonNull(adSelectionIdGenerator);
@@ -206,7 +229,9 @@ public final class AdSelectionRunner {
         mContext = context;
         mCustomAudienceDao = customAudienceDao;
         mAdSelectionEntryDao = adSelectionEntryDao;
-        mExecutorService = executorService;
+        mAdServicesHttpsClient = adServicesHttpsClient;
+        mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
+        mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
         mConsentManager = consentManager;
         mAdsScoreGenerator = adsScoreGenerator;
         mAdBidGenerator = adBidGenerator;
@@ -238,7 +263,7 @@ public final class AdSelectionRunner {
                                     validateRequest(
                                             inputParams.getAdSelectionConfig(),
                                             inputParams.getCallerPackageName()),
-                            mExecutorService);
+                            mLightweightExecutorService);
 
             ListenableFuture<DBAdSelection> dbAdSelectionFuture =
                     FluentFuture.from(validateRequestFuture)
@@ -247,7 +272,7 @@ public final class AdSelectionRunner {
                                             orchestrateAdSelection(
                                                     inputParams.getAdSelectionConfig(),
                                                     inputParams.getCallerPackageName()),
-                                    mExecutorService);
+                                    mLightweightExecutorService);
 
             Futures.addCallback(
                     dbAdSelectionFuture,
@@ -272,7 +297,7 @@ public final class AdSelectionRunner {
                             clearExpiredAdSelectionData();
                         }
                     },
-                    mExecutorService);
+                    mLightweightExecutorService);
         } catch (Throwable t) {
             notifyFailureToCaller(callback, t);
         }
@@ -376,7 +401,7 @@ public final class AdSelectionRunner {
                 };
 
         ListenableFuture<List<AdBiddingOutcome>> biddingOutcome =
-                Futures.transformAsync(buyerCustomAudience, bidAds, mExecutorService);
+                Futures.transformAsync(buyerCustomAudience, bidAds, mLightweightExecutorService);
 
         AsyncFunction<List<AdBiddingOutcome>, List<AdScoringOutcome>> mapBidsToScores =
                 bids -> {
@@ -384,7 +409,8 @@ public final class AdSelectionRunner {
                 };
 
         ListenableFuture<List<AdScoringOutcome>> scoredAds =
-                Futures.transformAsync(biddingOutcome, mapBidsToScores, mExecutorService);
+                Futures.transformAsync(
+                        biddingOutcome, mapBidsToScores, mLightweightExecutorService);
 
         Function<List<AdScoringOutcome>, AdScoringOutcome> reduceScoresToWinner =
                 scores -> {
@@ -392,7 +418,7 @@ public final class AdSelectionRunner {
                 };
 
         ListenableFuture<AdScoringOutcome> winningOutcome =
-                Futures.transform(scoredAds, reduceScoresToWinner, mExecutorService);
+                Futures.transform(scoredAds, reduceScoresToWinner, mLightweightExecutorService);
 
         Function<AdScoringOutcome, Pair<DBAdSelection.Builder, String>> mapWinnerToDBResult =
                 scoringWinner -> {
@@ -400,7 +426,7 @@ public final class AdSelectionRunner {
                 };
 
         ListenableFuture<Pair<DBAdSelection.Builder, String>> dbAdSelectionBuilder =
-                Futures.transform(winningOutcome, mapWinnerToDBResult, mExecutorService);
+                Futures.transform(winningOutcome, mapWinnerToDBResult, mLightweightExecutorService);
 
         AsyncFunction<Pair<DBAdSelection.Builder, String>, DBAdSelection> saveResultToPersistence =
                 adSelectionAndJs -> {
@@ -409,7 +435,7 @@ public final class AdSelectionRunner {
                 };
 
         return FluentFuture.from(dbAdSelectionBuilder)
-                .transformAsync(saveResultToPersistence, mExecutorService)
+                .transformAsync(saveResultToPersistence, mLightweightExecutorService)
                 .withTimeout(
                         mFlags.getAdSelectionOverallTimeoutMs(),
                         TimeUnit.MILLISECONDS,
@@ -419,7 +445,7 @@ public final class AdSelectionRunner {
                 .catching(
                         TimeoutException.class,
                         this::handleTimeoutError,
-                        MoreExecutors.listeningDecorator(mExecutorService));
+                        mLightweightExecutorService);
     }
 
     @Nullable
@@ -430,11 +456,7 @@ public final class AdSelectionRunner {
 
     private ListenableFuture<List<DBCustomAudience>> getBuyersCustomAudience(
             final AdSelectionConfig adSelectionConfig) {
-
-        ListeningExecutorService listeningExecutorService =
-                MoreExecutors.listeningDecorator(mExecutorService);
-
-        return listeningExecutorService.submit(
+        return mBackgroundExecutorService.submit(
                 () -> {
                     Preconditions.checkArgument(
                             !adSelectionConfig.getCustomAudienceBuyers().isEmpty(),
@@ -445,7 +467,8 @@ public final class AdSelectionRunner {
                                     mClock.instant(),
                                     mFlags.getFledgeCustomAudienceActiveTimeWindowInMs());
                     if (buyerCustomAudience == null || buyerCustomAudience.isEmpty()) {
-                        // TODO(b/233296309) : Remove this exception after adding contextual ads
+                        // TODO(b/233296309) : Remove this exception after adding contextual
+                        // ads
                         throw new IllegalStateException(ERROR_NO_CA_AVAILABLE);
                     }
                     return buyerCustomAudience;
@@ -586,12 +609,9 @@ public final class AdSelectionRunner {
             @NonNull DBAdSelection.Builder dbAdSelectionBuilder,
             @NonNull String buyerDecisionLogicJS,
             @NonNull String callerPackageName) {
-        ListeningExecutorService listeningExecutorService =
-                MoreExecutors.listeningDecorator(mExecutorService);
-
         final long adSelectionId = mAdSelectionIdGenerator.generateId();
         LogUtil.v("Persisting Ad Selection Result for Id:%d", adSelectionId);
-        return listeningExecutorService.submit(
+        return mBackgroundExecutorService.submit(
                 () -> {
                     // TODO : b/230568647 retry ID generation in case of collision
                     DBAdSelection dbAdSelection;

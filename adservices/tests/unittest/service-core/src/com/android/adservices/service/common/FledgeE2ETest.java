@@ -66,6 +66,7 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -106,7 +107,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class FledgeE2ETest {
     @Spy private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
@@ -158,7 +158,8 @@ public class FledgeE2ETest {
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private CustomAudienceDao mCustomAudienceDao;
     private AdSelectionEntryDao mAdSelectionEntryDao;
-    private ExecutorService mExecutorService;
+    private ExecutorService mLightweightExecutorService;
+    private ExecutorService mBackgroundExecutorService;
     private CustomAudienceServiceImpl mCustomAudienceService;
     private AdSelectionServiceImpl mAdSelectionService;
     private final Flags mFlags = FlagsFactory.getFlagsForTest();
@@ -192,9 +193,11 @@ public class FledgeE2ETest {
                         .build()
                         .adSelectionEntryDao();
 
-        mExecutorService = Executors.newFixedThreadPool(20);
+        mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
+        mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
 
-        mAdServicesHttpsClient = new AdServicesHttpsClient(mExecutorService);
+        mAdServicesHttpsClient =
+                new AdServicesHttpsClient(AdServicesExecutors.getBlockingExecutor());
 
         mCustomAudienceService =
                 new CustomAudienceServiceImpl(
@@ -227,7 +230,8 @@ public class FledgeE2ETest {
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mAppImportanceFilter,
-                        mExecutorService,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLogger,
@@ -556,7 +560,8 @@ public class FledgeE2ETest {
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mAppImportanceFilter,
-                        mExecutorService,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLogger,

@@ -57,6 +57,7 @@ import android.os.RemoteException;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -67,6 +68,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
@@ -100,7 +102,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * This test covers strictly the unit of {@link AdSelectionRunner} The dependencies in this test are
@@ -130,6 +131,7 @@ public class AdSelectionRunnerTest {
     @Mock private AppImportanceFilter mAppImportanceFilter;
     @Spy private Clock mClock = Clock.systemUTC();
     @Mock private ConsentManager mConsentManagerMock;
+
     private Flags mFlags =
             new Flags() {
                 @Override
@@ -138,7 +140,9 @@ public class AdSelectionRunnerTest {
                 }
             };
     private Context mContext = ApplicationProvider.getApplicationContext();
-    private ExecutorService mExecutorService;
+    private AdServicesHttpsClient mAdServicesHttpsClient;
+    private ExecutorService mLightweightExecutorService;
+    private ExecutorService mBackgroundExecutorService;
     private CustomAudienceDao mCustomAudienceDao;
     private AdSelectionEntryDao mAdSelectionEntryDao;
     @Spy private AdServicesLogger mAdServicesLoggerSpy = AdServicesLoggerImpl.getInstance();
@@ -174,7 +178,11 @@ public class AdSelectionRunnerTest {
                         .initMocks(this)
                         .startMocking();
 
-        mExecutorService = Executors.newFixedThreadPool(20);
+        mContext = ApplicationProvider.getApplicationContext();
+        mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
+        mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
+        mAdServicesHttpsClient =
+                new AdServicesHttpsClient(AdServicesExecutors.getBlockingExecutor());
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(mContext, CustomAudienceDatabase.class)
                         .build()
@@ -297,7 +305,9 @@ public class AdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
-                        mExecutorService,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -381,7 +391,9 @@ public class AdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
-                        mExecutorService,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -491,7 +503,9 @@ public class AdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
-                        mExecutorService,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -565,7 +579,9 @@ public class AdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
-                        mExecutorService,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -613,7 +629,9 @@ public class AdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
-                        mExecutorService,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -652,7 +670,9 @@ public class AdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
-                        mExecutorService,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -732,7 +752,9 @@ public class AdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
-                        mExecutorService,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -862,7 +884,9 @@ public class AdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
-                        mExecutorService,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -962,7 +986,9 @@ public class AdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
-                        mExecutorService,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -1069,7 +1095,9 @@ public class AdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
-                        mExecutorService,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -1178,7 +1206,9 @@ public class AdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
-                        mExecutorService,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -1312,7 +1342,9 @@ public class AdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
-                        mExecutorService,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -1427,7 +1459,9 @@ public class AdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
-                        mExecutorService,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -1504,7 +1538,6 @@ public class AdSelectionRunnerTest {
     @After
     public void tearDown() {
         mAdSelectionEntryDao.removeAdSelectionEntriesByIds(Arrays.asList(AD_SELECTION_ID));
-        mExecutorService.shutdown();
         if (mStaticMockSession != null) {
             mStaticMockSession.finishMocking();
         }
