@@ -111,30 +111,6 @@ public abstract class SandboxedSdkProvider {
             @NonNull Bundle data, @NonNull DataReceivedCallback callback);
 
     /**
-     * Callback for tracking the status of initializing the SDK.
-     *
-     * <p>This callback is created by the SDK sandbox, SDKs should use it to notify the SDK sandbox
-     * about the status of {@link SandboxedSdkProvider#onLoadSdk}
-     */
-    public interface OnLoadSdkCallback {
-        /**
-         * Called when sdk is successfully loaded.
-         *
-         * <p>After SDK successfully initialized, it must call this method on the callback object.
-         *
-         * @param params list of params to be passed to the client application
-         */
-        void onLoadSdkFinished(@NonNull Bundle params);
-
-        /**
-         * If SDK failed to initialize, it must call this method on the callback object.
-         *
-         * @param errorMessage a String description of the error
-         */
-        void onLoadSdkError(@NonNull String errorMessage);
-    }
-
-    /**
      * Callback for tracking the status of data received from the client application.
      *
      * <p>This callback is created by the SDK sandbox. SDKs can use it to notify the SDK sandbox
