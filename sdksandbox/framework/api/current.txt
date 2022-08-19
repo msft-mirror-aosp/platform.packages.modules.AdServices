@@ -65,7 +65,7 @@ package android.app.sdksandbox {
     field public static final int LOAD_SDK_NOT_FOUND = 100; // 0x64
     field public static final int LOAD_SDK_SDK_DEFINED_ERROR = 102; // 0x66
     field public static final int REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR = 700; // 0x2bc
-    field public static final int SANDBOX_NOT_AVAILABLE = 503; // 0x1f7
+    field public static final int SDK_SANDBOX_PROCESS_NOT_AVAILABLE = 503; // 0x1f7
     field public static final String SDK_SANDBOX_SERVICE = "sdk_sandbox";
     field public static final int SDK_SANDBOX_STATE_DISABLED = 0; // 0x0
     field public static final int SDK_SANDBOX_STATE_ENABLED_PROCESS_ISOLATION = 2; // 0x2

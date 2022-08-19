@@ -17,7 +17,7 @@
 package com.android.server.sdksandbox;
 
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND;
-import static android.app.sdksandbox.SdkSandboxManager.SANDBOX_NOT_AVAILABLE;
+import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE;
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_SERVICE;
 
 import static com.android.server.sdksandbox.SdkSandboxStorageManager.SdkDataDirInfo;
@@ -500,7 +500,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 if (!isSdkSandboxServiceRunning(callingInfo)) {
                     handleSurfacePackageError(
                             callingInfo,
-                            SANDBOX_NOT_AVAILABLE,
+                            SDK_SANDBOX_PROCESS_NOT_AVAILABLE,
                             SANDBOX_NOT_AVAILABLE_MSG,
                             /*timeSystemServerReceivedCallFromSandbox=*/ -1,
                             callback);
@@ -542,7 +542,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 if (!isSdkSandboxServiceRunning(callingInfo)) {
                     handleSurfacePackageError(
                             callingInfo,
-                            SANDBOX_NOT_AVAILABLE,
+                            SDK_SANDBOX_PROCESS_NOT_AVAILABLE,
                             SANDBOX_NOT_AVAILABLE_MSG,
                             /*timeSystemServerReceivedCallFromSandbox=*/ -1,
                             callback);
@@ -576,7 +576,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 if (!isSdkSandboxServiceRunning(callingInfo)) {
                     handleSendDataError(
                             callingInfo,
-                            SANDBOX_NOT_AVAILABLE,
+                            SDK_SANDBOX_PROCESS_NOT_AVAILABLE,
                             SANDBOX_NOT_AVAILABLE_MSG,
                             callback);
                     return;
@@ -591,7 +591,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 if (!isSdkSandboxServiceRunning(callingInfo)) {
                     handleSendDataError(
                             callingInfo,
-                            SANDBOX_NOT_AVAILABLE,
+                            SDK_SANDBOX_PROCESS_NOT_AVAILABLE,
                             SANDBOX_NOT_AVAILABLE_MSG,
                             callback);
                     return;
@@ -801,7 +801,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         } catch (RemoteException re) {
                             link.handleLoadSdkException(
                                     new LoadSdkException(
-                                            SANDBOX_NOT_AVAILABLE, SANDBOX_NOT_AVAILABLE_MSG),
+                                            SDK_SANDBOX_PROCESS_NOT_AVAILABLE,
+                                            SANDBOX_NOT_AVAILABLE_MSG),
                                     false,
                                     timeSystemServerReceivedCallFromApp,
                                     SdkSandboxStatsLog
@@ -950,7 +951,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                             () ->
                                     link.handleLoadSdkException(
                                             new LoadSdkException(
-                                                    SANDBOX_NOT_AVAILABLE,
+                                                    SDK_SANDBOX_PROCESS_NOT_AVAILABLE,
                                                     SANDBOX_NOT_AVAILABLE_MSG),
                                             false,
                                             timeSystemServerReceivedCallFromApp,
@@ -971,7 +972,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     link);
         } catch (DeadObjectException e) {
             link.handleLoadSdkException(
-                    new LoadSdkException(SANDBOX_NOT_AVAILABLE, SANDBOX_NOT_AVAILABLE_MSG),
+                    new LoadSdkException(
+                            SDK_SANDBOX_PROCESS_NOT_AVAILABLE, SANDBOX_NOT_AVAILABLE_MSG),
                     false,
                     timeSystemServerReceivedCallFromApp,
                     SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX);
@@ -1376,7 +1378,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                 () ->
                                         handleSurfacePackageError(
                                                 mCallingInfo,
-                                                SANDBOX_NOT_AVAILABLE,
+                                                SDK_SANDBOX_PROCESS_NOT_AVAILABLE,
                                                 SANDBOX_NOT_AVAILABLE_MSG,
                                                 /*timeSystemServerReceivedCallFromSandbox=*/ -1,
                                                 callback));
@@ -1457,7 +1459,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             } catch (DeadObjectException e) {
                 handleSurfacePackageError(
                         mCallingInfo,
-                        SANDBOX_NOT_AVAILABLE,
+                        SDK_SANDBOX_PROCESS_NOT_AVAILABLE,
                         SANDBOX_NOT_AVAILABLE_MSG,
                         /*timeSystemServerReceivedCallFromSandbox=*/ -1,
                         callback);
@@ -1529,7 +1531,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                 () ->
                                         handleSendDataError(
                                                 mCallingInfo,
-                                                SANDBOX_NOT_AVAILABLE,
+                                                SDK_SANDBOX_PROCESS_NOT_AVAILABLE,
                                                 SANDBOX_NOT_AVAILABLE_MSG,
                                                 callback));
             }
@@ -1555,7 +1557,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 }
             } catch (DeadObjectException e) {
                 handleSendDataError(
-                        mCallingInfo, SANDBOX_NOT_AVAILABLE, SANDBOX_NOT_AVAILABLE_MSG, callback);
+                        mCallingInfo,
+                        SDK_SANDBOX_PROCESS_NOT_AVAILABLE,
+                        SANDBOX_NOT_AVAILABLE_MSG,
+                        callback);
             } catch (RemoteException e) {
                 String errorMsg = "Failed to sendData";
                 Log.w(TAG, errorMsg, e);

@@ -379,7 +379,7 @@ public class SdkSandboxManagerTest {
                 sdkName, params, Runnable::run, surfacePackageCallback);
         assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isFalse();
         assertThat(surfacePackageCallback.getSurfacePackageErrorCode())
-                .isEqualTo(SdkSandboxManager.SANDBOX_NOT_AVAILABLE);
+                .isEqualTo(SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE);
     }
 
     @Test
@@ -426,7 +426,7 @@ public class SdkSandboxManagerTest {
         mSdkSandboxManager.sendData(sdkName, new Bundle(), Runnable::run, sendDataCallback);
         assertThat(sendDataCallback.isSendDataSuccessful()).isFalse();
         assertThat(sendDataCallback.getSendDataErrorCode())
-                .isEqualTo(SdkSandboxManager.SANDBOX_NOT_AVAILABLE);
+                .isEqualTo(SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE);
     }
 
     @Test
