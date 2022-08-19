@@ -381,16 +381,16 @@ public class SdkSandboxTest {
         @Override
         public void onLoadSdkSuccess(
                 LoadSdkResponse loadSdkResponse, ISdkSandboxManagerToSdkSandboxCallback callback) {
-            mLatch.countDown();
             mCallback = callback;
             mSuccessful = true;
+            mLatch.countDown();
         }
 
         @Override
         public void onLoadSdkError(LoadSdkException exception) {
-            mLatch.countDown();
             mErrorCode = exception.getLoadSdkErrorCode();
             mSuccessful = false;
+            mLatch.countDown();
         }
 
     }
@@ -473,7 +473,6 @@ public class SdkSandboxTest {
                 long timeSandboxCalledSystemServer,
                 Bundle params,
                 Bundle latencies) {
-            mLatch.countDown();
             mSurfacePackage = surfacePackage;
             mLatencySystemServerToSandbox =
                     latencies.getInt(
@@ -482,6 +481,7 @@ public class SdkSandboxTest {
                     latencies.getInt(IRequestSurfacePackageFromSdkCallback.LATENCY_SANDBOX);
             mLatencySdk = latencies.getInt(IRequestSurfacePackageFromSdkCallback.LATENCY_SDK);
             mTimeSandboxCalledSystemServer = timeSandboxCalledSystemServer;
+            mLatch.countDown();
         }
 
         @Override
@@ -491,9 +491,9 @@ public class SdkSandboxTest {
                 long timeSandboxCalledSystemServer,
                 boolean failedAtSdk,
                 Bundle sandboxLatencies) {
-            mLatch.countDown();
             mErrorCode = errorCode;
             mSuccessful = false;
+            mLatch.countDown();
         }
     }
 }
