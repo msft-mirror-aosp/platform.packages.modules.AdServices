@@ -127,13 +127,32 @@ public final class TopicsManager {
         String appPackageName = "";
         String sdkPackageName = "";
         // First check if context is SandboxedSdkContext or not
-        Context getTopicsRequestContext = getTopicsRequest.getContext();
-        if (getTopicsRequestContext instanceof SandboxedSdkContext) {
-            SandboxedSdkContext requestContext = ((SandboxedSdkContext) getTopicsRequestContext);
-            sdkPackageName = requestContext.getSdkPackageName();
-            appPackageName = requestContext.getClientPackageName();
-        } else { // This is the case without the Sandbox.
-            appPackageName = getTopicsRequestContext.getPackageName();
+        if (mContext instanceof SandboxedSdkContext) {
+            // This is the case with the Sandbox.
+            SandboxedSdkContext sandboxedSdkContext = ((SandboxedSdkContext) mContext);
+            sdkPackageName = sandboxedSdkContext.getSdkPackageName();
+            appPackageName = sandboxedSdkContext.getClientPackageName();
+
+            if (sdkName != null) {
+                throw new IllegalArgumentException(
+                        "When calling Topics API from Sandbox, caller should not set Ads Sdk Name");
+            }
+
+            String sdkNameFromSandboxedContext = sandboxedSdkContext.getSdkName();
+            if (null == sdkNameFromSandboxedContext || sdkNameFromSandboxedContext.isEmpty()) {
+                throw new IllegalArgumentException(
+                        "Sdk Name From SandboxedSdkContext should not be null or empty");
+            }
+
+            sdkName = sdkNameFromSandboxedContext;
+        } else {
+            // This is the case without the Sandbox.
+            if (null == sdkName) {
+                // When adsSdkName is not set, we assume the App calls the Topics API directly.
+                // We set the adsSdkName to empty to mark this.
+                sdkName = EMPTY_SDK;
+            }
+            appPackageName = mContext.getPackageName();
         }
         try {
             service.getTopics(
