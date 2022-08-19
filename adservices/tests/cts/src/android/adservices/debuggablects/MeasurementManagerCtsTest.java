@@ -48,6 +48,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -216,6 +217,7 @@ public class MeasurementManagerCtsTest {
         assertNull(result.get());
     }
 
+    @Ignore
     @Test
     public void testDeleteRegistrations_withRequest_withInvalidArguments_withCallback_hasError()
             throws Exception {
