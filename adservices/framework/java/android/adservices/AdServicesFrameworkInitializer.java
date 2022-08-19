@@ -33,6 +33,7 @@ import android.adservices.measurement.MeasurementManager;
 import android.adservices.topics.TopicsManager;
 import android.annotation.SystemApi;
 import android.app.SystemServiceRegistry;
+import android.app.sdksandbox.SdkSandboxSystemServiceRegistry;
 import android.content.Context;
 
 import com.android.adservices.LogUtil;
@@ -60,6 +61,11 @@ public class AdServicesFrameworkInitializer {
         SystemServiceRegistry.registerContextAwareService(
                 TOPICS_SERVICE, TopicsManager.class,
                 (c) -> new TopicsManager(c));
+        // TODO(b/242889021): don't use this workaround on devices that have proper fix
+        SdkSandboxSystemServiceRegistry.getInstance()
+                .registerServiceMutator(
+                        TOPICS_SERVICE,
+                        (service, ctx) -> ((TopicsManager) service).initialize(ctx));
 
         LogUtil.d("Registering AdServices's CustomAudienceManager.");
         SystemServiceRegistry.registerContextAwareService(

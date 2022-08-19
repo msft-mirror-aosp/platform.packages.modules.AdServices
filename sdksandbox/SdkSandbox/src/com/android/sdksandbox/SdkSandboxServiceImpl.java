@@ -260,16 +260,31 @@ public class SdkSandboxServiceImpl extends Service {
             Class<?> clz = Class.forName(SandboxedSdkHolder.class.getName(), true, loader);
             SandboxedSdkHolder sandboxedSdkHolder =
                     (SandboxedSdkHolder) clz.getDeclaredConstructor().newInstance();
+            // We want to ensure that SandboxedSdkContext.getSystemService() will return different
+            // instances for different SandboxedSdkContext contexts, so that different SDKs
+            // running in the same sdk sandbox process don't share the same manager instance.
+            // Because SandboxedSdkContext is a ContextWrapper, it delegates the getSystemService()
+            // call to its base context. If we use an application context here as a base context
+            // when creating an instance of SandboxedSdkContext it will mean that all instances of
+            // SandboxedSdkContext will return the same manager instances.
+
+            // In order to create per-SandboxedSdkContext instances in getSystemService, each
+            // SandboxedSdkContext needs to have use ContextImpl as a base context. The ContextImpl
+            // is hidden, so we can't instantiate it directly. However, the
+            // createCredentialProtectedStorageContext() will always create a new ContextImpl
+            // object, which is why we are using it as a base context when creating an instance of
+            // SandboxedSdkContext.
+            // TODO(b/242889021): make this detail internal to SandboxedSdkContext
+            Context ctx = mInjector.getContext().createCredentialProtectedStorageContext();
             SandboxedSdkContext sandboxedSdkContext =
                     new SandboxedSdkContext(
-                            mInjector.getContext(),
+                            ctx,
                             callingPackageName,
                             applicationInfo,
                             sdkName,
                             sdkCeDataDir,
                             sdkDeDataDir);
             sandboxedSdkHolder.init(
-                    mInjector.getContext(),
                     params,
                     callback,
                     sdkProviderClassName,
