@@ -43,6 +43,8 @@ public final class AggregateReportFixture {
                 .setSourceRegistrationTime(ValidAggregateReportParams.SOURCE_REGISTRATION_TIME)
                 .setScheduledReportTime(ValidAggregateReportParams.TRIGGER_TIME + getRandomTime())
                 .setAdTechDomain(ValidAggregateReportParams.AD_TECH_DOMAIN)
+                // TODO (b/238924528): uncomment when enforcing enrollment
+                //.setEnrollmentId(ValidAggregateReportParams.ENROLLMENT_ID)
                 .setDebugCleartextPayload(ValidAggregateReportParams.getDebugPayload())
                 .setStatus(EventReport.Status.PENDING)
                 .build();
@@ -55,6 +57,7 @@ public final class AggregateReportFixture {
         public static final long SOURCE_REGISTRATION_TIME = 8640000000L;
         public static final long TRIGGER_TIME = 8640000000L;
         public static final Uri AD_TECH_DOMAIN = Uri.parse("https://com.example");
+        public static final String ENROLLMENT_ID = "enrollment-id";
 
         public static final String getDebugPayload() {
             List<AggregateHistogramContribution> contributions = new ArrayList<>();

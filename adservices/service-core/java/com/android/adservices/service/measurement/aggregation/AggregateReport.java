@@ -38,6 +38,7 @@ public class AggregateReport {
     private long mSourceRegistrationTime;
     private long mScheduledReportTime;   // triggerTime + random([10min, 1hour])
     private Uri mAdTechDomain;
+    private String mEnrollmentId;
     private String mDebugCleartextPayload;
     private AggregateAttributionData mAggregateAttributionData;
     private @Status int mStatus;
@@ -60,6 +61,7 @@ public class AggregateReport {
         mSourceRegistrationTime = 0L;
         mScheduledReportTime = 0L;
         mAdTechDomain = null;
+        mEnrollmentId = null;
         mDebugCleartextPayload = null;
         mAggregateAttributionData = null;
         mStatus = AggregateReport.Status.PENDING;
@@ -76,6 +78,7 @@ public class AggregateReport {
                 && mSourceRegistrationTime == aggregateReport.mSourceRegistrationTime
                 && mScheduledReportTime == aggregateReport.mScheduledReportTime
                 && Objects.equals(mAdTechDomain, aggregateReport.mAdTechDomain)
+                && Objects.equals(mEnrollmentId, aggregateReport.mEnrollmentId)
                 && Objects.equals(mDebugCleartextPayload, aggregateReport.mDebugCleartextPayload)
                 && Objects.equals(mAggregateAttributionData,
                         aggregateReport.mAggregateAttributionData)
@@ -86,7 +89,7 @@ public class AggregateReport {
     @Override
     public int hashCode() {
         return Objects.hash(mId, mPublisher, mAttributionDestination, mSourceRegistrationTime,
-                mScheduledReportTime, mAdTechDomain, mDebugCleartextPayload,
+                mScheduledReportTime, mAdTechDomain, mEnrollmentId, mDebugCleartextPayload,
                 mAggregateAttributionData, mStatus);
     }
 
@@ -130,6 +133,13 @@ public class AggregateReport {
      */
     public Uri getAdTechDomain() {
         return mAdTechDomain;
+    }
+
+    /**
+     * Ad-tech enrollment ID.
+     */
+    public String getEnrollmentId() {
+        return mEnrollmentId;
     }
 
     /**
@@ -242,6 +252,14 @@ public class AggregateReport {
          */
         public Builder setAdTechDomain(Uri adTechDomain) {
             mAttributionReport.mAdTechDomain = adTechDomain;
+            return this;
+        }
+
+        /**
+         * See {@link AggregateReport#getEnrollmentId()}.
+         */
+        public Builder setEnrollmentId(String enrollmentId) {
+            mAttributionReport.mEnrollmentId = enrollmentId;
             return this;
         }
 

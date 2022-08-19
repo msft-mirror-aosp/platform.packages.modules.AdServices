@@ -244,6 +244,7 @@ public abstract class AbstractDbIntegrationTest {
                 source.getAppDestination().toString());
         values.put(MeasurementTables.SourceContract.AD_TECH_DOMAIN,
                 source.getAdTechDomain().toString());
+        values.put(MeasurementTables.SourceContract.ENROLLMENT_ID, source.getEnrollmentId());
         values.put(MeasurementTables.SourceContract.STATUS, source.getStatus());
         values.put(MeasurementTables.SourceContract.EVENT_TIME, source.getEventTime());
         values.put(MeasurementTables.SourceContract.EXPIRY_TIME, source.getExpiryTime());
@@ -276,6 +277,7 @@ public abstract class AbstractDbIntegrationTest {
                 trigger.getDestinationType());
         values.put(MeasurementTables.TriggerContract.AD_TECH_DOMAIN,
                 trigger.getAdTechDomain().toString());
+        values.put(MeasurementTables.TriggerContract.ENROLLMENT_ID, trigger.getEnrollmentId());
         values.put(MeasurementTables.TriggerContract.STATUS, trigger.getStatus());
         values.put(MeasurementTables.TriggerContract.TRIGGER_TIME, trigger.getTriggerTime());
         values.put(MeasurementTables.TriggerContract.EVENT_TRIGGERS, trigger.getEventTriggers());
@@ -298,6 +300,7 @@ public abstract class AbstractDbIntegrationTest {
         values.put(MeasurementTables.EventReportContract.SOURCE_ID, report.getSourceId());
         values.put(MeasurementTables.EventReportContract.AD_TECH_DOMAIN,
                 report.getAdTechDomain().toString());
+        values.put(MeasurementTables.EventReportContract.ENROLLMENT_ID, report.getEnrollmentId());
         values.put(MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
                 report.getAttributionDestination().toString());
         values.put(MeasurementTables.EventReportContract.REPORT_TIME, report.getReportTime());
@@ -334,6 +337,8 @@ public abstract class AbstractDbIntegrationTest {
                 attribution.getDestinationOrigin());
         values.put(MeasurementTables.AttributionContract.AD_TECH_DOMAIN,
                 attribution.getAdTechDomain());
+        values.put(MeasurementTables.AttributionContract.ENROLLMENT_ID,
+                attribution.getEnrollmentId());
         values.put(MeasurementTables.AttributionContract.TRIGGER_TIME,
                 attribution.getTriggerTime());
         values.put(MeasurementTables.AttributionContract.REGISTRANT,
@@ -364,6 +369,9 @@ public abstract class AbstractDbIntegrationTest {
         values.put(
                 MeasurementTables.AggregateReport.AD_TECH_DOMAIN,
                 aggregateReport.getAdTechDomain().toString());
+        values.put(
+                MeasurementTables.AggregateReport.ENROLLMENT_ID,
+                aggregateReport.getEnrollmentId());
         values.put(
                 MeasurementTables.AggregateReport.DEBUG_CLEARTEXT_PAYLOAD,
                 aggregateReport.getDebugCleartextPayload());
