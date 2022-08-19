@@ -106,7 +106,8 @@ public class AdServicesCommonServiceImpl extends
 
                         SharedPreferences preferences =
                                 mContext.getSharedPreferences(
-                                        ADSERVICES_STATUS_SHARED_PREFERENCE, Context.MODE_PRIVATE);
+                                        ADSERVICES_STATUS_SHARED_PREFERENCE,
+                                        Context.MODE_MULTI_PROCESS);
 
                         int adServiceEntryPointStatusInt =
                                 adServicesEntryPointEnabled
@@ -121,7 +122,7 @@ public class AdServicesCommonServiceImpl extends
                                         + adIdEnabled
                                         + ", adservice status is "
                                         + mFlags.getAdservicesEnableStatus());
-                        if (mFlags.getAdservicesEnableStatus()) {
+                        if (mFlags.getAdservicesEnableStatus() && adServicesEntryPointEnabled) {
                             ConsentNotificationJobService.schedule(mContext, adIdEnabled);
                         }
                     } catch (Exception e) {
