@@ -955,11 +955,14 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
-    public void testUnloadSdkThatIsNotLoaded() {
-        disableForegroundCheck();
+    public void testUnloadSdkThatIsNotLoaded() throws Exception {
+        // Load SDK to bring up a sandbox
+        loadSdk();
+        // Trying to load an SDK that is not loaded should fail.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> mService.unloadSdk(TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER));
+                () -> mService.unloadSdk(
+                        TEST_PACKAGE, SDK_PROVIDER_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER));
     }
 
     @Test
@@ -990,6 +993,24 @@ public class SdkSandboxManagerServiceUnitTest {
         Mockito.verify(mAmSpy)
                 .killUid(Mockito.eq(Process.toSdkSandboxUid(Process.myUid())), Mockito.anyString());
         assertThat(mProvider.getBoundServiceForApp(callingInfo)).isNull();
+    }
+
+    @Test
+    public void testUnloadSdkAfterKillingSandboxDoesNotThrowException() throws Exception {
+        disableKillUid();
+
+        loadSdk();
+
+        // Kill the sandbox
+        ArgumentCaptor<IBinder.DeathRecipient> deathRecipientCaptor =
+                ArgumentCaptor.forClass(IBinder.DeathRecipient.class);
+        Mockito.verify(mSdkSandboxService.asBinder(), Mockito.atLeastOnce())
+                .linkToDeath(deathRecipientCaptor.capture(), ArgumentMatchers.eq(0));
+        IBinder.DeathRecipient deathRecipient = deathRecipientCaptor.getValue();
+        deathRecipient.binderDied();
+
+        // Unloading SDK should be a no-op
+        mService.unloadSdk(TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER);
     }
 
     @Test

@@ -396,6 +396,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         try {
             IBinder sdkToken = mSdkTokenManager.getSdkToken(callingInfo, sdkName);
             if (sdkToken == null) {
+                if (!isSdkSandboxServiceRunning(callingInfo)) {
+                    // If the sandbox has died and unloadSdk is called after,
+                    // the app should not crash from an uncaught exception.
+                    Log.i(TAG, "Sdk sandbox for " + callingInfo
+                            + " is not available, cannot unload SDK " + sdkName);
+                    return;
+                }
                 throw new IllegalArgumentException(
                         "SDK " + sdkName + " is not loaded for " + callingInfo);
             }
@@ -1015,6 +1022,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         if (boundSandbox != null) {
                             try {
                                 boundSandbox.unloadSdk(sdkToken);
+                            } catch (DeadObjectException e) {
+                                Log.i(TAG, "Sdk sandbox for " + callingInfo
+                                        + " is dead, cannot unload SDK " + sdkName);
+                                return false;
                             } catch (RemoteException e) {
                                 Log.w(TAG, "Failed to unload SDK: ", e);
                             }
