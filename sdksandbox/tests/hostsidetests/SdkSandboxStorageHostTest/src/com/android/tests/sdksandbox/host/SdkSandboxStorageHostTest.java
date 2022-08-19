@@ -820,6 +820,9 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     public void testSdkDataSubDirectory_PerSdkStorageIsUsable() throws Exception {
         installPackage(TEST_APP_STORAGE_APK);
 
+        // LoadSdk to ensure per-sdk storage is available. This also reduces flakiness
+        runPhase("loadSdk");
+
         // Verify that per-sdk storage exist
         final String perSdkStorage =
                 getSdkDataPerSdkPath(0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, true);
