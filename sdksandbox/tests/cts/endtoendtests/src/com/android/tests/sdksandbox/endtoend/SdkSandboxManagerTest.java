@@ -151,8 +151,14 @@ public class SdkSandboxManagerTest {
 
     @Test
     public void unloadingNonexistentSdkThrowsException() {
-        final String sdkName = "com.android.nonexistent";
-        assertThrows(IllegalArgumentException.class, () -> mSdkSandboxManager.unloadSdk(sdkName));
+        final String sdkName1 = "com.android.loadSdkSuccessfullySdkProvider";
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(sdkName1, new Bundle(), Runnable::run, callback);
+        // If the SDK provider has already been loaded from another test, ignore the error.
+        assertThat(callback.isLoadSdkSuccessful(/*ignoreSdkAlreadyLoadedError=*/ true)).isTrue();
+
+        final String sdkName2 = "com.android.nonexistent";
+        assertThrows(IllegalArgumentException.class, () -> mSdkSandboxManager.unloadSdk(sdkName2));
     }
 
     @Test
