@@ -30,6 +30,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
+import android.util.Log;
 import android.view.SurfaceControlViewHost.SurfacePackage;
 
 import com.android.internal.annotations.GuardedBy;
@@ -106,6 +107,8 @@ public final class SdkSandboxManager {
      * client application.
      */
     public static final int LOAD_SDK_INTERNAL_ERROR = 500;
+
+    private static final String TAG = "SdkSandboxManager";
 
     /** @hide */
     @IntDef(
@@ -454,7 +457,7 @@ public final class SdkSandboxManager {
             }
 
             final RequestSurfacePackageReceiverProxy callbackProxy =
-                    new RequestSurfacePackageReceiverProxy(callbackExecutor, receiver);
+                    new RequestSurfacePackageReceiverProxy(callbackExecutor, receiver, mService);
 
             mService.requestSurfacePackage(
                     mContext.getPackageName(),
@@ -569,17 +572,24 @@ public final class SdkSandboxManager {
             extends IRequestSurfacePackageCallback.Stub {
         private final Executor mExecutor;
         private final OutcomeReceiver<Bundle, RequestSurfacePackageException> mReceiver;
+        private final ISdkSandboxManager mService;
 
         RequestSurfacePackageReceiverProxy(
                 Executor executor,
-                OutcomeReceiver<Bundle, RequestSurfacePackageException> receiver) {
+                OutcomeReceiver<Bundle, RequestSurfacePackageException> receiver,
+                ISdkSandboxManager service) {
             mExecutor = executor;
             mReceiver = receiver;
+            mService = service;
         }
 
         @Override
-        public void onSurfacePackageReady(SurfacePackage surfacePackage,
-                int surfacePackageId, Bundle params) {
+        public void onSurfacePackageReady(
+                SurfacePackage surfacePackage,
+                int surfacePackageId,
+                Bundle params,
+                long timeSystemServerCalledApp) {
+            logLatencyFromSystemServerToApp(timeSystemServerCalledApp);
             mExecutor.execute(
                     () -> {
                         params.putParcelable(EXTRA_SURFACE_PACKAGE, surfacePackage);
@@ -588,11 +598,28 @@ public final class SdkSandboxManager {
         }
 
         @Override
-        public void onSurfacePackageError(int errorCode, String errorMsg) {
+        public void onSurfacePackageError(
+                int errorCode, String errorMsg, long timeSystemServerCalledApp) {
+            logLatencyFromSystemServerToApp(timeSystemServerCalledApp);
             mExecutor.execute(
                     () ->
                             mReceiver.onError(
                                     new RequestSurfacePackageException(errorCode, errorMsg)));
+        }
+
+        private void logLatencyFromSystemServerToApp(long timeSystemServerCalledApp) {
+            try {
+                mService.logLatencyFromSystemServerToApp(
+                        ISdkSandboxManager.REQUEST_SURFACE_PACKAGE,
+                        // TODO(b/242832156): Add Injector class for testing
+                        (int) (System.currentTimeMillis() - timeSystemServerCalledApp));
+            } catch (RemoteException e) {
+                Log.w(
+                        TAG,
+                        "Remote exception while calling logLatencyFromSystemServerToApp."
+                                + "Error: "
+                                + e.getMessage());
+            }
         }
     }
 
