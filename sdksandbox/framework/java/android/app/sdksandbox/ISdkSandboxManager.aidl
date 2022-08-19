@@ -33,6 +33,7 @@ interface ISdkSandboxManager {
     * List of methods for which latencies are logged with logLatencyFromSystemServerToApp
     */
     const String REQUEST_SURFACE_PACKAGE = "REQUEST_SURFACE_PACKAGE";
+    const String LOAD_SDK = "LOAD_SDK";
 
     void addSdkSandboxLifecycleCallback(in String callingPackageName, in ISdkSandboxLifecycleCallback callback);
     void removeSdkSandboxLifecycleCallback(in String callingPackageName, in ISdkSandboxLifecycleCallback callback);

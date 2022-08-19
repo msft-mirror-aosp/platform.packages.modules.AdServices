@@ -120,6 +120,7 @@ public class SdkSandboxManagerServiceUnitTest {
     private static final long TIME_SDK_CALL_COMPLETED = 20;
     private static final long TIME_SANDBOX_CALLED_SYSTEM_SERVER = 21;
     private static final long TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_SANDBOX = 22;
+    private static final long TIME_SYSTEM_SERVER_CALLED_APP = 23;
 
     private static final String TEST_KEY = "key";
     private static final String TEST_VALUE = "value";
@@ -1397,6 +1398,7 @@ public class SdkSandboxManagerServiceUnitTest {
                         END_TIME_TO_LOAD_SANDBOX,
                         TIME_SYSTEM_SERVER_CALLED_SANDBOX,
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_SANDBOX,
+                        TIME_SYSTEM_SERVER_CALLED_APP,
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
                         TIME_FAILURE_HANDLED);
 
@@ -1549,6 +1551,7 @@ public class SdkSandboxManagerServiceUnitTest {
                         END_TIME_TO_LOAD_SANDBOX,
                         TIME_SYSTEM_SERVER_CALLED_SANDBOX,
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_SANDBOX,
+                        TIME_SYSTEM_SERVER_CALLED_APP,
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
                         TIME_SYSTEM_SERVER_CALLED_SANDBOX);
         loadSdk();
@@ -1626,6 +1629,7 @@ public class SdkSandboxManagerServiceUnitTest {
                         END_TIME_TO_LOAD_SANDBOX,
                         TIME_SYSTEM_SERVER_CALLED_SANDBOX,
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_SANDBOX,
+                        TIME_SYSTEM_SERVER_CALLED_APP,
                         TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
                         TIME_SYSTEM_SERVER_CALLED_SANDBOX);
         loadSdk();
