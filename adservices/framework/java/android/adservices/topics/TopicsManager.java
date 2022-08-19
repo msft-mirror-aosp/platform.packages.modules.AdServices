@@ -54,11 +54,11 @@ public final class TopicsManager {
      */
     public static final String TOPICS_SERVICE = "topics_service";
 
-    // Whent an app calls the Topics API directly, it sets the SDK name to empty string.
+    // When an app calls the Topics API directly, it sets the SDK name to empty string.
     static final String EMPTY_SDK = "";
 
-    private final Context mContext;
-    private final ServiceBinder<ITopicsService> mServiceBinder;
+    private Context mContext;
+    private ServiceBinder<ITopicsService> mServiceBinder;
 
     /**
      * Create TopicsManager
@@ -66,12 +66,29 @@ public final class TopicsManager {
      * @hide
      */
     public TopicsManager(Context context) {
+        // In case the TopicsManager is initiated from inside a sdk_sandbox process the fields
+        // will be immediately rewritten by the initialize method below.
+        initialize(context);
+    }
+
+    /**
+     * Initializes {@link TopicsManager} with the given {@code context}.
+     *
+     * <p>This method is called by the {@link SandboxedSdkContext} to propagate the correct context.
+     * For more information check the javadoc on the {@link
+     * android.app.sdksandbox.SdkSandboxSystemServiceRegistry}.
+     *
+     * @hide
+     * @see android.app.sdksandbox.SdkSandboxSystemServiceRegistry
+     */
+    public TopicsManager initialize(Context context) {
         mContext = context;
         mServiceBinder =
                 ServiceBinder.getServiceBinder(
                         context,
                         AdServicesCommon.ACTION_TOPICS_SERVICE,
                         ITopicsService.Stub::asInterface);
+        return this;
     }
 
     @NonNull
