@@ -16,17 +16,20 @@
 
 package com.android.adservices.service.measurement;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdServicesStatusUtils;
@@ -65,7 +68,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
 
@@ -123,8 +125,7 @@ public final class MeasurementServiceImplTest {
                 .thenReturn(AdServicesApiConsent.GIVEN);
         when(mMockThrottler.tryAcquire(any(), any())).thenReturn(true);
         when(mMockContext.getPackageManager()).thenReturn(mPackageManager);
-        when(mMockFlags.getWebContextRegistrationClientAppAllowList())
-                .thenReturn(ALLOW_ALL_PACKAGES);
+        when(mMockFlags.getWebContextClientAppAllowList()).thenReturn(ALLOW_ALL_PACKAGES);
         mMeasurementServiceImpl =
                 new MeasurementServiceImpl(
                         mMockMeasurementImpl,
@@ -191,7 +192,7 @@ public final class MeasurementServiceImplTest {
                         });
 
         assertThat(countDownLatchAny.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        Mockito.verify(mMockMeasurementImpl, times(1)).register(any(), anyLong());
+        verify(mMockMeasurementImpl, times(1)).register(any(), anyLong());
     }
 
     @Test
@@ -217,7 +218,7 @@ public final class MeasurementServiceImplTest {
                         new IMeasurementCallback.Stub() {
                             @Override
                             public void onResult() {
-                                Assert.fail();
+                                fail();
                             }
 
                             @Override
@@ -228,7 +229,7 @@ public final class MeasurementServiceImplTest {
                         });
 
         assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        Mockito.verify(mMockMeasurementImpl, never()).register(any(), anyLong());
+        verify(mMockMeasurementImpl, never()).register(any(), anyLong());
         Assert.assertEquals(1, errors.size());
         Assert.assertEquals(
                 AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED, errors.get(0).getStatusCode());
@@ -360,7 +361,7 @@ public final class MeasurementServiceImplTest {
                         });
 
         assertThat(countDownLatchAny.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        Mockito.verify(mMockMeasurementImpl, times(1)).register(any(), anyLong());
+        verify(mMockMeasurementImpl, times(1)).register(any(), anyLong());
     }
 
     @Test
@@ -386,7 +387,7 @@ public final class MeasurementServiceImplTest {
                         new IMeasurementCallback.Stub() {
                             @Override
                             public void onResult() {
-                                Assert.fail();
+                                fail();
                             }
 
                             @Override
@@ -397,7 +398,7 @@ public final class MeasurementServiceImplTest {
                         });
 
         assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        Mockito.verify(mMockMeasurementImpl, never()).register(any(), anyLong());
+        verify(mMockMeasurementImpl, never()).register(any(), anyLong());
         Assert.assertEquals(1, errors.size());
         Assert.assertEquals(
                 AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED, errors.get(0).getStatusCode());
@@ -448,12 +449,15 @@ public final class MeasurementServiceImplTest {
     }
 
     @Test
-    public void testDeleteRegistrations_killSwitchOff() throws Exception {
+    public void testDeleteRegistrations_killSwitchOffAndPackageAllowListed() throws Exception {
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 "measurement_api_delete_registrations_kill_switch",
                 Boolean.toString(false),
                 /* makeDefault */ false);
+
+        // Allow client to call API
+        allowAllRegistrationClients();
 
         final CountDownLatch countDownLatchAny = new CountDownLatch(1);
         new MeasurementServiceImpl(
@@ -479,16 +483,59 @@ public final class MeasurementServiceImplTest {
                         });
 
         assertThat(countDownLatchAny.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        Mockito.verify(mMockMeasurementImpl, times(1)).deleteRegistrations(any());
+        verify(mMockMeasurementImpl, times(1)).deleteRegistrations(any());
     }
 
     @Test
-    public void testDeleteRegistrations_killSwitchOn() throws Exception {
+    public void testDeleteRegistrations_killSwitchOffAndPackageNotAllowListed() throws Exception {
+        final List<MeasurementErrorResponse> errors = new ArrayList<>();
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_api_delete_registrations_kill_switch",
+                Boolean.toString(false),
+                /* makeDefault */ false);
+
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        new MeasurementServiceImpl(
+                        mMockMeasurementImpl,
+                        mMockContext,
+                        mConsentManager,
+                        mMockThrottler,
+                        FlagsFactory.getFlags(),
+                        mMockAdServicesLogger)
+                .deleteRegistrations(
+                        getDefaultDeletionRequest(),
+                        mMockCallerMetadata,
+                        new IMeasurementCallback.Stub() {
+                            @Override
+                            public void onResult() {
+                                fail("Failure callback expected.");
+                            }
+
+                            @Override
+                            public void onFailure(MeasurementErrorResponse errorResponse) {
+                                errors.add(errorResponse);
+                                countDownLatch.countDown();
+                            }
+                        });
+
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        verify(mMockMeasurementImpl, never()).deleteRegistrations(any());
+        Assert.assertEquals(1, errors.size());
+        Assert.assertEquals(
+                AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED, errors.get(0).getStatusCode());
+    }
+
+    @Test
+    public void testDeleteRegistrations_killSwitchOnAndPackageAllowListed() throws Exception {
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 "measurement_api_delete_registrations_kill_switch",
                 Boolean.toString(true),
                 /* makeDefault */ false);
+
+        // Allow client to call API
+        allowAllRegistrationClients();
 
         final CountDownLatch countDownLatch = new CountDownLatch(1);
         final List<MeasurementErrorResponse> errors = new ArrayList<>();
@@ -505,7 +552,7 @@ public final class MeasurementServiceImplTest {
                         new IMeasurementCallback.Stub() {
                             @Override
                             public void onResult() {
-                                Assert.fail();
+                                fail();
                             }
 
                             @Override
@@ -516,7 +563,7 @@ public final class MeasurementServiceImplTest {
                         });
 
         assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        Mockito.verify(mMockMeasurementImpl, never()).deleteRegistrations(any());
+        verify(mMockMeasurementImpl, never()).deleteRegistrations(any());
         Assert.assertEquals(1, errors.size());
         Assert.assertEquals(
                 AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED, errors.get(0).getStatusCode());
@@ -658,7 +705,7 @@ public final class MeasurementServiceImplTest {
                         });
 
         assertThat(countDownLatchAny.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        Mockito.verify(mMockMeasurementImpl, times(1)).getMeasurementApiStatus();
+        verify(mMockMeasurementImpl, times(1)).getMeasurementApiStatus();
     }
 
     @Test
@@ -687,7 +734,7 @@ public final class MeasurementServiceImplTest {
                         });
 
         assertThat(countDownLatchAny.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        Mockito.verify(mMockMeasurementImpl, never()).getMeasurementApiStatus();
+        verify(mMockMeasurementImpl, never()).getMeasurementApiStatus();
     }
 
     @Test(expected = NullPointerException.class)
@@ -754,7 +801,7 @@ public final class MeasurementServiceImplTest {
                         });
 
         assertThat(countDownLatchAny.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        Mockito.verify(mMockMeasurementImpl, times(1)).registerWebSource(any(), anyLong());
+        verify(mMockMeasurementImpl, times(1)).registerWebSource(any(), anyLong());
     }
 
     @Test
@@ -783,7 +830,7 @@ public final class MeasurementServiceImplTest {
                         new IMeasurementCallback.Stub() {
                             @Override
                             public void onResult() {
-                                Assert.fail();
+                                fail();
                             }
 
                             @Override
@@ -794,7 +841,7 @@ public final class MeasurementServiceImplTest {
                         });
 
         assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        Mockito.verify(mMockMeasurementImpl, never()).registerWebSource(any(), anyLong());
+        verify(mMockMeasurementImpl, never()).registerWebSource(any(), anyLong());
         Assert.assertEquals(1, errors.size());
         Assert.assertEquals(
                 AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED, errors.get(0).getStatusCode());
@@ -928,7 +975,7 @@ public final class MeasurementServiceImplTest {
                         });
 
         assertThat(countDownLatchAny.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        Mockito.verify(mMockMeasurementImpl, times(1)).registerWebTrigger(any(), anyLong());
+        verify(mMockMeasurementImpl, times(1)).registerWebTrigger(any(), anyLong());
     }
 
     @Test
@@ -957,7 +1004,7 @@ public final class MeasurementServiceImplTest {
                         new IMeasurementCallback.Stub() {
                             @Override
                             public void onResult() {
-                                Assert.fail();
+                                fail();
                             }
 
                             @Override
@@ -968,7 +1015,7 @@ public final class MeasurementServiceImplTest {
                         });
 
         assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        Mockito.verify(mMockMeasurementImpl, never()).registerWebTrigger(any(), anyLong());
+        verify(mMockMeasurementImpl, never()).registerWebTrigger(any(), anyLong());
         Assert.assertEquals(1, errors.size());
         Assert.assertEquals(
                 AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED, errors.get(0).getStatusCode());
@@ -1055,7 +1102,7 @@ public final class MeasurementServiceImplTest {
                 new IMeasurementCallback.Stub() {
                     @Override
                     public void onResult() {
-                        Assert.fail();
+                        fail();
                     }
 
                     @Override
@@ -1076,7 +1123,7 @@ public final class MeasurementServiceImplTest {
                 new IMeasurementCallback.Stub() {
                     @Override
                     public void onResult() {
-                        Assert.fail();
+                        fail();
                     }
 
                     @Override
@@ -1093,7 +1140,7 @@ public final class MeasurementServiceImplTest {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent(mPackageManager);
         doReturn(ALLOW_LIST_WITHOUT_TEST_PACKAGE)
                 .when(mMockFlags)
-                .getWebContextRegistrationClientAppAllowList();
+                .getWebContextClientAppAllowList();
         CountDownLatch callbackCountDown = new CountDownLatch(1);
 
         // Execution
@@ -1103,14 +1150,14 @@ public final class MeasurementServiceImplTest {
                 new IMeasurementCallback.Stub() {
                     @Override
                     public void onResult() {
-                        Assert.fail();
+                        fail("Failure callback expected.");
                     }
 
                     @Override
                     public void onFailure(MeasurementErrorResponse measurementErrorResponse) {
                         callbackCountDown.countDown();
                         assertThat(measurementErrorResponse.getStatusCode())
-                                .isEqualTo(STATUS_USER_CONSENT_REVOKED);
+                                .isEqualTo(STATUS_CALLER_NOT_ALLOWED);
                     }
                 });
 
@@ -1129,7 +1176,7 @@ public final class MeasurementServiceImplTest {
                 new IMeasurementCallback.Stub() {
                     @Override
                     public void onResult() {
-                        Assert.fail();
+                        fail();
                     }
 
                     @Override
@@ -1141,13 +1188,14 @@ public final class MeasurementServiceImplTest {
     }
 
     @Test
-    public void testRegisterWebTrigger_packageNotAllowListed() throws InterruptedException {
+    public void testRegisterWebTrigger_packageNotAllowListed_doesNotBlock()
+            throws InterruptedException {
         // Setup
         doReturn(mPackageManager).when(mMockContext).getPackageManager();
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent(mPackageManager);
         doReturn(ALLOW_LIST_WITHOUT_TEST_PACKAGE)
                 .when(mMockFlags)
-                .getWebContextRegistrationClientAppAllowList();
+                .getWebContextClientAppAllowList();
         CountDownLatch callbackCountDown = new CountDownLatch(1);
 
         // Execution
@@ -1157,14 +1205,12 @@ public final class MeasurementServiceImplTest {
                 new IMeasurementCallback.Stub() {
                     @Override
                     public void onResult() {
-                        Assert.fail();
+                        callbackCountDown.countDown();
                     }
 
                     @Override
                     public void onFailure(MeasurementErrorResponse measurementErrorResponse) {
-                        callbackCountDown.countDown();
-                        assertThat(measurementErrorResponse.getStatusCode())
-                                .isEqualTo(STATUS_USER_CONSENT_REVOKED);
+                        fail("Success expected as allowlist does not apply to web trigger.");
                     }
                 });
 
