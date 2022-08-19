@@ -35,8 +35,10 @@ import com.android.adservices.service.topics.AppInfo;
 import com.android.adservices.service.topics.PackageManagerUtil;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
+import com.google.android.libraries.mobiledatadownload.file.SynchronousFileStorage;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.mobiledatadownload.ClientConfigProto.ClientFile;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -47,6 +49,7 @@ import org.mockito.MockitoAnnotations;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -60,20 +63,28 @@ public class OnDeviceClassifierTest {
     private static Preprocessor sPreprocessor;
 
     @Mock private PackageManagerUtil mPackageManagerUtil;
-
+    @Mock private SynchronousFileStorage mMockFileStorage;
+    @Mock private ModelManager mModelManager;
+    @Mock Map<String, ClientFile> mMockDownloadedFiles;
     private OnDeviceClassifier mOnDeviceClassifier;
 
     @Before
     public void setUp() throws IOException {
         MockitoAnnotations.initMocks(this);
+        mModelManager =
+                new ModelManager(
+                        sContext,
+                        ModelManager.BUNDLED_LABELS_FILE_PATH,
+                        ModelManager.BUNDLED_TOP_APP_FILE_PATH,
+                        ModelManager.BUNDLED_CLASSIFIER_ASSETS_METADATA_PATH,
+                        ModelManager.BUNDLED_MODEL_FILE_PATH,
+                        mMockFileStorage,
+                        mMockDownloadedFiles);
 
         sPreprocessor = new Preprocessor(sContext);
         mOnDeviceClassifier =
                 new OnDeviceClassifier(
-                        sPreprocessor,
-                        mPackageManagerUtil,
-                        new Random(),
-                        ModelManager.getInstance(sContext));
+                        sPreprocessor, mPackageManagerUtil, new Random(), mModelManager);
     }
 
     @Test
@@ -88,7 +99,8 @@ public class OnDeviceClassifierTest {
     }
 
     @Test
-    public void testClassify_packageManagerError_returnsDefaultClassifications() {
+    public void testClassify_packageManagerError_returnsDefaultClassifications()
+            throws IOException {
         String appPackage1 = "com.example.adservices.samples.topics.sampleapp1";
         ImmutableSet<String> appPackages = ImmutableSet.of(appPackage1);
         // If fetch from PackageManagerUtil fails, we will use empty strings as descriptions.
@@ -103,8 +115,11 @@ public class OnDeviceClassifierTest {
         assertThat(classifications.get(appPackage1)).hasSize(CLASSIFIER_NUMBER_OF_TOP_LABELS);
         // Check all the returned labels for default empty string descriptions.
         assertThat(classifications.get(appPackage1))
-                .isEqualTo(createTopics(Arrays.asList(
-                        10230, 10253, 10227, 10250, 10257, 10225, 10249, 10009, 10223, 10228)));
+                .isEqualTo(
+                        createTopics(
+                                Arrays.asList(
+                                        10230, 10253, 10227, 10250, 10257, 10225, 10249, 10009,
+                                        10223, 10228)));
     }
 
     @Test
@@ -140,12 +155,12 @@ public class OnDeviceClassifierTest {
         // Scores can differ a little on devices. Using this to reduce flakiness.
         // Expected top 10: 10253, 10230, 10284, 10237, 10227, 10257, 10165, 10028, 10330, 10047
         assertThat(classifications.get(appPackage1))
-                .containsAtLeastElementsIn(createTopics(Arrays.asList(
-                        10237, 10227, 10257, 10165, 10330)));
+                .containsAtLeastElementsIn(
+                        createTopics(Arrays.asList(10237, 10227, 10257, 10165, 10330)));
         // Expected top 10: 10227, 10225, 10235, 10230, 10238, 10253, 10247, 10254, 10234, 10229
         assertThat(classifications.get(appPackage2))
-                .containsAtLeastElementsIn(createTopics(
-                        Arrays.asList(10227, 10225, 10235, 10230, 10254)));
+                .containsAtLeastElementsIn(
+                        createTopics(Arrays.asList(10227, 10225, 10235, 10230, 10254)));
     }
 
     @Test
@@ -212,12 +227,12 @@ public class OnDeviceClassifierTest {
         // Check different expected scores for different descriptions.
         // Expected top 10: 10253, 10230, 10284, 10237, 10227, 10257, 10165, 10028, 10330, 10047
         assertThat(firstClassifications.get(appPackage1))
-                .containsAtLeastElementsIn(createTopics(Arrays.asList(
-                        10253, 10230, 10284, 10028, 10330)));
+                .containsAtLeastElementsIn(
+                        createTopics(Arrays.asList(10253, 10230, 10284, 10028, 10330)));
         // Expected top 10: 10227, 10225, 10235, 10230, 10238, 10253, 10247, 10254, 10234, 10229
         assertThat(secondClassifications.get(appPackage1))
-                .containsAtLeastElementsIn(createTopics(
-                        Arrays.asList(10238, 10253, 10247, 10254, 10234)));
+                .containsAtLeastElementsIn(
+                        createTopics(Arrays.asList(10238, 10253, 10247, 10254, 10234)));
     }
 
     @Test
