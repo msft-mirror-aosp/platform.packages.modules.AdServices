@@ -20,7 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.app.sdksandbox.KeyWithType;
 import android.app.sdksandbox.LoadSdkException;
-import android.app.sdksandbox.LoadSdkResponse;
+import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -152,6 +152,7 @@ public class SdkSandboxTest {
                 new Bundle(),
                 mRemoteCode1);
         assertThat(latch1.await(1, TimeUnit.MINUTES)).isTrue();
+        assertThat(mRemoteCode1.mSuccessful).isTrue();
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
                 duplicateToken,
@@ -380,7 +381,7 @@ public class SdkSandboxTest {
 
         @Override
         public void onLoadSdkSuccess(
-                LoadSdkResponse loadSdkResponse, ISdkSandboxManagerToSdkSandboxCallback callback) {
+                SandboxedSdk sandboxedSdk, ISdkSandboxManagerToSdkSandboxCallback callback) {
             mCallback = callback;
             mSuccessful = true;
             mLatch.countDown();

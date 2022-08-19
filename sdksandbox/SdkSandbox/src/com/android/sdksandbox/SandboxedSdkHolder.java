@@ -17,7 +17,7 @@
 package com.android.sdksandbox;
 
 import android.app.sdksandbox.LoadSdkException;
-import android.app.sdksandbox.LoadSdkResponse;
+import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
@@ -48,6 +48,7 @@ class SandboxedSdkHolder {
     private boolean mInitialized = false;
     private SandboxedSdkProvider mSdk;
     private Context mContext;
+    private SandboxedSdk mSandboxedSdk;
 
     private DisplayManager mDisplayManager;
     private final Random mRandom = new SecureRandom();
@@ -79,8 +80,8 @@ class SandboxedSdkHolder {
             mHandler.post(
                     () -> {
                         try {
-                            LoadSdkResponse response = mSdk.onLoadSdk(params);
-                            sendLoadSdkSuccess(response, callback);
+                            mSandboxedSdk = mSdk.onLoadSdk(params);
+                            sendLoadSdkSuccess(mSandboxedSdk, callback);
                         } catch (LoadSdkException exception) {
                             sendLoadSdkError(exception, callback);
                         } catch (RuntimeException exception) {
@@ -119,9 +120,9 @@ class SandboxedSdkHolder {
         writer.println(" mSdk class: " + sdkClass);
     }
 
-    private void sendLoadSdkSuccess(LoadSdkResponse response, ILoadSdkInSandboxCallback callback) {
+    private void sendLoadSdkSuccess(SandboxedSdk sandboxedSdk, ILoadSdkInSandboxCallback callback) {
         try {
-            callback.onLoadSdkSuccess(response, new SdkSandboxCallbackImpl());
+            callback.onLoadSdkSuccess(sandboxedSdk, new SdkSandboxCallbackImpl());
         } catch (RemoteException e) {
             Log.e(TAG, "Could not send onLoadSdkSuccess: " + e);
         }

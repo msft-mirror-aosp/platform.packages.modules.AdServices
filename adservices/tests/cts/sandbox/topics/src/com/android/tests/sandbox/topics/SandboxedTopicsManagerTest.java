@@ -34,6 +34,7 @@ import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -85,6 +86,7 @@ public class SandboxedTopicsManagerTest {
     }
 
     @Test
+    @Ignore("b/242318904")
     public void loadSdkAndRunTopicsApi() throws Exception {
         overrideDisableTopicsEnrollmentCheck("1");
         // The setup for this test:
