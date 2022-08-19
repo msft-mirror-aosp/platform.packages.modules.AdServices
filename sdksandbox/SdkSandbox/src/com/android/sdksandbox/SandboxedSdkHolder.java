@@ -58,7 +58,6 @@ class SandboxedSdkHolder {
     private SdkSandboxServiceImpl.Injector mInjector;
 
     void init(
-            Context context,
             Bundle params,
             ILoadSdkInSandboxCallback callback,
             String sdkProviderClassName,
@@ -69,7 +68,7 @@ class SandboxedSdkHolder {
             throw new IllegalStateException("Already initialized!");
         }
         mInitialized = true;
-        mContext = context;
+        mContext = sandboxedSdkContext.getBaseContext();
         mDisplayManager = mContext.getSystemService(DisplayManager.class);
         mInjector = injector;
         try {
