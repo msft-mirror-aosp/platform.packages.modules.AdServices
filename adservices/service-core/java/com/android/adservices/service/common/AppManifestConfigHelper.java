@@ -117,6 +117,7 @@ public class AppManifestConfigHelper {
      *
      * @param context the context for the API call. This needs to be the context where the calling
      *     UID is that of the API caller.
+     * @param useSandboxCheck whether to use the sandbox check.
      * @param appPackageName the package name of the app whose manifest config will be read.
      * @param enrollmentId the enrollment ID of the sdk that will be checked against the app's
      *     manifest config.
