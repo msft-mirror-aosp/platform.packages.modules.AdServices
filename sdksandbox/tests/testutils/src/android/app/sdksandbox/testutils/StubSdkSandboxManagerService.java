@@ -21,6 +21,7 @@ import android.app.sdksandbox.IRequestSurfacePackageCallback;
 import android.app.sdksandbox.ISdkSandboxLifecycleCallback;
 import android.app.sdksandbox.ISdkSandboxManager;
 import android.app.sdksandbox.ISendDataCallback;
+import android.app.sdksandbox.ISharedPreferencesSyncCallback;
 import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.content.pm.SharedLibraryInfo;
 import android.os.Bundle;
@@ -78,7 +79,8 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
     public void syncDataFromClient(
             String callingPackageName,
             long timeAppCalledSystemServer,
-            SharedPreferencesUpdate update) {}
+            SharedPreferencesUpdate update,
+            ISharedPreferencesSyncCallback callback) {}
 
     @Override
     public void addSdkSandboxLifecycleCallback(
