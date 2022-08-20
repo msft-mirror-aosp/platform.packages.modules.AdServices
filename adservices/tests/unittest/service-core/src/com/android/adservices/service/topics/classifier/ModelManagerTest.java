@@ -218,9 +218,21 @@ public class ModelManagerTest {
 
         Map<String, List<Integer>> appTopic = mTestModelManager.retrieveAppClassificationTopics();
         // Check size of map
-        // The app topics file contains 11 sample apps + 2 test valid topics' apps
-        // + 1 end2end test app.
-        assertThat(appTopic.size()).isEqualTo(14);
+        // The app topics file contains 10000 apps + 11 sample apps + 2 test valid topics' apps
+        // + 1 end2end test app + 1 cts test app + 1 empty app.
+        assertThat(appTopic.size()).isEqualTo(10016);
+
+        // Check android messaging, chrome and a sample app topics in map
+        // The topicId of "com.google.android.apps.messaging" in
+        // assets/precomputed_test_app_list.csv is 10281, 10280
+        List<Integer> androidMessagingTopics = Arrays.asList(10281, 10280);
+        assertThat(appTopic.get("com.google.android.apps.messaging"))
+                .isEqualTo(androidMessagingTopics);
+
+        // The topicId of "com.android.chrome" in assets/precomputed_test_app_list.csv
+        // is 10185
+        List<Integer> chromeTopics = Arrays.asList(10185);
+        assertThat(appTopic.get("com.android.chrome")).isEqualTo(chromeTopics);
 
         // The topicIds of "com.example.adservices.samples.topics.sampleapp" in
         // assets/precomputed_test_app_list.csv are 10222, 10223, 10116, 10243, 10254
@@ -252,6 +264,103 @@ public class ModelManagerTest {
         // assets/precomputed_test_app_list.csv are 143, 15
         List<Integer> validTestApp2Topics = Arrays.asList(10253, 10254);
         assertThat(appTopic.get(validTestAppPrefix + "2")).isEqualTo(validTestApp2Topics);
+    }
+
+    @Test
+    public void testAppsWithOnlyEmptyTopics() {
+        mTestModelManager =
+                new ModelManager(
+                        sContext,
+                        TEST_LABELS_FILE_PATH,
+                        TEST_APPS_FILE_PATH,
+                        TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
+                        MODEL_FILE_PATH,
+                        mMockFileStorage,
+                        mMockDownloadedFiles);
+        // Load precomputed labels from the test source `assets/precomputed_test_app_list.csv`
+        Map<String, List<Integer>> appTopic = mTestModelManager.retrieveAppClassificationTopics();
+
+        // The app com.emptytopics has empty topic in `assets/precomputed_test_app_list.csv`
+        String emptyTopicsAppId = "com.emptytopics";
+
+        // Verify the topic list of this app is empty.
+        assertThat(appTopic.get(emptyTopicsAppId)).isEmpty();
+
+        // Check app com.google.chromeremotedesktop has empty topic
+        // in `assets/precomputed_test_app_list.csv`
+        String chromeRemoteDesktopAppId = "com.google.chromeremotedesktop";
+
+        // Verify the topic list of this app is empty.
+        assertThat(appTopic.get(chromeRemoteDesktopAppId)).isEmpty();
+    }
+
+    @Test
+    public void testGetTestClassifierAssetsMetadata_correctFormat() {
+        mTestModelManager =
+                new ModelManager(
+                        sContext,
+                        TEST_LABELS_FILE_PATH,
+                        TEST_APPS_FILE_PATH,
+                        TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
+                        MODEL_FILE_PATH,
+                        mMockFileStorage,
+                        mMockDownloadedFiles);
+        // There should contain 6 assets and 1 property in classifier_test_assets_metadata.json.
+        // The asset without "asset_name" or "property" will not be stored in the map.
+        mTestClassifierAssetsMetadata = mTestModelManager.retrieveClassifierAssetsMetadata();
+        assertThat(mTestClassifierAssetsMetadata).hasSize(7);
+
+        // The property of metadata with correct format should contain 3 attributions:
+        // "taxonomy_type", "taxonomy_version", "updated_date".
+        // The key name of property is "version_info"
+        assertThat(mTestClassifierAssetsMetadata.get("version_info")).hasSize(3);
+        assertThat(mTestClassifierAssetsMetadata.get("version_info").keySet()).containsExactly(
+                "taxonomy_type", "taxonomy_version", "updated_date");
+
+        // The property "version_info" should have attribution "taxonomy_version"
+        // and its value should be "12".
+        assertThat(mTestClassifierAssetsMetadata.get("version_info").get("taxonomy_version"))
+                .isEqualTo("12");
+
+        // The property "version_info" should have attribution "taxonomy_type"
+        // and its value should be "chrome_and_mobile_taxonomy".
+        assertThat(mTestClassifierAssetsMetadata.get("version_info").get("taxonomy_type"))
+                .isEqualTo("chrome_and_mobile_taxonomy");
+
+        // The metadata of 1 asset with correct format should contain 4 attributions:
+        // "asset_version", "path", "checksum", "updated_date".
+        // Check if "labels_topics" asset has the correct format.
+        assertThat(mTestClassifierAssetsMetadata.get("labels_topics")).hasSize(4);
+        assertThat(mTestClassifierAssetsMetadata.get("labels_topics").keySet()).containsExactly(
+                "asset_version", "path", "checksum", "updated_date");
+
+        // The asset "labels_topics" should have attribution "asset_version" and its value should be
+        // "34"
+        assertThat(mTestClassifierAssetsMetadata.get("labels_topics").get("asset_version"))
+                .isEqualTo("34");
+
+        // The asset "labels_topics" should have attribution "path" and its value should be
+        // "assets/classifier/labels_test_topics.txt"
+        assertThat(mTestClassifierAssetsMetadata.get("labels_topics").get("path"))
+                .isEqualTo("assets/classifier/labels_test_topics.txt");
+
+        // The asset "labels_topics" should have attribution "updated_date" and its value should be
+        // "2022-07-29"
+        assertThat(mTestClassifierAssetsMetadata.get("labels_topics").get("updated_date"))
+                .isEqualTo("2022-07-29");
+
+        // There should contain 4 metadata attributions in asset "topic_id_to_name"
+        assertThat(mTestClassifierAssetsMetadata.get("topic_id_to_name")).hasSize(4);
+
+        // The asset "topic_id_to_name" should have attribution "path" and its value should be
+        // "assets/classifier/topic_id_to_name.csv"
+        assertThat(mTestClassifierAssetsMetadata.get("topic_id_to_name").get("path"))
+                .isEqualTo("assets/classifier/topic_id_to_name.csv");
+
+        // The asset "precomputed_app_list" should have attribution "checksum" and
+        // its value should be "6c4fa0e24cf67c0e830d05196f2b8e66824ca0ebf6ade3229cdd3dedf63cbb96"
+        assertThat(mTestClassifierAssetsMetadata.get("precomputed_app_list").get("checksum"))
+                .isEqualTo("6c4fa0e24cf67c0e830d05196f2b8e66824ca0ebf6ade3229cdd3dedf63cbb96");
     }
 
     @Test
@@ -319,9 +428,9 @@ public class ModelManagerTest {
                 .isEqualTo("assets/classifier/topic_id_to_name.csv");
 
         // The asset "precomputed_app_list" should have attribution "checksum" and
-        // its value should be "e5d118889e7e57f1e5ed166354f3dfa81963ee7e917f98c8a687d541b9bbe489"
+        // its value should be "79078da8d0414526b14535509a3111e1f40762dc4b5acefa3f9155510dbc666c"
         assertThat(mProductionClassifierAssetsMetadata.get("precomputed_app_list").get("checksum"))
-                .isEqualTo("e5d118889e7e57f1e5ed166354f3dfa81963ee7e917f98c8a687d541b9bbe489");
+                .isEqualTo("79078da8d0414526b14535509a3111e1f40762dc4b5acefa3f9155510dbc666c");
     }
 
     @Test
@@ -394,9 +503,9 @@ public class ModelManagerTest {
                 .isEqualTo("assets/classifier/topic_id_to_name.csv");
 
         // The asset "precomputed_app_list" should have attribution "checksum" and
-        // its value should be "e5d118889e7e57f1e5ed166354f3dfa81963ee7e917f98c8a687d541b9bbe489"
+        // its value should be "79078da8d0414526b14535509a3111e1f40762dc4b5acefa3f9155510dbc666c"
         assertThat(mProductionClassifierAssetsMetadata.get("precomputed_app_list").get("checksum"))
-                .isEqualTo("e5d118889e7e57f1e5ed166354f3dfa81963ee7e917f98c8a687d541b9bbe489");
+                .isEqualTo("79078da8d0414526b14535509a3111e1f40762dc4b5acefa3f9155510dbc666c");
     }
 
     @Test
