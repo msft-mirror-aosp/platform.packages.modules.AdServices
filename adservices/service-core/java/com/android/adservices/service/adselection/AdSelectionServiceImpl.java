@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
+
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__FLEDGE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
@@ -31,6 +33,7 @@ import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
+import android.annotation.RequiresPermission;
 import android.content.Context;
 
 import com.android.adservices.LogUtil;
@@ -45,6 +48,7 @@ import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.CallingAppUidSupplier;
 import com.android.adservices.service.common.CallingAppUidSupplierBinderImpl;
+import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.AdSelectionOverrider;
@@ -69,7 +73,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
-    @NonNull private final ExecutorService mExecutor;
+    @NonNull private final ExecutorService mLightweightExecutor;
+    @NonNull private final ExecutorService mBackgroundExecutor;
     @NonNull private final Context mContext;
     @NonNull private final ConsentManager mConsentManager;
     @NonNull private final DevContextFilter mDevContextFilter;
@@ -78,6 +83,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @NonNull private final Flags mFlags;
     @NonNull private final CallingAppUidSupplier mCallingAppUidSupplier;
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
+    @NonNull private final FledgeAllowListsFilter mFledgeAllowListsFilter;
 
     private static final String API_NOT_AUTHORIZED_MSG =
             "This API is not enabled for the given app because either dev options are disabled or"
@@ -90,20 +96,23 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull DevContextFilter devContextFilter,
             @NonNull AppImportanceFilter appImportanceFilter,
-            @NonNull ExecutorService executorService,
+            @NonNull ExecutorService lightweightExecutorService,
+            @NonNull ExecutorService backgroundExecutorService,
             @NonNull Context context,
             ConsentManager consentManager,
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull Flags flags,
             @NonNull CallingAppUidSupplier callingAppUidSupplier,
-            @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter) {
+            @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter,
+            @NonNull FledgeAllowListsFilter fledgeAllowListsFilter) {
         Objects.requireNonNull(context, "Context must be provided.");
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(devContextFilter);
         Objects.requireNonNull(appImportanceFilter);
-        Objects.requireNonNull(executorService);
+        Objects.requireNonNull(lightweightExecutorService);
+        Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(consentManager);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(flags);
@@ -115,13 +124,15 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         mAdServicesHttpsClient = adServicesHttpsClient;
         mDevContextFilter = devContextFilter;
         mAppImportanceFilter = appImportanceFilter;
-        mExecutor = executorService;
+        mLightweightExecutor = lightweightExecutorService;
+        mBackgroundExecutor = backgroundExecutorService;
         mContext = context;
         mConsentManager = consentManager;
         mAdServicesLogger = adServicesLogger;
         mFlags = flags;
         mCallingAppUidSupplier = callingAppUidSupplier;
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
+        mFledgeAllowListsFilter = fledgeAllowListsFilter;
     }
 
     /** Creates a new instance of {@link AdSelectionServiceImpl}. */
@@ -134,26 +145,34 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         this(
                 AdSelectionDatabase.getInstance(context).adSelectionEntryDao(),
                 CustomAudienceDatabase.getInstance(context).customAudienceDao(),
-                new AdServicesHttpsClient(AdServicesExecutors.getBackgroundExecutor()),
+                new AdServicesHttpsClient(AdServicesExecutors.getBlockingExecutor()),
                 DevContextFilter.create(context),
                 AppImportanceFilter.create(
                         context,
                         AD_SERVICES_API_CALLED__API_CLASS__FLEDGE,
                         () -> FlagsFactory.getFlags().getForegroundStatuslLevelForValidation()),
+                AdServicesExecutors.getLightWeightExecutor(),
                 AdServicesExecutors.getBackgroundExecutor(),
                 context,
                 ConsentManager.getInstance(context),
                 AdServicesLoggerImpl.getInstance(),
                 FlagsFactory.getFlags(),
                 CallingAppUidSupplierBinderImpl.create(),
-                FledgeAuthorizationFilter.create(context, AdServicesLoggerImpl.getInstance()));
+                FledgeAuthorizationFilter.create(context, AdServicesLoggerImpl.getInstance()),
+                new FledgeAllowListsFilter(
+                        FlagsFactory.getFlags(), AdServicesLoggerImpl.getInstance()));
     }
 
     // TODO(b/233116758): Validate all the fields inside the adSelectionConfig.
     @Override
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void runAdSelection(
             @NonNull AdSelectionInput inputParams, @NonNull AdSelectionCallback callback) {
         int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
+
+        // Caller permissions must be checked in the binder thread, before anything else
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
+
         try {
             Objects.requireNonNull(inputParams);
             Objects.requireNonNull(callback);
@@ -171,23 +190,31 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
-                        mExecutor,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutor,
+                        mBackgroundExecutor,
                         mConsentManager,
                         mAdServicesLogger,
                         devContext,
                         mAppImportanceFilter,
                         mFlags,
                         getCallingUid(apiName),
-                        mFledgeAuthorizationFilter);
+                        mFledgeAuthorizationFilter,
+                        mFledgeAllowListsFilter);
 
         adSelectionRunner.runAdSelection(inputParams, callback);
     }
 
     @Override
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void reportImpression(
             @NonNull ReportImpressionInput requestParams,
             @NonNull ReportImpressionCallback callback) {
         int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
+
+        // Caller permissions must be checked in the binder thread, before anything else
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
+
         try {
             Objects.requireNonNull(requestParams);
             Objects.requireNonNull(callback);
@@ -203,7 +230,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         ImpressionReporter reporter =
                 new ImpressionReporter(
                         mContext,
-                        mExecutor,
+                        mLightweightExecutor,
+                        mBackgroundExecutor,
                         mAdSelectionEntryDao,
                         mAdServicesHttpsClient,
                         mConsentManager,
@@ -212,17 +240,23 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mAppImportanceFilter,
                         mFlags,
                         getCallingUid(apiName),
-                        mFledgeAuthorizationFilter);
+                        mFledgeAuthorizationFilter,
+                        mFledgeAllowListsFilter);
         reporter.reportImpression(requestParams, callback);
     }
 
     @Override
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void overrideAdSelectionConfigRemoteInfo(
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJS,
             @NonNull AdSelectionSignals trustedScoringSignals,
             @NonNull AdSelectionOverrideCallback callback) {
         int apiName = AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
+
+        // Caller permissions must be checked in the binder thread, before anything else
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
+
         try {
             Objects.requireNonNull(adSelectionConfig);
             Objects.requireNonNull(decisionLogicJS);
@@ -246,7 +280,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 new AdSelectionOverrider(
                         devContext,
                         mAdSelectionEntryDao,
-                        mExecutor,
+                        mLightweightExecutor,
+                        mBackgroundExecutor,
                         mContext.getPackageManager(),
                         mConsentManager,
                         mAdServicesLogger,
@@ -268,12 +303,16 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     }
 
     @Override
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void removeAdSelectionConfigRemoteInfoOverride(
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull AdSelectionOverrideCallback callback) {
         // Auto-generated variable name is too long for lint check
         int apiName =
                 AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
+
+        // Caller permissions must be checked in the binder thread, before anything else
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
 
         try {
             Objects.requireNonNull(adSelectionConfig);
@@ -297,7 +336,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 new AdSelectionOverrider(
                         devContext,
                         mAdSelectionEntryDao,
-                        mExecutor,
+                        mLightweightExecutor,
+                        mBackgroundExecutor,
                         mContext.getPackageManager(),
                         mConsentManager,
                         mAdServicesLogger,
@@ -309,11 +349,15 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     }
 
     @Override
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void resetAllAdSelectionConfigRemoteOverrides(
             @NonNull AdSelectionOverrideCallback callback) {
         // Auto-generated variable name is too long for lint check
         int apiName =
                 AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES;
+
+        // Caller permissions must be checked in the binder thread, before anything else
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
 
         try {
             Objects.requireNonNull(callback);
@@ -336,7 +380,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 new AdSelectionOverrider(
                         devContext,
                         mAdSelectionEntryDao,
-                        mExecutor,
+                        mLightweightExecutor,
+                        mBackgroundExecutor,
                         mContext.getPackageManager(),
                         mConsentManager,
                         mAdServicesLogger,

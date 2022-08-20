@@ -33,6 +33,7 @@ import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CommonFixture;
 import android.adservices.http.MockWebServerRule;
+import android.annotation.NonNull;
 import android.content.Context;
 import android.net.Uri;
 import android.util.Pair;
@@ -41,6 +42,7 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -60,7 +62,6 @@ import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.google.mockwebserver.Dispatcher;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
@@ -68,6 +69,7 @@ import com.google.mockwebserver.RecordedRequest;
 
 import org.json.JSONException;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -81,8 +83,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class AdBidGeneratorImplTest {
     public static final List<Double> BIDS =
@@ -118,9 +118,9 @@ public class AdBidGeneratorImplTest {
     private final String mFetchJavaScriptPath = "/fetchJavascript/";
     private final String mTrustedBiddingPath = "/fetchBiddingSignals/";
     private final String mTrustedBiddingParams = "?keys=max_bid_limit%2Cad_type";
-    private final ExecutorService mExecutorService = Executors.newFixedThreadPool(20);
-    private final ListeningExecutorService mListeningExecutorService =
-            MoreExecutors.listeningDecorator(mExecutorService);
+    private ListeningExecutorService mLightweightExecutorService;
+    private ListeningExecutorService mBackgroundExecutorService;
+    private ListeningExecutorService mBlockingExecutorService;
     private final Context mContext = ApplicationProvider.getApplicationContext();
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
     @Mock AdSelectionScriptEngine mAdSelectionScriptEngine;
@@ -147,10 +147,11 @@ public class AdBidGeneratorImplTest {
         MockitoAnnotations.initMocks(this);
 
         mDevContext = DevContext.createForDevOptionsDisabled();
-
+        mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
+        mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
+        mBlockingExecutorService = AdServicesExecutors.getBlockingExecutor();
         mAdServicesHttpsClient =
-                new AdServicesHttpsClient(MoreExecutors.newDirectExecutorService());
-
+                new AdServicesHttpsClient(AdServicesExecutors.getBlockingExecutor());
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(
                                 ApplicationProvider.getApplicationContext(),
@@ -223,7 +224,8 @@ public class AdBidGeneratorImplTest {
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
                         mContext,
-                        mListeningExecutorService,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
@@ -314,7 +316,8 @@ public class AdBidGeneratorImplTest {
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
                         mContext,
-                        mListeningExecutorService,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
@@ -375,7 +378,8 @@ public class AdBidGeneratorImplTest {
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
                         mContext,
-                        mListeningExecutorService,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
@@ -421,6 +425,7 @@ public class AdBidGeneratorImplTest {
     }
 
     @Test
+    @Ignore("b/242895704")
     public void testRunAdBiddingPerCABiddingTimesOut() throws Exception {
         // Given we are using a direct executor and mock the returned result from the
         // AdSelectionScriptEngine.generateBids for preparing the test,
@@ -439,7 +444,8 @@ public class AdBidGeneratorImplTest {
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
                         mContext,
-                        mListeningExecutorService,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
@@ -455,7 +461,7 @@ public class AdBidGeneratorImplTest {
                                 EMPTY_CONTEXTUAL_SIGNALS,
                                 EMPTY_USER_SIGNALS,
                                 mCustomAudienceSignals))
-                .thenReturn(generateBidsWithDelay());
+                .thenAnswer((invocation) -> generateBidsWithDelay(flagsWithSmallerLimits));
         // When the call to runAdBiddingPerCA, and the computation of future is complete,
         FluentFuture<AdBiddingOutcome> result =
                 mAdBidGenerator.runAdBiddingPerCA(
@@ -495,7 +501,8 @@ public class AdBidGeneratorImplTest {
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
                         mContext,
-                        mListeningExecutorService,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
@@ -578,7 +585,8 @@ public class AdBidGeneratorImplTest {
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
                         mContext,
-                        mListeningExecutorService,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
@@ -654,7 +662,8 @@ public class AdBidGeneratorImplTest {
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
                         mContext,
-                        mListeningExecutorService,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
@@ -701,7 +710,8 @@ public class AdBidGeneratorImplTest {
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
                         mContext,
-                        mListeningExecutorService,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
@@ -734,7 +744,8 @@ public class AdBidGeneratorImplTest {
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
                         mContext,
-                        mListeningExecutorService,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
@@ -779,7 +790,8 @@ public class AdBidGeneratorImplTest {
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
                         mContext,
-                        mListeningExecutorService,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
@@ -798,10 +810,10 @@ public class AdBidGeneratorImplTest {
         assertNull(result.get());
     }
 
-    private ListenableFuture<List<AdWithBid>> generateBidsWithDelay() {
-        return mListeningExecutorService.submit(
+    private ListenableFuture<List<AdWithBid>> generateBidsWithDelay(@NonNull Flags flags) {
+        return mBlockingExecutorService.submit(
                 () -> {
-                    Thread.sleep(2 * mFlags.getAdSelectionBiddingTimeoutPerCaMs());
+                    Thread.sleep(2 * flags.getAdSelectionBiddingTimeoutPerCaMs());
                     return AD_WITH_BIDS;
                 });
     }
@@ -811,7 +823,7 @@ public class AdBidGeneratorImplTest {
             throws Exception {
         CountDownLatch resultLatch = new CountDownLatch(1);
         ListenableFuture<T> futureResult = function.get();
-        futureResult.addListener(resultLatch::countDown, mExecutorService);
+        futureResult.addListener(resultLatch::countDown, mLightweightExecutorService);
         resultLatch.await();
         return futureResult.get();
     }

@@ -17,7 +17,7 @@
 package com.android.server.sdksandbox;
 
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND;
-import static android.app.sdksandbox.SdkSandboxManager.SANDBOX_NOT_AVAILABLE;
+import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE;
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_SERVICE;
 
 import static com.android.server.sdksandbox.SdkSandboxStorageManager.SdkDataDirInfo;
@@ -32,8 +32,9 @@ import android.app.sdksandbox.ISdkSandboxLifecycleCallback;
 import android.app.sdksandbox.ISdkSandboxManager;
 import android.app.sdksandbox.ISendDataCallback;
 import android.app.sdksandbox.LoadSdkException;
-import android.app.sdksandbox.LoadSdkResponse;
+import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
+import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -396,6 +397,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         try {
             IBinder sdkToken = mSdkTokenManager.getSdkToken(callingInfo, sdkName);
             if (sdkToken == null) {
+                if (!isSdkSandboxServiceRunning(callingInfo)) {
+                    // If the sandbox has died and unloadSdk is called after,
+                    // the app should not crash from an uncaught exception.
+                    Log.i(TAG, "Sdk sandbox for " + callingInfo
+                            + " is not available, cannot unload SDK " + sdkName);
+                    return;
+                }
                 throw new IllegalArgumentException(
                         "SDK " + sdkName + " is not loaded for " + callingInfo);
             }
@@ -492,8 +500,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 if (!isSdkSandboxServiceRunning(callingInfo)) {
                     handleSurfacePackageError(
                             callingInfo,
-                            SANDBOX_NOT_AVAILABLE,
+                            SDK_SANDBOX_PROCESS_NOT_AVAILABLE,
                             SANDBOX_NOT_AVAILABLE_MSG,
+                            /*timeSystemServerReceivedCallFromSandbox=*/ -1,
                             callback);
                     return;
                 }
@@ -533,8 +542,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 if (!isSdkSandboxServiceRunning(callingInfo)) {
                     handleSurfacePackageError(
                             callingInfo,
-                            SANDBOX_NOT_AVAILABLE,
+                            SDK_SANDBOX_PROCESS_NOT_AVAILABLE,
                             SANDBOX_NOT_AVAILABLE_MSG,
+                            /*timeSystemServerReceivedCallFromSandbox=*/ -1,
                             callback);
                     return;
                 }
@@ -566,7 +576,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 if (!isSdkSandboxServiceRunning(callingInfo)) {
                     handleSendDataError(
                             callingInfo,
-                            SANDBOX_NOT_AVAILABLE,
+                            SDK_SANDBOX_PROCESS_NOT_AVAILABLE,
                             SANDBOX_NOT_AVAILABLE_MSG,
                             callback);
                     return;
@@ -581,7 +591,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 if (!isSdkSandboxServiceRunning(callingInfo)) {
                     handleSendDataError(
                             callingInfo,
-                            SANDBOX_NOT_AVAILABLE,
+                            SDK_SANDBOX_PROCESS_NOT_AVAILABLE,
                             SANDBOX_NOT_AVAILABLE_MSG,
                             callback);
                     return;
@@ -622,7 +632,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     @Override
     public void syncDataFromClient(
-            String callingPackageName, long timeAppCalledSystemServer, Bundle data) {
+            String callingPackageName,
+            long timeAppCalledSystemServer,
+            SharedPreferencesUpdate update) {
         final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
 
         SdkSandboxStatsLog.write(
@@ -639,21 +651,41 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         final CallingInfo callingInfo = new CallingInfo(callingUid, callingPackageName);
         enforceCallingPackageBelongsToUid(callingInfo);
         try {
-            syncDataFromClientInternal(callingInfo, data);
+            syncDataFromClientInternal(callingInfo, update);
         } finally {
             Binder.restoreCallingIdentity(token);
         }
     }
 
-    private void syncDataFromClientInternal(CallingInfo callingInfo, Bundle data) {
+    private void syncDataFromClientInternal(
+            CallingInfo callingInfo, SharedPreferencesUpdate update) {
         // check first if service already bound
         ISdkSandboxService service = mServiceProvider.getBoundServiceForApp(callingInfo);
         if (service != null) {
             try {
-                service.syncDataFromClient(data);
+                service.syncDataFromClient(update);
             } catch (RemoteException ignore) {
                 // TODO(b/239403323): Sandbox has died. Register lifecycle callback to retry.
             }
+        }
+    }
+
+    @Override
+    public void logLatencyFromSystemServerToApp(String method, int latency) {
+        SdkSandboxStatsLog.write(
+                SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                convertToStatsLogMethodCode(method),
+                latency,
+                /*success=*/ true,
+                SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_APP);
+    }
+
+    private int convertToStatsLogMethodCode(String method) {
+        switch (method) {
+            case ISdkSandboxManager.REQUEST_SURFACE_PACKAGE:
+                return SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE;
+            default:
+                return SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__METHOD_UNSPECIFIED;
         }
     }
 
@@ -769,7 +801,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         } catch (RemoteException re) {
                             link.handleLoadSdkException(
                                     new LoadSdkException(
-                                            SANDBOX_NOT_AVAILABLE, SANDBOX_NOT_AVAILABLE_MSG),
+                                            SDK_SANDBOX_PROCESS_NOT_AVAILABLE,
+                                            SANDBOX_NOT_AVAILABLE_MSG),
                                     false,
                                     timeSystemServerReceivedCallFromApp,
                                     SdkSandboxStatsLog
@@ -918,7 +951,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                             () ->
                                     link.handleLoadSdkException(
                                             new LoadSdkException(
-                                                    SANDBOX_NOT_AVAILABLE,
+                                                    SDK_SANDBOX_PROCESS_NOT_AVAILABLE,
                                                     SANDBOX_NOT_AVAILABLE_MSG),
                                             false,
                                             timeSystemServerReceivedCallFromApp,
@@ -939,7 +972,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     link);
         } catch (DeadObjectException e) {
             link.handleLoadSdkException(
-                    new LoadSdkException(SANDBOX_NOT_AVAILABLE, SANDBOX_NOT_AVAILABLE_MSG),
+                    new LoadSdkException(
+                            SDK_SANDBOX_PROCESS_NOT_AVAILABLE, SANDBOX_NOT_AVAILABLE_MSG),
                     false,
                     timeSystemServerReceivedCallFromApp,
                     SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX);
@@ -994,6 +1028,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         if (boundSandbox != null) {
                             try {
                                 boundSandbox.unloadSdk(sdkToken);
+                            } catch (DeadObjectException e) {
+                                Log.i(TAG, "Sdk sandbox for " + callingInfo
+                                        + " is dead, cannot unload SDK " + sdkName);
+                                return false;
                             } catch (RemoteException e) {
                                 Log.w(TAG, "Failed to unload SDK: ", e);
                             }
@@ -1170,10 +1208,21 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             CallingInfo callingInfo,
             int errorCode,
             String errorMsg,
+            long timeSystemServerReceivedCallFromSandbox,
             IRequestSurfacePackageCallback callback) {
         removePendingCallback(callingInfo, callback.asBinder());
+        final long timeSystemServerCalledApp = mInjector.getCurrentTime();
+        /** -1 because stage where failure occurred is unknown and hence do not log */
+        if (timeSystemServerReceivedCallFromSandbox != -1) {
+            SdkSandboxStatsLog.write(
+                    SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                    SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK,
+                    (int) (timeSystemServerCalledApp - timeSystemServerReceivedCallFromSandbox),
+                    /*success=*/ true,
+                    SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_SANDBOX_TO_APP);
+        }
         try {
-            callback.onSurfacePackageError(errorCode, errorMsg);
+            callback.onSurfacePackageError(errorCode, errorMsg, timeSystemServerCalledApp);
         } catch (RemoteException e) {
             Log.w(TAG, "Failed to send onSurfacePackageError", e);
         }
@@ -1235,13 +1284,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         @Override
         public void onLoadSdkSuccess(
-                LoadSdkResponse response, ISdkSandboxManagerToSdkSandboxCallback callback) {
+                SandboxedSdk sandboxedSdk, ISdkSandboxManagerToSdkSandboxCallback callback) {
             // Keep reference to callback so that manager service can
             // callback to remote code loaded.
             synchronized (this) {
                 mManagerToCodeCallback = callback;
             }
-            handleLoadSdkSuccess(response);
+            handleLoadSdkSuccess(sandboxedSdk);
         }
 
         @Override
@@ -1254,10 +1303,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     /*stage*/ SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED);
         }
 
-        private void handleLoadSdkSuccess(LoadSdkResponse response) {
+        private void handleLoadSdkSuccess(SandboxedSdk sandboxedSdk) {
             removePendingCallback(mCallingInfo, this.asBinder());
             try {
-                mManagerToAppCallback.onLoadSdkSuccess(response);
+                mManagerToAppCallback.onLoadSdkSuccess(sandboxedSdk);
             } catch (RemoteException e) {
                 Log.w(TAG, "Failed to send onLoadCodeSuccess", e);
             }
@@ -1294,10 +1343,19 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 SurfaceControlViewHost.SurfacePackage surfacePackage,
                 int surfacePackageId,
                 Bundle params,
+                long timeSystemServerReceivedCallFromSandbox,
                 IRequestSurfacePackageCallback callback) {
             removePendingCallback(mCallingInfo, callback.asBinder());
+            final long timeSystemServerCalledApp = mInjector.getCurrentTime();
+            SdkSandboxStatsLog.write(
+                    SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                    SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK,
+                    (int) (timeSystemServerCalledApp - timeSystemServerReceivedCallFromSandbox),
+                    /*success=*/ true,
+                    SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_SANDBOX_TO_APP);
             try {
-                callback.onSurfacePackageReady(surfacePackage, surfacePackageId, params);
+                callback.onSurfacePackageReady(
+                        surfacePackage, surfacePackageId, params, timeSystemServerCalledApp);
             } catch (RemoteException e) {
                 Log.w(TAG, "Failed to send onSurfacePackageReady callback", e);
             }
@@ -1320,18 +1378,19 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                 () ->
                                         handleSurfacePackageError(
                                                 mCallingInfo,
-                                                SANDBOX_NOT_AVAILABLE,
+                                                SDK_SANDBOX_PROCESS_NOT_AVAILABLE,
                                                 SANDBOX_NOT_AVAILABLE_MSG,
+                                                /*timeSystemServerReceivedCallFromSandbox=*/ -1,
                                                 callback));
             }
+            final long timeSystemServerCalledSandbox = mInjector.getCurrentTime();
+            SdkSandboxStatsLog.write(
+                    SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                    SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE,
+                    (int) (timeSystemServerCalledSandbox - timeSystemServerReceivedCallFromApp),
+                    /*success=*/ true,
+                    SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX);
             try {
-                final long timeSystemServerCalledSandbox = mInjector.getCurrentTime();
-                SdkSandboxStatsLog.write(
-                        SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                        SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE,
-                        (int) (timeSystemServerCalledSandbox - timeSystemServerReceivedCallFromApp),
-                        /*success=*/ true,
-                        SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX);
                 synchronized (this) {
                     mManagerToCodeCallback.onSurfacePackageRequested(
                             hostToken,
@@ -1359,7 +1418,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                             /*sandboxStageSuccess=*/ true,
                                             /*sdkStageSuccess=*/ true);
                                     handleSurfacePackageReady(
-                                            surfacePackage, surfacePackageId, params, callback);
+                                            surfacePackage,
+                                            surfacePackageId,
+                                            params,
+                                            timeSystemServerReceivedCallFromSandbox,
+                                            callback);
                                 }
 
                                 @Override
@@ -1383,17 +1446,23 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                     int sdkSandboxManagerErrorCode =
                                             toSdkSandboxManagerRequestSurfacePackageErrorCode(
                                                     errorCode);
+
                                     handleSurfacePackageError(
                                             mCallingInfo,
                                             sdkSandboxManagerErrorCode,
                                             errorMsg,
+                                            timeSystemServerReceivedCallFromSandbox,
                                             callback);
                                 }
                             });
                 }
             } catch (DeadObjectException e) {
                 handleSurfacePackageError(
-                        mCallingInfo, SANDBOX_NOT_AVAILABLE, SANDBOX_NOT_AVAILABLE_MSG, callback);
+                        mCallingInfo,
+                        SDK_SANDBOX_PROCESS_NOT_AVAILABLE,
+                        SANDBOX_NOT_AVAILABLE_MSG,
+                        /*timeSystemServerReceivedCallFromSandbox=*/ -1,
+                        callback);
             } catch (RemoteException e) {
                 String errorMsg = "Failed to requestSurfacePackage";
                 Log.w(TAG, errorMsg, e);
@@ -1401,6 +1470,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         mCallingInfo,
                         SdkSandboxManager.REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR,
                         errorMsg + ": " + e,
+                        /*timeSystemServerReceivedCallFromSandbox=*/ -1,
                         callback);
             }
         }
@@ -1461,7 +1531,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                 () ->
                                         handleSendDataError(
                                                 mCallingInfo,
-                                                SANDBOX_NOT_AVAILABLE,
+                                                SDK_SANDBOX_PROCESS_NOT_AVAILABLE,
                                                 SANDBOX_NOT_AVAILABLE_MSG,
                                                 callback));
             }
@@ -1487,7 +1557,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 }
             } catch (DeadObjectException e) {
                 handleSendDataError(
-                        mCallingInfo, SANDBOX_NOT_AVAILABLE, SANDBOX_NOT_AVAILABLE_MSG, callback);
+                        mCallingInfo,
+                        SDK_SANDBOX_PROCESS_NOT_AVAILABLE,
+                        SANDBOX_NOT_AVAILABLE_MSG,
+                        callback);
             } catch (RemoteException e) {
                 String errorMsg = "Failed to sendData";
                 Log.w(TAG, errorMsg, e);
@@ -1515,6 +1588,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                             exception.getExtraInformation());
                 case ILoadSdkInSandboxCallback.LOAD_SDK_PROVIDER_INIT_ERROR:
                 case ILoadSdkInSandboxCallback.LOAD_SDK_INSTANTIATION_ERROR:
+                case ILoadSdkInSandboxCallback.LOAD_SDK_INTERNAL_ERROR:
                     return new LoadSdkException(
                             SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR,
                             exception.getMessage(),

@@ -84,6 +84,7 @@ public class SourceTest {
         assertEquals(
                 new Source.Builder()
                         .setAdTechDomain(Uri.parse("https://example.com"))
+                        .setEnrollmentId("enrollment-id")
                         .setAppDestination(Uri.parse("android-app://example.com/aD1"))
                         .setWebDestination(Uri.parse("https://example.com/aD2"))
                         .setPublisher(Uri.parse("https://example.com/aS"))
@@ -106,6 +107,7 @@ public class SourceTest {
                         .build(),
                 new Source.Builder()
                         .setAdTechDomain(Uri.parse("https://example.com"))
+                        .setEnrollmentId("enrollment-id")
                         .setAppDestination(Uri.parse("android-app://example.com/aD1"))
                         .setWebDestination(Uri.parse("https://example.com/aD2"))
                         .setPublisher(Uri.parse("https://example.com/aS"))
@@ -156,6 +158,13 @@ public class SourceTest {
                         .build(),
                 SourceFixture.getValidSourceBuilder()
                         .setAdTechDomain(Uri.parse("https://2.com"))
+                        .build());
+        assertNotEquals(
+                SourceFixture.getValidSourceBuilder()
+                        .setEnrollmentId("enrollment-id-1")
+                        .build(),
+                SourceFixture.getValidSourceBuilder()
+                        .setEnrollmentId("enrollment-id-2")
                         .build());
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder()
@@ -245,6 +254,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION,
                 SourceFixture.ValidSourceParams.WEB_DESTINATION,
                 SourceFixture.ValidSourceParams.AD_TECH_DOMAIN,
+                SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                 SourceFixture.ValidSourceParams.REGISTRANT,
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
                 SourceFixture.ValidSourceParams.EXPIRY_TIME,
@@ -263,6 +273,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION,
                 SourceFixture.ValidSourceParams.WEB_DESTINATION,
                 SourceFixture.ValidSourceParams.AD_TECH_DOMAIN,
+                SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                 SourceFixture.ValidSourceParams.REGISTRANT,
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
                 SourceFixture.ValidSourceParams.EXPIRY_TIME,
@@ -284,6 +295,7 @@ public class SourceTest {
                 null,
                 null,
                 SourceFixture.ValidSourceParams.AD_TECH_DOMAIN,
+                SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                 SourceFixture.ValidSourceParams.REGISTRANT,
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
                 SourceFixture.ValidSourceParams.EXPIRY_TIME,
@@ -302,6 +314,7 @@ public class SourceTest {
                 Uri.parse("com.destination"),
                 SourceFixture.ValidSourceParams.WEB_DESTINATION,
                 SourceFixture.ValidSourceParams.AD_TECH_DOMAIN,
+                SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                 SourceFixture.ValidSourceParams.REGISTRANT,
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
                 SourceFixture.ValidSourceParams.EXPIRY_TIME,
@@ -320,6 +333,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION,
                 Uri.parse("com.destination"),
                 SourceFixture.ValidSourceParams.AD_TECH_DOMAIN,
+                SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                 SourceFixture.ValidSourceParams.REGISTRANT,
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
                 SourceFixture.ValidSourceParams.EXPIRY_TIME,
@@ -341,6 +355,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION,
                 SourceFixture.ValidSourceParams.WEB_DESTINATION,
                 null,
+                SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                 SourceFixture.ValidSourceParams.REGISTRANT,
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
                 SourceFixture.ValidSourceParams.EXPIRY_TIME,
@@ -359,6 +374,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION,
                 SourceFixture.ValidSourceParams.WEB_DESTINATION,
                 Uri.parse("com.adTechDomain"),
+                SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                 SourceFixture.ValidSourceParams.REGISTRANT,
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
                 SourceFixture.ValidSourceParams.EXPIRY_TIME,
@@ -372,14 +388,38 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildAggregateFilterData());
     }
 
+    //TODO (b/238924528): uncomment when enforcing enrollment.
+    /*@Test
+    public void testSourceBuilder_validateArgumentEnrollmentId() {
+        assertInvalidSourceArguments(
+                SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
+                SourceFixture.ValidSourceParams.PUBLISHER,
+                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION,
+                SourceFixture.ValidSourceParams.WEB_DESTINATION,
+                SourceFixture.ValidSourceParams.AD_TECH_DOMAIN,
+                null,
+                SourceFixture.ValidSourceParams.REGISTRANT,
+                SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
+                SourceFixture.ValidSourceParams.EXPIRY_TIME,
+                SourceFixture.ValidSourceParams.PRIORITY,
+                SourceFixture.ValidSourceParams.SOURCE_TYPE,
+                SourceFixture.ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
+                SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
+                SourceFixture.ValidSourceParams.DEBUG_KEY,
+                SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
+                SourceFixture.ValidSourceParams.buildAggregateSource(),
+                SourceFixture.ValidSourceParams.buildAggregateFilterData());
+    }*/
+
     @Test
     public void testSourceBuilder_validateArgumentRegistrant() {
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
                 SourceFixture.ValidSourceParams.PUBLISHER,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION,
-                SourceFixture.ValidSourceParams.AD_TECH_DOMAIN,
                 SourceFixture.ValidSourceParams.WEB_DESTINATION,
+                SourceFixture.ValidSourceParams.AD_TECH_DOMAIN,
+                SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                 null,
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
                 SourceFixture.ValidSourceParams.EXPIRY_TIME,
@@ -398,6 +438,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION,
                 SourceFixture.ValidSourceParams.WEB_DESTINATION,
                 SourceFixture.ValidSourceParams.AD_TECH_DOMAIN,
+                SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                 Uri.parse("com.registrant"),
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
                 SourceFixture.ValidSourceParams.EXPIRY_TIME,
@@ -419,6 +460,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION,
                 SourceFixture.ValidSourceParams.WEB_DESTINATION,
                 SourceFixture.ValidSourceParams.AD_TECH_DOMAIN,
+                SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                 SourceFixture.ValidSourceParams.REGISTRANT,
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
                 SourceFixture.ValidSourceParams.EXPIRY_TIME,
@@ -1363,6 +1405,7 @@ public class SourceTest {
             Uri appDestination,
             Uri webDestination,
             Uri adTechDomain,
+            String enrollmentId,
             Uri registrant,
             Long sourceEventTime,
             Long expiryTime,
@@ -1383,6 +1426,7 @@ public class SourceTest {
                                 .setAppDestination(appDestination)
                                 .setWebDestination(webDestination)
                                 .setAdTechDomain(adTechDomain)
+                                .setEnrollmentId(enrollmentId)
                                 .setRegistrant(registrant)
                                 .setEventTime(sourceEventTime)
                                 .setExpiryTime(expiryTime)

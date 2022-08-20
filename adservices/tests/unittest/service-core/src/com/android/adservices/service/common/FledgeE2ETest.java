@@ -17,6 +17,7 @@
 package com.android.adservices.service.common;
 
 import static com.android.adservices.service.adselection.ImpressionReporter.CALLER_PACKAGE_NAME_MISMATCH;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyBoolean;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
@@ -65,6 +66,7 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -105,7 +107,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class FledgeE2ETest {
     @Spy private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
@@ -157,12 +158,17 @@ public class FledgeE2ETest {
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private CustomAudienceDao mCustomAudienceDao;
     private AdSelectionEntryDao mAdSelectionEntryDao;
-    private ExecutorService mExecutorService;
+    private ExecutorService mLightweightExecutorService;
+    private ExecutorService mBackgroundExecutorService;
     private CustomAudienceServiceImpl mCustomAudienceService;
     private AdSelectionServiceImpl mAdSelectionService;
     private final Flags mFlags = FlagsFactory.getFlagsForTest();
     private MockWebServerRule.RequestMatcher<String> mRequestMatcherPrefixMatch;
     private Uri mLocalhostBuyerDomain;
+
+    @Spy
+    FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
+            new FledgeAllowListsFilter(mFlags, mAdServicesLogger);
 
     @Before
     public void setUp() throws Exception {
@@ -187,9 +193,11 @@ public class FledgeE2ETest {
                         .build()
                         .adSelectionEntryDao();
 
-        mExecutorService = Executors.newFixedThreadPool(20);
+        mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
+        mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
 
-        mAdServicesHttpsClient = new AdServicesHttpsClient(mExecutorService);
+        mAdServicesHttpsClient =
+                new AdServicesHttpsClient(AdServicesExecutors.getBlockingExecutor());
 
         mCustomAudienceService =
                 new CustomAudienceServiceImpl(
@@ -202,6 +210,7 @@ public class FledgeE2ETest {
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 mFlags),
                         FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger),
+                        mFledgeAllowListsFilterSpy,
                         mConsentManagerMock,
                         mDevContextFilter,
                         MoreExecutors.newDirectExecutorService(),
@@ -221,13 +230,15 @@ public class FledgeE2ETest {
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mAppImportanceFilter,
-                        mExecutorService,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLogger,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger));
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger),
+                        mFledgeAllowListsFilterSpy);
 
         mRequestMatcherPrefixMatch = (a, b) -> !b.isEmpty() && a.startsWith(b);
     }
@@ -549,13 +560,21 @@ public class FledgeE2ETest {
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mAppImportanceFilter,
-                        mExecutorService,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLogger,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger));
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger),
+                        mFledgeAllowListsFilterSpy);
+
+        // Stubbing this check so it fails at matching validation
+        doNothing()
+                .when(mFledgeAllowListsFilterSpy)
+                .assertAppCanUsePpapi(
+                        otherPackageName, AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION);
 
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()

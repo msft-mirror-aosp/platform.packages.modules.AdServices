@@ -17,7 +17,7 @@
 package com.android.sdksandbox;
 
 import android.app.sdksandbox.LoadSdkException;
-import android.app.sdksandbox.LoadSdkResponse;
+import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
@@ -48,6 +48,7 @@ class SandboxedSdkHolder {
     private boolean mInitialized = false;
     private SandboxedSdkProvider mSdk;
     private Context mContext;
+    private SandboxedSdk mSandboxedSdk;
 
     private DisplayManager mDisplayManager;
     private final Random mRandom = new SecureRandom();
@@ -58,7 +59,6 @@ class SandboxedSdkHolder {
     private SdkSandboxServiceImpl.Injector mInjector;
 
     void init(
-            Context context,
             Bundle params,
             ILoadSdkInSandboxCallback callback,
             String sdkProviderClassName,
@@ -69,7 +69,7 @@ class SandboxedSdkHolder {
             throw new IllegalStateException("Already initialized!");
         }
         mInitialized = true;
-        mContext = context;
+        mContext = sandboxedSdkContext.getBaseContext();
         mDisplayManager = mContext.getSystemService(DisplayManager.class);
         mInjector = injector;
         try {
@@ -79,8 +79,8 @@ class SandboxedSdkHolder {
             mHandler.post(
                     () -> {
                         try {
-                            LoadSdkResponse response = mSdk.onLoadSdk(params);
-                            sendLoadSdkSuccess(response, callback);
+                            mSandboxedSdk = mSdk.onLoadSdk(params);
+                            sendLoadSdkSuccess(mSandboxedSdk, callback);
                         } catch (LoadSdkException exception) {
                             sendLoadSdkError(exception, callback);
                         } catch (RuntimeException exception) {
@@ -91,19 +91,19 @@ class SandboxedSdkHolder {
         } catch (ClassNotFoundException e) {
             sendLoadSdkError(
                     new LoadSdkException(
-                            IRequestSurfacePackageFromSdkCallback.SURFACE_PACKAGE_INTERNAL_ERROR,
+                            ILoadSdkInSandboxCallback.LOAD_SDK_INTERNAL_ERROR,
                             "Could not find class: " + sdkProviderClassName),
                     callback);
         } catch (Exception e) {
             sendLoadSdkError(
                     new LoadSdkException(
-                            IRequestSurfacePackageFromSdkCallback.SURFACE_PACKAGE_INTERNAL_ERROR,
+                            ILoadSdkInSandboxCallback.LOAD_SDK_INTERNAL_ERROR,
                             "Could not instantiate SandboxedSdkProvider: " + e),
                     callback);
         } catch (Throwable e) {
             sendLoadSdkError(
                     new LoadSdkException(
-                            IRequestSurfacePackageFromSdkCallback.SURFACE_PACKAGE_INTERNAL_ERROR,
+                            ILoadSdkInSandboxCallback.LOAD_SDK_INTERNAL_ERROR,
                             "Error thrown during init: " + e),
                     callback);
         }
@@ -119,9 +119,9 @@ class SandboxedSdkHolder {
         writer.println(" mSdk class: " + sdkClass);
     }
 
-    private void sendLoadSdkSuccess(LoadSdkResponse response, ILoadSdkInSandboxCallback callback) {
+    private void sendLoadSdkSuccess(SandboxedSdk sandboxedSdk, ILoadSdkInSandboxCallback callback) {
         try {
-            callback.onLoadSdkSuccess(response, new SdkSandboxCallbackImpl());
+            callback.onLoadSdkSuccess(sandboxedSdk, new SdkSandboxCallbackImpl());
         } catch (RemoteException e) {
             Log.e(TAG, "Could not send onLoadSdkSuccess: " + e);
         }

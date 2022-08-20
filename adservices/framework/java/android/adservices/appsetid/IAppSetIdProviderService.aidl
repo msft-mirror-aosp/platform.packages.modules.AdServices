@@ -28,6 +28,6 @@ interface IAppSetIdProviderService {
     /**
      * Get AppSetId information from the provider.
      */
-    oneway void getAppSetIdProvider(in int clientUid, in String clientPackageName,
+    oneway void getAppSetId(in int clientUid, in String clientPackageName,
                          in IGetAppSetIdProviderCallback callback);
 }

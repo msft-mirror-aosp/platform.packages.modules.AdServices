@@ -29,7 +29,10 @@
                   android:resource="@xml/ad_services_config" />
         <activity android:name=".SimpleActivity"
                   android:excludeFromRecents="true"
-                  android:exported="false">
+                  android:exported="false"
+                  android:turnScreenOn="true"
+                  android:keepScreenOn="true"
+                  android:showWhenLocked="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

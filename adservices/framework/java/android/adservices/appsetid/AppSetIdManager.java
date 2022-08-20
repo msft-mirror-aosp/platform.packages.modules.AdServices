@@ -34,11 +34,7 @@ import java.util.Objects;
 import java.util.concurrent.Executor;
 
 /**
- * AppSetId Manager provides APIs for app and ad-SDKs to access advertising ID. The appsetId is a
- * unique, user-resettable ID for non-monetizing advertising usecases. The scope of the ID can be
- * per app or per deveoper account on play store. AppSetId is used for analytics or fraud prevention
- * use cases, on a given device that one may need to correlate usage or actions across a set of apps
- * owned by an organization.
+ * AppSetIdManager provides APIs for app and ad-SDKs to access appSetId for non-monetizing purpose.
  */
 public class AppSetIdManager {
     /**

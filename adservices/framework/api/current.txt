@@ -100,8 +100,8 @@ package android.adservices.appsetid {
 
   public class AppSetId {
     ctor public AppSetId(@NonNull String, int);
-    method @NonNull public String getAppSetId();
-    method public int getAppSetIdScope();
+    method @NonNull public String getId();
+    method public int getScope();
     field public static final int SCOPE_APP = 1; // 0x1
     field public static final int SCOPE_DEVELOPER = 2; // 0x2
   }
@@ -386,14 +386,9 @@ package android.adservices.measurement {
 package android.adservices.topics {
 
   public final class GetTopicsRequest {
+    method @NonNull public static android.adservices.topics.GetTopicsRequest create();
+    method @NonNull public static android.adservices.topics.GetTopicsRequest createWithAdsSdkName(@NonNull String);
     method @NonNull public String getAdsSdkName();
-    method @NonNull public android.content.Context getContext();
-  }
-
-  public static final class GetTopicsRequest.Builder {
-    ctor public GetTopicsRequest.Builder(@NonNull android.content.Context);
-    method @NonNull public android.adservices.topics.GetTopicsRequest build();
-    method @NonNull public android.adservices.topics.GetTopicsRequest.Builder setAdsSdkName(@NonNull String);
   }
 
   public final class GetTopicsResponse {

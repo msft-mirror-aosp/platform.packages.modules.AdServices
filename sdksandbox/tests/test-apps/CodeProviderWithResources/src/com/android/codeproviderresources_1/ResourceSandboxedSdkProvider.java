@@ -17,11 +17,12 @@
 package com.android.codeproviderresources_1;
 
 import android.app.sdksandbox.LoadSdkException;
-import android.app.sdksandbox.LoadSdkResponse;
+import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
+import android.os.Binder;
 import android.os.Bundle;
 import android.view.View;
 
@@ -37,7 +38,7 @@ public class ResourceSandboxedSdkProvider extends SandboxedSdkProvider {
     private static final String ASSET_FILE = "test-asset.txt";
 
     @Override
-    public LoadSdkResponse onLoadSdk(Bundle params) throws LoadSdkException {
+    public SandboxedSdk onLoadSdk(Bundle params) throws LoadSdkException {
         Resources resources = getContext().getResources();
         String stringRes = resources.getString(R.string.test_string);
         int integerRes = resources.getInteger(R.integer.test_integer);
@@ -65,7 +66,7 @@ public class ResourceSandboxedSdkProvider extends SandboxedSdkProvider {
             throw new LoadSdkException(
                     new Throwable("File not found: " + ASSET_FILE), new Bundle());
         }
-        return new LoadSdkResponse(new Bundle());
+        return new SandboxedSdk(new Binder());
     }
 
     @Override

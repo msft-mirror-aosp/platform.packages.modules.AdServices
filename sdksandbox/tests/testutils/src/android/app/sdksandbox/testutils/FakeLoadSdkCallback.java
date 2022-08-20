@@ -19,25 +19,27 @@ package android.app.sdksandbox.testutils;
 import static com.google.common.truth.Truth.assertThat;
 
 import android.app.sdksandbox.LoadSdkException;
-import android.app.sdksandbox.LoadSdkResponse;
+import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.os.OutcomeReceiver;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-public class FakeLoadSdkCallback implements OutcomeReceiver<LoadSdkResponse, LoadSdkException> {
+public class FakeLoadSdkCallback implements OutcomeReceiver<SandboxedSdk, LoadSdkException> {
     private final CountDownLatch mLoadSdkLatch = new CountDownLatch(1);
 
     private boolean mLoadSdkSuccess;
 
     private int mErrorCode;
     private String mErrorMsg;
+    private SandboxedSdk mSandboxedSdk;
 
     @Override
-    public void onResult(LoadSdkResponse response) {
+    public void onResult(SandboxedSdk sandboxedSdk) {
         mLoadSdkSuccess = true;
         mLoadSdkLatch.countDown();
+        mSandboxedSdk = sandboxedSdk;
     }
 
     @Override
@@ -70,6 +72,11 @@ public class FakeLoadSdkCallback implements OutcomeReceiver<LoadSdkResponse, Loa
     public String getLoadSdkErrorMsg() {
         waitForLatch(mLoadSdkLatch);
         return mErrorMsg;
+    }
+
+    public SandboxedSdk getSandboxedSdk() {
+        waitForLatch(mLoadSdkLatch);
+        return mSandboxedSdk;
     }
 
     private void waitForLatch(CountDownLatch latch) {

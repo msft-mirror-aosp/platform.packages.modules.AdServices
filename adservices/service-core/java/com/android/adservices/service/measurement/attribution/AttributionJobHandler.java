@@ -174,6 +174,7 @@ class AttributionJobHandler {
                                             roundDownToDay(source.getEventTime()))
                                     .setScheduledReportTime(trigger.getTriggerTime() + randomTime)
                                     .setAdTechDomain(source.getAdTechDomain())
+                                    .setEnrollmentId(source.getEnrollmentId())
                                     .setDebugCleartextPayload(
                                             AggregateReport.generateDebugPayload(
                                                     contributions.get()))
@@ -526,6 +527,7 @@ class AttributionJobHandler {
                 .setDestinationSite(triggerDestinationTopPrivateDomain)
                 .setDestinationOrigin(BaseUriExtractor.getBaseUri(destination).toString())
                 .setAdTechDomain(trigger.getAdTechDomain().toString())
+                .setEnrollmentId(trigger.getEnrollmentId())
                 .setTriggerTime(trigger.getTriggerTime())
                 .setRegistrant(trigger.getRegistrant().toString())
                 .build();
