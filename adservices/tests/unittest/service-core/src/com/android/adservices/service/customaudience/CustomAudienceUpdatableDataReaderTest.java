@@ -41,9 +41,9 @@ import java.util.List;
 public class CustomAudienceUpdatableDataReaderTest {
     private static final String RESPONSE_IDENTIFIER = "[1]";
     private static final DBTrustedBiddingData VALID_TRUSTED_BIDDING_DATA =
-            DBTrustedBiddingDataFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER).build();
+            DBTrustedBiddingDataFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1).build();
     private static final List<DBAdData> VALID_DB_AD_DATA_LIST =
-            DBAdDataFixture.getValidDbAdDataListByBuyer(CommonFixture.VALID_BUYER);
+            DBAdDataFixture.getValidDbAdDataListByBuyer(CommonFixture.VALID_BUYER_1);
 
     private final Flags mFlags = FlagsFactory.getFlagsForTest();
 
@@ -60,7 +60,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         responseObject,
                         RESPONSE_IDENTIFIER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
@@ -85,7 +85,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         responseObject,
                         RESPONSE_IDENTIFIER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
@@ -107,7 +107,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         responseObject,
                         RESPONSE_IDENTIFIER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
@@ -122,7 +122,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         CustomAudienceUpdatableDataFixture.getMalformedJsonObject(),
                         RESPONSE_IDENTIFIER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
@@ -136,7 +136,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         CustomAudienceUpdatableDataFixture.getMalformedNullJsonObject(),
                         RESPONSE_IDENTIFIER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
@@ -157,7 +157,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         responseObject,
                         RESPONSE_IDENTIFIER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         1,
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
@@ -177,7 +177,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         responseObject,
                         RESPONSE_IDENTIFIER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
@@ -198,7 +198,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         responseObject,
                         RESPONSE_IDENTIFIER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
@@ -221,7 +221,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         responseObject,
                         RESPONSE_IDENTIFIER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
@@ -236,7 +236,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         CustomAudienceUpdatableDataFixture.getMalformedJsonObject(),
                         RESPONSE_IDENTIFIER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
@@ -250,7 +250,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         CustomAudienceUpdatableDataFixture.getMalformedNullJsonObject(),
                         RESPONSE_IDENTIFIER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
@@ -289,7 +289,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         responseObject,
                         RESPONSE_IDENTIFIER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         1,
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
@@ -308,7 +308,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         responseObject,
                         RESPONSE_IDENTIFIER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
@@ -327,7 +327,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         responseObject,
                         RESPONSE_IDENTIFIER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
@@ -350,7 +350,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         responseObject,
                         RESPONSE_IDENTIFIER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
@@ -365,7 +365,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         CustomAudienceUpdatableDataFixture.getMalformedJsonObject(),
                         RESPONSE_IDENTIFIER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
@@ -379,7 +379,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         CustomAudienceUpdatableDataFixture.getMalformedNullJsonObject(),
                         RESPONSE_IDENTIFIER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
@@ -397,7 +397,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         responseObject,
                         RESPONSE_IDENTIFIER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         1,
@@ -416,7 +416,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         responseObject,
                         RESPONSE_IDENTIFIER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
