@@ -94,7 +94,7 @@ public class CustomAudienceServiceImplTest {
     private static final ExecutorService DIRECT_EXECUTOR = MoreExecutors.newDirectExecutorService();
 
     private static final CustomAudience VALID_CUSTOM_AUDIENCE =
-            CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER).build();
+            CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build();
 
     @Mock private CustomAudienceImpl mCustomAudienceImpl;
     @Mock private FledgeAuthorizationFilter mFledgeAuthorizationFilter;
@@ -184,7 +184,7 @@ public class CustomAudienceServiceImplTest {
                 .assertAdTechAllowed(
                         CONTEXT,
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
         verify(mConsentManagerMock).isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
         verify(mFledgeAllowListsFilter)
@@ -215,7 +215,7 @@ public class CustomAudienceServiceImplTest {
                 .assertAdTechAllowed(
                         CONTEXT,
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
         verify(mConsentManagerMock).isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
         verify(mFledgeAllowListsFilter)
@@ -334,7 +334,7 @@ public class CustomAudienceServiceImplTest {
                 .assertAdTechAllowed(
                         CONTEXT,
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
         verify(mAppImportanceFilter)
                 .assertCallerIsInForeground(
@@ -374,7 +374,7 @@ public class CustomAudienceServiceImplTest {
                 .assertAdTechAllowed(
                         CONTEXT,
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
         verify(mAppImportanceFilter)
                 .assertCallerIsInForeground(
@@ -396,7 +396,7 @@ public class CustomAudienceServiceImplTest {
     public void testLeaveCustomAudience_runNormally() throws RemoteException {
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
-                CommonFixture.VALID_BUYER,
+                CommonFixture.VALID_BUYER_1,
                 CustomAudienceFixture.VALID_NAME,
                 mICustomAudienceCallback);
 
@@ -406,7 +406,7 @@ public class CustomAudienceServiceImplTest {
         verify(mCustomAudienceImpl)
                 .leaveCustomAudience(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         CustomAudienceFixture.VALID_NAME);
         verify(mICustomAudienceCallback).onSuccess();
         verify(mFledgeAuthorizationFilter)
@@ -418,7 +418,7 @@ public class CustomAudienceServiceImplTest {
                 .assertAdTechAllowed(
                         CONTEXT,
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
         verify(mAppImportanceFilter)
                 .assertCallerIsInForeground(
@@ -442,7 +442,7 @@ public class CustomAudienceServiceImplTest {
 
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
-                CommonFixture.VALID_BUYER,
+                CommonFixture.VALID_BUYER_1,
                 CustomAudienceFixture.VALID_NAME,
                 mICustomAudienceCallback);
 
@@ -459,7 +459,7 @@ public class CustomAudienceServiceImplTest {
                 .assertAdTechAllowed(
                         CONTEXT,
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
         verify(mFledgeAllowListsFilter)
                 .assertAppCanUsePpapi(
@@ -500,7 +500,7 @@ public class CustomAudienceServiceImplTest {
                 () ->
                         mService.leaveCustomAudience(
                                 CustomAudienceFixture.VALID_OWNER,
-                                CommonFixture.VALID_BUYER,
+                                CommonFixture.VALID_BUYER_1,
                                 CustomAudienceFixture.VALID_NAME,
                                 mICustomAudienceCallback));
 
@@ -522,7 +522,7 @@ public class CustomAudienceServiceImplTest {
 
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
-                CommonFixture.VALID_BUYER,
+                CommonFixture.VALID_BUYER_1,
                 CustomAudienceFixture.VALID_NAME,
                 mICustomAudienceCallback);
 
@@ -546,7 +546,7 @@ public class CustomAudienceServiceImplTest {
                 () ->
                         mService.leaveCustomAudience(
                                 null,
-                                CommonFixture.VALID_BUYER,
+                                CommonFixture.VALID_BUYER_1,
                                 CustomAudienceFixture.VALID_NAME,
                                 mICustomAudienceCallback));
 
@@ -584,7 +584,7 @@ public class CustomAudienceServiceImplTest {
                 () ->
                         mService.leaveCustomAudience(
                                 CustomAudienceFixture.VALID_OWNER,
-                                CommonFixture.VALID_BUYER,
+                                CommonFixture.VALID_BUYER_1,
                                 null,
                                 mICustomAudienceCallback));
 
@@ -603,7 +603,7 @@ public class CustomAudienceServiceImplTest {
                 () ->
                         mService.leaveCustomAudience(
                                 CustomAudienceFixture.VALID_OWNER,
-                                CommonFixture.VALID_BUYER,
+                                CommonFixture.VALID_BUYER_1,
                                 CustomAudienceFixture.VALID_NAME,
                                 null));
 
@@ -620,12 +620,12 @@ public class CustomAudienceServiceImplTest {
                 .when(mCustomAudienceImpl)
                 .leaveCustomAudience(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         CustomAudienceFixture.VALID_NAME);
 
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
-                CommonFixture.VALID_BUYER,
+                CommonFixture.VALID_BUYER_1,
                 CustomAudienceFixture.VALID_NAME,
                 mICustomAudienceCallback);
 
@@ -635,7 +635,7 @@ public class CustomAudienceServiceImplTest {
         verify(mCustomAudienceImpl)
                 .leaveCustomAudience(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         CustomAudienceFixture.VALID_NAME);
         verify(mICustomAudienceCallback).onSuccess();
         verify(mFledgeAuthorizationFilter)
@@ -647,7 +647,7 @@ public class CustomAudienceServiceImplTest {
                 .assertAdTechAllowed(
                         CONTEXT,
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
         verify(mAppImportanceFilter)
                 .assertCallerIsInForeground(
@@ -672,7 +672,7 @@ public class CustomAudienceServiceImplTest {
 
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
-                CommonFixture.VALID_BUYER,
+                CommonFixture.VALID_BUYER_1,
                 CustomAudienceFixture.VALID_NAME,
                 mICustomAudienceCallback);
 
@@ -687,7 +687,7 @@ public class CustomAudienceServiceImplTest {
         verify(mCustomAudienceImpl)
                 .leaveCustomAudience(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         CustomAudienceFixture.VALID_NAME);
         verify(mICustomAudienceCallback).onSuccess();
         verify(mFledgeAuthorizationFilter)
@@ -699,7 +699,7 @@ public class CustomAudienceServiceImplTest {
                 .assertAdTechAllowed(
                         CONTEXT,
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
         verify(mFledgeAllowListsFilter)
                 .assertAppCanUsePpapi(
@@ -771,7 +771,7 @@ public class CustomAudienceServiceImplTest {
                 .assertAdTechAllowed(
                         CONTEXT,
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
         verify(mFledgeAllowListsFilter)
                 .assertAppCanUsePpapi(
@@ -798,7 +798,7 @@ public class CustomAudienceServiceImplTest {
 
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
-                CommonFixture.VALID_BUYER,
+                CommonFixture.VALID_BUYER_1,
                 CustomAudienceFixture.VALID_NAME,
                 mICustomAudienceCallback);
 
@@ -839,7 +839,7 @@ public class CustomAudienceServiceImplTest {
 
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
-                CommonFixture.VALID_BUYER,
+                CommonFixture.VALID_BUYER_1,
                 CustomAudienceFixture.VALID_NAME,
                 mICustomAudienceCallback);
 
@@ -855,7 +855,7 @@ public class CustomAudienceServiceImplTest {
                 .assertAdTechAllowed(
                         CONTEXT,
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
         verify(mFledgeAllowListsFilter)
                 .assertAppCanUsePpapi(
@@ -867,7 +867,7 @@ public class CustomAudienceServiceImplTest {
         verify(mCustomAudienceImpl)
                 .leaveCustomAudience(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         CustomAudienceFixture.VALID_NAME);
         verify(mICustomAudienceCallback).onSuccess();
         verifyLoggerSpy(AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE, STATUS_SUCCESS);
@@ -892,7 +892,7 @@ public class CustomAudienceServiceImplTest {
 
         mService.overrideCustomAudienceRemoteInfo(
                 CustomAudienceFixture.VALID_OWNER,
-                CommonFixture.VALID_BUYER,
+                CommonFixture.VALID_BUYER_1,
                 CustomAudienceFixture.VALID_NAME,
                 "",
                 AdSelectionSignals.EMPTY,
@@ -943,7 +943,7 @@ public class CustomAudienceServiceImplTest {
 
         mService.overrideCustomAudienceRemoteInfo(
                 CustomAudienceFixture.VALID_OWNER,
-                CommonFixture.VALID_BUYER,
+                CommonFixture.VALID_BUYER_1,
                 CustomAudienceFixture.VALID_NAME,
                 "",
                 AdSelectionSignals.EMPTY,
@@ -962,7 +962,7 @@ public class CustomAudienceServiceImplTest {
                 .persistCustomAudienceOverride(
                         DBCustomAudienceOverride.builder()
                                 .setOwner(CustomAudienceFixture.VALID_OWNER)
-                                .setBuyer(CommonFixture.VALID_BUYER)
+                                .setBuyer(CommonFixture.VALID_BUYER_1)
                                 .setName(CustomAudienceFixture.VALID_NAME)
                                 .setBiddingLogicJS("")
                                 .setTrustedBiddingData(AdSelectionSignals.EMPTY.toString())
@@ -991,7 +991,7 @@ public class CustomAudienceServiceImplTest {
 
         mService.removeCustomAudienceRemoteInfoOverride(
                 CustomAudienceFixture.VALID_OWNER,
-                CommonFixture.VALID_BUYER,
+                CommonFixture.VALID_BUYER_1,
                 CustomAudienceFixture.VALID_NAME,
                 mCustomAudienceOverrideCallback);
 
@@ -1032,7 +1032,7 @@ public class CustomAudienceServiceImplTest {
 
         mService.removeCustomAudienceRemoteInfoOverride(
                 CustomAudienceFixture.VALID_OWNER,
-                CommonFixture.VALID_BUYER,
+                CommonFixture.VALID_BUYER_1,
                 CustomAudienceFixture.VALID_NAME,
                 mCustomAudienceOverrideCallback);
 
@@ -1044,7 +1044,7 @@ public class CustomAudienceServiceImplTest {
                         CONTEXT.getPackageManager(), CustomAudienceFixture.VALID_OWNER);
         verify(mCustomAudienceDao)
                 .removeCustomAudienceOverrideByPrimaryKeyAndPackageName(
-                        CustomAudienceFixture.VALID_OWNER, CommonFixture.VALID_BUYER,
+                        CustomAudienceFixture.VALID_OWNER, CommonFixture.VALID_BUYER_1,
                         CustomAudienceFixture.VALID_NAME, CustomAudienceFixture.VALID_OWNER);
         verify(mCustomAudienceOverrideCallback).onSuccess();
         verifyLoggerSpy(apiName, STATUS_SUCCESS);
@@ -1142,7 +1142,7 @@ public class CustomAudienceServiceImplTest {
                 () ->
                         mService.leaveCustomAudience(
                                 CustomAudienceFixture.VALID_OWNER,
-                                CommonFixture.VALID_BUYER,
+                                CommonFixture.VALID_BUYER_1,
                                 CustomAudienceFixture.VALID_NAME,
                                 mICustomAudienceCallback));
     }
@@ -1160,7 +1160,7 @@ public class CustomAudienceServiceImplTest {
                 () ->
                         mService.overrideCustomAudienceRemoteInfo(
                                 CustomAudienceFixture.VALID_OWNER,
-                                CommonFixture.VALID_BUYER,
+                                CommonFixture.VALID_BUYER_1,
                                 CustomAudienceFixture.VALID_NAME,
                                 "",
                                 AdSelectionSignals.EMPTY,
@@ -1180,7 +1180,7 @@ public class CustomAudienceServiceImplTest {
                 () ->
                         mService.removeCustomAudienceRemoteInfoOverride(
                                 CustomAudienceFixture.VALID_OWNER,
-                                CommonFixture.VALID_BUYER,
+                                CommonFixture.VALID_BUYER_1,
                                 CustomAudienceFixture.VALID_NAME,
                                 mCustomAudienceOverrideCallback));
     }
@@ -1206,7 +1206,7 @@ public class CustomAudienceServiceImplTest {
                 .assertAdTechAllowed(
                         CONTEXT,
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
 
         mService.joinCustomAudience(VALID_CUSTOM_AUDIENCE, mICustomAudienceCallback);
@@ -1223,7 +1223,7 @@ public class CustomAudienceServiceImplTest {
                 .assertAdTechAllowed(
                         CONTEXT,
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
         verify(mAppImportanceFilter)
                 .assertCallerIsInForeground(
@@ -1286,12 +1286,12 @@ public class CustomAudienceServiceImplTest {
                 .assertAdTechAllowed(
                         CONTEXT,
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
 
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
-                CommonFixture.VALID_BUYER,
+                CommonFixture.VALID_BUYER_1,
                 CustomAudienceFixture.VALID_NAME,
                 mICustomAudienceCallback);
 
@@ -1307,7 +1307,7 @@ public class CustomAudienceServiceImplTest {
                 .assertAdTechAllowed(
                         CONTEXT,
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
         verify(mAppImportanceFilter)
                 .assertCallerIsInForeground(
@@ -1338,7 +1338,7 @@ public class CustomAudienceServiceImplTest {
 
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
-                CommonFixture.VALID_BUYER,
+                CommonFixture.VALID_BUYER_1,
                 CustomAudienceFixture.VALID_NAME,
                 mICustomAudienceCallback);
 
@@ -1348,7 +1348,7 @@ public class CustomAudienceServiceImplTest {
         verify(mCustomAudienceImpl)
                 .leaveCustomAudience(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         CustomAudienceFixture.VALID_NAME);
         verify(mICustomAudienceCallback).onSuccess();
         verify(mFledgeAuthorizationFilter)
@@ -1385,7 +1385,7 @@ public class CustomAudienceServiceImplTest {
                 .assertAdTechAllowed(
                         CONTEXT,
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
         verify(mFledgeAuthorizationFilter)
                 .assertAppDeclaredPermission(
@@ -1418,14 +1418,14 @@ public class CustomAudienceServiceImplTest {
 
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
-                CommonFixture.VALID_BUYER,
+                CommonFixture.VALID_BUYER_1,
                 CustomAudienceFixture.VALID_NAME,
                 mICustomAudienceCallback);
         verify(mFledgeAuthorizationFilter)
                 .assertAdTechAllowed(
                         CONTEXT,
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
         verify(mFledgeAuthorizationFilter)
                 .assertAppDeclaredPermission(

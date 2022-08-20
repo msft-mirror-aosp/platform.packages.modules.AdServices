@@ -31,11 +31,11 @@ public class CustomAudienceSignalsTest {
     public void testBuildCustomAudienceSignals() {
         CustomAudienceSignals customAudienceSignals =
                 CustomAudienceSignalsFixture.aCustomAudienceSignalsBuilder()
-                        .setBuyer(CommonFixture.VALID_BUYER)
+                        .setBuyer(CommonFixture.VALID_BUYER_1)
                         .build();
 
         assertEquals(customAudienceSignals.getOwner(), CustomAudienceFixture.VALID_OWNER);
-        assertEquals(customAudienceSignals.getBuyer(), CommonFixture.VALID_BUYER);
+        assertEquals(customAudienceSignals.getBuyer(), CommonFixture.VALID_BUYER_1);
         assertEquals(customAudienceSignals.getName(), CustomAudienceFixture.VALID_NAME);
         assertEquals(
                 customAudienceSignals.getActivationTime(),
@@ -52,11 +52,11 @@ public class CustomAudienceSignalsTest {
     public void testBuildFromCustomAudience() {
         CustomAudienceSignals customAudienceSignals =
                 CustomAudienceSignals.buildFromCustomAudience(
-                        DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER)
+                        DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
                                 .build());
 
         assertEquals(customAudienceSignals.getOwner(), CustomAudienceFixture.VALID_OWNER);
-        assertEquals(customAudienceSignals.getBuyer(), CommonFixture.VALID_BUYER);
+        assertEquals(customAudienceSignals.getBuyer(), CommonFixture.VALID_BUYER_1);
         assertEquals(customAudienceSignals.getName(), CustomAudienceFixture.VALID_NAME);
         assertEquals(
                 customAudienceSignals.getActivationTime(),
@@ -73,12 +73,12 @@ public class CustomAudienceSignalsTest {
     public void testEqualCustomAudienceSignalsHaveSameHashCode() {
         CustomAudienceSignals obj1 =
                 CustomAudienceSignalsFixture.aCustomAudienceSignalsBuilder()
-                        .setBuyer(CommonFixture.VALID_BUYER)
+                        .setBuyer(CommonFixture.VALID_BUYER_1)
                         .setName("the-same-name")
                         .build();
         CustomAudienceSignals obj2 =
                 CustomAudienceSignalsFixture.aCustomAudienceSignalsBuilder()
-                        .setBuyer(CommonFixture.VALID_BUYER)
+                        .setBuyer(CommonFixture.VALID_BUYER_1)
                         .setName("the-same-name")
                         .build();
 
@@ -89,12 +89,12 @@ public class CustomAudienceSignalsTest {
     public void testNotEqualCustomAudienceSignalsHaveDifferentHashCodes() {
         CustomAudienceSignals obj1 =
                 CustomAudienceSignalsFixture.aCustomAudienceSignalsBuilder()
-                        .setBuyer(CommonFixture.VALID_BUYER)
+                        .setBuyer(CommonFixture.VALID_BUYER_1)
                         .setName("a-name")
                         .build();
         CustomAudienceSignals obj2 =
                 CustomAudienceSignalsFixture.aCustomAudienceSignalsBuilder()
-                        .setBuyer(CommonFixture.VALID_BUYER)
+                        .setBuyer(CommonFixture.VALID_BUYER_1)
                         .setName("a-different-name")
                         .build();
 

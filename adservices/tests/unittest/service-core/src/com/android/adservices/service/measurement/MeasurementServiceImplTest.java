@@ -71,6 +71,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -1267,6 +1268,8 @@ public final class MeasurementServiceImplTest {
                 .setOriginUris(Collections.emptyList())
                 .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
                 .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
+                .setStart(Instant.MIN)
+                .setEnd(Instant.MAX)
                 .build();
     }
 

@@ -51,7 +51,7 @@ public class AdBiddingOutcomeTest {
     private static final CustomAudienceSignals CUSTOM_AUDIENCE_SIGNALS =
             new CustomAudienceSignals.Builder()
                     .setOwner(CustomAudienceFixture.VALID_OWNER)
-                    .setBuyer(CommonFixture.VALID_BUYER)
+                    .setBuyer(CommonFixture.VALID_BUYER_1)
                     .setName(NAME)
                     .setActivationTime(ACTIVATION_TIME)
                     .setExpirationTime(EXPIRATION_TIME)

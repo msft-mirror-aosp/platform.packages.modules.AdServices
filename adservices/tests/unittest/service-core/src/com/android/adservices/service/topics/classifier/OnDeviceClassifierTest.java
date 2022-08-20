@@ -187,6 +187,29 @@ public class OnDeviceClassifierTest {
     }
 
     @Test
+    public void testClassify_successfulClassifications_overrideClassifierThreshold() {
+        // Check getClassification for sample descriptions.
+        String appPackage1 = "com.example.adservices.samples.topics.sampleapp1";
+        ImmutableMap<String, AppInfo> appInfoMap =
+                ImmutableMap.<String, AppInfo>builder()
+                        .put(appPackage1, new AppInfo("appName1", "Sample app description."))
+                        .build();
+        ImmutableSet<String> appPackages = ImmutableSet.of(appPackage1);
+        when(mPackageManagerUtil.getAppInformation(eq(appPackages))).thenReturn(appInfoMap);
+        // Override classifierThreshold.
+        float overrideThreshold = 0.1f;
+        setClassifierThreshold(overrideThreshold);
+
+        ImmutableMap<String, List<Topic>> classifications =
+                mOnDeviceClassifier.classify(appPackages);
+
+        verify(mPackageManagerUtil).getAppInformation(eq(appPackages));
+        assertThat(classifications).hasSize(1);
+        // Expecting 2 values greater than 0.1 threshold.
+        assertThat(classifications.get(appPackage1)).hasSize(2);
+    }
+
+    @Test
     public void testClassify_successfulClassificationsForUpdatedAppDescription() {
         // Check getClassification for sample descriptions.
         String appPackage1 = "com.example.adservices.samples.topics.sampleapp1";
@@ -345,6 +368,14 @@ public class OnDeviceClassifierTest {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 "classifier_number_of_top_labels",
                 Integer.toString(overrideValue),
+                /* makeDefault */ false);
+    }
+
+    private void setClassifierThreshold(float overrideValue) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "classifier_threshold",
+                Float.toString(overrideValue),
                 /* makeDefault */ false);
     }
 }
