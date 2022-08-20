@@ -14,12 +14,11 @@
      limitations under the License.
 -->
 <androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        android:id="@+id/main_fragment"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical" >
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main_fragment"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -30,121 +29,101 @@
             android:orientation="vertical"
             android:focusableInTouchMode="true" >
             <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingStart="24dp"
-                    android:paddingEnd="24dp"
-                    android:orientation="vertical"
-                    android:focusableInTouchMode="true" >
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="24dp"
+                android:paddingEnd="24dp"
+                android:orientation="vertical"
+                android:focusableInTouchMode="true" >
                 <TextView
-                        android:text="@string/settingsUI_main_view_subtitle"
-                        style="@style/MainStyle.Body2" />
+                    android:text="@string/settingsUI_main_view_subtitle"
+                    style="@style/MainStyle.Body2" />
 
                 <ImageView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:src="@drawable/ic_main_view_image"
-                        tools:ignore="ContentDescription" />
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:src="@drawable/ic_main_view_image"
+                    tools:ignore="ContentDescription" />
             </LinearLayout>
 
             <com.android.settingslib.widget.MainSwitchBar
-                    android:id="@+id/main_switch_bar"
-                    android:layout_height="wrap_content"
-                    android:layout_width="match_parent"
-                    android:title="@string/settingsUI_privacy_sandbox_beta_switch_title"
-                    android:summary="@string/settingsUI_privacy_sandbox_beta_switch_summary" />
+                android:id="@+id/main_switch_bar"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:title="@string/settingsUI_privacy_sandbox_beta_switch_title"
+                android:textDirection="locale" />
             <LinearLayout
                 android:id="@+id/privacy_sandbox_controls"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical" >
-                <LinearLayout
+                <TextView
                     android:id="@+id/topics_preference"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
+                    android:background="?android:attr/selectableItemBackground"
+                    android:layout_marginTop="0dp"
                     android:padding="20dp"
-                    android:key="topics_preference"
-                    android:background="?android:attr/selectableItemBackground" >
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/settingsUI_topics_title"
-                        android:textAppearance="@style/TextAppearance.H5" />
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/settingsUI_topics_summary"
-                        android:textAppearance="@style/TextAppearance.Body2"
-                        android:textColor="@color/secondary_text_color" />
-                </LinearLayout>
-                <LinearLayout
+                    android:text="@string/settingsUI_topics_title"
+                    style="@style/MainStyle.H5" />
+                <TextView
                     android:id="@+id/apps_preference"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
+                    android:background="?android:attr/selectableItemBackground"
+                    android:layout_marginTop="0dp"
                     android:padding="20dp"
-                    android:key="topics_preference"
-                    android:background="?android:attr/selectableItemBackground" >
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/settingsUI_apps_title"
-                        android:textAppearance="@style/TextAppearance.H5" />
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/settingsUI_apps_summary"
-                        android:textAppearance="@style/TextAppearance.Body2"
-                        android:textColor="@color/secondary_text_color" />
-                </LinearLayout>
+                    android:text="@string/settingsUI_apps_title"
+                    style="@style/MainStyle.H5" />
             </LinearLayout>
 
             <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingStart="24dp"
-                    android:paddingEnd="24dp"
-                    android:paddingBottom="24dp"
-                    android:orientation="vertical"
-                    android:focusableInTouchMode="true" >
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="24dp"
+                android:paddingBottom="48dp"
+                android:orientation="vertical"
+                android:focusableInTouchMode="true" >
                 <ImageView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:layout_marginStart="2dp"
-                        android:src="@drawable/ic_info_icon"
-                        tools:ignore="ContentDescription" />
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginStart="2dp"
+                    android:src="@drawable/ic_info_icon"
+                    tools:ignore="ContentDescription" />
 
                 <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="18dp"
-                        android:text="@string/settingsUI_main_view_info_text1"
-                        android:textAppearance="@style/TextAppearance.Body2.Bold" />
+                    android:layout_marginTop="18dp"
+                    android:layout_marginStart="0dp"
+                    android:text="@string/settingsUI_main_view_info_text1"
+                    style="@style/MainStyle.Body2BoldBullet" />
                 <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="18dp"
-                        android:text="@string/settingsUI_main_view_info_text2"
-                        android:textAppearance="@style/TextAppearance.Body2" />
+                    android:layout_marginTop="18dp"
+                    android:text="@string/settingsUI_main_view_info_text2"
+                    style="@style/MainStyle.Body2" />
                 <TextView
-                        android:layout_marginStart="18dp"
-                        android:text="@string/settingsUI_main_view_info_text3"
-                        style="@style/MainStyle.Body2BoldBullet" />
+                    android:layout_marginTop="18dp"
+                    android:layout_marginStart="0dp"
+                    android:text="@string/settingsUI_main_view_info_text3"
+                    style="@style/MainStyle.Body2BoldBullet" />
                 <TextView
-                        android:text="@string/settingsUI_main_view_info_text4"
-                        style="@style/MainStyle.Body2BoldBullet" />
+                    android:text="@string/settingsUI_main_view_info_text4"
+                    style="@style/MainStyle.Body2BoldBullet" />
                 <TextView
-                        android:text="@string/settingsUI_main_view_info_text5"
-                        style="@style/MainStyle.Body2BulletSubtext" />
+                    android:text="@string/settingsUI_main_view_info_text5"
+                    style="@style/MainStyle.Body2BulletSubtext" />
                 <TextView
-                        android:text="@string/settingsUI_main_view_info_text6"
-                        style="@style/MainStyle.Body2BoldBullet" />
+                    android:text="@string/settingsUI_main_view_info_text6"
+                    style="@style/MainStyle.Body2BoldBullet" />
                 <TextView
-                        android:text="@string/settingsUI_main_view_info_text7"
-                        style="@style/MainStyle.Body2BulletSubtext" />
+                    android:text="@string/settingsUI_main_view_info_text7"
+                    style="@style/MainStyle.Body2BulletSubtext" />
+                <TextView
+                    android:layout_marginTop="18dp"
+                    android:layout_marginStart="0dp"
+                    android:text="@string/settingsUI_main_view_info_text8"
+                    style="@style/MainStyle.Body2BoldBullet" />
+                <TextView
+                    android:layout_marginTop="18dp"
+                    android:text="@string/settingsUI_main_view_info_text9"
+                    style="@style/MainStyle.Body2" />
             </LinearLayout>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

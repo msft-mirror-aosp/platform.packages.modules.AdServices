@@ -51,6 +51,8 @@ public final class PhFlags implements Flags {
 
     // Topics classifier keys
     static final String KEY_CLASSIFIER_TYPE = "classifier_type";
+    static final String KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS = "classifier_number_of_top_labels";
+    static final String KEY_CLASSIFIER_THRESHOLD = "classifier_threshold";
 
     // Measurement keys
     static final String KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS =
@@ -138,6 +140,7 @@ public final class PhFlags implements Flags {
     static final String KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY =
             "topics_number_of_epochs_to_keep_in_history";
 
+    // Fledge invoking app status keys
     static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION =
             "fledge_ad_selection_enforce_foreground_status_run_ad_selection";
     static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION =
@@ -145,10 +148,14 @@ public final class PhFlags implements Flags {
     static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE =
             "fledge_ad_selection_enforce_foreground_status_ad_selection_override";
     static final String KEY_FOREGROUND_STATUS_LEVEL = "foreground_validation_status_level";
-
     static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE =
             "fledge_ad_selection_enforce_foreground_status_custom_audience";
     static final String KEY_ENFORCE_FOREGROUND_STATUS_TOPICS = "topics_enforce_foreground_status";
+
+    // Fledge JS isolate setting keys
+    static final String KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE =
+            "fledge_js_isolate_enforce_max_heap_size";
+    static final String KEY_ISOLATE_MAX_HEAP_SIZE_BYTES = "fledge_js_isolate_max_heap_size_bytes";
 
     // MDD keys.
     static final String KEY_DOWNLOADER_CONNECTION_TIMEOUT_MS = "downloader_connection_timeout_ms";
@@ -204,8 +211,9 @@ public final class PhFlags implements Flags {
     // Adservices enable status keys.
     static final String KEY_ADSERVICES_ENABLE_STATUS = "adservice_enable_status";
 
-    // Disable Topics enrollment check.
+    // Disable enrollment check
     static final String KEY_DISABLE_TOPICS_ENROLLMENT_CHECK = "disable_topics_enrollment_check";
+    static final String KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK = "disable_fledge_enrollment_check";
 
     // SystemProperty prefix. We can use SystemProperty to override the AdService Configs.
     private static final String SYSTEM_PROPERTY_PREFIX = "debug.adservices.";
@@ -214,7 +222,7 @@ public final class PhFlags implements Flags {
     static final String KEY_CONSENT_NOTIFICATION_DEBUG_MODE = "consent_notification_debug_mode";
 
     // App/SDK AllowList/DenyList keys that have access to the web registration APIs
-    static final String KEY_WEB_CONTEXT_REGISTRATION_CLIENT_ALLOW_LIST =
+    static final String KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST =
             "web_context_registration_client_allow_list";
 
     private static final PhFlags sSingleton = new PhFlags();
@@ -298,6 +306,27 @@ public final class PhFlags implements Flags {
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_CLASSIFIER_TYPE,
                         /* defaultValue */ DEFAULT_CLASSIFIER_TYPE));
+    }
+
+    @Override
+    public int getClassifierNumberOfTopLabels() {
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        return SystemProperties.getInt(
+                getSystemPropertyName(KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS),
+                DeviceConfig.getInt(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS,
+                        /* defaultValue */ CLASSIFIER_NUMBER_OF_TOP_LABELS));
+    }
+
+    @Override
+    public float getClassifierThreshold() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getFloat(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_CLASSIFIER_THRESHOLD,
+                /* defaultValue */ CLASSIFIER_THRESHOLD);
     }
 
     @Override
@@ -1104,6 +1133,16 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getDisableFledgeEnrollmentCheck() {
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK),
+                /* defaultValue */ DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK,
+                        /* defaultValue */ DISABLE_FLEDGE_ENROLLMENT_CHECK));
+    }
+
+    @Override
     public boolean getEnforceForegroundStatusForTopics() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_ENFORCE_FOREGROUND_STATUS_TOPICS),
@@ -1154,11 +1193,27 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public String getWebContextRegistrationClientAppAllowList() {
+    public boolean getEnforceIsolateMaxHeapSize() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE,
+                /* defaultValue */ ENFORCE_ISOLATE_MAX_HEAP_SIZE);
+    }
+
+    @Override
+    public long getIsolateMaxHeapSizeBytes() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ISOLATE_MAX_HEAP_SIZE_BYTES,
+                /* defaultValue */ ISOLATE_MAX_HEAP_SIZE_BYTES);
+    }
+
+    @Override
+    public String getWebContextClientAppAllowList() {
         return DeviceConfig.getString(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_WEB_CONTEXT_REGISTRATION_CLIENT_ALLOW_LIST,
-                /* defaultValue */ WEB_CONTEXT_REGISTRATION_CLIENT_ALLOW_LIST);
+                /* flagName */ KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST,
+                /* defaultValue */ WEB_CONTEXT_CLIENT_ALLOW_LIST);
     }
 
     @VisibleForTesting
@@ -1179,6 +1234,8 @@ public final class PhFlags implements Flags {
         writer.println("==== AdServices PH Flags Dump Enrollment ====");
         writer.println(
                 "\t" + DISABLE_TOPICS_ENROLLMENT_CHECK + " = " + isDisableTopicsEnrollmentCheck());
+        writer.println(
+                "\t" + DISABLE_FLEDGE_ENROLLMENT_CHECK + " = " + getDisableFledgeEnrollmentCheck());
 
         writer.println("==== AdServices PH Flags Dump killswitches ====");
         writer.println("\t" + KEY_GLOBAL_KILL_SWITCH + " = " + getGlobalKillSwitch());
@@ -1426,6 +1483,12 @@ public final class PhFlags implements Flags {
                         + KEY_FOREGROUND_STATUS_LEVEL
                         + " = "
                         + getForegroundStatuslLevelForValidation());
+
+        writer.println(
+                "\t" + KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE + " = " + getEnforceIsolateMaxHeapSize());
+
+        writer.println(
+                "\t" + KEY_ISOLATE_MAX_HEAP_SIZE_BYTES + " = " + getIsolateMaxHeapSizeBytes());
 
         writer.println("==== AdServices PH Flags Dump STATUS ====");
         writer.println("\t" + KEY_ADSERVICES_ENABLE_STATUS + " = " + getAdservicesEnableStatus());

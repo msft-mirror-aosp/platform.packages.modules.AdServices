@@ -40,6 +40,7 @@ import static org.mockito.Mockito.when;
 import android.app.job.JobScheduler;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.SystemClock;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
@@ -170,6 +171,7 @@ public class ConsentManagerTest {
         when(mPackageManagerMock.hasSystemFeature(EEA_DEVICE)).thenReturn(true);
         mConsentManager.disable(mContextSpy);
 
+        SystemClock.sleep(1000);
         verify(mTopicsWorker, times(1)).clearAllTopicsData(any());
         // TODO(b/240988406): change to test for correct method call
         verify(mAppConsentDao, times(1)).clearAllConsentData();
@@ -397,6 +399,7 @@ public class ConsentManagerTest {
         App appWithRevokedConsent = appsWithRevokedConsent.get(0);
         assertThat(appWithRevokedConsent.getPackageName()).isEqualTo(app.getPackageName());
 
+        SystemClock.sleep(1000);
         verify(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(app.getPackageName());
     }
 
@@ -433,6 +436,7 @@ public class ConsentManagerTest {
         App appWithRevokedConsent = appsWithRevokedConsent.get(0);
         assertThat(appWithRevokedConsent.getPackageName()).isEqualTo(app.getPackageName());
 
+        SystemClock.sleep(1000);
         verify(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(app.getPackageName());
 
         // restore consent for first app
@@ -516,6 +520,7 @@ public class ConsentManagerTest {
         assertThat(knownAppsWithConsent).isEmpty();
         assertThat(appsWithRevokedConsent).isEmpty();
 
+        SystemClock.sleep(1000);
         verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
     }
 
@@ -566,6 +571,7 @@ public class ConsentManagerTest {
                                 .map(App::getPackageName)
                                 .collect(Collectors.toList()));
 
+        SystemClock.sleep(1000);
         verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
     }
 

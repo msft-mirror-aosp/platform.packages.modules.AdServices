@@ -35,6 +35,7 @@ import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 import org.junit.After;
 import org.junit.AssumptionViolatedException;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -837,6 +838,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
+    @Ignore("b/242294416")
     public void testSdkDataSubDirectory_PerSdkStorageIsUsable_DifferentVolume() throws Exception {
         installPackage(TEST_APP_STORAGE_APK);
 

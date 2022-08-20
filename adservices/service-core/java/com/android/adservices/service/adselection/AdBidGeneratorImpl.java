@@ -36,12 +36,12 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.js.IsolateSettings;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 
 import org.json.JSONException;
@@ -49,7 +49,6 @@ import org.json.JSONException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -77,7 +76,8 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             "Bidding failed for unexpected error";
 
     @NonNull private final Context mContext;
-    @NonNull private final ListeningExecutorService mListeningExecutorService;
+    @NonNull private final ListeningExecutorService mLightweightExecutorService;
+    @NonNull private final ListeningExecutorService mBackgroundExecutorService;
     @NonNull private final AdSelectionScriptEngine mAdSelectionScriptEngine;
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull private final CustomAudienceDevOverridesHelper mCustomAudienceDevOverridesHelper;
@@ -85,39 +85,56 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
 
     public AdBidGeneratorImpl(
             @NonNull Context context,
-            @NonNull ExecutorService listeningExecutorService,
+            @NonNull AdServicesHttpsClient adServicesHttpsClient,
+            @NonNull ListeningExecutorService lightweightExecutorService,
+            @NonNull ListeningExecutorService backgroundExecutorService,
             @NonNull DevContext devContext,
             @NonNull CustomAudienceDao customAudienceDao,
             @NonNull Flags flags) {
         Objects.requireNonNull(context);
-        Objects.requireNonNull(listeningExecutorService);
+        Objects.requireNonNull(adServicesHttpsClient);
+        Objects.requireNonNull(lightweightExecutorService);
+        Objects.requireNonNull(backgroundExecutorService);
+        Objects.requireNonNull(devContext);
+        Objects.requireNonNull(customAudienceDao);
+        Objects.requireNonNull(flags);
 
         mContext = context;
-        mListeningExecutorService = MoreExecutors.listeningDecorator(listeningExecutorService);
-        mAdSelectionScriptEngine = new AdSelectionScriptEngine(mContext);
-        mAdServicesHttpsClient = new AdServicesHttpsClient(listeningExecutorService);
+        mLightweightExecutorService = lightweightExecutorService;
+        mBackgroundExecutorService = backgroundExecutorService;
+        mAdServicesHttpsClient = adServicesHttpsClient;
         mCustomAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(devContext, customAudienceDao);
         mFlags = flags;
+        mAdSelectionScriptEngine =
+                new AdSelectionScriptEngine(
+                        mContext,
+                        () -> mFlags.getEnforceIsolateMaxHeapSize(),
+                        () -> mFlags.getIsolateMaxHeapSizeBytes());
     }
 
     @VisibleForTesting
     AdBidGeneratorImpl(
             @NonNull Context context,
-            @NonNull ListeningExecutorService listeningExecutorService,
+            @NonNull ListeningExecutorService lightWeightExecutorService,
+            @NonNull ListeningExecutorService backgroundExecutorService,
             @NonNull AdSelectionScriptEngine adSelectionScriptEngine,
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper,
-            @NonNull Flags flags) {
+            @NonNull Flags flags,
+            @NonNull IsolateSettings isolateSettings) {
         Objects.requireNonNull(context);
-        Objects.requireNonNull(listeningExecutorService);
+        Objects.requireNonNull(lightWeightExecutorService);
+        Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(adSelectionScriptEngine);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(customAudienceDevOverridesHelper);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(isolateSettings);
 
         mContext = context;
-        mListeningExecutorService = listeningExecutorService;
+        mLightweightExecutorService = lightWeightExecutorService;
+        mBackgroundExecutorService = backgroundExecutorService;
         mAdSelectionScriptEngine = adSelectionScriptEngine;
         mAdServicesHttpsClient = adServicesHttpsClient;
         mCustomAudienceDevOverridesHelper = customAudienceDevOverridesHelper;
@@ -169,7 +186,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                                     userSignals,
                                     adSelectionSignals);
                         },
-                        mListeningExecutorService);
+                        mLightweightExecutorService);
         return adWithBidPair
                 .transform(
                         candidate -> {
@@ -195,18 +212,19 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                             LogUtil.d("Bidding for CA %s transformed", customAudience.getName());
                             return result;
                         },
-                        mListeningExecutorService)
+                        mLightweightExecutorService)
                 .withTimeout(
                         mFlags.getAdSelectionBiddingTimeoutPerCaMs(),
                         TimeUnit.MILLISECONDS,
                         // TODO(b/237103033): Comply with thread usage policy for AdServices;
                         //  use a global scheduled executor
                         new ScheduledThreadPoolExecutor(1))
-                .catching(JSONException.class, this::handleBiddingError, mListeningExecutorService)
+                .catching(
+                        JSONException.class, this::handleBiddingError, mLightweightExecutorService)
                 .catching(
                         TimeoutException.class,
                         this::handleTimeoutError,
-                        mListeningExecutorService);
+                        mLightweightExecutorService);
     }
 
     @Nullable
@@ -242,7 +260,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
 
         FluentFuture<AdSelectionSignals> trustedSignalsOverride =
                 FluentFuture.from(
-                        mListeningExecutorService.submit(
+                        mBackgroundExecutorService.submit(
                                 () ->
                                         mCustomAudienceDevOverridesHelper
                                                 .getTrustedBiddingSignalsOverride(
@@ -256,7 +274,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                                         mAdServicesHttpsClient.fetchPayload(
                                                 trustedBiddingUriWithKeys),
                                         s -> s == null ? null : AdSelectionSignals.fromString(s),
-                                        mListeningExecutorService);
+                                        mLightweightExecutorService);
                             } else {
                                 LogUtil.d(
                                         "Developer options enabled and override trusted signals"
@@ -265,14 +283,14 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                                 return Futures.immediateFuture(jsOverride);
                             }
                         },
-                        mListeningExecutorService)
+                        mLightweightExecutorService)
                 .catching(
                         Exception.class,
                         e -> {
                             LogUtil.w(e, "Exception encountered when fetching trusted signals");
                             throw new IllegalStateException(MISSING_TRUSTED_BIDDING_SIGNALS);
                         },
-                        mListeningExecutorService);
+                        mLightweightExecutorService);
     }
 
     private FluentFuture<String> getBuyerDecisionLogic(
@@ -282,7 +300,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             @NonNull String name) {
         FluentFuture<String> jsOverrideFuture =
                 FluentFuture.from(
-                        mListeningExecutorService.submit(
+                        mBackgroundExecutorService.submit(
                                 () ->
                                         mCustomAudienceDevOverridesHelper.getBiddingLogicOverride(
                                                 owner, buyer, name)));
@@ -302,7 +320,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                                 return Futures.immediateFuture(jsOverride);
                             }
                         },
-                        mListeningExecutorService)
+                        mLightweightExecutorService)
                 .catching(
                         Exception.class,
                         e -> {
@@ -310,7 +328,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                                     e, "Exception encountered when fetching buyer decision logic");
                             throw new IllegalStateException(MISSING_BIDDING_LOGIC);
                         },
-                        mListeningExecutorService);
+                        mLightweightExecutorService);
     }
 
     /**
@@ -337,14 +355,12 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             @NonNull CustomAudienceSignals customAudienceSignals,
             @NonNull AdSelectionSignals userSignals,
             @NonNull AdSelectionSignals adSelectionSignals) {
-
         FluentFuture<AdSelectionSignals> trustedBiddingSignals =
                 getTrustedBiddingSignals(
                         customAudience.getTrustedBiddingData(),
                         customAudience.getOwner(),
                         customAudience.getBuyer(),
                         customAudience.getName());
-
         // TODO(b/231265311): update AdSelectionScriptEngine AdData class objects with DBAdData
         //  classes and remove this conversion.
         List<AdData> ads =
@@ -354,7 +370,6 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                                     return new AdData(adData.getRenderUri(), adData.getMetadata());
                                 })
                         .collect(Collectors.toList());
-
         return trustedBiddingSignals
                 .transformAsync(
                         biddingSignals -> {
@@ -368,13 +383,13 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                                     userSignals,
                                     customAudienceSignals);
                         },
-                        mListeningExecutorService)
+                        mLightweightExecutorService)
                 .transform(
                         adWithBids -> {
                             return new Pair<>(
                                     getBestAdWithBidPerCA(adWithBids), buyerDecisionLogicJs);
                         },
-                        mListeningExecutorService);
+                        mLightweightExecutorService);
     }
 
     @Nullable

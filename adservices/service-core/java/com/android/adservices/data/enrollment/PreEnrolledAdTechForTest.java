@@ -25,7 +25,12 @@ import java.util.List;
 final class PreEnrolledAdTechForTest {
 
     static List<EnrollmentData> getList() {
-        return Arrays.asList(SIMPLE_ENROLLMENT, ONE_SDK_MULTIPLE_URLS, SECOND_ENROLLMENT);
+        return Arrays.asList(
+              SIMPLE_ENROLLMENT,
+              ONE_SDK_MULTIPLE_URLS,
+              SECOND_ENROLLMENT,
+              TOPICS_SAMPLE_APPS
+            );
     }
 
     private static final EnrollmentData SIMPLE_ENROLLMENT =
@@ -67,4 +72,25 @@ final class PreEnrolledAdTechForTest {
                     .setRemarketingResponseBasedRegistrationUrl(Arrays.asList("https://test3.com"))
                     .setEncryptionKeyUrl(Arrays.asList("https://test3.com/keys"))
                     .build();
+
+    private static final EnrollmentData TOPICS_SAMPLE_APPS =
+            new EnrollmentData.Builder()
+                    .setEnrollmentId("E4")
+                    .setCompanyId("1001")
+                    .setSdkNames(
+                            Arrays.asList(
+                                    "SdkName1",
+                                    "SdkName2",
+                                    "SdkName3",
+                                    "SdkName4",
+                                    "SdkName5"
+                            )
+                     )
+                    .setAttributionSourceRegistrationUrl(Arrays.asList("https://test.com/source"))
+                    .setAttributionTriggerRegistrationUrl(Arrays.asList("https://test.com/trigger"))
+                    .setAttributionReportingUrl(Arrays.asList("https://test.com"))
+                    .setRemarketingResponseBasedRegistrationUrl(Arrays.asList("https://test.com"))
+                    .setEncryptionKeyUrl(Arrays.asList("https://test.com/keys"))
+                    .build();
+
 }

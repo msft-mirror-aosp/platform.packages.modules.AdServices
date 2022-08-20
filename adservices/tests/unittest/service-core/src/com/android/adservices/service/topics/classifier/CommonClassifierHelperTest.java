@@ -30,11 +30,15 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.MockRandom;
 import com.android.adservices.data.topics.Topic;
 
+import com.google.android.libraries.mobiledatadownload.file.SynchronousFileStorage;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.mobiledatadownload.ClientConfigProto.ClientFile;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -60,8 +64,7 @@ public class CommonClassifierHelperTest {
     private static final String TEST_CLASSIFIER_ASSETS_METADATA_PATH =
             "classifier/classifier_test_assets_metadata.json";
     private static final String PRODUCTION_LABELS_FILE_PATH = "classifier/labels_topics.txt";
-    private static final String PRODUCTION_APPS_FILE_PATH =
-            "classifier/precomputed_app_list.csv";
+    private static final String PRODUCTION_APPS_FILE_PATH = "classifier/precomputed_app_list.csv";
     private static final String PRODUCTION_CLASSIFIER_ASSETS_METADATA_PATH =
             "classifier/classifier_assets_metadata.json";
     private static final String BUNDLED_MODEL_FILE_PATH = "classifier/model.tflite";
@@ -78,21 +81,31 @@ public class CommonClassifierHelperTest {
     private long mProductionTaxonomyVersion;
     private long mProductionModelVersion;
 
+    @Mock SynchronousFileStorage mMockFileStorage;
+    @Mock Map<String, ClientFile> mMockDownloadedFiles;
+
     @Before
     public void setUp() {
-        mTestModelManager = new ModelManager(
-                sContext,
-                TEST_LABELS_FILE_PATH,
-                TEST_PRECOMPUTED_FILE_PATH,
-                TEST_CLASSIFIER_ASSETS_METADATA_PATH,
-                BUNDLED_MODEL_FILE_PATH);
+        MockitoAnnotations.initMocks(this);
+        mTestModelManager =
+                new ModelManager(
+                        sContext,
+                        TEST_LABELS_FILE_PATH,
+                        TEST_PRECOMPUTED_FILE_PATH,
+                        TEST_CLASSIFIER_ASSETS_METADATA_PATH,
+                        BUNDLED_MODEL_FILE_PATH,
+                        mMockFileStorage,
+                        mMockDownloadedFiles);
 
-        mProductionModelManager = new ModelManager(
-                sContext,
-                PRODUCTION_LABELS_FILE_PATH,
-                PRODUCTION_APPS_FILE_PATH,
-                PRODUCTION_CLASSIFIER_ASSETS_METADATA_PATH,
-                BUNDLED_MODEL_FILE_PATH);
+        mProductionModelManager =
+                new ModelManager(
+                        sContext,
+                        PRODUCTION_LABELS_FILE_PATH,
+                        PRODUCTION_APPS_FILE_PATH,
+                        PRODUCTION_CLASSIFIER_ASSETS_METADATA_PATH,
+                        BUNDLED_MODEL_FILE_PATH,
+                        mMockFileStorage,
+                        mMockDownloadedFiles);
 
         testLabels = mTestModelManager.retrieveLabels();
         testClassifierAssetsMetadata = mTestModelManager.retrieveClassifierAssetsMetadata();
@@ -436,34 +449,38 @@ public class CommonClassifierHelperTest {
     public void testComputeTestAssetChecksum() {
         // Compute SHA256 checksum of labels topics file in test assets and check the result
         // can match the checksum saved in the test classifier assets metadata file.
-        String labelsTestTopicsChecksum = computeClassifierAssetChecksum(
-                sContext.getAssets(), TEST_LABELS_FILE_PATH);
-        assertThat(labelsTestTopicsChecksum).isEqualTo(
-                testClassifierAssetsMetadata.get("labels_topics").get("checksum"));
+        String labelsTestTopicsChecksum =
+                computeClassifierAssetChecksum(sContext.getAssets(), TEST_LABELS_FILE_PATH);
+        assertThat(labelsTestTopicsChecksum)
+                .isEqualTo(testClassifierAssetsMetadata.get("labels_topics").get("checksum"));
 
         // Compute SHA256 checksum of precomputed apps topics file in test assets
         // and check the result can match the checksum saved in the classifier assets metadata file.
-        String precomputedAppsTestChecksum = computeClassifierAssetChecksum(
-                sContext.getAssets(), TEST_PRECOMPUTED_FILE_PATH);
-        assertThat(precomputedAppsTestChecksum).isEqualTo(
-                testClassifierAssetsMetadata.get("precomputed_app_list").get("checksum"));
+        String precomputedAppsTestChecksum =
+                computeClassifierAssetChecksum(sContext.getAssets(), TEST_PRECOMPUTED_FILE_PATH);
+        assertThat(precomputedAppsTestChecksum)
+                .isEqualTo(
+                        testClassifierAssetsMetadata.get("precomputed_app_list").get("checksum"));
     }
 
     @Test
     public void testComputeProductionAssetChecksum() {
         // Compute SHA256 checksum of labels topics file in production assets and check the result
         // can match the checksum saved in the production classifier assets metadata file.
-        String labelsProductionTopicsChecksum = computeClassifierAssetChecksum(
-                sContext.getAssets(), PRODUCTION_LABELS_FILE_PATH);
-        assertThat(labelsProductionTopicsChecksum).isEqualTo(
-                productionClassifierAssetsMetadata.get("labels_topics").get("checksum"));
+        String labelsProductionTopicsChecksum =
+                computeClassifierAssetChecksum(sContext.getAssets(), PRODUCTION_LABELS_FILE_PATH);
+        assertThat(labelsProductionTopicsChecksum)
+                .isEqualTo(productionClassifierAssetsMetadata.get("labels_topics").get("checksum"));
 
         // Compute SHA256 checksum of precomputed apps topics file in production assets
         // and check the result can match the checksum saved in the classifier assets metadata file.
-        String precomputedAppsProductionChecksum = computeClassifierAssetChecksum(
-                sContext.getAssets(), PRODUCTION_APPS_FILE_PATH);
-        assertThat(precomputedAppsProductionChecksum).isEqualTo(
-                productionClassifierAssetsMetadata.get("precomputed_app_list").get("checksum"));
+        String precomputedAppsProductionChecksum =
+                computeClassifierAssetChecksum(sContext.getAssets(), PRODUCTION_APPS_FILE_PATH);
+        assertThat(precomputedAppsProductionChecksum)
+                .isEqualTo(
+                        productionClassifierAssetsMetadata
+                                .get("precomputed_app_list")
+                                .get("checksum"));
     }
 
     private Topic getTestTopic(int topicId) {

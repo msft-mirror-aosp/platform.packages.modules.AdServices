@@ -27,10 +27,12 @@ import static androidx.test.espresso.matcher.ViewMatchers.withClassName;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
+import android.content.Context;
 import android.graphics.Rect;
 import android.util.Log;
 import android.view.View;
@@ -54,10 +56,12 @@ import com.android.adservices.api.R;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.consent.App;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.topics.classifier.ModelManager;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment;
 import com.android.adservices.ui.settings.viewmodels.AppsViewModel;
 import com.android.adservices.ui.settings.viewmodels.MainViewModel;
 import com.android.adservices.ui.settings.viewmodels.TopicsViewModel;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
 
@@ -65,7 +69,10 @@ import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -75,6 +82,9 @@ import java.util.List;
 public class SettingsActivityTest {
     static ViewModelProvider sViewModelProvider = Mockito.mock(ViewModelProvider.class);
     static ConsentManager sConsentManager;
+    private MockitoSession mStaticMockSession;
+
+    @Mock ModelManager mModelManager;
 
     private static final class NestedScrollToAction implements ViewAction {
         private static final String TAG =
@@ -110,8 +120,8 @@ public class SettingsActivityTest {
                         .withViewDescription(HumanReadables.describe(view))
                         .withCause(
                                 new RuntimeException(
-                                        "Scrolling to view was attempted, but the view is not " +
-                                                "displayed"))
+                                        "Scrolling to view was attempted, but the view is not "
+                                                + "displayed"))
                         .build();
             }
         }
@@ -144,51 +154,64 @@ public class SettingsActivityTest {
      *
      * @return the mocked {@link ViewModelProvider}
      */
-    public static ViewModelProvider generateMockedViewModelProvider() {
-        sConsentManager =
-                spy(ConsentManager.getInstance(ApplicationProvider.getApplicationContext()));
-        List<Topic> tempList = new ArrayList<>();
-        tempList.add(Topic.create(10001, 1, 1));
-        tempList.add(Topic.create(10002, 1, 1));
-        tempList.add(Topic.create(10003, 1, 1));
-        ImmutableList<Topic> topicsList = ImmutableList.copyOf(tempList);
-        doReturn(topicsList).when(sConsentManager).getKnownTopicsWithConsent();
-
-        tempList = new ArrayList<>();
-        tempList.add(Topic.create(10004, 1, 1));
-        tempList.add(Topic.create(10005, 1, 1));
-        ImmutableList<Topic> blockedTopicsList = ImmutableList.copyOf(tempList);
-        doReturn(blockedTopicsList).when(sConsentManager).getTopicsWithRevokedConsent();
-
-        List<App> appTempList = new ArrayList<>();
-        appTempList.add(App.create("app1"));
-        appTempList.add(App.create("app2"));
-        ImmutableList<App> appsList = ImmutableList.copyOf(appTempList);
-        doReturn(appsList).when(sConsentManager).getKnownAppsWithConsent();
-
-        appTempList = new ArrayList<>();
-        appTempList.add(App.create("app3"));
-        ImmutableList<App> blockedAppsList = ImmutableList.copyOf(appTempList);
-        doReturn(blockedAppsList).when(sConsentManager).getAppsWithRevokedConsent();
-
-        doNothing().when(sConsentManager).resetTopicsAndBlockedTopics();
+    public ViewModelProvider generateMockedViewModelProvider() {
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(ModelManager.class)
+                        .strictness(Strictness.WARN)
+                        .initMocks(this)
+                        .startMocking();
         try {
-            doNothing().when(sConsentManager).resetAppsAndBlockedApps();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        doNothing().when(sConsentManager).resetMeasurement();
+            ExtendedMockito.doReturn(mModelManager)
+                    .when(() -> ModelManager.getInstance(any(Context.class)));
+            sConsentManager =
+                    spy(ConsentManager.getInstance(ApplicationProvider.getApplicationContext()));
+            List<Topic> tempList = new ArrayList<>();
+            tempList.add(Topic.create(10001, 1, 1));
+            tempList.add(Topic.create(10002, 1, 1));
+            tempList.add(Topic.create(10003, 1, 1));
+            ImmutableList<Topic> topicsList = ImmutableList.copyOf(tempList);
+            doReturn(topicsList).when(sConsentManager).getKnownTopicsWithConsent();
 
-        TopicsViewModel topicsViewModel =
-                new TopicsViewModel(ApplicationProvider.getApplicationContext(), sConsentManager);
-        AppsViewModel appsViewModel =
-                new AppsViewModel(ApplicationProvider.getApplicationContext(), sConsentManager);
-        MainViewModel mainViewModel =
-                new MainViewModel(ApplicationProvider.getApplicationContext(), sConsentManager);
-        doReturn(topicsViewModel).when(sViewModelProvider).get(TopicsViewModel.class);
-        doReturn(mainViewModel).when(sViewModelProvider).get(MainViewModel.class);
-        doReturn(appsViewModel).when(sViewModelProvider).get(AppsViewModel.class);
-        return sViewModelProvider;
+            tempList = new ArrayList<>();
+            tempList.add(Topic.create(10004, 1, 1));
+            tempList.add(Topic.create(10005, 1, 1));
+            ImmutableList<Topic> blockedTopicsList = ImmutableList.copyOf(tempList);
+            doReturn(blockedTopicsList).when(sConsentManager).getTopicsWithRevokedConsent();
+
+            List<App> appTempList = new ArrayList<>();
+            appTempList.add(App.create("app1"));
+            appTempList.add(App.create("app2"));
+            ImmutableList<App> appsList = ImmutableList.copyOf(appTempList);
+            doReturn(appsList).when(sConsentManager).getKnownAppsWithConsent();
+
+            appTempList = new ArrayList<>();
+            appTempList.add(App.create("app3"));
+            ImmutableList<App> blockedAppsList = ImmutableList.copyOf(appTempList);
+            doReturn(blockedAppsList).when(sConsentManager).getAppsWithRevokedConsent();
+
+            doNothing().when(sConsentManager).resetTopicsAndBlockedTopics();
+            try {
+                doNothing().when(sConsentManager).resetAppsAndBlockedApps();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            doNothing().when(sConsentManager).resetMeasurement();
+
+            TopicsViewModel topicsViewModel =
+                    new TopicsViewModel(
+                            ApplicationProvider.getApplicationContext(), sConsentManager);
+            AppsViewModel appsViewModel =
+                    new AppsViewModel(ApplicationProvider.getApplicationContext(), sConsentManager);
+            MainViewModel mainViewModel =
+                    new MainViewModel(ApplicationProvider.getApplicationContext(), sConsentManager);
+            doReturn(topicsViewModel).when(sViewModelProvider).get(TopicsViewModel.class);
+            doReturn(mainViewModel).when(sViewModelProvider).get(MainViewModel.class);
+            doReturn(appsViewModel).when(sViewModelProvider).get(AppsViewModel.class);
+            return sViewModelProvider;
+        } finally {
+            mStaticMockSession.finishMocking();
+        }
     }
 
     /**
@@ -202,12 +225,11 @@ public class SettingsActivityTest {
 
     /**
      * Test if the strings (settingsUI_topics_title, settingsUI_apps_title,
-     * settingsUI_privacy_sandbox_beta_title) are displayed in {@link
-     * AdServicesSettingsMainFragment}.
+     * settingsUI_main_view_title) are displayed in {@link AdServicesSettingsMainFragment}.
      */
     @Test
     public void test_MainFragmentView_isDisplayed() {
-        onView(withText(R.string.settingsUI_privacy_sandbox_beta_title))
+        onView(withText(R.string.settingsUI_privacy_sandbox_beta_switch_title))
                 .perform(nestedScrollTo())
                 .check(matches(isDisplayed()));
         onView(withText(R.string.settingsUI_topics_title))
@@ -218,9 +240,7 @@ public class SettingsActivityTest {
                 .check(matches(isDisplayed()));
     }
 
-    /**
-     *  Test if {@link MainViewModel} works if Activity is recreated (simulates rotate phone).
-     */
+    /** Test if {@link MainViewModel} works if Activity is recreated (simulates rotate phone). */
     @Test
     public void test_MainViewModel_getConsent() {
         onView(withId(R.id.main_fragment))

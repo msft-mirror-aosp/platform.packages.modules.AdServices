@@ -20,7 +20,6 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_KILLSWITCH_
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 import static android.adservices.common.AdServicesStatusUtils.StatusCode;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
@@ -55,7 +54,7 @@ import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.measurement.access.IAccessResolver;
 import com.android.adservices.service.measurement.access.UserConsentAccessResolver;
-import com.android.adservices.service.measurement.access.WebRegistrationByPackageAccessResolver;
+import com.android.adservices.service.measurement.access.WebContextByPackageAccessResolver;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
@@ -188,8 +187,8 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             request, System.currentTimeMillis()),
                             Arrays.asList(
                                     new UserConsentAccessResolver(mConsentManager),
-                                    new WebRegistrationByPackageAccessResolver(
-                                            mFlags.getWebContextRegistrationClientAppAllowList(),
+                                    new WebContextByPackageAccessResolver(
+                                            mFlags.getWebContextClientAppAllowList(),
                                             request.getPackageName())),
                             callback,
                             AD_SERVICES_API_CALLED__API_NAME__REGISTER_WEB_SOURCE,
@@ -219,22 +218,18 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         }
 
         sBackgroundExecutor.execute(
-                () -> {
-                    performWorkIfAllowed(
-                            mFlags::getMeasurementApiRegisterWebTriggerKillSwitch,
-                            (measurementImpl) ->
-                                    measurementImpl.registerWebTrigger(
-                                            request, System.currentTimeMillis()),
-                            Arrays.asList(
-                                    new UserConsentAccessResolver(mConsentManager),
-                                    new WebRegistrationByPackageAccessResolver(
-                                            mFlags.getWebContextRegistrationClientAppAllowList(),
-                                            request.getPackageName())),
-                            callback,
-                            AD_SERVICES_API_CALLED__API_NAME__REGISTER_WEB_TRIGGER,
-                            request.getPackageName(),
-                            startTime);
-                });
+                () ->
+                        performWorkIfAllowed(
+                                mFlags::getMeasurementApiRegisterWebTriggerKillSwitch,
+                                (measurementImpl) ->
+                                        measurementImpl.registerWebTrigger(
+                                                request, System.currentTimeMillis()),
+                                Collections.singletonList(
+                                        new UserConsentAccessResolver(mConsentManager)),
+                                callback,
+                                AD_SERVICES_API_CALLED__API_NAME__REGISTER_WEB_TRIGGER,
+                                request.getPackageName(),
+                                startTime));
     }
 
     @Override
@@ -269,6 +264,22 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             .setErrorMessage(KILL_SWITCH_ENABLED)
                                             .build());
                             resultCode = STATUS_KILLSWITCH_ENABLED;
+                            return;
+                        }
+
+                        WebContextByPackageAccessResolver webContextAccessResolver =
+                                new WebContextByPackageAccessResolver(
+                                        mFlags.getWebContextClientAppAllowList(),
+                                        request.getPackageName());
+                        if (!webContextAccessResolver.isAllowed(mContext)) {
+                            resultCode = webContextAccessResolver.getErrorStatusCode();
+                            callback.onFailure(
+                                    new MeasurementErrorResponse.Builder()
+                                            .setStatusCode(resultCode)
+                                            .setErrorMessage(
+                                                    webContextAccessResolver.getErrorMessage())
+                                            .build());
+
                             return;
                         }
 
@@ -363,7 +374,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                 statusCode = accessDenier.getErrorStatusCode();
                 callback.onFailure(
                         new MeasurementErrorResponse.Builder()
-                                .setStatusCode(STATUS_USER_CONSENT_REVOKED)
+                                .setStatusCode(statusCode)
                                 .setErrorMessage(accessDenier.getErrorMessage())
                                 .build());
                 return;

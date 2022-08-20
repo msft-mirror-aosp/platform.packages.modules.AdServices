@@ -30,19 +30,6 @@ import android.content.pm.PackageManager;
 public final class PermissionHelper {
     private PermissionHelper() {}
 
-    /** This permission needs to be declared by the caller of Topics APIs. */
-    public static final String ACCESS_ADSERVICES_TOPICS_PERMISSION =
-            "android.permission.ACCESS_ADSERVICES_TOPICS";
-
-    /** This permission needs to be declared by the caller of Attribution APIs. */
-    public static final String ACCESS_ADSERVICES_ATTRIBUTION_PERMISSION =
-            "android.permission.ACCESS_ADSERVICES_ATTRIBUTION";
-
-    /** This permission needs to be declared by the caller of Custom Audiences APIs. */
-    public static final String ACCESS_ADSERVICES_CUSTOM_AUDIENCE_PERMISSION =
-            "android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE";
-
-
     private static boolean checkSdkPermission(
             @NonNull Context context, @NonNull String sdkName, @NonNull String perm) {
         return context.getPackageManager().checkPermission(perm, sdkName)
@@ -73,7 +60,7 @@ public final class PermissionHelper {
         if (useSandboxCheck) {
             // TODO(b/240718367): Add check for SDK permission.
         }
-        return (context.checkCallingOrSelfPermission(AdServicesPermissions.ACCESS_ADSERVICES_ADID)
+        return (context.checkCallingOrSelfPermission(AdServicesPermissions.ACCESS_ADSERVICES_AD_ID)
                 == PackageManager.PERMISSION_GRANTED);
     }
 
@@ -97,6 +84,25 @@ public final class PermissionHelper {
         int status =
                 context.checkCallingOrSelfPermission(
                         AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
+        return status == PackageManager.PERMISSION_GRANTED;
+    }
+
+    /**
+     * @return {@code true} if the caller has the permission to invoke AdService's state
+     *     modification API.
+     */
+    public static boolean hasModifyAdServicesStatePermission(@NonNull Context context) {
+        int status =
+                context.checkCallingOrSelfPermission(AdServicesPermissions.MODIFY_ADSERVICES_STATE);
+        return status == PackageManager.PERMISSION_GRANTED;
+    }
+
+    /**
+     * @return {@code true} if the caller has the permission to invoke AdService's state access API.
+     */
+    public static boolean hasAccessAdServicesStatePermission(@NonNull Context context) {
+        int status =
+                context.checkCallingOrSelfPermission(AdServicesPermissions.ACCESS_ADSERVICES_STATE);
         return status == PackageManager.PERMISSION_GRANTED;
     }
 }

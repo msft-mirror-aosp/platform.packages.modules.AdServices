@@ -17,7 +17,6 @@
 package com.android.adservices.service.common;
 
 import android.annotation.NonNull;
-import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
@@ -124,6 +123,7 @@ public class AppManifestConfigHelper {
      */
     public static boolean isAllowedTopicsAccess(
             @NonNull Context context,
+            @NonNull boolean useSandboxCheck,
             @NonNull String appPackageName,
             @NonNull String enrollmentId) {
         Objects.requireNonNull(appPackageName);
@@ -134,7 +134,7 @@ public class AppManifestConfigHelper {
 
             // If the request comes directly from the app, check that the app has declared that it
             // includes this Sdk library.
-            if (!(context instanceof SandboxedSdkContext)) {
+            if (!useSandboxCheck) {
                 return appManifestConfig
                                 .getIncludesSdkLibraryConfig()
                                 .getIncludesSdkLibraries()

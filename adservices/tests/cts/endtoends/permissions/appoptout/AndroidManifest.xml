@@ -19,6 +19,7 @@
     package="com.android.adservices.tests.permissions.appoptout" >
 
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_TOPICS" />
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE" />
     <application>
         <!-- In this config file, the topics access is revoked for all -->
         <property android:name="android.adservices.AD_SERVICES_CONFIG"

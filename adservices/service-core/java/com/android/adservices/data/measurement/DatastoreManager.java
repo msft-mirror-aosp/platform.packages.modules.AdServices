@@ -16,6 +16,7 @@
 
 package com.android.adservices.data.measurement;
 
+import com.android.adservices.LogUtil;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Optional;
@@ -87,7 +88,13 @@ public abstract class DatastoreManager {
             result = Optional.of(execute.apply(measurementDao));
         } catch (DatastoreException ex) {
             result = Optional.empty();
+            LogUtil.e(ex, "DatastoreException thrown during transaction");
             transaction.rollback();
+        } catch (Exception ex) {
+            // Catch all exceptions for rollback
+            LogUtil.e(ex, "Unhandled exception thrown during transaction");
+            transaction.rollback();
+            throw ex;
         } finally {
             transaction.end();
         }

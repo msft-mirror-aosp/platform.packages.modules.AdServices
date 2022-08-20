@@ -86,9 +86,9 @@ public class MainActivity extends AppCompatActivity {
 
     private String getAppSetIdDisplayString(AppSetId appSetId) {
         return "AppSetId: "
-                + appSetId.getAppSetId()
+                + appSetId.getId()
                 + "\n"
                 + "AppSetId Scope: "
-                + String.valueOf(appSetId.getAppSetIdScope());
+                + String.valueOf(appSetId.getScope());
     }
 }
