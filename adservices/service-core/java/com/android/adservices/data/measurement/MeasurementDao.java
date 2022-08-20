@@ -719,8 +719,8 @@ class MeasurementDao implements IMeasurementDao {
     @Override
     public void deleteMeasurementData(
             @NonNull Uri registrant,
-            @Nullable Instant start,
-            @Nullable Instant end,
+            @NonNull Instant start,
+            @NonNull Instant end,
             @NonNull List<Uri> origins,
             @NonNull List<Uri> domains,
             @DeletionRequest.MatchBehavior int matchBehavior,
@@ -729,7 +729,11 @@ class MeasurementDao implements IMeasurementDao {
         Objects.requireNonNull(registrant);
         Objects.requireNonNull(origins);
         Objects.requireNonNull(domains);
-        validateOptionalRange(start, end);
+        Objects.requireNonNull(start);
+        Objects.requireNonNull(end);
+        Instant cappedStart = capDeletionRange(start);
+        Instant cappedEnd = capDeletionRange(end);
+        validateRange(cappedStart, cappedEnd);
         // Handle no-op case
         // Preserving everything => Do Nothing
         if (domains.isEmpty()
@@ -740,7 +744,7 @@ class MeasurementDao implements IMeasurementDao {
         final SQLiteDatabase db = mSQLTransaction.getDatabase();
         Function<String, String> registrantMatcher = getRegistrantMatcher(registrant);
         Function<String, String> siteMatcher = getSiteMatcher(origins, domains, matchBehavior);
-        Function<String, String> timeMatcher = getTimeMatcher(start, end);
+        Function<String, String> timeMatcher = getTimeMatcher(cappedStart, cappedEnd);
 
         if (deletionMode == DeletionRequest.DELETION_MODE_ALL) {
             deleteAttribution(db, registrantMatcher, siteMatcher, timeMatcher);
@@ -1006,12 +1010,12 @@ class MeasurementDao implements IMeasurementDao {
         }
     }
 
-    private void validateOptionalRange(Instant start, Instant end) {
-        if (start == null ^ end == null) {
-            throw new IllegalArgumentException(
-                    "invalid range, both start and end dates must be provided if providing any");
+    private void validateRange(Instant start, Instant end) {
+        if (start == null || end == null) {
+            throw new IllegalArgumentException("start or end date is null");
         }
-        if (start != null && start.isAfter(end)) {
+
+        if (start.isAfter(end)) {
             throw new IllegalArgumentException(
                     "invalid range, start date must be equal or before end date");
         }
@@ -1235,5 +1239,17 @@ class MeasurementDao implements IMeasurementDao {
 
     private static String getNullableUriString(@Nullable Uri uri) {
         return Optional.ofNullable(uri).map(Uri::toString).orElse(null);
+    }
+
+    /**
+     * Returns the min or max possible long value to avoid the ArithmeticException thrown when
+     * calling toEpochMilli() on Instant.MAX or Instant.MIN
+     */
+    private static Instant capDeletionRange(Instant instant) {
+        Instant[] instants = {
+            Instant.ofEpochMilli(Long.MIN_VALUE), instant, Instant.ofEpochMilli(Long.MAX_VALUE)
+        };
+        Arrays.sort(instants);
+        return instants[1];
     }
 }

@@ -26,6 +26,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /** Deletion Request. */
 public class DeletionRequest {
@@ -105,21 +106,21 @@ public class DeletionRequest {
     }
 
     /** Get the start of the deletion range. */
-    @Nullable
+    @NonNull
     public Instant getStart() {
         return mStart;
     }
 
     /** Get the end of the deletion range. */
-    @Nullable
+    @NonNull
     public Instant getEnd() {
         return mEnd;
     }
 
     /** Builder for {@link DeletionRequest} objects. */
     public static final class Builder {
-        private Instant mStart;
-        private Instant mEnd;
+        private Instant mStart = Instant.MIN;
+        private Instant mEnd = Instant.MAX;
         private List<Uri> mOriginUris;
         private List<Uri> mDomainUris;
         @MatchBehavior private int mMatchBehavior;
@@ -132,7 +133,7 @@ public class DeletionRequest {
          * records using the same origin only, i.e. subdomains won't match. E.g. If originUri is
          * {@code https://a.example.com}, then {@code https://a.example.com} will match; {@code
          * https://example.com}, {@code https://b.example.com} and {@code https://abcexample.com}
-         * will NOT match.
+         * will NOT match. A null or empty list will match everything.
          */
         public @NonNull Builder setOriginUris(@Nullable List<Uri> originUris) {
             mOriginUris = originUris;
@@ -144,6 +145,7 @@ public class DeletionRequest {
          * records using the same domain or any subdomains. E.g. If domainUri is {@code
          * https://example.com}, then {@code https://a.example.com}, {@code https://example.com} and
          * {@code https://b.example.com} will match; {@code https://abcexample.com} will NOT match.
+         * A null or empty list will match everything.
          */
         public @NonNull Builder setDomainUris(@Nullable List<Uri> domainUris) {
             mDomainUris = domainUris;
@@ -173,14 +175,24 @@ public class DeletionRequest {
             return this;
         }
 
-        /** Set the start of the deletion range. */
-        public @NonNull Builder setStart(@Nullable Instant start) {
+        /**
+         * Set the start of the deletion range. Passing in {@link java.time.Instant#MIN} will cause
+         * everything from the oldest record to the specified end be deleted. No set start will
+         * default to {@link java.time.Instant#MIN}.
+         */
+        public @NonNull Builder setStart(@NonNull Instant start) {
+            Objects.requireNonNull(start);
             mStart = start;
             return this;
         }
 
-        /** Set the end of the deletion range. */
-        public @NonNull Builder setEnd(@Nullable Instant end) {
+        /**
+         * Set the end of the deletion range. Passing in {@link java.time.Instant#MAX} will cause
+         * everything from the specified start until the newest record to be deleted. No set end
+         * will default to {@link java.time.Instant#MAX}.
+         */
+        public @NonNull Builder setEnd(@NonNull Instant end) {
+            Objects.requireNonNull(end);
             mEnd = end;
             return this;
         }
