@@ -88,7 +88,7 @@ public class AdBidGeneratorImplTest {
     public static final List<Double> BIDS =
             new ArrayList<Double>(ImmutableList.of(-10.0, 0.0, 1.0, 5.4));
     public static final List<AdData> ADS =
-            AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER);
+            AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER_1);
     public static final List<AdWithBid> AD_WITH_NON_POSITIVE_BIDS =
             new ArrayList<AdWithBid>(
                     ImmutableList.of(
@@ -111,7 +111,7 @@ public class AdBidGeneratorImplTest {
             AdSelectionSignals.fromString(
                     "{\n" + "\t\"max_bid_limit\": 20,\n" + "\t\"ad_type\": \"retail\"\n" + "}");
     private static final DBCustomAudience CUSTOM_AUDIENCE_WITH_EMPTY_ADS =
-            DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER)
+            DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
                     .setAds(Collections.emptyList())
                     .build();
     @Rule public final MockitoRule rule = MockitoJUnit.rule();
@@ -178,7 +178,7 @@ public class AdBidGeneratorImplTest {
                         .build();
 
         mCustomAudienceWithAds =
-                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER)
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
                         .setBiddingLogicUrl(mDecisionLogicUri)
                         .setTrustedBiddingData(mTrustedBiddingData)
                         .build();
@@ -570,7 +570,7 @@ public class AdBidGeneratorImplTest {
                         .build();
 
         DBCustomAudience customAudienceWithAds =
-                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER)
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
                         .setBiddingLogicUrl(mDecisionLogicUri)
                         .setTrustedBiddingData(trustedBiddingData)
                         .build();

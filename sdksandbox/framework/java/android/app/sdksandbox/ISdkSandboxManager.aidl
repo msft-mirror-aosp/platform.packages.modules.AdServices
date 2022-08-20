@@ -23,6 +23,7 @@ import android.app.sdksandbox.ILoadSdkCallback;
 import android.app.sdksandbox.IRequestSurfacePackageCallback;
 import android.app.sdksandbox.ISdkSandboxLifecycleCallback;
 import android.app.sdksandbox.ISendDataCallback;
+import android.app.sdksandbox.ISharedPreferencesSyncCallback;
 import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.content.pm.SharedLibraryInfo;
 
@@ -41,7 +42,7 @@ interface ISdkSandboxManager {
     void requestSurfacePackage(in String callingPackageName, in String sdkName, in IBinder hostToken, int displayId, int width, int height, long timeAppCalledSystemServer, in Bundle params, IRequestSurfacePackageCallback callback);
     void sendData(in String callingPackageName, in String sdkName, in Bundle data, in ISendDataCallback callback);
     List<SharedLibraryInfo> getLoadedSdkLibrariesInfo(in String callingPackageName, long timeAppCalledSystemServer);
-    void syncDataFromClient(in String callingPackageName, long timeAppCalledSystemServer, in SharedPreferencesUpdate update);
+    void syncDataFromClient(in String callingPackageName, long timeAppCalledSystemServer, in SharedPreferencesUpdate update, in ISharedPreferencesSyncCallback callback);
     void stopSdkSandbox(in String callingPackageName);
     void logLatencyFromSystemServerToApp(in String method, int latency);
 }

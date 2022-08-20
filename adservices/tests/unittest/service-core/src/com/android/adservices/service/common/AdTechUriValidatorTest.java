@@ -29,7 +29,7 @@ public class AdTechUriValidatorTest {
     private final AdTechUriValidator mValidator =
             new AdTechUriValidator(
                     ValidatorUtil.AD_TECH_ROLE_BUYER,
-                    CommonFixture.VALID_BUYER.toString(),
+                    CommonFixture.VALID_BUYER_1.toString(),
                     CLASS_NAME,
                     URI_FIELD_NAME);
 
@@ -38,7 +38,7 @@ public class AdTechUriValidatorTest {
         Assert.assertTrue(
                 mValidator
                         .getValidationViolations(
-                                Uri.parse("https://" + CommonFixture.VALID_BUYER + "/valid/uri"))
+                                Uri.parse("https://" + CommonFixture.VALID_BUYER_1 + "/valid/uri"))
                         .isEmpty());
     }
 
@@ -68,7 +68,7 @@ public class AdTechUriValidatorTest {
                 String.format(
                         AdTechUriValidator.IDENTIFIER_AND_URL_ARE_INCONSISTENT,
                         ValidatorUtil.AD_TECH_ROLE_BUYER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         ValidatorUtil.AD_TECH_ROLE_BUYER,
                         URI_FIELD_NAME,
                         uriHost));
@@ -78,7 +78,7 @@ public class AdTechUriValidatorTest {
     public void testNotHttpsHost() {
         ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
-                        Uri.parse("http://" + CommonFixture.VALID_BUYER + "/not/https/")),
+                        Uri.parse("http://" + CommonFixture.VALID_BUYER_1 + "/not/https/")),
                 String.format(AdTechUriValidator.URI_SHOULD_USE_HTTPS, CLASS_NAME, URI_FIELD_NAME));
     }
 }
