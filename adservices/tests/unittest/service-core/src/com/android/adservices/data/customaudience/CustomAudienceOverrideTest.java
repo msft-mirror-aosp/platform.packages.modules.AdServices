@@ -35,7 +35,7 @@ public class CustomAudienceOverrideTest {
         DBCustomAudienceOverride dbCustomAudienceOverride =
                 DBCustomAudienceOverride.builder()
                         .setOwner(CustomAudienceFixture.VALID_OWNER)
-                        .setBuyer(CommonFixture.VALID_BUYER)
+                        .setBuyer(CommonFixture.VALID_BUYER_1)
                         .setName(NAME)
                         .setAppPackageName(APP_PACKAGE_NAME)
                         .setBiddingLogicJS(BIDDING_LOGIC_JS)
@@ -43,7 +43,7 @@ public class CustomAudienceOverrideTest {
                         .build();
 
         assertEquals(dbCustomAudienceOverride.getOwner(), CustomAudienceFixture.VALID_OWNER);
-        assertEquals(dbCustomAudienceOverride.getBuyer(), CommonFixture.VALID_BUYER);
+        assertEquals(dbCustomAudienceOverride.getBuyer(), CommonFixture.VALID_BUYER_1);
         assertEquals(dbCustomAudienceOverride.getName(), NAME);
         assertEquals(dbCustomAudienceOverride.getAppPackageName(), APP_PACKAGE_NAME);
         assertEquals(dbCustomAudienceOverride.getBiddingLogicJS(), BIDDING_LOGIC_JS);
@@ -56,7 +56,7 @@ public class CustomAudienceOverrideTest {
                 IllegalStateException.class,
                 () -> {
                     DBCustomAudienceOverride.builder()
-                            .setBuyer(CommonFixture.VALID_BUYER)
+                            .setBuyer(CommonFixture.VALID_BUYER_1)
                             .setName(NAME)
                             .setAppPackageName(APP_PACKAGE_NAME)
                             .setBiddingLogicJS(BIDDING_LOGIC_JS)
@@ -87,7 +87,7 @@ public class CustomAudienceOverrideTest {
                 () -> {
                     DBCustomAudienceOverride.builder()
                             .setOwner(CustomAudienceFixture.VALID_OWNER)
-                            .setBuyer(CommonFixture.VALID_BUYER)
+                            .setBuyer(CommonFixture.VALID_BUYER_1)
                             .setAppPackageName(APP_PACKAGE_NAME)
                             .setBiddingLogicJS(BIDDING_LOGIC_JS)
                             .setTrustedBiddingData(TRUSTED_BIDDING_DATA)
@@ -102,7 +102,7 @@ public class CustomAudienceOverrideTest {
                 () -> {
                     DBCustomAudienceOverride.builder()
                             .setOwner(CustomAudienceFixture.VALID_OWNER)
-                            .setBuyer(CommonFixture.VALID_BUYER)
+                            .setBuyer(CommonFixture.VALID_BUYER_1)
                             .setName(NAME)
                             .setBiddingLogicJS(BIDDING_LOGIC_JS)
                             .setTrustedBiddingData(TRUSTED_BIDDING_DATA)
@@ -117,7 +117,7 @@ public class CustomAudienceOverrideTest {
                 () -> {
                     DBCustomAudienceOverride.builder()
                             .setOwner(CustomAudienceFixture.VALID_OWNER)
-                            .setBuyer(CommonFixture.VALID_BUYER)
+                            .setBuyer(CommonFixture.VALID_BUYER_1)
                             .setName(NAME)
                             .setAppPackageName(APP_PACKAGE_NAME)
                             .setTrustedBiddingData(TRUSTED_BIDDING_DATA)
@@ -132,11 +132,30 @@ public class CustomAudienceOverrideTest {
                 () -> {
                     DBCustomAudienceOverride.builder()
                             .setOwner(CustomAudienceFixture.VALID_OWNER)
-                            .setBuyer(CommonFixture.VALID_BUYER)
+                            .setBuyer(CommonFixture.VALID_BUYER_1)
                             .setName(NAME)
                             .setAppPackageName(APP_PACKAGE_NAME)
                             .setBiddingLogicJS(BIDDING_LOGIC_JS)
                             .build();
                 });
+    }
+
+    @Test
+    public void testDBCustomAudienceOverrideCreate() {
+        DBCustomAudienceOverride dbCustomAudienceOverride =
+                DBCustomAudienceOverride.create(
+                        CustomAudienceFixture.VALID_OWNER,
+                        CommonFixture.VALID_BUYER_1,
+                        NAME,
+                        APP_PACKAGE_NAME,
+                        BIDDING_LOGIC_JS,
+                        TRUSTED_BIDDING_DATA);
+
+        assertEquals(dbCustomAudienceOverride.getOwner(), CustomAudienceFixture.VALID_OWNER);
+        assertEquals(dbCustomAudienceOverride.getBuyer(), CommonFixture.VALID_BUYER_1);
+        assertEquals(dbCustomAudienceOverride.getName(), NAME);
+        assertEquals(dbCustomAudienceOverride.getAppPackageName(), APP_PACKAGE_NAME);
+        assertEquals(dbCustomAudienceOverride.getBiddingLogicJS(), BIDDING_LOGIC_JS);
+        assertEquals(dbCustomAudienceOverride.getTrustedBiddingData(), TRUSTED_BIDDING_DATA);
     }
 }

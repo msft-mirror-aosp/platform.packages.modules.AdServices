@@ -41,7 +41,7 @@ public class CustomAudienceTimestampValidatorTest {
                 mValidator
                         .getValidationViolations(
                                 CustomAudienceFixture.getValidBuilderForBuyer(
-                                                CommonFixture.VALID_BUYER)
+                                                CommonFixture.VALID_BUYER_1)
                                         .build())
                         .isEmpty());
     }
@@ -51,7 +51,7 @@ public class CustomAudienceTimestampValidatorTest {
 
         ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .setActivationTime(
                                         CustomAudienceFixture.INVALID_DELAYED_ACTIVATION_TIME)
                                 .build()),
@@ -70,7 +70,7 @@ public class CustomAudienceTimestampValidatorTest {
     public void testExpirationTimeBeforeNow() {
         ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .setExpirationTime(
                                         CustomAudienceFixture.INVALID_BEFORE_NOW_EXPIRATION_TIME)
                                 .build()),
@@ -83,7 +83,7 @@ public class CustomAudienceTimestampValidatorTest {
     public void testExpirationTimeBeforeActivation() {
         ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .setExpirationTime(
                                         CustomAudienceFixture
                                                 .INVALID_BEFORE_DELAYED_EXPIRATION_TIME)
@@ -102,7 +102,7 @@ public class CustomAudienceTimestampValidatorTest {
                 mValidator
                         .getValidationViolations(
                                 CustomAudienceFixture.getValidBuilderForBuyer(
-                                                CommonFixture.VALID_BUYER)
+                                                CommonFixture.VALID_BUYER_1)
                                         .setActivationTime(null)
                                         .setExpirationTime(null)
                                         .build())
@@ -115,7 +115,7 @@ public class CustomAudienceTimestampValidatorTest {
                 mValidator
                         .getValidationViolations(
                                 CustomAudienceFixture.getValidBuilderForBuyer(
-                                                CommonFixture.VALID_BUYER)
+                                                CommonFixture.VALID_BUYER_1)
                                         .setActivationTime(null)
                                         .setExpirationTime(
                                                 CustomAudienceFixture.VALID_EXPIRATION_TIME)
@@ -127,7 +127,7 @@ public class CustomAudienceTimestampValidatorTest {
     public void testNullActivationTimeWithExpireAfterMax() {
         ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .setActivationTime(null)
                                 .setExpirationTime(
                                         CustomAudienceFixture.INVALID_BEYOND_MAX_EXPIRATION_TIME)
@@ -146,7 +146,7 @@ public class CustomAudienceTimestampValidatorTest {
                 mValidator
                         .getValidationViolations(
                                 CustomAudienceFixture.getValidBuilderForBuyer(
-                                                CommonFixture.VALID_BUYER)
+                                                CommonFixture.VALID_BUYER_1)
                                         .setExpirationTime(null)
                                         .setActivationTime(
                                                 CustomAudienceFixture.VALID_DELAYED_ACTIVATION_TIME)
@@ -158,7 +158,7 @@ public class CustomAudienceTimestampValidatorTest {
     public void testNullExpirationTimeWithBeyondMaxActivationTime() {
         ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .setExpirationTime(null)
                                 .setActivationTime(
                                         CustomAudienceFixture.INVALID_DELAYED_ACTIVATION_TIME)
