@@ -109,15 +109,14 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 
 public class FledgeE2ETest {
+    public static final String CUSTOM_AUDIENCE_SEQ_1 = "/ca1";
+    public static final String CUSTOM_AUDIENCE_SEQ_2 = "/ca2";
     @Spy private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
-
     private static final Uri BUYER_DOMAIN_1 =
             CommonFixture.getUri(AdSelectionConfigFixture.BUYER_1, "");
     private static final Uri BUYER_DOMAIN_2 =
             CommonFixture.getUri(AdSelectionConfigFixture.BUYER_2, "");
-
     private static final String AD_URI_PREFIX = "/adverts/123";
-
     private static final String BUYER_BIDDING_LOGIC_URI_PATH = "/buyer/bidding/logic/";
     private static final String BUYER_TRUSTED_SIGNAL_URI_PATH = "/kv/buyer/signals/";
     private static final String BUYER_TRUSTED_SIGNAL_PARAMS =
@@ -145,11 +144,10 @@ public class FledgeE2ETest {
     private static final List<Double> BIDS_FOR_BUYER_1 = ImmutableList.of(1.1, 2.2);
     private static final List<Double> BIDS_FOR_BUYER_2 = ImmutableList.of(4.5, 6.7, 10.0);
     private static final List<Double> INVALID_BIDS = ImmutableList.of(0.0, -1.0, -2.0);
-    public static final String CUSTOM_AUDIENCE_SEQ_1 = "/ca1";
-    public static final String CUSTOM_AUDIENCE_SEQ_2 = "/ca2";
     private final AdServicesLogger mAdServicesLogger = AdServicesLoggerImpl.getInstance();
-    @Mock private ConsentManager mConsentManagerMock;
+    private final Flags mFlags = FlagsFactory.getFlagsForTest();
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
+    @Mock private ConsentManager mConsentManagerMock;
     private MockitoSession mStaticMockSession = null;
     // This object access some system APIs
     @Mock private DevContextFilter mDevContextFilter;
@@ -162,7 +160,6 @@ public class FledgeE2ETest {
     private ExecutorService mBackgroundExecutorService;
     private CustomAudienceServiceImpl mCustomAudienceService;
     private AdSelectionServiceImpl mAdSelectionService;
-    private final Flags mFlags = FlagsFactory.getFlagsForTest();
     private MockWebServerRule.RequestMatcher<String> mRequestMatcherPrefixMatch;
     private Uri mLocalhostBuyerDomain;
 
