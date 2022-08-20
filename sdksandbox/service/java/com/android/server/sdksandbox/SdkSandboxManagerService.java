@@ -31,6 +31,7 @@ import android.app.sdksandbox.IRequestSurfacePackageCallback;
 import android.app.sdksandbox.ISdkSandboxLifecycleCallback;
 import android.app.sdksandbox.ISdkSandboxManager;
 import android.app.sdksandbox.ISendDataCallback;
+import android.app.sdksandbox.ISharedPreferencesSyncCallback;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
@@ -634,7 +635,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     public void syncDataFromClient(
             String callingPackageName,
             long timeAppCalledSystemServer,
-            SharedPreferencesUpdate update) {
+            SharedPreferencesUpdate update,
+            ISharedPreferencesSyncCallback callback) {
         final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
 
         SdkSandboxStatsLog.write(

@@ -26,6 +26,7 @@ import android.Manifest;
 import android.app.ActivityManager;
 import android.app.sdksandbox.ILoadSdkCallback;
 import android.app.sdksandbox.ISdkSandboxManager;
+import android.app.sdksandbox.ISharedPreferencesSyncCallback;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkContext;
@@ -1041,7 +1042,8 @@ public class SdkSandboxManagerServiceUnitTest {
         mService.syncDataFromClient(
                 TEST_PACKAGE,
                 /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
-                TEST_UPDATE);
+                TEST_UPDATE,
+                Mockito.mock(ISharedPreferencesSyncCallback.class));
 
         // Verify when sandbox is not bound, manager service does not try to sync
         assertThat(mSdkSandboxService.getLastUpdate()).isNull();
@@ -1058,7 +1060,8 @@ public class SdkSandboxManagerServiceUnitTest {
         mService.syncDataFromClient(
                 TEST_PACKAGE,
                 /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
-                TEST_UPDATE);
+                TEST_UPDATE,
+                Mockito.mock(ISharedPreferencesSyncCallback.class));
 
         // Verify that manager service calls sandbox to sync data
         final Bundle lastData = mSdkSandboxService.getLastUpdate();
@@ -1173,7 +1176,11 @@ public class SdkSandboxManagerServiceUnitTest {
     @Test
     public void testLatencyMetrics_IpcFromAppToSystemServer_SyncDataFromClient() {
         // Sync data from client
-        mService.syncDataFromClient(TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, TEST_UPDATE);
+        mService.syncDataFromClient(
+                TEST_PACKAGE,
+                TIME_APP_CALLED_SYSTEM_SERVER,
+                TEST_UPDATE,
+                Mockito.mock(ISharedPreferencesSyncCallback.class));
         ExtendedMockito.verify(
                 () ->
                         SdkSandboxStatsLog.write(
