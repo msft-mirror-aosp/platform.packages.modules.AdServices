@@ -17,11 +17,13 @@
 package com.android.adservices.download;
 
 import static com.android.adservices.download.MddTaskScheduler.KEY_MDD_TASK_TAG;
+import static com.android.adservices.download.MddTaskScheduler.getMddTaskJobId;
 
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 
 import android.annotation.NonNull;
 import android.app.job.JobParameters;
+import android.app.job.JobScheduler;
 import android.app.job.JobService;
 import android.content.Context;
 import android.os.PersistableBundle;
@@ -46,16 +48,17 @@ public class MddJobService extends JobService {
     public boolean onStartJob(@NonNull JobParameters params) {
         LogUtil.d("MddJobService.onStartJob");
 
+        if (FlagsFactory.getFlags().getMddBackgroundTaskKillSwitch()) {
+            LogUtil.e("MDD background task is disabled, skipping and cancelling MddJobService");
+            return skipAndCancelBackgroundJob(params);
+        }
+
         // This service executes each incoming job on a Handler running on the application's
         // main thread. This means that we must offload the execution logic to background executor.
         ListenableFuture<Void> handleTaskFuture =
                 PropagatedFutures.submitAsync(
                         () -> {
-                            PersistableBundle extras = params.getExtras();
-                            if (null == extras) {
-                                throw new IllegalArgumentException("Can't find MDD Tasks Tag!");
-                            }
-                            String mddTag = extras.getString(KEY_MDD_TASK_TAG);
+                            String mddTag = getMddTag(params);
                             LogUtil.d("MddJobService.onStartJob for " + mddTag);
 
                             return MobileDataDownloadFactory.getMdd(this, FlagsFactory.getFlags())
@@ -94,6 +97,15 @@ public class MddJobService extends JobService {
         return true;
     }
 
+    private String getMddTag(JobParameters params) {
+        PersistableBundle extras = params.getExtras();
+        if (null == extras) {
+            throw new IllegalArgumentException("Can't find MDD Tasks Tag!");
+        }
+        String mddTag = extras.getString(KEY_MDD_TASK_TAG);
+        return mddTag;
+    }
+
     @Override
     public boolean onStopJob(@NonNull JobParameters job) {
         LogUtil.d("MddJobService.onStopJob");
@@ -101,8 +113,13 @@ public class MddJobService extends JobService {
     }
 
     /** Schedule MDD background tasks. */
-    public static void schedule(Context context) {
+    public static boolean schedule(Context context) {
         LogUtil.d("MddJobService.schedule MDD tasks.");
+
+        if (FlagsFactory.getFlags().getMddBackgroundTaskKillSwitch()) {
+            LogUtil.e("Mdd background task is disabled, skip scheduling.");
+            return false;
+        }
 
         // Schedule MDD to download scripts periodically.
         Futures.addCallback(
@@ -120,5 +137,18 @@ public class MddJobService extends JobService {
                     }
                 },
                 MoreExecutors.directExecutor());
+
+        return true;
+    }
+
+    private boolean skipAndCancelBackgroundJob(final JobParameters params) {
+        this.getSystemService(JobScheduler.class).cancel(getMddTaskJobId(getMddTag(params)));
+
+        // Tell the JobScheduler that the job has completed and does not need to be
+        // rescheduled.
+        jobFinished(params, false);
+
+        // Returning false means that this job has completed its work.
+        return false;
     }
 }

@@ -896,9 +896,24 @@ public interface Flags extends Dumpable {
      */
     boolean TOPICS_KILL_SWITCH = false; // By default, the Topics API is enabled.
 
+    /** @return value of Topics API kill switch */
     default boolean getTopicsKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
         return getGlobalKillSwitch() || TOPICS_KILL_SWITCH;
+    }
+
+    // MDD Killswitches
+
+    /**
+     * MDD Background Task Kill Switch. The default value is false which means the MDD background
+     * task is enabled. This flag is used for emergency turning off the MDD background tasks.
+     */
+    boolean MDD_BACKGROUND_TASK_KILL_SWITCH = false;
+
+    /** @return value of Mdd Background Task kill switch */
+    default boolean getMddBackgroundTaskKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        return getGlobalKillSwitch() || MDD_BACKGROUND_TASK_KILL_SWITCH;
     }
 
     // FLEDGE Kill switches
