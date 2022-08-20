@@ -18,11 +18,16 @@ package {
 
 android_test {
     name: "CtsAdServicesPermissionsAppOptOutEndToEndTests",
+    defaults: [
+        "cts_defaults",
+        "modules-utils-testable-device-config-defaults"
+    ],
     srcs: [
         "src/**/*.java",
     ],
     static_libs: [
         "adservices-clients",
+        "adservices-test-fixtures",
         "androidx.concurrent_concurrent-futures",
         "compatibility-device-util-axt",
         "truth-prebuilt",

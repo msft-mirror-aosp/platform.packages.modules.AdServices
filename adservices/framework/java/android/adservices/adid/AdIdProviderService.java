@@ -30,7 +30,11 @@ import android.os.RemoteException;
 import java.io.IOException;
 
 /**
- * Base class for service that provides abstract class for getting adId from the provider service.
+ * Abstract Base class for provider service to implement generation of Advertising Id and
+ * limitAdTracking value.
+ *
+ * <p>The implementor of this service needs to override the onGetAdId method and provide a
+ * device-level unique advertising Id and limitAdTracking value on that device.
  *
  * @hide
  */
@@ -43,7 +47,7 @@ public abstract class AdIdProviderService extends Service {
 
     /**
      * Abstract method which will be overridden by provider to provide the adId. For multi-user,
-     * multi-profiles on-devicei scenarios, separate instance of service per user is expected to
+     * multi-profiles on-device scenarios, separate instance of service per user is expected to
      * implement this method.
      */
     @NonNull

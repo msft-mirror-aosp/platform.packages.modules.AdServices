@@ -41,13 +41,13 @@ public final class MaintenanceJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
+        LogUtil.d("MaintenanceJobService.onStartJob");
+
         if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
-            LogUtil.e("Topics API is disabled");
-            // Returning false means that this job has completed its work.
-            return false;
+            LogUtil.e("Topics API is disabled, skipping and cancelling MaintenanceJobService");
+            return skipAndCancelBackgroundJob(params);
         }
 
-        LogUtil.d("MaintenanceJobService.onStartJob");
         ListenableFuture<Void> appReconciliationFuture =
                 Futures.submit(
                         () -> TopicsWorker.getInstance(this).reconcileApplicationUpdate(this),
@@ -96,7 +96,6 @@ public final class MaintenanceJobService extends JobService {
         LogUtil.d("Scheduling maintenance job ...");
     }
 
-    // TODO(b/241866524): Support Killswitch in scheduling
     /**
      * Schedule Maintenance Job Service if needed: there is no scheduled job with same job
      * parameters.
@@ -106,6 +105,11 @@ public final class MaintenanceJobService extends JobService {
      * @return a {@code boolean} to indicate if the service job is actually scheduled.
      */
     public static boolean scheduleIfNeeded(Context context, boolean forceSchedule) {
+        if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
+            LogUtil.e("Topics API is disabled, skip scheduling the MaintenanceJobService");
+            return false;
+        }
+
         final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
         if (jobScheduler == null) {
             LogUtil.e("Cannot fetch Job Scheduler!");
@@ -132,5 +136,16 @@ public final class MaintenanceJobService extends JobService {
 
         schedule(context, jobScheduler, flagsMaintenanceJobPeriodMs, flagsMaintenanceJobFlexMs);
         return true;
+    }
+
+    private boolean skipAndCancelBackgroundJob(final JobParameters params) {
+        this.getSystemService(JobScheduler.class).cancel(MAINTENANCE_JOB_ID);
+
+        // Tell the JobScheduler that the job has completed and does not need to be
+        // rescheduled.
+        jobFinished(params, false);
+
+        // Returning false means that this job has completed its work.
+        return false;
     }
 }

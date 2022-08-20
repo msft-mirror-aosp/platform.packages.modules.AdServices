@@ -16,9 +16,10 @@
 
 package com.android.tests.codeprovider.storagetest_1;
 
-import android.app.sdksandbox.LoadSdkResponse;
+import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
+import android.os.Binder;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -27,30 +28,29 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+
 public class StorageTestSandboxedSdkProvider extends SandboxedSdkProvider {
     private static final String TAG = "StorageTestSandboxedSdkProvider";
     private static final String BUNDLE_KEY_PHASE_NAME = "phase-name";
 
     @Override
-    public LoadSdkResponse onLoadSdk(Bundle params) {
-        return new LoadSdkResponse(new Bundle());
+    public SandboxedSdk onLoadSdk(Bundle params) {
+        return new SandboxedSdk(new Binder());
     }
 
     @Override
     public View getView(Context windowContext, Bundle params, int width, int height) {
+        try {
+            handlePhase(params);
+        } catch (Throwable e) {
+            Log.e(TAG, e.getMessage(), e);
+            throw new RuntimeException();
+        }
         return null;
     }
 
     @Override
-    public void onDataReceived(Bundle data, DataReceivedCallback callback) {
-        try {
-            handlePhase(data);
-            callback.onDataReceivedSuccess(new Bundle());
-        } catch (Throwable e) {
-            Log.e(TAG, e.getMessage(), e);
-            callback.onDataReceivedError(e.getMessage());
-        }
-    }
+    public void onDataReceived(Bundle data, DataReceivedCallback callback) {}
 
     private void handlePhase(Bundle params) throws Exception {
         String phaseName = params.getString(BUNDLE_KEY_PHASE_NAME, "");

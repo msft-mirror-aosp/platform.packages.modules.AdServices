@@ -18,10 +18,13 @@ package {
 
 android_test_helper_app {
     name: "SendDataSdkProvider",
-    defaults: ["platform_app_defaults"],
+    defaults: ["platform_app_defaults",],
     certificate: ":sdksandbox-test",
     srcs: [
        "src/**/*.java",
     ],
     platform_apis: true,
+    static_libs: [
+       "SdkSandboxTestUtils",
+    ],
 }

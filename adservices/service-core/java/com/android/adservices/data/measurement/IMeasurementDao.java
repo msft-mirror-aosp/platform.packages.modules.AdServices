@@ -223,8 +223,8 @@ public interface IMeasurementDao {
      * and/or a range of dates.
      *
      * @param registrant who owns the data
-     * @param start time for deletion range. May be null. If null, end must be null as well
-     * @param end time for deletion range. May be null. If null, start must be null as well
+     * @param start time for deletion range. Set to Instant.MIN to delete everything up to the end
+     * @param end time for deletion range. Set to Instant.MAX to delete everything after the start
      * @param origins list of origins which should be used for matching
      * @param domains list of domains which should be used for matching
      * @param matchBehavior {@link DeletionRequest.MatchBehavior} to be used for matching
@@ -232,8 +232,8 @@ public interface IMeasurementDao {
      */
     void deleteMeasurementData(
             @NonNull Uri registrant,
-            @Nullable Instant start,
-            @Nullable Instant end,
+            @NonNull Instant start,
+            @NonNull Instant end,
             @NonNull List<Uri> origins,
             @NonNull List<Uri> domains,
             @DeletionRequest.MatchBehavior int matchBehavior,

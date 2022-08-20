@@ -18,8 +18,10 @@ package com.android.sdksandbox;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import android.app.sdksandbox.KeyWithType;
 import android.app.sdksandbox.LoadSdkException;
-import android.app.sdksandbox.LoadSdkResponse;
+import android.app.sdksandbox.SandboxedSdk;
+import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
@@ -44,6 +46,10 @@ import org.mockito.Mockito;
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -63,8 +69,18 @@ public class SdkSandboxTest {
     private static final long TIME_SDK_CALL_COMPLETED = 9;
     private static final long TIME_SANDBOX_CALLED_SYSTEM_SERVER = 11;
 
+    private static final String KEY_TO_UPDATE = "hello1";
+    private static final KeyWithType KEY_WITH_TYPE_TO_UPDATE =
+            new KeyWithType(KEY_TO_UPDATE, KeyWithType.KEY_TYPE_STRING);
     private static final Map<String, String> TEST_DATA =
-            Map.of("hello1", "world1", "hello2", "world2", "empty", "");
+            Map.of(KEY_TO_UPDATE, "world1", "hello2", "world2", "empty", "");
+    private static final List<KeyWithType> KEYS_TO_SYNC =
+            List.of(
+                    KEY_WITH_TYPE_TO_UPDATE,
+                    new KeyWithType("hello2", KeyWithType.KEY_TYPE_STRING),
+                    new KeyWithType("empty", KeyWithType.KEY_TYPE_STRING));
+    private static final SharedPreferencesUpdate TEST_UPDATE =
+            new SharedPreferencesUpdate(KEYS_TO_SYNC, getBundleFromMap(TEST_DATA));
 
     private Context mContext;
     private InjectorForTest mInjector;
@@ -136,6 +152,7 @@ public class SdkSandboxTest {
                 new Bundle(),
                 mRemoteCode1);
         assertThat(latch1.await(1, TimeUnit.MINUTES)).isTrue();
+        assertThat(mRemoteCode1.mSuccessful).isTrue();
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
                 duplicateToken,
@@ -260,7 +277,7 @@ public class SdkSandboxTest {
 
     @Test
     public void testSyncDataFromClient_StoresInClientSharedPreference() throws Exception {
-        mService.syncDataFromClient(getBundleFromMap(TEST_DATA));
+        mService.syncDataFromClient(TEST_UPDATE);
 
         // Verify that ClientSharedPreference contains the synced data
         SharedPreferences pref = getClientSharedPreference();
@@ -268,10 +285,75 @@ public class SdkSandboxTest {
         assertThat(pref.getAll().values()).containsExactlyElementsIn(TEST_DATA.values());
     }
 
-    private Bundle getBundleFromMap(Map<String, String> data) {
+    @Test
+    public void testSyncDataFromClient_SupportsAllValidTypes() throws Exception {
+        // Create a bundle with all supported values
+        Bundle bundle = new Bundle();
+        bundle.putString("string", "value");
+        bundle.putBoolean("boolean", true);
+        bundle.putInt("integer", 1);
+        bundle.putFloat("float", 1.0f);
+        bundle.putLong("long", 1L);
+        bundle.putStringArrayList("arrayList", new ArrayList<>(Arrays.asList("list1", "list2")));
+
+        final List<KeyWithType> keysToSync =
+                List.of(
+                        new KeyWithType("string", KeyWithType.KEY_TYPE_STRING),
+                        new KeyWithType("boolean", KeyWithType.KEY_TYPE_BOOLEAN),
+                        new KeyWithType("integer", KeyWithType.KEY_TYPE_INTEGER),
+                        new KeyWithType("float", KeyWithType.KEY_TYPE_FLOAT),
+                        new KeyWithType("long", KeyWithType.KEY_TYPE_LONG),
+                        new KeyWithType("arrayList", KeyWithType.KEY_TYPE_STRING_SET));
+        final SharedPreferencesUpdate update = new SharedPreferencesUpdate(keysToSync, bundle);
+        mService.syncDataFromClient(update);
+
+        // Verify that ClientSharedPreference contains the synced data
+        SharedPreferences pref = getClientSharedPreference();
+        assertThat(pref.getAll().keySet()).containsExactlyElementsIn(bundle.keySet());
+        assertThat(pref.getString("string", "")).isEqualTo("value");
+        assertThat(pref.getBoolean("boolean", false)).isEqualTo(true);
+        assertThat(pref.getInt("integer", 0)).isEqualTo(1);
+        assertThat(pref.getFloat("float", 0.0f)).isEqualTo(1.0f);
+        assertThat(pref.getLong("long", 0L)).isEqualTo(1L);
+        assertThat(pref.getStringSet("arrayList", Collections.emptySet()))
+                .containsExactly("list1", "list2");
+    }
+
+    @Test
+    public void testSyncDataFromClient_KeyCanBeUpdated() throws Exception {
+        // Preload some data
+        mService.syncDataFromClient(TEST_UPDATE);
+
+        // Now send in a new update
+        final Bundle newData = getBundleFromMap(Map.of(KEY_TO_UPDATE, "update"));
+        final SharedPreferencesUpdate newUpdate =
+                new SharedPreferencesUpdate(List.of(KEY_WITH_TYPE_TO_UPDATE), newData);
+        mService.syncDataFromClient(newUpdate);
+
+        // Verify that ClientSharedPreference contains the synced data
+        SharedPreferences pref = getClientSharedPreference();
+        assertThat(pref.getAll().keySet()).containsExactlyElementsIn(TEST_DATA.keySet());
+        assertThat(pref.getString(KEY_TO_UPDATE, "")).isEqualTo("update");
+    }
+
+    @Test
+    public void testSyncDataFromClient_KeyCanBeRemoved() throws Exception {
+        // Preload some data
+        mService.syncDataFromClient(TEST_UPDATE);
+
+        // Now send in a new update
+        final SharedPreferencesUpdate newUpdate =
+                new SharedPreferencesUpdate(TEST_UPDATE.getKeysInUpdate(), new Bundle());
+        mService.syncDataFromClient(newUpdate);
+
+        // Verify that ClientSharedPreference contains the synced data
+        SharedPreferences pref = getClientSharedPreference();
+        assertThat(pref.getAll().keySet()).doesNotContain(KEY_TO_UPDATE);
+    }
+
+    private static Bundle getBundleFromMap(Map<String, String> data) {
         Bundle bundle = new Bundle();
         for (String key : data.keySet()) {
-            // TODO(b/239403323): add support for non-string values
             bundle.putString(key, data.get(key));
         }
         return bundle;
@@ -299,17 +381,17 @@ public class SdkSandboxTest {
 
         @Override
         public void onLoadSdkSuccess(
-                LoadSdkResponse loadSdkResponse, ISdkSandboxManagerToSdkSandboxCallback callback) {
-            mLatch.countDown();
+                SandboxedSdk sandboxedSdk, ISdkSandboxManagerToSdkSandboxCallback callback) {
             mCallback = callback;
             mSuccessful = true;
+            mLatch.countDown();
         }
 
         @Override
         public void onLoadSdkError(LoadSdkException exception) {
-            mLatch.countDown();
             mErrorCode = exception.getLoadSdkErrorCode();
             mSuccessful = false;
+            mLatch.countDown();
         }
 
     }
@@ -392,7 +474,6 @@ public class SdkSandboxTest {
                 long timeSandboxCalledSystemServer,
                 Bundle params,
                 Bundle latencies) {
-            mLatch.countDown();
             mSurfacePackage = surfacePackage;
             mLatencySystemServerToSandbox =
                     latencies.getInt(
@@ -401,6 +482,7 @@ public class SdkSandboxTest {
                     latencies.getInt(IRequestSurfacePackageFromSdkCallback.LATENCY_SANDBOX);
             mLatencySdk = latencies.getInt(IRequestSurfacePackageFromSdkCallback.LATENCY_SDK);
             mTimeSandboxCalledSystemServer = timeSandboxCalledSystemServer;
+            mLatch.countDown();
         }
 
         @Override
@@ -410,9 +492,9 @@ public class SdkSandboxTest {
                 long timeSandboxCalledSystemServer,
                 boolean failedAtSdk,
                 Bundle sandboxLatencies) {
-            mLatch.countDown();
             mErrorCode = errorCode;
             mSuccessful = false;
+            mLatch.countDown();
         }
     }
 }

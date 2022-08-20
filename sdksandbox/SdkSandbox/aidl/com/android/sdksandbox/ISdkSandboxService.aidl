@@ -16,6 +16,7 @@
 
 package com.android.sdksandbox;
 
+import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.content.pm.ApplicationInfo;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -30,5 +31,5 @@ oneway interface ISdkSandboxService {
                   in String sdkCeDataDir, in String sdkDeDataDir,
                   in Bundle params, in ILoadSdkInSandboxCallback callback);
     void unloadSdk(IBinder sdkToken);
-    void syncDataFromClient(in Bundle data);
+    void syncDataFromClient(in SharedPreferencesUpdate update);
 }

@@ -58,6 +58,7 @@ import java.util.concurrent.Executor;
 /** Mobile Data Download Factory. */
 public class MobileDataDownloadFactory {
     private static MobileDataDownload sSingletonMdd;
+    private static SynchronousFileStorage sSynchronousFileStorage;
 
     private static final String MDD_METADATA_SHARED_PREFERENCES = "mdd_metadata_store";
     private static final String TOPICS_MANIFEST_ID = "TopicsManifestId";
@@ -118,14 +119,21 @@ public class MobileDataDownloadFactory {
         }
     }
 
+    /** Return a singleton of {@link SynchronousFileStorage}. */
     @NonNull
-    private static SynchronousFileStorage getFileStorage(@NonNull Context context) {
-        return new SynchronousFileStorage(
-                ImmutableList.of(
-                        /*backends*/ AndroidFileBackend.builder(context).build(),
-                        new JavaFileBackend()),
-                ImmutableList.of(/*transforms*/ ),
-                ImmutableList.of(/*monitors*/ ));
+    public static SynchronousFileStorage getFileStorage(@NonNull Context context) {
+        synchronized (MobileDataDownloadFactory.class) {
+            if (sSynchronousFileStorage == null) {
+                sSynchronousFileStorage =
+                        new SynchronousFileStorage(
+                                ImmutableList.of(
+                                        /*backends*/ AndroidFileBackend.builder(context).build(),
+                                        new JavaFileBackend()),
+                                ImmutableList.of(/*transforms*/ ),
+                                ImmutableList.of(/*monitors*/ ));
+            }
+            return sSynchronousFileStorage;
+        }
     }
 
     @NonNull
