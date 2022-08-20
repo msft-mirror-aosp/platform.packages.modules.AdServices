@@ -22,6 +22,7 @@ import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
+import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 import android.os.TransactionTooLargeException;
@@ -104,6 +105,9 @@ public class AdSelectionManager {
      *
      * <p>If the {@link TimeoutException} is thrown, it is caused when a timeout is encountered
      * during bidding, scoring, or overall selection process to find winning Ad.
+     *
+     * <p>If the {@link LimitExceededException} is thrown, it is caused when the calling package
+     * exceeds the allowed rate limits and is throttled.
      */
     public void selectAds(
             @NonNull AdSelectionConfig adSelectionConfig,

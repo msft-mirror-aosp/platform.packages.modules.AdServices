@@ -20,6 +20,7 @@ import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STAT
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION;
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S;
+import static com.android.adservices.service.PhFlags.KEY_SDK_REQUEST_PERMITS_PER_SECOND;
 
 import static org.junit.Assert.assertEquals;
 
@@ -123,5 +124,13 @@ public class PhFlagsFixture {
                 PhFlags.KEY_ISOLATE_MAX_HEAP_SIZE_BYTES,
                 Long.toString(value),
                 false);
+    }
+
+    public static void overrideSdkRequestPermitsPerSecond(int value) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_SDK_REQUEST_PERMITS_PER_SECOND,
+                Integer.toString(value),
+                true);
     }
 }

@@ -17,16 +17,20 @@
 package com.android.adservices.service.customaudience;
 
 import static android.adservices.common.AdServicesStatusUtils.ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE;
+import static android.adservices.common.AdServicesStatusUtils.RATE_LIMIT_REACHED_ERROR_MESSAGE;
 import static android.adservices.common.AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE;
 import static android.adservices.common.AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
+import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_JOIN_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_LEAVE_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO;
@@ -35,10 +39,12 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.stats.FledgeApiCallStatsMatcher.aCallStatForFledgeApiWithStatus;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyString;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.mockitoSession;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.staticMockMarker;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyNoMoreInteractions;
@@ -70,12 +76,12 @@ import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -84,10 +90,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.Spy;
 
 import java.util.concurrent.ExecutorService;
+import java.util.function.Supplier;
 
 public class CustomAudienceServiceImplTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
@@ -106,6 +114,8 @@ public class CustomAudienceServiceImplTest {
     @Mock private CustomAudienceDao mCustomAudienceDao;
     @Mock DevContextFilter mDevContextFilter;
     @Spy private final AdServicesLogger mAdServicesLoggerSpy = AdServicesLoggerImpl.getInstance();
+    @Mock private Throttler mMockThrottler;
+    private Supplier<Throttler> mThrottlerSupplier = () -> mMockThrottler;
 
     private final Flags mFlagsWithAllCheckEnabled = new FlagsWithCheckEnabledSwitch(true, true);
     private final Flags mFlagsWithForegroundCheckDisabled =
@@ -120,7 +130,7 @@ public class CustomAudienceServiceImplTest {
     @Before
     public void setup() throws Exception {
         mStaticMockitoSession =
-                ExtendedMockito.mockitoSession()
+                mockitoSession()
                         .initMocks(this)
                         .mockStatic(BackgroundFetchJobService.class)
                         .startMocking();
@@ -137,7 +147,15 @@ public class CustomAudienceServiceImplTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlagsWithAllCheckEnabled,
+                        mThrottlerSupplier,
                         CallingAppUidSupplierProcessImpl.create());
+
+        Mockito.lenient()
+                .when(mMockThrottler.tryAcquire(eq(FLEDGE_API_JOIN_CUSTOM_AUDIENCE), anyString()))
+                .thenReturn(true);
+        Mockito.lenient()
+                .when(mMockThrottler.tryAcquire(eq(FLEDGE_API_LEAVE_CUSTOM_AUDIENCE), anyString()))
+                .thenReturn(true);
     }
 
     @After
@@ -247,6 +265,7 @@ public class CustomAudienceServiceImplTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlagsWithAllCheckEnabled,
+                        mThrottlerSupplier,
                         CallingAppUidSupplierFailureImpl.create());
 
         assertThrows(
@@ -493,6 +512,7 @@ public class CustomAudienceServiceImplTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlagsWithAllCheckEnabled,
+                        mThrottlerSupplier,
                         CallingAppUidSupplierFailureImpl.create());
 
         assertThrows(
@@ -756,6 +776,7 @@ public class CustomAudienceServiceImplTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlagsWithForegroundCheckDisabled,
+                        mThrottlerSupplier,
                         CallingAppUidSupplierProcessImpl.create());
 
         mService.joinCustomAudience(VALID_CUSTOM_AUDIENCE, mICustomAudienceCallback);
@@ -835,6 +856,7 @@ public class CustomAudienceServiceImplTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlagsWithForegroundCheckDisabled,
+                        mThrottlerSupplier,
                         CallingAppUidSupplierProcessImpl.create());
 
         mService.leaveCustomAudience(
@@ -939,6 +961,7 @@ public class CustomAudienceServiceImplTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlagsWithForegroundCheckDisabled,
+                        mThrottlerSupplier,
                         CallingAppUidSupplierProcessImpl.create());
 
         mService.overrideCustomAudienceRemoteInfo(
@@ -1028,6 +1051,7 @@ public class CustomAudienceServiceImplTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlagsWithForegroundCheckDisabled,
+                        mThrottlerSupplier,
                         CallingAppUidSupplierProcessImpl.create());
 
         mService.removeCustomAudienceRemoteInfoOverride(
@@ -1097,6 +1121,7 @@ public class CustomAudienceServiceImplTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlagsWithForegroundCheckDisabled,
+                        mThrottlerSupplier,
                         CallingAppUidSupplierProcessImpl.create());
 
         mService.resetAllCustomAudienceOverrides(mCustomAudienceOverrideCallback);
@@ -1250,6 +1275,7 @@ public class CustomAudienceServiceImplTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlagsWithEnrollmentCheckDisabled,
+                        mThrottlerSupplier,
                         CallingAppUidSupplierProcessImpl.create());
 
         mService.joinCustomAudience(VALID_CUSTOM_AUDIENCE, mICustomAudienceCallback);
@@ -1334,6 +1360,7 @@ public class CustomAudienceServiceImplTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlagsWithEnrollmentCheckDisabled,
+                        mThrottlerSupplier,
                         CallingAppUidSupplierProcessImpl.create());
 
         mService.leaveCustomAudience(
@@ -1446,6 +1473,60 @@ public class CustomAudienceServiceImplTest {
                         AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
         verifyErrorResponseICustomAudienceCallback(
                 STATUS_CALLER_NOT_ALLOWED, SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE);
+    }
+
+    @Test
+    public void testJoinCustomAudience_throttledFailure() throws RemoteException {
+        // Throttle Join Custom Audience
+        when(mMockThrottler.tryAcquire(eq(FLEDGE_API_JOIN_CUSTOM_AUDIENCE), anyString()))
+                .thenReturn(false);
+
+        mService.joinCustomAudience(VALID_CUSTOM_AUDIENCE, mICustomAudienceCallback);
+
+        ArgumentCaptor<FledgeErrorResponse> actualResponseCaptor =
+                ArgumentCaptor.forClass(FledgeErrorResponse.class);
+        verify(mICustomAudienceCallback).onFailure(actualResponseCaptor.capture());
+        assertEquals(STATUS_RATE_LIMIT_REACHED, actualResponseCaptor.getValue().getStatusCode());
+        assertEquals(
+                RATE_LIMIT_REACHED_ERROR_MESSAGE,
+                actualResponseCaptor.getValue().getErrorMessage());
+        verify(mFledgeAuthorizationFilter)
+                .assertAppDeclaredPermission(
+                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
+        verify(mFledgeAuthorizationFilter)
+                .assertCallingPackageName(
+                        CustomAudienceFixture.VALID_OWNER,
+                        Process.myUid(),
+                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
+    }
+
+    @Test
+    public void testLeaveCustomAudience_throttledFailure() throws RemoteException {
+        // Throttle Leave Custom Audience
+        when(mMockThrottler.tryAcquire(eq(FLEDGE_API_LEAVE_CUSTOM_AUDIENCE), anyString()))
+                .thenReturn(false);
+
+        mService.leaveCustomAudience(
+                CustomAudienceFixture.VALID_OWNER,
+                CommonFixture.VALID_BUYER_1,
+                CustomAudienceFixture.VALID_NAME,
+                mICustomAudienceCallback);
+
+        ArgumentCaptor<FledgeErrorResponse> actualResponseCaptor =
+                ArgumentCaptor.forClass(FledgeErrorResponse.class);
+        verify(mICustomAudienceCallback).onFailure(actualResponseCaptor.capture());
+        assertEquals(STATUS_RATE_LIMIT_REACHED, actualResponseCaptor.getValue().getStatusCode());
+        assertEquals(
+                RATE_LIMIT_REACHED_ERROR_MESSAGE,
+                actualResponseCaptor.getValue().getErrorMessage());
+        verify(mFledgeAuthorizationFilter)
+                .assertAppDeclaredPermission(
+                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
+        verify(mFledgeAuthorizationFilter)
+                .assertCallingPackageName(
+                        CustomAudienceFixture.VALID_OWNER,
+                        Process.myUid(),
+                        AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
     }
 
     private void verifyErrorResponseICustomAudienceCallback(int statusCode, String errorMessage)

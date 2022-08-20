@@ -168,6 +168,7 @@ public class FledgeCtsDebuggableTest {
         PhFlagsFixture.overrideForegroundStatusForFledgeReportImpression(false);
         PhFlagsFixture.overrideEnforceIsolateMaxHeapSize(false);
         PhFlagsFixture.overrideIsolateMaxHeapSizeBytes(0);
+        PhFlagsFixture.overrideSdkRequestPermitsPerSecond(Integer.MAX_VALUE);
     }
 
     @Test
