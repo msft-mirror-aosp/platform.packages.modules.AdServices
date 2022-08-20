@@ -15,6 +15,8 @@
  */
 package android.adservices.measurement;
 
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION;
+
 import android.adservices.AdServicesState;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
@@ -22,6 +24,7 @@ import android.annotation.CallbackExecutor;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.annotation.RequiresPermission;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.net.Uri;
@@ -44,7 +47,6 @@ import java.util.concurrent.Executor;
  * MeasurementManager.
  */
 public class MeasurementManager {
-
     /** @hide */
     public static final String MEASUREMENT_SERVICE = "measurement_service";
 
@@ -151,11 +153,13 @@ public class MeasurementManager {
      * @param executor used by callback to dispatch results.
      * @param callback intended to notify asynchronously the API result.
      */
+    @RequiresPermission(ACCESS_ADSERVICES_ATTRIBUTION)
     public void registerSource(
             @NonNull Uri attributionSource,
             @Nullable InputEvent inputEvent,
             @Nullable @CallbackExecutor Executor executor,
             @Nullable OutcomeReceiver<Object, Exception> callback) {
+
         Objects.requireNonNull(attributionSource);
         register(
                 new RegistrationRequest.Builder()
@@ -182,6 +186,7 @@ public class MeasurementManager {
      * @param executor used by callback to dispatch results.
      * @param callback intended to notify asynchronously the API result.
      */
+    @RequiresPermission(ACCESS_ADSERVICES_ATTRIBUTION)
     public void registerWebSource(
             @NonNull WebSourceRegistrationRequest request,
             @Nullable Executor executor,
@@ -234,6 +239,7 @@ public class MeasurementManager {
      * @param executor used by callback to dispatch results
      * @param callback intended to notify asynchronously the API result
      */
+    @RequiresPermission(ACCESS_ADSERVICES_ATTRIBUTION)
     public void registerWebTrigger(
             @NonNull WebTriggerRegistrationRequest request,
             @Nullable Executor executor,
@@ -281,10 +287,12 @@ public class MeasurementManager {
      * @param executor used by callback to dispatch results.
      * @param callback intended to notify asynchronously the API result.
      */
+    @RequiresPermission(ACCESS_ADSERVICES_ATTRIBUTION)
     public void registerTrigger(
             @NonNull Uri trigger,
             @Nullable @CallbackExecutor Executor executor,
             @Nullable OutcomeReceiver<Object, Exception> callback) {
+
         Objects.requireNonNull(trigger);
         register(
                 new RegistrationRequest.Builder()
@@ -371,6 +379,7 @@ public class MeasurementManager {
      * @param executor used by callback to dispatch results.
      * @param callback intended to notify asynchronously the API result.
      */
+    @RequiresPermission(ACCESS_ADSERVICES_ATTRIBUTION)
     public void getMeasurementApiStatus(
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<Integer, Exception> callback) {
