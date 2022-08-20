@@ -52,6 +52,7 @@ public final class PhFlags implements Flags {
     // Topics classifier keys
     static final String KEY_CLASSIFIER_TYPE = "classifier_type";
     static final String KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS = "classifier_number_of_top_labels";
+    static final String KEY_CLASSIFIER_THRESHOLD = "classifier_threshold";
 
     // Measurement keys
     static final String KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS =
@@ -317,6 +318,15 @@ public final class PhFlags implements Flags {
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS,
                         /* defaultValue */ CLASSIFIER_NUMBER_OF_TOP_LABELS));
+    }
+
+    @Override
+    public float getClassifierThreshold() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getFloat(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_CLASSIFIER_THRESHOLD,
+                /* defaultValue */ CLASSIFIER_THRESHOLD);
     }
 
     @Override
