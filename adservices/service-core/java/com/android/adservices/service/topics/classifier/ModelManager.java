@@ -305,8 +305,10 @@ public class ModelManager {
                 String[] columns = line.split(LIST_COLUMN_DELIMITER);
 
                 // If the line has less than 2 elements, this app contains empty topic
-                // and will not be saved in the appTopicsMap.
+                // and save an empty topic list of this app in appTopicsMap.
                 if (columns.length < 2) {
+                    // columns[0] if the app's name
+                    appTopicsMap.put(columns[0], ImmutableList.of());
                     continue;
                 }
 
@@ -334,12 +336,7 @@ public class ModelManager {
                     allowedAppTopics.add(Integer.parseInt(appTopic));
                 }
 
-                // Do not add empty topics in the precomputed list.
-                if (allowedAppTopics.isEmpty()) {
-                    LogUtil.e("Topics for " + app + " cannot be empty.");
-                } else {
-                    appTopicsMap.put(app, ImmutableList.copyOf(allowedAppTopics));
-                }
+                appTopicsMap.put(app, ImmutableList.copyOf(allowedAppTopics));
             }
         } catch (IOException e) {
             LogUtil.e(e, "Unable to read precomputed app topics list");
