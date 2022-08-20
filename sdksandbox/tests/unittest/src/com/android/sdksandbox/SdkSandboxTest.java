@@ -22,6 +22,7 @@ import android.app.sdksandbox.KeyWithType;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SharedPreferencesUpdate;
+import android.app.sdksandbox.testutils.FakeSharedPreferencesSyncCallback;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
@@ -277,7 +278,7 @@ public class SdkSandboxTest {
 
     @Test
     public void testSyncDataFromClient_StoresInClientSharedPreference() throws Exception {
-        mService.syncDataFromClient(TEST_UPDATE);
+        mService.syncDataFromClient(TEST_UPDATE, new FakeSharedPreferencesSyncCallback());
 
         // Verify that ClientSharedPreference contains the synced data
         SharedPreferences pref = getClientSharedPreference();
@@ -305,7 +306,7 @@ public class SdkSandboxTest {
                         new KeyWithType("long", KeyWithType.KEY_TYPE_LONG),
                         new KeyWithType("arrayList", KeyWithType.KEY_TYPE_STRING_SET));
         final SharedPreferencesUpdate update = new SharedPreferencesUpdate(keysToSync, bundle);
-        mService.syncDataFromClient(update);
+        mService.syncDataFromClient(update, new FakeSharedPreferencesSyncCallback());
 
         // Verify that ClientSharedPreference contains the synced data
         SharedPreferences pref = getClientSharedPreference();
@@ -322,13 +323,13 @@ public class SdkSandboxTest {
     @Test
     public void testSyncDataFromClient_KeyCanBeUpdated() throws Exception {
         // Preload some data
-        mService.syncDataFromClient(TEST_UPDATE);
+        mService.syncDataFromClient(TEST_UPDATE, new FakeSharedPreferencesSyncCallback());
 
         // Now send in a new update
         final Bundle newData = getBundleFromMap(Map.of(KEY_TO_UPDATE, "update"));
         final SharedPreferencesUpdate newUpdate =
                 new SharedPreferencesUpdate(List.of(KEY_WITH_TYPE_TO_UPDATE), newData);
-        mService.syncDataFromClient(newUpdate);
+        mService.syncDataFromClient(newUpdate, new FakeSharedPreferencesSyncCallback());
 
         // Verify that ClientSharedPreference contains the synced data
         SharedPreferences pref = getClientSharedPreference();
@@ -339,16 +340,26 @@ public class SdkSandboxTest {
     @Test
     public void testSyncDataFromClient_KeyCanBeRemoved() throws Exception {
         // Preload some data
-        mService.syncDataFromClient(TEST_UPDATE);
+        mService.syncDataFromClient(TEST_UPDATE, new FakeSharedPreferencesSyncCallback());
 
         // Now send in a new update
         final SharedPreferencesUpdate newUpdate =
                 new SharedPreferencesUpdate(TEST_UPDATE.getKeysInUpdate(), new Bundle());
-        mService.syncDataFromClient(newUpdate);
+        mService.syncDataFromClient(newUpdate, new FakeSharedPreferencesSyncCallback());
 
         // Verify that ClientSharedPreference contains the synced data
         SharedPreferences pref = getClientSharedPreference();
         assertThat(pref.getAll().keySet()).doesNotContain(KEY_TO_UPDATE);
+    }
+
+    @Test
+    public void testSyncDataFromClient_CallbackIsCalled() throws Exception {
+        // Preload some data
+        final FakeSharedPreferencesSyncCallback callback = new FakeSharedPreferencesSyncCallback();
+        mService.syncDataFromClient(TEST_UPDATE, callback);
+
+        // Verify that ClientSharedPreference contains the synced data
+        assertThat(callback.isSuccessful()).isTrue();
     }
 
     private static Bundle getBundleFromMap(Map<String, String> data) {
