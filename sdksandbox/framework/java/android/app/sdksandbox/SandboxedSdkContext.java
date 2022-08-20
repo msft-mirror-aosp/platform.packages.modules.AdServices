@@ -16,6 +16,8 @@
 
 package android.app.sdksandbox;
 
+import static android.app.sdksandbox.SdkSandboxSystemServiceRegistry.ServiceMutator;
+
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
@@ -23,6 +25,8 @@ import android.content.ContextWrapper;
 import android.content.pm.ApplicationInfo;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
+
+import com.android.internal.annotations.VisibleForTesting;
 
 import java.io.File;
 
@@ -54,6 +58,7 @@ public final class SandboxedSdkContext extends ContextWrapper {
     private final ApplicationInfo mSdkProviderInfo;
     @Nullable private final File mCeDataDir;
     @Nullable private final File mDeDataDir;
+    private final SdkSandboxSystemServiceRegistry mSdkSandboxSystemServiceRegistry;
 
     public SandboxedSdkContext(
             @NonNull Context baseContext,
@@ -62,6 +67,25 @@ public final class SandboxedSdkContext extends ContextWrapper {
             @NonNull String sdkName,
             @Nullable String sdkCeDataDir,
             @Nullable String sdkDeDataDir) {
+        this(
+                baseContext,
+                clientPackageName,
+                info,
+                sdkName,
+                sdkCeDataDir,
+                sdkDeDataDir,
+                SdkSandboxSystemServiceRegistry.getInstance());
+    }
+
+    @VisibleForTesting
+    public SandboxedSdkContext(
+            @NonNull Context baseContext,
+            @NonNull String clientPackageName,
+            @NonNull ApplicationInfo info,
+            @NonNull String sdkName,
+            @Nullable String sdkCeDataDir,
+            @Nullable String sdkDeDataDir,
+            SdkSandboxSystemServiceRegistry sdkSandboxSystemServiceRegistry) {
         super(baseContext);
         mClientPackageName = clientPackageName;
         mSdkName = sdkName;
@@ -82,6 +106,8 @@ public final class SandboxedSdkContext extends ContextWrapper {
 
         mCeDataDir = (sdkCeDataDir != null) ? new File(sdkCeDataDir) : null;
         mDeDataDir = (sdkDeDataDir != null) ? new File(sdkDeDataDir) : null;
+
+        mSdkSandboxSystemServiceRegistry = sdkSandboxSystemServiceRegistry;
     }
 
     /**
@@ -177,5 +203,19 @@ public final class SandboxedSdkContext extends ContextWrapper {
             throw new RuntimeException("No data directory found for sdk: " + getSdkName());
         }
         return res;
+    }
+
+    @Override
+    @Nullable
+    public Object getSystemService(String name) {
+        if (name == null) {
+            return null;
+        }
+        Object service = getBaseContext().getSystemService(name);
+        ServiceMutator serviceMutator = mSdkSandboxSystemServiceRegistry.getServiceMutator(name);
+        if (serviceMutator != null) {
+            service = serviceMutator.setContext(service, this);
+        }
+        return service;
     }
 }

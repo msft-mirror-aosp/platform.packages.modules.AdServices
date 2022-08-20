@@ -42,6 +42,13 @@ public class SharedPreferencesUpdateUnitTest {
                     new KeyWithType(KEY_STRING, KeyWithType.KEY_TYPE_STRING));
 
     @Test
+    public void testSharedPreferencesUpdate_DescribeContents() throws Exception {
+        final SharedPreferencesUpdate update =
+                new SharedPreferencesUpdate(KEYS_TO_SYNC, getTestBundle());
+        assertThat(update.describeContents()).isEqualTo(0);
+    }
+
+    @Test
     public void testSharedPreferencesUpdate_IsParcelable() throws Exception {
         final SharedPreferencesUpdate update =
                 new SharedPreferencesUpdate(KEYS_TO_SYNC, getTestBundle());

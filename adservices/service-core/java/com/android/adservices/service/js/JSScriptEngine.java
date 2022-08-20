@@ -21,6 +21,7 @@ import android.annotation.Nullable;
 import android.annotation.SuppressLint;
 import android.content.Context;
 
+import androidx.javascriptengine.IsolateStartupParameters;
 import androidx.javascriptengine.JavaScriptIsolate;
 import androidx.javascriptengine.JavaScriptSandbox;
 
@@ -49,8 +50,8 @@ import javax.annotation.concurrent.GuardedBy;
 
 /**
  * A convenience class to execute JS scripts using a WebView. Because arguments to the {@link
- * #evaluate(String, List)} methods are set at WebView level, calls to that methods are serialized
- * to avoid one scripts being able to interfere one another.
+ * #evaluate(String, List, IsolateSettings)} methods are set at WebView level, calls to that methods
+ * are serialized to avoid one scripts being able to interfere one another.
  *
  * <p>The class is re-entrant, for best performance when using it on multiple thread is better to
  * have every thread using its own instance.
@@ -61,6 +62,9 @@ public class JSScriptEngine {
     @VisibleForTesting public static final String TAG = JSScriptEngine.class.getSimpleName();
     public static final String WASM_MODULE_BYTES_ID = "__wasmModuleBytes";
     public static final String WASM_MODULE_ARG_NAME = "wasmModule";
+
+    public static final String NON_SUPPORTED_MAX_HEAP_SIZE_ERROR =
+            "JS isolate does not support Max heap size";
 
     @SuppressLint("StaticFieldLeak")
     private static JSScriptEngine sSingleton;
@@ -264,13 +268,30 @@ public class JSScriptEngine {
     }
 
     /**
-     * Same as {@link #evaluate(String, List, String)} where the entry point function name is {@link
-     * #ENTRY_POINT_FUNC_NAME}.
+     * Same as {@link #evaluate(String, List, String, IsolateSettings)} where the entry point
+     * function name is {@link #ENTRY_POINT_FUNC_NAME}.
      */
     @NonNull
     public ListenableFuture<String> evaluate(
+            @NonNull String jsScript,
+            @NonNull List<JSScriptArgument> args,
+            @NonNull IsolateSettings isolateSettings) {
+        return evaluate(jsScript, args, ENTRY_POINT_FUNC_NAME, isolateSettings);
+    }
+
+    /**
+     * Same as {@link #evaluate(String, List, String, IsolateSettings)} where the entry point
+     * function name is {@link #ENTRY_POINT_FUNC_NAME}.
+     */
+    // TODO(b/242358625): remove this method post updating the perf test
+    @NonNull
+    public ListenableFuture<String> evaluate(
             @NonNull String jsScript, @NonNull List<JSScriptArgument> args) {
-        return evaluate(jsScript, args, ENTRY_POINT_FUNC_NAME);
+        return evaluate(
+                jsScript,
+                args,
+                ENTRY_POINT_FUNC_NAME,
+                IsolateSettings.forMaxHeapSizeEnforcementDisabled());
     }
 
     /**
@@ -288,8 +309,34 @@ public class JSScriptEngine {
     public ListenableFuture<String> evaluate(
             @NonNull String jsScript,
             @NonNull List<JSScriptArgument> args,
+            @NonNull String entryFunctionName,
+            @NonNull IsolateSettings isolateSettings) {
+        return evaluateInternal(jsScript, args, entryFunctionName, null, isolateSettings);
+    }
+
+    /**
+     * Invokes the function {@code entryFunctionName} defined by the JS code in {@code jsScript} and
+     * return the result. It will reset the WebView status after evaluating the script.
+     *
+     * @param jsScript The JS script
+     * @param args The arguments to pass when invoking {@code entryFunctionName}
+     * @param entryFunctionName The name of a function defined in {@code jsScript} that should be
+     *     invoked.
+     * @return A {@link ListenableFuture} containing the JS string representation of the result of
+     *     {@code entryFunctionName}'s invocation
+     */
+    // TODO(b/242358625): remove this method post updating the perf test
+    @NonNull
+    public ListenableFuture<String> evaluate(
+            @NonNull String jsScript,
+            @NonNull List<JSScriptArgument> args,
             @NonNull String entryFunctionName) {
-        return evaluateInternal(jsScript, args, entryFunctionName, null);
+        return evaluateInternal(
+                jsScript,
+                args,
+                entryFunctionName,
+                null,
+                IsolateSettings.forMaxHeapSizeEnforcementDisabled());
     }
 
     /**
@@ -311,10 +358,42 @@ public class JSScriptEngine {
             @NonNull String jsScript,
             @NonNull byte[] wasmBinary,
             @NonNull List<JSScriptArgument> args,
+            @NonNull String entryFunctionName,
+            @NonNull IsolateSettings isolateSettings) {
+        Objects.requireNonNull(wasmBinary);
+
+        return evaluateInternal(jsScript, args, entryFunctionName, wasmBinary, isolateSettings);
+    }
+
+    /**
+     * Loads the WASM module defined by {@code wasmBinary}, invokes the function {@code
+     * entryFunctionName} defined by the JS code in {@code jsScript} and return the result. It will
+     * reset the WebView status after evaluating the script. The function is expected to accept all
+     * the arguments defined in {@code args} plus an extra final parameter of type {@code
+     * WebAssembly.Module}.
+     *
+     * @param jsScript The JS script
+     * @param args The arguments to pass when invoking {@code entryFunctionName}
+     * @param entryFunctionName The name of a function defined in {@code jsScript} that should be
+     *     invoked.
+     * @return A {@link ListenableFuture} containing the JS string representation of the result of
+     *     {@code entryFunctionName}'s invocation
+     */
+    // TODO(b/242358625): remove this method post updating the perf test
+    @NonNull
+    public ListenableFuture<String> evaluate(
+            @NonNull String jsScript,
+            @NonNull byte[] wasmBinary,
+            @NonNull List<JSScriptArgument> args,
             @NonNull String entryFunctionName) {
         Objects.requireNonNull(wasmBinary);
 
-        return evaluateInternal(jsScript, args, entryFunctionName, wasmBinary);
+        return evaluateInternal(
+                jsScript,
+                args,
+                entryFunctionName,
+                wasmBinary,
+                IsolateSettings.forMaxHeapSizeEnforcementDisabled());
     }
 
     @NonNull
@@ -322,7 +401,8 @@ public class JSScriptEngine {
             @NonNull String jsScript,
             @NonNull List<JSScriptArgument> args,
             @NonNull String entryFunctionName,
-            @Nullable byte[] wasmBinary) {
+            @Nullable byte[] wasmBinary,
+            @NonNull IsolateSettings isolateSettings) {
         Objects.requireNonNull(jsScript);
         Objects.requireNonNull(args);
         Objects.requireNonNull(entryFunctionName);
@@ -336,7 +416,8 @@ public class JSScriptEngine {
                                         jsScript,
                                         args,
                                         entryFunctionName,
-                                        wasmBinary),
+                                        wasmBinary,
+                                        isolateSettings),
                         mExecutorService)
                 .finishToFuture();
     }
@@ -348,7 +429,8 @@ public class JSScriptEngine {
             @NonNull String jsScript,
             @NonNull List<JSScriptArgument> args,
             @NonNull String entryFunctionName,
-            @Nullable byte[] wasmBinary) {
+            @Nullable byte[] wasmBinary,
+            @NonNull IsolateSettings isolateSettings) {
 
         boolean hasWasmModule = wasmBinary != null;
         if (hasWasmModule) {
@@ -358,7 +440,7 @@ public class JSScriptEngine {
                             + " Sandbox available on this device");
         }
 
-        JavaScriptIsolate jsIsolate = createIsolate(jsSandbox);
+        JavaScriptIsolate jsIsolate = createIsolate(jsSandbox, isolateSettings);
         closer.eventuallyClose(new CloseableIsolateWrapper(jsIsolate), mExecutorService);
 
         if (hasWasmModule) {
@@ -411,7 +493,7 @@ public class JSScriptEngine {
         // returns a promises so all our code will be in a promise chain
         boolean promiseReturnSupported =
                 jsSandbox.isFeatureSupported(JavaScriptSandbox.JS_FEATURE_PROMISE_RETURN);
-        LogUtil.d(
+        LogUtil.v(
                 String.format(
                         "Is WASM supported? WASM_COMPILATION: %b  PROVIDE_CONSUME_ARRAY_BUFFER: %b,"
                                 + " PROMISE_RETURN: %b",
@@ -424,7 +506,7 @@ public class JSScriptEngine {
     }
 
     /**
-     * @return a future value inidicating if the JS Sandbox installed on the device supports WASM
+     * @return a future value indicating if the JS Sandbox installed on the device supports WASM
      *     execution or an error if the connection to the JS Sandbox failed.
      */
     public ListenableFuture<Boolean> isWasmSupported() {
@@ -433,16 +515,56 @@ public class JSScriptEngine {
                 .transform(jsSandbox -> isWasmSupported(jsSandbox), mExecutorService);
     }
 
+    boolean isConfigurableHeapSizeSupported(JavaScriptSandbox jsSandbox) {
+        boolean isConfigurableHeapSupported =
+                jsSandbox.isFeatureSupported(JavaScriptSandbox.JS_FEATURE_ISOLATE_MAX_HEAP_SIZE);
+        LogUtil.v("Is configurable max heap size supported? : %b", isConfigurableHeapSupported);
+        return isConfigurableHeapSupported;
+    }
+
     /**
      * Creates a new isolate. This method handles the case where the `JavaScriptSandbox` process has
      * been terminated by closing this connection. The ongoing call will fail, we won't try to
      * recover it to keep the code simple.
+     *
+     * <p>Throws error in case, we have enforced max heap memory restrictions and isolate does not
+     * support that feature
      */
-    private JavaScriptIsolate createIsolate(JavaScriptSandbox jsSandbox) {
+    private JavaScriptIsolate createIsolate(
+            JavaScriptSandbox jsSandbox, IsolateSettings isolateSettings) {
         StopWatch isolateStopWatch =
                 mProfiler.start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
         try {
-            return jsSandbox.createIsolate();
+            if (!isConfigurableHeapSizeSupported(jsSandbox)
+                    && isolateSettings.getEnforceMaxHeapSizeFeature()) {
+                LogUtil.e("Memory limit enforcement required, but not supported by Isolate");
+                throw new IllegalStateException(NON_SUPPORTED_MAX_HEAP_SIZE_ERROR);
+            }
+
+            JavaScriptIsolate javaScriptIsolate;
+            if (isolateSettings.getEnforceMaxHeapSizeFeature()
+                    && isolateSettings.getMaxHeapSizeBytes() > 0) {
+                LogUtil.d(
+                        "Creating JS isolate with memory limit: %d bytes",
+                        isolateSettings.getMaxHeapSizeBytes());
+                IsolateStartupParameters startupParams = new IsolateStartupParameters();
+                startupParams.setMaxHeapSizeBytes(isolateSettings.getMaxHeapSizeBytes());
+                javaScriptIsolate = jsSandbox.createIsolate(startupParams);
+                if (javaScriptIsolate == null) {
+                    throw new IllegalStateException(
+                            "JS Isolate does not support setting max heap size");
+                }
+            } else {
+                LogUtil.d("Creating JS isolate with unbounded memory limit");
+                javaScriptIsolate = jsSandbox.createIsolate();
+            }
+            return javaScriptIsolate;
+        } catch (IllegalStateException isolateMemoryLimitUnsupported) {
+            LogUtil.e(
+                    "JavaScriptIsolate does not support setting max heap size, cannot create an"
+                            + " isolate to run JS code into.");
+            throw new JSScriptEngineConnectionException(
+                    "Unable to create isolate", isolateMemoryLimitUnsupported);
         } catch (RuntimeException jsSandboxIsDisconnected) {
             LogUtil.e(
                     "JavaScriptSandboxProcess is disconnected, cannot create an isolate to run JS"

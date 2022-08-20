@@ -94,7 +94,7 @@ public class CustomAudienceApiCtsTest {
     public void testJoinCustomAudience_validCustomAudience_success()
             throws ExecutionException, InterruptedException {
         mClient.joinCustomAudience(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .build())
                 .get();
     }
@@ -107,7 +107,7 @@ public class CustomAudienceApiCtsTest {
                         () ->
                                 mClient.joinCustomAudience(
                                                 CustomAudienceFixture.getValidBuilderForBuyer(
-                                                                CommonFixture.VALID_BUYER)
+                                                                CommonFixture.VALID_BUYER_1)
                                                         .setOwnerPackageName("Invalid_owner")
                                                         .build())
                                         .get());
@@ -117,7 +117,7 @@ public class CustomAudienceApiCtsTest {
     @Test
     public void testJoinCustomAudience_illegalExpirationTime_fail() {
         CustomAudience customAudience =
-                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                         .setExpirationTime(CustomAudienceFixture.INVALID_BEYOND_MAX_EXPIRATION_TIME)
                         .build();
         Exception exception =
@@ -131,12 +131,12 @@ public class CustomAudienceApiCtsTest {
     public void testLeaveCustomAudience_joinedCustomAudience_success()
             throws ExecutionException, InterruptedException {
         mClient.joinCustomAudience(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .build())
                 .get();
         mClient.leaveCustomAudience(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         CustomAudienceFixture.VALID_NAME)
                 .get();
     }
@@ -146,7 +146,7 @@ public class CustomAudienceApiCtsTest {
             throws ExecutionException, InterruptedException {
         mClient.leaveCustomAudience(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         "not_exist_name")
                 .get();
     }
@@ -154,12 +154,16 @@ public class CustomAudienceApiCtsTest {
     @Test
     public void testLeaveCustomAudience_ownerNotCallingApp_fail()
             throws ExecutionException, InterruptedException {
-        // TODO: This behavior is incorrect; owner mismatch should be passed up asynchronously
-        mClient.leaveCustomAudience(
-                        "Invalid_owner",
-                        CommonFixture.VALID_BUYER,
-                        CustomAudienceFixture.VALID_NAME)
-                .get();
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                mClient.leaveCustomAudience(
+                                                "Invalid_owner",
+                                                CommonFixture.VALID_BUYER_1,
+                                                CustomAudienceFixture.VALID_NAME)
+                                        .get());
+        assertTrue(exception.getCause() instanceof SecurityException);
     }
 
     @Test

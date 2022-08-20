@@ -57,6 +57,7 @@ import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
@@ -79,24 +80,24 @@ public class CustomAudienceServiceEndToEndTest {
     protected static final Context CONTEXT = ApplicationProvider.getApplicationContext();
 
     private static final CustomAudience CUSTOM_AUDIENCE_PK1_1 =
-            CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER).build();
+            CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build();
 
     private static final CustomAudience CUSTOM_AUDIENCE_PK1_2 =
-            CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+            CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                     .setActivationTime(CustomAudienceFixture.VALID_DELAYED_ACTIVATION_TIME)
                     .setExpirationTime(CustomAudienceFixture.VALID_DELAYED_EXPIRATION_TIME)
                     .build();
 
     private static final CustomAudience CUSTOM_AUDIENCE_PK1_BEYOND_MAX_EXPIRATION_TIME =
-            CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+            CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                     .setExpirationTime(CustomAudienceFixture.INVALID_BEYOND_MAX_EXPIRATION_TIME)
                     .build();
 
     private static final DBCustomAudience DB_CUSTOM_AUDIENCE_PK1_1 =
-            DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER).build();
+            DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1).build();
 
     private static final DBCustomAudience DB_CUSTOM_AUDIENCE_PK1_2 =
-            DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER)
+            DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
                     .setActivationTime(CustomAudienceFixture.VALID_DELAYED_ACTIVATION_TIME)
                     .setExpirationTime(CustomAudienceFixture.VALID_DELAYED_EXPIRATION_TIME)
                     .build();
@@ -159,12 +160,13 @@ public class CustomAudienceServiceEndToEndTest {
                                 CONTEXT.getPackageManager(),
                                 EnrollmentDao.getInstance(CONTEXT),
                                 mAdServicesLogger),
+                        new FledgeAllowListsFilter(CommonFixture.FLAGS_FOR_TEST, mAdServicesLogger),
                         mConsentManagerMock,
                         mDevContextFilter,
                         MoreExecutors.newDirectExecutorService(),
                         mAdServicesLogger,
                         mAppImportanceFilter,
-                        FlagsFactory.getFlagsForTest(),
+                        CommonFixture.FLAGS_FOR_TEST,
                         CallingAppUidSupplierProcessImpl.create());
     }
 
@@ -195,12 +197,13 @@ public class CustomAudienceServiceEndToEndTest {
                                 CONTEXT.getPackageManager(),
                                 EnrollmentDao.getInstance(CONTEXT),
                                 mAdServicesLogger),
+                        new FledgeAllowListsFilter(CommonFixture.FLAGS_FOR_TEST, mAdServicesLogger),
                         mConsentManagerMock,
                         mDevContextFilter,
                         MoreExecutors.newDirectExecutorService(),
                         mAdServicesLogger,
                         mAppImportanceFilter,
-                        FlagsFactory.getFlagsForTest(),
+                        CommonFixture.FLAGS_FOR_TEST,
                         CallingAppUidSupplierFailureImpl.create());
 
         ResultCapturingCallback callback = new ResultCapturingCallback();
@@ -212,7 +215,7 @@ public class CustomAudienceServiceEndToEndTest {
         assertNull(
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         CustomAudienceFixture.VALID_NAME));
     }
 
@@ -220,7 +223,7 @@ public class CustomAudienceServiceEndToEndTest {
     public void testJoinCustomAudience_callerPackageNameMismatch_fail() {
         ResultCapturingCallback callback = new ResultCapturingCallback();
         mService.joinCustomAudience(
-                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                         .setOwnerPackageName("other_owner")
                         .build(),
                 callback);
@@ -233,7 +236,7 @@ public class CustomAudienceServiceEndToEndTest {
         assertNull(
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         CustomAudienceFixture.VALID_NAME));
     }
 
@@ -253,7 +256,7 @@ public class CustomAudienceServiceEndToEndTest {
                 DB_CUSTOM_AUDIENCE_PK1_1,
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         CustomAudienceFixture.VALID_NAME));
 
         callback = new ResultCapturingCallback();
@@ -263,7 +266,7 @@ public class CustomAudienceServiceEndToEndTest {
                 DB_CUSTOM_AUDIENCE_PK1_2,
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         CustomAudienceFixture.VALID_NAME));
 
         verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
@@ -298,7 +301,7 @@ public class CustomAudienceServiceEndToEndTest {
         assertNull(
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         CustomAudienceFixture.VALID_NAME));
     }
 
@@ -324,12 +327,13 @@ public class CustomAudienceServiceEndToEndTest {
                                 CONTEXT.getPackageManager(),
                                 EnrollmentDao.getInstance(CONTEXT),
                                 mAdServicesLogger),
+                        new FledgeAllowListsFilter(CommonFixture.FLAGS_FOR_TEST, mAdServicesLogger),
                         mConsentManagerMock,
                         mDevContextFilter,
                         MoreExecutors.newDirectExecutorService(),
                         mAdServicesLogger,
                         mAppImportanceFilter,
-                        FlagsFactory.getFlagsForTest(),
+                        CommonFixture.FLAGS_FOR_TEST,
                         CallingAppUidSupplierFailureImpl.create());
 
         ResultCapturingCallback callback = new ResultCapturingCallback();
@@ -338,7 +342,7 @@ public class CustomAudienceServiceEndToEndTest {
                 () -> {
                     mService.leaveCustomAudience(
                             CustomAudienceFixture.VALID_OWNER,
-                            CommonFixture.VALID_BUYER,
+                            CommonFixture.VALID_BUYER_1,
                             CustomAudienceFixture.VALID_NAME,
                             callback);
                 });
@@ -349,7 +353,7 @@ public class CustomAudienceServiceEndToEndTest {
         ResultCapturingCallback callback = new ResultCapturingCallback();
         mService.leaveCustomAudience(
                 "other_owner",
-                CommonFixture.VALID_BUYER,
+                CommonFixture.VALID_BUYER_1,
                 CustomAudienceFixture.VALID_NAME,
                 callback);
 
@@ -377,20 +381,20 @@ public class CustomAudienceServiceEndToEndTest {
                 DB_CUSTOM_AUDIENCE_PK1_1,
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         CustomAudienceFixture.VALID_NAME));
 
         callback = new ResultCapturingCallback();
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
-                CommonFixture.VALID_BUYER,
+                CommonFixture.VALID_BUYER_1,
                 CustomAudienceFixture.VALID_NAME,
                 callback);
         assertTrue(callback.isSuccess());
         assertNull(
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         CustomAudienceFixture.VALID_NAME));
 
         verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)));
@@ -436,14 +440,14 @@ public class CustomAudienceServiceEndToEndTest {
         ResultCapturingCallback callback = new ResultCapturingCallback();
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
-                CommonFixture.VALID_BUYER,
+                CommonFixture.VALID_BUYER_1,
                 "Not exist name",
                 callback);
         assertTrue(callback.isSuccess());
         assertNull(
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         CustomAudienceFixture.VALID_NAME));
     }
 

@@ -49,7 +49,7 @@ public class CustomAudienceManagerTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private static final CustomAudience CUSTOM_AUDIENCE =
-            CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER).build();
+            CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build();
 
     private void measureJoinCustomAudience(String label) throws Exception {
         Log.i(TAG, "Calling joinCustomAudience()");
@@ -68,7 +68,7 @@ public class CustomAudienceManagerTest {
                         .build();
 
         client.joinCustomAudience(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .build())
                 .get();
 
@@ -88,7 +88,7 @@ public class CustomAudienceManagerTest {
 
         client.leaveCustomAudience(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         CustomAudienceFixture.VALID_NAME)
                 .get();
 

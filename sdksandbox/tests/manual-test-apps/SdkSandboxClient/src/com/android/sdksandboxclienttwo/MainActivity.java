@@ -24,8 +24,8 @@ import static android.app.sdksandbox.SdkSandboxManager.EXTRA_WIDTH_IN_PIXELS;
 
 import android.app.Activity;
 import android.app.sdksandbox.LoadSdkException;
-import android.app.sdksandbox.LoadSdkResponse;
 import android.app.sdksandbox.RequestSurfacePackageException;
+import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -70,10 +70,10 @@ public class MainActivity extends Activity {
         mLoadButton.setOnClickListener(
                 v -> {
                     Bundle params = new Bundle();
-                    OutcomeReceiver<LoadSdkResponse, LoadSdkException> receiver =
-                            new OutcomeReceiver<LoadSdkResponse, LoadSdkException>() {
+                    OutcomeReceiver<SandboxedSdk, LoadSdkException> receiver =
+                            new OutcomeReceiver<SandboxedSdk, LoadSdkException>() {
                                 @Override
-                                public void onResult(LoadSdkResponse response) {
+                                public void onResult(SandboxedSdk sandboxedSdk) {
                                     mSdkLoaded = true;
                                     makeToast("Loaded successfully!");
                                 }

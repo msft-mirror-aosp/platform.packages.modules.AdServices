@@ -72,6 +72,7 @@ public class Source {
     private Uri mAppDestination;
     private Uri mWebDestination;
     private Uri mAdTechDomain;
+    private String mEnrollmentId;
     private Uri mRegistrant;
     private SourceType mSourceType;
     private long mPriority;
@@ -312,6 +313,7 @@ public class Source {
                 && Objects.equals(mAppDestination, source.mAppDestination)
                 && Objects.equals(mWebDestination, source.mWebDestination)
                 && Objects.equals(mAdTechDomain, source.mAdTechDomain)
+                && Objects.equals(mEnrollmentId, source.mEnrollmentId)
                 && mPriority == source.mPriority
                 && mStatus == source.mStatus
                 && mExpiryTime == source.mExpiryTime
@@ -338,6 +340,7 @@ public class Source {
                 mAppDestination,
                 mWebDestination,
                 mAdTechDomain,
+                mEnrollmentId,
                 mPriority,
                 mStatus,
                 mExpiryTime,
@@ -445,6 +448,13 @@ public class Source {
      */
     public Uri getAdTechDomain() {
         return mAdTechDomain;
+    }
+
+    /**
+     * AdTech enrollment ID
+     */
+    public String getEnrollmentId() {
+        return mEnrollmentId;
     }
 
     /** Uri which registered the {@link Source}. */
@@ -748,6 +758,13 @@ public class Source {
             return this;
         }
 
+        /** See {@link Source#getEnrollmentId()} ()}. */
+        @NonNull
+        public Builder setEnrollmentId(@NonNull String enrollmentId) {
+            mBuilding.mEnrollmentId = enrollmentId;
+            return this;
+        }
+
         /** See {@link Source#getEventId()}. */
         @NonNull
         public Builder setEventTime(long eventTime) {
@@ -868,6 +885,8 @@ public class Source {
             Validation.validateNonNull(
                     mBuilding.mPublisher,
                     mBuilding.mAdTechDomain,
+                    // TODO (b/238924528): uncomment when enforcing enrollment.
+                    //mBuilding.mEnrollmentId,
                     mBuilding.mRegistrant,
                     mBuilding.mSourceType);
 

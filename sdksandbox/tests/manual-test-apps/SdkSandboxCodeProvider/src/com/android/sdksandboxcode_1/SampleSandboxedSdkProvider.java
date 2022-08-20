@@ -16,6 +16,7 @@
 
 package com.android.sdksandboxcode_1;
 
+import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
 import android.content.Intent;
@@ -23,21 +24,21 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.net.Uri;
+import android.os.Binder;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
 import java.util.Random;
-import java.util.concurrent.Executor;
 
 public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
 
     private static final String TAG = "SampleSandboxedSdkProvider";
 
     @Override
-    public void onLoadSdk(Bundle params, Executor executor, OnLoadSdkCallback callback) {
-        callback.onLoadSdkFinished(null);
+    public SandboxedSdk onLoadSdk(Bundle params) {
+        return new SandboxedSdk(new Binder());
     }
 
     @Override

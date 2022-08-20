@@ -30,8 +30,11 @@ import android.os.RemoteException;
 import java.io.IOException;
 
 /**
- * Base class for service that provides abstract class for getting appsetId from the provider
- * service.
+ * Abstract Base class for provider service to implement generation of AppSetId with appropriate
+ * appSetId scope value.
+ *
+ * <p>The implementor of this service needs to override the onGetAppSetIdProvider method and provide
+ * an app-scoped or developer-account scoped unique appSetId.
  *
  * @hide
  */
@@ -43,27 +46,27 @@ public abstract class AppSetIdProviderService extends Service {
     public static final String SERVICE_INTERFACE =
             "android.adservices.appsetid.AppSetIdProviderService";
 
-    /** Abstract method which will be overrider by provider to provide the appsetid. */
+    /** Abstract method which will be overridden by provider to provide the appsetid. */
     @NonNull
-    public abstract AppSetId onGetAppSetIdProvider(int clientUid, @NonNull String clientPackageName)
+    public abstract AppSetId onGetAppSetId(int clientUid, @NonNull String clientPackageName)
             throws IOException;
 
     private final android.adservices.appsetid.IAppSetIdProviderService mInterface =
             new android.adservices.appsetid.IAppSetIdProviderService.Stub() {
                 @Override
-                public void getAppSetIdProvider(
+                public void getAppSetId(
                         int appUID,
                         @NonNull String packageName,
                         @NonNull IGetAppSetIdProviderCallback resultCallback)
                         throws RemoteException {
                     try {
-                        AppSetId appsetId = onGetAppSetIdProvider(appUID, packageName);
+                        AppSetId appsetId = onGetAppSetId(appUID, packageName);
                         GetAppSetIdResult appsetIdInternal =
                                 new GetAppSetIdResult.Builder()
                                         .setStatusCode(STATUS_SUCCESS)
                                         .setErrorMessage("")
-                                        .setAppSetId(appsetId.getAppSetId())
-                                        .setAppSetIdScope(appsetId.getAppSetIdScope())
+                                        .setAppSetId(appsetId.getId())
+                                        .setAppSetIdScope(appsetId.getScope())
                                         .build();
 
                         resultCallback.onResult(appsetIdInternal);

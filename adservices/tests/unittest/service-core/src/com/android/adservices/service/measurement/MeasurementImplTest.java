@@ -161,7 +161,7 @@ public final class MeasurementImplTest {
     private static final TriggerRegistration VALID_TRIGGER_REGISTRATION =
             new TriggerRegistration.Builder()
                     .setTopOrigin(Uri.parse("https://foo.com"))
-                    .setReportingOrigin(Uri.parse("https://bar.com"))
+                    .setRegistrationUri(Uri.parse("https://bar.com"))
                     .setEventTriggers(EVENT_TRIGGERS)
                     .setAggregateTriggerData(
                             "[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\"],"
@@ -179,7 +179,7 @@ public final class MeasurementImplTest {
                     .setExpiry(8640000010L) //
                     .setInstallAttributionWindow(841839879274L) //
                     .setInstallCooldownWindow(8418398274L) //
-                    .setReportingOrigin(Uri.parse("https://example.com")) //
+                    .setRegistrationUri(Uri.parse("https://example.com")) //
                     .setTopOrigin(Uri.parse("android-app://com.source"))
                     .build();
     private static final SourceRegistration VALID_SOURCE_REGISTRATION_2 =
@@ -191,7 +191,7 @@ public final class MeasurementImplTest {
                     .setExpiry(865000010L) //
                     .setInstallAttributionWindow(841839879275L) //
                     .setInstallCooldownWindow(7418398274L) //
-                    .setReportingOrigin(Uri.parse("https://example2.com")) //
+                    .setRegistrationUri(Uri.parse("https://example2.com")) //
                     .setTopOrigin(Uri.parse("android-app://com.source2"))
                     .build();
     private static final WebSourceParams INPUT_SOURCE_REGISTRATION_1 =
@@ -566,6 +566,8 @@ public final class MeasurementImplTest {
                                         DEFAULT_CONTEXT.getAttributionSource().getPackageName())
                                 .setDomainUris(Collections.emptyList())
                                 .setOriginUris(Collections.emptyList())
+                                .setStart(Instant.ofEpochMilli(Long.MIN_VALUE))
+                                .setEnd(Instant.ofEpochMilli(Long.MAX_VALUE))
                                 .build());
         assertEquals(STATUS_SUCCESS, result);
     }
@@ -598,39 +600,10 @@ public final class MeasurementImplTest {
                                 .setOriginUris(Collections.singletonList(DEFAULT_URI))
                                 .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
                                 .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
+                                .setStart(Instant.ofEpochMilli(Long.MIN_VALUE))
+                                .setEnd(Instant.ofEpochMilli(Long.MAX_VALUE))
                                 .build());
         assertEquals(STATUS_SUCCESS, result);
-    }
-    @Test
-    public void testDeleteRegistrations_invalidParameterStartButNoEnd() {
-        final int result =
-                mMeasurementImpl.deleteRegistrations(
-                        new DeletionParam.Builder()
-                                .setPackageName(
-                                        DEFAULT_CONTEXT.getAttributionSource().getPackageName())
-                                .setDomainUris(Collections.emptyList())
-                                .setOriginUris(Collections.emptyList())
-                                .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
-                                .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
-                                .setStart(Instant.now())
-                                .build());
-        assertEquals(STATUS_INVALID_ARGUMENT, result);
-    }
-
-    @Test
-    public void testDeleteRegistrations_invalidParameterEndButNoStart() {
-        final int result =
-                mMeasurementImpl.deleteRegistrations(
-                        new DeletionParam.Builder()
-                                .setPackageName(
-                                        DEFAULT_CONTEXT.getAttributionSource().getPackageName())
-                                .setDomainUris(Collections.emptyList())
-                                .setOriginUris(Collections.emptyList())
-                                .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
-                                .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
-                                .setEnd(Instant.now())
-                                .build());
-        assertEquals(STATUS_INVALID_ARGUMENT, result);
     }
 
     @Test
@@ -645,6 +618,8 @@ public final class MeasurementImplTest {
                                 .setOriginUris(Collections.emptyList())
                                 .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
                                 .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
+                                .setStart(Instant.MIN)
+                                .setEnd(Instant.MAX)
                                 .build());
         assertEquals(STATUS_INTERNAL_ERROR, result);
     }
@@ -672,7 +647,7 @@ public final class MeasurementImplTest {
                                 .setAppDestination(sampleSource.getAppDestination())
                                 .setTopOrigin(sampleSource.getPublisher())
                                 .setExpiry(expiry)
-                                .setReportingOrigin(sampleSource.getAdTechDomain())
+                                .setRegistrationUri(sampleSource.getAdTechDomain())
                                 .build());
         doReturn(Optional.of(sourceRegistrations)).when(mSourceFetcher).fetchSource(any());
 
@@ -1611,7 +1586,7 @@ public final class MeasurementImplTest {
                 .setPublisherType(publisherType)
                 .setAppDestination(firstSourceDestination)
                 .setWebDestination(firstSourceWebDestination)
-                .setAdTechDomain(sourceRegistration.getReportingOrigin())
+                .setAdTechDomain(sourceRegistration.getRegistrationUri())
                 .setRegistrant(Uri.parse("android-app://" + packageName))
                 .setEventTime(eventTime)
                 .setExpiryTime(
@@ -1635,7 +1610,7 @@ public final class MeasurementImplTest {
                 .setAttributionDestination(destination)
                 .setDestinationType(destinationType)
                 .setAdTechDomain(
-                        MeasurementImplTest.VALID_TRIGGER_REGISTRATION.getReportingOrigin())
+                        MeasurementImplTest.VALID_TRIGGER_REGISTRATION.getRegistrationUri())
                 .setRegistrant(Uri.parse(ANDROID_APP_SCHEME + attributionSource.getPackageName()))
                 .setTriggerTime(triggerTime)
                 .setEventTriggers(EVENT_TRIGGERS)

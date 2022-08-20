@@ -18,8 +18,7 @@ package android.app.sdksandbox.testutils;
 
 import android.app.sdksandbox.ILoadSdkCallback;
 import android.app.sdksandbox.LoadSdkException;
-import android.app.sdksandbox.LoadSdkResponse;
-import android.os.Bundle;
+import android.app.sdksandbox.SandboxedSdk;
 
 public class FakeLoadSdkCallbackBinder extends ILoadSdkCallback.Stub {
     private final FakeLoadSdkCallback mFakeLoadSdkCallback;
@@ -33,13 +32,13 @@ public class FakeLoadSdkCallbackBinder extends ILoadSdkCallback.Stub {
     }
 
     @Override
-    public void onLoadSdkSuccess(Bundle params) {
-        mFakeLoadSdkCallback.onResult(new LoadSdkResponse(params));
+    public void onLoadSdkSuccess(SandboxedSdk sandboxedSdk) {
+        mFakeLoadSdkCallback.onResult(sandboxedSdk);
     }
 
     @Override
-    public void onLoadSdkFailure(int errorCode, String errorMsg) {
-        mFakeLoadSdkCallback.onError(new LoadSdkException(errorCode, errorMsg));
+    public void onLoadSdkFailure(LoadSdkException exception) {
+        mFakeLoadSdkCallback.onError(exception);
     }
 
     public boolean isLoadSdkSuccessful() {

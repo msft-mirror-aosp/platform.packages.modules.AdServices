@@ -35,8 +35,10 @@ import android.net.Uri;
 import android.os.Process;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 
@@ -54,6 +56,8 @@ import java.util.concurrent.TimeUnit;
 
 public class TestAdSelectionManagerTest {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
+    private static final String WRITE_DEVICE_CONFIG_PERMISSION =
+            "android.permission.WRITE_DEVICE_CONFIG";
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private static final String DECISION_LOGIC_JS = "function test() { return \"hello world\"; }";
@@ -89,6 +93,12 @@ public class TestAdSelectionManagerTest {
                         .build();
         DevContext devContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
         mIsDebugMode = devContext.getDevOptionsEnabled();
+
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(WRITE_DEVICE_CONFIG_PERMISSION);
+        PhFlagsFixture.overrideEnforceIsolateMaxHeapSize(false);
+        PhFlagsFixture.overrideIsolateMaxHeapSizeBytes(0);
     }
 
     @Test
@@ -202,6 +212,6 @@ public class TestAdSelectionManagerTest {
                         () -> {
                             result.get(10, TimeUnit.SECONDS);
                         });
-        assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
+        assertThat(exception.getCause()).isInstanceOf(IllegalArgumentException.class);
     }
 }

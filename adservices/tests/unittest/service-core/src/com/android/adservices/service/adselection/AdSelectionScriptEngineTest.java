@@ -38,6 +38,7 @@ import androidx.test.filters.SmallTest;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.service.adselection.AdSelectionScriptEngine.AuctionScriptResult;
 import com.android.adservices.service.exception.JSExecutionException;
+import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
 
 import com.google.common.collect.ImmutableList;
@@ -66,7 +67,7 @@ public class AdSelectionScriptEngineTest {
     private static final CustomAudienceSignals CUSTOM_AUDIENCE_SIGNALS_1 =
             new CustomAudienceSignals(
                     CustomAudienceFixture.VALID_OWNER,
-                    CommonFixture.VALID_BUYER,
+                    CommonFixture.VALID_BUYER_1,
                     "name",
                     NOW,
                     NOW.plus(Duration.ofDays(1)),
@@ -74,7 +75,7 @@ public class AdSelectionScriptEngineTest {
     private static final CustomAudienceSignals CUSTOM_AUDIENCE_SIGNALS_2 =
             new CustomAudienceSignals(
                     CustomAudienceFixture.VALID_OWNER,
-                    CommonFixture.VALID_BUYER,
+                    CommonFixture.VALID_BUYER_1,
                     "name",
                     NOW,
                     NOW.plus(Duration.ofDays(1)),
@@ -82,8 +83,12 @@ public class AdSelectionScriptEngineTest {
     private static final List<CustomAudienceSignals> CUSTOM_AUDIENCE_SIGNALS_LIST =
             ImmutableList.of(CUSTOM_AUDIENCE_SIGNALS_1, CUSTOM_AUDIENCE_SIGNALS_2);
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(1);
+    IsolateSettings mIsolateSettings = IsolateSettings.forMaxHeapSizeEnforcementDisabled();
     private final AdSelectionScriptEngine mAdSelectionScriptEngine =
-            new AdSelectionScriptEngine(sContext);
+            new AdSelectionScriptEngine(
+                    sContext,
+                    () -> mIsolateSettings.getEnforceMaxHeapSizeFeature(),
+                    () -> mIsolateSettings.getMaxHeapSizeBytes());
 
     @Test
     public void testAuctionScriptIsInvalidIfRequiredFunctionDoesNotExist() throws Exception {

@@ -19,7 +19,7 @@ package {
 android_test {
     name: "AdServicesFrameworkUnitTests",
     srcs: [
-        "src/**/*.java",
+          "src/**/*.java"
     ],
     static_libs: [
         "androidx.test.runner",
@@ -27,7 +27,6 @@ android_test {
         "truth-prebuilt",
         "mockito-target-extended-minus-junit4",
         "ub-uiautomator",
-        "adservices-service-core",
         "adservices-test-fixtures",
     ],
     libs: [
@@ -45,4 +44,5 @@ android_test {
         "mts-adservices"
     ],
     test_mainline_modules: ["com.google.android.adservices.apex"],
+    instrumentation_for: "AdServicesApk",
 }
