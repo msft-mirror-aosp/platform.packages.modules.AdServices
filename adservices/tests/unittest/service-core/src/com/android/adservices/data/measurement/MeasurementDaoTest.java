@@ -652,7 +652,23 @@ public class MeasurementDaoTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testDeleteMeasurementData_invalidRangeNoStartDate() {
+    public void testDeleteMeasurementData_invalidRangeStartAfterEndDate() {
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        (dao) -> {
+                            dao.deleteMeasurementData(
+                                    APP_ONE_SOURCE,
+                                    Instant.now().plusMillis(1),
+                                    Instant.now(),
+                                    Collections.emptyList(),
+                                    Collections.emptyList(),
+                                    0,
+                                    0);
+                        });
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testDeleteMeasurementData_requiredStartAsNull() {
         DatastoreManagerFactory.getDatastoreManager(sContext)
                 .runInTransaction(
                         (dao) -> {
@@ -667,8 +683,8 @@ public class MeasurementDaoTest {
                         });
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testDeleteMeasurementData_invalidRangeNoEndDate() {
+    @Test(expected = NullPointerException.class)
+    public void testDeleteMeasurementData_requiredEndAsNull() {
         DatastoreManagerFactory.getDatastoreManager(sContext)
                 .runInTransaction(
                         (dao) -> {
@@ -676,22 +692,6 @@ public class MeasurementDaoTest {
                                     APP_ONE_SOURCE,
                                     Instant.now(),
                                     null /* end */,
-                                    Collections.emptyList(),
-                                    Collections.emptyList(),
-                                    0,
-                                    0);
-                        });
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testDeleteMeasurementData_invalidRangeStartAfterEndDate() {
-        DatastoreManagerFactory.getDatastoreManager(sContext)
-                .runInTransaction(
-                        (dao) -> {
-                            dao.deleteMeasurementData(
-                                    APP_ONE_SOURCE,
-                                    Instant.now().plusMillis(1),
-                                    Instant.now(),
                                     Collections.emptyList(),
                                     Collections.emptyList(),
                                     0,

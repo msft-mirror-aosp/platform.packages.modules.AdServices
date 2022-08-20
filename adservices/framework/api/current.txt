@@ -287,10 +287,10 @@ package android.adservices.measurement {
   public class DeletionRequest {
     method public int getDeletionMode();
     method @NonNull public java.util.List<android.net.Uri> getDomainUris();
-    method @Nullable public java.time.Instant getEnd();
+    method @NonNull public java.time.Instant getEnd();
     method public int getMatchBehavior();
     method @NonNull public java.util.List<android.net.Uri> getOriginUris();
-    method @Nullable public java.time.Instant getStart();
+    method @NonNull public java.time.Instant getStart();
     field public static final int DELETION_MODE_ALL = 0; // 0x0
     field public static final int DELETION_MODE_EXCLUDE_INTERNAL_DATA = 1; // 0x1
     field public static final int MATCH_BEHAVIOR_DELETE = 0; // 0x0
@@ -302,10 +302,10 @@ package android.adservices.measurement {
     method @NonNull public android.adservices.measurement.DeletionRequest build();
     method @NonNull public android.adservices.measurement.DeletionRequest.Builder setDeletionMode(int);
     method @NonNull public android.adservices.measurement.DeletionRequest.Builder setDomainUris(@Nullable java.util.List<android.net.Uri>);
-    method @NonNull public android.adservices.measurement.DeletionRequest.Builder setEnd(@Nullable java.time.Instant);
+    method @NonNull public android.adservices.measurement.DeletionRequest.Builder setEnd(@NonNull java.time.Instant);
     method @NonNull public android.adservices.measurement.DeletionRequest.Builder setMatchBehavior(int);
     method @NonNull public android.adservices.measurement.DeletionRequest.Builder setOriginUris(@Nullable java.util.List<android.net.Uri>);
-    method @NonNull public android.adservices.measurement.DeletionRequest.Builder setStart(@Nullable java.time.Instant);
+    method @NonNull public android.adservices.measurement.DeletionRequest.Builder setStart(@NonNull java.time.Instant);
   }
 
   public class MeasurementManager {
