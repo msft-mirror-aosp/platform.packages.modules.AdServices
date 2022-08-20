@@ -131,6 +131,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private final ArrayMap<CallingInfo, ArrayMap<IBinder, Runnable>> mPendingCallbacks =
             new ArrayMap<>();
 
+    @GuardedBy("mLock")
+    private final ArrayMap<CallingInfo, ISharedPreferencesSyncCallback> mSyncDataCallbacks =
+            new ArrayMap<>();
+
     private final SdkSandboxManagerLocal mLocalManager;
 
     private final String mAdServicesPackageName;
@@ -463,6 +467,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             mSandboxLifecycleCallbacks.remove(callingInfo);
             mPendingCallbacks.remove(callingInfo);
             mCallingInfosWithDeathRecipients.remove(callingInfo);
+            mSyncDataCallbacks.remove(callingInfo);
             removeAllSdkTokensAndLinks(callingInfo);
             stopSdkSandboxService(callingInfo, "Caller " + callingInfo + " has died");
         }
@@ -653,22 +658,44 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         final CallingInfo callingInfo = new CallingInfo(callingUid, callingPackageName);
         enforceCallingPackageBelongsToUid(callingInfo);
         try {
-            syncDataFromClientInternal(callingInfo, update);
+            syncDataFromClientInternal(callingInfo, update, callback);
         } finally {
             Binder.restoreCallingIdentity(token);
         }
     }
 
     private void syncDataFromClientInternal(
-            CallingInfo callingInfo, SharedPreferencesUpdate update) {
+            CallingInfo callingInfo,
+            SharedPreferencesUpdate update,
+            ISharedPreferencesSyncCallback callback) {
         // check first if service already bound
         ISdkSandboxService service = mServiceProvider.getBoundServiceForApp(callingInfo);
         if (service != null) {
             try {
-                service.syncDataFromClient(update);
-            } catch (RemoteException ignore) {
-                // TODO(b/239403323): Sandbox has died. Register lifecycle callback to retry.
+                service.syncDataFromClient(update, callback);
+            } catch (RemoteException e) {
+                syncDataOnError(
+                        callback, ISharedPreferencesSyncCallback.INTERNAL_ERROR, e.getMessage());
             }
+        } else {
+            syncDataOnError(
+                    callback,
+                    ISharedPreferencesSyncCallback.SANDBOX_NOT_AVAILABLE,
+                    "Sandbox not available");
+            // Store reference to the callback so that we can notify SdkSandboxManager when sandbox
+            // starts
+            synchronized (mLock) {
+                mSyncDataCallbacks.put(callingInfo, callback);
+            }
+        }
+    }
+
+    private void syncDataOnError(
+            ISharedPreferencesSyncCallback callback, int errorCode, String errorMsg) {
+        try {
+            callback.onError(errorCode, errorMsg);
+        } catch (RemoteException ignore) {
+            // App died. Sync will be re-established again by app later.
         }
     }
 
@@ -808,7 +835,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                     false,
                                     timeSystemServerReceivedCallFromApp,
                                     SdkSandboxStatsLog
-                                        .SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX);
+                                            .SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX);
                             notifyPendingCallbacks(callingInfo);
                             handleSandboxLifecycleCallbacks(callingInfo);
                             return;
@@ -822,6 +849,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                 timeToLoadSandbox,
                                 /* success=*/ true,
                                 SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__LOAD_SANDBOX);
+
+                        onSandboxStart(callingInfo);
+
                         loadSdkForService(
                                 callingInfo,
                                 sdkToken,
@@ -914,6 +944,21 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     boolean isSdkSandboxServiceRunning(CallingInfo callingInfo) {
         return mServiceProvider.getBoundServiceForApp(callingInfo) != null;
+    }
+
+    private void onSandboxStart(CallingInfo callingInfo) {
+        ISharedPreferencesSyncCallback syncManagerCallback = null;
+        synchronized (mLock) {
+            syncManagerCallback = mSyncDataCallbacks.get(callingInfo);
+            mSyncDataCallbacks.remove(callingInfo);
+        }
+        if (syncManagerCallback != null) {
+            try {
+                syncManagerCallback.onSandboxStart();
+            } catch (RemoteException ignore) {
+                // App died.
+            }
+        }
     }
 
     private void loadSdkForService(
