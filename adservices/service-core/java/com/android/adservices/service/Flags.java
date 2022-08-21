@@ -115,6 +115,22 @@ public interface Flags extends Dumpable {
         return DEFAULT_CLASSIFIER_TYPE;
     }
 
+    /** Number of top labels allowed for every app. */
+    int CLASSIFIER_NUMBER_OF_TOP_LABELS = 10;
+
+    /** Returns the number of top labels allowed for every app after the classification process. */
+    default int getClassifierNumberOfTopLabels() {
+        return CLASSIFIER_NUMBER_OF_TOP_LABELS;
+    }
+
+    /** Threshold value for classification values. */
+    float CLASSIFIER_THRESHOLD = 0.0f;
+
+    /** Returns the threshold value for classification values. */
+    default float getClassifierThreshold() {
+        return CLASSIFIER_THRESHOLD;
+    }
+
     /* The default period for the Maintenance job. */
     long MAINTENANCE_JOB_PERIOD_MS = 86_400_000; // 1 day.
 
@@ -880,9 +896,24 @@ public interface Flags extends Dumpable {
      */
     boolean TOPICS_KILL_SWITCH = false; // By default, the Topics API is enabled.
 
+    /** @return value of Topics API kill switch */
     default boolean getTopicsKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
         return getGlobalKillSwitch() || TOPICS_KILL_SWITCH;
+    }
+
+    // MDD Killswitches
+
+    /**
+     * MDD Background Task Kill Switch. The default value is false which means the MDD background
+     * task is enabled. This flag is used for emergency turning off the MDD background tasks.
+     */
+    boolean MDD_BACKGROUND_TASK_KILL_SWITCH = false;
+
+    /** @return value of Mdd Background Task kill switch */
+    default boolean getMddBackgroundTaskKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        return getGlobalKillSwitch() || MDD_BACKGROUND_TASK_KILL_SWITCH;
     }
 
     // FLEDGE Kill switches
@@ -922,7 +953,11 @@ public interface Flags extends Dumpable {
     String PPAPI_APP_ALLOW_LIST =
             "android.platform.test.scenario,"
                     + "android.adservices.crystalball,"
+                    + "android.adservices.cts,"
+                    + "android.adservices.debuggablects,"
+                    + "com.android.tests.sandbox.fledge,"
                     + "com.android.tests.sandbox.topics,"
+                    + "com.android.adservices.endtoendtest,"
                     + "com.android.adservices.tests.cts.endtoendtest,"
                     + "com.android.adservices.tests.cts.topics.testapp1," // CTS test sample app
                     + "com.android.adservices.tests.permissions.appoptout,"
@@ -933,15 +968,16 @@ public interface Flags extends Dumpable {
                     + "com.example.adservices.samples.topics.sampleapp3,"
                     + "com.example.adservices.samples.topics.sampleapp4,"
                     + "com.example.adservices.samples.topics.sampleapp5,"
-                    + "com.example.adservices.samples.topics.sampleapp6";
+                    + "com.example.adservices.samples.topics.sampleapp6,"
+                    + "com.android.adservices.servicecoretest";
 
     /**
-     * The client app packages that are allowed to invoke web context registration APIs, i.e. {@link
+     * The client app packages that are allowed to invoke web context APIs, i.e. {@link
      * android.adservices.measurement.MeasurementManager#registerWebSource} and {@link
-     * android.adservices.measurement.MeasurementManager#registerWebTrigger}. App packages that do
+     * android.adservices.measurement.MeasurementManager#deleteRegistrations}. App packages that do
      * not belong to the list will be responded back with an error response.
      */
-    String WEB_CONTEXT_REGISTRATION_CLIENT_ALLOW_LIST = "";
+    String WEB_CONTEXT_CLIENT_ALLOW_LIST = "";
 
     /**
      * Returns the The Allow List for PP APIs. Only App Package Name belongs to this Allow List can
@@ -974,8 +1010,16 @@ public interface Flags extends Dumpable {
      */
     boolean DISABLE_TOPICS_ENROLLMENT_CHECK = false; // By default, enrollment check is enabled.
 
+    boolean DISABLE_FLEDGE_ENROLLMENT_CHECK = true; // By default, enrollment check is disabled
+
+    /** @return {@code true} if the Topics API should disable the ad tech enrollment check */
     default boolean isDisableTopicsEnrollmentCheck() {
         return DISABLE_TOPICS_ENROLLMENT_CHECK;
+    }
+
+    /** @return {@code true} if the FLEDGE APIs should disable the ad tech enrollment check */
+    default boolean getDisableFledgeEnrollmentCheck() {
+        return DISABLE_FLEDGE_ENROLLMENT_CHECK;
     }
 
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION = true;
@@ -1028,8 +1072,8 @@ public interface Flags extends Dumpable {
         return FOREGROUND_STATUS_LEVEL;
     }
 
-    default String getWebContextRegistrationClientAppAllowList() {
-        return WEB_CONTEXT_REGISTRATION_CLIENT_ALLOW_LIST;
+    default String getWebContextClientAppAllowList() {
+        return WEB_CONTEXT_CLIENT_ALLOW_LIST;
     }
 
     boolean ENFORCE_ISOLATE_MAX_HEAP_SIZE = true;

@@ -51,17 +51,17 @@ public class DBCustomAudienceBackgroundFetchDataTest {
     public void testBuildFetchDataSuccess() {
         DBCustomAudienceBackgroundFetchData fetchData =
                 DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
-                                CommonFixture.VALID_BUYER)
+                                CommonFixture.VALID_BUYER_1)
                         .setEligibleUpdateTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
                         .setNumValidationFailures(NUM_VALIDATION_FAILURES_POSITIVE)
                         .setNumTimeoutFailures(NUM_TIMEOUT_FAILURES_POSITIVE)
                         .build();
 
         assertEquals(CustomAudienceFixture.VALID_OWNER, fetchData.getOwner());
-        assertEquals(CommonFixture.VALID_BUYER, fetchData.getBuyer());
+        assertEquals(CommonFixture.VALID_BUYER_1, fetchData.getBuyer());
         assertEquals(CustomAudienceFixture.VALID_NAME, fetchData.getName());
         assertEquals(
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(CommonFixture.VALID_BUYER),
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(CommonFixture.VALID_BUYER_1),
                 fetchData.getDailyUpdateUrl());
         assertEquals(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI, fetchData.getEligibleUpdateTime());
         assertEquals(NUM_VALIDATION_FAILURES_POSITIVE, fetchData.getNumValidationFailures());
@@ -73,19 +73,19 @@ public class DBCustomAudienceBackgroundFetchDataTest {
         DBCustomAudienceBackgroundFetchData fetchData =
                 DBCustomAudienceBackgroundFetchData.builder()
                         .setOwner(CustomAudienceFixture.VALID_OWNER)
-                        .setBuyer(CommonFixture.VALID_BUYER)
+                        .setBuyer(CommonFixture.VALID_BUYER_1)
                         .setName(CustomAudienceFixture.VALID_NAME)
                         .setDailyUpdateUrl(
                                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
-                                        CommonFixture.VALID_BUYER))
+                                        CommonFixture.VALID_BUYER_1))
                         .setEligibleUpdateTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
                         .build();
 
         assertEquals(CustomAudienceFixture.VALID_OWNER, fetchData.getOwner());
-        assertEquals(CommonFixture.VALID_BUYER, fetchData.getBuyer());
+        assertEquals(CommonFixture.VALID_BUYER_1, fetchData.getBuyer());
         assertEquals(CustomAudienceFixture.VALID_NAME, fetchData.getName());
         assertEquals(
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(CommonFixture.VALID_BUYER),
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(CommonFixture.VALID_BUYER_1),
                 fetchData.getDailyUpdateUrl());
         assertEquals(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI, fetchData.getEligibleUpdateTime());
         assertEquals(0, fetchData.getNumValidationFailures());
@@ -98,14 +98,14 @@ public class DBCustomAudienceBackgroundFetchDataTest {
                 IllegalArgumentException.class,
                 () ->
                         DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
-                                        CommonFixture.VALID_BUYER)
+                                        CommonFixture.VALID_BUYER_1)
                                 .setNumValidationFailures(-10)
                                 .build());
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                         DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
-                                        CommonFixture.VALID_BUYER)
+                                        CommonFixture.VALID_BUYER_1)
                                 .setNumTimeoutFailures(-10)
                                 .build());
     }
@@ -115,19 +115,19 @@ public class DBCustomAudienceBackgroundFetchDataTest {
         DBCustomAudienceBackgroundFetchData fetchData =
                 DBCustomAudienceBackgroundFetchData.create(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         CustomAudienceFixture.VALID_NAME,
                         CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
-                                CommonFixture.VALID_BUYER),
+                                CommonFixture.VALID_BUYER_1),
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                         NUM_VALIDATION_FAILURES_POSITIVE,
                         NUM_TIMEOUT_FAILURES_POSITIVE);
 
         assertEquals(CustomAudienceFixture.VALID_OWNER, fetchData.getOwner());
-        assertEquals(CommonFixture.VALID_BUYER, fetchData.getBuyer());
+        assertEquals(CommonFixture.VALID_BUYER_1, fetchData.getBuyer());
         assertEquals(CustomAudienceFixture.VALID_NAME, fetchData.getName());
         assertEquals(
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(CommonFixture.VALID_BUYER),
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(CommonFixture.VALID_BUYER_1),
                 fetchData.getDailyUpdateUrl());
         assertEquals(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI, fetchData.getEligibleUpdateTime());
         assertEquals(NUM_VALIDATION_FAILURES_POSITIVE, fetchData.getNumValidationFailures());
@@ -169,7 +169,7 @@ public class DBCustomAudienceBackgroundFetchDataTest {
     public void testCopyWithFullSuccessfulUpdatableDataResetsFailureCounts() throws JSONException {
         DBCustomAudienceBackgroundFetchData originalFetchData =
                 DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
-                                CommonFixture.VALID_BUYER)
+                                CommonFixture.VALID_BUYER_1)
                         .setEligibleUpdateTime(CommonFixture.FIXED_NOW)
                         .setNumValidationFailures(1)
                         .setNumTimeoutFailures(2)
@@ -200,7 +200,7 @@ public class DBCustomAudienceBackgroundFetchDataTest {
     public void testCopyWithFailedUpdatableDataUpdatesValidationFailureCount() {
         DBCustomAudienceBackgroundFetchData originalFetchData =
                 DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
-                                CommonFixture.VALID_BUYER)
+                                CommonFixture.VALID_BUYER_1)
                         .setEligibleUpdateTime(CommonFixture.FIXED_NOW)
                         .setNumValidationFailures(NUM_VALIDATION_FAILURES_POSITIVE)
                         .setNumTimeoutFailures(NUM_TIMEOUT_FAILURES_POSITIVE)
@@ -230,7 +230,7 @@ public class DBCustomAudienceBackgroundFetchDataTest {
     public void testCopyWithResponseValidationFailureUpdatesValidationFailureCount() {
         DBCustomAudienceBackgroundFetchData originalFetchData =
                 DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
-                                CommonFixture.VALID_BUYER)
+                                CommonFixture.VALID_BUYER_1)
                         .setEligibleUpdateTime(CommonFixture.FIXED_NOW)
                         .setNumValidationFailures(NUM_VALIDATION_FAILURES_POSITIVE)
                         .setNumTimeoutFailures(NUM_TIMEOUT_FAILURES_POSITIVE)
@@ -261,7 +261,7 @@ public class DBCustomAudienceBackgroundFetchDataTest {
     public void testCopyWithNetworkConnectTimeoutFailureUpdatesTimeoutFailureCount() {
         DBCustomAudienceBackgroundFetchData originalFetchData =
                 DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
-                                CommonFixture.VALID_BUYER)
+                                CommonFixture.VALID_BUYER_1)
                         .setEligibleUpdateTime(CommonFixture.FIXED_NOW)
                         .setNumValidationFailures(NUM_VALIDATION_FAILURES_POSITIVE)
                         .setNumTimeoutFailures(NUM_TIMEOUT_FAILURES_POSITIVE)
@@ -291,7 +291,7 @@ public class DBCustomAudienceBackgroundFetchDataTest {
     public void testCopyWithNetworkReadTimeoutFailureUpdatesTimeoutFailureCount() {
         DBCustomAudienceBackgroundFetchData originalFetchData =
                 DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
-                                CommonFixture.VALID_BUYER)
+                                CommonFixture.VALID_BUYER_1)
                         .setEligibleUpdateTime(CommonFixture.FIXED_NOW)
                         .setNumValidationFailures(NUM_VALIDATION_FAILURES_POSITIVE)
                         .setNumTimeoutFailures(NUM_TIMEOUT_FAILURES_POSITIVE)
@@ -321,7 +321,7 @@ public class DBCustomAudienceBackgroundFetchDataTest {
     public void testCopyWithKAnonFailureDesNotUpdate() {
         DBCustomAudienceBackgroundFetchData originalFetchData =
                 DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
-                                CommonFixture.VALID_BUYER)
+                                CommonFixture.VALID_BUYER_1)
                         .setEligibleUpdateTime(CommonFixture.FIXED_NOW)
                         .setNumValidationFailures(NUM_VALIDATION_FAILURES_POSITIVE)
                         .setNumTimeoutFailures(NUM_TIMEOUT_FAILURES_POSITIVE)
@@ -349,7 +349,7 @@ public class DBCustomAudienceBackgroundFetchDataTest {
     public void testCopyWithUnknownFailureDesNotUpdate() {
         DBCustomAudienceBackgroundFetchData originalFetchData =
                 DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
-                                CommonFixture.VALID_BUYER)
+                                CommonFixture.VALID_BUYER_1)
                         .setEligibleUpdateTime(CommonFixture.FIXED_NOW)
                         .setNumValidationFailures(NUM_VALIDATION_FAILURES_POSITIVE)
                         .setNumTimeoutFailures(NUM_TIMEOUT_FAILURES_POSITIVE)

@@ -119,12 +119,12 @@ public class BackgroundFetchRunnerTest {
                                 CommonFixture.FIXED_NOW, mFlags);
         DBCustomAudienceBackgroundFetchData originalFetchData =
                 DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
-                                CommonFixture.VALID_BUYER)
+                                CommonFixture.VALID_BUYER_1)
                         .setEligibleUpdateTime(originalEligibleUpdateTime)
                         .build();
         DBCustomAudienceBackgroundFetchData expectedFetchData =
                 DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
-                                CommonFixture.VALID_BUYER)
+                                CommonFixture.VALID_BUYER_1)
                         .setEligibleUpdateTime(expectedEligibleUpdateTime)
                         .build();
 
@@ -147,12 +147,12 @@ public class BackgroundFetchRunnerTest {
         Instant originalEligibleUpdateTime = CommonFixture.FIXED_NOW.minusMillis(60L * 1000L);
         DBCustomAudienceBackgroundFetchData originalFetchData =
                 DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
-                                CommonFixture.VALID_BUYER)
+                                CommonFixture.VALID_BUYER_1)
                         .setEligibleUpdateTime(originalEligibleUpdateTime)
                         .build();
         DBCustomAudienceBackgroundFetchData expectedFetchData =
                 DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
-                                CommonFixture.VALID_BUYER)
+                                CommonFixture.VALID_BUYER_1)
                         .setEligibleUpdateTime(originalEligibleUpdateTime)
                         .setNumValidationFailures(1)
                         .build();
@@ -179,7 +179,7 @@ public class BackgroundFetchRunnerTest {
 
         CustomAudienceUpdatableData updatableData =
                 mBackgroundFetchRunnerSpy.fetchAndValidateCustomAudienceUpdatableData(
-                        CommonFixture.FIXED_NOW, CommonFixture.VALID_BUYER, mFetchUri);
+                        CommonFixture.FIXED_NOW, CommonFixture.VALID_BUYER_1, mFetchUri);
 
         assertEquals(expectedUpdatableData, updatableData);
 
@@ -202,7 +202,7 @@ public class BackgroundFetchRunnerTest {
 
         CustomAudienceUpdatableData updatableData =
                 mBackgroundFetchRunnerSpy.fetchAndValidateCustomAudienceUpdatableData(
-                        CommonFixture.FIXED_NOW, CommonFixture.VALID_BUYER, mFetchUri);
+                        CommonFixture.FIXED_NOW, CommonFixture.VALID_BUYER_1, mFetchUri);
 
         assertEquals(expectedUpdatableData, updatableData);
 
@@ -257,7 +257,7 @@ public class BackgroundFetchRunnerTest {
 
         CustomAudienceUpdatableData updatableData =
                 runnerWithSmallLimits.fetchAndValidateCustomAudienceUpdatableData(
-                        CommonFixture.FIXED_NOW, CommonFixture.VALID_BUYER, mFetchUri);
+                        CommonFixture.FIXED_NOW, CommonFixture.VALID_BUYER_1, mFetchUri);
 
         assertTrue(responseLatch.await(150, TimeUnit.MILLISECONDS));
         assertEquals(expectedUpdatableData, updatableData);
@@ -284,7 +284,7 @@ public class BackgroundFetchRunnerTest {
 
         CustomAudienceUpdatableData updatableData =
                 mBackgroundFetchRunnerSpy.fetchAndValidateCustomAudienceUpdatableData(
-                        CommonFixture.FIXED_NOW, CommonFixture.VALID_BUYER, invalidFetchUri);
+                        CommonFixture.FIXED_NOW, CommonFixture.VALID_BUYER_1, invalidFetchUri);
 
         assertEquals(expectedUpdatableData, updatableData);
 
@@ -318,7 +318,7 @@ public class BackgroundFetchRunnerTest {
 
         CustomAudienceUpdatableData updatableData =
                 runnerWithSmallLimits.fetchAndValidateCustomAudienceUpdatableData(
-                        CommonFixture.FIXED_NOW, CommonFixture.VALID_BUYER, mFetchUri);
+                        CommonFixture.FIXED_NOW, CommonFixture.VALID_BUYER_1, mFetchUri);
 
         assertEquals(expectedUpdatableData, updatableData);
 

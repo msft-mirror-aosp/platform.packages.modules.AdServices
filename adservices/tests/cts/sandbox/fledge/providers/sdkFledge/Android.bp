@@ -16,29 +16,22 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-android_test {
-    name: "CtsAdServicesEndToEndCommonTests",
+android_test_helper_app {
+    name: "SdkFledge",
+    defaults: ["platform_app_defaults"],
+    certificate: ":sdksandbox-test",
     srcs: [
-        "src/**/*.java",
+       "src/**/*.java",
     ],
     static_libs: [
-        "androidx.concurrent_concurrent-futures",
-        "compatibility-device-util-axt",
-        "truth-prebuilt",
-        "ub-uiautomator",
-        "adservices-test-fixtures",
-        "adservices-clients",
+            "adservices-clients",
+            "androidx.concurrent_concurrent-futures",
+            "compatibility-device-util-axt",
+            "truth-prebuilt",
+            "framework-adservices.impl",
     ],
     libs: [
         "android.test.base",
-        "framework-adservices.impl",
-        "framework-sdksandbox.impl",
     ],
-    test_suites: [
-        "cts",
-        "general-tests",
-        "mts-adservices"
-    ],
-    sdk_version: "module_current",
-    test_mainline_modules: ["com.google.android.adservices.apex"],
+    platform_apis: true,
 }

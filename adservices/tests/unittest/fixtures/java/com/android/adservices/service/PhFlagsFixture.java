@@ -96,6 +96,19 @@ public class PhFlagsFixture {
                 false);
     }
 
+    /**
+     * Enables test to override the flag enabling the enrollment check for callers of Fledge APIs.
+     *
+     * @param enable whether enable or disable the check
+     */
+    public static void overrideFledgeEnrollmentCheck(boolean enable) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                PhFlags.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK,
+                Boolean.toString(!enable),
+                false);
+    }
+
     public static void overrideEnforceIsolateMaxHeapSize(boolean value) {
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,

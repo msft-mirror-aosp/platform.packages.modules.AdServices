@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.adservices.tests.cts.common;
+package android.adservices.cts;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertThrows;
+
 import android.adservices.common.AdServicesCommonManager;
-import android.adservices.exceptions.AdServicesException;
 import android.content.Context;
 import android.os.OutcomeReceiver;
 
@@ -34,8 +35,10 @@ import com.google.common.util.concurrent.ListenableFuture;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 @RunWith(AndroidJUnit4.class)
 public class AdServicesCommonManagerTest {
@@ -46,17 +49,36 @@ public class AdServicesCommonManagerTest {
             sContext.getSystemService(AdServicesCommonManager.class);
 
     @Test
-    public void testStatusManager() throws Exception {
+    public void testStatusManagerNotAuthorized() {
         overrideAdserviceEnableStatus(false);
 
         // At beginning, Sdk1 receives a false status.
-        Boolean sdk1Response = getAdservicesStatus().get();
-        assertThat(sdk1Response).isFalse();
+        ListenableFuture<Boolean> adServicesStatusResponse = getAdservicesStatus();
 
-        overrideAdserviceEnableStatus(true);
+        Exception adServicesStatusResponseException =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> {
+                            adServicesStatusResponse.get(1, TimeUnit.SECONDS);
+                        });
+        assertThat(adServicesStatusResponseException.getCause())
+                .isInstanceOf(SecurityException.class);
+    }
 
-        Boolean sdk2Response = getAdservicesStatus().get();
-        assertThat(sdk2Response).isTrue();
+    @Test
+    public void testSetStatusEnabledNotExecuted() throws Exception {
+        mCommonManager.setAdServicesEnabled(true, true);
+
+        ListenableFuture<Boolean> adServicesStatusResponse = getAdservicesStatus();
+
+        Exception adServicesStatusResponseException =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> {
+                            adServicesStatusResponse.get(1, TimeUnit.SECONDS);
+                        });
+        assertThat(adServicesStatusResponseException.getCause())
+                .isInstanceOf(SecurityException.class);
     }
 
     // Override the Adservice enable status in the test.
@@ -70,14 +92,14 @@ public class AdServicesCommonManagerTest {
                 completer -> {
                     mCommonManager.isAdServicesEnabled(
                             CALLBACK_EXECUTOR,
-                            new OutcomeReceiver<Boolean, AdServicesException>() {
+                            new OutcomeReceiver<Boolean, Exception>() {
                                 @Override
                                 public void onResult(Boolean result) {
                                     completer.set(result);
                                 }
 
                                 @Override
-                                public void onError(AdServicesException error) {
+                                public void onError(Exception error) {
                                     completer.setException(error);
                                 }
                             });

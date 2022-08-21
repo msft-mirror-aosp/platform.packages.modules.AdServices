@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.common;
 
-import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ADID;
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_AD_ID;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_TOPICS;
 
@@ -24,6 +24,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.Mockito.when;
 
+import android.adservices.common.AdServicesPermissions;
 import android.content.pm.PackageManager;
 import android.test.mock.MockContext;
 
@@ -109,11 +110,10 @@ public class PermissionHelperTest {
     public void testSdkHasPermission() {
         when(mMockPackageManager.checkPermission(ACCESS_ADSERVICES_TOPICS, SDK_PACKAGE_NAME))
                 .thenReturn(PackageManager.PERMISSION_GRANTED);
-        when(mMockPackageManager.checkPermission(ACCESS_ADSERVICES_ADID, SDK_PACKAGE_NAME))
+        when(mMockPackageManager.checkPermission(ACCESS_ADSERVICES_AD_ID, SDK_PACKAGE_NAME))
                 .thenReturn(PackageManager.PERMISSION_GRANTED);
         when(mMockPackageManager.checkPermission(
-                        PermissionHelper.ACCESS_ADSERVICES_ATTRIBUTION_PERMISSION,
-                        SDK_PACKAGE_NAME))
+                        AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION, SDK_PACKAGE_NAME))
                 .thenReturn(PackageManager.PERMISSION_GRANTED);
         when(mMockPackageManager.checkPermission(
                         ACCESS_ADSERVICES_CUSTOM_AUDIENCE, SDK_PACKAGE_NAME))
@@ -143,11 +143,10 @@ public class PermissionHelperTest {
     public void testSdkNotHasPermission() {
         when(mMockPackageManager.checkPermission(ACCESS_ADSERVICES_TOPICS, SDK_PACKAGE_NAME))
                 .thenReturn(PackageManager.PERMISSION_DENIED);
-        when(mMockPackageManager.checkPermission(ACCESS_ADSERVICES_ADID, SDK_PACKAGE_NAME))
+        when(mMockPackageManager.checkPermission(ACCESS_ADSERVICES_AD_ID, SDK_PACKAGE_NAME))
                 .thenReturn(PackageManager.PERMISSION_DENIED);
         when(mMockPackageManager.checkPermission(
-                        PermissionHelper.ACCESS_ADSERVICES_ATTRIBUTION_PERMISSION,
-                        SDK_PACKAGE_NAME))
+                        AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION, SDK_PACKAGE_NAME))
                 .thenReturn(PackageManager.PERMISSION_DENIED);
         when(mMockPackageManager.checkPermission(
                         ACCESS_ADSERVICES_CUSTOM_AUDIENCE, SDK_PACKAGE_NAME))

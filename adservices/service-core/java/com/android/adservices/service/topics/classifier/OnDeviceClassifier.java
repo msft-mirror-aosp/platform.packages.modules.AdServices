@@ -18,13 +18,12 @@ package com.android.adservices.service.topics.classifier;
 
 import android.annotation.NonNull;
 import android.content.Context;
-import android.content.res.AssetManager;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.topics.AppInfo;
 import com.android.adservices.service.topics.PackageManagerUtil;
-import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -48,9 +47,6 @@ public class OnDeviceClassifier implements Classifier {
 
     private static OnDeviceClassifier sSingleton;
 
-    // TODO(b/235497008): Convert MAX_LABELS_PER_APP to a flag.
-    @VisibleForTesting static final int MAX_LABELS_PER_APP = 10;
-
     private static final String EMPTY = "";
     private static final AppInfo EMPTY_APP_INFO = new AppInfo(EMPTY, EMPTY);
 
@@ -62,7 +58,6 @@ public class OnDeviceClassifier implements Classifier {
 
     private final Preprocessor mPreprocessor;
     private final PackageManagerUtil mPackageManagerUtil;
-    private final AssetManager mAssetManager;
     private final Random mRandom;
     private final ModelManager mModelManager;
 
@@ -76,12 +71,10 @@ public class OnDeviceClassifier implements Classifier {
     public OnDeviceClassifier(
             @NonNull Preprocessor preprocessor,
             @NonNull PackageManagerUtil packageManagerUtil1,
-            @NonNull AssetManager assetManager,
             @NonNull Random random,
             @NonNull ModelManager modelManager) {
         mPreprocessor = preprocessor;
         mPackageManagerUtil = packageManagerUtil1;
-        mAssetManager = assetManager;
         mRandom = random;
         mLoaded = false;
         mAppInfoMap = ImmutableMap.of();
@@ -97,7 +90,6 @@ public class OnDeviceClassifier implements Classifier {
                         new OnDeviceClassifier(
                                 new Preprocessor(context),
                                 new PackageManagerUtil(context),
-                                context.getAssets(),
                                 new Random(),
                                 ModelManager.getInstance(context));
             }
@@ -162,11 +154,23 @@ public class OnDeviceClassifier implements Classifier {
 
         // Limit the number of entries to first MAX_LABELS_PER_APP.
         // TODO(b/235435229): Evaluate the strategy to use first x elements.
+        int numberOfTopLabels = FlagsFactory.getFlags().getClassifierNumberOfTopLabels();
+        float classifierThresholdValue = FlagsFactory.getFlags().getClassifierThreshold();
+        LogUtil.i(
+                "numberOfTopLabels = %s\n classifierThresholdValue = %s",
+                numberOfTopLabels, classifierThresholdValue);
         return classifications.stream()
+                .sorted((c1, c2) -> Float.compare(c2.getScore(), c1.getScore())) // Reverse sorted.
+                .filter(category -> isAboveThreshold(category, classifierThresholdValue))
                 .map(OnDeviceClassifier::convertCategoryLabelToTopicId)
                 .map(this::createTopic)
-                .limit(MAX_LABELS_PER_APP)
+                .limit(numberOfTopLabels)
                 .collect(Collectors.toList());
+    }
+
+    // Filter category above the required threshold.
+    private static boolean isAboveThreshold(Category category, float classifierThresholdValue) {
+        return category.getScore() >= classifierThresholdValue;
     }
 
     // Converts Category Label to TopicId. Expects label to be labelId of the classified category.

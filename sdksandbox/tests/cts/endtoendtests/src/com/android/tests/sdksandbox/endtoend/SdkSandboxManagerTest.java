@@ -23,8 +23,10 @@ import static android.app.sdksandbox.SdkSandboxManager.EXTRA_WIDTH_IN_PIXELS;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 
+import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallback;
@@ -75,6 +77,8 @@ public class SdkSandboxManagerTest {
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        assertNotNull(callback.getSandboxedSdk());
+        assertNotNull(callback.getSandboxedSdk().getInterface());
         mSdkSandboxManager.unloadSdk(sdkName);
     }
 
@@ -111,7 +115,7 @@ public class SdkSandboxManagerTest {
         mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isFalse();
         assertThat(callback.getLoadSdkErrorCode())
-                .isEqualTo(SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR);
+                .isEqualTo(SdkSandboxManager.LOAD_SDK_SDK_DEFINED_ERROR);
     }
 
     @Test
@@ -151,8 +155,14 @@ public class SdkSandboxManagerTest {
 
     @Test
     public void unloadingNonexistentSdkThrowsException() {
-        final String sdkName = "com.android.nonexistent";
-        assertThrows(IllegalArgumentException.class, () -> mSdkSandboxManager.unloadSdk(sdkName));
+        final String sdkName1 = "com.android.loadSdkSuccessfullySdkProvider";
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(sdkName1, new Bundle(), Runnable::run, callback);
+        // If the SDK provider has already been loaded from another test, ignore the error.
+        assertThat(callback.isLoadSdkSuccessful(/*ignoreSdkAlreadyLoadedError=*/ true)).isTrue();
+
+        final String sdkName2 = "com.android.nonexistent";
+        assertThrows(IllegalArgumentException.class, () -> mSdkSandboxManager.unloadSdk(sdkName2));
     }
 
     @Test
@@ -163,11 +173,16 @@ public class SdkSandboxManagerTest {
         mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
         // If the SDK provider has already been loaded from another test, ignore the error.
         assertThat(callback.isLoadSdkSuccessful(/*ignoreSdkAlreadyLoadedError=*/ true)).isTrue();
+        SandboxedSdk sandboxedSdk = callback.getSandboxedSdk();
+        assertNotNull(sandboxedSdk.getInterface());
 
         // Attempt to load the SDK again and see that it fails.
         final FakeLoadSdkCallback reloadCallback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, reloadCallback);
         assertThat(reloadCallback.isLoadSdkSuccessful()).isFalse();
+
+        // SDK's interface should still be obtainable.
+        assertNotNull(sandboxedSdk.getInterface());
 
         // Further calls to the SDK should still be valid.
         final FakeRequestSurfacePackageCallback surfacePackageCallback =
@@ -354,6 +369,29 @@ public class SdkSandboxManagerTest {
     }
 
     @Test
+    public void testRequestSurfacePackage_SandboxDiesAfterLoadingSdk() throws Exception {
+        final String sdkName = "com.android.requestSurfacePackageSuccessfullySdkProvider";
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
+        assertThat(callback.isLoadSdkSuccessful(/*ignoreSdkAlreadyLoadedError=*/ true)).isTrue();
+
+        assertThat(killSandboxIfExists()).isTrue();
+
+        final FakeRequestSurfacePackageCallback surfacePackageCallback =
+                new FakeRequestSurfacePackageCallback();
+        Bundle params = new Bundle();
+        params.putInt(EXTRA_WIDTH_IN_PIXELS, 500);
+        params.putInt(EXTRA_HEIGHT_IN_PIXELS, 500);
+        params.putInt(EXTRA_DISPLAY_ID, 0);
+        params.putBinder(EXTRA_HOST_TOKEN, new Binder());
+        mSdkSandboxManager.requestSurfacePackage(
+                sdkName, params, Runnable::run, surfacePackageCallback);
+        assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isFalse();
+        assertThat(surfacePackageCallback.getSurfacePackageErrorCode())
+                .isEqualTo(SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE);
+    }
+
+    @Test
     public void sendDataSuccessfully() {
         final String sdkName = "com.android.sendDataSdkProvider";
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
@@ -382,6 +420,38 @@ public class SdkSandboxManagerTest {
         assertThat(sendDataCallback.getSendDataErrorCode())
                 .isEqualTo(SdkSandboxManager.SEND_DATA_INTERNAL_ERROR);
         assertThat(sendDataCallback.getSendDataErrorMsg()).contains("Unable to process data");
+    }
+
+    @Test
+    public void testSendData_SandboxDiesAfterLoadingSdk() throws Exception {
+        final String sdkName = "com.android.sendDataSdkProvider";
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
+        assertThat(callback.isLoadSdkSuccessful(/*ignoreSdkAlreadyLoadedError=*/ true)).isTrue();
+
+        assertThat(killSandboxIfExists()).isTrue();
+
+        final FakeSendDataCallback sendDataCallback = new FakeSendDataCallback();
+        mSdkSandboxManager.sendData(sdkName, new Bundle(), Runnable::run, sendDataCallback);
+        assertThat(sendDataCallback.isSendDataSuccessful()).isFalse();
+        assertThat(sendDataCallback.getSendDataErrorCode())
+                .isEqualTo(SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE);
+    }
+
+    @Test
+    public void sendDataSdkException() {
+        final String sdkName = "com.android.sendDataSdkProvider";
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
+        assertThat(callback.isLoadSdkSuccessful(/*ignoreSdkAlreadyLoadedError=*/ true)).isTrue();
+
+        Bundle data = new Bundle();
+        data.putChar("Error", 'E');
+        final FakeSendDataCallback sendDataCallback = new FakeSendDataCallback();
+        mSdkSandboxManager.sendData(sdkName, data, Runnable::run, sendDataCallback);
+        assertThat(sendDataCallback.isSendDataSuccessful()).isFalse();
+        assertThat(sendDataCallback.getSendDataErrorCode())
+                .isEqualTo(SdkSandboxManager.SEND_DATA_INTERNAL_ERROR);
     }
 
     @Test

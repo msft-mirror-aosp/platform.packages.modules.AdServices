@@ -15,29 +15,18 @@
  */
 package android.adservices.topics;
 
-import static android.adservices.topics.TopicsManager.EMPTY_SDK;
 
 import android.annotation.NonNull;
-import android.app.sdksandbox.SandboxedSdkContext;
-import android.content.Context;
+import android.annotation.Nullable;
 
 /** Get Topics Request. */
 public final class GetTopicsRequest {
-    /** Context of the application/sandbox which send out the request to getTopics API. */
-    private final Context mContext;
 
     /** Name of Ads SDK that is involved in this request. */
     private final String mAdsSdkName;
 
-    private GetTopicsRequest(@NonNull Context context, @NonNull String adsSdkName) {
-        mContext = context;
+    private GetTopicsRequest(@Nullable String adsSdkName) {
         mAdsSdkName = adsSdkName;
-    }
-
-    /** Get the Context. */
-    @NonNull
-    public Context getContext() {
-        return mContext;
     }
 
     /** Get the Sdk Name. */
@@ -47,59 +36,32 @@ public final class GetTopicsRequest {
     }
 
     /**
-     * Builder for {@link GetTopicsRequest} objects.
+     * Builds a {@link GetTopicsRequest} instance.
+     *
+     * <p>This should be called by either the app itself or by SDK running inside the Sandbox.
      */
-    public static final class Builder {
-        private final Context mContext;
-        private String mSdkName;
+    @NonNull
+    public static GetTopicsRequest create() {
+        return new GetTopicsRequest(/* adsSdkName */ null);
+    }
 
-        /**
-         * Creates a {@link Builder} object using provided {@link Context}.
-         *
-         * @param context {@link Context} of the application/sandbox which send out the request to
-         *     getTopics API.
-         */
-        public Builder(@NonNull Context context) {
-            mContext = context;
+    /**
+     * Create a {@link GetTopicsRequest} instance with the provided Ads Sdk Name.
+     *
+     * <p>This should be called by SDKs running outside of the Sandbox.
+     *
+     * @param adsSdkName the Ads Sdk Name.
+     */
+    @NonNull
+    public static GetTopicsRequest createWithAdsSdkName(@NonNull String adsSdkName) {
+        // This is the case the SDK calling without the Sandbox.
+        // Check if the caller set the adsSdkName
+        if (adsSdkName == null) {
+            throw new IllegalArgumentException(
+                    "When calling Topics API outside of the Sandbox, caller should set Ads Sdk"
+                            + " Name");
         }
 
-        /**
-         * Set the Sdk Name. When the app calls the Topics API directly without using a SDK, don't
-         * set this field.
-         */
-        public @NonNull Builder setAdsSdkName(@NonNull String sdkName) {
-            mSdkName = sdkName;
-            return this;
-        }
-
-        /** Builds a {@link GetTopicsRequest} instance. */
-        public @NonNull GetTopicsRequest build() {
-            if (null == mContext) {
-                throw new IllegalArgumentException("Must set the context for GetTopicsRequest");
-            }
-
-            // First check if context is SandboxedSdkContext or not
-            if (mContext instanceof SandboxedSdkContext) {
-                String sdkNameFromSandboxedContext = ((SandboxedSdkContext) mContext).getSdkName();
-                if (null == sdkNameFromSandboxedContext || sdkNameFromSandboxedContext.isEmpty()) {
-                    throw new IllegalArgumentException(
-                            "sdkNameFromSandboxedContext should not be null or empty");
-                }
-                if (mSdkName != null) {
-                    throw new IllegalArgumentException(
-                            "When calling PPAPI from Sandbox, caller should not set mSdkName");
-                }
-                mSdkName = sdkNameFromSandboxedContext;
-            } else { // This is the case without the Sandbox.
-                // Check if the caller set the mSdkName
-                if (mSdkName == null) {
-                    // When Sdk name is not set, we assume the App calls the Topics API directly.
-                    // We set the Sdk name to empty to mark this.
-                    mSdkName = EMPTY_SDK;
-                }
-            }
-
-            return new GetTopicsRequest(mContext, mSdkName);
-        }
+        return new GetTopicsRequest(adsSdkName);
     }
 }

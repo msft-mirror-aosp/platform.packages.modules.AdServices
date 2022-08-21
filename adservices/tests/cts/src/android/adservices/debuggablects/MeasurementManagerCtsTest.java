@@ -19,8 +19,6 @@ package android.adservices.debuggablects;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import android.adservices.clients.measurement.MeasurementClient;
 import android.adservices.measurement.DeletionRequest;
@@ -31,11 +29,9 @@ import android.adservices.measurement.WebTriggerParams;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.content.Context;
 import android.net.Uri;
-import android.os.OutcomeReceiver;
 import android.provider.DeviceConfig;
 import android.test.suitebuilder.annotation.SmallTest;
 
-import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
@@ -48,6 +44,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -57,8 +54,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -109,9 +104,7 @@ public class MeasurementManagerCtsTest {
                                 sContext, ConsentManager.getInstance(sContext), mockFlags))
                 .when(mm)
                 .getService();
-        Mockito.doReturn(ALLOW_LIST_ALL)
-                .when(mockFlags)
-                .getWebContextRegistrationClientAppAllowList();
+        Mockito.doReturn(ALLOW_LIST_ALL).when(mockFlags).getWebContextClientAppAllowList();
 
         mMeasurementClient =
                 new MeasurementClient.Builder()
@@ -171,9 +164,11 @@ public class MeasurementManagerCtsTest {
     }
 
     @Test
-    public void testDeleteRegistrations_withRequest_withNoOrigin_withNoRange_withCallback_NoErrors()
-            throws Exception {
-        DeletionRequest deletionRequest = new DeletionRequest.Builder().build();
+    public void
+            testDeleteRegistrations_withRequest_withNoOrigin_withMaxRange_withCallback_NoErrors()
+                    throws Exception {
+        DeletionRequest deletionRequest =
+                new DeletionRequest.Builder().setStart(Instant.MIN).setEnd(Instant.MAX).build();
         ListenableFuture<Void> result = mMeasurementClient.deleteRegistrations(deletionRequest);
         assertNull(result.get());
     }
@@ -218,36 +213,13 @@ public class MeasurementManagerCtsTest {
         assertNull(result.get());
     }
 
+    @Ignore
     @Test
-    public void testDeleteRegistrations_withRequest_withInvalidArguments_withCallback_hasError()
+    public void testDeleteRegistrations_withRequest_withNoOrigin_withNoRange_withCallback_NoErrors()
             throws Exception {
-        final MeasurementManager manager = sContext.getSystemService(MeasurementManager.class);
-        Objects.requireNonNull(manager);
-
-        CompletableFuture<Void> future = new CompletableFuture<>();
-        OutcomeReceiver<Object, Exception> callback =
-                new OutcomeReceiver<Object, Exception>() {
-                    @Override
-                    public void onResult(@NonNull Object ignoredResult) {
-                        fail();
-                    }
-
-                    @Override
-                    public void onError(Exception error) {
-                        future.complete(null);
-                        assertTrue(error instanceof IllegalArgumentException);
-                    }
-                };
-        DeletionRequest request =
-                new DeletionRequest.Builder()
-                        .setOriginUris(Collections.singletonList(ORIGIN_URI))
-                        .setDomainUris(Collections.singletonList(DOMAIN_URI))
-                        .setEnd(Instant.now())
-                        .build();
-
-        manager.deleteRegistrations(request, mExecutorService, callback);
-
-        Assert.assertNull(future.get());
+        DeletionRequest deletionRequest = new DeletionRequest.Builder().build();
+        ListenableFuture<Void> result = mMeasurementClient.deleteRegistrations(deletionRequest);
+        assertNull(result.get());
     }
 
     @Test

@@ -11,6 +11,7 @@
             "publisher": "android-app://com.example.abc",
             "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 100,
@@ -23,6 +24,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
               {
@@ -49,6 +51,7 @@
             "publisher": "android-app://com.example.abc",
             "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 100,
@@ -61,6 +64,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
               {
@@ -80,6 +84,7 @@
           "sourceId": 1,
           "attributionDestination": "android-app://com.example2.app/d1",
           "adTechDomain": "https://www.example3.com",
+          "enrollmentId": "enrollment-id-3",
           "triggerData": 2,
           "triggerTime": 8640000002,
           "status": 0,
@@ -96,6 +101,7 @@
             "destinationSite": "android-app://com.example2.app",
             "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           }
@@ -113,6 +119,7 @@
             "publisher": "https://www.example1.com",
             "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 100,
@@ -125,6 +132,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example2.app/d2",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
               {
@@ -151,6 +159,7 @@
             "publisher": "https://www.example1.com",
             "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 100,
@@ -163,6 +172,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example2.app/d2",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 1,
             "eventTriggers": [
               {
@@ -193,6 +203,7 @@
             "publisherType": 1,
             "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 100,
@@ -207,6 +218,7 @@
             "publisherType": 1,
             "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 200,
@@ -219,6 +231,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
               {
@@ -246,6 +259,7 @@
             "publisherType": 1,
             "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 100,
@@ -260,6 +274,7 @@
             "publisherType": 1,
             "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 200,
@@ -272,6 +287,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
               {
@@ -292,6 +308,7 @@
           "attributionDestination": "android-app://com.example2.app/d1",
           "reportTime": 8643600030,
           "adTechDomain": "https://www.example3.com",
+          "enrollmentId": "enrollment-id-3",
           "triggerData": 2,
           "triggerTime": 8640000002,
           "triggerPriority": 101,
@@ -307,6 +324,7 @@
             "destinationSite": "android-app://com.example2.app",
             "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           }
@@ -324,6 +342,7 @@
             "publisher": "android-app://com.example.abc",
             "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 100,
@@ -337,6 +356,7 @@
             "publisher": "android-app://com.example.abc",
             "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000002,
             "expiryTime": 8640000030,
             "priority": 100,
@@ -349,6 +369,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
               {
@@ -375,6 +396,7 @@
             "publisher": "android-app://com.example.abc",
             "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 100,
@@ -388,6 +410,7 @@
             "publisher": "android-app://com.example.abc",
             "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000002,
             "expiryTime": 8640000030,
             "priority": 100,
@@ -400,6 +423,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
               {
@@ -420,6 +444,7 @@
           "attributionDestination": "android-app://com.example.xyz",
           "reportTime": 8643600030,
           "adTechDomain": "https://www.example3.com",
+          "enrollmentId": "enrollment-id-3",
           "triggerData": 2,
           "triggerTime": 8640000003,
           "triggerPriority": 101,
@@ -435,6 +460,7 @@
             "destinationSite": "android-app://com.example.xyz",
             "destinationOrigin": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000003,
             "registrant": "android-app://com.example.xyz"
           }
@@ -453,6 +479,7 @@
             "publisher": "android-app://com.example.abc",
             "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 10368000000,
             "priority": 100,
@@ -466,6 +493,7 @@
             "publisher": "android-app://com.example.abc",
             "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 10368000000,
             "priority": 50,
@@ -480,6 +508,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
               {
@@ -506,6 +535,7 @@
             "publisher": "android-app://com.example.abc",
             "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 10368000000,
             "priority": 100,
@@ -519,6 +549,7 @@
             "publisher": "android-app://com.example.abc",
             "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 10368000000,
             "priority": 50,
@@ -533,6 +564,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
               {
@@ -553,6 +585,7 @@
             "sourceId": 2,
             "attributionDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000002,
             "triggerPriority": 101,
@@ -570,6 +603,7 @@
             "destinationSite": "android-app://com.example.xyz",
             "destinationOrigin": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           }
@@ -588,6 +622,7 @@
             "publisher": "android-app://com.example.abc",
             "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 10368000000,
             "priority": 100,
@@ -601,6 +636,7 @@
             "publisher": "android-app://com.example.abc",
             "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 10368000000,
             "priority": 50,
@@ -615,6 +651,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
               {
@@ -642,6 +679,7 @@
             "publisher": "android-app://com.example.abc",
             "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 10368000000,
             "priority": 100,
@@ -655,6 +693,7 @@
             "publisher": "android-app://com.example.abc",
             "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 10368000000,
             "priority": 50,
@@ -669,6 +708,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
               {
@@ -689,6 +729,7 @@
             "sourceId": 1,
             "attributionDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 9072000001,
             "triggerPriority": 101,
@@ -706,6 +747,7 @@
             "destinationSite": "android-app://com.example.xyz",
             "destinationOrigin": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerTime": 9072000001,
             "registrant": "android-app://com.example.xyz"
           }
@@ -724,6 +766,7 @@
             "publisher": "android-app://com.example.abc",
             "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 10368000000,
             "priority": 100,
@@ -737,6 +780,7 @@
             "publisher": "android-app://com.example.abc",
             "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 10368000000,
             "priority": 50,
@@ -751,6 +795,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "priority": 101,
             "status": 0,
             "eventTriggers": [
@@ -778,6 +823,7 @@
             "publisher": "android-app://com.example.abc",
             "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 10368000000,
             "priority": 100,
@@ -791,6 +837,7 @@
             "publisher": "android-app://com.example.abc",
             "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 10368000000,
             "priority": 50,
@@ -805,6 +852,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
               {
@@ -825,6 +873,7 @@
             "sourceId": 2,
             "attributionDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerData": 1,
             "triggerTime": 8640000002,
             "triggerPriority": 101,
@@ -842,6 +891,7 @@
             "destinationSite": "android-app://com.example.xyz",
             "destinationOrigin": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           }
@@ -860,6 +910,7 @@
             "publisher": "android-app://com.example.abc",
             "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 10368000000,
             "priority": 100,
@@ -873,6 +924,7 @@
             "publisher": "android-app://com.example.abc",
             "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 10368000000,
             "priority": 50,
@@ -887,6 +939,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
               {
@@ -913,6 +966,7 @@
             "publisher": "android-app://com.example.abc",
             "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 10368000000,
             "priority": 100,
@@ -926,6 +980,7 @@
             "publisher": "android-app://com.example.abc",
             "appDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 10368000000,
             "priority": 50,
@@ -940,6 +995,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
               {
@@ -960,6 +1016,7 @@
             "sourceId": 1,
             "attributionDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerData": 0,
             "triggerTime": 9072000001,
             "triggerPriority": 101,
@@ -977,6 +1034,7 @@
             "destinationSite": "android-app://com.example.xyz",
             "destinationOrigin": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerTime": 9072000001,
             "registrant": "android-app://com.example.xyz"
           }
@@ -996,6 +1054,7 @@
             "publisherType": 1,
             "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 100,
@@ -1008,6 +1067,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
               {
@@ -1035,6 +1095,7 @@
             "publisherType": 1,
             "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 100,
@@ -1047,6 +1108,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
               {
@@ -1066,6 +1128,7 @@
           "sourceId": 1,
           "attributionDestination": "android-app://com.example2.app/d1",
           "adTechDomain": "https://www.example3.com",
+          "enrollmentId": "enrollment-id-3",
           "triggerData": 1,
           "triggerTime": 8640000002,
           "status": 0,
@@ -1082,6 +1145,7 @@
             "destinationSite": "android-app://com.example2.app",
             "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           }
@@ -1100,6 +1164,7 @@
             "publisher": "android-app://com.example.abc",
             "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 100,
@@ -1112,6 +1177,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
               {
@@ -1138,6 +1204,7 @@
             "publisher": "android-app://com.example.abc",
             "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 100,
@@ -1150,6 +1217,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
               {
@@ -1169,6 +1237,7 @@
           "sourceId": 1,
           "attributionDestination": "android-app://com.example2.app/d1",
           "adTechDomain": "https://www.example3.com",
+          "enrollmentId": "enrollment-id-3",
           "triggerData": 7,
           "triggerTime": 8640000002,
           "status": 0,
@@ -1185,6 +1254,7 @@
             "destinationSite": "android-app://com.example2.app",
             "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           }
@@ -1203,6 +1273,7 @@
           "publisherType": 1,
           "appDestination": "android-app://com.example2.app/d1",
           "adTechDomain": "https://www.example3.com",
+          "enrollmentId": "enrollment-id-3",
           "eventTime": 8640000001,
           "expiryTime": 8640000030,
           "priority": 100,
@@ -1213,6 +1284,7 @@
           "id": "T1",
           "attributionDestination": "android-app://com.example2.app/d1",
           "adTechDomain": "https://www.example3.com",
+          "enrollmentId": "enrollment-id-3",
           "status":0,
           "eventTriggers": [
             {
@@ -1229,6 +1301,7 @@
           "id": "T2",
           "attributionDestination": "android-app://com.example2.app/d1",
           "adTechDomain": "https://www.example3.com",
+          "enrollmentId": "enrollment-id-3",
           "status": 0,
           "eventTriggers": [
             {
@@ -1254,6 +1327,7 @@
           "publisherType": 1,
           "appDestination": "android-app://com.example2.app/d1",
           "adTechDomain": "https://www.example3.com",
+          "enrollmentId": "enrollment-id-3",
           "eventTime": 8640000001,
           "expiryTime": 8640000030,
           "priority": 100,
@@ -1264,6 +1338,7 @@
           "id": "T1",
           "attributionDestination": "android-app://com.example2.app/d1",
           "adTechDomain": "https://www.example3.com",
+          "enrollmentId": "enrollment-id-3",
           "status": 2,
           "eventTriggers": [
             {
@@ -1280,6 +1355,7 @@
           "id": "T2",
           "attributionDestination": "android-app://com.example2.app/d1",
           "adTechDomain": "https://www.example3.com",
+          "enrollmentId": "enrollment-id-3",
           "status": 1,
           "eventTriggers": [
             {
@@ -1298,6 +1374,7 @@
           "sourceId": 1,
           "attributionDestination": "android-app://com.example2.app/d1",
           "adTechDomain": "https://www.example3.com",
+          "enrollmentId": "enrollment-id-3",
           "triggerData": 0,
           "triggerTime": 8640000002,
           "status": 0,
@@ -1313,6 +1390,7 @@
           "destinationSite": "android-app://com.example2.app",
           "destinationOrigin": "android-app://com.example2.app",
           "adTechDomain": "https://www.example3.com",
+          "enrollmentId": "enrollment-id-3",
           "triggerTime": 8640000002,
           "registrant": "android-app://com.example.xyz"
         }]
@@ -1330,6 +1408,7 @@
           "publisherType": 1,
           "appDestination": "android-app://com.example2.app/d1",
           "adTechDomain": "https://www.example3.com",
+          "enrollmentId": "enrollment-id-3",
           "eventTime": 8640000001,
           "expiryTime": 8640000030,
           "priority": 100,
@@ -1340,6 +1419,7 @@
           "id": "T1",
           "attributionDestination": "android-app://com.example2.app/d1",
           "adTechDomain": "https://www.example3.com",
+          "enrollmentId": "enrollment-id-3",
           "status": 0,
           "eventTriggers": [
             {
@@ -1356,6 +1436,7 @@
           "id": "T2",
           "attributionDestination": "android-app://com.example2.app/d1",
           "adTechDomain": "https://www.example3.com",
+          "enrollmentId": "enrollment-id-3",
           "status": 0,
           "eventTriggers": [
             {
@@ -1381,6 +1462,7 @@
           "publisherType": 1,
           "appDestination": "android-app://com.example2.app/d1",
           "adTechDomain": "https://www.example3.com",
+          "enrollmentId": "enrollment-id-3",
           "eventTime": 8640000001,
           "expiryTime": 8640000030,
           "priority": 100,
@@ -1391,6 +1473,7 @@
           "id": "T1",
           "attributionDestination": "android-app://com.example2.app/d1",
           "adTechDomain": "https://www.example3.com",
+          "enrollmentId": "enrollment-id-3",
           "status": 2,
           "eventTriggers": [
             {
@@ -1407,6 +1490,7 @@
           "id": "T2",
           "attributionDestination": "android-app://com.example2.app/d1",
           "adTechDomain": "https://www.example3.com",
+          "enrollmentId": "enrollment-id-3",
           "status": 2,
           "eventTriggers": [
             {
@@ -1425,6 +1509,7 @@
           "sourceId": 1,
           "attributionDestination": "android-app://com.example2.app/d1",
           "adTechDomain": "https://www.example3.com",
+          "enrollmentId": "enrollment-id-3",
           "triggerData": 1,
           "triggerTime": 8640000003,
           "status": 0,
@@ -1441,6 +1526,7 @@
             "destinationSite": "android-app://com.example2.app",
             "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           },
@@ -1451,6 +1537,7 @@
             "destinationSite": "android-app://com.example2.app",
             "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000003,
             "registrant": "android-app://com.example.xyz"
           }]
@@ -1468,6 +1555,7 @@
             "publisher": "android-app://com.example.abc",
             "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 100,
@@ -1480,6 +1568,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
               {
@@ -1497,6 +1586,7 @@
             "id": "T2",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
               {
@@ -1514,6 +1604,7 @@
             "id": "T3",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
               {
@@ -1531,6 +1622,7 @@
             "id": "T4",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
               {
@@ -1557,6 +1649,7 @@
             "publisher": "android-app://com.example.abc",
             "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 100,
@@ -1569,6 +1662,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
               {
@@ -1586,6 +1680,7 @@
             "id": "T2",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
               {
@@ -1603,6 +1698,7 @@
             "id": "T3",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
               {
@@ -1620,6 +1716,7 @@
             "id": "T4",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
               {
@@ -1640,6 +1737,7 @@
             "sourceId": 1,
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000003,
             "status": 0,
@@ -1653,6 +1751,7 @@
             "sourceId": 1,
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerData": 3,
             "triggerTime": 8640000004,
             "status": 0,
@@ -1666,6 +1765,7 @@
             "sourceId": 1,
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerData": 4,
             "triggerTime": 8640000005,
             "status": 0,
@@ -1683,6 +1783,7 @@
             "destinationSite": "android-app://com.example2.app",
             "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           },
@@ -1693,6 +1794,7 @@
             "destinationSite": "android-app://com.example2.app",
             "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000003,
             "registrant": "android-app://com.example.xyz"
           },
@@ -1703,6 +1805,7 @@
             "destinationSite": "android-app://com.example2.app",
             "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000004,
             "registrant": "android-app://com.example.xyz"
           },
@@ -1713,6 +1816,7 @@
             "destinationSite": "android-app://com.example2.app",
             "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000005,
             "registrant": "android-app://com.example.xyz"
           }
@@ -1732,6 +1836,7 @@
             "publisherType": 1,
             "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 100,
@@ -1744,6 +1849,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
               {
@@ -1761,6 +1867,7 @@
             "id": "T2",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
               {
@@ -1778,6 +1885,7 @@
             "id": "T3",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
               {
@@ -1795,6 +1903,7 @@
             "id": "T4",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
               {
@@ -1822,6 +1931,7 @@
             "publisherType": 1,
             "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 100,
@@ -1834,6 +1944,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
               {
@@ -1851,6 +1962,7 @@
             "id": "T2",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
               {
@@ -1868,6 +1980,7 @@
             "id": "T3",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
               {
@@ -1885,6 +1998,7 @@
             "id": "T4",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
               {
@@ -1905,6 +2019,7 @@
             "sourceId": 1,
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerData": 1,
             "triggerTime": 8640000002,
             "status": 0,
@@ -1918,6 +2033,7 @@
             "sourceId": 1,
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000003,
             "status": 0,
@@ -1931,6 +2047,7 @@
             "sourceId": 1,
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerData": 4,
             "triggerTime": 8640000005,
             "status": 0,
@@ -1948,6 +2065,7 @@
             "destinationSite": "android-app://com.example2.app",
             "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           },
@@ -1958,6 +2076,7 @@
             "destinationSite": "android-app://com.example2.app",
             "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000003,
             "registrant": "android-app://com.example.xyz"
           },
@@ -1968,6 +2087,7 @@
             "destinationSite": "android-app://com.example2.app",
             "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000004,
             "registrant": "android-app://com.example.xyz"
           },
@@ -1978,6 +2098,7 @@
             "destinationSite": "android-app://com.example2.app",
             "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000005,
             "registrant": "android-app://com.example.xyz"
           }
@@ -1996,6 +2117,7 @@
             "publisher": "https://www.example1.com",
             "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 100,
@@ -2010,6 +2132,7 @@
             "publisher": "https://www.example1.com",
             "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
             "priority": 101,
@@ -2023,6 +2146,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
               {
@@ -2048,7 +2172,9 @@
             "sourceType": "navigation",
             "publisher": "https://www.example1.com",
             "appDestination": "android-app://com.example2.app/d1",
+            "enrollmentId": "enrollment-id-3",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 100,
@@ -2063,6 +2189,7 @@
             "publisher": "https://www.example1.com",
             "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
             "priority": 101,
@@ -2076,6 +2203,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 1,
             "eventTriggers": [
               {
@@ -2106,6 +2234,7 @@
             "publisher": "https://www.example1.com",
             "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 100,
@@ -2120,6 +2249,7 @@
             "publisher": "https://www.example1.com",
             "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
             "priority": 101,
@@ -2133,6 +2263,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
               {
@@ -2159,6 +2290,7 @@
             "publisher": "https://www.example1.com",
             "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 100,
@@ -2173,6 +2305,7 @@
             "publisher": "https://www.example1.com",
             "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
             "priority": 101,
@@ -2186,6 +2319,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 1,
             "eventTriggers": [
               {
@@ -2217,6 +2351,7 @@
             "publisherType": 1,
             "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
             "priority": 101,
@@ -2233,6 +2368,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
               {
@@ -2261,6 +2397,7 @@
             "publisherType": 1,
             "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
             "priority": 101,
@@ -2277,6 +2414,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
               {
@@ -2298,6 +2436,7 @@
             "sourceId": 2,
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerData": 1,
             "triggerTime": 8640000002,
             "status": 0,
@@ -2315,6 +2454,7 @@
             "destinationSite": "android-app://com.example2.app",
             "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           }
@@ -2334,6 +2474,7 @@
             "publisherType": 1,
             "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
             "priority": 101,
@@ -2351,6 +2492,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
               {
@@ -2379,6 +2521,7 @@
             "publisherType": 1,
             "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
             "priority": 101,
@@ -2396,6 +2539,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 1,
             "eventTriggers": [
               {
@@ -2427,6 +2571,7 @@
             "publisher": "android-app://com.example.abc",
             "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
             "priority": 101,
@@ -2443,6 +2588,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
               {
@@ -2480,6 +2626,7 @@
             "publisher": "android-app://com.example.abc",
             "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
             "priority": 101,
@@ -2496,6 +2643,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
               {
@@ -2527,6 +2675,7 @@
             "sourceId": 2,
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerData": 0,
             "triggerTime": 8640000002,
             "status": 0,
@@ -2544,6 +2693,7 @@
             "destinationSite": "android-app://com.example2.app",
             "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           }
@@ -2562,6 +2712,7 @@
             "publisher": "android-app://com.example.abc",
             "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
             "priority": 101,
@@ -2578,6 +2729,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
               {
@@ -2611,6 +2763,7 @@
             "publisher": "android-app://com.example.abc",
             "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
             "priority": 101,
@@ -2627,6 +2780,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
               {
@@ -2654,6 +2808,7 @@
             "sourceId": 2,
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerData": 1,
             "triggerTime": 8640000002,
             "status": 0,
@@ -2671,6 +2826,7 @@
             "destinationSite": "android-app://com.example2.app",
             "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           }
@@ -2690,6 +2846,7 @@
             "publisherType": 1,
             "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
             "priority": 101,
@@ -2707,6 +2864,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
               {
@@ -2748,6 +2906,7 @@
             "publisherType": 1,
             "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
             "priority": 101,
@@ -2765,6 +2924,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
               {
@@ -2799,6 +2959,7 @@
             "sourceId": 2,
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerData": 0,
             "triggerTime": 8640000002,
             "status": 0,
@@ -2816,6 +2977,7 @@
             "destinationSite": "android-app://com.example2.app",
             "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           }
@@ -2834,6 +2996,7 @@
             "publisher": "android-app://com.example.abc",
             "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
             "priority": 101,
@@ -2850,6 +3013,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
               {
@@ -2894,6 +3058,7 @@
             "publisher": "android-app://com.example.abc",
             "appDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
             "priority": 101,
@@ -2910,6 +3075,7 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
               {
@@ -2948,6 +3114,7 @@
             "sourceId": 2,
             "attributionDestination": "android-app://com.example2.app/d1",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerData": 1,
             "triggerTime": 8640000002,
             "status": 0,
@@ -2965,6 +3132,7 @@
             "destinationSite": "android-app://com.example2.app",
             "destinationOrigin": "android-app://com.example2.app",
             "adTechDomain": "https://www.example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           }

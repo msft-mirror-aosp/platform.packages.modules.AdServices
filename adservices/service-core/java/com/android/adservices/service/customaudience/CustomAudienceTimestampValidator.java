@@ -86,8 +86,12 @@ public class CustomAudienceTimestampValidator implements Validator<CustomAudienc
 
         Instant currentTime = mClock.instant();
         Instant activationTime = customAudience.getActivationTime();
-        Instant calculatedActivationTime =
-                activationTime.isBefore(currentTime) ? currentTime : activationTime;
+        Instant calculatedActivationTime;
+        if (activationTime == null || activationTime.isBefore(currentTime)) {
+            calculatedActivationTime = currentTime;
+        } else {
+            calculatedActivationTime = activationTime;
+        }
         Instant maxActivationTime = currentTime.plus(mCustomAudienceMaxActivateIn);
         if (calculatedActivationTime.isAfter(maxActivationTime)) {
             violations.add(
@@ -95,24 +99,28 @@ public class CustomAudienceTimestampValidator implements Validator<CustomAudienc
                             VIOLATION_ACTIVATE_AFTER_MAX_ACTIVATE,
                             mCustomAudienceMaxActivateIn,
                             currentTime,
-                            customAudience.getActivationTime()));
+                            calculatedActivationTime));
         }
         Instant expirationTime = customAudience.getExpirationTime();
-        if (!customAudience.getExpirationTime().isAfter(currentTime)) {
-            violations.add(String.format(VIOLATION_EXPIRE_BEFORE_CURRENT_TIME, expirationTime));
-        } else if (!expirationTime.isAfter(activationTime)) {
-            violations.add(
-                    String.format(
-                            VIOLATION_EXPIRE_BEFORE_ACTIVATION, activationTime, expirationTime));
-        } else if (expirationTime.isAfter(
-                calculatedActivationTime.plus(mCustomAudienceMaxExpireIn))) {
-            violations.add(
-                    String.format(
-                            VIOLATION_EXPIRE_AFTER_MAX_EXPIRE_TIME,
-                            mCustomAudienceMaxExpireIn,
-                            customAudience.getActivationTime(),
-                            currentTime,
-                            expirationTime));
+        if (expirationTime != null) {
+            if (!expirationTime.isAfter(currentTime)) {
+                violations.add(String.format(VIOLATION_EXPIRE_BEFORE_CURRENT_TIME, expirationTime));
+            } else if (!expirationTime.isAfter(calculatedActivationTime)) {
+                violations.add(
+                        String.format(
+                                VIOLATION_EXPIRE_BEFORE_ACTIVATION,
+                                calculatedActivationTime,
+                                expirationTime));
+            } else if (expirationTime.isAfter(
+                    calculatedActivationTime.plus(mCustomAudienceMaxExpireIn))) {
+                violations.add(
+                        String.format(
+                                VIOLATION_EXPIRE_AFTER_MAX_EXPIRE_TIME,
+                                mCustomAudienceMaxExpireIn,
+                                calculatedActivationTime,
+                                currentTime,
+                                expirationTime));
+            }
         }
     }
 }
