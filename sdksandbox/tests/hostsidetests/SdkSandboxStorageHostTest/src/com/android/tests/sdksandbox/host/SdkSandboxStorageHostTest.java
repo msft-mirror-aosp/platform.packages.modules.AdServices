@@ -34,7 +34,6 @@ import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -292,6 +291,8 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     @LargeTest
     public void testSdkDataPackageDirectory_IsReconciled_IncludesDifferentVolumes()
             throws Exception {
+        assumeTrue(mAdoptableUtils.isAdoptableStorageSupported());
+
         try {
             installPackage(TEST_APP_STORAGE_APK);
 
@@ -344,6 +345,8 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     @LargeTest
     public void testSdkDataPackageDirectory_IsReconciled_ChecksForPackageOnWrongVolume()
             throws Exception {
+        assumeTrue(mAdoptableUtils.isAdoptableStorageSupported());
+
         try {
             installPackage(TEST_APP_STORAGE_APK);
 
@@ -424,6 +427,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     @LargeTest
     public void testSdkDataPackageDirectory_IsReconciled_DeleteKeepNewVolumeData()
             throws Exception {
+        assumeTrue(mAdoptableUtils.isAdoptableStorageSupported());
 
         try {
             installPackage(TEST_APP_STORAGE_APK);
@@ -837,8 +841,9 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
-    @Ignore("b/242294416")
     public void testSdkDataSubDirectory_PerSdkStorageIsUsable_DifferentVolume() throws Exception {
+        assumeTrue(mAdoptableUtils.isAdoptableStorageSupported());
+
         installPackage(TEST_APP_STORAGE_APK);
 
         try {
