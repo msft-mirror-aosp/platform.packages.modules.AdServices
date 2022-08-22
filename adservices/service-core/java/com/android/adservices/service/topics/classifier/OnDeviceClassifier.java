@@ -155,12 +155,22 @@ public class OnDeviceClassifier implements Classifier {
         // Limit the number of entries to first MAX_LABELS_PER_APP.
         // TODO(b/235435229): Evaluate the strategy to use first x elements.
         int numberOfTopLabels = FlagsFactory.getFlags().getClassifierNumberOfTopLabels();
+        float classifierThresholdValue = FlagsFactory.getFlags().getClassifierThreshold();
+        LogUtil.i(
+                "numberOfTopLabels = %s\n classifierThresholdValue = %s",
+                numberOfTopLabels, classifierThresholdValue);
         return classifications.stream()
                 .sorted((c1, c2) -> Float.compare(c2.getScore(), c1.getScore())) // Reverse sorted.
+                .filter(category -> isAboveThreshold(category, classifierThresholdValue))
                 .map(OnDeviceClassifier::convertCategoryLabelToTopicId)
                 .map(this::createTopic)
                 .limit(numberOfTopLabels)
                 .collect(Collectors.toList());
+    }
+
+    // Filter category above the required threshold.
+    private static boolean isAboveThreshold(Category category, float classifierThresholdValue) {
+        return category.getScore() >= classifierThresholdValue;
     }
 
     // Converts Category Label to TopicId. Expects label to be labelId of the classified category.

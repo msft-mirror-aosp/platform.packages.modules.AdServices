@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement.access;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
+
 import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
 import android.content.Context;
@@ -42,7 +44,7 @@ public class UserConsentAccessResolver implements IAccessResolver {
     @Override
     @AdServicesStatusUtils.StatusCode
     public int getErrorStatusCode() {
-        return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
+        return STATUS_USER_CONSENT_REVOKED;
     }
 
     @NonNull

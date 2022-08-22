@@ -52,6 +52,7 @@ public final class PhFlags implements Flags {
     // Topics classifier keys
     static final String KEY_CLASSIFIER_TYPE = "classifier_type";
     static final String KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS = "classifier_number_of_top_labels";
+    static final String KEY_CLASSIFIER_THRESHOLD = "classifier_threshold";
 
     // Measurement keys
     static final String KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS =
@@ -195,6 +196,7 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH =
             "measurement_receiver_delete_packages_kill_switch";
     static final String KEY_TOPICS_KILL_SWITCH = "topics_kill_switch";
+    static final String KEY_MDD_BACKGROUND_TASK_KILL_SWITCH = "mdd_background_task_kill_switch";
     static final String KEY_ADID_KILL_SWITCH = "adid_kill_switch";
     static final String KEY_APPSETID_KILL_SWITCH = "appsetid_kill_switch";
     static final String KEY_FLEDGE_SELECT_ADS_KILL_SWITCH = "flegde_select_ads_kill_switch";
@@ -214,6 +216,10 @@ public final class PhFlags implements Flags {
     static final String KEY_DISABLE_TOPICS_ENROLLMENT_CHECK = "disable_topics_enrollment_check";
     static final String KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK = "disable_fledge_enrollment_check";
 
+    // Disable Measurement enrollment check.
+    static final String KEY_DISABLE_MEASUREMENT_ENROLLMENT_CHECK =
+            "disable_measurement_enrollment_check";
+
     // SystemProperty prefix. We can use SystemProperty to override the AdService Configs.
     private static final String SYSTEM_PROPERTY_PREFIX = "debug.adservices.";
 
@@ -221,8 +227,7 @@ public final class PhFlags implements Flags {
     static final String KEY_CONSENT_NOTIFICATION_DEBUG_MODE = "consent_notification_debug_mode";
 
     // App/SDK AllowList/DenyList keys that have access to the web registration APIs
-    static final String KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST =
-            "web_context_registration_client_allow_list";
+    static final String KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST = "web_context_client_allow_list";
 
     private static final PhFlags sSingleton = new PhFlags();
 
@@ -317,6 +322,15 @@ public final class PhFlags implements Flags {
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS,
                         /* defaultValue */ CLASSIFIER_NUMBER_OF_TOP_LABELS));
+    }
+
+    @Override
+    public float getClassifierThreshold() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getFloat(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_CLASSIFIER_THRESHOLD,
+                /* defaultValue */ CLASSIFIER_THRESHOLD);
     }
 
     @Override
@@ -1033,6 +1047,21 @@ public final class PhFlags implements Flags {
                                 /* defaultValue */ TOPICS_KILL_SWITCH));
     }
 
+    // MDD Killswitches
+    @Override
+    public boolean getMddBackgroundTaskKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        return getGlobalKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(KEY_MDD_BACKGROUND_TASK_KILL_SWITCH),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                /* flagName */ KEY_MDD_BACKGROUND_TASK_KILL_SWITCH,
+                                /* defaultValue */ MDD_BACKGROUND_TASK_KILL_SWITCH));
+    }
+
     // FLEDGE Kill switches
 
     @Override
@@ -1120,6 +1149,16 @@ public final class PhFlags implements Flags {
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_DISABLE_TOPICS_ENROLLMENT_CHECK,
                         /* defaultValue */ DISABLE_TOPICS_ENROLLMENT_CHECK));
+    } //
+
+    @Override
+    public boolean isDisableMeasurementEnrollmentCheck() {
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(KEY_DISABLE_MEASUREMENT_ENROLLMENT_CHECK),
+                /* defaultValue */ DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_DISABLE_MEASUREMENT_ENROLLMENT_CHECK,
+                        /* defaultValue */ DISABLE_MEASUREMENT_ENROLLMENT_CHECK));
     }
 
     @Override
@@ -1226,6 +1265,11 @@ public final class PhFlags implements Flags {
                 "\t" + DISABLE_TOPICS_ENROLLMENT_CHECK + " = " + isDisableTopicsEnrollmentCheck());
         writer.println(
                 "\t" + DISABLE_FLEDGE_ENROLLMENT_CHECK + " = " + getDisableFledgeEnrollmentCheck());
+        writer.println(
+                "\t"
+                        + DISABLE_MEASUREMENT_ENROLLMENT_CHECK
+                        + " = "
+                        + isDisableMeasurementEnrollmentCheck());
 
         writer.println("==== AdServices PH Flags Dump killswitches ====");
         writer.println("\t" + KEY_GLOBAL_KILL_SWITCH + " = " + getGlobalKillSwitch());
@@ -1237,6 +1281,12 @@ public final class PhFlags implements Flags {
                         + KEY_SDK_REQUEST_PERMITS_PER_SECOND
                         + " = "
                         + getSdkRequestPermitsPerSecond());
+
+        writer.println(
+                "\t"
+                        + KEY_MDD_BACKGROUND_TASK_KILL_SWITCH
+                        + " = "
+                        + getMddBackgroundTaskKillSwitch());
 
         writer.println("==== AdServices PH Flags Dump MDD related flags: ====");
         writer.println(

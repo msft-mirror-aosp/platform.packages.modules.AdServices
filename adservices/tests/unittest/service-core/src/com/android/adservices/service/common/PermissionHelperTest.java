@@ -81,11 +81,7 @@ public class PermissionHelperTest {
                         PermissionHelper.hasAdIdPermission(
                                 mMockContextGrant, /*useSandboxCheck =*/ false, SDK_PACKAGE_NAME))
                 .isTrue();
-
-        assertThat(
-                        PermissionHelper.hasAttributionPermission(
-                                mMockContextGrant, /*useSandboxCheck =*/ false, SDK_PACKAGE_NAME))
-                .isTrue();
+        assertThat(PermissionHelper.hasAttributionPermission(mMockContextGrant)).isTrue();
         assertThat(PermissionHelper.hasCustomAudiencesPermission(mMockContextGrant)).isTrue();
     }
 
@@ -99,10 +95,7 @@ public class PermissionHelperTest {
                         PermissionHelper.hasAdIdPermission(
                                 mMockContextDeny, /*useSandboxCheck =*/ false, SDK_PACKAGE_NAME))
                 .isFalse();
-        assertThat(
-                        PermissionHelper.hasAttributionPermission(
-                                mMockContextDeny, /*useSandboxCheck =*/ false, SDK_PACKAGE_NAME))
-                .isFalse();
+        assertThat(PermissionHelper.hasAttributionPermission(mMockContextDeny)).isFalse();
         assertThat(PermissionHelper.hasCustomAudiencesPermission(mMockContextDeny)).isFalse();
     }
 

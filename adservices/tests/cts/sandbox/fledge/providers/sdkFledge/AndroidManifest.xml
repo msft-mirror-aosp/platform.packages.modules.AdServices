@@ -18,8 +18,6 @@
           package="com.android.tests.providers.sdkfledge">
      <!-- Permissions to access PP APIs. -->
      <uses-permission android:name="android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE" />
-     <uses-permission android:name="android.permission.ADSERVICES_ACCESS_AD_ID" />
-     <uses-permission android:name="android.permission.ADSERVICES_ACCESS_APP_SET_ID" />
 
     <application>
         <sdk-library android:name="com.android.tests.providers.sdkfledge"

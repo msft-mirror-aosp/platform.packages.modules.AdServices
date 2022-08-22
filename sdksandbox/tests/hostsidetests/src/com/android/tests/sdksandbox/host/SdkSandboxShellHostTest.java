@@ -26,15 +26,16 @@ import com.android.tradefed.util.CommandStatus;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.HashSet;
 
+@Ignore("b/242829515,b/242829475,b/242830221,b/242829965")
 @RunWith(DeviceJUnit4ClassRunner.class)
 public final class SdkSandboxShellHostTest extends BaseHostJUnit4Test {
 
-    // TODO: Refactor utility methods/constants once ag/17182697 is merged
     private static final String DEBUGGABLE_APP_PACKAGE = "com.android.sdksandbox.debuggable";
     private static final String DEBUGGABLE_APP_ACTIVITY = "SdkSandboxTestDebuggableActivity";
 

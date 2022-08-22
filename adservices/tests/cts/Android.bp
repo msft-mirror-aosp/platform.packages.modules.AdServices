@@ -50,10 +50,7 @@ android_test {
 }
 android_test {
     name: "CtsAdServicesDebuggableDeviceTestCases",
-    defaults: [
-        "cts_defaults",
-        "modules-utils-testable-device-config-defaults"
-    ],
+    defaults: ["cts_defaults"],
     libs: [
         "android.test.runner",
         "android.test.base",

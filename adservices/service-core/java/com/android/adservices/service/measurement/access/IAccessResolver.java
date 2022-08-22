@@ -33,7 +33,7 @@ public interface IAccessResolver {
     @AdServicesStatusUtils.StatusCode
     int getErrorStatusCode();
 
-    /** @return error message to throw in case the user access wasn't granted. */
+    /** @return error message to throw in case access wasn't granted. */
     @NonNull
     String getErrorMessage();
 }

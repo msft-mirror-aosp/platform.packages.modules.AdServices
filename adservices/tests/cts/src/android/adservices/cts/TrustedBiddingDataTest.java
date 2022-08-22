@@ -37,7 +37,7 @@ import java.util.Collections;
 @SmallTest
 public final class TrustedBiddingDataTest {
     private static final Uri VALID_TRUSTED_BIDDING_URL =
-            TrustedBiddingDataFixture.getValidTrustedBiddingUrlByBuyer(CommonFixture.VALID_BUYER);
+            TrustedBiddingDataFixture.getValidTrustedBiddingUrlByBuyer(CommonFixture.VALID_BUYER_1);
 
     @Test
     public void testBuildValidTrustedBiddingDataSuccess() {

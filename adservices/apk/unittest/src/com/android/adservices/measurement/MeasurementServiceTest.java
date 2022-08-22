@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.adservices.measurement;
 
 import static org.junit.Assert.assertNotNull;
@@ -26,9 +25,11 @@ import android.os.IBinder;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.measurement.attribution.AttributionJobService;
@@ -45,11 +46,26 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
+import java.util.Arrays;
+
 /** Unit test for {@link com.android.adservices.measurement.MeasurementService}. */
 public class MeasurementServiceTest {
     @Mock ConsentManager mMockConsentManager;
     @Mock Flags mMockFlags;
     @Mock MeasurementImpl mMockMeasurementImpl;
+    @Mock EnrollmentDao mMockEnrollmentDao;
+
+    private static final EnrollmentData ENROLLMENT =
+            new EnrollmentData.Builder()
+                    .setEnrollmentId("E1")
+                    .setCompanyId("1001")
+                    .setSdkNames("sdk1")
+                    .setAttributionSourceRegistrationUrl(Arrays.asList("https://test.com/source"))
+                    .setAttributionTriggerRegistrationUrl(Arrays.asList("https://test.com/trigger"))
+                    .setAttributionReportingUrl(Arrays.asList("https://test.com"))
+                    .setRemarketingResponseBasedRegistrationUrl(Arrays.asList("https://test.com"))
+                    .setEncryptionKeyUrl(Arrays.asList("https://test.com/keys"))
+                    .build();
 
     /** Setup for tests */
     @Before
@@ -67,6 +83,7 @@ public class MeasurementServiceTest {
                         .spyStatic(AggregateFallbackReportingJobService.class)
                         .spyStatic(AttributionJobService.class)
                         .spyStatic(ConsentManager.class)
+                        .spyStatic(EnrollmentDao.class)
                         .spyStatic(EventReportingJobService.class)
                         .spyStatic(EventFallbackReportingJobService.class)
                         .spyStatic(DeleteExpiredJobService.class)
@@ -83,6 +100,12 @@ public class MeasurementServiceTest {
 
             ExtendedMockito.doReturn(mMockConsentManager)
                     .when(() -> ConsentManager.getInstance(any()));
+
+            ExtendedMockito.doReturn(mMockEnrollmentDao)
+                    .when(() -> EnrollmentDao.getInstance(any()));
+            doReturn(ENROLLMENT)
+                    .when(mMockEnrollmentDao)
+                    .getEnrollmentDataFromMeasurementUrl(any());
 
             ExtendedMockito.doReturn(mMockMeasurementImpl)
                     .when(() -> MeasurementImpl.getInstance(any()));
