@@ -18,6 +18,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.android.tests.sdksandbox.endtoend" >
 
+    <queries>
+        <package android:name="com.android.codeproviderresources" />
+        <package android:name="com.android.sdksandboxcode" />
+        <package android:name="com.android.sdksandboxcode.v2" />
+    </queries>
+
     <application android:debuggable="true">
         <uses-library android:name="android.test.runner" />
         <uses-sdk-library android:name="com.android.sdksandboxcode.v1"
