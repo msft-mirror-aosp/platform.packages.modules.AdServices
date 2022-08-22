@@ -91,7 +91,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
             return;
         }
 
-        LogUtil.i("Package Fully Removed:" + packageUri);
+        LogUtil.d("Package Fully Removed:" + packageUri);
         sBackgroundExecutor.execute(
                 () -> MeasurementImpl.getInstance(context).deletePackageRecords(packageUri));
     }
@@ -103,7 +103,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
             return;
         }
 
-        LogUtil.i("Package Data Cleared: " + packageUri);
+        LogUtil.d("Package Data Cleared: " + packageUri);
         sBackgroundExecutor.execute(
                 () -> MeasurementImpl.getInstance(context).deletePackageRecords(packageUri));
     }
@@ -115,7 +115,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
             return;
         }
 
-        LogUtil.i("Package Added: " + packageUri);
+        LogUtil.d("Package Added: " + packageUri);
         sBackgroundExecutor.execute(
                 () ->
                         MeasurementImpl.getInstance(context)
