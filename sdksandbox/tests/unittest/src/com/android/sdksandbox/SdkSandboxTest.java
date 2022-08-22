@@ -18,9 +18,9 @@ package com.android.sdksandbox;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import android.app.sdksandbox.KeyWithType;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxedSdk;
+import android.app.sdksandbox.SharedPreferencesKey;
 import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.app.sdksandbox.testutils.FakeSharedPreferencesSyncCallback;
 import android.content.Context;
@@ -71,15 +71,15 @@ public class SdkSandboxTest {
     private static final long TIME_SANDBOX_CALLED_SYSTEM_SERVER = 11;
 
     private static final String KEY_TO_UPDATE = "hello1";
-    private static final KeyWithType KEY_WITH_TYPE_TO_UPDATE =
-            new KeyWithType(KEY_TO_UPDATE, KeyWithType.KEY_TYPE_STRING);
+    private static final SharedPreferencesKey KEY_WITH_TYPE_TO_UPDATE =
+            new SharedPreferencesKey(KEY_TO_UPDATE, SharedPreferencesKey.KEY_TYPE_STRING);
     private static final Map<String, String> TEST_DATA =
             Map.of(KEY_TO_UPDATE, "world1", "hello2", "world2", "empty", "");
-    private static final List<KeyWithType> KEYS_TO_SYNC =
+    private static final List<SharedPreferencesKey> KEYS_TO_SYNC =
             List.of(
                     KEY_WITH_TYPE_TO_UPDATE,
-                    new KeyWithType("hello2", KeyWithType.KEY_TYPE_STRING),
-                    new KeyWithType("empty", KeyWithType.KEY_TYPE_STRING));
+                    new SharedPreferencesKey("hello2", SharedPreferencesKey.KEY_TYPE_STRING),
+                    new SharedPreferencesKey("empty", SharedPreferencesKey.KEY_TYPE_STRING));
     private static final SharedPreferencesUpdate TEST_UPDATE =
             new SharedPreferencesUpdate(KEYS_TO_SYNC, getBundleFromMap(TEST_DATA));
 
@@ -332,14 +332,15 @@ public class SdkSandboxTest {
         bundle.putLong("long", 1L);
         bundle.putStringArrayList("arrayList", new ArrayList<>(Arrays.asList("list1", "list2")));
 
-        final List<KeyWithType> keysToSync =
+        final List<SharedPreferencesKey> keysToSync =
                 List.of(
-                        new KeyWithType("string", KeyWithType.KEY_TYPE_STRING),
-                        new KeyWithType("boolean", KeyWithType.KEY_TYPE_BOOLEAN),
-                        new KeyWithType("integer", KeyWithType.KEY_TYPE_INTEGER),
-                        new KeyWithType("float", KeyWithType.KEY_TYPE_FLOAT),
-                        new KeyWithType("long", KeyWithType.KEY_TYPE_LONG),
-                        new KeyWithType("arrayList", KeyWithType.KEY_TYPE_STRING_SET));
+                        new SharedPreferencesKey("string", SharedPreferencesKey.KEY_TYPE_STRING),
+                        new SharedPreferencesKey("boolean", SharedPreferencesKey.KEY_TYPE_BOOLEAN),
+                        new SharedPreferencesKey("integer", SharedPreferencesKey.KEY_TYPE_INTEGER),
+                        new SharedPreferencesKey("float", SharedPreferencesKey.KEY_TYPE_FLOAT),
+                        new SharedPreferencesKey("long", SharedPreferencesKey.KEY_TYPE_LONG),
+                        new SharedPreferencesKey(
+                                "arrayList", SharedPreferencesKey.KEY_TYPE_STRING_SET));
         final SharedPreferencesUpdate update = new SharedPreferencesUpdate(keysToSync, bundle);
         mService.syncDataFromClient(update, new FakeSharedPreferencesSyncCallback());
 
