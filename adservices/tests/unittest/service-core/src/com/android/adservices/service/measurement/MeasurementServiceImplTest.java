@@ -160,7 +160,7 @@ public final class MeasurementServiceImplTest {
         when(mMockFlags.getMeasurementApiRegisterWebTriggerKillSwitch()).thenReturn(false);
         when(mMockFlags.getMeasurementApiDeleteRegistrationsKillSwitch()).thenReturn(false);
         when(mMockFlags.getMeasurementApiStatusKillSwitch()).thenReturn(false);
-        when(mMockFlags.getPpapiAppAllowList()).thenReturn("*");
+        when(mMockFlags.getPpapiAppSignatureBypassList()).thenReturn("*");
         mCallerMetadata =
                 new CallerMetadata.Builder()
                         .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
@@ -915,7 +915,7 @@ public final class MeasurementServiceImplTest {
             ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any()));
             MeasurementImpl measurementImpl =
                     new MeasurementImpl(mMockContext, null, null, null, null, null);
-            when(mMockFlags.getPpapiAppAllowList()).thenReturn("*");
+            when(mMockFlags.getPpapiAppSignatureBypassList()).thenReturn("*");
             CountDownLatch countDownLatch = new CountDownLatch(1);
             final AtomicInteger resultWrapper = new AtomicInteger();
 
@@ -2065,7 +2065,7 @@ public final class MeasurementServiceImplTest {
         final String value = enabledAll ? "*" : "";
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                "ppapi_app_allow_list",
+                "ppapi_app_signature_bypass_list",
                 value,
                 /* makeDefault */ false);
     }
