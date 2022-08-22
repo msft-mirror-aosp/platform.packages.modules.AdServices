@@ -21,9 +21,9 @@ import android.annotation.Nullable;
 import android.annotation.RequiresPermission;
 import android.app.Service;
 import android.app.sdksandbox.ISharedPreferencesSyncCallback;
-import android.app.sdksandbox.KeyWithType;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxedSdkContext;
+import android.app.sdksandbox.SharedPreferencesKey;
 import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.content.Context;
 import android.content.Intent;
@@ -148,7 +148,7 @@ public class SdkSandboxServiceImpl extends Service {
                 PreferenceManager.getDefaultSharedPreferences(mInjector.getContext());
         SharedPreferences.Editor editor = pref.edit();
         final Bundle data = update.getData();
-        for (KeyWithType keyInUpdate : update.getKeysInUpdate()) {
+        for (SharedPreferencesKey keyInUpdate : update.getKeysInUpdate()) {
             updateSharedPreferences(editor, data, keyInUpdate);
         }
         // TODO(b/239403323): What if writing to persistent storage fails?
@@ -162,7 +162,7 @@ public class SdkSandboxServiceImpl extends Service {
     }
 
     private void updateSharedPreferences(
-            SharedPreferences.Editor editor, Bundle data, KeyWithType keyInUpdate) {
+            SharedPreferences.Editor editor, Bundle data, SharedPreferencesKey keyInUpdate) {
         final String key = keyInUpdate.getName();
 
         if (!data.containsKey(key)) {
@@ -174,22 +174,22 @@ public class SdkSandboxServiceImpl extends Service {
         final int type = keyInUpdate.getType();
         try {
             switch (type) {
-                case KeyWithType.KEY_TYPE_STRING:
+                case SharedPreferencesKey.KEY_TYPE_STRING:
                     editor.putString(key, data.getString(key, ""));
                     break;
-                case KeyWithType.KEY_TYPE_BOOLEAN:
+                case SharedPreferencesKey.KEY_TYPE_BOOLEAN:
                     editor.putBoolean(key, data.getBoolean(key, false));
                     break;
-                case KeyWithType.KEY_TYPE_INTEGER:
+                case SharedPreferencesKey.KEY_TYPE_INTEGER:
                     editor.putInt(key, data.getInt(key, 0));
                     break;
-                case KeyWithType.KEY_TYPE_FLOAT:
+                case SharedPreferencesKey.KEY_TYPE_FLOAT:
                     editor.putFloat(key, data.getFloat(key, 0.0f));
                     break;
-                case KeyWithType.KEY_TYPE_LONG:
+                case SharedPreferencesKey.KEY_TYPE_LONG:
                     editor.putLong(key, data.getLong(key, 0L));
                     break;
-                case KeyWithType.KEY_TYPE_STRING_SET:
+                case SharedPreferencesKey.KEY_TYPE_STRING_SET:
                     final ArraySet<String> castedValue =
                             new ArraySet<>(data.getStringArrayList(key));
                     editor.putStringSet(key, castedValue);

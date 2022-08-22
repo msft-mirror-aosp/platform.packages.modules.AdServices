@@ -36,10 +36,10 @@ public class SharedPreferencesUpdateUnitTest {
     private static final long VALUE_LONG = 1L;
     private static final String VALUE_STRING = "value";
 
-    private static final List<KeyWithType> KEYS_TO_SYNC =
+    private static final List<SharedPreferencesKey> KEYS_TO_SYNC =
             List.of(
-                    new KeyWithType(KEY_LONG, KeyWithType.KEY_TYPE_LONG),
-                    new KeyWithType(KEY_STRING, KeyWithType.KEY_TYPE_STRING));
+                    new SharedPreferencesKey(KEY_LONG, SharedPreferencesKey.KEY_TYPE_LONG),
+                    new SharedPreferencesKey(KEY_STRING, SharedPreferencesKey.KEY_TYPE_STRING));
 
     @Test
     public void testSharedPreferencesUpdate_DescribeContents() throws Exception {

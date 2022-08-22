@@ -32,7 +32,7 @@ import java.util.Objects;
  *
  * @hide
  */
-public final class KeyWithType implements Parcelable {
+public final class SharedPreferencesKey implements Parcelable {
     /** @hide */
     @IntDef(
             prefix = "KEY_TYPE_",
@@ -98,23 +98,23 @@ public final class KeyWithType implements Parcelable {
     private final String mKeyName;
     private final @KeyType int mKeyType;
 
-    public static final @NonNull Parcelable.Creator<KeyWithType> CREATOR =
-            new Parcelable.Creator<KeyWithType>() {
-                public KeyWithType createFromParcel(Parcel in) {
-                    return new KeyWithType(in);
+    public static final @NonNull Parcelable.Creator<SharedPreferencesKey> CREATOR =
+            new Parcelable.Creator<SharedPreferencesKey>() {
+                public SharedPreferencesKey createFromParcel(Parcel in) {
+                    return new SharedPreferencesKey(in);
                 }
 
-                public KeyWithType[] newArray(int size) {
-                    return new KeyWithType[size];
+                public SharedPreferencesKey[] newArray(int size) {
+                    return new SharedPreferencesKey[size];
                 }
             };
 
-    public KeyWithType(@NonNull String keyName, @KeyType int keyType) {
+    public SharedPreferencesKey(@NonNull String keyName, @KeyType int keyType) {
         mKeyName = keyName;
         mKeyType = keyType;
     }
 
-    private KeyWithType(Parcel in) {
+    private SharedPreferencesKey(Parcel in) {
         mKeyName = in.readString();
         mKeyType = in.readInt();
     }
@@ -132,14 +132,14 @@ public final class KeyWithType implements Parcelable {
 
     @Override
     public String toString() {
-        return "KeyWithType{" + "mKeyName=" + mKeyName + ", mKeyType='" + mKeyType + "'}";
+        return "SharedPreferencesKey{" + "mKeyName=" + mKeyName + ", mKeyType='" + mKeyType + "'}";
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof KeyWithType)) return false;
-        final KeyWithType that = (KeyWithType) o;
+        if (!(o instanceof SharedPreferencesKey)) return false;
+        final SharedPreferencesKey that = (SharedPreferencesKey) o;
         return mKeyName.equals(that.getName()) && mKeyType == that.getType();
     }
 
