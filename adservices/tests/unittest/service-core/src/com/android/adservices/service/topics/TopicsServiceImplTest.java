@@ -414,11 +414,10 @@ public class TopicsServiceImplTest {
         when(mPackageManager.getProperty(
                         AppManifestConfigHelper.AD_SERVICES_CONFIG_PROPERTY, TEST_APP_PACKAGE_NAME))
                 .thenReturn(property);
-
+        Resources resources =
+                mContext.getPackageManager().getResourcesForApplication(TEST_APP_PACKAGE_NAME);
         when(mPackageManager.getResourcesForApplication(TEST_APP_PACKAGE_NAME))
-                .thenReturn(
-                        mContext.getPackageManager()
-                                .getResourcesForApplication(TEST_APP_PACKAGE_NAME));
+                .thenReturn(resources);
         runGetTopics(createTopicsServiceImplInstance_SandboxContext());
     }
 
