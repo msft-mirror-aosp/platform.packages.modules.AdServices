@@ -722,9 +722,9 @@ class MeasurementDao implements IMeasurementDao {
         Objects.requireNonNull(domains);
         Objects.requireNonNull(start);
         Objects.requireNonNull(end);
+        validateRange(start, end);
         Instant cappedStart = capDeletionRange(start);
         Instant cappedEnd = capDeletionRange(end);
-        validateRange(cappedStart, cappedEnd);
         // Handle no-op case
         // Preserving everything => Do Nothing
         if (domains.isEmpty()

@@ -62,14 +62,14 @@ public final class DeletionParam implements Parcelable {
 
         boolean hasStart = in.readBoolean();
         if (hasStart) {
-            mStart = Instant.ofEpochMilli(in.readLong());
+            mStart = Instant.parse(in.readString());
         } else {
             mStart = null;
         }
 
         boolean hasEnd = in.readBoolean();
         if (hasEnd) {
-            mEnd = Instant.ofEpochMilli(in.readLong());
+            mEnd = Instant.parse(in.readString());
         } else {
             mEnd = null;
         }
@@ -109,14 +109,14 @@ public final class DeletionParam implements Parcelable {
 
         if (mStart != null) {
             out.writeBoolean(true);
-            out.writeLong(mStart.toEpochMilli());
+            out.writeString(mStart.toString());
         } else {
             out.writeBoolean(false);
         }
 
         if (mEnd != null) {
             out.writeBoolean(true);
-            out.writeLong(mEnd.toEpochMilli());
+            out.writeString(mEnd.toString());
         } else {
             out.writeBoolean(false);
         }
