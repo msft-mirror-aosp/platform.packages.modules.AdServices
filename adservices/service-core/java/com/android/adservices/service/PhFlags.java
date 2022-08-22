@@ -216,6 +216,10 @@ public final class PhFlags implements Flags {
     static final String KEY_DISABLE_TOPICS_ENROLLMENT_CHECK = "disable_topics_enrollment_check";
     static final String KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK = "disable_fledge_enrollment_check";
 
+    // Disable Measurement enrollment check.
+    static final String KEY_DISABLE_MEASUREMENT_ENROLLMENT_CHECK =
+            "disable_measurement_enrollment_check";
+
     // SystemProperty prefix. We can use SystemProperty to override the AdService Configs.
     private static final String SYSTEM_PROPERTY_PREFIX = "debug.adservices.";
 
@@ -223,8 +227,7 @@ public final class PhFlags implements Flags {
     static final String KEY_CONSENT_NOTIFICATION_DEBUG_MODE = "consent_notification_debug_mode";
 
     // App/SDK AllowList/DenyList keys that have access to the web registration APIs
-    static final String KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST =
-            "web_context_registration_client_allow_list";
+    static final String KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST = "web_context_client_allow_list";
 
     private static final PhFlags sSingleton = new PhFlags();
 
@@ -1146,6 +1149,16 @@ public final class PhFlags implements Flags {
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_DISABLE_TOPICS_ENROLLMENT_CHECK,
                         /* defaultValue */ DISABLE_TOPICS_ENROLLMENT_CHECK));
+    } //
+
+    @Override
+    public boolean isDisableMeasurementEnrollmentCheck() {
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(KEY_DISABLE_MEASUREMENT_ENROLLMENT_CHECK),
+                /* defaultValue */ DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_DISABLE_MEASUREMENT_ENROLLMENT_CHECK,
+                        /* defaultValue */ DISABLE_MEASUREMENT_ENROLLMENT_CHECK));
     }
 
     @Override
@@ -1252,6 +1265,11 @@ public final class PhFlags implements Flags {
                 "\t" + DISABLE_TOPICS_ENROLLMENT_CHECK + " = " + isDisableTopicsEnrollmentCheck());
         writer.println(
                 "\t" + DISABLE_FLEDGE_ENROLLMENT_CHECK + " = " + getDisableFledgeEnrollmentCheck());
+        writer.println(
+                "\t"
+                        + DISABLE_MEASUREMENT_ENROLLMENT_CHECK
+                        + " = "
+                        + isDisableMeasurementEnrollmentCheck());
 
         writer.println("==== AdServices PH Flags Dump killswitches ====");
         writer.println("\t" + KEY_GLOBAL_KILL_SWITCH + " = " + getGlobalKillSwitch());

@@ -1000,17 +1000,18 @@ public interface Flags extends Dumpable {
         return SDK_REQUEST_PERMITS_PER_SECOND;
     }
 
-    // TODO(b/238924460): Remove after MDD download service is available and can be invoked from CTS
-    // tests.
+    // TODO(b/238924460): Enable by default after enrollment process is open.
     /**
-     * Disable enrollment check for Topics API. This is done only to allow CTS test to pass since
-     * there is currently no way to write the enrollment data from test in the same db that can be
-     * read from the service. Note: This should not be enabled in production, unless there's a
-     * problem with enrollment.
+     * Once the enrollment process is open, this should be false by default, such that enrollment is
+     * always enforced, unless there are bugs with enrollment. Disabling enforcement for now since
+     * we don't want to block alpha testing while the enrollment process is being set up.
      */
-    boolean DISABLE_TOPICS_ENROLLMENT_CHECK = false; // By default, enrollment check is enabled.
+    boolean DISABLE_TOPICS_ENROLLMENT_CHECK = true;
 
     boolean DISABLE_FLEDGE_ENROLLMENT_CHECK = true; // By default, enrollment check is disabled
+
+    // TODO(b/243025320): Enable by default after enrollment process is open.
+    boolean DISABLE_MEASUREMENT_ENROLLMENT_CHECK = true;
 
     /** @return {@code true} if the Topics API should disable the ad tech enrollment check */
     default boolean isDisableTopicsEnrollmentCheck() {
@@ -1020,6 +1021,10 @@ public interface Flags extends Dumpable {
     /** @return {@code true} if the FLEDGE APIs should disable the ad tech enrollment check */
     default boolean getDisableFledgeEnrollmentCheck() {
         return DISABLE_FLEDGE_ENROLLMENT_CHECK;
+    }
+
+    default boolean isDisableMeasurementEnrollmentCheck() {
+        return DISABLE_MEASUREMENT_ENROLLMENT_CHECK;
     }
 
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION = true;

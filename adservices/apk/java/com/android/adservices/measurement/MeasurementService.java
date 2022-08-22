@@ -20,6 +20,7 @@ import android.content.Intent;
 import android.os.IBinder;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
@@ -49,7 +50,11 @@ public class MeasurementService extends Service {
         }
         if (mMeasurementService == null) {
             mMeasurementService =
-                    new MeasurementServiceImpl(this, ConsentManager.getInstance(this), flags);
+                    new MeasurementServiceImpl(
+                            this,
+                            ConsentManager.getInstance(this),
+                            EnrollmentDao.getInstance(this),
+                            flags);
         }
         schedulePeriodicJobs();
     }
