@@ -2467,6 +2467,7 @@ public class PhFlagsTest {
         assertThat(phFlags.getDisableFledgeEnrollmentCheck()).isEqualTo(phOverridingValue);
     }
 
+    @Test
     public void testIsDisableMeasurementEnrollmentCheck() {
         // Without any overriding, the value is the hard coded constant.
         assertThat(FlagsFactory.getFlags().isDisableMeasurementEnrollmentCheck())
