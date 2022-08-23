@@ -50,6 +50,7 @@ import com.android.adservices.service.common.CallingAppUidSupplier;
 import com.android.adservices.service.common.CallingAppUidSupplierBinderImpl;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.AdSelectionOverrider;
 import com.android.adservices.service.devapi.DevContext;
@@ -198,6 +199,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         devContext,
                         mAppImportanceFilter,
                         mFlags,
+                        () -> Throttler.getInstance(mFlags.getSdkRequestPermitsPerSecond()),
                         getCallingUid(apiName),
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter);
@@ -239,6 +241,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mAdServicesLogger,
                         mAppImportanceFilter,
                         mFlags,
+                        () -> Throttler.getInstance(mFlags.getSdkRequestPermitsPerSecond()),
                         getCallingUid(apiName),
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter);

@@ -302,6 +302,7 @@ public final class MeasurementServiceImplTest {
                     }
                 };
 
+        Throttler.destroyExistingThrottler();
         final Throttler throttler = Throttler.getInstance(1);
             new MeasurementServiceImpl(
                             mMockMeasurementImpl,
@@ -356,6 +357,7 @@ public final class MeasurementServiceImplTest {
                     }
                 };
 
+        Throttler.destroyExistingThrottler();
         final Throttler throttler = Throttler.getInstance(1);
             new MeasurementServiceImpl(
                             mMockMeasurementImpl,
@@ -702,6 +704,7 @@ public final class MeasurementServiceImplTest {
                     }
                 };
 
+        Throttler.destroyExistingThrottler();
         final Throttler throttler = Throttler.getInstance(1);
             new MeasurementServiceImpl(
                             mMockMeasurementImpl,
@@ -1024,6 +1027,7 @@ public final class MeasurementServiceImplTest {
                     }
                 };
 
+        Throttler.destroyExistingThrottler();
         final Throttler throttler = Throttler.getInstance(1);
             new MeasurementServiceImpl(
                             mMockMeasurementImpl,
