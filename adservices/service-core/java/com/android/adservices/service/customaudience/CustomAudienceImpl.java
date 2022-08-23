@@ -103,13 +103,17 @@ public class CustomAudienceImpl {
      * Perform check on {@link CustomAudience} and write into db if it is valid.
      *
      * @param customAudience instance staged to be inserted.
+     * @param callerPackageName package name for the calling application, used as the owner
+     *     application identifier
      */
-    public void joinCustomAudience(@NonNull CustomAudience customAudience) {
+    public void joinCustomAudience(
+            @NonNull CustomAudience customAudience, @NonNull String callerPackageName) {
         Objects.requireNonNull(customAudience);
+        Objects.requireNonNull(callerPackageName);
         Instant currentTime = mClock.instant();
 
         LogUtil.v("Validating CA limits");
-        mCustomAudienceQuantityChecker.check(customAudience);
+        mCustomAudienceQuantityChecker.check(customAudience, callerPackageName);
         LogUtil.v("Validating CA");
         mCustomAudienceValidator.validate(customAudience);
 
@@ -118,7 +122,10 @@ public class CustomAudienceImpl {
 
         DBCustomAudience dbCustomAudience =
                 DBCustomAudience.fromServiceObject(
-                        customAudience, currentTime, customAudienceDefaultExpireIn);
+                        customAudience,
+                        callerPackageName,
+                        currentTime,
+                        customAudienceDefaultExpireIn);
 
         LogUtil.v("Inserting CA in the DB");
         mCustomAudienceDao.insertOrOverwriteCustomAudience(

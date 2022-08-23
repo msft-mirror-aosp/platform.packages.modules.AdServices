@@ -45,7 +45,6 @@ public final class CustomAudienceTest {
         CustomAudience validCustomAudience =
                 CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build();
 
-        assertEquals(CustomAudienceFixture.VALID_OWNER, validCustomAudience.getOwnerPackageName());
         assertEquals(CommonFixture.VALID_BUYER_1, validCustomAudience.getBuyer());
         assertEquals(CustomAudienceFixture.VALID_NAME, validCustomAudience.getName());
         assertEquals(
@@ -80,8 +79,6 @@ public final class CustomAudienceTest {
                         .setExpirationTime(CustomAudienceFixture.VALID_DELAYED_EXPIRATION_TIME)
                         .build();
 
-        assertThat(validDelayedActivationCustomAudience.getOwnerPackageName())
-                .isEqualTo(CustomAudienceFixture.VALID_OWNER);
         assertThat(validDelayedActivationCustomAudience.getBuyer())
                 .isEqualTo(CommonFixture.VALID_BUYER_1);
         assertThat(validDelayedActivationCustomAudience.getName())
@@ -144,7 +141,6 @@ public final class CustomAudienceTest {
                 () -> {
                     // No buyer were set
                     new CustomAudience.Builder()
-                            .setOwnerPackageName(CustomAudienceFixture.VALID_OWNER)
                             .setName(CustomAudienceFixture.VALID_NAME)
                             .setActivationTime(CustomAudienceFixture.VALID_DELAYED_ACTIVATION_TIME)
                             .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
@@ -170,7 +166,6 @@ public final class CustomAudienceTest {
                 () -> {
                     // No buyer were set
                     new CustomAudience.Builder()
-                            .setOwnerPackageName(CustomAudienceFixture.VALID_OWNER)
                             .setBuyer(null)
                             .build();
                 });
@@ -184,8 +179,6 @@ public final class CustomAudienceTest {
                         .setAds(null)
                         .build();
 
-        assertThat(nullAdsCustomAudience.getOwnerPackageName())
-                .isEqualTo(CustomAudienceFixture.VALID_OWNER);
         assertThat(nullAdsCustomAudience.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
         assertThat(nullAdsCustomAudience.getName()).isEqualTo(CustomAudienceFixture.VALID_NAME);
         assertThat(nullAdsCustomAudience.getActivationTime())
@@ -219,8 +212,6 @@ public final class CustomAudienceTest {
                         .setAds(emptyAds)
                         .build();
 
-        assertThat(emptyAdsCustomAudience.getOwnerPackageName())
-                .isEqualTo(CustomAudienceFixture.VALID_OWNER);
         assertThat(emptyAdsCustomAudience.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
         assertThat(emptyAdsCustomAudience.getName()).isEqualTo(CustomAudienceFixture.VALID_NAME);
         assertThat(emptyAdsCustomAudience.getActivationTime())
