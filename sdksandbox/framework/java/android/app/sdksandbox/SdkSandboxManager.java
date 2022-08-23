@@ -350,6 +350,7 @@ public final class SdkSandboxManager {
      * Fetches information about Sdks that are loaded in the sandbox.
      *
      * @return List of {@link SharedLibraryInfo} containing all currently loaded sdks
+     * @hide
      */
     public @NonNull List<SharedLibraryInfo> getLoadedSdkLibrariesInfo() {
         try {

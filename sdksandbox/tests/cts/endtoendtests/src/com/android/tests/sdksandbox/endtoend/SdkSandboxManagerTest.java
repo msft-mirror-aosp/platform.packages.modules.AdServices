@@ -33,7 +33,6 @@ import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallback;
 import android.app.sdksandbox.testutils.FakeSdkSandboxLifecycleCallback;
 import android.app.sdksandbox.testutils.FakeSendDataCallback;
 import android.content.Context;
-import android.content.pm.SharedLibraryInfo;
 import android.os.Binder;
 import android.os.Bundle;
 
@@ -47,8 +46,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-
-import java.util.List;
 
 /*
  * TODO(b/215372846): These providers
@@ -294,34 +291,6 @@ public class SdkSandboxManagerTest {
         killSandbox();
         assertThat(lifecycleCallback1.isSdkSandboxDeathDetected()).isFalse();
         assertThat(lifecycleCallback2.isSdkSandboxDeathDetected()).isTrue();
-    }
-
-    @Test
-    public void getLoadedSdkLibrariesInfoSuccessfully() {
-        final String sdkName = "com.android.getLoadedSdkLibInfoSuccessfully";
-        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
-
-        mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
-        List<SharedLibraryInfo> sdkLibrariesInfo = mSdkSandboxManager.getLoadedSdkLibrariesInfo();
-
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
-        // TODO(b/239025435): assert size 1 after unload is implemented
-        assertThat(sdkLibrariesInfo.stream().filter(lib -> lib.getName().equals(sdkName)).count())
-                .isEqualTo(1);
-    }
-
-    @Test
-    public void getLoadedSdkLibrariesInfoMissesSdkWhenLoadFailed() {
-        final String sdkName = "com.android.loadSdkWithInternalErrorSdkProvider";
-        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
-
-        mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
-        assertThat(callback.isLoadSdkSuccessful()).isFalse();
-
-        List<SharedLibraryInfo> sdkLibrariesInfo = mSdkSandboxManager.getLoadedSdkLibrariesInfo();
-        // TODO(b/239025435): assert empty after unload is implemented
-        assertThat(sdkLibrariesInfo.stream().filter(lib -> lib.getName().equals(sdkName)).count())
-                .isEqualTo(0);
     }
 
     @Test
