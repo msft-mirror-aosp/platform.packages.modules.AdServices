@@ -17,7 +17,6 @@
 package com.android.adservices.service.common;
 
 import android.annotation.NonNull;
-import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
@@ -62,7 +61,6 @@ public class AppManifestConfigHelper {
      * @param enrollmentId the enrollment ID of the sdk that will be checked against the app's
      *     manifest config.
      */
-    // TODO(b/237444140): Update for adtech enrollment.
     public static boolean isAllowedAttributionAccess(
             @NonNull Context context,
             @NonNull String appPackageName,
@@ -124,6 +122,7 @@ public class AppManifestConfigHelper {
      */
     public static boolean isAllowedTopicsAccess(
             @NonNull Context context,
+            @NonNull boolean useSandboxCheck,
             @NonNull String appPackageName,
             @NonNull String enrollmentId) {
         Objects.requireNonNull(appPackageName);
@@ -134,7 +133,7 @@ public class AppManifestConfigHelper {
 
             // If the request comes directly from the app, check that the app has declared that it
             // includes this Sdk library.
-            if (!(context instanceof SandboxedSdkContext)) {
+            if (!useSandboxCheck) {
                 return appManifestConfig
                                 .getIncludesSdkLibraryConfig()
                                 .getIncludesSdkLibraries()
@@ -162,8 +161,7 @@ public class AppManifestConfigHelper {
      * @param context the context for the API call. This needs to be the context where the calling
      *     UID is that of the API caller.
      * @param appPackageName the package name of the app whose manifest config will be read.
-     * @param sdk the name of the sdk that will be checked against app's manifest config. // TODO:
-     *     Update for adtech enrollment.
+     * @param sdk the name of the sdk that will be checked against app's manifest config.
      */
     public static boolean isAllowedAdIdAccess(
             @NonNull Context context, @NonNull String appPackageName, @NonNull String sdk) {
@@ -188,8 +186,7 @@ public class AppManifestConfigHelper {
      * @param context the context for the API call. This needs to be the context where the calling
      *     UID is that of the API caller.
      * @param appPackageName the package name of the app whose manifest config will be read.
-     * @param sdk the name of the sdk that will be checked against app's manifest config. // TODO:
-     *     Update for adtech enrollment.
+     * @param sdk the name of the sdk that will be checked against app's manifest config.
      */
     public static boolean isAllowedAppSetIdAccess(
             @NonNull Context context, @NonNull String appPackageName, @NonNull String sdk) {

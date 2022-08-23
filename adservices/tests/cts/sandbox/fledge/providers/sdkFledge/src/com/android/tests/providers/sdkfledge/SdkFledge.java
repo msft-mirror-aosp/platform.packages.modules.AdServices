@@ -31,10 +31,11 @@ import android.adservices.customaudience.AddCustomAudienceOverrideRequest;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.TrustedBiddingData;
 import android.app.sdksandbox.LoadSdkException;
-import android.app.sdksandbox.LoadSdkResponse;
+import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
 import android.net.Uri;
+import android.os.Binder;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -113,7 +114,7 @@ public class SdkFledge extends SandboxedSdkProvider {
     private TestAdvertisingCustomAudienceClient mTestCustomAudienceClient;
 
     @Override
-    public LoadSdkResponse onLoadSdk(Bundle params) throws LoadSdkException {
+    public SandboxedSdk onLoadSdk(Bundle params) throws LoadSdkException {
         try {
             setup();
         } catch (Exception e) {
@@ -248,7 +249,7 @@ public class SdkFledge extends SandboxedSdkProvider {
         }
 
         // If we got this far, that means the test succeeded
-        return new LoadSdkResponse(new Bundle());
+        return new SandboxedSdk(new Binder());
     }
 
     @Override

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.tests.cts.common;
+package android.adservices.cts;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -53,6 +53,22 @@ public class AdServicesCommonManagerTest {
         overrideAdserviceEnableStatus(false);
 
         // At beginning, Sdk1 receives a false status.
+        ListenableFuture<Boolean> adServicesStatusResponse = getAdservicesStatus();
+
+        Exception adServicesStatusResponseException =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> {
+                            adServicesStatusResponse.get(1, TimeUnit.SECONDS);
+                        });
+        assertThat(adServicesStatusResponseException.getCause())
+                .isInstanceOf(SecurityException.class);
+    }
+
+    @Test
+    public void testSetStatusEnabledNotExecuted() throws Exception {
+        mCommonManager.setAdServicesEnabled(true, true);
+
         ListenableFuture<Boolean> adServicesStatusResponse = getAdservicesStatus();
 
         Exception adServicesStatusResponseException =

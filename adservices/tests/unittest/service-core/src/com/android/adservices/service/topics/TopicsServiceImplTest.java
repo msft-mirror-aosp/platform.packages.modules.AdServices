@@ -41,7 +41,6 @@ import android.adservices.common.CallerMetadata;
 import android.adservices.topics.GetTopicsParam;
 import android.adservices.topics.GetTopicsResult;
 import android.adservices.topics.IGetTopicsCallback;
-import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
@@ -126,7 +125,7 @@ public class TopicsServiceImplTest {
     @Mock private PackageManager mPackageManager;
     @Mock private Flags mMockFlags;
     @Mock private Clock mClock;
-    @Mock private SandboxedSdkContext mMockSdkContext;
+    @Mock private Context mMockSdkContext;
     @Mock private Context mMockAppContext;
     @Mock private Throttler mMockThrottler;
     @Mock private EnrollmentDao mEnrollmentDao;
@@ -167,7 +166,6 @@ public class TopicsServiceImplTest {
         when(mConsentManager.getConsent(any(PackageManager.class)))
                 .thenReturn(AdServicesApiConsent.GIVEN);
         when(mMockSdkContext.getPackageManager()).thenReturn(mPackageManager);
-        when(mMockSdkContext.getSdkName()).thenReturn(SOME_SDK_NAME);
         when(mPackageManager.getPackageUid(TEST_APP_PACKAGE_NAME, 0)).thenReturn(Process.myUid());
 
         when(mMockFlags.getPpapiAppAllowList()).thenReturn(TOPICS_API_ALLOW_LIST);

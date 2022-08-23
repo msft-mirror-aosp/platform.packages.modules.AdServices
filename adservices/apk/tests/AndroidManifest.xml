@@ -23,7 +23,7 @@
     <!-- New permission introduced in T+ devices needed to show notifications. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
-    <application android:debuggable="true">
+    <application android:debuggable="true" tools:replace="android:extractNativeLibs">
         <!-- Activity for Adservices Settings UI -->
         <activity
                 android:name="com.android.adservices.ui.settings.AdServicesSettingsActivityWrapper"

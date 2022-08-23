@@ -29,6 +29,6 @@ import com.android.adservices.ui.settings.viewmodels.TopicsViewModel;
  */
 public class AdServicesSettingsActivityWrapper extends AdServicesSettingsActivity {
     public AdServicesSettingsActivityWrapper() {
-        super(SettingsActivityTest.generateMockedViewModelProvider());
+        super(new SettingsActivityTest().generateMockedViewModelProvider());
     }
 }

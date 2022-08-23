@@ -83,6 +83,7 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.TriggerContract.STATUS, Trigger.Status.PENDING);
         values.put(MeasurementTables.TriggerContract.AD_TECH_DOMAIN,
                 trigger.getAdTechDomain().toString());
+        values.put(MeasurementTables.TriggerContract.ENROLLMENT_ID, trigger.getEnrollmentId());
         values.put(MeasurementTables.TriggerContract.REGISTRANT,
                 trigger.getRegistrant().toString());
         values.put(MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA,
@@ -189,6 +190,7 @@ class MeasurementDao implements IMeasurementDao {
                 getNullableUriString(source.getWebDestination()));
         values.put(MeasurementTables.SourceContract.AD_TECH_DOMAIN,
                 source.getAdTechDomain().toString());
+        values.put(MeasurementTables.SourceContract.ENROLLMENT_ID, source.getEnrollmentId());
         values.put(MeasurementTables.SourceContract.EVENT_TIME, source.getEventTime());
         values.put(MeasurementTables.SourceContract.EXPIRY_TIME, source.getExpiryTime());
         values.put(MeasurementTables.SourceContract.PRIORITY, source.getPriority());
@@ -427,6 +429,8 @@ class MeasurementDao implements IMeasurementDao {
                 eventReport.getTriggerDedupKey());
         values.put(MeasurementTables.EventReportContract.AD_TECH_DOMAIN,
                 eventReport.getAdTechDomain().toString());
+        values.put(MeasurementTables.EventReportContract.ENROLLMENT_ID,
+                eventReport.getEnrollmentId());
         values.put(MeasurementTables.EventReportContract.STATUS,
                 eventReport.getStatus());
         values.put(MeasurementTables.EventReportContract.REPORT_TIME,
@@ -476,6 +480,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.AttributionContract.AD_TECH_DOMAIN,
                 attribution.getAdTechDomain());
+        values.put(
+                MeasurementTables.AttributionContract.ENROLLMENT_ID,
+                attribution.getEnrollmentId());
         values.put(
                 MeasurementTables.AttributionContract.TRIGGER_TIME, attribution.getTriggerTime());
         values.put(MeasurementTables.AttributionContract.REGISTRANT, attribution.getRegistrant());
@@ -712,8 +719,8 @@ class MeasurementDao implements IMeasurementDao {
     @Override
     public void deleteMeasurementData(
             @NonNull Uri registrant,
-            @Nullable Instant start,
-            @Nullable Instant end,
+            @NonNull Instant start,
+            @NonNull Instant end,
             @NonNull List<Uri> origins,
             @NonNull List<Uri> domains,
             @DeletionRequest.MatchBehavior int matchBehavior,
@@ -722,7 +729,11 @@ class MeasurementDao implements IMeasurementDao {
         Objects.requireNonNull(registrant);
         Objects.requireNonNull(origins);
         Objects.requireNonNull(domains);
-        validateOptionalRange(start, end);
+        Objects.requireNonNull(start);
+        Objects.requireNonNull(end);
+        Instant cappedStart = capDeletionRange(start);
+        Instant cappedEnd = capDeletionRange(end);
+        validateRange(cappedStart, cappedEnd);
         // Handle no-op case
         // Preserving everything => Do Nothing
         if (domains.isEmpty()
@@ -733,7 +744,7 @@ class MeasurementDao implements IMeasurementDao {
         final SQLiteDatabase db = mSQLTransaction.getDatabase();
         Function<String, String> registrantMatcher = getRegistrantMatcher(registrant);
         Function<String, String> siteMatcher = getSiteMatcher(origins, domains, matchBehavior);
-        Function<String, String> timeMatcher = getTimeMatcher(start, end);
+        Function<String, String> timeMatcher = getTimeMatcher(cappedStart, cappedEnd);
 
         if (deletionMode == DeletionRequest.DELETION_MODE_ALL) {
             deleteAttribution(db, registrantMatcher, siteMatcher, timeMatcher);
@@ -999,12 +1010,12 @@ class MeasurementDao implements IMeasurementDao {
         }
     }
 
-    private void validateOptionalRange(Instant start, Instant end) {
-        if (start == null ^ end == null) {
-            throw new IllegalArgumentException(
-                    "invalid range, both start and end dates must be provided if providing any");
+    private void validateRange(Instant start, Instant end) {
+        if (start == null || end == null) {
+            throw new IllegalArgumentException("start or end date is null");
         }
-        if (start != null && start.isAfter(end)) {
+
+        if (start.isAfter(end)) {
             throw new IllegalArgumentException(
                     "invalid range, start date must be equal or before end date");
         }
@@ -1122,8 +1133,10 @@ class MeasurementDao implements IMeasurementDao {
                 aggregateReport.getSourceRegistrationTime());
         values.put(MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME,
                 aggregateReport.getScheduledReportTime());
-        values.put(MeasurementTables.AggregateReport.REPORTING_ORIGIN,
-                aggregateReport.getReportingOrigin().toString());
+        values.put(MeasurementTables.AggregateReport.AD_TECH_DOMAIN,
+                aggregateReport.getAdTechDomain().toString());
+        values.put(MeasurementTables.AggregateReport.ENROLLMENT_ID,
+                aggregateReport.getEnrollmentId());
         values.put(MeasurementTables.AggregateReport.DEBUG_CLEARTEXT_PAYLOAD,
                 aggregateReport.getDebugCleartextPayload());
         values.put(MeasurementTables.AggregateReport.STATUS,
@@ -1226,5 +1239,17 @@ class MeasurementDao implements IMeasurementDao {
 
     private static String getNullableUriString(@Nullable Uri uri) {
         return Optional.ofNullable(uri).map(Uri::toString).orElse(null);
+    }
+
+    /**
+     * Returns the min or max possible long value to avoid the ArithmeticException thrown when
+     * calling toEpochMilli() on Instant.MAX or Instant.MIN
+     */
+    private static Instant capDeletionRange(Instant instant) {
+        Instant[] instants = {
+            Instant.ofEpochMilli(Long.MIN_VALUE), instant, Instant.ofEpochMilli(Long.MAX_VALUE)
+        };
+        Arrays.sort(instants);
+        return instants[1];
     }
 }

@@ -15,10 +15,13 @@
  */
 package android.adservices.adid;
 
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_AD_ID;
+
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
+import android.annotation.RequiresPermission;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.os.LimitExceededException;
@@ -90,6 +93,7 @@ public class AdIdManager {
      * @throws IllegalStateException if this API is not available.
      * @throws LimitExceededException if rate limit was reached.
      */
+    @RequiresPermission(ACCESS_ADSERVICES_AD_ID)
     @NonNull
     public void getAdId(
             @NonNull @CallbackExecutor Executor executor,

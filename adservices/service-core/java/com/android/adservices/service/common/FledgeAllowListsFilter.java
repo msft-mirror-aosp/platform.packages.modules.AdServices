@@ -41,17 +41,36 @@ public class FledgeAllowListsFilter {
     /**
      * Asserts the package is allowed to call PPAPI.
      *
+     * <p>Do not use this method in the Binder thread; flags must not be called there.
+     *
      * @param appPackageName the package name to be validated.
      * @param apiNameLoggingId the id of the api being called
-     * @throws SecurityException if the package is not authorized.
+     * @throws AppNotAllowedException if the package is not authorized.
      */
-    public void assertAppCanUsePpapi(@NonNull String appPackageName, int apiNameLoggingId) {
+    public void assertAppCanUsePpapi(@NonNull String appPackageName, int apiNameLoggingId)
+            throws AppNotAllowedException {
         Objects.requireNonNull(appPackageName);
         if (!AllowLists.isPackageAllowListed(mFlags.getPpapiAppAllowList(), appPackageName)) {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiNameLoggingId, AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED);
-            throw new SecurityException(
-                    AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE);
+            throw new AppNotAllowedException();
+        }
+    }
+
+    /**
+     * Internal exception for easy assertion catches specific to checking that an app is allowed to
+     * use the PP APIs.
+     *
+     * <p>This exception is not meant to be exposed externally and should not be passed outside of
+     * the service.
+     */
+    public static class AppNotAllowedException extends SecurityException {
+        /**
+         * Creates a {@link AppNotAllowedException}, used in cases where an app should have been
+         * allowed to use the PP APIs.
+         */
+        public AppNotAllowedException() {
+            super(AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE);
         }
     }
 }

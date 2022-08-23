@@ -30,6 +30,7 @@ public class AttributionTest {
     private static final String PUBLISHER_SITE = "android-app://com.publisher";
     private static final String REGISTRANT = "android-app://com.registrant";
     private static final String AD_TECH_DOMAIN = "https://com.example";
+    private static final String ENROLLMENT_ID = "enrollment-id";
     private static final long TRIGGER_TIME = 10000L;
     private static final String SOME_OTHER_STRING = "some_other";
     private static final long SOME_OTHER_LONG = 1L;
@@ -37,152 +38,171 @@ public class AttributionTest {
     @Test
     public void equals_pass() {
         assertEquals(
-                createExampleAttributionRateLimitBuilder().build(),
-                createExampleAttributionRateLimitBuilder().build());
+                createExampleAttributionBuilder().build(),
+                createExampleAttributionBuilder().build());
         assertEquals(
-                createExampleAttributionRateLimitBuilder().setId(SOME_OTHER_STRING).build(),
-                createExampleAttributionRateLimitBuilder().build());
+                createExampleAttributionBuilder().setId(SOME_OTHER_STRING).build(),
+                createExampleAttributionBuilder().build());
     }
 
     @Test
     public void equals_fail() {
         assertNotEquals(
-                createExampleAttributionRateLimitBuilder().setRegistrant(SOME_OTHER_STRING).build(),
-                createExampleAttributionRateLimitBuilder().build());
+                createExampleAttributionBuilder().setRegistrant(SOME_OTHER_STRING).build(),
+                createExampleAttributionBuilder().build());
         assertNotEquals(
-                createExampleAttributionRateLimitBuilder()
+                createExampleAttributionBuilder()
                         .setAdTechDomain(SOME_OTHER_STRING)
                         .build(),
-                createExampleAttributionRateLimitBuilder().build());
+                createExampleAttributionBuilder().build());
         assertNotEquals(
-                createExampleAttributionRateLimitBuilder()
+                createExampleAttributionBuilder()
+                        .setEnrollmentId(SOME_OTHER_STRING)
+                        .build(),
+                createExampleAttributionBuilder().build());
+        assertNotEquals(
+                createExampleAttributionBuilder()
                         .setDestinationSite(SOME_OTHER_STRING)
                         .build(),
-                createExampleAttributionRateLimitBuilder().build());
+                createExampleAttributionBuilder().build());
         assertNotEquals(
-                createExampleAttributionRateLimitBuilder()
+                createExampleAttributionBuilder()
                         .setDestinationOrigin(SOME_OTHER_STRING)
                         .build(),
-                createExampleAttributionRateLimitBuilder().build());
+                createExampleAttributionBuilder().build());
         assertNotEquals(
-                createExampleAttributionRateLimitBuilder().setSourceSite(SOME_OTHER_STRING).build(),
-                createExampleAttributionRateLimitBuilder().build());
+                createExampleAttributionBuilder().setSourceSite(SOME_OTHER_STRING).build(),
+                createExampleAttributionBuilder().build());
         assertNotEquals(
-                createExampleAttributionRateLimitBuilder()
+                createExampleAttributionBuilder()
                         .setSourceOrigin(SOME_OTHER_STRING)
                         .build(),
-                createExampleAttributionRateLimitBuilder().build());
+                createExampleAttributionBuilder().build());
         assertNotEquals(
-                createExampleAttributionRateLimitBuilder().setTriggerTime(SOME_OTHER_LONG).build(),
-                createExampleAttributionRateLimitBuilder().build());
+                createExampleAttributionBuilder().setTriggerTime(SOME_OTHER_LONG).build(),
+                createExampleAttributionBuilder().build());
     }
 
     @Test
     public void hashCode_pass() {
         assertEquals(
-                createExampleAttributionRateLimitBuilder().build().hashCode(),
-                createExampleAttributionRateLimitBuilder().build().hashCode());
+                createExampleAttributionBuilder().build().hashCode(),
+                createExampleAttributionBuilder().build().hashCode());
     }
 
     @Test
     public void hashCode_fail() {
         assertNotEquals(
-                createExampleAttributionRateLimitBuilder()
+                createExampleAttributionBuilder()
                         .setRegistrant(SOME_OTHER_STRING)
                         .build()
                         .hashCode(),
-                createExampleAttributionRateLimitBuilder().build().hashCode());
+                createExampleAttributionBuilder().build().hashCode());
         assertNotEquals(
-                createExampleAttributionRateLimitBuilder()
+                createExampleAttributionBuilder()
                         .setAdTechDomain(SOME_OTHER_STRING)
                         .build()
                         .hashCode(),
-                createExampleAttributionRateLimitBuilder().build().hashCode());
+                createExampleAttributionBuilder().build().hashCode());
         assertNotEquals(
-                createExampleAttributionRateLimitBuilder()
+                createExampleAttributionBuilder()
+                        .setEnrollmentId(SOME_OTHER_STRING)
+                        .build()
+                        .hashCode(),
+                createExampleAttributionBuilder().build().hashCode());
+        assertNotEquals(
+                createExampleAttributionBuilder()
                         .setDestinationSite(SOME_OTHER_STRING)
                         .build()
                         .hashCode(),
-                createExampleAttributionRateLimitBuilder().build().hashCode());
+                createExampleAttributionBuilder().build().hashCode());
         assertNotEquals(
-                createExampleAttributionRateLimitBuilder()
+                createExampleAttributionBuilder()
                         .setDestinationOrigin(SOME_OTHER_STRING)
                         .build()
                         .hashCode(),
-                createExampleAttributionRateLimitBuilder().build().hashCode());
+                createExampleAttributionBuilder().build().hashCode());
         assertNotEquals(
-                createExampleAttributionRateLimitBuilder()
+                createExampleAttributionBuilder()
                         .setSourceSite(SOME_OTHER_STRING)
                         .build()
                         .hashCode(),
-                createExampleAttributionRateLimitBuilder().build().hashCode());
+                createExampleAttributionBuilder().build().hashCode());
         assertNotEquals(
-                createExampleAttributionRateLimitBuilder()
+                createExampleAttributionBuilder()
                         .setSourceOrigin(SOME_OTHER_STRING)
                         .build()
                         .hashCode(),
-                createExampleAttributionRateLimitBuilder().build().hashCode());
+                createExampleAttributionBuilder().build().hashCode());
         assertNotEquals(
-                createExampleAttributionRateLimitBuilder()
+                createExampleAttributionBuilder()
                         .setTriggerTime(SOME_OTHER_LONG)
                         .build()
                         .hashCode(),
-                createExampleAttributionRateLimitBuilder().build().hashCode());
+                createExampleAttributionBuilder().build().hashCode());
     }
 
     @Test
     public void getters() {
         assertEquals(
-                REGISTRANT, createExampleAttributionRateLimitBuilder().build().getRegistrant());
+                REGISTRANT, createExampleAttributionBuilder().build().getRegistrant());
         assertEquals(
                 DESTINATION_SITE,
-                createExampleAttributionRateLimitBuilder().build().getDestinationSite());
+                createExampleAttributionBuilder().build().getDestinationSite());
         assertEquals(
                 DESTINATION_ORIGIN,
-                createExampleAttributionRateLimitBuilder().build().getDestinationOrigin());
+                createExampleAttributionBuilder().build().getDestinationOrigin());
         assertEquals(
                 PUBLISHER_ORIGIN,
-                createExampleAttributionRateLimitBuilder().build().getSourceOrigin());
+                createExampleAttributionBuilder().build().getSourceOrigin());
         assertEquals(
-                PUBLISHER_SITE, createExampleAttributionRateLimitBuilder().build().getSourceSite());
+                PUBLISHER_SITE, createExampleAttributionBuilder().build().getSourceSite());
         assertEquals(
-                TRIGGER_TIME, createExampleAttributionRateLimitBuilder().build().getTriggerTime());
+                TRIGGER_TIME, createExampleAttributionBuilder().build().getTriggerTime());
         assertEquals(
                 AD_TECH_DOMAIN,
-                createExampleAttributionRateLimitBuilder().build().getAdTechDomain());
+                createExampleAttributionBuilder().build().getAdTechDomain());
+        assertEquals(
+                ENROLLMENT_ID,
+                createExampleAttributionBuilder().build().getEnrollmentId());
     }
 
     @Test
     public void validate() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> createExampleAttributionRateLimitBuilder().setSourceSite(null).build());
+                () -> createExampleAttributionBuilder().setSourceSite(null).build());
         assertThrows(
                 IllegalArgumentException.class,
-                () -> createExampleAttributionRateLimitBuilder().setRegistrant(null).build());
+                () -> createExampleAttributionBuilder().setRegistrant(null).build());
         assertThrows(
                 IllegalArgumentException.class,
-                () -> createExampleAttributionRateLimitBuilder().setAdTechDomain(null).build());
+                () -> createExampleAttributionBuilder().setAdTechDomain(null).build());
+        // TODO (b/238924528): uncomment when enforcing enrollment
+        /*assertThrows(
+                IllegalArgumentException.class,
+                () -> createExampleAttributionBuilder().setEnrollmentId(null).build());*/
         assertThrows(
                 IllegalArgumentException.class,
-                () -> createExampleAttributionRateLimitBuilder().setDestinationSite(null).build());
+                () -> createExampleAttributionBuilder().setDestinationSite(null).build());
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                        createExampleAttributionRateLimitBuilder()
+                        createExampleAttributionBuilder()
                                 .setDestinationOrigin(null)
                                 .build());
         assertThrows(
                 IllegalArgumentException.class,
-                () -> createExampleAttributionRateLimitBuilder().setSourceOrigin(null).build());
+                () -> createExampleAttributionBuilder().setSourceOrigin(null).build());
     }
 
-    private static Attribution.Builder createExampleAttributionRateLimitBuilder() {
+    private static Attribution.Builder createExampleAttributionBuilder() {
         return new Attribution.Builder()
                 .setId(ID)
                 .setRegistrant(REGISTRANT)
                 .setTriggerTime(TRIGGER_TIME)
                 .setAdTechDomain(AD_TECH_DOMAIN)
+                .setEnrollmentId(ENROLLMENT_ID)
                 .setDestinationOrigin(DESTINATION_ORIGIN)
                 .setDestinationSite(DESTINATION_SITE)
                 .setSourceOrigin(PUBLISHER_ORIGIN)

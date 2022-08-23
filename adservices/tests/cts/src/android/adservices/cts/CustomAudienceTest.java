@@ -43,10 +43,10 @@ public final class CustomAudienceTest {
     @Test
     public void testBuildValidCustomAudienceSuccess() {
         CustomAudience validCustomAudience =
-                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER).build();
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build();
 
         assertEquals(CustomAudienceFixture.VALID_OWNER, validCustomAudience.getOwnerPackageName());
-        assertEquals(CommonFixture.VALID_BUYER, validCustomAudience.getBuyer());
+        assertEquals(CommonFixture.VALID_BUYER_1, validCustomAudience.getBuyer());
         assertEquals(CustomAudienceFixture.VALID_NAME, validCustomAudience.getName());
         assertEquals(
                 CustomAudienceFixture.VALID_ACTIVATION_TIME,
@@ -55,27 +55,27 @@ public final class CustomAudienceTest {
                 CustomAudienceFixture.VALID_EXPIRATION_TIME,
                 validCustomAudience.getExpirationTime());
         assertEquals(
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(CommonFixture.VALID_BUYER),
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(CommonFixture.VALID_BUYER_1),
                 validCustomAudience.getDailyUpdateUrl());
         assertEquals(
                 CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS,
                 validCustomAudience.getUserBiddingSignals());
         assertEquals(
                 TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(
-                        CommonFixture.VALID_BUYER),
+                        CommonFixture.VALID_BUYER_1),
                 validCustomAudience.getTrustedBiddingData());
         assertEquals(
-                CustomAudienceFixture.getValidBiddingLogicUrlByBuyer(CommonFixture.VALID_BUYER),
+                CustomAudienceFixture.getValidBiddingLogicUrlByBuyer(CommonFixture.VALID_BUYER_1),
                 validCustomAudience.getBiddingLogicUrl());
         assertEquals(
-                AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER),
+                AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER_1),
                 validCustomAudience.getAds());
     }
 
     @Test
     public void testBuildValidDelayedActivationCustomAudienceSuccess() {
         CustomAudience validDelayedActivationCustomAudience =
-                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                         .setActivationTime(CustomAudienceFixture.VALID_DELAYED_ACTIVATION_TIME)
                         .setExpirationTime(CustomAudienceFixture.VALID_DELAYED_EXPIRATION_TIME)
                         .build();
@@ -83,7 +83,7 @@ public final class CustomAudienceTest {
         assertThat(validDelayedActivationCustomAudience.getOwnerPackageName())
                 .isEqualTo(CustomAudienceFixture.VALID_OWNER);
         assertThat(validDelayedActivationCustomAudience.getBuyer())
-                .isEqualTo(CommonFixture.VALID_BUYER);
+                .isEqualTo(CommonFixture.VALID_BUYER_1);
         assertThat(validDelayedActivationCustomAudience.getName())
                 .isEqualTo(CustomAudienceFixture.VALID_NAME);
         assertThat(validDelayedActivationCustomAudience.getActivationTime())
@@ -93,25 +93,25 @@ public final class CustomAudienceTest {
         assertThat(validDelayedActivationCustomAudience.getDailyUpdateUrl())
                 .isEqualTo(
                         CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
-                                CommonFixture.VALID_BUYER));
+                                CommonFixture.VALID_BUYER_1));
         assertThat(validDelayedActivationCustomAudience.getUserBiddingSignals())
                 .isEqualTo(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
         assertThat(validDelayedActivationCustomAudience.getTrustedBiddingData())
                 .isEqualTo(
                         TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(
-                                CommonFixture.VALID_BUYER));
+                                CommonFixture.VALID_BUYER_1));
         assertThat(validDelayedActivationCustomAudience.getBiddingLogicUrl())
                 .isEqualTo(
                         CustomAudienceFixture.getValidBiddingLogicUrlByBuyer(
-                                CommonFixture.VALID_BUYER));
+                                CommonFixture.VALID_BUYER_1));
         assertThat(validDelayedActivationCustomAudience.getAds())
-                .isEqualTo(AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER));
+                .isEqualTo(AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER_1));
     }
 
     @Test
     public void testParcelValidCustomAudienceSuccess() {
         CustomAudience validCustomAudience =
-                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER).build();
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build();
 
         Parcel p = Parcel.obtain();
         validCustomAudience.writeToParcel(p, 0);
@@ -124,7 +124,7 @@ public final class CustomAudienceTest {
     @Test
     public void testParcelValidCustomAudienceWithNullValueSuccess() {
         CustomAudience validCustomAudienceWithNullValue =
-                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                         .setActivationTime(null)
                         .setTrustedBiddingData(null)
                         .build();
@@ -150,15 +150,15 @@ public final class CustomAudienceTest {
                             .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
                             .setDailyUpdateUrl(
                                     CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
-                                            CommonFixture.VALID_BUYER))
+                                            CommonFixture.VALID_BUYER_1))
                             .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                             .setTrustedBiddingData(
                                     TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(
-                                            CommonFixture.VALID_BUYER))
+                                            CommonFixture.VALID_BUYER_1))
                             .setBiddingLogicUrl(
                                     CustomAudienceFixture.getValidBiddingLogicUrlByBuyer(
-                                            CommonFixture.VALID_BUYER))
-                            .setAds(AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER))
+                                            CommonFixture.VALID_BUYER_1))
+                            .setAds(AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER_1))
                             .build();
                 });
     }
@@ -180,13 +180,13 @@ public final class CustomAudienceTest {
     public void testBuildNullAdsCustomAudienceSuccess() {
         // Ads are not set, so the CustomAudience gets built with empty list.
         CustomAudience nullAdsCustomAudience =
-                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                         .setAds(null)
                         .build();
 
         assertThat(nullAdsCustomAudience.getOwnerPackageName())
                 .isEqualTo(CustomAudienceFixture.VALID_OWNER);
-        assertThat(nullAdsCustomAudience.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER);
+        assertThat(nullAdsCustomAudience.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
         assertThat(nullAdsCustomAudience.getName()).isEqualTo(CustomAudienceFixture.VALID_NAME);
         assertThat(nullAdsCustomAudience.getActivationTime())
                 .isEqualTo(CustomAudienceFixture.VALID_ACTIVATION_TIME);
@@ -195,17 +195,17 @@ public final class CustomAudienceTest {
         assertThat(nullAdsCustomAudience.getDailyUpdateUrl())
                 .isEqualTo(
                         CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
-                                CommonFixture.VALID_BUYER));
+                                CommonFixture.VALID_BUYER_1));
         assertThat(nullAdsCustomAudience.getUserBiddingSignals())
                 .isEqualTo(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
         assertThat(nullAdsCustomAudience.getTrustedBiddingData())
                 .isEqualTo(
                         TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(
-                                CommonFixture.VALID_BUYER));
+                                CommonFixture.VALID_BUYER_1));
         assertThat(nullAdsCustomAudience.getBiddingLogicUrl())
                 .isEqualTo(
                         CustomAudienceFixture.getValidBiddingLogicUrlByBuyer(
-                                CommonFixture.VALID_BUYER));
+                                CommonFixture.VALID_BUYER_1));
         assertThat(nullAdsCustomAudience.getAds()).isEqualTo(Collections.emptyList());
     }
 
@@ -215,13 +215,13 @@ public final class CustomAudienceTest {
         ArrayList<AdData> emptyAds = new ArrayList<>(Collections.emptyList());
 
         CustomAudience emptyAdsCustomAudience =
-                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                         .setAds(emptyAds)
                         .build();
 
         assertThat(emptyAdsCustomAudience.getOwnerPackageName())
                 .isEqualTo(CustomAudienceFixture.VALID_OWNER);
-        assertThat(emptyAdsCustomAudience.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER);
+        assertThat(emptyAdsCustomAudience.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
         assertThat(emptyAdsCustomAudience.getName()).isEqualTo(CustomAudienceFixture.VALID_NAME);
         assertThat(emptyAdsCustomAudience.getActivationTime())
                 .isEqualTo(CustomAudienceFixture.VALID_ACTIVATION_TIME);
@@ -230,24 +230,24 @@ public final class CustomAudienceTest {
         assertThat(emptyAdsCustomAudience.getDailyUpdateUrl())
                 .isEqualTo(
                         CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
-                                CommonFixture.VALID_BUYER));
+                                CommonFixture.VALID_BUYER_1));
         assertThat(emptyAdsCustomAudience.getUserBiddingSignals())
                 .isEqualTo(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
         assertThat(emptyAdsCustomAudience.getTrustedBiddingData())
                 .isEqualTo(
                         TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(
-                                CommonFixture.VALID_BUYER));
+                                CommonFixture.VALID_BUYER_1));
         assertThat(emptyAdsCustomAudience.getBiddingLogicUrl())
                 .isEqualTo(
                         CustomAudienceFixture.getValidBiddingLogicUrlByBuyer(
-                                CommonFixture.VALID_BUYER));
+                                CommonFixture.VALID_BUYER_1));
         assertThat(emptyAdsCustomAudience.getAds()).isEqualTo(emptyAds);
     }
 
     @Test
     public void testCustomAudienceDescribeContent() {
         CustomAudience validCustomAudience =
-                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER).build();
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build();
 
         assertThat(validCustomAudience.describeContents()).isEqualTo(0);
     }

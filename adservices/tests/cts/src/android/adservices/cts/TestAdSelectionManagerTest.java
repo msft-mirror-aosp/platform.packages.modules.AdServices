@@ -212,6 +212,6 @@ public class TestAdSelectionManagerTest {
                         () -> {
                             result.get(10, TimeUnit.SECONDS);
                         });
-        assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
+        assertThat(exception.getCause()).isInstanceOf(IllegalArgumentException.class);
     }
 }

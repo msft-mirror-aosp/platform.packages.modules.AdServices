@@ -22,13 +22,13 @@ import android.content.Context;
 
 import com.android.adservices.service.common.AllowLists;
 
-/** Used for web registration APIs. Checks if the package has access to them. */
-public class WebRegistrationByPackageAccessResolver implements IAccessResolver {
+/** Used for web context APIs. Checks if the package has access to them. */
+public class WebContextByPackageAccessResolver implements IAccessResolver {
     private static final String ERROR_MESSAGE = "Package %s is not allowed to call the API.";
     private final String mAllowList;
     private final String mPackageName;
 
-    public WebRegistrationByPackageAccessResolver(
+    public WebContextByPackageAccessResolver(
             @NonNull String allowList, @NonNull String packageName) {
         mAllowList = allowList;
         mPackageName = packageName;
@@ -43,7 +43,7 @@ public class WebRegistrationByPackageAccessResolver implements IAccessResolver {
     @Override
     @AdServicesStatusUtils.StatusCode
     public int getErrorStatusCode() {
-        return AdServicesStatusUtils.STATUS_UNAUTHORIZED;
+        return AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
     }
 
     @NonNull

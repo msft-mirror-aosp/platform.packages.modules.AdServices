@@ -73,6 +73,7 @@ public final class EventReportTest {
         assertEquals("1", eventReport.getId());
         assertEquals(21, eventReport.getSourceId());
         assertEquals("https://foo.com", eventReport.getAdTechDomain().toString());
+        assertEquals("enrollment-id", eventReport.getEnrollmentId());
         assertEquals("https://bar.com", eventReport.getAttributionDestination().toString());
         assertEquals(1000L, eventReport.getTriggerTime());
         assertEquals(8L, eventReport.getTriggerData());
@@ -89,6 +90,7 @@ public final class EventReportTest {
         assertNull(eventReport.getId());
         assertEquals(0L, eventReport.getSourceId());
         assertNull(eventReport.getAdTechDomain());
+        assertNull(eventReport.getEnrollmentId());
         assertNull(eventReport.getAttributionDestination());
         assertEquals(0L, eventReport.getTriggerTime());
         assertEquals(0L, eventReport.getTriggerData());
@@ -122,6 +124,7 @@ public final class EventReportTest {
         assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
         assertEquals(source.getEventId(), report.getSourceId());
         assertEquals(source.getAdTechDomain(), report.getAdTechDomain());
+        assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
         assertEquals(trigger.getAttributionDestination(), report.getAttributionDestination());
         assertEquals(source.getExpiryTime() + ONE_HOUR_IN_MILLIS, report.getReportTime());
         assertEquals(source.getSourceType(), report.getSourceType());
@@ -151,6 +154,7 @@ public final class EventReportTest {
         assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
         assertEquals(source.getEventId(), report.getSourceId());
         assertEquals(source.getAdTechDomain(), report.getAdTechDomain());
+        assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
         assertEquals(trigger.getAttributionDestination(), report.getAttributionDestination());
         assertEquals(source.getExpiryTime() + ONE_HOUR_IN_MILLIS, report.getReportTime());
         assertEquals(Source.SourceType.EVENT, report.getSourceType());
@@ -177,6 +181,7 @@ public final class EventReportTest {
         assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
         assertEquals(source.getEventId(), report.getSourceId());
         assertEquals(source.getAdTechDomain(), report.getAdTechDomain());
+        assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
         assertEquals(trigger.getAttributionDestination(), report.getAttributionDestination());
         assertEquals(source.getExpiryTime() + ONE_HOUR_IN_MILLIS, report.getReportTime());
         assertEquals(Source.SourceType.EVENT, report.getSourceType());
@@ -206,6 +211,7 @@ public final class EventReportTest {
         assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
         assertEquals(source.getEventId(), report.getSourceId());
         assertEquals(source.getAdTechDomain(), report.getAdTechDomain());
+        assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
         assertEquals(trigger.getAttributionDestination(), report.getAttributionDestination());
         assertEquals(source.getExpiryTime() + ONE_HOUR_IN_MILLIS, report.getReportTime());
         assertEquals(Source.SourceType.EVENT, report.getSourceType());
@@ -233,6 +239,7 @@ public final class EventReportTest {
         assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
         assertEquals(source.getEventId(), report.getSourceId());
         assertEquals(source.getAdTechDomain(), report.getAdTechDomain());
+        assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
         assertEquals(APP_DESTINATION, report.getAttributionDestination());
         assertEquals(
                 source.getEventTime()
@@ -265,6 +272,7 @@ public final class EventReportTest {
         assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
         assertEquals(source.getEventId(), report.getSourceId());
         assertEquals(source.getAdTechDomain(), report.getAdTechDomain());
+        assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
         assertEquals(trigger.getAttributionDestination(), report.getAttributionDestination());
         assertEquals(
                 source.getReportingTime(trigger.getTriggerTime(), EventSurfaceType.WEB),
@@ -296,6 +304,7 @@ public final class EventReportTest {
         assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
         assertEquals(source.getEventId(), report.getSourceId());
         assertEquals(source.getAdTechDomain(), report.getAdTechDomain());
+        assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
         assertEquals(trigger.getAttributionDestination(), report.getAttributionDestination());
         // One hour after install attributed navigation type window
         assertEquals(
@@ -332,6 +341,7 @@ public final class EventReportTest {
         assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
         assertEquals(source.getEventId(), report.getSourceId());
         assertEquals(source.getAdTechDomain(), report.getAdTechDomain());
+        assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
         assertEquals(trigger.getAttributionDestination(), report.getAttributionDestination());
         // One hour after regular navigation type window (without install attribution consideration)
         assertEquals(
@@ -363,6 +373,7 @@ public final class EventReportTest {
                         .setId("1")
                         .setSourceId(22)
                         .setAdTechDomain(Uri.parse("https://foo.com"))
+                        .setEnrollmentId("another-enrollment-id")
                         .setAttributionDestination(Uri.parse("https://bar.com"))
                         .setTriggerTime(1000L)
                         .setTriggerData(8L)
@@ -391,6 +402,7 @@ public final class EventReportTest {
                 .setInstallCooldownWindow(isInstallAttributable ? 100 : 0)
                 .setEventTime(eventTime)
                 .setAdTechDomain(Uri.parse("https://example-adtech1.com"))
+                .setEnrollmentId("enrollment-id")
                 .setAppDestination(appDestination)
                 .setWebDestination(webDestination)
                 .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(10))
@@ -402,6 +414,7 @@ public final class EventReportTest {
                 .setTriggerTime(eventTime)
                 .setEventTriggers(EVENT_TRIGGERS)
                 .setAdTechDomain(Uri.parse("https://example-adtech2.com"))
+                .setEnrollmentId("enrollment-id")
                 .setAttributionDestination(destination)
                 .build();
     }
@@ -411,6 +424,7 @@ public final class EventReportTest {
                 .setId("1")
                 .setSourceId(21)
                 .setAdTechDomain(Uri.parse("https://foo.com"))
+                .setEnrollmentId("enrollment-id")
                 .setAttributionDestination(Uri.parse("https://bar.com"))
                 .setTriggerTime(1000L)
                 .setTriggerData(8L)

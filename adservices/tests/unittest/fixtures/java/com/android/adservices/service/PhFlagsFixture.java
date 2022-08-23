@@ -20,6 +20,7 @@ import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STAT
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION;
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S;
+import static com.android.adservices.service.PhFlags.KEY_SDK_REQUEST_PERMITS_PER_SECOND;
 
 import static org.junit.Assert.assertEquals;
 
@@ -96,6 +97,19 @@ public class PhFlagsFixture {
                 false);
     }
 
+    /**
+     * Enables test to override the flag enabling the enrollment check for callers of Fledge APIs.
+     *
+     * @param enable whether enable or disable the check
+     */
+    public static void overrideFledgeEnrollmentCheck(boolean enable) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                PhFlags.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK,
+                Boolean.toString(!enable),
+                false);
+    }
+
     public static void overrideEnforceIsolateMaxHeapSize(boolean value) {
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -110,5 +124,13 @@ public class PhFlagsFixture {
                 PhFlags.KEY_ISOLATE_MAX_HEAP_SIZE_BYTES,
                 Long.toString(value),
                 false);
+    }
+
+    public static void overrideSdkRequestPermitsPerSecond(int value) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_SDK_REQUEST_PERMITS_PER_SECOND,
+                Integer.toString(value),
+                true);
     }
 }

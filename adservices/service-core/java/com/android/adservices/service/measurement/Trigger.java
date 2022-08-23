@@ -52,6 +52,7 @@ public class Trigger {
     private Uri mAttributionDestination;
     @EventSurfaceType private int mDestinationType;
     private Uri mAdTechDomain;
+    private String mEnrollmentId;
     private long mTriggerTime;
     private String mEventTriggers;
     @Status private int mStatus;
@@ -90,6 +91,7 @@ public class Trigger {
                 && Objects.equals(mAttributionDestination, trigger.mAttributionDestination)
                 && mDestinationType == trigger.mDestinationType
                 && Objects.equals(mAdTechDomain, trigger.mAdTechDomain)
+                && Objects.equals(mEnrollmentId, trigger.mEnrollmentId)
                 && mTriggerTime == trigger.mTriggerTime
                 && Objects.equals(mDebugKey, trigger.mDebugKey)
                 && Objects.equals(mEventTriggers, trigger.mEventTriggers)
@@ -109,6 +111,7 @@ public class Trigger {
                 mAttributionDestination,
                 mDestinationType,
                 mAdTechDomain,
+                mEnrollmentId,
                 mTriggerTime,
                 mEventTriggers,
                 mStatus,
@@ -144,6 +147,13 @@ public class Trigger {
      */
     public Uri getAdTechDomain() {
         return mAdTechDomain;
+    }
+
+    /**
+     * AdTech enrollment ID.
+     */
+    public String getEnrollmentId() {
+        return mEnrollmentId;
     }
 
     /**
@@ -392,6 +402,13 @@ public class Trigger {
             return this;
         }
 
+        /** See {@link Trigger#getEnrollmentId()} ()}. */
+        @NonNull
+        public Builder setEnrollmentId(String enrollmentId) {
+            mBuilding.mEnrollmentId = enrollmentId;
+            return this;
+        }
+
         /** See {@link Trigger#getStatus()}. */
         @NonNull
         public Builder setStatus(@Status int status) {
@@ -463,6 +480,8 @@ public class Trigger {
             Validation.validateNonNull(
                     mBuilding.mAttributionDestination,
                     mBuilding.mAdTechDomain,
+                    // TODO (b/238924528): uncomment when enforcing enrollment
+                    //mBuilding.mEnrollmentId,
                     mBuilding.mRegistrant);
 
             return mBuilding;

@@ -63,11 +63,9 @@ public class DeletionRequestTest {
                 new DeletionRequest.Builder()
                         .setDomainUris(null)
                         .setOriginUris(null)
-                        .setStart(null)
-                        .setEnd(null)
+                        .setStart(START)
+                        .setEnd(END)
                         .build();
-        Assert.assertNull(request.getStart());
-        Assert.assertNull(request.getEnd());
         Assert.assertTrue(request.getOriginUris().isEmpty());
         Assert.assertTrue(request.getDomainUris().isEmpty());
         Assert.assertEquals(DeletionRequest.DELETION_MODE_ALL, request.getDeletionMode());
@@ -77,11 +75,33 @@ public class DeletionRequestTest {
     @Test
     public void testDefaultParams() {
         DeletionRequest request = new DeletionRequest.Builder().build();
-        Assert.assertNull(request.getStart());
-        Assert.assertNull(request.getEnd());
+        Assert.assertEquals(Instant.MIN, request.getStart());
+        Assert.assertEquals(Instant.MAX, request.getEnd());
         Assert.assertTrue(request.getOriginUris().isEmpty());
         Assert.assertTrue(request.getDomainUris().isEmpty());
         Assert.assertEquals(DeletionRequest.DELETION_MODE_ALL, request.getDeletionMode());
         Assert.assertEquals(DeletionRequest.MATCH_BEHAVIOR_DELETE, request.getMatchBehavior());
+    }
+
+    @Test
+    public void testNullStartThrowsException() {
+        Assert.assertThrows(
+                NullPointerException.class,
+                () -> new DeletionRequest.Builder().setStart(null).setEnd(END).build());
+    }
+
+    @Test
+    public void testNullEndThrowsException() {
+        Assert.assertThrows(
+                NullPointerException.class,
+                () -> new DeletionRequest.Builder().setStart(START).setEnd(null).build());
+    }
+
+    @Test
+    public void testMinAndMaxInstants() {
+        DeletionRequest request =
+                new DeletionRequest.Builder().setStart(Instant.MIN).setEnd(Instant.MAX).build();
+        Assert.assertEquals(Instant.MIN, request.getStart());
+        Assert.assertEquals(Instant.MAX, request.getEnd());
     }
 }

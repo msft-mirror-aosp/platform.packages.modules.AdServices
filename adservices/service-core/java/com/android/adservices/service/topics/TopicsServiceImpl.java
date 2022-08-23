@@ -284,6 +284,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                     (enrollmentData != null && enrollmentData.getEnrollmentId() != null)
                             && AppManifestConfigHelper.isAllowedTopicsAccess(
                                     mContext,
+                                    Process.isSdkSandboxUid(callingUid),
                                     topicsParam.getAppPackageName(),
                                     enrollmentData.getEnrollmentId());
             if (!permitted) {

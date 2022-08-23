@@ -27,6 +27,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import android.app.job.JobParameters;
@@ -39,6 +40,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.topics.classifier.ModelManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
@@ -57,10 +59,10 @@ import java.util.concurrent.CountDownLatch;
 public class ConsentNotificationJobServiceTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
 
-    @Spy private final ConsentManager mConsentManager = ConsentManager.getInstance(CONTEXT);
+    private ConsentManager mConsentManager;
 
     @Spy
-    private final ConsentNotificationJobService mConsentNotificationJobService =
+    private ConsentNotificationJobService mConsentNotificationJobService =
             new ConsentNotificationJobService();
 
     @Mock JobParameters mMockJobParameters;
@@ -69,6 +71,7 @@ public class ConsentNotificationJobServiceTest {
     @Mock PersistableBundle mPersistableBundle;
     @Mock Flags mFlags;
     private MockitoSession mStaticMockSession = null;
+    @Mock private ModelManager mModelManager;
 
     /** Initialize static spies. */
     @Before
@@ -82,6 +85,7 @@ public class ConsentNotificationJobServiceTest {
                         .spyStatic(ConsentManager.class)
                         .spyStatic(AdServicesSyncUtil.class)
                         .spyStatic(ConsentNotificationJobService.class)
+                        .spyStatic(ModelManager.class)
                         .strictness(Strictness.WARN)
                         .initMocks(this)
                         .startMocking();
@@ -98,6 +102,8 @@ public class ConsentNotificationJobServiceTest {
     /** Test successful onStart method execution when notification was not yet displayed. */
     @Test
     public void testOnStartJobAsyncUtilExecute() throws InterruptedException {
+        doReturn(mModelManager).when(() -> ModelManager.getInstance(any(Context.class)));
+        mConsentManager = spy(ConsentManager.getInstance(CONTEXT));
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
         doReturn(mPackageManager).when(mConsentNotificationJobService).getPackageManager();
@@ -111,10 +117,13 @@ public class ConsentNotificationJobServiceTest {
         when(mMockJobParameters.getExtras()).thenReturn(mPersistableBundle);
         when(mPersistableBundle.getBoolean(anyString(), anyBoolean())).thenReturn(true);
         doReturn(mAdservicesSyncUtil).when(() -> AdServicesSyncUtil.getInstance());
-        doAnswer(unusedInvocation -> {
-            jobFinishedCountDown.countDown();
-            return null;
-        }).when(mConsentNotificationJobService).jobFinished(mMockJobParameters, false);
+        doAnswer(
+                unusedInvocation -> {
+                    jobFinishedCountDown.countDown();
+                    return null;
+                })
+                .when(mConsentNotificationJobService)
+                .jobFinished(mMockJobParameters, false);
 
         doNothing().when(mAdservicesSyncUtil).execute(any(Context.class), any(Boolean.class));
         doReturn(mFlags).when(() -> FlagsFactory.getFlags());
@@ -145,7 +154,6 @@ public class ConsentNotificationJobServiceTest {
         calendar.setTimeInMillis(0);
 
         doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
-
         long initialDelay = ConsentNotificationJobService.calculateInitialDelay(calendar);
         long deadline = ConsentNotificationJobService.calculateDeadline(calendar);
 

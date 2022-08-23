@@ -22,26 +22,56 @@ import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+
+import static org.mockito.ArgumentMatchers.any;
+
+import android.content.Context;
 import android.content.Intent;
 
 import androidx.test.core.app.ActivityScenario;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.topics.classifier.ModelManager;
 import com.android.adservices.ui.settings.AdServicesSettingsActivity;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
 /** Tests for {@link ConsentNotificationActivity}. */
 public class NotificationActivityTest {
     private static final String NOTIFICATION_INTENT = "android.test.adservices.ui.NOTIFICATIONS";
+    private MockitoSession mStaticMockSession = null;
+    @Mock private ModelManager mModelManager;
 
     @Before
     public void setup() {
+        MockitoAnnotations.initMocks(this);
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(ModelManager.class)
+                        .strictness(Strictness.WARN)
+                        .initMocks(this)
+                        .startMocking();
+        doReturn(mModelManager).when(() -> ModelManager.getInstance(any(Context.class)));
+
         Intent mIntent = new Intent(NOTIFICATION_INTENT);
         mIntent.putExtra("isEUDevice", false);
         ActivityScenario.launch(mIntent);
+    }
+    /** Clean up static spies. */
+    @After
+    public void teardown() {
+        if (mStaticMockSession != null) {
+            mStaticMockSession.finishMocking();
+        }
     }
 
     /**

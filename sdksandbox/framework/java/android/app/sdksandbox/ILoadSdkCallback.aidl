@@ -17,11 +17,11 @@
 package android.app.sdksandbox;
 
 import android.os.Bundle;
-import android.app.sdksandbox.LoadSdkResponse;
+import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.LoadSdkException;
 
 /** @hide */
 interface ILoadSdkCallback {
-    oneway void onLoadSdkSuccess(in LoadSdkResponse responseParcel);
+    oneway void onLoadSdkSuccess(in SandboxedSdk sandboxedSdkParcel);
     oneway void onLoadSdkFailure(in LoadSdkException exception);
 }

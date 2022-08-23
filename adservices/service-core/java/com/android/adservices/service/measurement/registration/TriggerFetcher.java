@@ -66,14 +66,14 @@ public class TriggerFetcher {
 
     private boolean parseTrigger(
             @NonNull Uri topOrigin,
-            @NonNull Uri reportingOrigin,
+            @NonNull Uri registrationUri,
             @NonNull Map<String, List<String>> headers,
             @NonNull List<TriggerRegistration> addToResults,
             boolean isWebSource,
             boolean isAllowDebugKey) {
         TriggerRegistration.Builder result = new TriggerRegistration.Builder();
         result.setTopOrigin(topOrigin);
-        result.setReportingOrigin(reportingOrigin);
+        result.setRegistrationUri(registrationUri);
         List<String> field;
         field = headers.get("Attribution-Reporting-Register-Trigger");
         if (field == null || field.size() != 1) {
@@ -129,27 +129,27 @@ public class TriggerFetcher {
 
     private void fetchTrigger(
             @NonNull Uri topOrigin,
-            @NonNull Uri target,
+            @NonNull Uri registrationUri,
             boolean shouldProcessRedirects,
             @NonNull List<TriggerRegistration> registrationsOut,
             boolean isWebSource,
             boolean isAllowDebugKey) {
         // Require https.
-        if (!target.getScheme().equals("https")) {
+        if (!registrationUri.getScheme().equals("https")) {
             return;
         }
         URL url;
         try {
-            url = new URL(target.toString());
+            url = new URL(registrationUri.toString());
         } catch (MalformedURLException e) {
-            LogUtil.d(e, "Malformed registration target URL");
+            LogUtil.d(e, "Malformed registration registrationUri URL");
             return;
         }
         HttpURLConnection urlConnection;
         try {
             urlConnection = (HttpURLConnection) openUrl(url);
         } catch (IOException e) {
-            LogUtil.d(e, "Failed to open registration target URL");
+            LogUtil.d(e, "Failed to open registration registrationUri URL");
             return;
         }
         try {
@@ -168,7 +168,7 @@ public class TriggerFetcher {
             final boolean parsed =
                     parseTrigger(
                             topOrigin,
-                            target,
+                            registrationUri,
                             headers,
                             registrationsOut,
                             isWebSource,

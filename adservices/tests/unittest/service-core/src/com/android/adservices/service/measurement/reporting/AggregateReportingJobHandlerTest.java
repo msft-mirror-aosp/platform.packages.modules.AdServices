@@ -113,7 +113,7 @@ public class AggregateReportingJobHandlerTest {
                 new AggregateReport.Builder()
                         .setId("aggregateReportId")
                         .setStatus(AggregateReport.Status.PENDING)
-                        .setReportingOrigin(Uri.parse("https://adtech.domain"))
+                        .setAdTechDomain(Uri.parse("https://adtech.domain"))
                         .build();
         JSONObject aggregateReportBody =
                 new AggregateReportBody.Builder()
@@ -149,7 +149,7 @@ public class AggregateReportingJobHandlerTest {
                 new AggregateReport.Builder()
                         .setId("aggregateReportId")
                         .setStatus(AggregateReport.Status.PENDING)
-                        .setReportingOrigin(Uri.parse("https://adtech.domain"))
+                        .setAdTechDomain(Uri.parse("https://adtech.domain"))
                         .build();
         JSONObject aggregateReportBody =
                 new AggregateReportBody.Builder()
@@ -183,7 +183,7 @@ public class AggregateReportingJobHandlerTest {
                 new AggregateReport.Builder()
                         .setId("aggregateReportId")
                         .setStatus(AggregateReport.Status.DELIVERED)
-                        .setReportingOrigin(Uri.parse("https://adtech.domain"))
+                        .setAdTechDomain(Uri.parse("https://adtech.domain"))
                         .setDebugCleartextPayload(CLEARTEXT_PAYLOAD)
                         .build();
 
@@ -206,7 +206,7 @@ public class AggregateReportingJobHandlerTest {
                 new AggregateReport.Builder()
                         .setId("aggregateReportId1")
                         .setStatus(AggregateReport.Status.PENDING)
-                        .setReportingOrigin(Uri.parse("https://adtech.domain"))
+                        .setAdTechDomain(Uri.parse("https://adtech.domain"))
                         .setScheduledReportTime(1000L)
                         .build();
         JSONObject aggregateReportBody1 =
@@ -219,7 +219,7 @@ public class AggregateReportingJobHandlerTest {
                 new AggregateReport.Builder()
                         .setId("aggregateReportId2")
                         .setStatus(AggregateReport.Status.PENDING)
-                        .setReportingOrigin(Uri.parse("https://adtech.domain"))
+                        .setAdTechDomain(Uri.parse("https://adtech.domain"))
                         .setScheduledReportTime(1100L)
                         .build();
         JSONObject aggregateReportBody2 =
@@ -261,7 +261,7 @@ public class AggregateReportingJobHandlerTest {
                 new AggregateReport.Builder()
                         .setId("aggregateReportId1")
                         .setStatus(AggregateReport.Status.PENDING)
-                        .setReportingOrigin(Uri.parse("https://adtech.domain"))
+                        .setAdTechDomain(Uri.parse("https://adtech.domain"))
                         .setPublisher(Uri.parse("android-app://source.app1"))
                         .setDebugCleartextPayload(CLEARTEXT_PAYLOAD)
                         .build();
@@ -275,7 +275,7 @@ public class AggregateReportingJobHandlerTest {
                 new AggregateReport.Builder()
                         .setId("aggregateReportId2")
                         .setStatus(AggregateReport.Status.PENDING)
-                        .setReportingOrigin(Uri.parse("https://adtech.domain"))
+                        .setAdTechDomain(Uri.parse("https://adtech.domain"))
                         .setPublisher(Uri.parse("android-app://source.app1"))
                         .setDebugCleartextPayload(CLEARTEXT_PAYLOAD)
                         .build();
@@ -319,7 +319,7 @@ public class AggregateReportingJobHandlerTest {
                 new AggregateReport.Builder()
                         .setId("aggregateReportId1")
                         .setStatus(AggregateReport.Status.PENDING)
-                        .setReportingOrigin(Uri.parse("https://adtech.domain"))
+                        .setAdTechDomain(Uri.parse("https://adtech.domain"))
                         .setScheduledReportTime(1000L)
                         .build();
         JSONObject aggregateReportBody =
@@ -361,7 +361,7 @@ public class AggregateReportingJobHandlerTest {
                 new AggregateReport.Builder()
                         .setId("aggregateReportId1")
                         .setStatus(AggregateReport.Status.PENDING)
-                        .setReportingOrigin(Uri.parse("https://adtech.domain"))
+                        .setAdTechDomain(Uri.parse("https://adtech.domain"))
                         .setPublisher(Uri.parse("android-app://source.app1"))
                         .setDebugCleartextPayload(CLEARTEXT_PAYLOAD)
                         .build();

@@ -15,8 +15,7 @@
   ~ limitations under the License.
   -->
 <ad-services-config>
-    <includes-sdk-library name="1234567" />
-    <attribution allowAdPartnersToAccess="1234" allowAllToAccess="false" />
+    <attribution allowAllToAccess="true" />
     <custom-audiences allowAllToAccess="false" allowAdPartnersToAccess="1234, 4567" />
     <topics allowAllToAccess="true" />
 </ad-services-config>

@@ -40,7 +40,8 @@ public final class AggregateReportTest {
                 .setAttributionDestination(Uri.parse("https://example.com/aS"))
                 .setSourceRegistrationTime(5L)
                 .setScheduledReportTime(1L)
-                .setReportingOrigin(Uri.parse("https://example.com/rT"))
+                .setAdTechDomain(Uri.parse("https://example.com/rT"))
+                .setEnrollmentId("enrollment-id")
                 .setDebugCleartextPayload(" key: 1369, value: 32768; key: 3461, value: 1664;")
                 .setAggregateAttributionData(
                         new AggregateAttributionData.Builder().build())
@@ -58,7 +59,8 @@ public final class AggregateReportTest {
                 attributionReport.getAttributionDestination());
         assertEquals(5L, attributionReport.getSourceRegistrationTime());
         assertEquals(1L, attributionReport.getScheduledReportTime());
-        assertEquals(Uri.parse("https://example.com/rT"), attributionReport.getReportingOrigin());
+        assertEquals(Uri.parse("https://example.com/rT"), attributionReport.getAdTechDomain());
+        assertEquals("enrollment-id", attributionReport.getEnrollmentId());
         assertEquals(" key: 1369, value: 32768; key: 3461, value: 1664;",
                 attributionReport.getDebugCleartextPayload());
         assertNotNull(attributionReport.getAggregateAttributionData());
@@ -75,7 +77,8 @@ public final class AggregateReportTest {
         assertNull(attributionReport.getAttributionDestination());
         assertEquals(0L, attributionReport.getSourceRegistrationTime());
         assertEquals(0L, attributionReport.getScheduledReportTime());
-        assertNull(attributionReport.getReportingOrigin());
+        assertNull(attributionReport.getAdTechDomain());
+        assertNull(attributionReport.getEnrollmentId());
         assertNull(attributionReport.getDebugCleartextPayload());
         assertNull(attributionReport.getAggregateAttributionData());
         assertEquals(AggregateReport.Status.PENDING, attributionReport.getStatus());
@@ -103,7 +106,8 @@ public final class AggregateReportTest {
                         .setAttributionDestination(Uri.parse("https://example.com/aS"))
                         .setSourceRegistrationTime(1L)
                         .setScheduledReportTime(1L)
-                        .setReportingOrigin(Uri.parse("https://example.com/rT"))
+                        .setAdTechDomain(Uri.parse("https://example.com/rT"))
+                        .setEnrollmentId("another-enrollment-id")
                         .setDebugCleartextPayload(
                                 " key: 1369, value: 32768; key: 3461, value: 1664;")
                         .setAggregateAttributionData(new AggregateAttributionData.Builder().build())

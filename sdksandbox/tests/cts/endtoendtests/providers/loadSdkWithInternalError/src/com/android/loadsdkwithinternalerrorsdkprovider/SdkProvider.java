@@ -16,7 +16,7 @@
 
 package com.android.loadsdkwithinternalerrorsdkprovider;
 
-import android.app.sdksandbox.LoadSdkResponse;
+import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
 import android.os.Bundle;
@@ -25,7 +25,7 @@ import android.view.View;
 public class SdkProvider extends SandboxedSdkProvider {
 
     @Override
-    public LoadSdkResponse onLoadSdk(Bundle params) {
+    public SandboxedSdk onLoadSdk(Bundle params) {
         throw new RuntimeException("General Exception");
     }
 

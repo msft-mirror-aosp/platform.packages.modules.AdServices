@@ -32,6 +32,7 @@ public class Attribution {
     private final String mDestinationSite;
     private final String mDestinationOrigin;
     private final String mAdTechDomain;
+    private final String mEnrollmentId;
     private final long mTriggerTime;
     private final String mRegistrant;
 
@@ -42,6 +43,7 @@ public class Attribution {
         this.mDestinationSite = builder.mDestinationSite;
         this.mDestinationOrigin = builder.mDestinationOrigin;
         this.mAdTechDomain = builder.mAdTechDomain;
+        this.mEnrollmentId = builder.mEnrollmentId;
         this.mTriggerTime = builder.mTriggerTime;
         this.mRegistrant = builder.mRegistrant;
     }
@@ -58,6 +60,7 @@ public class Attribution {
                 && Objects.equals(mDestinationSite, attr.mDestinationSite)
                 && Objects.equals(mDestinationOrigin, attr.mDestinationOrigin)
                 && Objects.equals(mAdTechDomain, attr.mAdTechDomain)
+                && Objects.equals(mEnrollmentId, attr.mEnrollmentId)
                 && Objects.equals(mRegistrant, attr.mRegistrant);
     }
 
@@ -69,6 +72,7 @@ public class Attribution {
                 mDestinationSite,
                 mDestinationOrigin,
                 mAdTechDomain,
+                mEnrollmentId,
                 mTriggerTime,
                 mRegistrant);
     }
@@ -103,6 +107,11 @@ public class Attribution {
         return mAdTechDomain;
     }
 
+    /** @return {@link Source} or {@link Trigger} enrollment ID */
+    public String getEnrollmentId() {
+        return mEnrollmentId;
+    }
+
     /** @return {@link Trigger} event time */
     public long getTriggerTime() {
         return mTriggerTime;
@@ -121,6 +130,7 @@ public class Attribution {
         private String mDestinationSite;
         private String mDestinationOrigin;
         private String mAdTechDomain;
+        private String mEnrollmentId;
         private long mTriggerTime;
         private String mRegistrant;
 
@@ -160,6 +170,12 @@ public class Attribution {
             return this;
         }
 
+        /** See {@link Attribution#getEnrollmentId()}. */
+        public Builder setEnrollmentId(String enrollmentId) {
+            mEnrollmentId = enrollmentId;
+            return this;
+        }
+
         /** See {@link Attribution#getTriggerTime()}. */
         public Builder setTriggerTime(long triggerTime) {
             mTriggerTime = triggerTime;
@@ -180,6 +196,8 @@ public class Attribution {
                     mDestinationSite,
                     mDestinationOrigin,
                     mAdTechDomain,
+                    // TODO (b/238924528): uncomment when enforcing enrollment
+                    //mEnrollmentId,
                     mRegistrant);
             return new Attribution(this);
         }

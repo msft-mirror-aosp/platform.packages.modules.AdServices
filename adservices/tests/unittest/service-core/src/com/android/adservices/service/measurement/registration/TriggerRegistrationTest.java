@@ -31,7 +31,7 @@ import org.junit.Test;
 @SmallTest
 public final class TriggerRegistrationTest {
     private static final Uri TOP_ORIGIN = Uri.parse("https://foo.com");
-    private static final Uri REPORTING_ORIGIN = Uri.parse("https://bar.com");
+    private static final Uri REGISTRATION_URI = Uri.parse("https://bar.com");
     private static final String TOP_LEVEL_FILTERS_JSON_STRING =
             "{\n"
                     + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
@@ -60,7 +60,7 @@ public final class TriggerRegistrationTest {
     private TriggerRegistration createExampleResponse() {
         return new TriggerRegistration.Builder()
                 .setTopOrigin(TOP_ORIGIN)
-                .setReportingOrigin(REPORTING_ORIGIN)
+                .setRegistrationUri(REGISTRATION_URI)
                 .setEventTriggers(EVENT_TRIGGERS)
                 .setAggregateTriggerData(AGGREGATE_TRIGGER_DATA)
                 .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
@@ -71,7 +71,7 @@ public final class TriggerRegistrationTest {
 
     void verifyExampleResponse(TriggerRegistration triggerRegistration) {
         assertEquals("https://foo.com", triggerRegistration.getTopOrigin().toString());
-        assertEquals("https://bar.com", triggerRegistration.getReportingOrigin().toString());
+        assertEquals("https://bar.com", triggerRegistration.getRegistrationUri().toString());
         assertEquals(EVENT_TRIGGERS, triggerRegistration.getEventTriggers());
         assertEquals(AGGREGATE_TRIGGER_DATA, triggerRegistration.getAggregateTriggerData());
         assertEquals(
@@ -91,10 +91,10 @@ public final class TriggerRegistrationTest {
         TriggerRegistration response =
                 new TriggerRegistration.Builder()
                         .setTopOrigin(TOP_ORIGIN)
-                        .setReportingOrigin(REPORTING_ORIGIN)
+                        .setRegistrationUri(REGISTRATION_URI)
                         .build();
         assertEquals(TOP_ORIGIN, response.getTopOrigin());
-        assertEquals(REPORTING_ORIGIN, response.getReportingOrigin());
+        assertEquals(REGISTRATION_URI, response.getRegistrationUri());
         assertNull(response.getEventTriggers());
         assertNull(response.getAggregateTriggerData());
         assertNull(response.getAggregateValues());

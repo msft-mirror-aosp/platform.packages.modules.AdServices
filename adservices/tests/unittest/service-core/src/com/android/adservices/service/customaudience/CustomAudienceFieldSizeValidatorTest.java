@@ -48,7 +48,7 @@ public class CustomAudienceFieldSizeValidatorTest {
         String tooLongName = getStringWithLength(FLAGS.getFledgeCustomAudienceMaxNameSizeB() * 2);
         ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .setName(tooLongName)
                                 .build()),
                 String.format(
@@ -62,11 +62,11 @@ public class CustomAudienceFieldSizeValidatorTest {
     public void testBiddingLogicUriTooLong() {
         Uri tooLongBiddingLogicUri =
                 getUriWithPathLength(
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         FLAGS.getFledgeCustomAudienceMaxBiddingLogicUriSizeB());
         ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .setBiddingLogicUrl(tooLongBiddingLogicUri)
                                 .build()),
                 String.format(
@@ -80,11 +80,11 @@ public class CustomAudienceFieldSizeValidatorTest {
     public void testDailyUpdateUriTooLong() {
         Uri tooLongDailyUpdateUri =
                 getUriWithPathLength(
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         FLAGS.getFledgeCustomAudienceMaxDailyUpdateUriSizeB());
         ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .setDailyUpdateUrl(tooLongDailyUpdateUri)
                                 .build()),
                 String.format(
@@ -101,7 +101,7 @@ public class CustomAudienceFieldSizeValidatorTest {
                         FLAGS.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB() * 2);
         ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .setUserBiddingSignals(tooBigUserBiddingSignals)
                                 .build()),
                 String.format(
@@ -118,12 +118,12 @@ public class CustomAudienceFieldSizeValidatorTest {
                         .setTrustedBiddingKeys(List.of())
                         .setTrustedBiddingUrl(
                                 getUriWithPathLength(
-                                        CommonFixture.VALID_BUYER,
+                                        CommonFixture.VALID_BUYER_1,
                                         FLAGS.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB()))
                         .build();
         ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .setTrustedBiddingData(tooBigTrustedBiddingData)
                                 .build()),
                 String.format(
@@ -138,7 +138,7 @@ public class CustomAudienceFieldSizeValidatorTest {
         List<AdData> tooBigAds =
                 List.of(
                         new AdData.Builder()
-                                .setRenderUri(getUriWithPathLength(CommonFixture.VALID_BUYER, 20))
+                                .setRenderUri(getUriWithPathLength(CommonFixture.VALID_BUYER_1, 20))
                                 .setMetadata(
                                         getAdSelectionSignalsWithLength(
                                                         FLAGS.getFledgeCustomAudienceMaxAdsSizeB())
@@ -146,7 +146,7 @@ public class CustomAudienceFieldSizeValidatorTest {
                                 .build());
         ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .setAds(tooBigAds)
                                 .build()),
                 String.format(
@@ -166,12 +166,12 @@ public class CustomAudienceFieldSizeValidatorTest {
             tooManyAds.add(
                     new AdData.Builder()
                             .setMetadata(AdSelectionSignals.EMPTY.toString())
-                            .setRenderUri(getUriWithPathLength(CommonFixture.VALID_BUYER, 1))
+                            .setRenderUri(getUriWithPathLength(CommonFixture.VALID_BUYER_1, 1))
                             .build());
         }
         ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .setAds(tooManyAds)
                                 .build()),
                 String.format(

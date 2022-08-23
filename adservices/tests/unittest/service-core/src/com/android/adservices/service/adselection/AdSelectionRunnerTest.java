@@ -16,11 +16,13 @@
 
 package com.android.adservices.service.adselection;
 
+import static com.android.adservices.service.adselection.AdSelectionRunner.AD_SELECTION_THROTTLED;
 import static com.android.adservices.service.adselection.AdSelectionRunner.AD_SELECTION_TIMED_OUT;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_AD_SELECTION_FAILURE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_CA_AVAILABLE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_VALID_BIDS_FOR_SCORING;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_WINNING_AD_FOUND;
+import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_SELECT_ADS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
 import static com.android.adservices.stats.FledgeApiCallStatsMatcher.aCallStatForFledgeApiWithStatus;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
@@ -35,6 +37,8 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 
 import android.adservices.adselection.AdBiddingOutcomeFixture;
 import android.adservices.adselection.AdSelectionCallback;
@@ -51,11 +55,13 @@ import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.exceptions.AdServicesException;
 import android.content.Context;
 import android.net.Uri;
+import android.os.Process;
 import android.os.RemoteException;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -66,7 +72,11 @@ import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.FledgeAllowListsFilter;
+import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -97,7 +107,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.function.Supplier;
 
 /**
  * This test covers strictly the unit of {@link AdSelectionRunner} The dependencies in this test are
@@ -110,8 +120,15 @@ public class AdSelectionRunnerTest {
     private static final AdTechIdentifier BUYER_2 = AdSelectionConfigFixture.BUYER_2;
     private static final Long AD_SELECTION_ID = 1234L;
     private static final String ERROR_INVALID_JSON = "Invalid Json Exception";
-    private static final int CALLER_UID = 100;
+    private static final int CALLER_UID = Process.myUid();
     private static final String MY_APP_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
+
+    private static final AdTechIdentifier SELLER_VALID =
+            AdTechIdentifier.fromString("developer.android.com");
+    private static final Uri DECISION_LOGIC_URI =
+            Uri.parse("https://developer.android.com/test/decisions_logic_urls");
+    private static final Uri TRUSTED_SIGNALS_URI =
+            Uri.parse("https://developer.android.com/test/trusted_signals_uri");
 
     private MockitoSession mStaticMockSession = null;
     @Mock private AdsScoreGenerator mMockAdsScoreGenerator;
@@ -120,12 +137,27 @@ public class AdSelectionRunnerTest {
     @Mock private AppImportanceFilter mAppImportanceFilter;
     @Spy private Clock mClock = Clock.systemUTC();
     @Mock private ConsentManager mConsentManagerMock;
-    private Flags mFlags;
-    private Context mContext;
-    private ExecutorService mExecutorService;
+    @Mock private Throttler mMockThrottler;
+
+    private Flags mFlags =
+            new Flags() {
+                @Override
+                public long getAdSelectionOverallTimeoutMs() {
+                    return 300;
+                }
+            };
+    private Context mContext = ApplicationProvider.getApplicationContext();
+    private AdServicesHttpsClient mAdServicesHttpsClient;
+    private ExecutorService mLightweightExecutorService;
+    private ExecutorService mBackgroundExecutorService;
     private CustomAudienceDao mCustomAudienceDao;
     private AdSelectionEntryDao mAdSelectionEntryDao;
+    private Supplier<Throttler> mThrottlerSupplier = () -> mMockThrottler;
     @Spy private AdServicesLogger mAdServicesLoggerSpy = AdServicesLoggerImpl.getInstance();
+    private final FledgeAuthorizationFilter mFledgeAuthorizationFilter =
+            FledgeAuthorizationFilter.create(mContext, mAdServicesLoggerSpy);
+    private final FledgeAllowListsFilter mFledgeAllowListsFilter =
+            new FledgeAllowListsFilter(mFlags, mAdServicesLoggerSpy);
 
     private AdSelectionConfig.Builder mAdSelectionConfigBuilder;
 
@@ -155,7 +187,10 @@ public class AdSelectionRunnerTest {
                         .startMocking();
 
         mContext = ApplicationProvider.getApplicationContext();
-        mExecutorService = Executors.newFixedThreadPool(20);
+        mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
+        mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
+        mAdServicesHttpsClient =
+                new AdServicesHttpsClient(AdServicesExecutors.getBlockingExecutor());
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(mContext, CustomAudienceDatabase.class)
                         .build()
@@ -168,7 +203,10 @@ public class AdSelectionRunnerTest {
 
         mAdSelectionConfigBuilder =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                        .setCustomAudienceBuyers(Arrays.asList(BUYER_1, BUYER_2));
+                        .setSeller(SELLER_VALID)
+                        .setCustomAudienceBuyers(Arrays.asList(BUYER_1, BUYER_2))
+                        .setDecisionLogicUri(DECISION_LOGIC_URI)
+                        .setTrustedScoringSignalsUri(TRUSTED_SIGNALS_URI);
 
         mDBCustomAudienceForBuyer1 = createDBCustomAudience(BUYER_1);
         mDBCustomAudienceForBuyer2 = createDBCustomAudience(BUYER_2);
@@ -188,13 +226,7 @@ public class AdSelectionRunnerTest {
                 AdScoringOutcomeFixture.anAdScoringBuilder(BUYER_2, 3.0).build();
         mAdScoringOutcomeList =
                 Arrays.asList(mAdScoringOutcomeForBuyer1, mAdScoringOutcomeForBuyer2);
-        mFlags =
-                new Flags() {
-                    @Override
-                    public long getAdSelectionOverallTimeoutMs() {
-                        return 300;
-                    }
-                };
+        when(mMockThrottler.tryAcquire(eq(FLEDGE_API_SELECT_ADS), anyString())).thenReturn(true);
     }
 
     private DBCustomAudience createDBCustomAudience(final AdTechIdentifier buyer) {
@@ -211,7 +243,6 @@ public class AdSelectionRunnerTest {
         when(mClock.instant()).thenReturn(Clock.systemUTC().instant());
         doReturn(mFlags).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
-
         // Creating ad selection config for happy case with all the buyers in place
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -283,7 +314,9 @@ public class AdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
-                        mExecutorService,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -292,7 +325,10 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
-                        CALLER_UID);
+                        mThrottlerSupplier,
+                        CALLER_UID,
+                        mFledgeAuthorizationFilter,
+                        mFledgeAllowListsFilter);
 
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
@@ -365,7 +401,9 @@ public class AdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
-                        mExecutorService,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -374,7 +412,10 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
-                        CALLER_UID);
+                        mThrottlerSupplier,
+                        CALLER_UID,
+                        mFledgeAuthorizationFilter,
+                        mFledgeAllowListsFilter);
 
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
@@ -473,7 +514,9 @@ public class AdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
-                        mExecutorService,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -482,7 +525,10 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
-                        CALLER_UID);
+                        mThrottlerSupplier,
+                        CALLER_UID,
+                        mFledgeAuthorizationFilter,
+                        mFledgeAllowListsFilter);
 
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
@@ -545,7 +591,9 @@ public class AdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
-                        mExecutorService,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -554,7 +602,10 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
-                        CALLER_UID);
+                        mThrottlerSupplier,
+                        CALLER_UID,
+                        mFledgeAuthorizationFilter,
+                        mFledgeAllowListsFilter);
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
 
@@ -591,7 +642,9 @@ public class AdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
-                        mExecutorService,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -600,7 +653,10 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
-                        CALLER_UID);
+                        mThrottlerSupplier,
+                        CALLER_UID,
+                        mFledgeAuthorizationFilter,
+                        mFledgeAllowListsFilter);
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
 
@@ -628,7 +684,9 @@ public class AdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
-                        mExecutorService,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -637,7 +695,10 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
-                        CALLER_UID);
+                        mThrottlerSupplier,
+                        CALLER_UID,
+                        mFledgeAuthorizationFilter,
+                        mFledgeAllowListsFilter);
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
 
@@ -706,7 +767,9 @@ public class AdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
-                        mExecutorService,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -715,7 +778,10 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
-                        CALLER_UID);
+                        mThrottlerSupplier,
+                        CALLER_UID,
+                        mFledgeAuthorizationFilter,
+                        mFledgeAllowListsFilter);
 
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
@@ -834,7 +900,9 @@ public class AdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
-                        mExecutorService,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -843,7 +911,10 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
-                        CALLER_UID);
+                        mThrottlerSupplier,
+                        CALLER_UID,
+                        mFledgeAuthorizationFilter,
+                        mFledgeAllowListsFilter);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
@@ -932,7 +1003,9 @@ public class AdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
-                        mExecutorService,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -941,7 +1014,10 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
-                        CALLER_UID);
+                        mThrottlerSupplier,
+                        CALLER_UID,
+                        mFledgeAuthorizationFilter,
+                        mFledgeAllowListsFilter);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
@@ -1037,7 +1113,9 @@ public class AdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
-                        mExecutorService,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -1046,7 +1124,10 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
-                        CALLER_UID);
+                        mThrottlerSupplier,
+                        CALLER_UID,
+                        mFledgeAuthorizationFilter,
+                        mFledgeAllowListsFilter);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
@@ -1144,7 +1225,9 @@ public class AdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
-                        mExecutorService,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -1153,7 +1236,10 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
-                        CALLER_UID);
+                        mThrottlerSupplier,
+                        CALLER_UID,
+                        mFledgeAuthorizationFilter,
+                        mFledgeAllowListsFilter);
 
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
@@ -1276,7 +1362,9 @@ public class AdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
-                        mExecutorService,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -1285,7 +1373,10 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
-                        CALLER_UID);
+                        mThrottlerSupplier,
+                        CALLER_UID,
+                        mFledgeAuthorizationFilter,
+                        mFledgeAllowListsFilter);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
@@ -1389,7 +1480,9 @@ public class AdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
-                        mExecutorService,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -1398,7 +1491,10 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         flagsWithSmallerLimits,
-                        CALLER_UID);
+                        mThrottlerSupplier,
+                        CALLER_UID,
+                        mFledgeAuthorizationFilter,
+                        mFledgeAllowListsFilter);
 
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
@@ -1411,6 +1507,50 @@ public class AdSelectionRunnerTest {
         Assert.assertEquals(
                 "Error response code mismatch",
                 AdServicesStatusUtils.STATUS_TIMEOUT,
+                response.getStatusCode());
+    }
+
+    @Test
+    public void testRunAdSelectionThrottledFailure() throws AdServicesException {
+        when(mClock.instant()).thenReturn(Clock.systemUTC().instant());
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        // Creating ad selection config for happy case with all the buyers in place
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        // Throttle Ad Selection request
+        when(mMockThrottler.tryAcquire(eq(FLEDGE_API_SELECT_ADS), anyString())).thenReturn(false);
+
+        mAdSelectionRunner =
+                new AdSelectionRunner(
+                        mContext,
+                        mCustomAudienceDao,
+                        mAdSelectionEntryDao,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mConsentManagerMock,
+                        mMockAdsScoreGenerator,
+                        mMockAdBidGenerator,
+                        mMockAdSelectionIdGenerator,
+                        mClock,
+                        mAdServicesLoggerSpy,
+                        mAppImportanceFilter,
+                        mFlags,
+                        mThrottlerSupplier,
+                        CALLER_UID,
+                        mFledgeAuthorizationFilter,
+                        mFledgeAllowListsFilter);
+
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
+
+        assertFalse(resultsCallback.mIsSuccess);
+        FledgeErrorResponse response = resultsCallback.mFledgeErrorResponse;
+        verifyErrorMessageIsCorrect(response.getErrorMessage(), AD_SELECTION_THROTTLED);
+        Assert.assertEquals(
+                "Error response code mismatch",
+                AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED,
                 response.getStatusCode());
     }
 
@@ -1464,7 +1604,6 @@ public class AdSelectionRunnerTest {
     @After
     public void tearDown() {
         mAdSelectionEntryDao.removeAdSelectionEntriesByIds(Arrays.asList(AD_SELECTION_ID));
-        mExecutorService.shutdown();
         if (mStaticMockSession != null) {
             mStaticMockSession.finishMocking();
         }

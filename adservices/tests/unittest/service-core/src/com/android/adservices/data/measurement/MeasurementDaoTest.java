@@ -105,6 +105,7 @@ public class MeasurementDaoTest {
             assertEquals(validSource.getAppDestination(), source.getAppDestination());
             assertEquals(validSource.getWebDestination(), source.getWebDestination());
             assertEquals(validSource.getAdTechDomain(), source.getAdTechDomain());
+            assertEquals(validSource.getEnrollmentId(), source.getEnrollmentId());
             assertEquals(validSource.getRegistrant(), source.getRegistrant());
             assertEquals(validSource.getEventTime(), source.getEventTime());
             assertEquals(validSource.getExpiryTime(), source.getExpiryTime());
@@ -139,6 +140,7 @@ public class MeasurementDaoTest {
                     validTrigger.getAttributionDestination(), trigger.getAttributionDestination());
             assertEquals(validTrigger.getDestinationType(), trigger.getDestinationType());
             assertEquals(validTrigger.getAdTechDomain(), trigger.getAdTechDomain());
+            assertEquals(validTrigger.getEnrollmentId(), trigger.getEnrollmentId());
             assertEquals(validTrigger.getRegistrant(), trigger.getRegistrant());
             assertEquals(validTrigger.getTriggerTime(), trigger.getTriggerTime());
             assertEquals(validTrigger.getEventTriggers(), trigger.getEventTriggers());
@@ -650,7 +652,23 @@ public class MeasurementDaoTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testDeleteMeasurementData_invalidRangeNoStartDate() {
+    public void testDeleteMeasurementData_invalidRangeStartAfterEndDate() {
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        (dao) -> {
+                            dao.deleteMeasurementData(
+                                    APP_ONE_SOURCE,
+                                    Instant.now().plusMillis(1),
+                                    Instant.now(),
+                                    Collections.emptyList(),
+                                    Collections.emptyList(),
+                                    0,
+                                    0);
+                        });
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testDeleteMeasurementData_requiredStartAsNull() {
         DatastoreManagerFactory.getDatastoreManager(sContext)
                 .runInTransaction(
                         (dao) -> {
@@ -665,8 +683,8 @@ public class MeasurementDaoTest {
                         });
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testDeleteMeasurementData_invalidRangeNoEndDate() {
+    @Test(expected = NullPointerException.class)
+    public void testDeleteMeasurementData_requiredEndAsNull() {
         DatastoreManagerFactory.getDatastoreManager(sContext)
                 .runInTransaction(
                         (dao) -> {
@@ -674,22 +692,6 @@ public class MeasurementDaoTest {
                                     APP_ONE_SOURCE,
                                     Instant.now(),
                                     null /* end */,
-                                    Collections.emptyList(),
-                                    Collections.emptyList(),
-                                    0,
-                                    0);
-                        });
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testDeleteMeasurementData_invalidRangeStartAfterEndDate() {
-        DatastoreManagerFactory.getDatastoreManager(sContext)
-                .runInTransaction(
-                        (dao) -> {
-                            dao.deleteMeasurementData(
-                                    APP_ONE_SOURCE,
-                                    Instant.now().plusMillis(1),
-                                    Instant.now(),
                                     Collections.emptyList(),
                                     Collections.emptyList(),
                                     0,
@@ -1354,6 +1356,7 @@ public class MeasurementDaoTest {
         Attribution attribution =
                 new Attribution.Builder()
                         .setAdTechDomain(source.getAdTechDomain().toString())
+                        .setEnrollmentId(source.getEnrollmentId())
                         .setDestinationOrigin(source.getWebDestination().toString())
                         .setDestinationSite(source.getAppDestination().toString())
                         .setSourceOrigin(source.getPublisher().toString())

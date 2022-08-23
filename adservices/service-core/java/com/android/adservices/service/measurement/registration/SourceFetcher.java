@@ -214,7 +214,7 @@ public class SourceFetcher {
 
     private boolean parseSource(
             @NonNull Uri topOrigin,
-            @NonNull Uri reportingOrigin,
+            @NonNull Uri registrationUri,
             @Nullable Uri appDestination,
             @Nullable Uri webDestination,
             boolean shouldValidateDestination,
@@ -224,7 +224,7 @@ public class SourceFetcher {
             boolean isAllowDebugKey) {
         SourceRegistration.Builder result = new SourceRegistration.Builder();
         result.setTopOrigin(topOrigin);
-        result.setReportingOrigin(reportingOrigin);
+        result.setRegistrationUri(registrationUri);
         List<String> field;
         field = headers.get("Attribution-Reporting-Register-Source");
         if (field == null || field.size() != 1) {

@@ -20,7 +20,6 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_KILLSWITCH_
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 import static android.adservices.common.AdServicesStatusUtils.StatusCode;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
@@ -32,6 +31,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REGISTER_WEB_SOURCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REGISTER_WEB_TRIGGER;
 
+import android.adservices.common.AdServicesPermissions;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
 import android.adservices.measurement.DeletionParam;
@@ -44,25 +44,29 @@ import android.adservices.measurement.RegistrationRequest;
 import android.adservices.measurement.WebSourceRegistrationRequestInternal;
 import android.adservices.measurement.WebTriggerRegistrationRequestInternal;
 import android.annotation.NonNull;
+import android.annotation.RequiresPermission;
 import android.content.Context;
 import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.PermissionHelper;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.measurement.access.IAccessResolver;
+import com.android.adservices.service.measurement.access.ManifestBasedAdtechAccessResolver;
+import com.android.adservices.service.measurement.access.PermissionAccessResolver;
 import com.android.adservices.service.measurement.access.UserConsentAccessResolver;
-import com.android.adservices.service.measurement.access.WebRegistrationByPackageAccessResolver;
+import com.android.adservices.service.measurement.access.WebContextByPackageAccessResolver;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -83,6 +87,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
     private final Flags mFlags;
     private final AdServicesLogger mAdServicesLogger;
     private final ConsentManager mConsentManager;
+    private final EnrollmentDao mEnrollmentDao;
     private final Context mContext;
     private final Throttler mThrottler;
     private static final String RATE_LIMIT_REACHED = "Rate limit reached to call this API.";
@@ -91,11 +96,13 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
     public MeasurementServiceImpl(
             @NonNull Context context,
             @NonNull ConsentManager consentManager,
+            @NonNull EnrollmentDao enrollmentDao,
             @NonNull Flags flags) {
         this(
                 MeasurementImpl.getInstance(context),
                 context,
                 consentManager,
+                enrollmentDao,
                 Throttler.getInstance(FlagsFactory.getFlags().getSdkRequestPermitsPerSecond()),
                 flags,
                 AdServicesLoggerImpl.getInstance());
@@ -106,18 +113,21 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             @NonNull MeasurementImpl measurementImpl,
             @NonNull Context context,
             @NonNull ConsentManager consentManager,
+            @NonNull EnrollmentDao enrollmentDao,
             @NonNull Throttler throttler,
             @NonNull Flags flags,
             @NonNull AdServicesLogger adServicesLogger) {
         mContext = context;
         mMeasurementImpl = measurementImpl;
         mConsentManager = consentManager;
+        mEnrollmentDao = enrollmentDao;
         mThrottler = throttler;
         mFlags = flags;
         mAdServicesLogger = adServicesLogger;
     }
 
     @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION)
     public void register(
             @NonNull RegistrationRequest request,
             @NonNull CallerMetadata callerMetadata,
@@ -144,14 +154,21 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             return;
         }
 
+        final boolean attributionPermission = PermissionHelper.hasAttributionPermission(mContext);
         sBackgroundExecutor.execute(
                 () -> {
                     performWorkIfAllowed(
                             () -> isRegisterDisabled(request),
                             (mMeasurementImpl) ->
                                     mMeasurementImpl.register(request, System.currentTimeMillis()),
-                            Collections.singletonList(
-                                    new UserConsentAccessResolver(mConsentManager)),
+                            Arrays.asList(
+                                    new UserConsentAccessResolver(mConsentManager),
+                                    new PermissionAccessResolver(attributionPermission),
+                                    new ManifestBasedAdtechAccessResolver(
+                                            mEnrollmentDao,
+                                            mFlags,
+                                            request.getPackageName(),
+                                            request.getRegistrationUri())),
                             callback,
                             apiNameId,
                             request.getPackageName(),
@@ -160,6 +177,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
     }
 
     @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION)
     public void registerWebSource(
             @NonNull WebSourceRegistrationRequestInternal request,
             @NonNull CallerMetadata callerMetadata,
@@ -179,6 +197,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             return;
         }
 
+        final boolean attributionPermission = PermissionHelper.hasAttributionPermission(mContext);
         sBackgroundExecutor.execute(
                 () -> {
                     performWorkIfAllowed(
@@ -188,8 +207,17 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             request, System.currentTimeMillis()),
                             Arrays.asList(
                                     new UserConsentAccessResolver(mConsentManager),
-                                    new WebRegistrationByPackageAccessResolver(
-                                            mFlags.getWebContextRegistrationClientAppAllowList(),
+                                    new PermissionAccessResolver(attributionPermission),
+                                    new ManifestBasedAdtechAccessResolver(
+                                            mEnrollmentDao,
+                                            mFlags,
+                                            request.getPackageName(),
+                                            request.getSourceRegistrationRequest()
+                                                    .getSourceParams()
+                                                    .get(0)
+                                                    .getRegistrationUri()),
+                                    new WebContextByPackageAccessResolver(
+                                            mFlags.getWebContextClientAppAllowList(),
                                             request.getPackageName())),
                             callback,
                             AD_SERVICES_API_CALLED__API_NAME__REGISTER_WEB_SOURCE,
@@ -199,6 +227,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
     }
 
     @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION)
     public void registerWebTrigger(
             @NonNull WebTriggerRegistrationRequestInternal request,
             @NonNull CallerMetadata callerMetadata,
@@ -218,6 +247,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             return;
         }
 
+        final boolean attributionPermission = PermissionHelper.hasAttributionPermission(mContext);
         sBackgroundExecutor.execute(
                 () -> {
                     performWorkIfAllowed(
@@ -227,9 +257,15 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             request, System.currentTimeMillis()),
                             Arrays.asList(
                                     new UserConsentAccessResolver(mConsentManager),
-                                    new WebRegistrationByPackageAccessResolver(
-                                            mFlags.getWebContextRegistrationClientAppAllowList(),
-                                            request.getPackageName())),
+                                    new PermissionAccessResolver(attributionPermission),
+                                    new ManifestBasedAdtechAccessResolver(
+                                            mEnrollmentDao,
+                                            mFlags,
+                                            request.getPackageName(),
+                                            request.getTriggerRegistrationRequest()
+                                                    .getTriggerParams()
+                                                    .get(0)
+                                                    .getRegistrationUri())),
                             callback,
                             AD_SERVICES_API_CALLED__API_NAME__REGISTER_WEB_TRIGGER,
                             request.getPackageName(),
@@ -269,6 +305,22 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             .setErrorMessage(KILL_SWITCH_ENABLED)
                                             .build());
                             resultCode = STATUS_KILLSWITCH_ENABLED;
+                            return;
+                        }
+
+                        WebContextByPackageAccessResolver webContextAccessResolver =
+                                new WebContextByPackageAccessResolver(
+                                        mFlags.getWebContextClientAppAllowList(),
+                                        request.getPackageName());
+                        if (!webContextAccessResolver.isAllowed(mContext)) {
+                            resultCode = webContextAccessResolver.getErrorStatusCode();
+                            callback.onFailure(
+                                    new MeasurementErrorResponse.Builder()
+                                            .setStatusCode(resultCode)
+                                            .setErrorMessage(
+                                                    webContextAccessResolver.getErrorMessage())
+                                            .build());
+
                             return;
                         }
 
@@ -360,10 +412,9 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
 
             if (accessDenierOpt.isPresent()) {
                 IAccessResolver accessDenier = accessDenierOpt.get();
-                statusCode = accessDenier.getErrorStatusCode();
                 callback.onFailure(
                         new MeasurementErrorResponse.Builder()
-                                .setStatusCode(STATUS_USER_CONSENT_REVOKED)
+                                .setStatusCode(accessDenier.getErrorStatusCode())
                                 .setErrorMessage(accessDenier.getErrorMessage())
                                 .build());
                 return;

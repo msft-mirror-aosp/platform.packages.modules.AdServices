@@ -19,7 +19,6 @@ android_test {
     name: "AdServicesApkUITests",
     srcs: [
         "src/**/*.java",
-        ":adservicesapk-filegroup",
     ],
     certificate: "platform",
     privileged: true,
@@ -30,7 +29,6 @@ android_test {
         "adservices-service-core",
         "adservices-assets",
         "androidx.fragment_fragment",
-        "androidx.preference_preference",
         "androidx.test.espresso.contrib",
         "androidx.test.ext.junit",
         "androidx.test.rules",
@@ -42,6 +40,7 @@ android_test {
         "SettingsLibSettingsTheme",
         "SettingsLibCollapsingToolbarBaseActivity",
         "SettingsLibMainSwitchPreference",
+        "AdServicesApkLib",
     ],
     libs: [
         "android.test.base",

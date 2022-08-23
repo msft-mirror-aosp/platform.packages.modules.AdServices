@@ -111,7 +111,7 @@ public class AppSetIdWorker {
 
         try {
             // Call appSetId provider service method to retrieve the appsetid and lat.
-            service.getAppSetIdProvider(
+            service.getAppSetId(
                     appUid,
                     packageName,
                     new IGetAppSetIdProviderCallback.Stub() {

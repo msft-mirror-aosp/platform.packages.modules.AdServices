@@ -32,6 +32,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.compatibility.common.util.ShellUtils;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.concurrent.Executor;
@@ -49,10 +50,13 @@ public class CustomAudienceManagerTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private static final CustomAudience CUSTOM_AUDIENCE =
-            CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER).build();
+            CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build();
+
+    private static final int DELAY_TO_AVOID_THROTTLE_MS = 1001;
 
     private void measureJoinCustomAudience(String label) throws Exception {
         Log.i(TAG, "Calling joinCustomAudience()");
+        Thread.sleep(DELAY_TO_AVOID_THROTTLE_MS);
         final long start = System.currentTimeMillis();
 
         InstrumentationRegistry.getInstrumentation()
@@ -68,7 +72,7 @@ public class CustomAudienceManagerTest {
                         .build();
 
         client.joinCustomAudience(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .build())
                 .get();
 
@@ -88,12 +92,20 @@ public class CustomAudienceManagerTest {
 
         client.leaveCustomAudience(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         CustomAudienceFixture.VALID_NAME)
                 .get();
 
         final long duration = System.currentTimeMillis() - start;
         Log.i(TAG, "joinCustomAudience() took " + duration + " ms: " + label);
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(WRITE_DEVICE_CONFIG_PERMISSION);
+        PhFlagsFixture.overrideSdkRequestPermitsPerSecond(Integer.MAX_VALUE);
     }
 
     @Test

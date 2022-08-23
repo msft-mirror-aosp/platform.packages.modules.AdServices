@@ -28,7 +28,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class WebRegistrationByPackageAccessResolverTest {
+public class WebContextByPackageAccessResolverTest {
     private static final String ERROR_MESSAGE_FORMAT = "Package %s is not allowed to call the API.";
     private static final String ALLOW_LIST_ALL = "*";
     private static final String ALLOW_LIST_NONE = "";
@@ -43,15 +43,15 @@ public class WebRegistrationByPackageAccessResolverTest {
     public void isAllowed_allowListedPackages_success() {
         // Execution
         assertTrue(
-                new WebRegistrationByPackageAccessResolver(
+                new WebContextByPackageAccessResolver(
                                 ALLOW_LIST_TWO_PACKAGES, PACKAGE_1_ALLOW_LISTED)
                         .isAllowed(mContext));
         assertTrue(
-                new WebRegistrationByPackageAccessResolver(
+                new WebContextByPackageAccessResolver(
                                 ALLOW_LIST_TWO_PACKAGES, PACKAGE_2_ALLOW_LISTED)
                         .isAllowed(mContext));
         assertFalse(
-                new WebRegistrationByPackageAccessResolver(ALLOW_LIST_TWO_PACKAGES, PACKAGE_OTHER)
+                new WebContextByPackageAccessResolver(ALLOW_LIST_TWO_PACKAGES, PACKAGE_OTHER)
                         .isAllowed(mContext));
     }
 
@@ -59,13 +59,13 @@ public class WebRegistrationByPackageAccessResolverTest {
     public void isAllowed_allAllowListedPackages_success() {
         // Execution
         assertTrue(
-                new WebRegistrationByPackageAccessResolver(ALLOW_LIST_ALL, PACKAGE_1_ALLOW_LISTED)
+                new WebContextByPackageAccessResolver(ALLOW_LIST_ALL, PACKAGE_1_ALLOW_LISTED)
                         .isAllowed(mContext));
         assertTrue(
-                new WebRegistrationByPackageAccessResolver(ALLOW_LIST_ALL, PACKAGE_2_ALLOW_LISTED)
+                new WebContextByPackageAccessResolver(ALLOW_LIST_ALL, PACKAGE_2_ALLOW_LISTED)
                         .isAllowed(mContext));
         assertTrue(
-                new WebRegistrationByPackageAccessResolver(ALLOW_LIST_ALL, PACKAGE_OTHER)
+                new WebContextByPackageAccessResolver(ALLOW_LIST_ALL, PACKAGE_OTHER)
                         .isAllowed(mContext));
     }
 
@@ -73,13 +73,13 @@ public class WebRegistrationByPackageAccessResolverTest {
     public void isAllowed_noneAllowListedPackages_success() {
         // Execution
         assertFalse(
-                new WebRegistrationByPackageAccessResolver(ALLOW_LIST_NONE, PACKAGE_1_ALLOW_LISTED)
+                new WebContextByPackageAccessResolver(ALLOW_LIST_NONE, PACKAGE_1_ALLOW_LISTED)
                         .isAllowed(mContext));
         assertFalse(
-                new WebRegistrationByPackageAccessResolver(ALLOW_LIST_NONE, PACKAGE_2_ALLOW_LISTED)
+                new WebContextByPackageAccessResolver(ALLOW_LIST_NONE, PACKAGE_2_ALLOW_LISTED)
                         .isAllowed(mContext));
         assertFalse(
-                new WebRegistrationByPackageAccessResolver(ALLOW_LIST_NONE, PACKAGE_OTHER)
+                new WebContextByPackageAccessResolver(ALLOW_LIST_NONE, PACKAGE_OTHER)
                         .isAllowed(mContext));
     }
 
@@ -88,7 +88,7 @@ public class WebRegistrationByPackageAccessResolverTest {
         // Execution
         assertEquals(
                 String.format(ERROR_MESSAGE_FORMAT, PACKAGE_1_ALLOW_LISTED),
-                new WebRegistrationByPackageAccessResolver(
+                new WebContextByPackageAccessResolver(
                                 ALLOW_LIST_TWO_PACKAGES, PACKAGE_1_ALLOW_LISTED)
                         .getErrorMessage());
     }

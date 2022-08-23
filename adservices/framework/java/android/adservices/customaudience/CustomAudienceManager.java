@@ -22,6 +22,7 @@ import android.adservices.common.FledgeErrorResponse;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
 import android.content.Context;
+import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 
@@ -97,6 +98,9 @@ public class CustomAudienceManager {
      *       {@link CustomAudience} buyer.
      * </ol>
      *
+     * <p>This call fails with {@link LimitExceededException} if the calling package exceeds the
+     * allowed rate limits and is throttled.
+     *
      * <p>This call fails with an {@link IllegalStateException} if an internal service error is
      * encountered.
      */
@@ -148,6 +152,9 @@ public class CustomAudienceManager {
      *   <li>the buyer is not authorized to use the API.
      * </ol>
      *
+     * <p>This call fails with {@link LimitExceededException} if the calling package exceeds the
+     * allowed rate limits and is throttled.
+     *
      * <p>This call does not inform the caller whether the custom audience specified existed in
      * on-device storage. In other words, it will fail silently when a buyer attempts to leave a
      * custom audience that was not joined.
@@ -179,9 +186,11 @@ public class CustomAudienceManager {
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            // leaveCustomAudience() does not throw errors or exceptions in the
-                            // course of expected operation
-                            executor.execute(() -> receiver.onResult(new Object()));
+                            executor.execute(
+                                    () ->
+                                            receiver.onError(
+                                                    AdServicesStatusUtils.asException(
+                                                            failureParcel)));
                         }
                     });
         } catch (RemoteException e) {
