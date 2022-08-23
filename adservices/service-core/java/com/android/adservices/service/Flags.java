@@ -116,7 +116,7 @@ public interface Flags extends Dumpable {
     }
 
     /** Number of top labels allowed for every app. */
-    int CLASSIFIER_NUMBER_OF_TOP_LABELS = 10;
+    int CLASSIFIER_NUMBER_OF_TOP_LABELS = 3;
 
     /** Returns the number of top labels allowed for every app after the classification process. */
     default int getClassifierNumberOfTopLabels() {
@@ -124,7 +124,7 @@ public interface Flags extends Dumpable {
     }
 
     /** Threshold value for classification values. */
-    float CLASSIFIER_THRESHOLD = 0.0f;
+    float CLASSIFIER_THRESHOLD = 0.1f;
 
     /** Returns the threshold value for classification values. */
     default float getClassifierThreshold() {
