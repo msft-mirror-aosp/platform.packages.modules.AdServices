@@ -33,8 +33,9 @@ import java.util.Objects;
  * <p>To be used for passing updates to Sandbox for syncing data via {@link
  * SharedPreferencesSyncManager#syncData()}.
  *
- * <p>Each update instance contains a list of {@link KeyWithType}, which are the keys whose updates
- * are being sent over with this class. User can get the list using {@link #getKeysInUpdate}.
+ * <p>Each update instance contains a list of {@link SharedPreferencesKey}, which are the keys whose
+ * updates are being sent over with this class. User can get the list using {@link
+ * #getKeysInUpdate}.
  *
  * <p>The data associated with the keys are sent as a {@link Bundle} which can be retrieved using
  * {@link #getData()}. If a key is present in list returned in {@link #getKeysInUpdate} but missing
@@ -44,7 +45,7 @@ import java.util.Objects;
  */
 public final class SharedPreferencesUpdate implements Parcelable {
 
-    private final ArrayList<KeyWithType> mKeysToSync;
+    private final ArrayList<SharedPreferencesKey> mKeysToSync;
     private final Bundle mData;
 
     public static final @NonNull Parcelable.Creator<SharedPreferencesUpdate> CREATOR =
@@ -58,7 +59,8 @@ public final class SharedPreferencesUpdate implements Parcelable {
                 }
             };
 
-    public SharedPreferencesUpdate(@NonNull List<KeyWithType> keysToSync, @NonNull Bundle data) {
+    public SharedPreferencesUpdate(
+            @NonNull List<SharedPreferencesKey> keysToSync, @NonNull Bundle data) {
         Objects.requireNonNull(keysToSync, "keysToSync should not be null");
         Objects.requireNonNull(data, "data should not be null");
 
@@ -67,7 +69,9 @@ public final class SharedPreferencesUpdate implements Parcelable {
     }
 
     private SharedPreferencesUpdate(Parcel in) {
-        mKeysToSync = in.readArrayList(KeyWithType.class.getClassLoader(), KeyWithType.class);
+        mKeysToSync =
+                in.readArrayList(
+                        SharedPreferencesKey.class.getClassLoader(), SharedPreferencesKey.class);
         Objects.requireNonNull(mKeysToSync, "mKeysToSync should not be null");
 
         mData = Bundle.CREATOR.createFromParcel(in);
@@ -86,7 +90,7 @@ public final class SharedPreferencesUpdate implements Parcelable {
     }
 
     @NonNull
-    public List<KeyWithType> getKeysInUpdate() {
+    public List<SharedPreferencesKey> getKeysInUpdate() {
         return mKeysToSync;
     }
 
