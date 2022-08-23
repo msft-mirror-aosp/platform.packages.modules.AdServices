@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.topics.classifier;
 
+import static com.android.adservices.service.topics.classifier.Preprocessor.limitDescriptionSize;
+
 import android.annotation.NonNull;
 
 import com.android.adservices.LogUtil;
@@ -180,6 +182,12 @@ public class OnDeviceClassifier implements Classifier {
         // Preprocess the app description for the model.
         appDescription = mPreprocessor.preprocessAppDescription(appDescription);
         appDescription = mPreprocessor.removeStopWords(appDescription);
+        // Limit description size.
+        int maxNumberOfWords = FlagsFactory.getFlags().getClassifierDescriptionMaxWords();
+        int maxNumberOfCharacters = FlagsFactory.getFlags().getClassifierDescriptionMaxLength();
+        appDescription =
+                limitDescriptionSize(appDescription, maxNumberOfWords, maxNumberOfCharacters);
+
         return appDescription;
     }
 
