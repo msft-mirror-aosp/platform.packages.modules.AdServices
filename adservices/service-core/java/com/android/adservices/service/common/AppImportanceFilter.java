@@ -148,6 +148,10 @@ public class AppImportanceFilter {
                         + " comparing with threshold of "
                         + mImportanceThresholdSupplier.get());
         if (minImportance > mImportanceThresholdSupplier.get()) {
+            LogUtil.v(
+                    "Application importance failed for app %s with importance %d greater"
+                            + " than threshold %d",
+                    appPackageName, minImportance, mImportanceThresholdSupplier.get());
             logForegroundViolation(appPackageName, apiNameIdForLogging, sdkName);
 
             throw new WrongCallingApplicationStateException();
@@ -183,6 +187,11 @@ public class AppImportanceFilter {
                                 + " comparing with threshold of "
                                 + mImportanceThresholdSupplier.get());
                 if (process.importance > mImportanceThresholdSupplier.get()) {
+                    LogUtil.v(
+                            "Application importance failed for app with UID %d "
+                                    + "with importance %d greater than threshold %d",
+                            appUid, process.importance, mImportanceThresholdSupplier.get());
+
                     logForegroundViolation(
                             process.pkgList.length == 1
                                     ? process.pkgList[0]
@@ -194,6 +203,7 @@ public class AppImportanceFilter {
                 return;
             }
         }
+        LogUtil.w("Unable to find process for app with UID %d, failing foreground check", appUid);
         logForegroundViolation(UNKNOWN_APP_PACKAGE_NAME, apiNameLoggingId, sdkName);
         throw new WrongCallingApplicationStateException();
     }
