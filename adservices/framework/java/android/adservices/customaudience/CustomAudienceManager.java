@@ -46,8 +46,8 @@ public class CustomAudienceManager {
      */
     public static final String CUSTOM_AUDIENCE_SERVICE = "custom_audience_service";
 
-    @NonNull private final Context mContext;
-    @NonNull private final ServiceBinder<ICustomAudienceService> mServiceBinder;
+    @NonNull private Context mContext;
+    @NonNull private ServiceBinder<ICustomAudienceService> mServiceBinder;
 
     /**
      * Create a service binder CustomAudienceManager
@@ -57,12 +57,31 @@ public class CustomAudienceManager {
     public CustomAudienceManager(@NonNull Context context) {
         Objects.requireNonNull(context);
 
+        // In case the CustomAudienceManager is initiated from inside a sdk_sandbox process the
+        // fields will be immediately rewritten by the initialize method below.
+        initialize(context);
+    }
+
+    /**
+     * Initializes {@link CustomAudienceManager} with the given {@code context}.
+     *
+     * <p>This method is called by the {@link SandboxedSdkContext} to propagate the correct context.
+     * For more information check the javadoc on the {@link
+     * android.app.sdksandbox.SdkSandboxSystemServiceRegistry}.
+     *
+     * @hide
+     * @see android.app.sdksandbox.SdkSandboxSystemServiceRegistry
+     */
+    public CustomAudienceManager initialize(@NonNull Context context) {
+        Objects.requireNonNull(context);
+
         mContext = context;
         mServiceBinder =
                 ServiceBinder.getServiceBinder(
                         context,
                         AdServicesCommon.ACTION_CUSTOM_AUDIENCE_SERVICE,
                         ICustomAudienceService.Stub::asInterface);
+        return this;
     }
 
     /** Create a service with test-enabling APIs */

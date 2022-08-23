@@ -48,15 +48,8 @@ public class AdSelectionManager {
      */
     public static final String AD_SELECTION_SERVICE = "ad_selection_service";
 
-    /**
-     * This field will be used once full implementation is ready.
-     *
-     * <p>TODO(b/212300065) remove the warning suppression once the service is implemented.
-     */
-    @SuppressWarnings("unused")
-    private final Context mContext;
-
-    private final ServiceBinder<AdSelectionService> mServiceBinder;
+    @NonNull private Context mContext;
+    @NonNull private ServiceBinder<AdSelectionService> mServiceBinder;
 
     /**
      * Create AdSelectionManager
@@ -66,12 +59,31 @@ public class AdSelectionManager {
     public AdSelectionManager(@NonNull Context context) {
         Objects.requireNonNull(context);
 
+        // In case the AdSelectionManager is initiated from inside a sdk_sandbox process the
+        // fields will be immediately rewritten by the initialize method below.
+        initialize(context);
+    }
+
+    /**
+     * Initializes {@link AdSelectionManager} with the given {@code context}.
+     *
+     * <p>This method is called by the {@link SandboxedSdkContext} to propagate the correct context.
+     * For more information check the javadoc on the {@link
+     * android.app.sdksandbox.SdkSandboxSystemServiceRegistry}.
+     *
+     * @hide
+     * @see android.app.sdksandbox.SdkSandboxSystemServiceRegistry
+     */
+    public AdSelectionManager initialize(@NonNull Context context) {
+        Objects.requireNonNull(context);
+
         mContext = context;
         mServiceBinder =
                 ServiceBinder.getServiceBinder(
                         context,
                         AdServicesCommon.ACTION_AD_SELECTION_SERVICE,
                         AdSelectionService.Stub::asInterface);
+        return this;
     }
 
     @NonNull
