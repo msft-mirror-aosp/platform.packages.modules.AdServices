@@ -16,6 +16,8 @@
 
 package android.app.sdksandbox;
 
+import static android.app.sdksandbox.SdkSandboxSystemServiceRegistry.ServiceMutator;
+
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
@@ -23,27 +25,29 @@ import android.content.ContextWrapper;
 import android.content.pm.ApplicationInfo;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
-import android.os.Bundle;
+
+import com.android.internal.annotations.VisibleForTesting;
 
 import java.io.File;
-import java.util.concurrent.Executor;
 
 /**
  * Refers to the context of the SDK loaded in the SDK sandbox process.
  *
- * <p>It is a wrapper of the client application (which loading SDK to the sandbox) context,
- * to represent the context of the SDK loaded by that application.
- * <p>This context contains methods that an SDK loaded into sdk sandbox can use to interact
- * with the sdk sandbox process, or other SDKs loaded into the same sdk sandbox process.
+ * <p>It is a wrapper of the client application (which loading SDK to the sandbox) context, to
+ * represent the context of the SDK loaded by that application.
+ *
+ * <p>This context contains methods that an SDK loaded into sdk sandbox can use to interact with the
+ * sdk sandbox process, or other SDKs loaded into the same sdk sandbox process.
  *
  * <p>An instance of the {@link SandboxedSdkContext} will be created by the SDK sandbox, and then
- * passed to the {@link SandboxedSdkProvider#initSdk(SandboxedSdkContext,
- * Bundle, Executor, SandboxedSdkProvider.InitSdkCallback)} after SDK is loaded.
+ * attached to the {@link SandboxedSdkProvider} after the SDK is loaded.
  *
- * <p> Each sdk will get their own private storage directory and the file storage API on this
- * object will utilize those area.
+ * <p>Each sdk will get their own private storage directory and the file storage API on this object
+ * will utilize those area.
  *
  * <p>Note: All APIs defined in this class are not stable and subject to change.
+ *
+ * @hide
  */
 public final class SandboxedSdkContext extends ContextWrapper {
 
@@ -54,8 +58,8 @@ public final class SandboxedSdkContext extends ContextWrapper {
     private final ApplicationInfo mSdkProviderInfo;
     @Nullable private final File mCeDataDir;
     @Nullable private final File mDeDataDir;
+    private final SdkSandboxSystemServiceRegistry mSdkSandboxSystemServiceRegistry;
 
-    /** @hide */
     public SandboxedSdkContext(
             @NonNull Context baseContext,
             @NonNull String clientPackageName,
@@ -63,6 +67,25 @@ public final class SandboxedSdkContext extends ContextWrapper {
             @NonNull String sdkName,
             @Nullable String sdkCeDataDir,
             @Nullable String sdkDeDataDir) {
+        this(
+                baseContext,
+                clientPackageName,
+                info,
+                sdkName,
+                sdkCeDataDir,
+                sdkDeDataDir,
+                SdkSandboxSystemServiceRegistry.getInstance());
+    }
+
+    @VisibleForTesting
+    public SandboxedSdkContext(
+            @NonNull Context baseContext,
+            @NonNull String clientPackageName,
+            @NonNull ApplicationInfo info,
+            @NonNull String sdkName,
+            @Nullable String sdkCeDataDir,
+            @Nullable String sdkDeDataDir,
+            SdkSandboxSystemServiceRegistry sdkSandboxSystemServiceRegistry) {
         super(baseContext);
         mClientPackageName = clientPackageName;
         mSdkName = sdkName;
@@ -83,6 +106,8 @@ public final class SandboxedSdkContext extends ContextWrapper {
 
         mCeDataDir = (sdkCeDataDir != null) ? new File(sdkCeDataDir) : null;
         mDeDataDir = (sdkDeDataDir != null) ? new File(sdkDeDataDir) : null;
+
+        mSdkSandboxSystemServiceRegistry = sdkSandboxSystemServiceRegistry;
     }
 
     /**
@@ -90,7 +115,6 @@ public final class SandboxedSdkContext extends ContextWrapper {
      * backed by sdk specific credential-protected storage.
      *
      * @see Context#isCredentialProtectedStorage()
-     * @hide
      */
     @Override
     @NonNull
@@ -126,7 +150,6 @@ public final class SandboxedSdkContext extends ContextWrapper {
 
     /**
      * Returns the SDK name defined in the SDK's manifest.
-     * @hide
      */
     @NonNull
     public String getSdkName() {
@@ -134,9 +157,18 @@ public final class SandboxedSdkContext extends ContextWrapper {
     }
 
     /**
-     * Returns the package name of the client application corresponding to the sandbox.
+     * Returns the SDK package name defined in the SDK's manifest.
      *
      * @hide
+     */
+    @NonNull
+    public String getSdkPackageName() {
+        return mSdkProviderInfo.packageName;
+    }
+
+    /**
+     * Returns the package name of the client application corresponding to the sandbox.
+     *
      */
     @NonNull
     public String getClientPackageName() {
@@ -171,5 +203,19 @@ public final class SandboxedSdkContext extends ContextWrapper {
             throw new RuntimeException("No data directory found for sdk: " + getSdkName());
         }
         return res;
+    }
+
+    @Override
+    @Nullable
+    public Object getSystemService(String name) {
+        if (name == null) {
+            return null;
+        }
+        Object service = getBaseContext().getSystemService(name);
+        ServiceMutator serviceMutator = mSdkSandboxSystemServiceRegistry.getServiceMutator(name);
+        if (serviceMutator != null) {
+            service = serviceMutator.setContext(service, this);
+        }
+        return service;
     }
 }

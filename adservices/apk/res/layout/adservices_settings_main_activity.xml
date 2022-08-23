@@ -13,10 +13,15 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-
-<androidx.fragment.app.FragmentContainerView
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/fragment_container_view"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:name="com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment" />
+    android:orientation="vertical"
+    android:theme="@style/AdServices.MainTheme" >
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/fragment_container_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:name="com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment" />
+</LinearLayout>

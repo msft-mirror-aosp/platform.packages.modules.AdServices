@@ -93,7 +93,7 @@ public class AdWithBidArgumentTest {
                                         AdWithBidArgument.AD_FIELD_NAME,
                                         stringArg(
                                                 AdDataArgument.RENDER_URL_FIELD_NAME,
-                                                AD_WITH_BID.getAdData().getRenderUrl().toString()),
+                                                AD_WITH_BID.getAdData().getRenderUri().toString()),
                                         jsonArg(
                                                 AdDataArgument.METADATA_FIELD_NAME,
                                                 AD_WITH_BID.getAdData().getMetadata())),

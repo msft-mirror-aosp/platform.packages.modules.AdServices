@@ -1,8 +1,43 @@
 {
    "mainline-presubmit": [
+    // Install com.google.android.adservices.apex and run the corresponding test.
     {
-      // Install com.google.android.adservices.apex and run SdkSandboxManagerServiceUnitTests.
+      "name": "CtsSdkSandboxInprocessTests[com.google.android.adservices.apex]"
+    },
+    {
       "name": "SdkSandboxManagerServiceUnitTests[com.google.android.adservices.apex]"
+    },
+    {
+      "name": "SdkSandboxFrameworkUnitTests[com.google.android.adservices.apex]"
+    },
+    {
+      "name": "SdkSandboxUnitTests[com.google.android.adservices.apex]"
+    },
+    {
+      "name": "SdkSandboxManagerTests[com.google.android.adservices.apex]"
+    },
+    {
+      "name": "SdkSandboxLifecycleHostTest[com.google.android.adservices.apex]"
+    },
+    {
+      "name": "SdkSandboxShellHostTest[com.google.android.adservices.apex]"
+    },
+    {
+      "name": "SdkSandboxRestrictionsHostTest[com.google.android.adservices.apex]"
+    },
+    {
+      "name": "SdkSandboxStorageHostTest[com.google.android.adservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "android.platform.test.annotations.LargeTest"
+        }
+      ]
+    }
+  ],
+  "mainline-postsubmit": [
+    // Install com.google.android.adservices.apex and run the corresponding test.
+    {
+      "name": "SdkSandboxStorageHostTest[com.google.android.adservices.apex]"
     }
   ],
   "presubmit": [
@@ -28,6 +63,9 @@
       "name": "SdkSandboxShellHostTest"
     },
     {
+      "name": "SdkSandboxRestrictionsHostTest"
+    },
+    {
       "name": "SdkSandboxStorageHostTest",
       "options": [
         {
@@ -39,9 +77,6 @@
   "postsubmit": [
     {
       "name": "SdkSandboxStorageHostTest"
-    },
-    {
-      "name": "SdkSandboxRestrictionsHostTest"
     }
   ]
 }

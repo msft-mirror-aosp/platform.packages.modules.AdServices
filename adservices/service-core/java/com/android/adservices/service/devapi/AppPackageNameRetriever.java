@@ -22,6 +22,7 @@ import android.content.pm.PackageManager;
 import androidx.annotation.NonNull;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.common.SdkRuntimeUtil;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -46,7 +47,9 @@ public class AppPackageNameRetriever {
 
     /**
      * @param appUid The UUID of the app, for example the ID of the app calling a given API
-     *     retrieved using {@code Binder.getCallingUid()}.
+     *     retrieved using {@code Binder.getCallingUid()} which has to be then processed using
+     *     {@link SdkRuntimeUtil#getCallingAppUid(int)} to take care of the fact that the caller
+     *     could be the SDK Sandbox.
      * @return the AppID (package name) for the application associated to the given UID In the rare
      *     case that there are multiple apps associated to the same UID the first one returned by
      *     the OS is returned.

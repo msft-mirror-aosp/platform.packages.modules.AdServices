@@ -16,6 +16,9 @@
 
 package android.adservices.http;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+
 import android.content.Context;
 import android.net.Uri;
 
@@ -24,6 +27,7 @@ import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.RecordedRequest;
 
+import org.junit.Assert;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -33,8 +37,10 @@ import java.io.InputStream;
 import java.net.ServerSocket;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 
 import javax.net.ssl.KeyManagerFactory;
@@ -43,14 +49,16 @@ import javax.net.ssl.SSLSocketFactory;
 
 /** Instances of this class are not thread safe. */
 public class MockWebServerRule implements TestRule {
-    // TODO: add support for HTTPS
-
     private static final int UNINITIALIZED = -1;
-
-    private int mPort = UNINITIALIZED;
-    private MockWebServer mMockWebServer;
     private final InputStream mCertificateInputStream;
     private final char[] mKeyStorePassword;
+    private int mPort = UNINITIALIZED;
+    private MockWebServer mMockWebServer;
+
+    private MockWebServerRule(InputStream inputStream, String keyStorePassword) {
+        mCertificateInputStream = inputStream;
+        mKeyStorePassword = keyStorePassword == null ? null : keyStorePassword.toCharArray();
+    }
 
     public static MockWebServerRule forHttp() {
         return new MockWebServerRule(null, null);
@@ -81,11 +89,6 @@ public class MockWebServerRule implements TestRule {
     public static MockWebServerRule forHttps(
             InputStream certificateInputStream, String keyStorePassword) {
         return new MockWebServerRule(certificateInputStream, keyStorePassword);
-    }
-
-    private MockWebServerRule(InputStream inputStream, String keyStorePassword) {
-        mCertificateInputStream = inputStream;
-        mKeyStorePassword = keyStorePassword == null ? null : keyStorePassword.toCharArray();
     }
 
     private boolean useHttps() {
@@ -181,6 +184,66 @@ public class MockWebServerRule implements TestRule {
         return sslContext.getSocketFactory();
     }
 
+    /**
+     * A utility that validates that the mock web server got the expected traffic.
+     *
+     * @param mockWebServer server instance used for making requests
+     * @param expectedRequestCount the number of requests expected to be received by the server
+     * @param expectedRequests the list of URLs that should have been requested, in case of repeat
+     *     requests the size of expectedRequests list could be less than the expectedRequestCount
+     * @param requestMatcher A custom matcher that dictates if the request meets the criteria of
+     *     being hit or not. This allows tests to do partial match of URLs in case of params or
+     *     other sub path of URL.
+     */
+    public void verifyMockServerRequests(
+            final MockWebServer mockWebServer,
+            final int expectedRequestCount,
+            final List<String> expectedRequests,
+            final RequestMatcher<String> requestMatcher) {
+
+        assertEquals(
+                "Number of expected requests does not match actual request count",
+                expectedRequestCount,
+                mockWebServer.getRequestCount());
+
+        // For parallel executions requests should be checked agnostic of order
+        final Set<String> actualRequests = new HashSet<>();
+        for (int i = 0; i < expectedRequestCount; i++) {
+            try {
+                actualRequests.add(mockWebServer.takeRequest().getPath());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        assertFalse(
+                String.format(
+                        "Expected requests cannot be empty, actual requests <%s>", actualRequests),
+                expectedRequestCount != 0 && expectedRequests.isEmpty());
+
+        for (String request : expectedRequests) {
+            Assert.assertTrue(
+                    String.format(
+                            "Actual requests <%s> do not contain request <%s>",
+                            actualRequests, request),
+                    wasPathRequested(actualRequests, request, requestMatcher));
+        }
+    }
+
+    private boolean wasPathRequested(
+            final Set<String> actualRequests,
+            final String request,
+            final RequestMatcher<String> requestMatcher) {
+        for (String actualRequest : actualRequests) {
+            // Passing a custom comparator allows tests to do partial match of URLs in case of
+            // params or other sub path of URL
+            if (requestMatcher.wasRequestMade(actualRequest, request)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public Statement apply(Statement base, Description description) {
         return new Statement() {
@@ -196,5 +259,9 @@ public class MockWebServerRule implements TestRule {
                 }
             }
         };
+    }
+
+    public interface RequestMatcher<T> {
+        boolean wasRequestMade(T actualRequest, T expectedRequest);
     }
 }

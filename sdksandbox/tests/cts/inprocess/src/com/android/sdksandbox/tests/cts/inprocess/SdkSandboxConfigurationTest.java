@@ -42,6 +42,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.AdServicesCommon;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -119,8 +120,8 @@ public class SdkSandboxConfigurationTest {
     }
 
     /**
-     * Tests that {@link Context#getDataDir()} returns correct value for the DE storage of the
-     * sak sandbox.
+     * Tests that {@link Context#getDataDir()} returns correct value for the DE storage of the sak
+     * sandbox.
      */
     @Test
     public void testGetDataDir_DE() throws Exception {
@@ -133,9 +134,7 @@ public class SdkSandboxConfigurationTest {
                 "/data/misc_de/0/sdksandbox/" + TEST_PKG + "/shared");
     }
 
-    /**
-     * Tests that sdk sandbox process can write to it's CE storage.
-     */
+    /** Tests that sdk sandbox process can write to it's CE storage. */
     @Test
     public void testCanWriteToDataDir_CE() throws Exception {
         final Context ctx = InstrumentationRegistry.getInstrumentation().getTargetContext();
@@ -150,9 +149,7 @@ public class SdkSandboxConfigurationTest {
         }
     }
 
-    /**
-     * Tests that sdk sandbox process can write to it's DE storage.
-     */
+    /** Tests that sdk sandbox process can write to it's DE storage. */
     @Test
     public void testCanWriteToDataDir_DE() throws Exception {
         final Context ctx =
@@ -172,6 +169,7 @@ public class SdkSandboxConfigurationTest {
 
     /** Tests that sdk sandbox process can resolve the package that provides AdServices APIs. */
     @Test
+    @Ignore("b/243146745")
     public void testCanResolveAndBindToAdServicesApiPackage() throws Exception {
         // Only run this test if sdk sandbox is enabled.
         assumeThat(

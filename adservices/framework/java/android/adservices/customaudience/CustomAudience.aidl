@@ -22,5 +22,7 @@ package android.adservices.customaudience;
  * A custom audience is an abstract grouping of users with similar interests, as determined by an
  * advertiser.  This class is a collection of on-device data that is necessary to serve
  * advertisements targeting a single custom audience.
+ *
+ * {@hide}
  */
 parcelable CustomAudience;

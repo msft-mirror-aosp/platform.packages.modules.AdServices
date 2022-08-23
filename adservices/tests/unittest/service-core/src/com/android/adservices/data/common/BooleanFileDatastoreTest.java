@@ -17,6 +17,7 @@
 package com.android.adservices.data.common;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
@@ -74,6 +75,18 @@ public class BooleanFileDatastoreTest {
         assertThrows(
                 NullPointerException.class,
                 () -> {
+                    mDatastore.putIfNew(null, true);
+                });
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    mDatastore.putIfNew("", true);
+                });
+
+        assertThrows(
+                NullPointerException.class,
+                () -> {
                     mDatastore.get(null);
                 });
 
@@ -97,7 +110,7 @@ public class BooleanFileDatastoreTest {
     }
 
     @Test
-    public void testPutGetUpdateRemoveBooleanFileDatastore() throws IOException {
+    public void testPutGetUpdateRemove() throws IOException {
         // Should not exist yet
         assertNull(mDatastore.get(TEST_KEY));
 
@@ -131,7 +144,31 @@ public class BooleanFileDatastoreTest {
     }
 
     @Test
-    public void testKeySetClearBooleanFileDatastore() throws IOException {
+    public void testPutIfNew() throws IOException {
+        // Should not exist yet
+        assertNull(mDatastore.get(TEST_KEY));
+
+        // Create because it's new
+        assertFalse(mDatastore.putIfNew(TEST_KEY, false));
+        Boolean readValue = mDatastore.get(TEST_KEY);
+        assertNotNull(readValue);
+        assertFalse(readValue);
+
+        // Force overwrite
+        mDatastore.put(TEST_KEY, true);
+        readValue = mDatastore.get(TEST_KEY);
+        assertNotNull(readValue);
+        assertTrue(readValue);
+
+        // Put should read the existing value
+        assertTrue(mDatastore.putIfNew(TEST_KEY, false));
+        readValue = mDatastore.get(TEST_KEY);
+        assertNotNull(readValue);
+        assertTrue(readValue);
+    }
+
+    @Test
+    public void testKeySetClear() throws IOException {
         int numEntries = 10;
         for (int i = 0; i < numEntries; i++) {
             // Even entries are true, odd are false
@@ -151,5 +188,69 @@ public class BooleanFileDatastoreTest {
 
         mDatastore.clear();
         assertTrue(mDatastore.keySet().isEmpty());
+    }
+
+    @Test
+    public void testKeySetClearAllTrue() throws IOException {
+        int numEntries = 10;
+        for (int i = 0; i < numEntries; i++) {
+            // Even entries are true, odd are false
+            mDatastore.put(TEST_KEY + i, (i & 1) == 0);
+        }
+
+        Set<String> trueKeys = mDatastore.keySetTrue();
+        Set<String> falseKeys = mDatastore.keySetFalse();
+
+        assertEquals(trueKeys.size(), numEntries / 2);
+        assertEquals(falseKeys.size(), numEntries / 2);
+
+        for (int i = 0; i < numEntries; i++) {
+            assertEquals(trueKeys.contains(TEST_KEY + i), (i & 1) == 0);
+            assertEquals(falseKeys.contains(TEST_KEY + i), (i & 1) != 0);
+        }
+
+        mDatastore.clearAllTrue();
+
+        trueKeys = mDatastore.keySetTrue();
+        falseKeys = mDatastore.keySetFalse();
+
+        assertTrue(trueKeys.isEmpty());
+        assertEquals(numEntries / 2, falseKeys.size());
+
+        for (int i = 0; i < numEntries; i++) {
+            assertEquals((i & 1) != 0, falseKeys.contains(TEST_KEY + i));
+        }
+    }
+
+    @Test
+    public void testKeySetClearAllFalse() throws IOException {
+        int numEntries = 10;
+        for (int i = 0; i < numEntries; i++) {
+            // Even entries are true, odd are false
+            mDatastore.put(TEST_KEY + i, (i & 1) == 0);
+        }
+
+        Set<String> trueKeys = mDatastore.keySetTrue();
+        Set<String> falseKeys = mDatastore.keySetFalse();
+
+        assertEquals(trueKeys.size(), numEntries / 2);
+        assertEquals(falseKeys.size(), numEntries / 2);
+
+        for (int i = 0; i < numEntries; i++) {
+            assertEquals(trueKeys.contains(TEST_KEY + i), (i & 1) == 0);
+            assertEquals(falseKeys.contains(TEST_KEY + i), (i & 1) != 0);
+        }
+
+        mDatastore.clearAllFalse();
+
+        trueKeys = mDatastore.keySetTrue();
+        falseKeys = mDatastore.keySetFalse();
+
+        assertEquals(numEntries / 2, trueKeys.size());
+        assertTrue(falseKeys.isEmpty());
+
+        for (int i = 0; i < numEntries; i++) {
+            assertEquals((i & 1) == 0, trueKeys.contains(TEST_KEY + i));
+        }
     }
 }

@@ -48,18 +48,19 @@ public class DeleteExpiredDynamicIntegrationTest extends AbstractDbIntegrationTe
         long insideExpiredWindow = System.currentTimeMillis()
                 - MEASUREMENT_DELETE_EXPIRED_WINDOW_MS / 2;
 
-        Source source = new Source.Builder()
-                .setAdTechDomain(Uri.parse("https://example.com"))
-                .setAttributionDestination(Uri.parse("https://example.com/aD"))
-                .setPublisher(Uri.parse("https://example.com/aS"))
-                .setId("non-expired")
-                .setEventId(2L)
-                .setPriority(3L)
-                .setEventTime(insideExpiredWindow)
-                .setExpiryTime(5L)
-                .setStatus(Source.Status.ACTIVE)
-                .setRegistrant(Uri.parse("android-app://com.example.abc"))
-                .build();
+        Source source =
+                new Source.Builder()
+                        .setAdTechDomain(Uri.parse("https://example.com"))
+                        .setAppDestination(Uri.parse("android-app://com.example.app/aD"))
+                        .setPublisher(Uri.parse("https://example.com/aS"))
+                        .setId("non-expired")
+                        .setEventId(2L)
+                        .setPriority(3L)
+                        .setEventTime(insideExpiredWindow)
+                        .setExpiryTime(5L)
+                        .setStatus(Source.Status.ACTIVE)
+                        .setRegistrant(Uri.parse("android-app://com.example.abc"))
+                        .build();
 
         for (Object[] testCase : testCases) {
             // input

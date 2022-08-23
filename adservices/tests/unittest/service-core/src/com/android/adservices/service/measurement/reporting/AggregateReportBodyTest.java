@@ -17,20 +17,37 @@
 package com.android.adservices.service.measurement.reporting;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import com.android.adservices.HpkeJni;
+import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
+import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
 
+import java.io.ByteArrayInputStream;
+import java.math.BigInteger;
+import java.util.Base64;
+import java.util.List;
+
+import co.nstant.in.cbor.CborDecoder;
+import co.nstant.in.cbor.CborException;
+import co.nstant.in.cbor.model.Array;
+import co.nstant.in.cbor.model.ByteString;
+import co.nstant.in.cbor.model.DataItem;
+import co.nstant.in.cbor.model.Map;
+import co.nstant.in.cbor.model.UnicodeString;
+
 public class AggregateReportBodyTest {
 
-    private static final String SOURCE_SITE = "https://source.example";
     private static final String ATTRIBUTION_DESTINATION = "https://attribution.destination";
     private static final String SOURCE_REGISTRATION_TIME = "1246174152155";
     private static final String SCHEDULED_REPORT_TIME = "1246174158155";
-    private static final String PRIVACY_BUDGET_KEY = "example-key";
-    private static final String VERSION = "1";
+    private static final String VERSION = "12";
     private static final String REPORT_ID = "A1";
     private static final String REPORTING_ORIGIN = "https://adtech.domain";
     private static final String DEBUG_CLEARTEXT_PAYLOAD = "{\"operation\":\"histogram\","
@@ -39,26 +56,14 @@ public class AggregateReportBodyTest {
 
     private AggregateReportBody createAggregateReportBodyExample1() {
         return new AggregateReportBody.Builder()
-                .setSourceSite(SOURCE_SITE)
                 .setAttributionDestination(ATTRIBUTION_DESTINATION)
                 .setSourceRegistrationTime(SOURCE_REGISTRATION_TIME)
                 .setScheduledReportTime(SCHEDULED_REPORT_TIME)
-                .setPrivacyBudgetKey(PRIVACY_BUDGET_KEY)
-                .setVersion(VERSION)
+                .setApiVersion(VERSION)
                 .setReportId(REPORT_ID)
                 .setReportingOrigin(REPORTING_ORIGIN)
                 .setDebugCleartextPayload(DEBUG_CLEARTEXT_PAYLOAD)
                 .build();
-    }
-
-    @Test
-    public void testAggregateBodyJsonSerialization() throws JSONException {
-        AggregateReportBody aggregateReport = createAggregateReportBodyExample1();
-        JSONObject aggregateReportJson = aggregateReport.toJson();
-
-        assertEquals(SOURCE_SITE, aggregateReportJson.get("source_site"));
-        assertEquals(ATTRIBUTION_DESTINATION, aggregateReportJson.get("attribution_destination"));
-        assertEquals(SOURCE_REGISTRATION_TIME, aggregateReportJson.get("source_registration_time"));
     }
 
     @Test
@@ -67,22 +72,75 @@ public class AggregateReportBodyTest {
         JSONObject sharedInfoJson = aggregateReport.sharedInfoToJson();
 
         assertEquals(SCHEDULED_REPORT_TIME, sharedInfoJson.get("scheduled_report_time"));
-        assertEquals(PRIVACY_BUDGET_KEY, sharedInfoJson.get("privacy_budget_key"));
         assertEquals(VERSION, sharedInfoJson.get("version"));
         assertEquals(REPORT_ID, sharedInfoJson.get("report_id"));
         assertEquals(REPORTING_ORIGIN, sharedInfoJson.get("reporting_origin"));
+        assertEquals(ATTRIBUTION_DESTINATION, sharedInfoJson.get("attribution_destination"));
+        assertEquals(SOURCE_REGISTRATION_TIME, sharedInfoJson.get("source_registration_time"));
     }
 
     @Test
-    public void testAggregationServicePayloadsJsonSerialization() throws JSONException {
+    public void testAggregationServicePayloadsJsonSerialization() throws Exception {
         AggregateReportBody aggregateReport = createAggregateReportBodyExample1();
+
+        AggregateEncryptionKey key = AggregateCryptoFixture.getKey();
         JSONArray aggregationServicePayloadsJson =
-                aggregateReport.aggregationServicePayloadsToJson();
+                aggregateReport.aggregationServicePayloadsToJson(/* sharedInfo = */ null, key);
 
-        JSONObject debugCleartextPayloadJson =
-                aggregationServicePayloadsJson.getJSONObject(0);
+        JSONObject aggregateServicePayloads = aggregationServicePayloadsJson.getJSONObject(0);
 
-        assertEquals(DEBUG_CLEARTEXT_PAYLOAD,
-                debugCleartextPayloadJson.get("debug_cleartext_payload"));
+        assertEquals(key.getKeyId(), aggregateServicePayloads.get("key_id"));
+        assertEncodedDebugPayload(aggregateServicePayloads);
+        assertEncryptedPayload(aggregateServicePayloads);
+    }
+
+    private void assertEncodedDebugPayload(JSONObject aggregateServicePayloads) throws Exception {
+        final String encodedPayloadBase64 =
+                (String) aggregateServicePayloads.get("debug_cleartext_payload");
+        assertNotNull(encodedPayloadBase64);
+
+        final byte[] cborEncodedPayload = Base64.getDecoder().decode(encodedPayloadBase64);
+        assertCborEncoded(cborEncodedPayload);
+    }
+
+    private void assertEncryptedPayload(JSONObject aggregateServicePayloads) throws Exception {
+        final String encryptedPayloadBase64 = (String) aggregateServicePayloads.get("payload");
+        assertNotNull(encryptedPayloadBase64);
+
+        final byte[] decryptedCborEncoded =
+                HpkeJni.decrypt(
+                        AggregateCryptoFixture.getPrivateKey(),
+                        Base64.getDecoder().decode(encryptedPayloadBase64),
+                        AggregateCryptoFixture.getSharedInfoPrefix().getBytes());
+        assertNotNull(decryptedCborEncoded);
+        assertCborEncoded(decryptedCborEncoded);
+    }
+
+    private void assertCborEncoded(byte[] value) throws CborException {
+        final List<DataItem> dataItems = new CborDecoder(new ByteArrayInputStream(value)).decode();
+
+        final Map payload = (Map) dataItems.get(0);
+        assertEquals("histogram", payload.get(new UnicodeString("operation")).toString());
+
+        final Array payloadArray = (Array) payload.get(new UnicodeString("data"));
+        assertEquals(2, payloadArray.getDataItems().size());
+        assertTrue(
+                payloadArray.getDataItems().stream()
+                        .anyMatch(
+                                i ->
+                                        isFound((Map) i, "bucket", 1369)
+                                                && isFound((Map) i, "value", 32768)));
+
+        assertTrue(
+                payloadArray.getDataItems().stream()
+                        .anyMatch(
+                                i ->
+                                        isFound((Map) i, "bucket", 3461)
+                                                && isFound((Map) i, "value", 1664)));
+    }
+
+    private boolean isFound(Map map, String name, int value) {
+        return BigInteger.valueOf(value)
+                .equals(new BigInteger(((ByteString) map.get(new UnicodeString(name))).getBytes()));
     }
 }

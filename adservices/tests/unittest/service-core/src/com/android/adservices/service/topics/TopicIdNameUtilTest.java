@@ -46,16 +46,17 @@ public class TopicIdNameUtilTest {
         ImmutableMap<Integer, String> topicIdToName = sTopicIdNameUtil.retrieveTopicIdToName();
 
         // Check size of map
-        // The topicId to topicName file contains 349 topics.
-        assertThat(topicIdToName.size()).isEqualTo(349);
+        // The topicId to topicName file contains 446 topics.
+        assertThat(topicIdToName.size()).isEqualTo(446);
 
         // Check some topicIds to topicNames in the map
-        assertThat(topicIdToName.get(1013)).isEqualTo("/Autos & Vehicles/Classic Vehicles");
+        assertThat(topicIdToName.get(10046)).isEqualTo(
+                "/Arts & Entertainment/Music & Audio/Rock Music/Indie & Alternative Music");
 
-        assertThat(topicIdToName.get(1299)).isEqualTo(
-                "/Science/Machine Learning & Artificial Intelligence");
+        assertThat(topicIdToName.get(10340)).isEqualTo(
+                "/People & Society/Family & Relationships/Parenting/Child Internet Safety");
 
-        assertThat(topicIdToName.get(1808)).isEqualTo(
-                "/Beauty & Fitness/Face & Body Care/Antiperspirants, Deodorants & Body Sprays");
+        assertThat(topicIdToName.get(10430)).isEqualTo(
+                "/Travel & Transportation/Business Travel");
     }
 }

@@ -116,7 +116,7 @@ public class BooleanFileDatastore {
             if (out != null) {
                 mAtomicFile.failWrite(out);
             }
-            LogUtil.e("Write to file failed", e);
+            LogUtil.e(e, "Write to file failed");
             throw e;
         }
     }
@@ -141,7 +141,7 @@ public class BooleanFileDatastore {
             LogUtil.v("File not found; continuing with clear database");
             mLocalMap.clear();
         } catch (IOException e) {
-            LogUtil.e("Read from store file failed", e);
+            LogUtil.e(e, "Read from store file failed");
             throw e;
         }
     }
@@ -165,6 +165,49 @@ public class BooleanFileDatastore {
         try {
             mLocalMap.put(key, value);
             writeToFile();
+        } finally {
+            mWriteLock.unlock();
+        }
+    }
+
+    /**
+     * Stores a value to the datastore file, but only if the key does not already exist.
+     *
+     * <p>If a change is made to the datastore, it is committed immediately to file.
+     *
+     * @param key A non-null, non-empty String key to store the {@code value} against
+     * @param value A boolean to be stored
+     * @return the value that exists in the datastore after the operation completes
+     * @throws IllegalArgumentException if {@code key} is an empty string
+     * @throws IOException if file write fails
+     * @throws NullPointerException if {@code key} is null
+     */
+    public boolean putIfNew(@NonNull String key, boolean value) throws IOException {
+        Objects.requireNonNull(key);
+        Preconditions.checkStringNotEmpty(key, "Key must not be empty");
+
+        // Try not to block readers first before trying to write
+        mReadLock.lock();
+        try {
+            Boolean valueInLocalMap = mLocalMap.get(key);
+            if (valueInLocalMap != null) {
+                return valueInLocalMap;
+            }
+        } finally {
+            mReadLock.unlock();
+        }
+
+        // Double check that the key wasn't written after the first check
+        mWriteLock.lock();
+        try {
+            Boolean valueInLocalMap = mLocalMap.get(key);
+            if (valueInLocalMap != null) {
+                return valueInLocalMap;
+            } else {
+                mLocalMap.put(key, value);
+                writeToFile();
+                return value;
+            }
         } finally {
             mWriteLock.unlock();
         }
@@ -200,7 +243,7 @@ public class BooleanFileDatastore {
     public Set<String> keySet() {
         mReadLock.lock();
         try {
-            return mLocalMap.keySet();
+            return Set.copyOf(mLocalMap.keySet());
         } finally {
             mReadLock.unlock();
         }
@@ -210,10 +253,11 @@ public class BooleanFileDatastore {
     private Set<String> keySetFilter(boolean filter) {
         mReadLock.lock();
         try {
-            return mLocalMap.entrySet().stream()
-                    .filter(entry -> entry.getValue().equals(filter))
-                    .map(Map.Entry::getKey)
-                    .collect(Collectors.toSet());
+            return Set.copyOf(
+                    mLocalMap.entrySet().stream()
+                            .filter(entry -> entry.getValue().equals(filter))
+                            .map(Map.Entry::getKey)
+                            .collect(Collectors.toSet()));
         } finally {
             mReadLock.unlock();
         }
@@ -256,6 +300,40 @@ public class BooleanFileDatastore {
         } finally {
             mWriteLock.unlock();
         }
+    }
+
+    private void clearByFilter(boolean filter) throws IOException {
+        mWriteLock.lock();
+        try {
+            mLocalMap.entrySet().removeIf(entry -> entry.getValue().equals(filter));
+            writeToFile();
+        } finally {
+            mWriteLock.unlock();
+        }
+    }
+
+    /**
+     * Clears all entries from the datastore file that have value {@code true}. Entries with value
+     * {@code false} are not removed.
+     *
+     * <p>This change is committed immediately to file.
+     *
+     * @throws IOException if file write fails
+     */
+    public void clearAllTrue() throws IOException {
+        clearByFilter(true);
+    }
+
+    /**
+     * Clears all entries from the datastore file that have value {@code false}. Entries with value
+     * {@code true} are not removed.
+     *
+     * <p>This change is committed immediately to file.
+     *
+     * @throws IOException if file write fails
+     */
+    public void clearAllFalse() throws IOException {
+        clearByFilter(false);
     }
 
     /**

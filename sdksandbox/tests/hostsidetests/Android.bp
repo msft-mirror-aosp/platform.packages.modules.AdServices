@@ -17,13 +17,6 @@ package {
 }
 
 java_test_host {
-    name: "SdkSandboxHostTest",
-    srcs: ["src/**/SdkSandboxHostTest.java"],
-    libs: ["tradefed"],
-    test_suites: ["general-tests"],
-}
-
-java_test_host {
     name: "SdkSandboxLifecycleHostTest",
     srcs: [
         "src/**/SdkSandboxLifecycleHostTest.java",
@@ -53,6 +46,7 @@ java_test_host {
     test_suites: ["general-tests"],
     data: [
         ":TestCodeProvider",
+        ":TestCodeProvider2",
         ":SdkSandboxTestApp",
         ":SdkSandboxTestDebuggableApp"
     ],
@@ -64,6 +58,7 @@ android_test_helper_app {
     defaults: ["platform_app_defaults"],
     platform_apis: true,
     srcs: [
+        "app/src/**/SdkSandboxEmptyActivity.java",
         "app/src/**/SdkSandboxTestActivity.java",
         ":framework-sdksandbox-sources",
         ":sdksandbox_aidl",
@@ -71,6 +66,7 @@ android_test_helper_app {
     ],
     static_libs: [
         "androidx.core_core",
+        "androidx.test.ext.junit",
         "SdkSandboxTestUtils",
     ],
 }

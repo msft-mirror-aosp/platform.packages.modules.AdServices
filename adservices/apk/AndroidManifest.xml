@@ -20,6 +20,12 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.android.adservices.api">
 
+    <!-- Declare the broadcast as protected so only the system service can send it.  The AdServices
+    System Service will send this broadcast to the AdServices module where there is a package
+    change.-->
+    <protected-broadcast android:name="com.android.adservices.PACKAGE_CHANGED" />
+
+    <!-- Allows the system service to query app status-->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
 
     <!-- Permissions required for showing notifications. -->
@@ -33,6 +39,14 @@
 
     <!-- Used for persisting scheduled jobs -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!--
+        Used to verify if the calling application is running in foreground.
+        Although this permission is deprecated, it is still checked for c apps (see
+        http://go/aocs/android/platform/superproject/+/master:frameworks/base/services/core/java/com/android/server/wm/ActivityTaskManagerService.java;l=3130?q=ActivityTaskManagerService)
+        and we want to use privileged flags as REAL_GET_TASKS.
+    -->
+    <uses-permission android:name="android.permission.GET_TASKS" />
 
     <!-- Allows an application to access AdServices Topics API. -->
     <permission android:name="android.permission.ACCESS_ADSERVICES_TOPICS"
@@ -52,41 +66,48 @@
         android:description="@string/permdesc_accessAdServicesCustomAudience"
         android:protectionLevel="normal" />
 
-    <!-- Allows Consent Service to access AdServices. -->
-    <permission android:name="android.permission.ACCESS_ADSERVICES_CONSENT"
-        android:label="@string/permlab_accessAdServicesConsent"
-        android:description="@string/permdesc_accessAdServicesConsent"
-        android:protectionLevel="signature|privileged" />
+    <!-- Allows an application to access AdServices Ad Id API. -->
+    <permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID"
+        android:label="@string/permlab_accessAdServicesAdId"
+        android:description="@string/permdesc_accessAdServicesAdId"
+        android:protectionLevel="normal" />
 
     <!-- Allows AdServices to access API for Ad ID. -->
-    <permission android:name="android.permission.ADSERVICES_ACCESS_AD_ID"
+    <permission android:name="android.permission.ACCESS_PRIVILEGED_AD_ID"
         android:label="@string/permlab_adServicesAccessAdId"
         android:description="@string/permdesc_adServicesAccessAdId"
         android:protectionLevel="signature" />
 
     <!-- Allows AdServices to access API for App set ID. -->
-    <permission android:name="android.permission.ADSERVICES_ACCESS_APP_SET_ID"
+    <permission android:name="android.permission.ACCESS_PRIVILEGED_APP_SET_ID"
         android:label="@string/permlab_adServicesAccessAppSetId"
         android:description="@string/permdesc_adServicesAccessAppSetId"
         android:protectionLevel="signature" />
 
-    <!-- Allows AdServices to access Consent Service. -->
-    <permission android:name="android.permission.ADSERVICES_ACCESS_CONSENT_SERVICE"
-        android:label="@string/permlab_adServicesAccessConsentService"
-        android:description="@string/permdesc_adServicesAccessConsentService"
-        android:protectionLevel="signature" />
+    <!-- Allows the caller to modify AdService's state via Common Service. -->
+    <permission android:name="android.permission.MODIFY_ADSERVICES_STATE"
+        android:label="@string/permlab_modifyAdServicesState"
+        android:description="@string/permdesc_modifyAdServicesState"
+        android:protectionLevel="signature|configurator" />
 
-    <uses-permission android:name="android.permission.ADSERVICES_ACCESS_AD_ID" />
-    <uses-permission android:name="android.permission.ADSERVICES_ACCESS_APP_SET_ID" />
-    <uses-permission android:name="android.permission.ADSERVICES_ACCESS_CONSENT_SERVICE" />
+    <!-- Allows the caller to get AdService's state via Common Service. -->
+    <permission android:name="android.permission.ACCESS_ADSERVICES_STATE"
+        android:label="@string/permlab_accessAdServicesState"
+        android:description="@string/permdesc_accessAdServicesState"
+        android:protectionLevel="signature|configurator" />
+
+    <uses-permission android:name="android.permission.ACCESS_PRIVILEGED_AD_ID" />
+    <uses-permission android:name="android.permission.ACCESS_PRIVILEGED_APP_SET_ID" />
+
+    <!-- Allows JobScheduler to persist jobs across reboot. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
-        android:label="Android AdServices"
-        android:forceQueryable="true"
-        android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher_round"
-        android:supportsRtl="true">
+            android:label="@string/app_label"
+            android:forceQueryable="true"
+            android:allowBackup="true"
+            android:supportsRtl="true"
+            android:theme="@style/FilterTouches">
         <service android:name="com.android.adservices.adselection.AdSelectionService"
                  android:exported="true"
                  android:visibleToInstantApps="false">
@@ -113,10 +134,25 @@
             </intent-filter>
         </service>
 
+        <service android:name="com.android.adservices.adid.AdIdService"
+                 android:exported="true"
+                 android:visibleToInstantApps="false">
+            <intent-filter android:priority="1">
+                <action android:name="android.adservices.ADID_SERVICE"/>
+            </intent-filter>
+        </service>
+
+        <service android:name="com.android.adservices.appsetid.AppSetIdService"
+                 android:exported="true"
+                 android:visibleToInstantApps="false">
+            <intent-filter android:priority="1">
+                <action android:name="android.adservices.APPSETID_SERVICE"/>
+            </intent-filter>
+        </service>
+
         <service android:name="com.android.adservices.measurement.MeasurementService"
             android:exported="true"
-            android:visibleToInstantApps="false"
-            >
+            android:visibleToInstantApps="false">
             <intent-filter android:priority="1">
                 <action android:name="android.adservices.MEASUREMENT_SERVICE" />
             </intent-filter>
@@ -141,12 +177,34 @@
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
+        <!-- Mdd background Job. -->
+        <service android:name="com.android.adservices.download.MddJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- Enable Notification Job. -->
+        <service android:name="com.android.adservices.service.common.ConsentNotificationJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
         <!-- Activity for Adservices Settings UI -->
         <activity
-            android:name="com.android.adservices.ui.settings.AdServicesSettingsActivity"
-            android:exported="true">
+                android:name="com.android.adservices.ui.settings.AdServicesSettingsActivity"
+                android:exported="true"
+                android:theme="@style/Theme.AdServices.Settings">
             <intent-filter android:priority="1">
                 <action android:name="android.adservices.ui.SETTINGS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!-- Activity for Adservices Detailed Notification UI -->
+        <activity
+            android:name="com.android.adservices.ui.notifications.ConsentNotificationActivity"
+            android:exported="true"
+            android:theme="@style/AdServices.NotificationTheme">
+            <intent-filter android:priority="1">
+                <action android:name="android.adservices.ui.NOTIFICATIONS" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
@@ -191,6 +249,15 @@
                      "com.android.adservices.service.customaudience.BackgroundFetchJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
+
+        <receiver android:name="com.android.adservices.service.common.PackageChangedReceiver"
+                  android:exported="true">
+            <intent-filter>
+                <!-- This intent must match the intent definition in the AdServices system
+                service. -->
+                <action android:name="com.android.adservices.PACKAGE_CHANGED"/>
+            </intent-filter>
+        </receiver>
 
         <provider
             android:name=

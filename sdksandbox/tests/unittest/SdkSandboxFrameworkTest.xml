@@ -32,5 +32,8 @@
             class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController">
         <option name="mainline-module-package-name" value="com.google.android.adservices" />
     </object>
+
+    <option name="config-descriptor:metadata" key="mainline-param"
+        value="com.google.android.adservices.apex" />
 </configuration>
 

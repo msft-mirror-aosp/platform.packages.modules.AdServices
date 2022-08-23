@@ -19,19 +19,25 @@ package com.android.sdksandbox;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.annotation.RequiresPermission;
-import android.annotation.SuppressLint;
 import android.app.Service;
+import android.app.sdksandbox.ISharedPreferencesSyncCallback;
+import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxedSdkContext;
+import android.app.sdksandbox.SharedPreferencesKey;
+import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Process;
 import android.os.RemoteException;
+import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.util.ArrayMap;
+import android.util.ArraySet;
 import android.util.Log;
 
 import com.android.internal.annotations.GuardedBy;
@@ -46,7 +52,6 @@ import java.util.Map;
 import java.util.Objects;
 
 /** Implementation of Sdk Sandbox Service. */
-@SuppressLint("NewApi") // TODO(b/227329631): remove this after T SDK is finalized
 public class SdkSandboxServiceImpl extends Service {
 
     private static final String TAG = "SdkSandbox";
@@ -70,6 +75,10 @@ public class SdkSandboxServiceImpl extends Service {
 
         Context getContext() {
             return mContext;
+        }
+
+        long getCurrentTime() {
+            return System.currentTimeMillis();
         }
     }
 
@@ -102,7 +111,7 @@ public class SdkSandboxServiceImpl extends Service {
             String sdkCeDataDir,
             String sdkDeDataDir,
             Bundle params,
-            ISdkSandboxToSdkSandboxManagerCallback callback) {
+            ILoadSdkInSandboxCallback callback) {
         enforceCallerIsSystemServer();
         final long token = Binder.clearCallingIdentity();
         try {
@@ -118,6 +127,91 @@ public class SdkSandboxServiceImpl extends Service {
                     callback);
         } finally {
             Binder.restoreCallingIdentity(token);
+        }
+    }
+
+    /** Unloads SDK. */
+    public void unloadSdk(IBinder sdkToken) {
+        enforceCallerIsSystemServer();
+        final long token = Binder.clearCallingIdentity();
+        try {
+            unloadSdkInternal(sdkToken);
+        } finally {
+            Binder.restoreCallingIdentity(token);
+        }
+    }
+
+    /** Sync data from client. */
+    public void syncDataFromClient(
+            SharedPreferencesUpdate update, ISharedPreferencesSyncCallback callback) {
+        SharedPreferences pref =
+                PreferenceManager.getDefaultSharedPreferences(mInjector.getContext());
+        SharedPreferences.Editor editor = pref.edit();
+        final Bundle data = update.getData();
+        for (SharedPreferencesKey keyInUpdate : update.getKeysInUpdate()) {
+            updateSharedPreferences(editor, data, keyInUpdate);
+        }
+        // TODO(b/239403323): What if writing to persistent storage fails?
+        editor.apply();
+
+        try {
+            callback.onSuccess();
+        } catch (RemoteException ignore) {
+            // The app died. Safe to ignore as sandbox will be killed soon.
+        }
+    }
+
+    private void updateSharedPreferences(
+            SharedPreferences.Editor editor, Bundle data, SharedPreferencesKey keyInUpdate) {
+        final String key = keyInUpdate.getName();
+
+        if (!data.containsKey(key)) {
+            // key was specified but bundle didn't have the key; meaning it has been removed.
+            editor.remove(key);
+            return;
+        }
+
+        final int type = keyInUpdate.getType();
+        try {
+            switch (type) {
+                case SharedPreferencesKey.KEY_TYPE_STRING:
+                    editor.putString(key, data.getString(key, ""));
+                    break;
+                case SharedPreferencesKey.KEY_TYPE_BOOLEAN:
+                    editor.putBoolean(key, data.getBoolean(key, false));
+                    break;
+                case SharedPreferencesKey.KEY_TYPE_INTEGER:
+                    editor.putInt(key, data.getInt(key, 0));
+                    break;
+                case SharedPreferencesKey.KEY_TYPE_FLOAT:
+                    editor.putFloat(key, data.getFloat(key, 0.0f));
+                    break;
+                case SharedPreferencesKey.KEY_TYPE_LONG:
+                    editor.putLong(key, data.getLong(key, 0L));
+                    break;
+                case SharedPreferencesKey.KEY_TYPE_STRING_SET:
+                    final ArraySet<String> castedValue =
+                            new ArraySet<>(data.getStringArrayList(key));
+                    editor.putStringSet(key, castedValue);
+                    break;
+                default:
+                    Log.e(
+                            TAG,
+                            "Unknown type found in default SharedPreferences for Key: "
+                                    + key
+                                    + " Type: "
+                                    + type);
+            }
+        } catch (ClassCastException ignore) {
+            editor.remove(key);
+            // TODO(b/239403323): Once error reporting is supported, we should return error to the
+            // user instead.
+            Log.e(
+                    TAG,
+                    "Wrong type found in default SharedPreferences for Key: "
+                            + key
+                            + " Type: "
+                            + type);
         }
     }
 
@@ -158,12 +252,12 @@ public class SdkSandboxServiceImpl extends Service {
             @Nullable String sdkCeDataDir,
             @Nullable String sdkDeDataDir,
             @NonNull Bundle params,
-            @NonNull ISdkSandboxToSdkSandboxManagerCallback callback) {
+            @NonNull ILoadSdkInSandboxCallback callback) {
         synchronized (mHeldSdk) {
             if (mHeldSdk.containsKey(sdkToken)) {
-                sendLoadError(callback,
-                        ISdkSandboxToSdkSandboxManagerCallback
-                                .LOAD_SDK_ALREADY_LOADED,
+                sendLoadError(
+                        callback,
+                        ILoadSdkInSandboxCallback.LOAD_SDK_ALREADY_LOADED,
                         "Already loaded sdk for package " + applicationInfo.packageName);
                 return;
             }
@@ -174,40 +268,66 @@ public class SdkSandboxServiceImpl extends Service {
             Class<?> clz = Class.forName(SandboxedSdkHolder.class.getName(), true, loader);
             SandboxedSdkHolder sandboxedSdkHolder =
                     (SandboxedSdkHolder) clz.getDeclaredConstructor().newInstance();
+            // We want to ensure that SandboxedSdkContext.getSystemService() will return different
+            // instances for different SandboxedSdkContext contexts, so that different SDKs
+            // running in the same sdk sandbox process don't share the same manager instance.
+            // Because SandboxedSdkContext is a ContextWrapper, it delegates the getSystemService()
+            // call to its base context. If we use an application context here as a base context
+            // when creating an instance of SandboxedSdkContext it will mean that all instances of
+            // SandboxedSdkContext will return the same manager instances.
+
+            // In order to create per-SandboxedSdkContext instances in getSystemService, each
+            // SandboxedSdkContext needs to have use ContextImpl as a base context. The ContextImpl
+            // is hidden, so we can't instantiate it directly. However, the
+            // createCredentialProtectedStorageContext() will always create a new ContextImpl
+            // object, which is why we are using it as a base context when creating an instance of
+            // SandboxedSdkContext.
+            // TODO(b/242889021): make this detail internal to SandboxedSdkContext
+            Context ctx = mInjector.getContext().createCredentialProtectedStorageContext();
             SandboxedSdkContext sandboxedSdkContext =
                     new SandboxedSdkContext(
-                            mInjector.getContext(),
+                            ctx,
                             callingPackageName,
                             applicationInfo,
                             sdkName,
                             sdkCeDataDir,
                             sdkDeDataDir);
             sandboxedSdkHolder.init(
-                    mInjector.getContext(),
                     params,
                     callback,
                     sdkProviderClassName,
                     loader,
-                    sandboxedSdkContext);
+                    sandboxedSdkContext,
+                    mInjector);
             synchronized (mHeldSdk) {
                 mHeldSdk.put(sdkToken, sandboxedSdkHolder);
             }
         } catch (ClassNotFoundException | NoSuchMethodException e) {
-            sendLoadError(callback,
-                    ISdkSandboxToSdkSandboxManagerCallback.LOAD_SDK_NOT_FOUND,
+            sendLoadError(
+                    callback,
+                    ILoadSdkInSandboxCallback.LOAD_SDK_NOT_FOUND,
                     "Failed to find: " + SandboxedSdkHolder.class.getName());
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            sendLoadError(callback,
-                    ISdkSandboxToSdkSandboxManagerCallback
-                            .LOAD_SDK_INSTANTIATION_ERROR,
+            sendLoadError(
+                    callback,
+                    ILoadSdkInSandboxCallback.LOAD_SDK_INSTANTIATION_ERROR,
                     "Failed to instantiate " + SandboxedSdkHolder.class.getName() + ": " + e);
         }
     }
 
-    private void sendLoadError(ISdkSandboxToSdkSandboxManagerCallback callback,
-            int errorCode, String message) {
+    private void unloadSdkInternal(@NonNull IBinder sdkToken) {
+        synchronized (mHeldSdk) {
+            SandboxedSdkHolder sandboxedSdkHolder = mHeldSdk.get(sdkToken);
+            if (sandboxedSdkHolder != null) {
+                sandboxedSdkHolder.unloadSdk();
+                mHeldSdk.remove(sdkToken);
+            }
+        }
+    }
+
+    private void sendLoadError(ILoadSdkInSandboxCallback callback, int errorCode, String message) {
         try {
-            callback.onLoadSdkError(errorCode, message);
+            callback.onLoadSdkError(new LoadSdkException(errorCode, message));
         } catch (RemoteException e) {
             Log.e(TAG, "Could not send onLoadCodeError");
         }
@@ -229,13 +349,12 @@ public class SdkSandboxServiceImpl extends Service {
                 @Nullable String sdkCeDataDir,
                 @Nullable String sdkDeDataDir,
                 @NonNull Bundle params,
-                @NonNull ISdkSandboxToSdkSandboxManagerCallback callback) {
+                @NonNull ILoadSdkInSandboxCallback callback) {
             Objects.requireNonNull(callingPackageName, "callingPackageName should not be null");
             Objects.requireNonNull(sdkToken, "sdkToken should not be null");
             Objects.requireNonNull(applicationInfo, "applicationInfo should not be null");
             Objects.requireNonNull(sdkName, "sdkName should not be null");
-            Objects.requireNonNull(sdkProviderClassName,
-                    "sdkProviderClassName should not be null");
+            Objects.requireNonNull(sdkProviderClassName, "sdkProviderClassName should not be null");
             Objects.requireNonNull(params, "params should not be null");
             Objects.requireNonNull(callback, "callback should not be null");
             if (TextUtils.isEmpty(sdkProviderClassName)) {
@@ -251,6 +370,21 @@ public class SdkSandboxServiceImpl extends Service {
                     sdkDeDataDir,
                     params,
                     callback);
+        }
+
+        @Override
+        public void unloadSdk(@NonNull IBinder sdkToken) {
+            Objects.requireNonNull(sdkToken, "sdkToken should not be null");
+            SdkSandboxServiceImpl.this.unloadSdk(sdkToken);
+        }
+
+        @Override
+        public void syncDataFromClient(
+                @NonNull SharedPreferencesUpdate update,
+                @NonNull ISharedPreferencesSyncCallback callback) {
+            Objects.requireNonNull(update, "update should not be null");
+            Objects.requireNonNull(callback, "callback should not be null");
+            SdkSandboxServiceImpl.this.syncDataFromClient(update, callback);
         }
     }
 }
