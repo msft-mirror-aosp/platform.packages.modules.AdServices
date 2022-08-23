@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
+import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
 
 import android.adservices.adselection.AdSelectionConfig;
@@ -28,6 +29,7 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
 import android.net.Uri;
+import android.os.LimitExceededException;
 import android.os.RemoteException;
 import android.util.Pair;
 
@@ -41,12 +43,14 @@ import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.internal.util.Preconditions;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -61,6 +65,7 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 /** Encapsulates the Impression Reporting logic */
 public class ImpressionReporter {
@@ -68,6 +73,10 @@ public class ImpressionReporter {
             "Unable to find ad selection with given ID";
     public static final String CALLER_PACKAGE_NAME_MISMATCH =
             "Caller package name does not match name used in ad selection";
+
+    @VisibleForTesting
+    static final String REPORT_IMPRESSION_THROTTLED = "Report impression exceeded rate limit";
+
     @NonNull private final Context mContext;
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
@@ -78,6 +87,7 @@ public class ImpressionReporter {
     @NonNull private final AdSelectionDevOverridesHelper mAdSelectionDevOverridesHelper;
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final Flags mFlags;
+    @NonNull private final Supplier<Throttler> mThrottlerSupplier;
     @NonNull private final AppImportanceFilter mAppImportanceFilter;
     private final int mCallerUid;
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
@@ -94,6 +104,7 @@ public class ImpressionReporter {
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull final Flags flags,
+            @NonNull final Supplier<Throttler> throttlerSupplier,
             int callerUid,
             @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter,
             @NonNull final FledgeAllowListsFilter fledgeAllowListsFilter) {
@@ -107,6 +118,7 @@ public class ImpressionReporter {
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(appImportanceFilter);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(throttlerSupplier);
         Objects.requireNonNull(fledgeAuthorizationFilter);
         Objects.requireNonNull(fledgeAllowListsFilter);
 
@@ -125,6 +137,7 @@ public class ImpressionReporter {
                 new AdSelectionDevOverridesHelper(devContext, mAdSelectionEntryDao);
         mAdServicesLogger = adServicesLogger;
         mFlags = flags;
+        mThrottlerSupplier = throttlerSupplier;
         mAppImportanceFilter = appImportanceFilter;
         mCallerUid = callerUid;
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
@@ -275,6 +288,9 @@ public class ImpressionReporter {
                     callback, AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED, t.getMessage());
         } else if (t instanceof FledgeAuthorizationFilter.CallerMismatchException) {
             invokeFailure(callback, AdServicesStatusUtils.STATUS_UNAUTHORIZED, t.getMessage());
+        } else if (t instanceof LimitExceededException) {
+            invokeFailure(
+                    callback, AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED, t.getMessage());
         } else {
             invokeFailure(callback, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, t.getMessage());
         }
@@ -523,6 +539,28 @@ public class ImpressionReporter {
     }
 
     /**
+     * Ensures that the caller package is not throttled from calling current the API
+     *
+     * @param callerPackageName the package name, which should be verified
+     * @throws LimitExceededException if the provided {@code callerPackageName} exceeds its rate
+     *     limits
+     * @return an ignorable {@code null}
+     */
+    private Void assertCallerNotThrottled(final String callerPackageName)
+            throws LimitExceededException {
+        LogUtil.v("Checking if API is throttled for package: %s ", callerPackageName);
+        Throttler throttler = mThrottlerSupplier.get();
+        boolean isThrottled =
+                !throttler.tryAcquire(FLEDGE_API_REPORT_IMPRESSIONS, callerPackageName);
+
+        if (isThrottled) {
+            LogUtil.e("Rate Limit Reached for API: %s", FLEDGE_API_REPORT_IMPRESSIONS);
+            throw new LimitExceededException(REPORT_IMPRESSION_THROTTLED);
+        }
+        return null;
+    }
+
+    /**
      * Validates the {@code reportImpression} request.
      *
      * @param adSelectionConfig the adSelectionConfig to be validated
@@ -536,11 +574,14 @@ public class ImpressionReporter {
      * @throws ConsentManager.RevokedConsentException if FLEDGE or the Privacy Sandbox do not have
      *     user consent
      * @throws IllegalArgumentException if the provided {@code adSelectionConfig} is not valid
+     * @throws LimitExceededException if the provided {@code callerPackageName} exceeds the rate
+     *     limits
      * @return an ignorable {@code null}
      */
     private Void validateRequest(AdSelectionConfig adSelectionConfig, String callerPackageName) {
         assertCallerPackageName(callerPackageName);
         maybeAssertForegroundCaller();
+        assertCallerNotThrottled(callerPackageName);
         assertFledgeEnrollment(adSelectionConfig, callerPackageName);
         assertAppInAllowList(callerPackageName);
         assertCallerHasUserConsent();

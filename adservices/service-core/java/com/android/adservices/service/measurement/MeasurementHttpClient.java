@@ -87,7 +87,7 @@ public class MeasurementHttpClient {
         try {
             url = new URL(endpoint);
         } catch (MalformedURLException e) {
-            LogUtil.d("Malformed registration target URL %s", e);
+            LogUtil.d(e, "Malformed registration target URL %s", e);
             return Optional.empty();
         }
 
