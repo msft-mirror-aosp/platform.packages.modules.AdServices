@@ -43,6 +43,7 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.service.PhFlagsFixture;
+import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 
@@ -97,6 +98,7 @@ public class FledgeCtsTest {
                             Uri.parse("https://" + SELLER + "/" + TRUSTED_SCORING_SIGNALS_URI))
                     .build();
 
+    private static final int DELAY_TO_AVOID_THROTTLE_MS = 1001;
     private AdSelectionClient mAdSelectionClient;
     private TestAdSelectionClient mTestAdSelectionClient;
     private AdvertisingCustomAudienceClient mCustomAudienceClient;
@@ -139,6 +141,7 @@ public class FledgeCtsTest {
         PhFlagsFixture.overrideForegroundStatusForFledgeReportImpression(false);
         PhFlagsFixture.overrideEnforceIsolateMaxHeapSize(false);
         PhFlagsFixture.overrideIsolateMaxHeapSizeBytes(0);
+        PhFlagsFixture.overrideSdkRequestPermitsPerSecond(Integer.MAX_VALUE);
     }
 
     @Test
@@ -179,9 +182,12 @@ public class FledgeCtsTest {
 
         CustomAudience customAudience2 = createCustomAudience(BUYER_2, bidsForBuyer2);
 
+        Throttler.destroyExistingThrottler();
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
+        Thread.sleep(DELAY_TO_AVOID_THROTTLE_MS);
         mCustomAudienceClient.joinCustomAudience(customAudience1).get(10, TimeUnit.SECONDS);
+        Thread.sleep(DELAY_TO_AVOID_THROTTLE_MS);
         mCustomAudienceClient.joinCustomAudience(customAudience2).get(10, TimeUnit.SECONDS);
 
         // Adding AdSelection override, asserting a failure since app is not debuggable.

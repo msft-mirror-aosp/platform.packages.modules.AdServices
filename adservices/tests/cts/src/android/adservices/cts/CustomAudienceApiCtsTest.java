@@ -64,6 +64,7 @@ public class CustomAudienceApiCtsTest {
     private static final String BIDDING_LOGIC_JS = "function test() { return \"hello world\"; }";
     private static final AdSelectionSignals TRUSTED_BIDDING_DATA =
             AdSelectionSignals.fromString("{\"trusted_bidding_data\":1}");
+    private static final int DELAY_TO_AVOID_THROTTLE_MS = 1001;
 
     private boolean mIsDebugMode;
 
@@ -130,10 +131,12 @@ public class CustomAudienceApiCtsTest {
     @Test
     public void testLeaveCustomAudience_joinedCustomAudience_success()
             throws ExecutionException, InterruptedException {
+        Thread.sleep(DELAY_TO_AVOID_THROTTLE_MS);
         mClient.joinCustomAudience(
                         CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .build())
                 .get();
+        Thread.sleep(DELAY_TO_AVOID_THROTTLE_MS);
         mClient.leaveCustomAudience(
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
