@@ -19,6 +19,7 @@
      package="android.adservices.cts"
      android:targetSandboxVersion="2">
 
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_ATTRIBUTION" />
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_TOPICS" />
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE" />
     <application>

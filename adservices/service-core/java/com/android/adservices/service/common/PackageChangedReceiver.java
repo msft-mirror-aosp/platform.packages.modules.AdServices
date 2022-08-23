@@ -24,11 +24,13 @@ import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.topics.TopicsWorker;
 import com.android.internal.annotations.VisibleForTesting;
 
+import java.util.Objects;
 import java.util.concurrent.Executor;
 
 /**
@@ -67,6 +69,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                     case PACKAGE_FULLY_REMOVED:
                         measurementOnPackageFullyRemoved(context, packageUri);
                         topicsOnPackageFullyRemoved(context, packageUri);
+                        fledgeOnPackageFullyRemovedOrDataCleared(context, packageUri);
                         break;
                     case PACKAGE_ADDED:
                         measurementOnPackageAdded(context, packageUri);
@@ -74,6 +77,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                         break;
                     case PACKAGE_DATA_CLEARED:
                         measurementOnPackageDataCleared(context, packageUri);
+                        fledgeOnPackageFullyRemovedOrDataCleared(context, packageUri);
                         break;
                 }
                 break;
@@ -135,5 +139,37 @@ public class PackageChangedReceiver extends BroadcastReceiver {
         LogUtil.d("Package Added for topics API: " + packageUri.toString());
         sBackgroundExecutor.execute(
                 () -> TopicsWorker.getInstance(context).handleAppInstallation(packageUri));
+    }
+
+    /** Deletes FLEDGE custom audience data belonging to the given application. */
+    @VisibleForTesting
+    void fledgeOnPackageFullyRemovedOrDataCleared(
+            @NonNull Context context, @NonNull Uri packageUri) {
+        Objects.requireNonNull(context);
+        Objects.requireNonNull(packageUri);
+
+        if (FlagsFactory.getFlags().getFledgeCustomAudienceServiceKillSwitch()) {
+            LogUtil.v("FLEDGE CA API is disabled");
+            return;
+        }
+
+        LogUtil.d("Deleting custom audience data for package: " + packageUri);
+        sBackgroundExecutor.execute(
+                () ->
+                        getCustomAudienceDatabase(context)
+                                .customAudienceDao()
+                                .deleteCustomAudienceDataByOwner(packageUri.toString()));
+    }
+
+    /**
+     * Returns an instance of the {@link CustomAudienceDatabase}.
+     *
+     * <p>This is split out for testing/mocking purposes only, since the {@link
+     * CustomAudienceDatabase} is abstract and therefore unmockable.
+     */
+    @VisibleForTesting
+    CustomAudienceDatabase getCustomAudienceDatabase(@NonNull Context context) {
+        Objects.requireNonNull(context);
+        return CustomAudienceDatabase.getInstance(context);
     }
 }

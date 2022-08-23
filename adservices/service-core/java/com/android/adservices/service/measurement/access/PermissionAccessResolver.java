@@ -16,24 +16,36 @@
 
 package com.android.adservices.service.measurement.access;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
+
 import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
 import android.content.Context;
 
-/** An interface exposes capability to control measurement PPAPIs access by clients. */
-public interface IAccessResolver {
-    /**
-     * @param context to retrieve contextual parameters. This method is chosen over constructor to
-     *     pass context to avoid memory leak issues
-     * @return true, if access is granted, false otherwise
-     */
-    boolean isAllowed(@NonNull Context context);
+/** Resolves whether the Attribution API access permissions has been requested. */
+public class PermissionAccessResolver implements IAccessResolver {
+    private static final String ERROR_MESSAGE = "Unauthorized caller. Permission not requested.";
+    private final boolean mAllowed;
 
-    /** @return error status code to return in case the access was not granted. */
-    @AdServicesStatusUtils.StatusCode
-    int getErrorStatusCode();
+    public PermissionAccessResolver(boolean allowed) {
+        mAllowed = allowed;
+    }
 
-    /** @return error message to throw in case access wasn't granted. */
+    @Override
+    public boolean isAllowed(@NonNull Context context) {
+        return mAllowed;
+    }
+
     @NonNull
-    String getErrorMessage();
+    @Override
+    public String getErrorMessage() {
+        return ERROR_MESSAGE;
+    }
+
+    @NonNull
+    @Override
+    @AdServicesStatusUtils.StatusCode
+    public int getErrorStatusCode() {
+        return STATUS_PERMISSION_NOT_REQUESTED;
+    }
 }

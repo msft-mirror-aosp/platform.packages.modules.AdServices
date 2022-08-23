@@ -72,7 +72,7 @@ public class SharedPreferencesSyncManager {
     // List of keys that this manager needs to keep in sync.
     @Nullable
     @GuardedBy("mLock")
-    private ArrayList<KeyWithType> mKeysToSync = null;
+    private ArrayList<SharedPreferencesKey> mKeysToSync = null;
 
     public SharedPreferencesSyncManager(
             @NonNull Context context, @NonNull ISdkSandboxManager service) {
@@ -108,7 +108,7 @@ public class SharedPreferencesSyncManager {
      * @param callback callback to receive notification for change in sync status.
      */
     public void startSharedPreferencesSync(
-            @NonNull Set<KeyWithType> keysWithTypeToSync,
+            @NonNull Set<SharedPreferencesKey> keysWithTypeToSync,
             @NonNull SharedPreferencesSyncCallback callback) {
         // TODO(b/239403323): Validate the parameters in SdkSandboxManager
         synchronized (mLock) {
@@ -120,7 +120,7 @@ public class SharedPreferencesSyncManager {
             mCallback = callback;
             mKeysToSync = new ArrayList<>(keysWithTypeToSync);
             mTypeOfKey = new ArrayMap<>();
-            for (KeyWithType keyWithTypeToSync : mKeysToSync) {
+            for (SharedPreferencesKey keyWithTypeToSync : mKeysToSync) {
                 mTypeOfKey.put(keyWithTypeToSync.getName(), keyWithTypeToSync.getType());
             }
 
@@ -285,7 +285,8 @@ public class SharedPreferencesSyncManager {
                 final Bundle data = new Bundle();
                 updateBundle(data, pref, key);
 
-                final KeyWithType keyWithType = new KeyWithType(key, mTypeOfKey.get(key));
+                final SharedPreferencesKey keyWithType =
+                        new SharedPreferencesKey(key, mTypeOfKey.get(key));
                 final SharedPreferencesUpdate update =
                         new SharedPreferencesUpdate(List.of(keyWithType), data);
                 try {
@@ -326,22 +327,22 @@ public class SharedPreferencesSyncManager {
         final int type = mTypeOfKey.get(key);
         try {
             switch (type) {
-                case KeyWithType.KEY_TYPE_STRING:
+                case SharedPreferencesKey.KEY_TYPE_STRING:
                     data.putString(key, pref.getString(key, ""));
                     break;
-                case KeyWithType.KEY_TYPE_BOOLEAN:
+                case SharedPreferencesKey.KEY_TYPE_BOOLEAN:
                     data.putBoolean(key, pref.getBoolean(key, false));
                     break;
-                case KeyWithType.KEY_TYPE_INTEGER:
+                case SharedPreferencesKey.KEY_TYPE_INTEGER:
                     data.putInt(key, pref.getInt(key, 0));
                     break;
-                case KeyWithType.KEY_TYPE_FLOAT:
+                case SharedPreferencesKey.KEY_TYPE_FLOAT:
                     data.putFloat(key, pref.getFloat(key, 0.0f));
                     break;
-                case KeyWithType.KEY_TYPE_LONG:
+                case SharedPreferencesKey.KEY_TYPE_LONG:
                     data.putLong(key, pref.getLong(key, 0L));
                     break;
-                case KeyWithType.KEY_TYPE_STRING_SET:
+                case SharedPreferencesKey.KEY_TYPE_STRING_SET:
                     data.putStringArrayList(
                             key, new ArrayList<>(pref.getStringSet(key, Collections.emptySet())));
                     break;

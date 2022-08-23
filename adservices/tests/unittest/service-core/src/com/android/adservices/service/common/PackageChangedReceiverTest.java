@@ -16,16 +16,21 @@
 
 package com.android.adservices.service.common;
 
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.doCallRealMethod;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyLong;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doCallRealMethod;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.mock;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyZeroInteractions;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
+
+import static com.google.common.truth.Truth.assertThat;
 
 import android.content.Context;
 import android.content.Intent;
@@ -34,6 +39,8 @@ import android.net.Uri;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.MeasurementImpl;
@@ -52,6 +59,9 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
 /** Unit test for {@link com.android.adservices.service.common.PackageChangedReceiver}. */
 @SmallTest
 public class PackageChangedReceiverTest {
@@ -65,6 +75,8 @@ public class PackageChangedReceiverTest {
     @Mock CacheManager mMockCacheManager;
     @Mock BlockedTopicsManager mBlockedTopicsManager;
     @Mock AppUpdateManager mMockAppUpdateManager;
+    @Mock CustomAudienceDatabase mCustomAudienceDatabaseMock;
+    @Mock CustomAudienceDao mCustomAudienceDaoMock;
     @Mock Flags mMockFlags;
 
     private TopicsWorker mSpyTopicsWorker;
@@ -90,12 +102,21 @@ public class PackageChangedReceiverTest {
     private PackageChangedReceiver createSpyPackageReceiverForMeasurement() {
         PackageChangedReceiver spyReceiver = Mockito.spy(new PackageChangedReceiver());
         doNothingForTopics(spyReceiver);
+        doNothingForFledge(spyReceiver);
         return spyReceiver;
     }
 
     private PackageChangedReceiver createSpyPackageReceiverForTopics() {
         PackageChangedReceiver spyReceiver = Mockito.spy(new PackageChangedReceiver());
         doNothingForMeasurement(spyReceiver);
+        doNothingForFledge(spyReceiver);
+        return spyReceiver;
+    }
+
+    private PackageChangedReceiver createSpyPackageReceiverForFledge() {
+        PackageChangedReceiver spyReceiver = Mockito.spy(new PackageChangedReceiver());
+        doNothingForMeasurement(spyReceiver);
+        doNothingForTopics(spyReceiver);
         return spyReceiver;
     }
 
@@ -108,6 +129,10 @@ public class PackageChangedReceiverTest {
     private void doNothingForTopics(PackageChangedReceiver receiver) {
         doNothing().when(receiver).topicsOnPackageFullyRemoved(any(), any());
         doNothing().when(receiver).topicsOnPackageAdded(any(), any());
+    }
+
+    private void doNothingForFledge(PackageChangedReceiver receiver) {
+        doNothing().when(receiver).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
     }
 
     private Intent createDefaultIntentWithAction(String value) {
@@ -134,10 +159,10 @@ public class PackageChangedReceiverTest {
             doReturn(false).when(mMockFlags).getTopicsKillSwitch();
 
             // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-            ExtendedMockito.when(FlagsFactory.getFlags()).thenReturn(mMockFlags);
+            when(FlagsFactory.getFlags()).thenReturn(mMockFlags);
 
             // Stubbing TopicsWorker.getInstance() to return mocked TopicsWorker instance
-            ExtendedMockito.doReturn(mSpyTopicsWorker).when(() -> TopicsWorker.getInstance(any()));
+            doReturn(mSpyTopicsWorker).when(() -> TopicsWorker.getInstance(any()));
 
             // Initialize package receiver meant for Topics
             PackageChangedReceiver spyReceiver = createSpyPackageReceiverForTopics();
@@ -170,7 +195,7 @@ public class PackageChangedReceiverTest {
             doReturn(true).when(mMockFlags).getTopicsKillSwitch();
 
             // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-            ExtendedMockito.when(FlagsFactory.getFlags()).thenReturn(mMockFlags);
+            when(FlagsFactory.getFlags()).thenReturn(mMockFlags);
 
             // Initialize package receiver meant for Topics and execute
             createSpyPackageReceiverForTopics().onReceive(sContext, intent);
@@ -201,12 +226,11 @@ public class PackageChangedReceiverTest {
             doReturn(false).when(mMockFlags).getMeasurementReceiverDeletePackagesKillSwitch();
 
             // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-            ExtendedMockito.when(FlagsFactory.getFlags()).thenReturn(mMockFlags);
+            when(FlagsFactory.getFlags()).thenReturn(mMockFlags);
 
             // Mock static method MeasurementImpl.getInstance that executes on a separate thread
-            MeasurementImpl mockMeasurementImpl = ExtendedMockito.mock(MeasurementImpl.class);
-            ExtendedMockito.doReturn(mockMeasurementImpl)
-                    .when(() -> MeasurementImpl.getInstance(any()));
+            MeasurementImpl mockMeasurementImpl = mock(MeasurementImpl.class);
+            doReturn(mockMeasurementImpl).when(() -> MeasurementImpl.getInstance(any()));
 
             // Initialize package receiver meant for Measurement
             PackageChangedReceiver spyReceiver = createSpyPackageReceiverForMeasurement();
@@ -243,12 +267,11 @@ public class PackageChangedReceiverTest {
             doReturn(true).when(mMockFlags).getMeasurementReceiverDeletePackagesKillSwitch();
 
             // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-            ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+            doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
             // Mock static method MeasurementImpl.getInstance that executes on a separate thread
-            MeasurementImpl mockMeasurementImpl = ExtendedMockito.mock(MeasurementImpl.class);
-            ExtendedMockito.doReturn(mockMeasurementImpl)
-                    .when(() -> MeasurementImpl.getInstance(any()));
+            MeasurementImpl mockMeasurementImpl = mock(MeasurementImpl.class);
+            doReturn(mockMeasurementImpl).when(() -> MeasurementImpl.getInstance(any()));
 
             // Initialize package receiver meant for Measurement
             PackageChangedReceiver spyReceiver = createSpyPackageReceiverForMeasurement();
@@ -270,6 +293,83 @@ public class PackageChangedReceiverTest {
     }
 
     @Test
+    public void testReceivePackageFullyRemoved_fledgeKillSwitchOff() throws InterruptedException {
+        Intent intent = createDefaultIntentWithAction(PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
+
+        // Start a mockitoSession to mock static method
+        // Lenient added to allow easy disabling of other APIs' methods
+        MockitoSession session =
+                ExtendedMockito.mockitoSession()
+                        .mockStatic(FlagsFactory.class)
+                        .strictness(Strictness.LENIENT)
+                        .initMocks(this)
+                        .startMocking();
+        try {
+            // Kill switch is off; service is enabled
+            doReturn(false).when(mMockFlags).getFledgeCustomAudienceServiceKillSwitch();
+            doReturn(mMockFlags).when(FlagsFactory::getFlags);
+
+            // Mock static method CustomAudienceDatabase.getInstance() executed on a separate thread
+            doReturn(mCustomAudienceDaoMock).when(mCustomAudienceDatabaseMock).customAudienceDao();
+
+            CountDownLatch completionLatch = new CountDownLatch(1);
+            doAnswer(
+                            unusedInvocation -> {
+                                completionLatch.countDown();
+                                return null;
+                            })
+                    .when(mCustomAudienceDaoMock)
+                    .deleteCustomAudienceDataByOwner(any());
+
+            // Initialize package receiver meant for FLEDGE
+            PackageChangedReceiver spyReceiver = createSpyPackageReceiverForFledge();
+            doReturn(mCustomAudienceDatabaseMock)
+                    .when(spyReceiver)
+                    .getCustomAudienceDatabase(any());
+            spyReceiver.onReceive(sContext, intent);
+
+            verify(spyReceiver).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
+
+            // Verify method inside background thread executes
+            assertThat(completionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
+            verify(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any());
+        } finally {
+            session.finishMocking();
+        }
+    }
+
+    @Test
+    public void testReceivePackageFullyRemoved_fledgeKillSwitchOn() {
+        Intent intent = createDefaultIntentWithAction(PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
+
+        // Start a mockitoSession to mock static method
+        // Lenient added to allow easy disabling of other APIs' methods
+        MockitoSession session =
+                ExtendedMockito.mockitoSession()
+                        .mockStatic(FlagsFactory.class)
+                        .strictness(Strictness.LENIENT)
+                        .initMocks(this)
+                        .startMocking();
+        try {
+            // Kill switch is on; service is disabled
+            doReturn(true).when(mMockFlags).getFledgeCustomAudienceServiceKillSwitch();
+            doReturn(mMockFlags).when(FlagsFactory::getFlags);
+
+            // Initialize package receiver meant for FLEDGE
+            PackageChangedReceiver spyReceiver = createSpyPackageReceiverForFledge();
+            spyReceiver.onReceive(sContext, intent);
+
+            verify(spyReceiver).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
+
+            // Verify no executions
+            verify(spyReceiver, never()).getCustomAudienceDatabase(any());
+            verifyZeroInteractions(mCustomAudienceDatabaseMock, mCustomAudienceDaoMock);
+        } finally {
+            session.finishMocking();
+        }
+    }
+
+    @Test
     public void testReceivePackageAdded_topics() throws InterruptedException {
         final long epochId = 1;
 
@@ -285,8 +385,7 @@ public class PackageChangedReceiverTest {
 
         try {
             // Stubbing TopicsWorker.getInstance() to return mocked TopicsWorker instance
-            ExtendedMockito.doReturn(mSpyTopicsWorker)
-                    .when(() -> TopicsWorker.getInstance(eq(sContext)));
+            doReturn(mSpyTopicsWorker).when(() -> TopicsWorker.getInstance(eq(sContext)));
             when(mMockEpochManager.getCurrentEpochId()).thenReturn(epochId);
 
             // Initialize package receiver meant for Topics and execute
@@ -321,12 +420,11 @@ public class PackageChangedReceiverTest {
             doReturn(false).when(mMockFlags).getMeasurementReceiverInstallAttributionKillSwitch();
 
             // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-            ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+            doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
             // Mock static method MeasurementImpl.getInstance that executes on a separate thread
-            MeasurementImpl mockMeasurementImpl = ExtendedMockito.mock(MeasurementImpl.class);
-            ExtendedMockito.doReturn(mockMeasurementImpl)
-                    .when(() -> MeasurementImpl.getInstance(any()));
+            MeasurementImpl mockMeasurementImpl = mock(MeasurementImpl.class);
+            doReturn(mockMeasurementImpl).when(() -> MeasurementImpl.getInstance(any()));
 
             // Initialize package receiver meant for Measurement
             PackageChangedReceiver spyReceiver = createSpyPackageReceiverForMeasurement();
@@ -363,12 +461,11 @@ public class PackageChangedReceiverTest {
             doReturn(true).when(mMockFlags).getMeasurementReceiverInstallAttributionKillSwitch();
 
             // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-            ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+            doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
             // Mock static method MeasurementImpl.getInstance that executes on a separate thread
-            MeasurementImpl mockMeasurementImpl = ExtendedMockito.mock(MeasurementImpl.class);
-            ExtendedMockito.doReturn(mockMeasurementImpl)
-                    .when(() -> MeasurementImpl.getInstance(any()));
+            MeasurementImpl mockMeasurementImpl = mock(MeasurementImpl.class);
+            doReturn(mockMeasurementImpl).when(() -> MeasurementImpl.getInstance(any()));
 
             // Initialize package receiver meant for Measurement
             PackageChangedReceiver spyReceiver = createSpyPackageReceiverForMeasurement();
@@ -405,12 +502,11 @@ public class PackageChangedReceiverTest {
             doReturn(false).when(mMockFlags).getMeasurementReceiverDeletePackagesKillSwitch();
 
             // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-            ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+            doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
             // Mock static method MeasurementImpl.getInstance that executes on a separate thread
-            MeasurementImpl mockMeasurementImpl = ExtendedMockito.mock(MeasurementImpl.class);
-            ExtendedMockito.doReturn(mockMeasurementImpl)
-                    .when(() -> MeasurementImpl.getInstance(any()));
+            MeasurementImpl mockMeasurementImpl = mock(MeasurementImpl.class);
+            doReturn(mockMeasurementImpl).when(() -> MeasurementImpl.getInstance(any()));
 
             // Initialize package receiver meant for Measurement
             PackageChangedReceiver spyReceiver = createSpyPackageReceiverForMeasurement();
@@ -447,12 +543,11 @@ public class PackageChangedReceiverTest {
             doReturn(true).when(mMockFlags).getMeasurementReceiverDeletePackagesKillSwitch();
 
             // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-            ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+            doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
             // Mock static method MeasurementImpl.getInstance that executes on a separate thread
-            MeasurementImpl mockMeasurementImpl = ExtendedMockito.mock(MeasurementImpl.class);
-            ExtendedMockito.doReturn(mockMeasurementImpl)
-                    .when(() -> MeasurementImpl.getInstance(any()));
+            MeasurementImpl mockMeasurementImpl = mock(MeasurementImpl.class);
+            doReturn(mockMeasurementImpl).when(() -> MeasurementImpl.getInstance(any()));
 
             // Initialize package receiver meant for Measurement
             PackageChangedReceiver spyReceiver = createSpyPackageReceiverForMeasurement();
@@ -468,6 +563,83 @@ public class PackageChangedReceiverTest {
 
             // Verify method inside measurement background thread does not execute
             verify(mockMeasurementImpl, never()).deletePackageRecords(any());
+        } finally {
+            session.finishMocking();
+        }
+    }
+
+    @Test
+    public void testReceivePackageDataCleared_fledgeKillSwitchOff() throws InterruptedException {
+        Intent intent = createDefaultIntentWithAction(PackageChangedReceiver.PACKAGE_DATA_CLEARED);
+
+        // Start a mockitoSession to mock static method
+        // Lenient added to allow easy disabling of other APIs' methods
+        MockitoSession session =
+                ExtendedMockito.mockitoSession()
+                        .mockStatic(FlagsFactory.class)
+                        .strictness(Strictness.LENIENT)
+                        .initMocks(this)
+                        .startMocking();
+        try {
+            // Kill switch is off; service is enabled
+            doReturn(false).when(mMockFlags).getFledgeCustomAudienceServiceKillSwitch();
+            doReturn(mMockFlags).when(FlagsFactory::getFlags);
+
+            // Mock static method CustomAudienceDatabase.getInstance() executed on a separate thread
+            doReturn(mCustomAudienceDaoMock).when(mCustomAudienceDatabaseMock).customAudienceDao();
+
+            CountDownLatch completionLatch = new CountDownLatch(1);
+            doAnswer(
+                            unusedInvocation -> {
+                                completionLatch.countDown();
+                                return null;
+                            })
+                    .when(mCustomAudienceDaoMock)
+                    .deleteCustomAudienceDataByOwner(any());
+
+            // Initialize package receiver meant for FLEDGE
+            PackageChangedReceiver spyReceiver = createSpyPackageReceiverForFledge();
+            doReturn(mCustomAudienceDatabaseMock)
+                    .when(spyReceiver)
+                    .getCustomAudienceDatabase(any());
+            spyReceiver.onReceive(sContext, intent);
+
+            verify(spyReceiver).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
+
+            // Verify method inside background thread executes
+            assertThat(completionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
+            verify(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any());
+        } finally {
+            session.finishMocking();
+        }
+    }
+
+    @Test
+    public void testReceivePackageDataCleared_fledgeKillSwitchOn() {
+        Intent intent = createDefaultIntentWithAction(PackageChangedReceiver.PACKAGE_DATA_CLEARED);
+
+        // Start a mockitoSession to mock static method
+        // Lenient added to allow easy disabling of other APIs' methods
+        MockitoSession session =
+                ExtendedMockito.mockitoSession()
+                        .mockStatic(FlagsFactory.class)
+                        .strictness(Strictness.LENIENT)
+                        .initMocks(this)
+                        .startMocking();
+        try {
+            // Kill switch is on; service is disabled
+            doReturn(true).when(mMockFlags).getFledgeCustomAudienceServiceKillSwitch();
+            doReturn(mMockFlags).when(FlagsFactory::getFlags);
+
+            // Initialize package receiver meant for FLEDGE
+            PackageChangedReceiver spyReceiver = createSpyPackageReceiverForFledge();
+            spyReceiver.onReceive(sContext, intent);
+
+            verify(spyReceiver).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
+
+            // Verify no executions
+            verify(spyReceiver, never()).getCustomAudienceDatabase(any());
+            verifyZeroInteractions(mCustomAudienceDatabaseMock, mCustomAudienceDaoMock);
         } finally {
             session.finishMocking();
         }
