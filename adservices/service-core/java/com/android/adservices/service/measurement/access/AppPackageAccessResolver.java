@@ -22,14 +22,13 @@ import android.content.Context;
 
 import com.android.adservices.service.common.AllowLists;
 
-/** Used for web context APIs. Checks if the package has access to them. */
-public class WebContextByPackageAccessResolver implements IAccessResolver {
+/** Used for web context and general API access APIs. Checks if the package has access to them. */
+public class AppPackageAccessResolver implements IAccessResolver {
     private static final String ERROR_MESSAGE = "Package %s is not allowed to call the API.";
     private final String mAllowList;
     private final String mPackageName;
 
-    public WebContextByPackageAccessResolver(
-            @NonNull String allowList, @NonNull String packageName) {
+    public AppPackageAccessResolver(@NonNull String allowList, @NonNull String packageName) {
         mAllowList = allowList;
         mPackageName = packageName;
     }
