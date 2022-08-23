@@ -97,7 +97,8 @@ public class EventReportingJobHandler {
         for (String eventReportId : pendingEventReportForGivenApp) {
             @AdServicesStatusUtils.StatusCode int result = performReport(eventReportId);
             if (result != AdServicesStatusUtils.STATUS_SUCCESS) {
-                LogUtil.i("Perform report status is %s for app : %s",
+                LogUtil.d(
+                        "Perform report status is %s for app : %s",
                         result, String.valueOf(appName));
             }
             logReportingStats(result);
