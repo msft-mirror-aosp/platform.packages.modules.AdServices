@@ -87,7 +87,7 @@ public class MeasurementHttpClient {
         try {
             url = new URL(endpoint);
         } catch (MalformedURLException e) {
-            LogUtil.d(e, "Malformed registration target URL %s", e);
+            LogUtil.e(e, "Malformed registration target URL");
             return Optional.empty();
         }
 
@@ -95,7 +95,7 @@ public class MeasurementHttpClient {
         try {
             urlConnection = (HttpURLConnection) setup(url);
         } catch (IOException e) {
-            LogUtil.e("Failed to open target URL %s", e);
+            LogUtil.e(e, "Failed to open target URL");
             return Optional.empty();
         }
 
@@ -137,7 +137,7 @@ public class MeasurementHttpClient {
                                 .build());
             }
         } catch (IOException e) {
-            LogUtil.e("Failed to get registration response %s", e);
+            LogUtil.e(e, "Failed to get registration response");
             return Optional.empty();
         } finally {
             if (urlConnection != null) {
