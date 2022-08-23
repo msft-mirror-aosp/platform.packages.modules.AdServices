@@ -24,7 +24,6 @@ import android.adservices.common.AdTechIdentifier;
 import org.junit.Test;
 
 public class AddCustomAudienceOverrideRequestTest {
-    private static final String OWNER = "owner";
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("buyer");
     private static final String NAME = "name";
     private static final String BIDDING_LOGIC_JS = "function test() { return \"hello world\"; }";
@@ -35,14 +34,12 @@ public class AddCustomAudienceOverrideRequestTest {
     public void testBuildAddCustomAudienceOverrideRequest() {
         AddCustomAudienceOverrideRequest request =
                 new AddCustomAudienceOverrideRequest.Builder()
-                        .setOwnerPackageName(OWNER)
                         .setBuyer(BUYER)
                         .setName(NAME)
                         .setBiddingLogicJs(BIDDING_LOGIC_JS)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_DATA)
                         .build();
 
-        assertEquals(request.getOwnerPackageName(), OWNER);
         assertEquals(request.getBuyer(), BUYER);
         assertEquals(request.getName(), NAME);
         assertEquals(request.getBiddingLogicJs(), BIDDING_LOGIC_JS);
