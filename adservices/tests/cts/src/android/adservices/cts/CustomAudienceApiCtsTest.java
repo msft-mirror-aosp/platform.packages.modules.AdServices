@@ -30,13 +30,8 @@ import android.adservices.customaudience.AddCustomAudienceOverrideRequest;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.RemoveCustomAudienceOverrideRequest;
-import android.content.Context;
 import android.os.Process;
 
-import androidx.test.core.app.ApplicationProvider;
-import androidx.test.platform.app.InstrumentationRegistry;
-
-import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 
@@ -50,11 +45,7 @@ import org.junit.Test;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-public class CustomAudienceApiCtsTest {
-
-    private static final String WRITE_DEVICE_CONFIG_PERMISSION =
-            "android.permission.WRITE_DEVICE_CONFIG";
-
+public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
     private AdvertisingCustomAudienceClient mClient;
     private TestAdvertisingCustomAudienceClient mTestClient;
 
@@ -70,25 +61,20 @@ public class CustomAudienceApiCtsTest {
 
     @Before
     public void setup() {
-        Context context = ApplicationProvider.getApplicationContext();
+        assertForegroundActivityStarted();
+
         mClient =
                 new AdvertisingCustomAudienceClient.Builder()
-                        .setContext(context)
+                        .setContext(sContext)
                         .setExecutor(MoreExecutors.directExecutor())
                         .build();
         mTestClient =
                 new TestAdvertisingCustomAudienceClient.Builder()
-                        .setContext(context)
+                        .setContext(sContext)
                         .setExecutor(MoreExecutors.directExecutor())
                         .build();
-        DevContext devContext = DevContextFilter.create(context).createDevContext(Process.myUid());
+        DevContext devContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
         mIsDebugMode = devContext.getDevOptionsEnabled();
-
-        InstrumentationRegistry.getInstrumentation()
-                .getUiAutomation()
-                .adoptShellPermissionIdentity(WRITE_DEVICE_CONFIG_PERMISSION);
-        // This test is running in background
-        PhFlagsFixture.overrideForegroundStatusForFledgeCustomAudience(false);
     }
 
     @Test

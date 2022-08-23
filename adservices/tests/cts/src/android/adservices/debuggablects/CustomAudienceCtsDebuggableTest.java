@@ -21,10 +21,7 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.AddCustomAudienceOverrideRequest;
 import android.adservices.customaudience.RemoveCustomAudienceOverrideRequest;
-import android.content.Context;
 import android.os.Process;
-
-import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
@@ -34,16 +31,13 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
 
-public class CustomAudienceCtsDebuggableTest {
+public class CustomAudienceCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
     private TestAdvertisingCustomAudienceClient mTestClient;
-
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
 
     private static final String OWNER = sContext.getPackageName();
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("buyer.example.com");
@@ -58,6 +52,8 @@ public class CustomAudienceCtsDebuggableTest {
 
     @Before
     public void setup() {
+        assertForegroundActivityStarted();
+
         mTestClient =
                 new TestAdvertisingCustomAudienceClient.Builder()
                         .setContext(sContext)
@@ -109,7 +105,6 @@ public class CustomAudienceCtsDebuggableTest {
         result.get(10, TimeUnit.SECONDS);
     }
 
-    @Ignore
     @Test
     public void testRemoveExistingOverrideSucceeds() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
