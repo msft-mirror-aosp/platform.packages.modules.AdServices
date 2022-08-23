@@ -27,10 +27,12 @@ import static androidx.test.espresso.matcher.ViewMatchers.withClassName;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
+import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
+import android.content.Context;
 import android.graphics.Rect;
 import android.util.Log;
 import android.view.View;
@@ -52,6 +54,7 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule;
 
 import com.android.adservices.api.R;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.common.BackgroundJobsManager;
 import com.android.adservices.service.consent.App;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment;
@@ -66,9 +69,12 @@ import junit.framework.AssertionFailedError;
 
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
@@ -151,58 +157,68 @@ public class SettingsActivityTest {
      * @return the mocked {@link ViewModelProvider}
      */
     public ViewModelProvider generateMockedViewModelProvider() {
+        sConsentManager =
+                spy(ConsentManager.getInstance(ApplicationProvider.getApplicationContext()));
+        List<Topic> tempList = new ArrayList<>();
+        tempList.add(Topic.create(10001, 1, 1));
+        tempList.add(Topic.create(10002, 1, 1));
+        tempList.add(Topic.create(10003, 1, 1));
+        ImmutableList<Topic> topicsList = ImmutableList.copyOf(tempList);
+        doReturn(topicsList).when(sConsentManager).getKnownTopicsWithConsent();
+
+        tempList = new ArrayList<>();
+        tempList.add(Topic.create(10004, 1, 1));
+        tempList.add(Topic.create(10005, 1, 1));
+        ImmutableList<Topic> blockedTopicsList = ImmutableList.copyOf(tempList);
+        doReturn(blockedTopicsList).when(sConsentManager).getTopicsWithRevokedConsent();
+
+        List<App> appTempList = new ArrayList<>();
+        appTempList.add(App.create("app1"));
+        appTempList.add(App.create("app2"));
+        ImmutableList<App> appsList = ImmutableList.copyOf(appTempList);
+        doReturn(appsList).when(sConsentManager).getKnownAppsWithConsent();
+
+        appTempList = new ArrayList<>();
+        appTempList.add(App.create("app3"));
+        ImmutableList<App> blockedAppsList = ImmutableList.copyOf(appTempList);
+        doReturn(blockedAppsList).when(sConsentManager).getAppsWithRevokedConsent();
+
+        doNothing().when(sConsentManager).resetTopicsAndBlockedTopics();
+        try {
+            doNothing().when(sConsentManager).resetAppsAndBlockedApps();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        doNothing().when(sConsentManager).resetMeasurement();
+
+        TopicsViewModel topicsViewModel =
+                new TopicsViewModel(ApplicationProvider.getApplicationContext(), sConsentManager);
+        AppsViewModel appsViewModel =
+                new AppsViewModel(ApplicationProvider.getApplicationContext(), sConsentManager);
+        MainViewModel mainViewModel =
+                new MainViewModel(ApplicationProvider.getApplicationContext(), sConsentManager);
+        doReturn(topicsViewModel).when(sViewModelProvider).get(TopicsViewModel.class);
+        doReturn(mainViewModel).when(sViewModelProvider).get(MainViewModel.class);
+        doReturn(appsViewModel).when(sViewModelProvider).get(AppsViewModel.class);
+        return sViewModelProvider;
+    }
+
+    @Before
+    public void setup() {
+        MockitoAnnotations.initMocks(this);
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
+                        .spyStatic(BackgroundJobsManager.class)
                         .strictness(Strictness.WARN)
                         .initMocks(this)
                         .startMocking();
-        try {
-            sConsentManager =
-                    spy(ConsentManager.getInstance(ApplicationProvider.getApplicationContext()));
-            List<Topic> tempList = new ArrayList<>();
-            tempList.add(Topic.create(10001, 1, 1));
-            tempList.add(Topic.create(10002, 1, 1));
-            tempList.add(Topic.create(10003, 1, 1));
-            ImmutableList<Topic> topicsList = ImmutableList.copyOf(tempList);
-            doReturn(topicsList).when(sConsentManager).getKnownTopicsWithConsent();
+        ExtendedMockito.doNothing()
+                .when(() -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
+    }
 
-            tempList = new ArrayList<>();
-            tempList.add(Topic.create(10004, 1, 1));
-            tempList.add(Topic.create(10005, 1, 1));
-            ImmutableList<Topic> blockedTopicsList = ImmutableList.copyOf(tempList);
-            doReturn(blockedTopicsList).when(sConsentManager).getTopicsWithRevokedConsent();
-
-            List<App> appTempList = new ArrayList<>();
-            appTempList.add(App.create("app1"));
-            appTempList.add(App.create("app2"));
-            ImmutableList<App> appsList = ImmutableList.copyOf(appTempList);
-            doReturn(appsList).when(sConsentManager).getKnownAppsWithConsent();
-
-            appTempList = new ArrayList<>();
-            appTempList.add(App.create("app3"));
-            ImmutableList<App> blockedAppsList = ImmutableList.copyOf(appTempList);
-            doReturn(blockedAppsList).when(sConsentManager).getAppsWithRevokedConsent();
-
-            doNothing().when(sConsentManager).resetTopicsAndBlockedTopics();
-            try {
-                doNothing().when(sConsentManager).resetAppsAndBlockedApps();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            doNothing().when(sConsentManager).resetMeasurement();
-
-            TopicsViewModel topicsViewModel =
-                    new TopicsViewModel(
-                            ApplicationProvider.getApplicationContext(), sConsentManager);
-            AppsViewModel appsViewModel =
-                    new AppsViewModel(ApplicationProvider.getApplicationContext(), sConsentManager);
-            MainViewModel mainViewModel =
-                    new MainViewModel(ApplicationProvider.getApplicationContext(), sConsentManager);
-            doReturn(topicsViewModel).when(sViewModelProvider).get(TopicsViewModel.class);
-            doReturn(mainViewModel).when(sViewModelProvider).get(MainViewModel.class);
-            doReturn(appsViewModel).when(sViewModelProvider).get(AppsViewModel.class);
-            return sViewModelProvider;
-        } finally {
+    @After
+    public void teardown() {
+        if (mStaticMockSession != null) {
             mStaticMockSession.finishMocking();
         }
     }

@@ -110,7 +110,7 @@ public class ConsentNotificationTrigger {
 
         // if the device is not an EU device and notifications are not disabled, set the consent
         if (!isEuDevice) {
-            ConsentManager.getInstance(context).enable(context.getPackageManager());
+            ConsentManager.getInstance(context).enable(context);
         }
 
         createNotificationChannel(context);

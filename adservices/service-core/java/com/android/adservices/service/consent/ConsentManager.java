@@ -35,9 +35,9 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
-import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.BackgroundJobsManager;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.UIStats;
@@ -138,7 +138,7 @@ public class ConsentManager {
     /**
      * Enables all PP API services. It gives consent to Topics, Fledge and Measurements services.
      */
-    public void enable(@NonNull PackageManager packageManager) {
+    public void enable(@NonNull Context context) {
         mAdServicesLoggerImpl.logUIStats(
                 new UIStats.Builder()
                         .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
@@ -147,7 +147,10 @@ public class ConsentManager {
                         .build());
         // Enable all the APIs
         try {
-            init(packageManager);
+            init(context.getPackageManager());
+
+            BackgroundJobsManager.scheduleAllBackgroundJobs(context);
+
             setConsent(AdServicesApiConsent.GIVEN);
         } catch (IOException e) {
             LogUtil.e(e, ERROR_MESSAGE_DATASTORE_IO_EXCEPTION_WHILE_SET_CONTENT);
@@ -177,7 +180,8 @@ public class ConsentManager {
             resetAppsAndBlockedApps();
             resetMeasurement();
 
-            unscheduleAllBackgroundJobs(context.getSystemService(JobScheduler.class));
+            BackgroundJobsManager.unscheduleAllBackgroundJobs(
+                    context.getSystemService(JobScheduler.class));
 
             setConsent(AdServicesApiConsent.REVOKED);
         } catch (IOException e) {
@@ -468,29 +472,6 @@ public class ConsentManager {
         //            mDeviceLoggingRegion = AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
         //        }
         mDeviceLoggingRegion = AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
-    }
-
-    private void unscheduleAllBackgroundJobs(@NonNull JobScheduler jobScheduler) {
-        Objects.requireNonNull(jobScheduler);
-
-        jobScheduler.cancel(AdServicesConfig.MAINTENANCE_JOB_ID);
-        jobScheduler.cancel(AdServicesConfig.TOPICS_EPOCH_JOB_ID);
-
-        jobScheduler.cancel(AdServicesConfig.MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID);
-        jobScheduler.cancel(AdServicesConfig.MEASUREMENT_DELETE_EXPIRED_JOB_ID);
-        jobScheduler.cancel(AdServicesConfig.MEASUREMENT_ATTRIBUTION_JOB_ID);
-        jobScheduler.cancel(AdServicesConfig.MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID);
-        jobScheduler.cancel(AdServicesConfig.MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID);
-        jobScheduler.cancel(AdServicesConfig.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID);
-
-        jobScheduler.cancel(AdServicesConfig.FLEDGE_BACKGROUND_FETCH_JOB_ID);
-
-        jobScheduler.cancel(AdServicesConfig.CONSENT_NOTIFICATION_JOB_ID);
-
-        jobScheduler.cancel(AdServicesConfig.MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID);
-        jobScheduler.cancel(AdServicesConfig.MDD_CHARGING_PERIODIC_TASK_JOB_ID);
-        jobScheduler.cancel(AdServicesConfig.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID);
-        jobScheduler.cancel(AdServicesConfig.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID);
     }
 
     /**

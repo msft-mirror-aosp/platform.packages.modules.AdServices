@@ -35,10 +35,13 @@ import android.adservices.common.IAdServicesCommonCallback;
 import android.adservices.common.IsAdServicesEnabledResult;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.IBinder;
 import android.os.RemoteException;
 
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
@@ -61,8 +64,10 @@ public class AdServicesCommonServiceImplTest {
     private CountDownLatch mGetCommonCallbackLatch;
     @Mock private Flags mFlags;
     @Mock private Context mContext;
+    @Mock private PackageManager mPackageManager;
     @Mock private SharedPreferences mSharedPreferences;
     @Mock private SharedPreferences.Editor mEditor;
+    @Mock private ConsentManager mConsentManager;
     @Captor ArgumentCaptor<String> mStringArgumentCaptor;
     @Captor ArgumentCaptor<Integer> mIntegerArgumentCaptor;
     private static final int BINDER_CONNECTION_TIMEOUT_MS = 5_000;
@@ -77,9 +82,14 @@ public class AdServicesCommonServiceImplTest {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(ConsentNotificationJobService.class)
+                        .spyStatic(ConsentManager.class)
+                        .spyStatic(BackgroundJobsManager.class)
                         .strictness(Strictness.LENIENT)
                         .initMocks(this)
                         .startMocking();
+
+        ExtendedMockito.doNothing()
+                .when(() -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
     }
 
     @After
@@ -143,6 +153,7 @@ public class AdServicesCommonServiceImplTest {
     @Test
     public void setAdservicesEntryPointStatusTest() throws InterruptedException {
         when(mContext.getSharedPreferences(anyString(), anyInt())).thenReturn(mSharedPreferences);
+        when(mContext.getPackageManager()).thenReturn(mPackageManager);
         when(mSharedPreferences.edit()).thenReturn(mEditor);
         when(mEditor.putInt(anyString(), anyInt())).thenReturn(mEditor);
         Mockito.doNothing().when(mEditor).apply();
@@ -152,6 +163,10 @@ public class AdServicesCommonServiceImplTest {
                                 ConsentNotificationJobService.schedule(
                                         any(Context.class), any(Boolean.class)));
         when(mFlags.getAdservicesEnableStatus()).thenReturn(true);
+        ExtendedMockito.when(mConsentManager.getConsent(any(PackageManager.class)))
+                .thenReturn(AdServicesApiConsent.getConsent(true));
+        ExtendedMockito.doReturn(mConsentManager)
+                .when(() -> ConsentManager.getInstance(any(Context.class)));
 
         mCommonService = new AdServicesCommonServiceImpl(mContext, mFlags);
         mCommonService.setAdServicesEnabled(true, false);
@@ -160,6 +175,8 @@ public class AdServicesCommonServiceImplTest {
         verify(
                 () -> ConsentNotificationJobService.schedule(any(Context.class), eq(false)),
                 times(1));
+        ExtendedMockito.verify(
+                () -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
         Mockito.verify(mEditor)
                 .putInt(mStringArgumentCaptor.capture(), mIntegerArgumentCaptor.capture());
         assertThat(mStringArgumentCaptor.getValue()).isEqualTo(KEY_ADSERVICES_ENTRY_POINT_STATUS);

@@ -113,7 +113,7 @@ public class ConsentNotificationTriggerTest {
             ConsentNotificationTrigger.showConsentNotification(mContext, false);
             Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
 
-            verify(mConsentManager).enable(any(PackageManager.class));
+            verify(mConsentManager).enable(any(Context.class));
             verify(mConsentManager).recordNotificationDisplayed(any(PackageManager.class));
             verifyNoMoreInteractions(mConsentManager);
             assertThat(mNotificationManager.getActiveNotifications()).hasLength(1);
