@@ -35,11 +35,9 @@ import android.adservices.customaudience.AddCustomAudienceOverrideRequest;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.TrustedBiddingDataFixture;
-import android.content.Context;
 import android.net.Uri;
 import android.os.Process;
 
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.service.PhFlagsFixture;
@@ -63,11 +61,11 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class FledgeCtsTest {
+public class FledgeCtsTest extends ForegroundCtsTest {
+
     private static final String WRITE_DEVICE_CONFIG_PERMISSION =
             "android.permission.WRITE_DEVICE_CONFIG";
 
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private static final AdTechIdentifier BUYER_1 = AdSelectionConfigFixture.BUYER_1;
@@ -108,6 +106,8 @@ public class FledgeCtsTest {
 
     @Before
     public void setup() {
+        assertForegroundActivityStarted();
+
         mAdSelectionClient =
                 new AdSelectionClient.Builder()
                         .setContext(sContext)
@@ -134,11 +134,7 @@ public class FledgeCtsTest {
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(WRITE_DEVICE_CONFIG_PERMISSION);
-        // This test is running in background
-        PhFlagsFixture.overrideForegroundStatusForFledgeCustomAudience(false);
-        PhFlagsFixture.overrideForegroundStatusForFledgeOverrides(false);
-        PhFlagsFixture.overrideForegroundStatusForFledgeRunAdSelection(false);
-        PhFlagsFixture.overrideForegroundStatusForFledgeReportImpression(false);
+        // Enabling tests to run with WebView version < M105
         PhFlagsFixture.overrideEnforceIsolateMaxHeapSize(false);
         PhFlagsFixture.overrideIsolateMaxHeapSizeBytes(0);
         PhFlagsFixture.overrideSdkRequestPermitsPerSecond(Integer.MAX_VALUE);
