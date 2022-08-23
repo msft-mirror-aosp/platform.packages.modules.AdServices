@@ -95,7 +95,6 @@ public class PermissionsValidTest {
 
             CustomAudience customAudience =
                     new CustomAudience.Builder()
-                            .setOwnerPackageName(sContext.getPackageName())
                             .setBuyer(AdTechIdentifier.fromString("test.com"))
                             .setName("exampleCustomAudience")
                             .setDailyUpdateUrl(Uri.parse("https://test.com/daily-update"))
@@ -175,7 +174,6 @@ public class PermissionsValidTest {
 
             customAudienceClient
                     .leaveCustomAudience(
-                            sContext.getPackageName(),
                             AdTechIdentifier.fromString("test.com"),
                             "exampleCustomAudience")
                     .get();

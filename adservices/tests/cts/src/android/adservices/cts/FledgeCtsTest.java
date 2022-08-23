@@ -191,25 +191,22 @@ public class FledgeCtsTest {
         mCustomAudienceClient.joinCustomAudience(customAudience2).get(10, TimeUnit.SECONDS);
 
         // Adding AdSelection override, asserting a failure since app is not debuggable.
-        AddAdSelectionOverrideRequest addAdSselectAdsExceptionelectionOverrideRequest =
+        AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
                 new AddAdSelectionOverrideRequest(
                         AD_SELECTION_CONFIG, decisionLogicJs, TRUSTED_SCORING_SIGNALS);
 
         ListenableFuture<Void> adSelectionOverrideResult =
                 mTestAdSelectionClient.overrideAdSelectionConfigRemoteInfo(
-                        addAdSselectAdsExceptionelectionOverrideRequest);
+                        addAdSelectionOverrideRequest);
 
         Exception adSelectionOverrideException =
                 assertThrows(
                         ExecutionException.class,
-                        () -> {
-                            adSelectionOverrideResult.get(10, TimeUnit.SECONDS);
-                        });
+                        () -> adSelectionOverrideResult.get(10, TimeUnit.SECONDS));
         assertThat(adSelectionOverrideException.getCause()).isInstanceOf(SecurityException.class);
 
         AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest =
                 new AddCustomAudienceOverrideRequest.Builder()
-                        .setOwnerPackageName(customAudience2.getOwnerPackageName())
                         .setBuyer(customAudience2.getBuyer())
                         .setName(customAudience2.getName())
                         .setBiddingLogicJs(biddingLogicJs)
@@ -224,9 +221,7 @@ public class FledgeCtsTest {
         Exception customAudienceOverrideException =
                 assertThrows(
                         ExecutionException.class,
-                        () -> {
-                            customAudienceOverrideResult.get(10, TimeUnit.SECONDS);
-                        });
+                        () -> customAudienceOverrideResult.get(10, TimeUnit.SECONDS));
         assertThat(customAudienceOverrideException.getCause())
                 .isInstanceOf(SecurityException.class);
 
@@ -235,11 +230,10 @@ public class FledgeCtsTest {
         Exception selectAdsException =
                 assertThrows(
                         ExecutionException.class,
-                        () -> {
-                            mAdSelectionClient
-                                    .selectAds(AD_SELECTION_CONFIG)
-                                    .get(30, TimeUnit.SECONDS);
-                        });
+                        () ->
+                                mAdSelectionClient
+                                        .selectAds(AD_SELECTION_CONFIG)
+                                        .get(30, TimeUnit.SECONDS));
         assertThat(selectAdsException.getCause()).isInstanceOf(IllegalStateException.class);
         // Cannot perform reporting since no ad selection id is returned.
     }
@@ -266,7 +260,6 @@ public class FledgeCtsTest {
         }
 
         return new CustomAudience.Builder()
-                .setOwnerPackageName(CustomAudienceFixture.VALID_OWNER)
                 .setBuyer(buyer)
                 .setName(buyer + CustomAudienceFixture.VALID_NAME)
                 .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)

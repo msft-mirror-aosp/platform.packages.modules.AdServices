@@ -91,7 +91,6 @@ public class CustomAudienceManagerTest {
                         .build();
 
         client.leaveCustomAudience(
-                        CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
                         CustomAudienceFixture.VALID_NAME)
                 .get();
