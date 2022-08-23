@@ -127,7 +127,7 @@ public class AggregateReportingJobHandler {
                 @AdServicesStatusUtils.StatusCode
                 int result = performReport(aggregateReportId, keys.get(i));
                 if (result != AdServicesStatusUtils.STATUS_SUCCESS) {
-                    LogUtil.i(
+                    LogUtil.d(
                             "Perform report status is %s for app : %s",
                             result, String.valueOf(appName));
                 }
