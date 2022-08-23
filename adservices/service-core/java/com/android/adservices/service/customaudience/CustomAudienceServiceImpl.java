@@ -157,7 +157,9 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
     @Override
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void joinCustomAudience(
-            @NonNull CustomAudience customAudience, @NonNull ICustomAudienceCallback callback) {
+            @NonNull CustomAudience customAudience,
+            @NonNull String ownerPackageName,
+            @NonNull ICustomAudienceCallback callback) {
         LogUtil.v("Entering joinCustomAudience");
 
         final int apiName = AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE;
@@ -167,6 +169,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
         try {
             Objects.requireNonNull(customAudience);
+            Objects.requireNonNull(ownerPackageName);
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
@@ -177,15 +180,18 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
         final int callerUid = getCallingUid(apiName);
         LogUtil.v("Running service");
-        mExecutorService.execute(() -> doJoinCustomAudience(customAudience, callback, callerUid));
+        mExecutorService.execute(
+                () -> doJoinCustomAudience(customAudience, ownerPackageName, callback, callerUid));
     }
 
     /** Try to join the custom audience and signal back to the caller using the callback. */
     private void doJoinCustomAudience(
             @NonNull CustomAudience customAudience,
+            @NonNull String ownerPackageName,
             @NonNull ICustomAudienceCallback callback,
             final int callerUid) {
         Objects.requireNonNull(customAudience);
+        Objects.requireNonNull(ownerPackageName);
         Objects.requireNonNull(callback);
 
         LogUtil.v("Entering doJoinCustomAudience");
@@ -198,36 +204,31 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             try {
                 LogUtil.v("Validating caller package name");
                 mFledgeAuthorizationFilter.assertCallingPackageName(
-                        customAudience.getOwnerPackageName(), callerUid, apiName);
+                        ownerPackageName, callerUid, apiName);
 
                 LogUtil.v("Validating API is not throttled");
-                assertCallerNotThrottled(
-                        FLEDGE_API_JOIN_CUSTOM_AUDIENCE, customAudience.getOwnerPackageName());
+                assertCallerNotThrottled(FLEDGE_API_JOIN_CUSTOM_AUDIENCE, ownerPackageName);
 
                 if (mFlags.getEnforceForegroundStatusForFledgeCustomAudience()) {
                     LogUtil.v("Checking caller is in foreground");
                     mAppImportanceFilter.assertCallerIsInForeground(
-                            customAudience.getOwnerPackageName(), apiName, null);
+                            ownerPackageName, apiName, null);
                 }
 
                 if (!mFlags.getDisableFledgeEnrollmentCheck()) {
                     mFledgeAuthorizationFilter.assertAdTechAllowed(
-                            mContext,
-                            customAudience.getOwnerPackageName(),
-                            customAudience.getBuyer(),
-                            apiName);
+                            mContext, ownerPackageName, customAudience.getBuyer(), apiName);
                 }
 
-                mFledgeAllowListsFilter.assertAppCanUsePpapi(
-                        customAudience.getOwnerPackageName(), apiName);
+                mFledgeAllowListsFilter.assertAppCanUsePpapi(ownerPackageName, apiName);
 
                 shouldLog = true;
 
                 // Fail silently for revoked user consent
                 if (!mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                        mContext.getPackageManager(), customAudience.getOwnerPackageName())) {
+                        mContext.getPackageManager(), ownerPackageName)) {
                     LogUtil.v("Joining custom audience");
-                    mCustomAudienceImpl.joinCustomAudience(customAudience);
+                    mCustomAudienceImpl.joinCustomAudience(customAudience, ownerPackageName);
                     BackgroundFetchJobService.scheduleIfNeeded(mContext, mFlags, false);
                     // TODO(b/233681870): Investigate implementation of actual failures
                     //  in logs/metrics

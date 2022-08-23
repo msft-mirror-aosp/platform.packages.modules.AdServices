@@ -32,11 +32,16 @@ import java.util.concurrent.Executor;
 public class TestCustomAudienceManager {
 
     private final CustomAudienceManager mCustomAudienceManager;
+    private final String mCallerPackageName;
 
-    TestCustomAudienceManager(@NonNull CustomAudienceManager customAudienceManager) {
+    TestCustomAudienceManager(
+            @NonNull CustomAudienceManager customAudienceManager,
+            @NonNull String callerPackageName) {
         Objects.requireNonNull(customAudienceManager);
+        Objects.requireNonNull(callerPackageName);
 
         mCustomAudienceManager = customAudienceManager;
+        mCallerPackageName = callerPackageName;
     }
 
     /**
@@ -64,7 +69,7 @@ public class TestCustomAudienceManager {
         try {
             final ICustomAudienceService service = mCustomAudienceManager.getService();
             service.overrideCustomAudienceRemoteInfo(
-                    request.getOwnerPackageName(),
+                    mCallerPackageName,
                     request.getBuyer(),
                     request.getName(),
                     request.getBiddingLogicJs(),
@@ -111,7 +116,7 @@ public class TestCustomAudienceManager {
         try {
             final ICustomAudienceService service = mCustomAudienceManager.getService();
             service.removeCustomAudienceRemoteInfoOverride(
-                    request.getOwnerPackageName(),
+                    mCallerPackageName,
                     request.getBuyer(),
                     request.getName(),
                     new CustomAudienceOverrideCallback.Stub() {

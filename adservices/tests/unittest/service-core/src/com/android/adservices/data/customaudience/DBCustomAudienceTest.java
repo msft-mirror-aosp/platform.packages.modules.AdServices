@@ -46,12 +46,13 @@ public class DBCustomAudienceTest {
             Duration.ofMillis(FLAGS.getFledgeCustomAudienceDefaultExpireInMs());
 
     @Test
-    public void testFromServiceObject_passThrough() {
+    public void testFromServiceObject_success() {
         assertEquals(
                 DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1).build(),
                 DBCustomAudience.fromServiceObject(
                         CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .build(),
+                        CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                         DEFAULT_EXPIRE_IN));
     }
@@ -62,6 +63,21 @@ public class DBCustomAudienceTest {
                 NullPointerException.class,
                 () ->
                         DBCustomAudience.fromServiceObject(
+                                null,
+                                CustomAudienceFixture.VALID_OWNER,
+                                CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
+                                DEFAULT_EXPIRE_IN));
+    }
+
+    @Test
+    public void testFromServiceObject_nullCallerPackageName() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        DBCustomAudience.fromServiceObject(
+                                CustomAudienceFixture.getValidBuilderForBuyer(
+                                                CommonFixture.VALID_BUYER_1)
+                                        .build(),
                                 null,
                                 CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                                 DEFAULT_EXPIRE_IN));
@@ -76,6 +92,7 @@ public class DBCustomAudienceTest {
                                 CustomAudienceFixture.getValidBuilderForBuyer(
                                                 CommonFixture.VALID_BUYER_1)
                                         .build(),
+                                CustomAudienceFixture.VALID_OWNER,
                                 null,
                                 DEFAULT_EXPIRE_IN));
     }
@@ -89,6 +106,7 @@ public class DBCustomAudienceTest {
                                 CustomAudienceFixture.getValidBuilderForBuyer(
                                                 CommonFixture.VALID_BUYER_1)
                                         .build(),
+                                CustomAudienceFixture.VALID_OWNER,
                                 CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                                 null));
     }
@@ -104,6 +122,7 @@ public class DBCustomAudienceTest {
                         CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .setAds(null)
                                 .build(),
+                        CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                         DEFAULT_EXPIRE_IN));
     }
@@ -120,6 +139,7 @@ public class DBCustomAudienceTest {
                                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(
                                                 200))
                                 .build(),
+                        CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                         DEFAULT_EXPIRE_IN));
     }
@@ -134,6 +154,7 @@ public class DBCustomAudienceTest {
                         CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .setActivationTime(null)
                                 .build(),
+                        CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                         DEFAULT_EXPIRE_IN));
     }
@@ -149,6 +170,7 @@ public class DBCustomAudienceTest {
                         CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .setExpirationTime(null)
                                 .build(),
+                        CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                         DEFAULT_EXPIRE_IN));
     }

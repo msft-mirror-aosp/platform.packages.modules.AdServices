@@ -21,6 +21,7 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
+import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
@@ -45,8 +46,8 @@ public class CustomAudienceManager {
      */
     public static final String CUSTOM_AUDIENCE_SERVICE = "custom_audience_service";
 
-    @NonNull
-    private final ServiceBinder<ICustomAudienceService> mServiceBinder;
+    @NonNull private final Context mContext;
+    @NonNull private final ServiceBinder<ICustomAudienceService> mServiceBinder;
 
     /**
      * Create a service binder CustomAudienceManager
@@ -54,6 +55,9 @@ public class CustomAudienceManager {
      * @hide
      */
     public CustomAudienceManager(@NonNull Context context) {
+        Objects.requireNonNull(context);
+
+        mContext = context;
         mServiceBinder =
                 ServiceBinder.getServiceBinder(
                         context,
@@ -64,7 +68,7 @@ public class CustomAudienceManager {
     /** Create a service with test-enabling APIs */
     @NonNull
     public TestCustomAudienceManager getTestCustomAudienceManager() {
-        return new TestCustomAudienceManager(this);
+        return new TestCustomAudienceManager(this, getCallerPackageName());
     }
 
     @NonNull
@@ -119,6 +123,7 @@ public class CustomAudienceManager {
 
             service.joinCustomAudience(
                     customAudience,
+                    getCallerPackageName(),
                     new ICustomAudienceCallback.Stub() {
                         @Override
                         public void onSuccess() {
@@ -167,7 +172,6 @@ public class CustomAudienceManager {
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
 
-        final String ownerPackageName = leaveCustomAudienceRequest.getOwnerPackageName();
         final AdTechIdentifier buyer = leaveCustomAudienceRequest.getBuyer();
         final String name = leaveCustomAudienceRequest.getName();
 
@@ -175,7 +179,7 @@ public class CustomAudienceManager {
             final ICustomAudienceService service = getService();
 
             service.leaveCustomAudience(
-                    ownerPackageName,
+                    getCallerPackageName(),
                     buyer,
                     name,
                     new ICustomAudienceCallback.Stub() {
@@ -196,6 +200,14 @@ public class CustomAudienceManager {
         } catch (RemoteException e) {
             LogUtil.e(e, "Exception");
             receiver.onError(new IllegalStateException("Internal Error!", e));
+        }
+    }
+
+    private String getCallerPackageName() {
+        if (mContext instanceof SandboxedSdkContext) {
+            return ((SandboxedSdkContext) mContext).getClientPackageName();
+        } else {
+            return mContext.getPackageName();
         }
     }
 }

@@ -28,36 +28,27 @@ import java.util.concurrent.Executor;
 /**
  * This POJO represents the {@link
  * TestCustomAudienceManager#overrideCustomAudienceRemoteInfo(AddCustomAudienceOverrideRequest,
- * Executor, OutcomeReceiver)} request
+ * Executor, OutcomeReceiver)} request.
  *
- * <p>It contains 3 fields {@code ownerPackageName}, {@code buyer}, and {@code name} which will
- * serve as the identifier for the two specific override fields, {@code biddingLogicJs} and {@code
- * trustedBiddingSignals}
+ * <p>It contains fields {@code buyer} and {@code name} which will serve as the identifier for the
+ * override fields, {@code biddingLogicJs} and {@code trustedBiddingSignals}, which are used during
+ * ad selection instead of querying external servers.
  */
 public class AddCustomAudienceOverrideRequest {
-    @NonNull private final String mOwnerPackageName;
     @NonNull private final AdTechIdentifier mBuyer;
     @NonNull private final String mName;
     @NonNull private final String mBiddingLogicJs;
     @NonNull private final AdSelectionSignals mTrustedBiddingSignals;
 
     public AddCustomAudienceOverrideRequest(
-            @NonNull String ownerPackageName,
             @NonNull AdTechIdentifier buyer,
             @NonNull String name,
             @NonNull String biddingLogicJs,
             @NonNull AdSelectionSignals trustedBiddingSignals) {
-        mOwnerPackageName = ownerPackageName;
         mBuyer = buyer;
         mName = name;
         mBiddingLogicJs = biddingLogicJs;
         mTrustedBiddingSignals = trustedBiddingSignals;
-    }
-
-    /** @return the package name for the owner application */
-    @NonNull
-    public String getOwnerPackageName() {
-        return mOwnerPackageName;
     }
 
     /** @return an {@link AdTechIdentifier} representing the buyer */
@@ -86,23 +77,12 @@ public class AddCustomAudienceOverrideRequest {
 
     /** Builder for {@link AddCustomAudienceOverrideRequest} objects. */
     public static final class Builder {
-        @Nullable private String mOwnerPackageName;
         @Nullable private AdTechIdentifier mBuyer;
         @Nullable private String mName;
         @Nullable private String mBiddingLogicJs;
         @Nullable private AdSelectionSignals mTrustedBiddingSignals;
 
         public Builder() {}
-
-        /** Sets the owner application's package name. */
-        @NonNull
-        public AddCustomAudienceOverrideRequest.Builder setOwnerPackageName(
-                @NonNull String ownerPackageName) {
-            Objects.requireNonNull(ownerPackageName);
-
-            this.mOwnerPackageName = ownerPackageName;
-            return this;
-        }
 
         /** Sets the buyer {@link AdTechIdentifier} for the custom audience. */
         @NonNull
@@ -145,14 +125,13 @@ public class AddCustomAudienceOverrideRequest {
         /** Builds a {@link AddCustomAudienceOverrideRequest} instance. */
         @NonNull
         public AddCustomAudienceOverrideRequest build() {
-            Objects.requireNonNull(mOwnerPackageName);
             Objects.requireNonNull(mBuyer);
             Objects.requireNonNull(mName);
             Objects.requireNonNull(mBiddingLogicJs);
             Objects.requireNonNull(mTrustedBiddingSignals);
 
             return new AddCustomAudienceOverrideRequest(
-                    mOwnerPackageName, mBuyer, mName, mBiddingLogicJs, mTrustedBiddingSignals);
+                    mBuyer, mName, mBiddingLogicJs, mTrustedBiddingSignals);
         }
     }
 }

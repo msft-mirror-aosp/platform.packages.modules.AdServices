@@ -186,7 +186,6 @@ public class SdkFledge extends SandboxedSdkProvider {
         try {
             AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest =
                     new AddCustomAudienceOverrideRequest.Builder()
-                            .setOwnerPackageName(customAudience2.getOwnerPackageName())
                             .setBuyer(customAudience2.getBuyer())
                             .setName(customAudience2.getName())
                             .setBiddingLogicJs(biddingLogicJs)
@@ -306,7 +305,6 @@ public class SdkFledge extends SandboxedSdkProvider {
         }
 
         return new CustomAudience.Builder()
-                .setOwnerPackageName("com.android.tests.sandbox.fledge")
                 .setBuyer(buyer)
                 .setName(buyer + "testCustomAudienceName")
                 .setActivationTime(Instant.now().truncatedTo(ChronoUnit.MILLIS))

@@ -79,7 +79,6 @@ public class CustomAudienceCtsDebuggableTest {
 
         AddCustomAudienceOverrideRequest request =
                 new AddCustomAudienceOverrideRequest.Builder()
-                        .setOwnerPackageName(OWNER)
                         .setBuyer(BUYER)
                         .setName(NAME)
                         .setBiddingLogicJs(BIDDING_LOGIC_JS)
@@ -98,7 +97,6 @@ public class CustomAudienceCtsDebuggableTest {
 
         RemoveCustomAudienceOverrideRequest request =
                 new RemoveCustomAudienceOverrideRequest.Builder()
-                        .setOwnerPackageName(OWNER)
                         .setBuyer(BUYER)
                         .setName(NAME)
                         .build();
@@ -116,7 +114,6 @@ public class CustomAudienceCtsDebuggableTest {
 
         AddCustomAudienceOverrideRequest addRequest =
                 new AddCustomAudienceOverrideRequest.Builder()
-                        .setOwnerPackageName(OWNER)
                         .setBuyer(BUYER)
                         .setName(NAME)
                         .setBiddingLogicJs(BIDDING_LOGIC_JS)
@@ -130,7 +127,6 @@ public class CustomAudienceCtsDebuggableTest {
 
         RemoveCustomAudienceOverrideRequest removeRequest =
                 new RemoveCustomAudienceOverrideRequest.Builder()
-                        .setOwnerPackageName(OWNER)
                         .setBuyer(BUYER)
                         .setName(NAME)
                         .build();

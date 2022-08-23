@@ -226,7 +226,6 @@ public class FledgeCtsDebuggableTest {
 
         AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest =
                 new AddCustomAudienceOverrideRequest.Builder()
-                        .setOwnerPackageName(customAudience2.getOwnerPackageName())
                         .setBuyer(customAudience2.getBuyer())
                         .setName(customAudience2.getName())
                         .setBiddingLogicJs(biddingLogicJs)
@@ -283,7 +282,6 @@ public class FledgeCtsDebuggableTest {
         }
 
         return new CustomAudience.Builder()
-                .setOwnerPackageName(mDevContext.getCallingAppPackageName())
                 .setBuyer(buyer)
                 .setName(buyer + CustomAudienceFixture.VALID_NAME)
                 .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
