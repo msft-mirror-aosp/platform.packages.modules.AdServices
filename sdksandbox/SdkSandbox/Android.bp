@@ -18,7 +18,10 @@ package {
 
 filegroup {
     name: "sdksandbox_aidl",
-    srcs: ["aidl/**/*.aidl"],
+    srcs: [
+        "aidl/**/*.aidl",
+        "aidl/**/*.java"
+    ],
     path: "aidl",
 }
 
