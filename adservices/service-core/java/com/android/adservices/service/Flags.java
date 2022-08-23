@@ -921,6 +921,17 @@ public interface Flags extends Dumpable {
         return getGlobalKillSwitch() || MDD_BACKGROUND_TASK_KILL_SWITCH;
     }
 
+    /**
+     * MDD Logger Kill Switch. The default value is false which means the MDD Logger is enabled.
+     * This flag is used for emergency turning off the MDD Logger.
+     */
+    boolean MDD_LOGGER_KILL_SWITCH = false;
+
+    /** @return value of MDD Logger Kill Switch */
+    default boolean getMddLoggerKillSwitch() {
+        return getGlobalKillSwitch() || MDD_LOGGER_KILL_SWITCH;
+    }
+
     // FLEDGE Kill switches
 
     /**
