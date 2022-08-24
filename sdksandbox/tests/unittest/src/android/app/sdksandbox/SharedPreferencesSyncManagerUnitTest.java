@@ -87,6 +87,15 @@ public class SharedPreferencesSyncManagerUnitTest {
     }
 
     @Test
+    public void test_sharedPreferencesSyncManager_isSingleton() throws Exception {
+        final SharedPreferencesSyncManager manager1 =
+                SharedPreferencesSyncManager.getInstance(mContext, mSdkSandboxManagerService);
+        final SharedPreferencesSyncManager manager2 =
+                SharedPreferencesSyncManager.getInstance(mContext, mSdkSandboxManagerService);
+        assertThat(manager1).isSameInstanceAs(manager2);
+    }
+
+    @Test
     public void test_startSync_syncSpecifiedKeys() throws Exception {
         // Populate default shared preference with test data
         populateDefaultSharedPreference(TEST_DATA);

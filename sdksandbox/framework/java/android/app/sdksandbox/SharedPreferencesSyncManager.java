@@ -27,6 +27,7 @@ import android.util.ArrayMap;
 import android.util.Log;
 
 import com.android.internal.annotations.GuardedBy;
+import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -36,11 +37,16 @@ import java.util.Set;
 /**
  * Syncs specified keys in default {@link SharedPreferences} to Sandbox.
  *
+ * <p>This class is a singleton since we want to maintain sync between app process and sandbox
+ * process.
+ *
  * @hide
  */
 public class SharedPreferencesSyncManager {
 
     private static final String TAG = "SdkSandboxManager";
+
+    private static SharedPreferencesSyncManager sInstance = null;
 
     private final ISdkSandboxManager mService;
     private final Context mContext;
@@ -74,10 +80,20 @@ public class SharedPreferencesSyncManager {
     @GuardedBy("mLock")
     private ArrayList<SharedPreferencesKey> mKeysToSync = null;
 
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
     public SharedPreferencesSyncManager(
             @NonNull Context context, @NonNull ISdkSandboxManager service) {
         mContext = context.getApplicationContext();
         mService = service;
+    }
+
+    /** Returns a singleton instance of this class. */
+    public static synchronized SharedPreferencesSyncManager getInstance(
+            @NonNull Context context, @NonNull ISdkSandboxManager service) {
+        if (sInstance == null) {
+            sInstance = new SharedPreferencesSyncManager(context, service);
+        }
+        return sInstance;
     }
 
     // TODO(b/237410689): Update links to getClientSharedPreferences when cl is merged.
