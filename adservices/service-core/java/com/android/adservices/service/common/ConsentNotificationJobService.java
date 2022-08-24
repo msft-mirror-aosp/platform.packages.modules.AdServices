@@ -166,7 +166,7 @@ public class ConsentNotificationJobService extends JobService {
                                     return;
                                 }
                                 AdServicesSyncUtil.getInstance()
-                                        .execute(this, adIdZeroStatus || isEuDevice(this));
+                                        .execute(this, !adIdZeroStatus || isEuDevice(this));
                             } finally {
                                 jobFinished(params, false);
                             }
