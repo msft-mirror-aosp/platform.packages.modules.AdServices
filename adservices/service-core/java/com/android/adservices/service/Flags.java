@@ -204,8 +204,6 @@ public interface Flags extends Dumpable {
         return MEASUREMENT_NETWORK_READ_TIMEOUT_MS;
     }
 
-    /* The default measurement app name. */
-    String MEASUREMENT_APP_NAME = "";
     int MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(5);
     int MEASUREMENT_NETWORK_READ_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(30);
 
@@ -224,11 +222,6 @@ public interface Flags extends Dumpable {
 
     default boolean getMeasurementIsClickVerificationEnabled() {
         return MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED;
-    }
-
-    /** Returns the app name. */
-    default String getMeasurementAppName() {
-        return MEASUREMENT_APP_NAME;
     }
 
     /** Measurement manifest file url, used for MDD download. */
