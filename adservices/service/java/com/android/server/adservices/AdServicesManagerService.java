@@ -127,11 +127,17 @@ public class AdServicesManagerService {
         final Intent i = new Intent(PACKAGE_CHANGED_BROADCAST);
         final List<ResolveInfo> resolveInfo =
                 mContext.getPackageManager()
-                        .queryBroadcastReceiversAsUser(i, PackageManager.GET_RECEIVERS, user);
+                        .queryBroadcastReceiversAsUser(
+                                i,
+                                PackageManager.ResolveInfoFlags.of(PackageManager.GET_RECEIVERS),
+                                user);
         if (resolveInfo != null && !resolveInfo.isEmpty()) {
             for (ResolveInfo info : resolveInfo) {
                 explicitBroadcast.setClassName(
                         info.activityInfo.packageName, info.activityInfo.name);
+                int uidChanged = intent.getIntExtra(Intent.EXTRA_UID, -1);
+                Log.v(TAG, "Package changed with UID " + uidChanged);
+                explicitBroadcast.putExtra(Intent.EXTRA_UID, uidChanged);
                 switch (intent.getAction()) {
                     case Intent.ACTION_PACKAGE_DATA_CLEARED:
                         explicitBroadcast.putExtra(ACTION_KEY, PACKAGE_DATA_CLEARED);
