@@ -51,6 +51,7 @@ import android.content.res.Resources;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.ParcelFileDescriptor;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.ServiceManager;
@@ -1140,6 +1141,27 @@ public class SdkSandboxManagerServiceUnitTest {
     @Test(expected = SecurityException.class)
     public void testDump_WithoutPermission() {
         mService.dump(new FileDescriptor(), new PrintWriter(new StringWriter()), new String[0]);
+    }
+
+    @Test
+    public void testHandleShellCommandExecutesCommand() {
+        final FileDescriptor in = FileDescriptor.in;
+        final FileDescriptor out = FileDescriptor.out;
+        final FileDescriptor err = FileDescriptor.err;
+
+        final SdkSandboxShellCommand command = Mockito.mock(SdkSandboxShellCommand.class);
+        Mockito.when(mInjector.createShellCommand(mService, mSpyContext)).thenReturn(command);
+
+        final String[] args = new String[] {"start"};
+
+        mService.handleShellCommand(
+                new ParcelFileDescriptor(in),
+                new ParcelFileDescriptor(out),
+                new ParcelFileDescriptor(err),
+                args);
+
+        Mockito.verify(mInjector).createShellCommand(mService, mSpyContext);
+        Mockito.verify(command).exec(mService, in, out, err, args);
     }
 
     @Test
