@@ -148,6 +148,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         long getCurrentTime() {
             return System.currentTimeMillis();
         }
+
+        SdkSandboxShellCommand createShellCommand(
+                SdkSandboxManagerService service, Context context) {
+            return new SdkSandboxShellCommand(service, context);
+        }
     }
 
     @VisibleForTesting
@@ -1137,8 +1142,14 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     @Override
     public int handleShellCommand(ParcelFileDescriptor in, ParcelFileDescriptor out,
             ParcelFileDescriptor err, String[] args) {
-        return new SdkSandboxShellCommand(this, mContext).exec(this,
-                in.getFileDescriptor(), out.getFileDescriptor(), err.getFileDescriptor(), args);
+        return mInjector
+                .createShellCommand(this, mContext)
+                .exec(
+                        this,
+                        in.getFileDescriptor(),
+                        out.getFileDescriptor(),
+                        err.getFileDescriptor(),
+                        args);
     }
 
     private SdkProviderInfo createSdkProviderInfo(
