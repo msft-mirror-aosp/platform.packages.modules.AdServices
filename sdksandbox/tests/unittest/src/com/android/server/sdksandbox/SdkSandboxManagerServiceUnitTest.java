@@ -29,6 +29,7 @@ import android.Manifest;
 import android.app.ActivityManager;
 import android.app.sdksandbox.ILoadSdkCallback;
 import android.app.sdksandbox.ISdkSandboxManager;
+import android.app.sdksandbox.ISdkToServiceCallback;
 import android.app.sdksandbox.ISharedPreferencesSyncCallback;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxedSdk;
@@ -1825,6 +1826,7 @@ public class SdkSandboxManagerServiceUnitTest {
         private ILoadSdkInSandboxCallback mLoadSdkInSandboxCallback;
         private final ISdkSandboxManagerToSdkSandboxCallback mManagerToSdkCallback;
         private IRequestSurfacePackageFromSdkCallback mRequestSurfacePackageFromSdkCallback = null;
+        private ISdkToServiceCallback mSdkToServiceCallback;
 
         private boolean mSurfacePackageRequested = false;
         boolean mDataReceived = false;
@@ -1847,8 +1849,10 @@ public class SdkSandboxManagerServiceUnitTest {
                 String deDataDir,
                 Bundle params,
                 ILoadSdkInSandboxCallback callback,
-                SandboxLatencyInfo sandboxLatencyInfo) {
+                SandboxLatencyInfo sandboxLatencyInfo,
+                ISdkToServiceCallback sdkToServiceCallback) {
             mLoadSdkInSandboxCallback = callback;
+            mSdkToServiceCallback = sdkToServiceCallback;
         }
 
         @Override
@@ -1877,6 +1881,11 @@ public class SdkSandboxManagerServiceUnitTest {
         }
 
         void sendLoadCodeSuccessful() throws RemoteException {
+            // Whenever loadSdk has been called successfully, the callback should have been
+            // instantiated.
+            Objects.requireNonNull(
+                    mSdkToServiceCallback,
+                    "mSdkToServiceCallback should have been passed when loadSdk succeeded");
             mLoadSdkInSandboxCallback.onLoadSdkSuccess(
                     new SandboxedSdk(new Binder()),
                     mManagerToSdkCallback,
