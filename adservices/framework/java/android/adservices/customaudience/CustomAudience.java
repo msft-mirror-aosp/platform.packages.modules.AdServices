@@ -22,14 +22,12 @@ import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
-import android.os.OutcomeReceiver;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.Executor;
 
 /**
  * Represents the information necessary for a custom audience to participate in ad selection.
@@ -39,8 +37,6 @@ import java.util.concurrent.Executor;
  * targeting a single custom audience.
  */
 public final class CustomAudience implements Parcelable {
-
-    @NonNull private final String mOwnerPackageName;
     @NonNull private final AdTechIdentifier mBuyer;
     @NonNull private final String mName;
     @Nullable private final Instant mActivationTime;
@@ -69,7 +65,6 @@ public final class CustomAudience implements Parcelable {
     private CustomAudience(@NonNull CustomAudience.Builder builder) {
         Objects.requireNonNull(builder);
 
-        mOwnerPackageName = builder.mOwnerPackageName;
         mBuyer = builder.mBuyer;
         mName = builder.mName;
         mActivationTime = builder.mActivationTime;
@@ -84,7 +79,6 @@ public final class CustomAudience implements Parcelable {
     private CustomAudience(@NonNull Parcel in) {
         Objects.requireNonNull(in);
 
-        mOwnerPackageName = in.readString();
         mBuyer = AdTechIdentifier.CREATOR.createFromParcel(in);
         mName = in.readString();
         mActivationTime = in.readBoolean() ? Instant.ofEpochMilli(in.readLong()) : null;
@@ -102,7 +96,6 @@ public final class CustomAudience implements Parcelable {
     public void writeToParcel(@NonNull Parcel dest, int flags) {
         Objects.requireNonNull(dest);
 
-        dest.writeString(mOwnerPackageName);
         mBuyer.writeToParcel(dest, flags);
         dest.writeString(mName);
         writeNullable(dest, mActivationTime,
@@ -130,19 +123,6 @@ public final class CustomAudience implements Parcelable {
     @Override
     public int describeContents() {
         return 0;
-    }
-
-    /**
-     * Returns a String representing the custom audience's owner application package name.
-     *
-     * <p>The value of this field should be the package name of the calling app. Supplying another
-     * app's package name will result in failure when calling {@link
-     * CustomAudienceManager#joinCustomAudience(JoinCustomAudienceRequest, Executor,
-     * OutcomeReceiver)}.
-     */
-    @NonNull
-    public String getOwnerPackageName() {
-        return mOwnerPackageName;
     }
 
     /**
@@ -286,8 +266,7 @@ public final class CustomAudience implements Parcelable {
         if (this == o) return true;
         if (!(o instanceof CustomAudience)) return false;
         CustomAudience that = (CustomAudience) o;
-        return mOwnerPackageName.equals(that.mOwnerPackageName)
-                && mBuyer.equals(that.mBuyer)
+        return mBuyer.equals(that.mBuyer)
                 && mName.equals(that.mName)
                 && Objects.equals(mActivationTime, that.mActivationTime)
                 && Objects.equals(mExpirationTime, that.mExpirationTime)
@@ -304,7 +283,6 @@ public final class CustomAudience implements Parcelable {
     @Override
     public int hashCode() {
         return Objects.hash(
-                mOwnerPackageName,
                 mBuyer,
                 mName,
                 mActivationTime,
@@ -318,7 +296,6 @@ public final class CustomAudience implements Parcelable {
 
     /** Builder for {@link CustomAudience} objects. */
     public static final class Builder {
-        @Nullable private String mOwnerPackageName;
         @Nullable private AdTechIdentifier mBuyer;
         @Nullable private String mName;
         @Nullable private Instant mActivationTime;
@@ -331,23 +308,6 @@ public final class CustomAudience implements Parcelable {
 
         // TODO(b/232883403): We may need to add @NonNUll members as args.
         public Builder() {
-        }
-
-        /**
-         * Sets the owner application package name.
-         *
-         * <p>The value of this field should be the package name of the calling app. Supplying
-         * another app's package name will result in failure when calling {@link
-         * CustomAudienceManager#joinCustomAudience(JoinCustomAudienceRequest, Executor,
-         * OutcomeReceiver)}.
-         *
-         * <p>See {@link #getOwnerPackageName()} for more information.
-         */
-        @NonNull
-        public CustomAudience.Builder setOwnerPackageName(@NonNull String ownerPackageName) {
-            Objects.requireNonNull(ownerPackageName);
-            mOwnerPackageName = ownerPackageName;
-            return this;
         }
 
         /**
@@ -471,7 +431,6 @@ public final class CustomAudience implements Parcelable {
          */
         @NonNull
         public CustomAudience build() {
-            Objects.requireNonNull(mOwnerPackageName);
             Objects.requireNonNull(mBuyer);
             Objects.requireNonNull(mName);
             Objects.requireNonNull(mDailyUpdateUrl);

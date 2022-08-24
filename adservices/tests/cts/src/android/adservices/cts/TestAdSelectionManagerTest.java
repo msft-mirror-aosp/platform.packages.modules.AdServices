@@ -30,11 +30,9 @@ import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.adselection.TestAdSelectionClient;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
-import android.content.Context;
 import android.net.Uri;
 import android.os.Process;
 
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.LogUtil;
@@ -54,8 +52,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class TestAdSelectionManagerTest {
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
+public class TestAdSelectionManagerTest extends ForegroundCtsTest {
     private static final String WRITE_DEVICE_CONFIG_PERMISSION =
             "android.permission.WRITE_DEVICE_CONFIG";
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
@@ -86,6 +83,8 @@ public class TestAdSelectionManagerTest {
 
     @Before
     public void setup() {
+        assertForegroundActivityStarted();
+
         mTestAdSelectionClient =
                 new TestAdSelectionClient.Builder()
                         .setContext(sContext)
@@ -114,8 +113,7 @@ public class TestAdSelectionManagerTest {
         ReportImpressionRequest input =
                 new ReportImpressionRequest(AD_SELECTION_ID, AD_SELECTION_CONFIG);
 
-        ListenableFuture<Void> result =
-                adSelectionClient.reportImpression(input);
+        ListenableFuture<Void> result = adSelectionClient.reportImpression(input);
 
         Exception exception =
                 assertThrows(

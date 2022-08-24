@@ -140,17 +140,21 @@ public class DBCustomAudience {
     /**
      * Parse parcelable {@link CustomAudience} to storage model {@link DBCustomAudience}.
      *
-     * @param parcelable the service model.
-     * @param currentTime the timestamp when calling the method.
-     * @param defaultExpireIn the default expiration from activation.
+     * @param parcelable the service model
+     * @param callerPackageName the String package name for the calling application, used as the
+     *     owner app identifier
+     * @param currentTime the timestamp when calling the method
+     * @param defaultExpireIn the default expiration from activation
      * @return storage model
      */
     @NonNull
     public static DBCustomAudience fromServiceObject(
             @NonNull CustomAudience parcelable,
+            @NonNull String callerPackageName,
             @NonNull Instant currentTime,
             @NonNull Duration defaultExpireIn) {
         Objects.requireNonNull(parcelable);
+        Objects.requireNonNull(callerPackageName);
         Objects.requireNonNull(currentTime);
         Objects.requireNonNull(defaultExpireIn);
 
@@ -174,7 +178,7 @@ public class DBCustomAudience {
         return new DBCustomAudience.Builder()
                 .setName(parcelable.getName())
                 .setBuyer(parcelable.getBuyer())
-                .setOwner(parcelable.getOwnerPackageName())
+                .setOwner(callerPackageName)
                 .setActivationTime(activationTime)
                 .setCreationTime(currentTime)
                 .setLastAdsAndBiddingDataUpdatedTime(lastAdsAndBiddingDataUpdatedTime)
