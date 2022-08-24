@@ -718,6 +718,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         switch (method) {
             case ISdkSandboxManager.REQUEST_SURFACE_PACKAGE:
                 return SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE;
+            case ISdkSandboxManager.LOAD_SDK:
+                return SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK;
             default:
                 return SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__METHOD_UNSPECIFIED;
         }
@@ -1359,7 +1361,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             synchronized (this) {
                 mManagerToCodeCallback = callback;
             }
-            handleLoadSdkSuccess(sandboxedSdk);
+            handleLoadSdkSuccess(sandboxedSdk, timeSystemServerReceivedCallFromSandbox);
         }
 
         @Override
@@ -1380,10 +1382,18 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     /*successAtStage=*/ true);
         }
 
-        private void handleLoadSdkSuccess(SandboxedSdk sandboxedSdk) {
+        private void handleLoadSdkSuccess(
+                SandboxedSdk sandboxedSdk, long timeSystemServerReceivedCallFromSandbox) {
             removePendingCallback(mCallingInfo, this.asBinder());
+            final long timeSystemServerCalledApp = mInjector.getCurrentTime();
+            SdkSandboxStatsLog.write(
+                    SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                    SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK,
+                    (int) (timeSystemServerCalledApp - timeSystemServerReceivedCallFromSandbox),
+                    /*success=*/ true,
+                    SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_SANDBOX_TO_APP);
             try {
-                mManagerToAppCallback.onLoadSdkSuccess(sandboxedSdk);
+                mManagerToAppCallback.onLoadSdkSuccess(sandboxedSdk, timeSystemServerCalledApp);
             } catch (RemoteException e) {
                 Log.w(TAG, "Failed to send onLoadCodeSuccess", e);
             }
@@ -1403,17 +1413,18 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
             removePendingCallback(mCallingInfo, this.asBinder());
 
+            final long timeSystemServerCalledApp = mInjector.getCurrentTime();
             if (stage != SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED) {
                 SdkSandboxStatsLog.write(
                         SdkSandboxStatsLog.SANDBOX_API_CALLED,
                         SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK,
-                        (int) (mInjector.getCurrentTime() - startTimeOfErrorStage),
+                        (int) (timeSystemServerCalledApp - startTimeOfErrorStage),
                         successAtStage,
                         stage);
             }
 
             try {
-                mManagerToAppCallback.onLoadSdkFailure(exception);
+                mManagerToAppCallback.onLoadSdkFailure(exception, timeSystemServerCalledApp);
             } catch (RemoteException e) {
                 Log.w(TAG, "Failed to send onLoadCodeFailure", e);
             }

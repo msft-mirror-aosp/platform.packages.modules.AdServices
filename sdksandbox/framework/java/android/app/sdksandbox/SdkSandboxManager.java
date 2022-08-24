@@ -333,7 +333,8 @@ public final class SdkSandboxManager {
             @NonNull Bundle params,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<SandboxedSdk, LoadSdkException> receiver) {
-        final LoadSdkReceiverProxy callbackProxy = new LoadSdkReceiverProxy(executor, receiver);
+        final LoadSdkReceiverProxy callbackProxy =
+                new LoadSdkReceiverProxy(executor, receiver, mService);
         try {
             mService.loadSdk(
                     mContext.getPackageName(),
@@ -550,21 +551,42 @@ public final class SdkSandboxManager {
     private static class LoadSdkReceiverProxy extends ILoadSdkCallback.Stub {
         private final Executor mExecutor;
         private final OutcomeReceiver<SandboxedSdk, LoadSdkException> mCallback;
+        private final ISdkSandboxManager mService;
 
         LoadSdkReceiverProxy(
-                Executor executor, OutcomeReceiver<SandboxedSdk, LoadSdkException> callback) {
+                Executor executor,
+                OutcomeReceiver<SandboxedSdk, LoadSdkException> callback,
+                ISdkSandboxManager service) {
             mExecutor = executor;
             mCallback = callback;
+            mService = service;
         }
 
         @Override
-        public void onLoadSdkSuccess(SandboxedSdk sandboxedSdk) {
+        public void onLoadSdkSuccess(SandboxedSdk sandboxedSdk, long timeSystemServerCalledApp) {
+            logLatencyFromSystemServerToApp(timeSystemServerCalledApp);
             mExecutor.execute(() -> mCallback.onResult(sandboxedSdk));
         }
 
         @Override
-        public void onLoadSdkFailure(LoadSdkException exception) {
+        public void onLoadSdkFailure(LoadSdkException exception, long timeSystemServerCalledApp) {
+            logLatencyFromSystemServerToApp(timeSystemServerCalledApp);
             mExecutor.execute(() -> mCallback.onError(exception));
+        }
+
+        private void logLatencyFromSystemServerToApp(long timeSystemServerCalledApp) {
+            try {
+                mService.logLatencyFromSystemServerToApp(
+                        ISdkSandboxManager.LOAD_SDK,
+                        // TODO(b/242832156): Add Injector class for testing
+                        (int) (System.currentTimeMillis() - timeSystemServerCalledApp));
+            } catch (RemoteException e) {
+                Log.w(
+                        TAG,
+                        "Remote exception while calling logLatencyFromSystemServerToApp."
+                                + "Error: "
+                                + e.getMessage());
+            }
         }
     }
 
