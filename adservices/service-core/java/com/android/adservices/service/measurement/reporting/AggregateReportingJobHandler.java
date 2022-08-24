@@ -99,48 +99,6 @@ public class AggregateReportingJobHandler {
     }
 
     /**
-     * Finds all aggregate reports for an app, these aggregate reports have a status {@link
-     * AggregateReport.Status#PENDING} and attempts to upload them individually.
-     *
-     * @param appName the given app name corresponding to the registrant field in Source table.
-     * @return always return true to signal to JobScheduler that the task is done.
-     */
-    synchronized boolean performAllPendingReportsForGivenApp(Uri appName) {
-        LogUtil.d("AggregateReportingJobHandler: performAllPendingReportsForGivenApp");
-        Optional<List<String>> pendingAggregateReportsForGivenApp = mDatastoreManager
-                .runInTransactionWithResult((dao) ->
-                        dao.getPendingAggregateReportIdsForGivenApp(appName));
-
-        if (!pendingAggregateReportsForGivenApp.isPresent()) {
-            // Failure during event report retrieval
-            return true;
-        }
-
-        List<String> pendingAggregateReportForGivenApp = pendingAggregateReportsForGivenApp.get();
-        List<AggregateEncryptionKey> keys =
-                mAggregateEncryptionKeyManager.getAggregateEncryptionKeys(
-                        pendingAggregateReportForGivenApp.size());
-
-        if (keys.size() == pendingAggregateReportForGivenApp.size()) {
-            for (int i = 0; i < pendingAggregateReportForGivenApp.size(); i++) {
-                final String aggregateReportId = pendingAggregateReportForGivenApp.get(i);
-                @AdServicesStatusUtils.StatusCode
-                int result = performReport(aggregateReportId, keys.get(i));
-                if (result != AdServicesStatusUtils.STATUS_SUCCESS) {
-                    LogUtil.d(
-                            "Perform report status is %s for app : %s",
-                            result, String.valueOf(appName));
-                }
-                logReportingStats(result);
-            }
-        } else {
-            LogUtil.w("The number of keys do not align with the number of reports");
-        }
-
-        return true;
-    }
-
-    /**
      * Perform aggregate reporting by finding the relevant {@link AggregateReport} and making an
      * HTTP POST request to the specified report to URL with the report data as a JSON in the body.
      *
