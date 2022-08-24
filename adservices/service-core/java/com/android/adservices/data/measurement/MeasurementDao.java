@@ -51,6 +51,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -59,7 +60,12 @@ import java.util.stream.Stream;
  */
 class MeasurementDao implements IMeasurementDao {
 
+    private Supplier<Boolean> mDbFileMaxSizeLimitReachedSupplier;
     private SQLTransaction mSQLTransaction;
+
+    MeasurementDao(@NonNull Supplier<Boolean> dbFileMaxSizeLimitReachedSupplier) {
+        mDbFileMaxSizeLimitReachedSupplier = dbFileMaxSizeLimitReachedSupplier;
+    }
 
     @Override
     public void setTransaction(ITransaction transaction) {
@@ -71,6 +77,11 @@ class MeasurementDao implements IMeasurementDao {
 
     @Override
     public void insertTrigger(@NonNull Trigger trigger) throws DatastoreException {
+        if (mDbFileMaxSizeLimitReachedSupplier.get()) {
+            LogUtil.d("DB size has reached the limit, trigger will not be inserted");
+            return;
+        }
+
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.TriggerContract.ID, UUID.randomUUID().toString());
         values.put(MeasurementTables.TriggerContract.ATTRIBUTION_DESTINATION,
@@ -177,6 +188,11 @@ class MeasurementDao implements IMeasurementDao {
 
     @Override
     public void insertSource(@NonNull Source source) throws DatastoreException {
+        if (mDbFileMaxSizeLimitReachedSupplier.get()) {
+            LogUtil.d("DB size has reached the limit, source will not be inserted");
+            return;
+        }
+
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.SourceContract.ID, UUID.randomUUID().toString());
         values.put(MeasurementTables.SourceContract.EVENT_ID, source.getEventId());
