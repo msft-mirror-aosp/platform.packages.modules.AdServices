@@ -32,6 +32,7 @@ import android.app.sdksandbox.ILoadSdkCallback;
 import android.app.sdksandbox.IRequestSurfacePackageCallback;
 import android.app.sdksandbox.ISdkSandboxLifecycleCallback;
 import android.app.sdksandbox.ISdkSandboxManager;
+import android.app.sdksandbox.ISdkToServiceCallback;
 import android.app.sdksandbox.ISendDataCallback;
 import android.app.sdksandbox.ISharedPreferencesSyncCallback;
 import android.app.sdksandbox.LoadSdkException;
@@ -383,13 +384,15 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             return;
         }
 
+        final SdkToServiceLink sdkToServiceLink = new SdkToServiceLink();
         invokeSdkSandboxServiceToLoadSdk(
                 callingInfo,
                 sdkToken,
                 sdkProviderInfo,
                 params,
                 link,
-                timeSystemServerReceivedCallFromApp);
+                timeSystemServerReceivedCallFromApp,
+                sdkToServiceLink);
     }
 
     @Override
@@ -809,7 +812,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             SdkProviderInfo info,
             Bundle params,
             AppAndRemoteSdkLink link,
-            long timeSystemServerReceivedCallFromApp) {
+            long timeSystemServerReceivedCallFromApp,
+            SdkToServiceLink sdkToServiceLink) {
         // check first if service already bound
         ISdkSandboxService service = mServiceProvider.getBoundServiceForApp(callingInfo);
         if (service != null) {
@@ -821,7 +825,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     link,
                     /*timeToLoadSandbox=*/ -1,
                     timeSystemServerReceivedCallFromApp,
-                    service);
+                    service,
+                    sdkToServiceLink);
             return;
         }
 
@@ -872,7 +877,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                 link,
                                 timeToLoadSandbox,
                                 timeSystemServerReceivedCallFromApp,
-                                service);
+                                service,
+                                sdkToServiceLink);
                     }
 
                     @Override
@@ -982,7 +988,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             AppAndRemoteSdkLink link,
             int timeToLoadSandbox,
             long timeSystemServerReceivedCallFromApp,
-            ISdkSandboxService service) {
+            ISdkSandboxService service,
+            SdkToServiceLink sdkToServiceLink) {
 
         // Gather sdk storage information
         SdkDataDirInfo sdkDataInfo =
@@ -1035,7 +1042,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     sdkDataInfo.getDeDataDir(),
                     params,
                     link,
-                    sandboxLatencyInfo);
+                    sandboxLatencyInfo,
+                    sdkToServiceLink);
         } catch (DeadObjectException e) {
             link.handleLoadSdkException(
                     new LoadSdkException(
@@ -1308,6 +1316,41 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             callback.onSendDataError(errorCode, errorMsg);
         } catch (RemoteException e) {
             Log.w(TAG, "Failed to send onSendDataError", e);
+        }
+    }
+
+    /**
+     * A callback object to establish a link between the sdk in sandbox calling into manager
+     * service.
+     *
+     * <p>When a sdk is loaded into a sandbox, a callback object of {@link SdkToServiceLink} is
+     * passed with the load call as a part of {@link android.app.sdksandbox.SdkSandboxController}.
+     * The sdk can call APIs on the link object and invoked the methods here to get data from the
+     * manager service.
+     */
+    private class SdkToServiceLink extends ISdkToServiceCallback.Stub {
+
+        /**
+         * Fetches information about Sdks that are loaded in the sandbox.
+         *
+         * @param clientPackageName package name of the app for which the sdk was loaded in the
+         *     sandbox
+         * @return List of {@link SharedLibraryInfo} containing all currently loaded sdks
+         */
+        @Override
+        public List<SharedLibraryInfo> getLoadedSdkLibrariesInfo(String clientPackageName)
+                throws RemoteException {
+            // TODO(b/242039497): Add authorisation checks
+            final List<SharedLibraryInfo> libraryInfoList = new ArrayList<>();
+            synchronized (mLock) {
+                for (int i = mAppAndRemoteSdkLinks.size() - 1; i >= 0; i--) {
+                    AppAndRemoteSdkLink link = mAppAndRemoteSdkLinks.valueAt(i);
+                    if (link.mCallingInfo.getPackageName().equals(clientPackageName)) {
+                        libraryInfoList.add(link.mSdkProviderInfo.mSdkInfo);
+                    }
+                }
+            }
+            return libraryInfoList;
         }
     }
 
