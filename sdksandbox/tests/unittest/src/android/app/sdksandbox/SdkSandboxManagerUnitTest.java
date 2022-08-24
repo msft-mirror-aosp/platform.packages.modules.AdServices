@@ -252,6 +252,8 @@ public class SdkSandboxManagerUnitTest {
         assertThat(exception.getRequestSurfacePackageErrorCode())
                 .isEqualTo(REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR);
         assertThat(exception.getMessage()).isEqualTo(ERROR_MSG);
+        assertNotNull(exception.getExtraErrorInformation());
+        assertTrue(exception.getExtraErrorInformation().isEmpty());
     }
 
     @Test
