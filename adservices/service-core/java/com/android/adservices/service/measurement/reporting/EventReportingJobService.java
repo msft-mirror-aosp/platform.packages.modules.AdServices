@@ -22,9 +22,6 @@ import android.app.job.JobScheduler;
 import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageInfo;
-import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -67,35 +64,6 @@ public final class EventReportingJobService extends JobService {
             jobFinished(params, !success);
         });
 
-        String appName = FlagsFactory.getFlags().getMeasurementAppName();
-        LogUtil.d("EventReportingJobService: onStartJob: appName=" + appName);
-
-        if (appName != null && !appName.equals("")) {
-            try {
-                PackageInfo packageInfo =
-                        getApplicationContext().getPackageManager().getPackageInfo(
-                                appName, 0);
-                boolean isTestOnly =
-                        (packageInfo.applicationInfo.flags & ApplicationInfo.FLAG_TEST_ONLY) != 0;
-                LogUtil.d("EventReportingJobService: onStartJob: isTestOnly=" + isTestOnly);
-                if (isTestOnly) {
-                    sBlockingExecutor.execute(() -> {
-                        boolean success = new EventReportingJobHandler(
-                                DatastoreManagerFactory.getDatastoreManager(
-                                        getApplicationContext()))
-                                .performAllPendingReportsForGivenApp(
-                                        Uri.parse("android-app://" + appName));
-                        jobFinished(params, success);
-                    });
-                } else {
-                    return false;
-                }
-            } catch (Exception e) {
-                LogUtil.e(
-                        "Perform all pending reports for app %s has exception %s", appName, e);
-                return false;
-            }
-        }
         LogUtil.d("EventReportingJobService.onStartJob");
         return true;
     }
