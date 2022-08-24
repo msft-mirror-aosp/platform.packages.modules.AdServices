@@ -336,12 +336,14 @@ public class FledgeE2ETest {
 
         // Join first custom audience
         ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience1, joinCallback1);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
         assertTrue(joinCallback1.isSuccess());
 
         // Join second custom audience
         ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience2, joinCallback2);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
         assertTrue(joinCallback2.isSuccess());
 
         verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
@@ -359,7 +361,7 @@ public class FledgeE2ETest {
         // Add Custom Audience Overrides
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback1 =
                 callAddCustomAudienceOverride(
-                        customAudience1.getOwnerPackageName(),
+                        CommonFixture.TEST_PACKAGE_NAME,
                         customAudience1.getBuyer(),
                         customAudience1.getName(),
                         biddingLogicJs,
@@ -370,7 +372,7 @@ public class FledgeE2ETest {
 
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback2 =
                 callAddCustomAudienceOverride(
-                        customAudience2.getOwnerPackageName(),
+                        CommonFixture.TEST_PACKAGE_NAME,
                         customAudience2.getBuyer(),
                         customAudience2.getName(),
                         biddingLogicJs,
@@ -479,12 +481,14 @@ public class FledgeE2ETest {
 
         // Join first custom audience
         ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience1, joinCallback1);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
         assertTrue(joinCallback1.isSuccess());
 
         // Join second custom audience
         ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience2, joinCallback2);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
         assertTrue(joinCallback2.isSuccess());
 
         // Add AdSelection Override
@@ -500,7 +504,7 @@ public class FledgeE2ETest {
         // Add Custom Audience Overrides
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback1 =
                 callAddCustomAudienceOverride(
-                        customAudience1.getOwnerPackageName(),
+                        CommonFixture.TEST_PACKAGE_NAME,
                         customAudience1.getBuyer(),
                         customAudience1.getName(),
                         biddingLogicJs,
@@ -511,7 +515,7 @@ public class FledgeE2ETest {
 
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback2 =
                 callAddCustomAudienceOverride(
-                        customAudience2.getOwnerPackageName(),
+                        CommonFixture.TEST_PACKAGE_NAME,
                         customAudience2.getBuyer(),
                         customAudience2.getName(),
                         biddingLogicJs,
@@ -669,12 +673,14 @@ public class FledgeE2ETest {
 
         // Join first custom audience
         ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience1, joinCallback1);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
         assertTrue(joinCallback1.isSuccess());
 
         // Join second custom audience
         ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience2, joinCallback2);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
         assertTrue(joinCallback2.isSuccess());
 
         verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
@@ -692,7 +698,7 @@ public class FledgeE2ETest {
         // Add Custom Audience Overrides
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback1 =
                 callAddCustomAudienceOverride(
-                        customAudience1.getOwnerPackageName(),
+                        CommonFixture.TEST_PACKAGE_NAME,
                         customAudience1.getBuyer(),
                         customAudience1.getName(),
                         biddingLogicJs,
@@ -703,7 +709,7 @@ public class FledgeE2ETest {
 
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback2 =
                 callAddCustomAudienceOverride(
-                        customAudience2.getOwnerPackageName(),
+                        CommonFixture.TEST_PACKAGE_NAME,
                         customAudience2.getBuyer(),
                         customAudience2.getName(),
                         biddingLogicJs,
@@ -818,12 +824,14 @@ public class FledgeE2ETest {
 
         // Join first custom audience
         ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience1, joinCallback1);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
         assertTrue(joinCallback1.isSuccess());
 
         // Join second custom audience
         ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience2, joinCallback2);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
         assertTrue(joinCallback2.isSuccess());
 
         verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
@@ -841,7 +849,7 @@ public class FledgeE2ETest {
         // Add Custom Audience Overrides
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback1 =
                 callAddCustomAudienceOverride(
-                        customAudience1.getOwnerPackageName(),
+                        CommonFixture.TEST_PACKAGE_NAME,
                         customAudience1.getBuyer(),
                         customAudience1.getName(),
                         biddingLogicJs,
@@ -852,7 +860,7 @@ public class FledgeE2ETest {
 
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback2 =
                 callAddCustomAudienceOverride(
-                        customAudience2.getOwnerPackageName(),
+                        CommonFixture.TEST_PACKAGE_NAME,
                         customAudience2.getBuyer(),
                         customAudience2.getName(),
                         biddingLogicJs,
@@ -965,12 +973,14 @@ public class FledgeE2ETest {
 
         // Join first custom audience
         ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience1, joinCallback1);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
         assertTrue(joinCallback1.isSuccess());
 
         // Join second custom audience
         ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience2, joinCallback2);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
         assertTrue(joinCallback2.isSuccess());
 
         // Add AdSelection Override
@@ -986,7 +996,7 @@ public class FledgeE2ETest {
         // Add Custom Audience Overrides
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback1 =
                 callAddCustomAudienceOverride(
-                        customAudience1.getOwnerPackageName(),
+                        CommonFixture.TEST_PACKAGE_NAME,
                         customAudience1.getBuyer(),
                         customAudience1.getName(),
                         biddingLogicJs,
@@ -997,7 +1007,7 @@ public class FledgeE2ETest {
 
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback2 =
                 callAddCustomAudienceOverride(
-                        customAudience2.getOwnerPackageName(),
+                        CommonFixture.TEST_PACKAGE_NAME,
                         customAudience2.getBuyer(),
                         customAudience2.getName(),
                         biddingLogicJs,
@@ -1136,12 +1146,14 @@ public class FledgeE2ETest {
 
         // Join first custom audience
         ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience1, joinCallback1);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
         assertTrue(joinCallback1.isSuccess());
 
         // Join second custom audience
         ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience2, joinCallback2);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
         assertTrue(joinCallback2.isSuccess());
 
         verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
@@ -1290,12 +1302,14 @@ public class FledgeE2ETest {
 
         // Join first custom audience
         ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience1, joinCallback1);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
         assertTrue(joinCallback1.isSuccess());
 
         // Join second custom audience
         ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience2, joinCallback2);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
         assertTrue(joinCallback2.isSuccess());
 
         // Run Ad Selection
@@ -1385,12 +1399,14 @@ public class FledgeE2ETest {
 
         // Join first custom audience
         ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience1, joinCallback1);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
         assertTrue(joinCallback1.isSuccess());
 
         // Join second custom audience
         ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience2, joinCallback2);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
         assertTrue(joinCallback2.isSuccess());
 
         // Run Ad Selection
@@ -1523,12 +1539,14 @@ public class FledgeE2ETest {
 
         // Join first custom audience
         ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience1, joinCallback1);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
         assertTrue(joinCallback1.isSuccess());
 
         // Join second custom audience
         ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience2, joinCallback2);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
         assertTrue(joinCallback2.isSuccess());
 
         verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
@@ -1661,7 +1679,8 @@ public class FledgeE2ETest {
 
         // Join custom audience
         ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience1, joinCallback1);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
         assertTrue(joinCallback1.isSuccess());
 
         // Run Ad Selection
@@ -1792,7 +1811,6 @@ public class FledgeE2ETest {
         }
 
         return new CustomAudience.Builder()
-                .setOwnerPackageName(CommonFixture.TEST_PACKAGE_NAME)
                 .setBuyer(AdTechIdentifier.fromString(buyerDomain.getHost()))
                 .setName(
                         buyerDomain.getHost()

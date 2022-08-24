@@ -43,9 +43,6 @@ public class RestrictionsTestSandboxedSdkProvider extends SandboxedSdkProvider {
         return new View(windowContext);
     }
 
-    @Override
-    public void onDataReceived(Bundle data, DataReceivedCallback callback) {}
-
     private void handlePhase(Bundle params) {
         String phaseName = params.getString(BUNDLE_KEY_PHASE_NAME, "");
         switch (phaseName) {

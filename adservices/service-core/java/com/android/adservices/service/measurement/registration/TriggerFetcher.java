@@ -116,7 +116,7 @@ public class TriggerFetcher {
             addToResults.add(result.build());
             return true;
         } catch (JSONException e) {
-            LogUtil.e("Trigger Parsing failed", e);
+            LogUtil.e(e, "Trigger Parsing failed");
             return false;
         }
     }

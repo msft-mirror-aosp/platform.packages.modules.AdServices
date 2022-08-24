@@ -17,6 +17,7 @@
 package com.android.adservices.service.common;
 
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyLong;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doCallRealMethod;
@@ -39,6 +40,7 @@ import android.net.Uri;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.service.Flags;
@@ -59,6 +61,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
+import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -77,6 +80,7 @@ public class PackageChangedReceiverTest {
     @Mock AppUpdateManager mMockAppUpdateManager;
     @Mock CustomAudienceDatabase mCustomAudienceDatabaseMock;
     @Mock CustomAudienceDao mCustomAudienceDaoMock;
+    @Mock AppConsentDao mAppConsentDaoMock;
     @Mock Flags mMockFlags;
 
     private TopicsWorker mSpyTopicsWorker;
@@ -103,6 +107,7 @@ public class PackageChangedReceiverTest {
         PackageChangedReceiver spyReceiver = Mockito.spy(new PackageChangedReceiver());
         doNothingForTopics(spyReceiver);
         doNothingForFledge(spyReceiver);
+        doNothingForConsent(spyReceiver);
         return spyReceiver;
     }
 
@@ -110,6 +115,7 @@ public class PackageChangedReceiverTest {
         PackageChangedReceiver spyReceiver = Mockito.spy(new PackageChangedReceiver());
         doNothingForMeasurement(spyReceiver);
         doNothingForFledge(spyReceiver);
+        doNothingForConsent(spyReceiver);
         return spyReceiver;
     }
 
@@ -117,6 +123,15 @@ public class PackageChangedReceiverTest {
         PackageChangedReceiver spyReceiver = Mockito.spy(new PackageChangedReceiver());
         doNothingForMeasurement(spyReceiver);
         doNothingForTopics(spyReceiver);
+        doNothingForConsent(spyReceiver);
+        return spyReceiver;
+    }
+
+    private PackageChangedReceiver createSpyPackageReceiverForConsent() {
+        PackageChangedReceiver spyReceiver = Mockito.spy(new PackageChangedReceiver());
+        doNothingForMeasurement(spyReceiver);
+        doNothingForTopics(spyReceiver);
+        doNothingForFledge(spyReceiver);
         return spyReceiver;
     }
 
@@ -133,6 +148,10 @@ public class PackageChangedReceiverTest {
 
     private void doNothingForFledge(PackageChangedReceiver receiver) {
         doNothing().when(receiver).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
+    }
+
+    private void doNothingForConsent(PackageChangedReceiver receiver) {
+        doNothing().when(receiver).consentOnPackageFullyRemoved(any(), any(), anyInt());
     }
 
     private Intent createDefaultIntentWithAction(String value) {
@@ -364,6 +383,45 @@ public class PackageChangedReceiverTest {
             // Verify no executions
             verify(spyReceiver, never()).getCustomAudienceDatabase(any());
             verifyZeroInteractions(mCustomAudienceDatabaseMock, mCustomAudienceDaoMock);
+        } finally {
+            session.finishMocking();
+        }
+    }
+
+    @Test
+    public void testReceivePackageFullyRemoved_consent() throws InterruptedException, IOException {
+        Intent intent = createDefaultIntentWithAction(PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
+
+        // Start a mockitoSession to mock static method
+        // Lenient added to allow easy disabling of other APIs' methods
+        MockitoSession session =
+                ExtendedMockito.mockitoSession()
+                        .mockStatic(AppConsentDao.class)
+                        .strictness(Strictness.LENIENT)
+                        .initMocks(this)
+                        .startMocking();
+        try {
+            // Mock static method AppConsentDao.getInstance() executed on a separate thread
+            doReturn(mAppConsentDaoMock).when(() -> AppConsentDao.getInstance(any()));
+
+            CountDownLatch completionLatch = new CountDownLatch(1);
+            doAnswer(
+                            unusedInvocation -> {
+                                completionLatch.countDown();
+                                return null;
+                            })
+                    .when(mAppConsentDaoMock)
+                    .clearConsentForUninstalledApp(any(), anyInt());
+
+            // Initialize package receiver meant for Consent
+            PackageChangedReceiver spyReceiver = createSpyPackageReceiverForConsent();
+            spyReceiver.onReceive(sContext, intent);
+
+            verify(spyReceiver).consentOnPackageFullyRemoved(any(), any(), anyInt());
+
+            // Verify method inside background thread executes
+            assertThat(completionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
+            verify(mAppConsentDaoMock).clearConsentForUninstalledApp(any(), anyInt());
         } finally {
             session.finishMocking();
         }

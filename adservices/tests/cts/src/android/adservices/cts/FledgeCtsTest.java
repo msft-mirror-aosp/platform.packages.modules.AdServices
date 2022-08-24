@@ -35,11 +35,9 @@ import android.adservices.customaudience.AddCustomAudienceOverrideRequest;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.TrustedBiddingDataFixture;
-import android.content.Context;
 import android.net.Uri;
 import android.os.Process;
 
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.service.PhFlagsFixture;
@@ -63,11 +61,11 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class FledgeCtsTest {
+public class FledgeCtsTest extends ForegroundCtsTest {
+
     private static final String WRITE_DEVICE_CONFIG_PERMISSION =
             "android.permission.WRITE_DEVICE_CONFIG";
 
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private static final AdTechIdentifier BUYER_1 = AdSelectionConfigFixture.BUYER_1;
@@ -108,6 +106,8 @@ public class FledgeCtsTest {
 
     @Before
     public void setup() {
+        assertForegroundActivityStarted();
+
         mAdSelectionClient =
                 new AdSelectionClient.Builder()
                         .setContext(sContext)
@@ -134,11 +134,7 @@ public class FledgeCtsTest {
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(WRITE_DEVICE_CONFIG_PERMISSION);
-        // This test is running in background
-        PhFlagsFixture.overrideForegroundStatusForFledgeCustomAudience(false);
-        PhFlagsFixture.overrideForegroundStatusForFledgeOverrides(false);
-        PhFlagsFixture.overrideForegroundStatusForFledgeRunAdSelection(false);
-        PhFlagsFixture.overrideForegroundStatusForFledgeReportImpression(false);
+        // Enabling tests to run with WebView version < M105
         PhFlagsFixture.overrideEnforceIsolateMaxHeapSize(false);
         PhFlagsFixture.overrideIsolateMaxHeapSizeBytes(0);
         PhFlagsFixture.overrideSdkRequestPermitsPerSecond(Integer.MAX_VALUE);
@@ -191,25 +187,22 @@ public class FledgeCtsTest {
         mCustomAudienceClient.joinCustomAudience(customAudience2).get(10, TimeUnit.SECONDS);
 
         // Adding AdSelection override, asserting a failure since app is not debuggable.
-        AddAdSelectionOverrideRequest addAdSselectAdsExceptionelectionOverrideRequest =
+        AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
                 new AddAdSelectionOverrideRequest(
                         AD_SELECTION_CONFIG, decisionLogicJs, TRUSTED_SCORING_SIGNALS);
 
         ListenableFuture<Void> adSelectionOverrideResult =
                 mTestAdSelectionClient.overrideAdSelectionConfigRemoteInfo(
-                        addAdSselectAdsExceptionelectionOverrideRequest);
+                        addAdSelectionOverrideRequest);
 
         Exception adSelectionOverrideException =
                 assertThrows(
                         ExecutionException.class,
-                        () -> {
-                            adSelectionOverrideResult.get(10, TimeUnit.SECONDS);
-                        });
+                        () -> adSelectionOverrideResult.get(10, TimeUnit.SECONDS));
         assertThat(adSelectionOverrideException.getCause()).isInstanceOf(SecurityException.class);
 
         AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest =
                 new AddCustomAudienceOverrideRequest.Builder()
-                        .setOwnerPackageName(customAudience2.getOwnerPackageName())
                         .setBuyer(customAudience2.getBuyer())
                         .setName(customAudience2.getName())
                         .setBiddingLogicJs(biddingLogicJs)
@@ -224,9 +217,7 @@ public class FledgeCtsTest {
         Exception customAudienceOverrideException =
                 assertThrows(
                         ExecutionException.class,
-                        () -> {
-                            customAudienceOverrideResult.get(10, TimeUnit.SECONDS);
-                        });
+                        () -> customAudienceOverrideResult.get(10, TimeUnit.SECONDS));
         assertThat(customAudienceOverrideException.getCause())
                 .isInstanceOf(SecurityException.class);
 
@@ -235,11 +226,10 @@ public class FledgeCtsTest {
         Exception selectAdsException =
                 assertThrows(
                         ExecutionException.class,
-                        () -> {
-                            mAdSelectionClient
-                                    .selectAds(AD_SELECTION_CONFIG)
-                                    .get(30, TimeUnit.SECONDS);
-                        });
+                        () ->
+                                mAdSelectionClient
+                                        .selectAds(AD_SELECTION_CONFIG)
+                                        .get(30, TimeUnit.SECONDS));
         assertThat(selectAdsException.getCause()).isInstanceOf(IllegalStateException.class);
         // Cannot perform reporting since no ad selection id is returned.
     }
@@ -266,7 +256,6 @@ public class FledgeCtsTest {
         }
 
         return new CustomAudience.Builder()
-                .setOwnerPackageName(CustomAudienceFixture.VALID_OWNER)
                 .setBuyer(buyer)
                 .setName(buyer + CustomAudienceFixture.VALID_NAME)
                 .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)

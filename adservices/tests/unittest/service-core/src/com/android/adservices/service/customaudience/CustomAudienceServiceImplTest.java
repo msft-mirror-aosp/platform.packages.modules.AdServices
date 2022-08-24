@@ -178,11 +178,13 @@ public class CustomAudienceServiceImplTest {
     @Test
     public void testJoinCustomAudience_runNormally() throws RemoteException {
 
-        mService.joinCustomAudience(VALID_CUSTOM_AUDIENCE, mICustomAudienceCallback);
+        mService.joinCustomAudience(
+                VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER, mICustomAudienceCallback);
         verify(mFledgeAuthorizationFilter)
                 .assertAppDeclaredPermission(
                         CONTEXT, AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
-        verify(mCustomAudienceImpl).joinCustomAudience(VALID_CUSTOM_AUDIENCE);
+        verify(mCustomAudienceImpl)
+                .joinCustomAudience(VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER);
         verify(
                 () ->
                         BackgroundFetchJobService.scheduleIfNeeded(
@@ -219,7 +221,8 @@ public class CustomAudienceServiceImplTest {
                 .when(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
 
-        mService.joinCustomAudience(VALID_CUSTOM_AUDIENCE, mICustomAudienceCallback);
+        mService.joinCustomAudience(
+                VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER, mICustomAudienceCallback);
         verify(mFledgeAuthorizationFilter)
                 .assertAppDeclaredPermission(
                         any(), eq(AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE));
@@ -270,7 +273,11 @@ public class CustomAudienceServiceImplTest {
 
         assertThrows(
                 IllegalStateException.class,
-                () -> mService.joinCustomAudience(VALID_CUSTOM_AUDIENCE, mICustomAudienceCallback));
+                () ->
+                        mService.joinCustomAudience(
+                                VALID_CUSTOM_AUDIENCE,
+                                CustomAudienceFixture.VALID_OWNER,
+                                mICustomAudienceCallback));
 
         verify(mFledgeAuthorizationFilter)
                 .assertAppDeclaredPermission(
@@ -288,7 +295,8 @@ public class CustomAudienceServiceImplTest {
                         Process.myUid(),
                         AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
 
-        mService.joinCustomAudience(VALID_CUSTOM_AUDIENCE, mICustomAudienceCallback);
+        mService.joinCustomAudience(
+                VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER, mICustomAudienceCallback);
 
         verify(mFledgeAuthorizationFilter)
                 .assertAppDeclaredPermission(
@@ -306,7 +314,24 @@ public class CustomAudienceServiceImplTest {
     public void testJoinCustomAudience_nullInput() {
         assertThrows(
                 NullPointerException.class,
-                () -> mService.joinCustomAudience(null, mICustomAudienceCallback));
+                () ->
+                        mService.joinCustomAudience(
+                                null, CustomAudienceFixture.VALID_OWNER, mICustomAudienceCallback));
+
+        verify(mFledgeAuthorizationFilter)
+                .assertAppDeclaredPermission(
+                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
+        verifyLoggerSpy(
+                AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE, STATUS_INVALID_ARGUMENT);
+    }
+
+    @Test
+    public void testJoinCustomAudience_nullCallerPackageName() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        mService.joinCustomAudience(
+                                VALID_CUSTOM_AUDIENCE, null, mICustomAudienceCallback));
 
         verify(mFledgeAuthorizationFilter)
                 .assertAppDeclaredPermission(
@@ -319,7 +344,9 @@ public class CustomAudienceServiceImplTest {
     public void testJoinCustomAudience_nullCallback() {
         assertThrows(
                 NullPointerException.class,
-                () -> mService.joinCustomAudience(VALID_CUSTOM_AUDIENCE, null));
+                () ->
+                        mService.joinCustomAudience(
+                                VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER, null));
 
         verify(mFledgeAuthorizationFilter)
                 .assertAppDeclaredPermission(
@@ -333,14 +360,16 @@ public class CustomAudienceServiceImplTest {
         String errorMessage = "Simulating Error creating Custom Audience";
         doThrow(new RuntimeException(errorMessage))
                 .when(mCustomAudienceImpl)
-                .joinCustomAudience(VALID_CUSTOM_AUDIENCE);
+                .joinCustomAudience(VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER);
 
-        mService.joinCustomAudience(VALID_CUSTOM_AUDIENCE, mICustomAudienceCallback);
+        mService.joinCustomAudience(
+                VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER, mICustomAudienceCallback);
 
         verify(mFledgeAuthorizationFilter)
                 .assertAppDeclaredPermission(
                         CONTEXT, AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
-        verify(mCustomAudienceImpl).joinCustomAudience(VALID_CUSTOM_AUDIENCE);
+        verify(mCustomAudienceImpl)
+                .joinCustomAudience(VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER);
         verifyErrorResponseICustomAudienceCallback(STATUS_INTERNAL_ERROR, errorMessage);
         verifyLoggerSpy(
                 AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE, STATUS_INTERNAL_ERROR);
@@ -376,12 +405,14 @@ public class CustomAudienceServiceImplTest {
     public void testJoinCustomAudience_errorReturnCallback() throws RemoteException {
         doThrow(RemoteException.class).when(mICustomAudienceCallback).onSuccess();
 
-        mService.joinCustomAudience(VALID_CUSTOM_AUDIENCE, mICustomAudienceCallback);
+        mService.joinCustomAudience(
+                VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER, mICustomAudienceCallback);
 
         verify(mFledgeAuthorizationFilter)
                 .assertAppDeclaredPermission(
                         CONTEXT, AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
-        verify(mCustomAudienceImpl).joinCustomAudience(VALID_CUSTOM_AUDIENCE);
+        verify(mCustomAudienceImpl)
+                .joinCustomAudience(VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER);
         verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)));
         verify(mICustomAudienceCallback).onSuccess();
         verify(mFledgeAuthorizationFilter)
@@ -742,7 +773,8 @@ public class CustomAudienceServiceImplTest {
                         AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
                         null);
 
-        mService.joinCustomAudience(VALID_CUSTOM_AUDIENCE, mICustomAudienceCallback);
+        mService.joinCustomAudience(
+                VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER, mICustomAudienceCallback);
 
         verify(mFledgeAuthorizationFilter)
                 .assertAppDeclaredPermission(
@@ -779,7 +811,8 @@ public class CustomAudienceServiceImplTest {
                         mThrottlerSupplier,
                         CallingAppUidSupplierProcessImpl.create());
 
-        mService.joinCustomAudience(VALID_CUSTOM_AUDIENCE, mICustomAudienceCallback);
+        mService.joinCustomAudience(
+                VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER, mICustomAudienceCallback);
         verify(mFledgeAuthorizationFilter)
                 .assertAppDeclaredPermission(
                         CONTEXT, AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
@@ -801,7 +834,8 @@ public class CustomAudienceServiceImplTest {
         verify(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(
                         CONTEXT.getPackageManager(), CustomAudienceFixture.VALID_OWNER);
-        verify(mCustomAudienceImpl).joinCustomAudience(VALID_CUSTOM_AUDIENCE);
+        verify(mCustomAudienceImpl)
+                .joinCustomAudience(VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER);
         verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)));
         verify(mICustomAudienceCallback).onSuccess();
         verifyLoggerSpy(AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE, STATUS_SUCCESS);
@@ -1152,7 +1186,11 @@ public class CustomAudienceServiceImplTest {
 
         assertThrows(
                 SecurityException.class,
-                () -> mService.joinCustomAudience(VALID_CUSTOM_AUDIENCE, mICustomAudienceCallback));
+                () ->
+                        mService.joinCustomAudience(
+                                VALID_CUSTOM_AUDIENCE,
+                                CustomAudienceFixture.VALID_OWNER,
+                                mICustomAudienceCallback));
     }
 
     @Test
@@ -1234,7 +1272,8 @@ public class CustomAudienceServiceImplTest {
                         CommonFixture.VALID_BUYER_1,
                         AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
 
-        mService.joinCustomAudience(VALID_CUSTOM_AUDIENCE, mICustomAudienceCallback);
+        mService.joinCustomAudience(
+                VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER, mICustomAudienceCallback);
 
         verify(mFledgeAuthorizationFilter)
                 .assertAppDeclaredPermission(
@@ -1278,11 +1317,13 @@ public class CustomAudienceServiceImplTest {
                         mThrottlerSupplier,
                         CallingAppUidSupplierProcessImpl.create());
 
-        mService.joinCustomAudience(VALID_CUSTOM_AUDIENCE, mICustomAudienceCallback);
+        mService.joinCustomAudience(
+                VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER, mICustomAudienceCallback);
         verify(mFledgeAuthorizationFilter)
                 .assertAppDeclaredPermission(
                         CONTEXT, AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
-        verify(mCustomAudienceImpl).joinCustomAudience(VALID_CUSTOM_AUDIENCE);
+        verify(mCustomAudienceImpl)
+                .joinCustomAudience(VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER);
         verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)));
         verify(mICustomAudienceCallback).onSuccess();
         verify(mFledgeAuthorizationFilter)
@@ -1407,7 +1448,8 @@ public class CustomAudienceServiceImplTest {
                         CustomAudienceFixture.VALID_OWNER,
                         AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
 
-        mService.joinCustomAudience(VALID_CUSTOM_AUDIENCE, mICustomAudienceCallback);
+        mService.joinCustomAudience(
+                VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER, mICustomAudienceCallback);
         verify(mFledgeAuthorizationFilter)
                 .assertAdTechAllowed(
                         CONTEXT,
@@ -1481,7 +1523,8 @@ public class CustomAudienceServiceImplTest {
         when(mMockThrottler.tryAcquire(eq(FLEDGE_API_JOIN_CUSTOM_AUDIENCE), anyString()))
                 .thenReturn(false);
 
-        mService.joinCustomAudience(VALID_CUSTOM_AUDIENCE, mICustomAudienceCallback);
+        mService.joinCustomAudience(
+                VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER, mICustomAudienceCallback);
 
         ArgumentCaptor<FledgeErrorResponse> actualResponseCaptor =
                 ArgumentCaptor.forClass(FledgeErrorResponse.class);

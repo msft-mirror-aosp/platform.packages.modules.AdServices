@@ -157,7 +157,7 @@ public class EnrollmentDataDownloadManager {
                     mMobileDataDownload.getFileGroup(getFileGroupRequest);
             ClientFileGroup fileGroup = fileGroupFuture.get();
             if (fileGroup == null) {
-                LogUtil.e("Failed to find MDD downloaded files.");
+                LogUtil.d("MDD has not downloaded the Enrollment Data Files yet.");
                 return null;
             }
             ClientFile enrollmentDataFile = null;

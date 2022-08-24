@@ -195,6 +195,7 @@ public class ImpressionReporter {
     public void reportImpression(
             @NonNull ReportImpressionInput requestParams,
             @NonNull ReportImpressionCallback callback) {
+        LogUtil.v("Executing reportImpression API");
         // Getting PH flags in a non binder thread
         FluentFuture<Long> timeoutFuture =
                 FluentFuture.from(
@@ -222,7 +223,6 @@ public class ImpressionReporter {
             @NonNull ReportImpressionCallback callback) {
         long adSelectionId = requestParams.getAdSelectionId();
         AdSelectionConfig adSelectionConfig = requestParams.getAdSelectionConfig();
-
         ListenableFuture<Void> validateRequestFuture =
                 Futures.submit(
                         () ->
@@ -354,6 +354,7 @@ public class ImpressionReporter {
 
     private FluentFuture<Pair<String, ReportingContext>> fetchSellerDecisionLogic(
             ReportingContext ctx) {
+        LogUtil.v("Fetching Seller decision logic");
         FluentFuture<String> jsOverrideFuture =
                 FluentFuture.from(
                         mBackgroundExecutorService.submit(
@@ -383,6 +384,7 @@ public class ImpressionReporter {
 
     private FluentFuture<Pair<ReportImpressionScriptEngine.SellerReportingResult, ReportingContext>>
             invokeSellerScript(String decisionLogicJs, ReportingContext ctx) {
+        LogUtil.v("Invoking seller script");
         try {
             return FluentFuture.from(
                             mJsEngine.reportResult(
@@ -579,6 +581,7 @@ public class ImpressionReporter {
      * @return an ignorable {@code null}
      */
     private Void validateRequest(AdSelectionConfig adSelectionConfig, String callerPackageName) {
+        LogUtil.v("Validating reportImpression Request");
         assertCallerPackageName(callerPackageName);
         maybeAssertForegroundCaller();
         assertCallerNotThrottled(callerPackageName);
