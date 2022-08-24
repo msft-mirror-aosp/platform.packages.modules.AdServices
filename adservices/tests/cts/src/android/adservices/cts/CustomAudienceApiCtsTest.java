@@ -30,13 +30,8 @@ import android.adservices.customaudience.AddCustomAudienceOverrideRequest;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.RemoveCustomAudienceOverrideRequest;
-import android.content.Context;
 import android.os.Process;
 
-import androidx.test.core.app.ApplicationProvider;
-import androidx.test.platform.app.InstrumentationRegistry;
-
-import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 
@@ -50,11 +45,7 @@ import org.junit.Test;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-public class CustomAudienceApiCtsTest {
-
-    private static final String WRITE_DEVICE_CONFIG_PERMISSION =
-            "android.permission.WRITE_DEVICE_CONFIG";
-
+public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
     private AdvertisingCustomAudienceClient mClient;
     private TestAdvertisingCustomAudienceClient mTestClient;
 
@@ -64,30 +55,26 @@ public class CustomAudienceApiCtsTest {
     private static final String BIDDING_LOGIC_JS = "function test() { return \"hello world\"; }";
     private static final AdSelectionSignals TRUSTED_BIDDING_DATA =
             AdSelectionSignals.fromString("{\"trusted_bidding_data\":1}");
+    private static final int DELAY_TO_AVOID_THROTTLE_MS = 1001;
 
     private boolean mIsDebugMode;
 
     @Before
     public void setup() {
-        Context context = ApplicationProvider.getApplicationContext();
+        assertForegroundActivityStarted();
+
         mClient =
                 new AdvertisingCustomAudienceClient.Builder()
-                        .setContext(context)
+                        .setContext(sContext)
                         .setExecutor(MoreExecutors.directExecutor())
                         .build();
         mTestClient =
                 new TestAdvertisingCustomAudienceClient.Builder()
-                        .setContext(context)
+                        .setContext(sContext)
                         .setExecutor(MoreExecutors.directExecutor())
                         .build();
-        DevContext devContext = DevContextFilter.create(context).createDevContext(Process.myUid());
+        DevContext devContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
         mIsDebugMode = devContext.getDevOptionsEnabled();
-
-        InstrumentationRegistry.getInstrumentation()
-                .getUiAutomation()
-                .adoptShellPermissionIdentity(WRITE_DEVICE_CONFIG_PERMISSION);
-        // This test is running in background
-        PhFlagsFixture.overrideForegroundStatusForFledgeCustomAudience(false);
     }
 
     @Test
@@ -97,21 +84,6 @@ public class CustomAudienceApiCtsTest {
                         CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .build())
                 .get();
-    }
-
-    @Test
-    public void testJoinCustomAudience_ownerIsNotCallingApp_fail() {
-        Exception exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () ->
-                                mClient.joinCustomAudience(
-                                                CustomAudienceFixture.getValidBuilderForBuyer(
-                                                                CommonFixture.VALID_BUYER_1)
-                                                        .setOwnerPackageName("Invalid_owner")
-                                                        .build())
-                                        .get());
-        assertTrue(exception.getCause() instanceof SecurityException);
     }
 
     @Test
@@ -130,12 +102,13 @@ public class CustomAudienceApiCtsTest {
     @Test
     public void testLeaveCustomAudience_joinedCustomAudience_success()
             throws ExecutionException, InterruptedException {
+        Thread.sleep(DELAY_TO_AVOID_THROTTLE_MS);
         mClient.joinCustomAudience(
                         CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .build())
                 .get();
+        Thread.sleep(DELAY_TO_AVOID_THROTTLE_MS);
         mClient.leaveCustomAudience(
-                        CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
                         CustomAudienceFixture.VALID_NAME)
                 .get();
@@ -145,34 +118,17 @@ public class CustomAudienceApiCtsTest {
     public void testLeaveCustomAudience_notJoinedCustomAudience_doesNotFail()
             throws ExecutionException, InterruptedException {
         mClient.leaveCustomAudience(
-                        CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
                         "not_exist_name")
                 .get();
     }
 
     @Test
-    public void testLeaveCustomAudience_ownerNotCallingApp_fail()
-            throws ExecutionException, InterruptedException {
-        Exception exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () ->
-                                mClient.leaveCustomAudience(
-                                                "Invalid_owner",
-                                                CommonFixture.VALID_BUYER_1,
-                                                CustomAudienceFixture.VALID_NAME)
-                                        .get());
-        assertTrue(exception.getCause() instanceof SecurityException);
-    }
-
-    @Test
-    public void testAddOverrideFailsWithDebugModeDisabled() throws Exception {
+    public void testAddOverrideFailsWithDebugModeDisabled() {
         Assume.assumeFalse(mIsDebugMode);
 
         AddCustomAudienceOverrideRequest request =
                 new AddCustomAudienceOverrideRequest.Builder()
-                        .setOwnerPackageName(OWNER)
                         .setBuyer(BUYER)
                         .setName(NAME)
                         .setBiddingLogicJs(BIDDING_LOGIC_JS)
@@ -182,21 +138,16 @@ public class CustomAudienceApiCtsTest {
         ListenableFuture<Void> result = mTestClient.overrideCustomAudienceRemoteInfo(request);
 
         Exception exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> {
-                            result.get(10, TimeUnit.SECONDS);
-                        });
+                assertThrows(ExecutionException.class, () -> result.get(10, TimeUnit.SECONDS));
         assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
     }
 
     @Test
-    public void testRemoveOverrideFailsWithDebugModeDisabled() throws Exception {
+    public void testRemoveOverrideFailsWithDebugModeDisabled() {
         Assume.assumeFalse(mIsDebugMode);
 
         RemoveCustomAudienceOverrideRequest request =
                 new RemoveCustomAudienceOverrideRequest.Builder()
-                        .setOwnerPackageName(OWNER)
                         .setBuyer(BUYER)
                         .setName(NAME)
                         .build();
@@ -204,26 +155,18 @@ public class CustomAudienceApiCtsTest {
         ListenableFuture<Void> result = mTestClient.removeCustomAudienceRemoteInfoOverride(request);
 
         Exception exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> {
-                            result.get(10, TimeUnit.SECONDS);
-                        });
+                assertThrows(ExecutionException.class, () -> result.get(10, TimeUnit.SECONDS));
         assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
     }
 
     @Test
-    public void testResetAllOverridesFailsWithDebugModeDisabled() throws Exception {
+    public void testResetAllOverridesFailsWithDebugModeDisabled() {
         Assume.assumeFalse(mIsDebugMode);
 
         ListenableFuture<Void> result = mTestClient.resetAllCustomAudienceOverrides();
 
         Exception exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> {
-                            result.get(10, TimeUnit.SECONDS);
-                        });
+                assertThrows(ExecutionException.class, () -> result.get(10, TimeUnit.SECONDS));
         assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
     }
 }

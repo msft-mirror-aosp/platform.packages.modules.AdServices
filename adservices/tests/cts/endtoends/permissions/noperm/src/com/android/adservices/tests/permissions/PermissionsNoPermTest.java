@@ -83,7 +83,6 @@ public class PermissionsNoPermTest {
 
         CustomAudience customAudience =
                 new CustomAudience.Builder()
-                        .setOwnerPackageName(sContext.getPackageName())
                         .setBuyer(AdTechIdentifier.fromString("buyer.example.com"))
                         .setName("exampleCustomAudience")
                         .setDailyUpdateUrl(Uri.parse("https://buyer.example.com/daily-update"))
@@ -111,7 +110,6 @@ public class PermissionsNoPermTest {
                         () ->
                                 customAudienceClient
                                         .leaveCustomAudience(
-                                                sContext.getPackageName(),
                                                 AdTechIdentifier.fromString("buyer.example.com"),
                                                 "exampleCustomAudience")
                                         .get());
@@ -128,7 +126,6 @@ public class PermissionsNoPermTest {
 
         AddCustomAudienceOverrideRequest request =
                 new AddCustomAudienceOverrideRequest.Builder()
-                        .setOwnerPackageName(sContext.getPackageName())
                         .setBuyer(AdTechIdentifier.fromString("buyer.example.com"))
                         .setName("exampleCustomAudience")
                         .setBiddingLogicJs("function test() { return \"hello, world!\"; }")
@@ -155,7 +152,6 @@ public class PermissionsNoPermTest {
 
         RemoveCustomAudienceOverrideRequest request =
                 new RemoveCustomAudienceOverrideRequest.Builder()
-                        .setOwnerPackageName(sContext.getPackageName())
                         .setBuyer(AdTechIdentifier.fromString("buyer.example.com"))
                         .setName("exampleCustomAudience")
                         .build();

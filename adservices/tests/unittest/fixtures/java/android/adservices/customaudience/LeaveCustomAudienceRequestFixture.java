@@ -26,7 +26,6 @@ public class LeaveCustomAudienceRequestFixture {
         return new LeaveCustomAudienceRequest.Builder()
                 .setBuyer(buyer)
                 .setName(CustomAudienceFixture.VALID_NAME)
-                .setOwnerPackageName(CustomAudienceFixture.VALID_OWNER)
                 .build();
     }
 
@@ -34,15 +33,6 @@ public class LeaveCustomAudienceRequestFixture {
         return new LeaveCustomAudienceRequest.Builder()
                 .setBuyer(CommonFixture.VALID_BUYER_1)
                 .setName(name)
-                .setOwnerPackageName(CustomAudienceFixture.VALID_OWNER)
-                .build();
-    }
-
-    public static LeaveCustomAudienceRequest getLeaveCustomAudienceRequestWithOwner(String owner) {
-        return new LeaveCustomAudienceRequest.Builder()
-                .setBuyer(CommonFixture.VALID_BUYER_1)
-                .setName(CustomAudienceFixture.VALID_NAME)
-                .setOwnerPackageName(owner)
                 .build();
     }
 }

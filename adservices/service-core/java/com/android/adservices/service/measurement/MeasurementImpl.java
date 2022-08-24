@@ -142,7 +142,7 @@ public final class MeasurementImpl {
      * @param eventTime  time when the package was installed.
      */
     public void doInstallAttribution(@NonNull Uri packageUri, long eventTime) {
-        LogUtil.i("Attributing installation for: " + packageUri);
+        LogUtil.d("Attributing installation for: " + packageUri);
         Uri appUri = getAppUri(packageUri);
         mReadWriteLock.readLock().lock();
         try {
