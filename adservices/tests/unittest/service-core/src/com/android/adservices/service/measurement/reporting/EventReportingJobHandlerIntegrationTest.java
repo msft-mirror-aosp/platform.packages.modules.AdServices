@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import android.net.Uri;
-
 import com.android.adservices.data.measurement.AbstractDbIntegrationTest;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
@@ -57,8 +55,7 @@ public class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrati
 
     public enum Action {
         SINGLE_REPORT,
-        ALL_REPORTS,
-        ALL_REPORTS_FOR_APP,
+        ALL_REPORTS
     }
 
     @Override
@@ -85,12 +82,6 @@ public class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrati
                         "Event report failed.",
                         spyReportingService.performScheduledPendingReportsInWindow(
                                 startValue, endValue));
-                break;
-            case ALL_REPORTS_FOR_APP:
-                final Uri appName = Uri.parse((String) get("appName"));
-                Assert.assertTrue(
-                        "Event report failed.",
-                        spyReportingService.performAllPendingReportsForGivenApp(appName));
                 break;
             case SINGLE_REPORT:
                 final int result = ((Number) Objects.requireNonNull(get("result"))).intValue();
