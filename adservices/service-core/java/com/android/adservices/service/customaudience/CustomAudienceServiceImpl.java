@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.customaudience;
 
-import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
 import static android.adservices.common.AdServicesStatusUtils.RATE_LIMIT_REACHED_ERROR_MESSAGE;
 
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_JOIN_CUSTOM_AUDIENCE;
@@ -37,7 +36,6 @@ import android.adservices.customaudience.CustomAudienceOverrideCallback;
 import android.adservices.customaudience.ICustomAudienceCallback;
 import android.adservices.customaudience.ICustomAudienceService;
 import android.annotation.NonNull;
-import android.annotation.RequiresPermission;
 import android.content.Context;
 import android.os.LimitExceededException;
 import android.os.RemoteException;
@@ -155,7 +153,6 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
      * @hide
      */
     @Override
-    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void joinCustomAudience(
             @NonNull CustomAudience customAudience,
             @NonNull String ownerPackageName,
@@ -288,7 +285,6 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
      * @hide
      */
     @Override
-    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void leaveCustomAudience(
             @NonNull String ownerPackageName,
             @NonNull AdTechIdentifier buyer,
@@ -398,7 +394,6 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
      * @hide
      */
     @Override
-    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void overrideCustomAudienceRemoteInfo(
             @NonNull String owner,
             @NonNull AdTechIdentifier buyer,
@@ -455,7 +450,6 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
      * @hide
      */
     @Override
-    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void removeCustomAudienceRemoteInfoOverride(
             @NonNull String owner,
             @NonNull AdTechIdentifier buyer,
@@ -530,7 +524,6 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
      * @hide
      */
     @Override
-    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void resetAllCustomAudienceOverrides(@NonNull CustomAudienceOverrideCallback callback) {
         final int apiName = AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES;
 

@@ -16,11 +16,14 @@
 
 package android.adservices.customaudience;
 
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
+
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
+import android.annotation.RequiresPermission;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.os.LimitExceededException;
@@ -127,6 +130,7 @@ public class CustomAudienceManager {
      * <p>This call fails with an {@link IllegalStateException} if an internal service error is
      * encountered.
      */
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void joinCustomAudience(
             @NonNull JoinCustomAudienceRequest joinCustomAudienceRequest,
             @NonNull @CallbackExecutor Executor executor,
@@ -183,6 +187,7 @@ public class CustomAudienceManager {
      * on-device storage. In other words, it will fail silently when a buyer attempts to leave a
      * custom audience that was not joined.
      */
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void leaveCustomAudience(
             @NonNull LeaveCustomAudienceRequest leaveCustomAudienceRequest,
             @NonNull @CallbackExecutor Executor executor,
