@@ -257,9 +257,6 @@ public class SdkFledge extends SandboxedSdkProvider {
         return null;
     }
 
-    @Override
-    public void onDataReceived(Bundle data, DataReceivedCallback callback) {}
-
     private void setup() {
         mAdSelectionClient =
                 new AdSelectionClient.Builder()

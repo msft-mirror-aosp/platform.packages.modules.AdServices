@@ -33,7 +33,6 @@ import android.app.sdksandbox.IRequestSurfacePackageCallback;
 import android.app.sdksandbox.ISdkSandboxLifecycleCallback;
 import android.app.sdksandbox.ISdkSandboxManager;
 import android.app.sdksandbox.ISdkToServiceCallback;
-import android.app.sdksandbox.ISendDataCallback;
 import android.app.sdksandbox.ISharedPreferencesSyncCallback;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxedSdk;
@@ -71,7 +70,6 @@ import android.webkit.WebViewUpdateService;
 import com.android.adservices.AdServicesCommon;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
-import com.android.sdksandbox.IDataReceivedCallback;
 import com.android.sdksandbox.ILoadSdkInSandboxCallback;
 import com.android.sdksandbox.IRequestSurfacePackageFromSdkCallback;
 import com.android.sdksandbox.ISdkSandboxManagerToSdkSandboxCallback;
@@ -578,49 +576,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 timeSystemServerReceivedCallFromApp,
                 params,
                 callback);
-    }
-
-    @Override
-    public void sendData(
-            String callingPackageName, String sdkName, Bundle data, ISendDataCallback callback) {
-        final int callingUid = Binder.getCallingUid();
-        final long token = Binder.clearCallingIdentity();
-
-        final CallingInfo callingInfo = new CallingInfo(callingUid, callingPackageName);
-        enforceCallingPackageBelongsToUid(callingInfo);
-        enforceCallerRunsInForeground(callingInfo);
-        try {
-            final IBinder sdkToken = mSdkTokenManager.getSdkToken(callingInfo, sdkName);
-            if (sdkToken == null) {
-                if (!isSdkSandboxServiceRunning(callingInfo)) {
-                    handleSendDataError(
-                            callingInfo,
-                            SDK_SANDBOX_PROCESS_NOT_AVAILABLE,
-                            SANDBOX_NOT_AVAILABLE_MSG,
-                            callback);
-                    return;
-                }
-                throw new IllegalArgumentException("Sdk " + sdkName + " is not loaded");
-            }
-            final AppAndRemoteSdkLink link;
-            synchronized (mLock) {
-                link = mAppAndRemoteSdkLinks.get(sdkToken);
-            }
-            if (link == null) {
-                if (!isSdkSandboxServiceRunning(callingInfo)) {
-                    handleSendDataError(
-                            callingInfo,
-                            SDK_SANDBOX_PROCESS_NOT_AVAILABLE,
-                            SANDBOX_NOT_AVAILABLE_MSG,
-                            callback);
-                    return;
-                }
-                throw new SecurityException("Sdk " + sdkName + " has not been loaded correctly");
-            }
-            link.sendDataToSdk(data, callback);
-        } finally {
-            Binder.restoreCallingIdentity(token);
-        }
     }
 
     private void onUserUnlocking(int userId) {
@@ -1309,16 +1264,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
     }
 
-    private void handleSendDataError(
-            CallingInfo callingInfo, int errorCode, String errorMsg, ISendDataCallback callback) {
-        removePendingCallback(callingInfo, callback.asBinder());
-        try {
-            callback.onSendDataError(errorCode, errorMsg);
-        } catch (RemoteException e) {
-            Log.w(TAG, "Failed to send onSendDataError", e);
-        }
-    }
-
     /**
      * A callback object to establish a link between the sdk in sandbox calling into manager
      * service.
@@ -1699,66 +1644,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SANDBOX_TO_SYSTEM_SERVER);
         }
 
-        private void handleSendDataSuccess(Bundle params, ISendDataCallback callback) {
-            removePendingCallback(mCallingInfo, callback.asBinder());
-            try {
-                callback.onSendDataSuccess(params);
-            } catch (RemoteException e) {
-                Log.w(TAG, "Failed to send onSendDataSuccess", e);
-            }
-        }
-
-        void sendDataToSdk(Bundle data, ISendDataCallback callback) {
-            synchronized (mLock) {
-                mPendingCallbacks.computeIfAbsent(mCallingInfo, k -> new ArrayMap<>());
-                mPendingCallbacks
-                        .get(mCallingInfo)
-                        .put(
-                                callback.asBinder(),
-                                () ->
-                                        handleSendDataError(
-                                                mCallingInfo,
-                                                SDK_SANDBOX_PROCESS_NOT_AVAILABLE,
-                                                SANDBOX_NOT_AVAILABLE_MSG,
-                                                callback));
-            }
-            try {
-                synchronized (this) {
-                    mManagerToCodeCallback.onDataReceived(
-                            data,
-                            new IDataReceivedCallback.Stub() {
-                                @Override
-                                public void onDataReceivedSuccess(Bundle params) {
-                                    handleSendDataSuccess(params, callback);
-                                }
-
-                                @Override
-                                public void onDataReceivedError(int errorCode, String errorMsg) {
-                                    handleSendDataError(
-                                            mCallingInfo,
-                                            toSdkSandboxManagerSendDataErrorCode(errorCode),
-                                            errorMsg,
-                                            callback);
-                                }
-                            });
-                }
-            } catch (DeadObjectException e) {
-                handleSendDataError(
-                        mCallingInfo,
-                        SDK_SANDBOX_PROCESS_NOT_AVAILABLE,
-                        SANDBOX_NOT_AVAILABLE_MSG,
-                        callback);
-            } catch (RemoteException e) {
-                String errorMsg = "Failed to sendData";
-                Log.w(TAG, errorMsg, e);
-                handleSendDataError(
-                        mCallingInfo,
-                        SdkSandboxManager.SEND_DATA_INTERNAL_ERROR,
-                        errorMsg + ": " + e,
-                        callback);
-            }
-        }
-
         private LoadSdkException updateLoadSdkErrorCode(LoadSdkException exception) {
             switch (exception.getLoadSdkErrorCode()) {
                 case ILoadSdkInSandboxCallback.LOAD_SDK_ALREADY_LOADED:
@@ -1809,19 +1694,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                             + sdkSandboxErrorCode
                             + "has no mapping to the SdkSandboxManager error codes");
             return SdkSandboxManager.REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR;
-        }
-
-        @SdkSandboxManager.SendDataErrorCode
-        private int toSdkSandboxManagerSendDataErrorCode(int sdkSandboxErrorCode) {
-            if (sdkSandboxErrorCode == IDataReceivedCallback.DATA_RECEIVED_INTERNAL_ERROR) {
-                return SdkSandboxManager.SEND_DATA_INTERNAL_ERROR;
-            }
-            Log.e(
-                    TAG,
-                    "Error code"
-                            + sdkSandboxErrorCode
-                            + "has no mapping to the SdkSandboxManager error codes");
-            return SdkSandboxManager.SEND_DATA_INTERNAL_ERROR;
         }
     }
 
