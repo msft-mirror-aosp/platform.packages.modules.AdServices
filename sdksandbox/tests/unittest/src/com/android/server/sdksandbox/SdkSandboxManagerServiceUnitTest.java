@@ -39,7 +39,6 @@ import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallbackBinder;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallbackBinder;
 import android.app.sdksandbox.testutils.FakeSdkSandboxLifecycleCallbackBinder;
-import android.app.sdksandbox.testutils.FakeSendDataCallbackBinder;
 import android.app.sdksandbox.testutils.FakeSharedPreferencesSyncCallback;
 import android.content.ComponentName;
 import android.content.Context;
@@ -62,7 +61,6 @@ import androidx.annotation.Nullable;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
-import com.android.sdksandbox.IDataReceivedCallback;
 import com.android.sdksandbox.ILoadSdkInSandboxCallback;
 import com.android.sdksandbox.IRequestSurfacePackageFromSdkCallback;
 import com.android.sdksandbox.ISdkSandboxManagerToSdkSandboxCallback;
@@ -555,91 +553,6 @@ public class SdkSandboxManagerServiceUnitTest {
 
         assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isFalse();
         assertThat(surfacePackageCallback.getSurfacePackageErrorCode())
-                .isEqualTo(SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE);
-    }
-
-    @Test
-    public void testSendData() throws Exception {
-        disableNetworkPermissionChecks();
-        disableForegroundCheck();
-
-        // Load an sdk
-        FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
-        mService.loadSdk(
-                TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
-        mSdkSandboxService.sendLoadCodeSuccessful();
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
-
-        // Send data to the sdk
-        FakeSendDataCallbackBinder sendDataCallback = new FakeSendDataCallbackBinder();
-        mService.sendData(TEST_PACKAGE, SDK_NAME, new Bundle(), sendDataCallback);
-        mSdkSandboxService.sendSendDataSuccessful(sendDataCallback);
-        assertThat(sendDataCallback.isSendDataSuccessful()).isTrue();
-    }
-
-    @Test
-    public void testSendData_SdkNotLoaded() throws Exception {
-        disableForegroundCheck();
-        disableNetworkPermissionChecks();
-
-        // Create sandbox
-        FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
-        mService.loadSdk(
-                TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
-        // Assume SupplementalProcess loads successfully
-        mSdkSandboxService.sendLoadCodeSuccessful();
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
-
-        // Try to send data to an SDK which is not loaded
-        IllegalArgumentException thrown =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () ->
-                                mService.sendData(
-                                        TEST_PACKAGE,
-                                        "invalid",
-                                        new Bundle(),
-                                        new FakeSendDataCallbackBinder()));
-        assertThat(thrown).hasMessageThat().contains("Sdk invalid is not loaded");
-    }
-
-    @Test
-    public void testSendData_SandboxDoesNotExist() throws Exception {
-        disableForegroundCheck();
-
-        FakeSendDataCallbackBinder callback = new FakeSendDataCallbackBinder();
-        mService.sendData(TEST_PACKAGE, SDK_NAME, new Bundle(), callback);
-        assertThat(callback.isSendDataSuccessful()).isFalse();
-        assertThat(callback.getSendDataErrorCode())
-                .isEqualTo(SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE);
-    }
-
-    @Test
-    public void testSendData_SandboxDiesInBetween() throws Exception {
-        disableNetworkPermissionChecks();
-        disableForegroundCheck();
-
-        // Load an sdk
-        FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
-        mService.loadSdk(
-                TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
-        mSdkSandboxService.sendLoadCodeSuccessful();
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
-
-        // Send data to the sdk
-        FakeSendDataCallbackBinder sendDataCallback = new FakeSendDataCallbackBinder();
-        mService.sendData(TEST_PACKAGE, SDK_NAME, new Bundle(), sendDataCallback);
-
-        // Kill the sandbox before the SDK can call the callback
-        ArgumentCaptor<IBinder.DeathRecipient> deathRecipientCaptor =
-                ArgumentCaptor.forClass(IBinder.DeathRecipient.class);
-        Mockito.verify(mSdkSandboxService.asBinder(), Mockito.atLeastOnce())
-                .linkToDeath(deathRecipientCaptor.capture(), ArgumentMatchers.eq(0));
-        IBinder.DeathRecipient deathRecipient = deathRecipientCaptor.getValue();
-        deathRecipient.binderDied();
-
-        assertThat(sendDataCallback.isSendDataSuccessful()).isFalse();
-        assertThat(sendDataCallback.getSendDataErrorCode())
                 .isEqualTo(SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE);
     }
 
@@ -1961,17 +1874,6 @@ public class SdkSandboxManagerServiceUnitTest {
             callback.onSurfacePackageError(errorCode, errorMsg, System.currentTimeMillis());
         }
 
-        void sendSendDataSuccessful(FakeSendDataCallbackBinder callback) throws RemoteException {
-            if (mDataReceived) {
-                callback.onSendDataSuccess(null);
-            }
-        }
-
-        void sendSendDataError(int errorCode, String errorMsg, FakeSendDataCallbackBinder callback)
-                throws RemoteException {
-            callback.onSendDataError(errorCode, errorMsg);
-        }
-
         private class FakeManagerToSdkCallback extends ISdkSandboxManagerToSdkSandboxCallback.Stub {
             @Override
             public void onSurfacePackageRequested(
@@ -1984,11 +1886,6 @@ public class SdkSandboxManagerServiceUnitTest {
                     IRequestSurfacePackageFromSdkCallback iRequestSurfacePackageFromSdkCallback) {
                 mSurfacePackageRequested = true;
                 mRequestSurfacePackageFromSdkCallback = iRequestSurfacePackageFromSdkCallback;
-            }
-
-            @Override
-            public void onDataReceived(Bundle data, IDataReceivedCallback callback) {
-                mDataReceived = true;
             }
         }
     }

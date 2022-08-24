@@ -113,9 +113,6 @@ public class Sdk1 extends SandboxedSdkProvider {
         return null;
     }
 
-    @Override
-    public void onDataReceived(Bundle data, DataReceivedCallback callback) {}
-
     private GetTopicsResponse callTopicsApi() throws Exception {
         AdvertisingTopicsClient advertisingTopicsClient =
                 new AdvertisingTopicsClient.Builder()
