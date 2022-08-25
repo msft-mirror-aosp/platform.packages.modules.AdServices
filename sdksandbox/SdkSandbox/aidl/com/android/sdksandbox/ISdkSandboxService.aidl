@@ -16,7 +16,6 @@
 
 package com.android.sdksandbox;
 
-import android.app.sdksandbox.ISharedPreferencesSyncCallback;
 import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.content.pm.ApplicationInfo;
 import android.os.Bundle;
@@ -36,5 +35,5 @@ oneway interface ISdkSandboxService {
                   in SandboxLatencyInfo sandboxLatencyInfo,
                   in ISdkToServiceCallback sdkToService);
     void unloadSdk(IBinder sdkToken);
-    void syncDataFromClient(in SharedPreferencesUpdate update, in ISharedPreferencesSyncCallback callback);
+    void syncDataFromClient(in SharedPreferencesUpdate update);
 }
