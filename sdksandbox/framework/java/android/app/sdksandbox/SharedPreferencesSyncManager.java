@@ -54,10 +54,6 @@ public class SharedPreferencesSyncManager {
     private final Object mLock = new Object();
 
     @GuardedBy("mLock")
-    private boolean mIsRunning = false;
-
-    // Set to true if initial bulk sync fails due to sandbox being unavailable
-    @GuardedBy("mLock")
     private boolean mWaitingForSandbox = false;
 
     // Set to a listener after initial bulk sync is successful
@@ -109,7 +105,6 @@ public class SharedPreferencesSyncManager {
             @NonNull Set<SharedPreferencesKey> keysWithTypeToSync) {
         // TODO(b/239403323): Validate the parameters in SdkSandboxManager
         synchronized (mLock) {
-            mIsRunning = true;
             for (SharedPreferencesKey keyWithType : keysWithTypeToSync) {
                 mKeysToSync.put(keyWithType.getName(), keyWithType);
             }
@@ -128,20 +123,17 @@ public class SharedPreferencesSyncManager {
         }
     }
 
-    // TODO(b/239403323): In incremental api, sync will always be running
-    /** Returns true if sync is running currently. */
-    public boolean isSyncRunning() {
+    /**
+     * Returns true if sync is in waiting state.
+     *
+     * <p>Sync transitions into waiting state whenever sdksandbox is unavailable. It resumes syncing
+     * again when SdkSandboxManager notifies us that sdksandbox is available again.
+     */
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    public boolean isWaitingForSandbox() {
         synchronized (mLock) {
-            return mIsRunning;
+            return mWaitingForSandbox;
         }
-    }
-
-    @GuardedBy("mLock")
-    private void cleanUp() {
-        getDefaultSharedPreferences().unregisterOnSharedPreferenceChangeListener(mListener);
-        mListener = null;
-        mIsRunning = false;
-        mWaitingForSandbox = false;
     }
 
     /**
@@ -161,9 +153,6 @@ public class SharedPreferencesSyncManager {
             }
 
             bulkSyncData();
-
-            // Register listener for syncing future updates
-            getDefaultSharedPreferences().registerOnSharedPreferenceChangeListener(mListener);
         }
     }
 
@@ -208,7 +197,7 @@ public class SharedPreferencesSyncManager {
 
     private void handleSuccess() {
         synchronized (mLock) {
-            if (mIsRunning && !mWaitingForSandbox && mListener == null) {
+            if (!mWaitingForSandbox && mListener == null) {
                 mListener = new ChangeListener();
                 getDefaultSharedPreferences().registerOnSharedPreferenceChangeListener(mListener);
             }
@@ -227,20 +216,13 @@ public class SharedPreferencesSyncManager {
 
     private void handleError(int errorCode, String errorMsg) {
         synchronized (mLock) {
-            if (!mIsRunning) {
-                return;
-            }
-
-            // If we are not waiting for sandbox and we haven't registered a listener yet, then
-            // this error is from initial bulk sync request.
+            // Transition to waiting state when sandbox is unavailable
             if (!mWaitingForSandbox
-                    && mListener == null
                     && errorCode == ISharedPreferencesSyncCallback.SANDBOX_NOT_AVAILABLE) {
                 // Wait for sandbox to start. When it starts, server will call onSandboxStart
                 mWaitingForSandbox = true;
                 return;
             }
-            cleanUp();
         }
     }
 
@@ -254,8 +236,8 @@ public class SharedPreferencesSyncManager {
         public void onSharedPreferenceChanged(SharedPreferences pref, @Nullable String key) {
             // Sync specified keys only
             synchronized (mLock) {
-                // Do not sync if sync has been stopped
-                if (!mIsRunning) {
+                // Do not sync if we are in waiting state
+                if (mWaitingForSandbox) {
                     return;
                 }
 
@@ -264,6 +246,7 @@ public class SharedPreferencesSyncManager {
                     bulkSyncData();
                     return;
                 }
+
                 if (!mKeysToSync.containsKey(key)) {
                     return;
                 }

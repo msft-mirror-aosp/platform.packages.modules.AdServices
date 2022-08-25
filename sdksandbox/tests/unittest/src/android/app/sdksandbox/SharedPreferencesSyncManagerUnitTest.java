@@ -34,6 +34,7 @@ import com.android.internal.annotations.GuardedBy;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -390,7 +391,7 @@ public class SharedPreferencesSyncManagerUnitTest {
         mSyncManager.addSharedPreferencesSyncKeys(KEYS_TO_SYNC);
     }
 
-    // TODO(b/239403323): On error, the sync should keep on running
+    @Ignore("b/239403323: Get rid of internal errors, since we are not notifying user about it")
     @Test
     public void test_onError_bulksync_stopsOnInternalError() throws Exception {
         // Set keys to sync and then sync data to register listener
@@ -401,13 +402,16 @@ public class SharedPreferencesSyncManagerUnitTest {
                 .getLastCallback()
                 .onError(INTERNAL_ERROR_CODE, INTERNAL_ERROR_MSG);
 
-        // Verify that sync is no longer running
-        assertThat(mSyncManager.isSyncRunning()).isFalse();
+        // Verify that sync is still running
+        assertThatSyncIsRunning();
     }
 
+    // TODO(b/239403323): Verify behavior when in waiting state
+
     /** Test that we support starting sync before sandbox is created */
+    @Ignore("b/239403323: Make update listener registration independent of bulk sync")
     @Test
-    public void test_onError_bulksync_doesNotStopOnSandboxNotAvailableError() throws Exception {
+    public void test_onError_bulksync_SandboxNotAvailableError() throws Exception {
         // Set keys to sync and then sync data to register listener
         mSyncManager.addSharedPreferencesSyncKeys(KEYS_TO_SYNC);
 
@@ -416,7 +420,8 @@ public class SharedPreferencesSyncManagerUnitTest {
                 .getLastCallback()
                 .onError(SANDBOX_NOT_AVAILABLE_ERROR_CODE, SANDBOX_NOT_AVAILABLE_ERROR_MSG);
         // Verify that sync was still running
-        assertThat(mSyncManager.isSyncRunning()).isTrue();
+        assertThatSyncIsRunning();
+        assertThat(mSyncManager.isWaitingForSandbox()).isTrue();
     }
 
     @Test
@@ -440,7 +445,6 @@ public class SharedPreferencesSyncManagerUnitTest {
         mSyncManager.addSharedPreferencesSyncKeys(KEYS_TO_SYNC);
     }
 
-    // TODO(b/239403323): Instead of stopping, we should switch to waiting for sandbox
     /** Test that we support starting sync before sandbox is created */
     @Test
     public void test_onError_updateListener_stopsOnSandboxNotAvailableError() throws Exception {
@@ -458,8 +462,8 @@ public class SharedPreferencesSyncManagerUnitTest {
         mSdkSandboxManagerService
                 .getLastCallback()
                 .onError(SANDBOX_NOT_AVAILABLE_ERROR_CODE, SANDBOX_NOT_AVAILABLE_ERROR_MSG);
-        // Verify that sync was stopped
-        assertThat(mSyncManager.isSyncRunning()).isFalse();
+        // Verify that sync is in waiting state now
+        assertThat(mSyncManager.isWaitingForSandbox()).isTrue();
     }
 
     @Test
@@ -521,6 +525,27 @@ public class SharedPreferencesSyncManagerUnitTest {
     private SharedPreferences getDefaultSharedPreferences() {
         final Context appContext = mContext.getApplicationContext();
         return PreferenceManager.getDefaultSharedPreferences(appContext);
+    }
+
+    private void assertThatSyncIsRunning() throws Exception {
+        // There must be some keys in the pool for sync to be running
+        final Set<SharedPreferencesKey> syncKeys = mSyncManager.getSharedPreferencesSyncKeys();
+        assertThat(syncKeys).isNotEmpty();
+
+        // If sync is still active, updating any key would result in syncing date
+        mSdkSandboxManagerService.clearUpdates(); // For easier assert
+        final SharedPreferencesKey syncKey = syncKeys.iterator().next();
+        assertThat(syncKey.getType()).isEqualTo(SharedPreferencesKey.KEY_TYPE_STRING);
+        getDefaultSharedPreferences()
+                .edit()
+                .putString(syncKey.getName(), "assertSyncRunning")
+                .commit();
+
+        // Verify that SyncManager tried to sync
+        mSdkSandboxManagerService.blockForReceivingUpdates(1);
+        final Bundle capturedData = mSdkSandboxManagerService.getLastUpdate().getData();
+        assertThat(capturedData.keySet()).containsExactly(syncKey);
+        assertThat(capturedData.getString(KEY_TO_UPDATE)).isEqualTo("assertSyncIsRunning");
     }
 
     private static class FakeSdkSandboxManagerService extends StubSdkSandboxManagerService {
