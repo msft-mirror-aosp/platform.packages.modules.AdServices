@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 The Android Open Source Project
+ * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,15 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package android.app.sdksandbox;
 
 import android.os.Bundle;
-import android.app.sdksandbox.SandboxedSdk;
-import android.app.sdksandbox.LoadSdkException;
+import android.content.pm.SharedLibraryInfo;
 
 /** @hide */
-interface ILoadSdkCallback {
-    oneway void onLoadSdkSuccess(in SandboxedSdk sandboxedSdkParcel, long timeSystemServerCalledApp);
-    oneway void onLoadSdkFailure(in LoadSdkException exception, long timeSystemServerCalledApp);
+interface ISdkToServiceCallback {
+   List<SharedLibraryInfo> getLoadedSdkLibrariesInfo(in String clientPackageName);
 }

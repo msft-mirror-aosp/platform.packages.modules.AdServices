@@ -28,6 +28,7 @@ import android.annotation.NonNull;
 import android.content.Context;
 import android.net.Uri;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
@@ -114,6 +115,7 @@ public class ReportImpressionScriptEngine {
         Objects.requireNonNull(renderUrl);
         Objects.requireNonNull(contextualSignals);
 
+        LogUtil.v("Reporting result");
         ImmutableList<JSScriptArgument> arguments =
                 ImmutableList.<JSScriptArgument>builder()
                         .add(
@@ -160,6 +162,7 @@ public class ReportImpressionScriptEngine {
         Objects.requireNonNull(signalsForBuyer);
         Objects.requireNonNull(contextualSignals);
         Objects.requireNonNull(customAudienceSignals);
+        LogUtil.v("Reporting win");
 
         ImmutableList<JSScriptArgument> arguments =
                 ImmutableList.<JSScriptArgument>builder()
@@ -180,6 +183,7 @@ public class ReportImpressionScriptEngine {
 
     ListenableFuture<ReportingScriptResult> runReportingScript(
             String jsScript, String functionName, List<JSScriptArgument> args) {
+        LogUtil.v("Executing reporting script");
         try {
             return transform(
                     callReportingScript(jsScript, functionName, args),
@@ -227,7 +231,7 @@ public class ReportImpressionScriptEngine {
     private SellerReportingResult handleReportResultOutput(
             @NonNull ReportingScriptResult reportResult) {
         Objects.requireNonNull(reportResult);
-
+        LogUtil.v("Handling reporting result output");
         Preconditions.checkState(
                 reportResult.status == JS_SCRIPT_STATUS_SUCCESS, "Report Result script failed!");
         Preconditions.checkState(
@@ -256,6 +260,7 @@ public class ReportImpressionScriptEngine {
     @NonNull
     private Uri handleReportWinOutput(@NonNull ReportingScriptResult reportResult) {
         Objects.requireNonNull(reportResult);
+        LogUtil.v("Handling report win output");
 
         Preconditions.checkState(
                 reportResult.status == JS_SCRIPT_STATUS_SUCCESS, "Report Result script failed!");
@@ -271,6 +276,7 @@ public class ReportImpressionScriptEngine {
     @NonNull
     private ReportingScriptResult parseReportingOutput(@NonNull String reportScriptResult) {
         Objects.requireNonNull(reportScriptResult);
+        LogUtil.v("Parsing Reporting output");
         try {
             Preconditions.checkState(
                     !reportScriptResult.equals("null"),

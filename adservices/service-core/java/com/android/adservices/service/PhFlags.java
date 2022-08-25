@@ -199,9 +199,9 @@ public final class PhFlags implements Flags {
     static final String KEY_MDD_BACKGROUND_TASK_KILL_SWITCH = "mdd_background_task_kill_switch";
     static final String KEY_ADID_KILL_SWITCH = "adid_kill_switch";
     static final String KEY_APPSETID_KILL_SWITCH = "appsetid_kill_switch";
-    static final String KEY_FLEDGE_SELECT_ADS_KILL_SWITCH = "flegde_select_ads_kill_switch";
+    static final String KEY_FLEDGE_SELECT_ADS_KILL_SWITCH = "fledge_select_ads_kill_switch";
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH =
-            "flegde_custom_audience_service_kill_switch";
+            "fledge_custom_audience_service_kill_switch";
 
     // App/SDK AllowList/DenyList keys
     static final String KEY_PPAPI_APP_ALLOW_LIST = "ppapi_app_allow_list";

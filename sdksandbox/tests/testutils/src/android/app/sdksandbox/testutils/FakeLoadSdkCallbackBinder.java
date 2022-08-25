@@ -32,12 +32,12 @@ public class FakeLoadSdkCallbackBinder extends ILoadSdkCallback.Stub {
     }
 
     @Override
-    public void onLoadSdkSuccess(SandboxedSdk sandboxedSdk) {
+    public void onLoadSdkSuccess(SandboxedSdk sandboxedSdk, long timeSystemServerCalledApp) {
         mFakeLoadSdkCallback.onResult(sandboxedSdk);
     }
 
     @Override
-    public void onLoadSdkFailure(LoadSdkException exception) {
+    public void onLoadSdkFailure(LoadSdkException exception, long timeSystemServerCalledApp) {
         mFakeLoadSdkCallback.onError(exception);
     }
 
