@@ -88,6 +88,7 @@ public class SharedPreferencesSyncManager {
     }
 
     // TODO(b/237410689): Update links to getClientSharedPreferences when cl is merged.
+    // TODO(b/237410689): Implement removeSyncKeys
     /**
      * Adds {@link SharedPreferencesKey}s to set of keys being synced from app's default {@link
      * SharedPreferences} to SdkSandbox.
@@ -95,8 +96,7 @@ public class SharedPreferencesSyncManager {
      * <p>Synced data will be available for sdks to read using the {@code
      * getClientSharedPreferences} api.
      *
-     * <p>To stop syncing any key that has been added using this API, use {@link #removeSyncKeys} to
-     * remove keys from pool of keys being synced.
+     * <p>To stop syncing any key that has been added using this API, use {@link #removeSyncKeys}.
      *
      * <p>If a provided {@link SharedPreferencesKey} conflicts with an existing key in the pool,
      * i.e., they have the same name but different type, then the old key is replaced with the new
@@ -128,26 +128,16 @@ public class SharedPreferencesSyncManager {
      * {@link SharedPreferences} to sandbox.
      */
     public Set<SharedPreferencesKey> getSharedPreferencesSyncKeys() {
-        return new ArraySet(mKeysToSync.values());
+        synchronized (mLock) {
+            return new ArraySet(mKeysToSync.values());
+        }
     }
 
-    /**
-     * Stops syncing data from app's default {@link SharedPreferences} to SdkSandbox.
-     *
-     * <p>This breaks any existing sync started using {@link #addSharedPreferencesSyncKeys(Set,
-     * SharedPreferencesSyncCallback)}. If there is no active sync present, then calling this is a
-     * no-op.
-     *
-     * <p>Data synced to Sandbox so far won't be erased.
-     */
-    public boolean stopSharedPreferencesSync() {
+    // TODO(b/239403323): In incremental api, sync will always be running
+    /** Returns true if sync is running currently. */
+    public boolean isSyncRunning() {
         synchronized (mLock) {
-            if (mIsRunning) {
-                mCallback.onStop();
-                cleanUp();
-                return true;
-            }
-            return false;
+            return mIsRunning;
         }
     }
 
@@ -382,14 +372,6 @@ public class SharedPreferencesSyncManager {
          * stopSharedPreferencesSync}.
          */
         void onStart();
-
-        /**
-         * Called when sync is broken by calling {@link stopSharedPreferencesSync} api.
-         *
-         * <p>This breaks the sync and user needs to call {@link addSharedPreferencesSyncKeys} again
-         * to restart syncing.
-         */
-        void onStop();
 
         // TODO(b/239403323): Create intdef for errorcodes.
         /**

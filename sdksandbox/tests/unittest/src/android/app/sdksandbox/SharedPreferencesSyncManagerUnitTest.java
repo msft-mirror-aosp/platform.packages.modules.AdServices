@@ -357,27 +357,10 @@ public class SharedPreferencesSyncManagerUnitTest {
     }
 
     @Test
-    public void test_startSync_multipleCalls_stopFirst() throws Exception {
-        // Set keys to sync and then sync data to register listener
-        mSyncManager.addSharedPreferencesSyncKeys(KEYS_TO_SYNC, mCallback);
-
-        // Stop the sync
-        mSyncManager.stopSharedPreferencesSync();
-
-        // Calling start sync again does not throw exception
-        mSyncManager.addSharedPreferencesSyncKeys(KEYS_TO_SYNC, mCallback);
-        // SdkSandboxManagerService should receive update for the second startSync call too
-        assertThat(mSdkSandboxManagerService.getNumberOfUpdatesReceived()).isEqualTo(2);
-    }
-
-    @Test
-    public void test_startSync_multipleCalls_updateListenerRegisteredOnce() throws Exception {
-        // Set keys to sync and then sync data to register listener
+    public void test_updateListener_multipleCalls_updateListenerRegisteredOnce() throws Exception {
+        // Add keys to sync and then sync data to register listener
         mSyncManager.addSharedPreferencesSyncKeys(KEYS_TO_SYNC, mCallback);
         mSdkSandboxManagerService.getLastCallback().onSuccess();
-
-        // Stop the sync
-        mSyncManager.stopSharedPreferencesSync();
 
         mSyncManager.addSharedPreferencesSyncKeys(KEYS_TO_SYNC, mCallback);
         mSdkSandboxManagerService.getLastCallback().onSuccess();
@@ -392,58 +375,7 @@ public class SharedPreferencesSyncManagerUnitTest {
                 () -> mSdkSandboxManagerService.blockForReceivingUpdates(2));
     }
 
-    @Test
-    public void test_stopSync_callsOnStop() throws Exception {
-        // Set keys to sync and then sync data to register listener
-        mSyncManager.addSharedPreferencesSyncKeys(KEYS_TO_SYNC, mCallback);
-
-        // Stop the sync
-        mSyncManager.stopSharedPreferencesSync();
-
-        // Verify on stop was called
-        assertThat(mCallback.getOnStopCalled()).isTrue();
-    }
-
-    @Test
-    public void test_stopSync_doesNotCallOnError() throws Exception {
-        // Set keys to sync and then sync data to register listener
-        mSyncManager.addSharedPreferencesSyncKeys(KEYS_TO_SYNC, mCallback);
-
-        // Stop the sync
-        mSyncManager.stopSharedPreferencesSync();
-
-        // Verify on stop was called
-        assertThat(mCallback.getOnErrorCalled()).isFalse();
-    }
-
-    @Test
-    public void test_stopSync_updateListener_shouldNotUpdate() throws Exception {
-        // Set keys to sync and then sync data to register listener
-        mSyncManager.addSharedPreferencesSyncKeys(KEYS_TO_SYNC, mCallback);
-        mSdkSandboxManagerService.getLastCallback().onSuccess();
-
-        // Stop the sync
-        mSyncManager.stopSharedPreferencesSync();
-
-        mSdkSandboxManagerService.clearUpdates(); // For cleaner observation
-
-        // Update the SharedPreference to trigger listeners
-        getDefaultSharedPreferences().edit().putString(KEY_TO_UPDATE, "update").commit();
-        // Should not receive any updates
-        assertThrows(
-                TimeoutException.class,
-                () -> mSdkSandboxManagerService.blockForReceivingUpdates(1));
-    }
-
-    @Test
-    public void test_stopSync_multipleCalls() throws Exception {
-        // Set keys to sync and then sync data to register listener
-        mSyncManager.addSharedPreferencesSyncKeys(KEYS_TO_SYNC, mCallback);
-
-        // Stop the sync
-        assertThat(mSyncManager.stopSharedPreferencesSync()).isTrue();
-        assertThat(mSyncManager.stopSharedPreferencesSync()).isFalse();
-    }
+    // TODO(b/239403323): When all keys are removed, update listener should not update
 
     @Test
     public void test_onError_bulksync_callsCorrectCallback() throws Exception {
@@ -477,6 +409,7 @@ public class SharedPreferencesSyncManagerUnitTest {
         mSyncManager.addSharedPreferencesSyncKeys(KEYS_TO_SYNC, mCallback);
     }
 
+    // TODO(b/239403323): On error, the sync should keep on running
     @Test
     public void test_onError_bulksync_stopsOnInternalError() throws Exception {
         // Set keys to sync and then sync data to register listener
@@ -488,7 +421,7 @@ public class SharedPreferencesSyncManagerUnitTest {
                 .onError(INTERNAL_ERROR_CODE, INTERNAL_ERROR_MSG);
 
         // Verify that sync is no longer running
-        assertThat(mSyncManager.stopSharedPreferencesSync()).isFalse();
+        assertThat(mSyncManager.isSyncRunning()).isFalse();
     }
 
     /** Test that we support starting sync before sandbox is created */
@@ -502,7 +435,7 @@ public class SharedPreferencesSyncManagerUnitTest {
                 .getLastCallback()
                 .onError(SANDBOX_NOT_AVAILABLE_ERROR_CODE, SANDBOX_NOT_AVAILABLE_ERROR_MSG);
         // Verify that sync was still running
-        assertThat(mSyncManager.stopSharedPreferencesSync()).isTrue();
+        assertThat(mSyncManager.isSyncRunning()).isTrue();
     }
 
     @Test
@@ -569,7 +502,7 @@ public class SharedPreferencesSyncManagerUnitTest {
                 .getLastCallback()
                 .onError(SANDBOX_NOT_AVAILABLE_ERROR_CODE, SANDBOX_NOT_AVAILABLE_ERROR_MSG);
         // Verify that sync was stopped
-        assertThat(mSyncManager.stopSharedPreferencesSync()).isFalse();
+        assertThat(mSyncManager.isSyncRunning()).isFalse();
     }
 
     @Test
@@ -725,12 +658,6 @@ public class SharedPreferencesSyncManagerUnitTest {
         @Override
         public void onStart() {
             mOnStartCalled = true;
-            mWaitForResponse.countDown();
-        }
-
-        @Override
-        public void onStop() {
-            mOnStopCalled = true;
             mWaitForResponse.countDown();
         }
 
