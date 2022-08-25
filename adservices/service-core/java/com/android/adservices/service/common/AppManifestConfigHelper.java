@@ -80,15 +80,15 @@ public class AppManifestConfigHelper {
     }
 
     /**
-     * Parses the app's manifest config to determine whether this sdk is permitted to use the Custom
-     * Audiences API.
+     * Parses the app's manifest config to determine whether the given {@code enrollmentId}
+     * associated with an ad tech is permitted to use the Custom Audience API.
      *
-     * <p>If there is a parse error, it returns false.
+     * <p>If there is a parse error, it returns {@code false}.
      *
      * @param context the context for the API call. This needs to be the context where the calling
      *     UID is that of the API caller.
-     * @param appPackageName the package name of the app whose manifest config will be read.
-     * @param enrollmentId the enrollment id associate with the ad tech identifier.
+     * @param appPackageName the package name of the app whose manifest config will be read
+     * @param enrollmentId the enrollment ID associate with the ad tech
      */
     public static boolean isAllowedCustomAudiencesAccess(
             @NonNull Context context,
