@@ -82,7 +82,6 @@ public class SharedPreferencesSyncManager {
     }
 
     // TODO(b/237410689): Update links to getClientSharedPreferences when cl is merged.
-    // TODO(b/237410689): Implement removeSyncKeys
     /**
      * Adds {@link SharedPreferencesKey}s to set of keys being synced from app's default {@link
      * SharedPreferences} to SdkSandbox.
@@ -90,7 +89,8 @@ public class SharedPreferencesSyncManager {
      * <p>Synced data will be available for sdks to read using the {@code
      * getClientSharedPreferences} api.
      *
-     * <p>To stop syncing any key that has been added using this API, use {@link #removeSyncKeys}.
+     * <p>To stop syncing any key that has been added using this API, use {@link
+     * #removeSharedPreferencesSyncKeys(Set)}.
      *
      * <p>If a provided {@link SharedPreferencesKey} conflicts with an existing key in the pool,
      * i.e., they have the same name but different type, then the old key is replaced with the new
@@ -100,7 +100,6 @@ public class SharedPreferencesSyncManager {
      * keys for syncing.
      *
      * @param keysWithTypeToSync set of keys and their type that will be synced to Sandbox.
-     * @param callback callback to receive notification for change in sync status.
      */
     public void addSharedPreferencesSyncKeys(
             @NonNull Set<SharedPreferencesKey> keysWithTypeToSync) {
@@ -116,6 +115,23 @@ public class SharedPreferencesSyncManager {
             }
 
             syncData();
+        }
+    }
+
+    /**
+     * Removes keys from set of {@link SharedPreferencesKey}s that have been added using {@link
+     * #addSharedPreferencesSyncKeys(Set)}
+     *
+     * <p>Removed keys will be erased from SdkSandbox if they have been synced already.
+     *
+     * @param keys set of key names that should no longer be synced to Sandbox.
+     */
+    public void removeSharedPreferencesSyncKeys(@NonNull Set<String> keys) {
+        synchronized (mLock) {
+            for (String key : keys) {
+                mKeysToSync.remove(key);
+            }
+            // TODO(b/19742283): removed keys need to be erased from sandbox.
         }
     }
 
