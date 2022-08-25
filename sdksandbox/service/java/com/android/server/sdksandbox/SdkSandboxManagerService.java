@@ -578,7 +578,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 callback);
     }
 
-    private void onUserUnlocking(int userId) {
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    void onUserUnlocking(int userId) {
         Log.i(TAG, "onUserUnlocking " + userId);
         // using postDelayed to wait for other volumes to mount
         mHandler.postDelayed(() -> mSdkSandboxStorageManager.onUserUnlocking(userId), 20000);
@@ -1732,7 +1733,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     /** @hide */
     public static class Lifecycle extends SystemService {
-        private final SdkSandboxManagerService mService;
+        @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+        SdkSandboxManagerService mService;
 
         public Lifecycle(Context context) {
             super(context);
