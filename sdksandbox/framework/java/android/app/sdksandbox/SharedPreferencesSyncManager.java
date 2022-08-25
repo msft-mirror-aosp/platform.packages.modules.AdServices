@@ -64,9 +64,6 @@ public class SharedPreferencesSyncManager {
     @GuardedBy("mLock")
     private ChangeListener mListener = null;
 
-    @GuardedBy("mLock")
-    private SharedPreferencesSyncCallback mCallback = null;
-
     // Map of keyName->SharedPreferenceKey that this manager needs to keep in sync.
     @GuardedBy("mLock")
     private ArrayMap<String, SharedPreferencesKey> mKeysToSync = new ArrayMap<>();
@@ -109,12 +106,10 @@ public class SharedPreferencesSyncManager {
      * @param callback callback to receive notification for change in sync status.
      */
     public void addSharedPreferencesSyncKeys(
-            @NonNull Set<SharedPreferencesKey> keysWithTypeToSync,
-            @NonNull SharedPreferencesSyncCallback callback) {
+            @NonNull Set<SharedPreferencesKey> keysWithTypeToSync) {
         // TODO(b/239403323): Validate the parameters in SdkSandboxManager
         synchronized (mLock) {
             mIsRunning = true;
-            mCallback = callback;
             for (SharedPreferencesKey keyWithType : keysWithTypeToSync) {
                 mKeysToSync.put(keyWithType.getName(), keyWithType);
             }
@@ -144,7 +139,6 @@ public class SharedPreferencesSyncManager {
     @GuardedBy("mLock")
     private void cleanUp() {
         getDefaultSharedPreferences().unregisterOnSharedPreferenceChangeListener(mListener);
-        mCallback = null;
         mListener = null;
         mIsRunning = false;
         mWaitingForSandbox = false;
@@ -246,7 +240,6 @@ public class SharedPreferencesSyncManager {
                 mWaitingForSandbox = true;
                 return;
             }
-            mCallback.onError(errorCode, errorMsg);
             cleanUp();
         }
     }
@@ -358,28 +351,5 @@ public class SharedPreferencesSyncManager {
                             + " Type: "
                             + type);
         }
-    }
-
-    // TODO(b/239403323): Move to SdkSandboxManager
-    /** Callback to receive notification about sync status. */
-    public interface SharedPreferencesSyncCallback {
-
-        /**
-         * Called when a pipeline for syncing has been successfully established.
-         *
-         * <p>All keys have been synced at least once and new updates will now be propagated to
-         * sandbox automatically, until the sync is broken due to error or by calling {@link
-         * stopSharedPreferencesSync}.
-         */
-        void onStart();
-
-        // TODO(b/239403323): Create intdef for errorcodes.
-        /**
-         * Called when there is an error in the sync process.
-         *
-         * <p>This breaks the sync and user needs to call {@link addSharedPreferencesSyncKeys} again
-         * to restart syncing.
-         */
-        void onError(int errorCode, String errorMsg);
     }
 }
