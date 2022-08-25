@@ -245,8 +245,8 @@ public class SdkSandboxTest {
                         mContext.getDisplayId(),
                         500,
                         500,
-                        System.currentTimeMillis(),
                         new Bundle(),
+                        SANDBOX_LATENCY_INFO,
                         callback);
         assertThat(surfaceLatch.await(1, TimeUnit.MINUTES)).isTrue();
         assertThat(callback.mSurfacePackage).isNotNull();
@@ -280,8 +280,8 @@ public class SdkSandboxTest {
                         111111 /* invalid displayId */,
                         500,
                         500,
-                        System.currentTimeMillis(),
                         null,
+                        SANDBOX_LATENCY_INFO,
                         callback);
         assertThat(surfaceLatch.await(1, TimeUnit.MINUTES)).isTrue();
         assertThat(callback.mSurfacePackage).isNull();
@@ -503,25 +503,25 @@ public class SdkSandboxTest {
                         mContext.getDisplayId(),
                         500,
                         500,
-                        TIME_SYSTEM_SERVER_CALLED_SANDBOX,
                         new Bundle(),
+                        SANDBOX_LATENCY_INFO,
                         callback);
         assertThat(surfaceLatch.await(1, TimeUnit.MINUTES)).isTrue();
         assertThat(callback.mSurfacePackage).isNotNull();
-        assertThat(callback.mLatencySystemServerToSandbox)
+        assertThat(callback.mSandboxLatencyInfo.getLatencySystemServerToSandbox())
                 .isEqualTo(
                         (int)
                                 (TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER
                                         - TIME_SYSTEM_SERVER_CALLED_SANDBOX));
-        assertThat(callback.mLatencySdk)
+        assertThat(callback.mSandboxLatencyInfo.getSdkLatency())
                 .isEqualTo((int) (TIME_SDK_CALL_COMPLETED - TIME_SANDBOX_CALLED_SDK));
-        assertThat(callback.mLatencySandbox)
+        assertThat(callback.mSandboxLatencyInfo.getSandboxLatency())
                 .isEqualTo(
                         (int)
                                 (TIME_SANDBOX_CALLED_SYSTEM_SERVER
                                         - TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER
                                         - (TIME_SDK_CALL_COMPLETED - TIME_SANDBOX_CALLED_SDK)));
-        assertThat(callback.mTimeSandboxCalledSystemServer)
+        assertThat(callback.mSandboxLatencyInfo.getTimeSandboxCalledSystemServer())
                 .isEqualTo(TIME_SANDBOX_CALLED_SYSTEM_SERVER);
     }
 
@@ -580,6 +580,7 @@ public class SdkSandboxTest {
         private SurfaceControlViewHost.SurfacePackage mSurfacePackage;
         boolean mSuccessful = false;
         int mErrorCode = -1;
+        private SandboxLatencyInfo mSandboxLatencyInfo;
         private int mLatencySystemServerToSandbox;
         private int mLatencySandbox;
         private int mLatencySdk;
@@ -593,27 +594,16 @@ public class SdkSandboxTest {
         public void onSurfacePackageReady(
                 SurfaceControlViewHost.SurfacePackage surfacePackage,
                 int displayId,
-                long timeSandboxCalledSystemServer,
                 Bundle params,
-                Bundle latencies) {
+                SandboxLatencyInfo sandboxLatencyInfo) {
             mSurfacePackage = surfacePackage;
-            mLatencySystemServerToSandbox =
-                    latencies.getInt(
-                            IRequestSurfacePackageFromSdkCallback.LATENCY_SYSTEM_SERVER_TO_SANDBOX);
-            mLatencySandbox =
-                    latencies.getInt(IRequestSurfacePackageFromSdkCallback.LATENCY_SANDBOX);
-            mLatencySdk = latencies.getInt(IRequestSurfacePackageFromSdkCallback.LATENCY_SDK);
-            mTimeSandboxCalledSystemServer = timeSandboxCalledSystemServer;
+            mSandboxLatencyInfo = sandboxLatencyInfo;
             mLatch.countDown();
         }
 
         @Override
         public void onSurfacePackageError(
-                int errorCode,
-                String message,
-                long timeSandboxCalledSystemServer,
-                boolean failedAtSdk,
-                Bundle sandboxLatencies) {
+                int errorCode, String message, SandboxLatencyInfo sandboxLatencyInfo) {
             mErrorCode = errorCode;
             mSuccessful = false;
             mLatch.countDown();

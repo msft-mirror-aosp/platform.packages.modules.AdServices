@@ -1481,6 +1481,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     (int) (timeSystemServerCalledSandbox - timeSystemServerReceivedCallFromApp),
                     /*success=*/ true,
                     SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX);
+            final SandboxLatencyInfo sandboxLatencyInfo =
+                    new SandboxLatencyInfo(timeSystemServerCalledSandbox);
             try {
                 synchronized (this) {
                     mManagerToCodeCallback.onSurfacePackageRequested(
@@ -1488,27 +1490,23 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                             displayId,
                             width,
                             height,
-                            timeSystemServerCalledSandbox,
                             params,
+                            sandboxLatencyInfo,
                             new IRequestSurfacePackageFromSdkCallback.Stub() {
                                 @Override
                                 public void onSurfacePackageReady(
                                         SurfaceControlViewHost.SurfacePackage surfacePackage,
                                         int surfacePackageId,
-                                        long timeSandboxCalledSystemServer,
                                         Bundle params,
-                                        Bundle sandboxLatencies) {
+                                        SandboxLatencyInfo sandboxLatencyInfo) {
                                     final long timeSystemServerReceivedCallFromSandbox =
                                             mInjector.getCurrentTime();
 
-                                    logLatencyMetricsForCallbackForRequestSurfacePackage(
-                                            sandboxLatencies,
-                                            /*latencySandboxToSystemServer=*/ (int)
-                                                    (timeSystemServerReceivedCallFromSandbox
-                                                            - timeSandboxCalledSystemServer),
+                                    logLatencyMetricsForCallback(
+                                            timeSystemServerReceivedCallFromSandbox,
                                             SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE,
-                                            /*sandboxStageSuccess=*/ true,
-                                            /*sdkStageSuccess=*/ true);
+                                            sandboxLatencyInfo);
+
                                     handleSurfacePackageReady(
                                             surfacePackage,
                                             surfacePackageId,
@@ -1521,20 +1519,14 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                 public void onSurfacePackageError(
                                         int errorCode,
                                         String errorMsg,
-                                        long timeSandboxCalledSystemServer,
-                                        boolean failedAtSdk,
-                                        Bundle sandboxLatencies) {
-                                    long timeSystemServerReceivedCallFromSandbox =
+                                        SandboxLatencyInfo sandboxLatencyInfo) {
+                                    final long timeSystemServerReceivedCallFromSandbox =
                                             mInjector.getCurrentTime();
 
-                                    logLatencyMetricsForCallbackForRequestSurfacePackage(
-                                            sandboxLatencies,
-                                            /*latencySandboxToSystemServer=*/ (int)
-                                                    (timeSystemServerReceivedCallFromSandbox
-                                                            - timeSandboxCalledSystemServer),
+                                    logLatencyMetricsForCallback(
+                                            timeSystemServerReceivedCallFromSandbox,
                                             SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE,
-                                            /*sandboxStageSuccess=*/ failedAtSdk,
-                                            /*sdkStageSuccess=*/ !failedAtSdk);
+                                            sandboxLatencyInfo);
 
                                     int sdkSandboxManagerErrorCode =
                                             toSdkSandboxManagerRequestSurfacePackageErrorCode(
@@ -1602,45 +1594,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     /*latency=*/ (int)
                             (timeSystemServerReceivedCallFromSandbox
                                     - sandboxLatencyInfo.getTimeSandboxCalledSystemServer()),
-                    /*success=*/ true,
-                    SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SANDBOX_TO_SYSTEM_SERVER);
-        }
-
-        // TODO(b/242990156): Use SandboxLatencyInfo Parcelable class for RequestSurfacePackage
-        private void logLatencyMetricsForCallbackForRequestSurfacePackage(
-                Bundle sandboxLatencies,
-                int latencySandboxToSystemServer,
-                int method,
-                boolean sandboxStageSuccess,
-                boolean sdkStageSuccess) {
-            SdkSandboxStatsLog.write(
-                    SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                    method,
-                    sandboxLatencies.getInt(
-                            IRequestSurfacePackageFromSdkCallback.LATENCY_SYSTEM_SERVER_TO_SANDBOX),
-                    /*success=*/ true,
-                    SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_SANDBOX);
-
-            SdkSandboxStatsLog.write(
-                    SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                    method,
-                    sandboxLatencies.getInt(IRequestSurfacePackageFromSdkCallback.LATENCY_SANDBOX),
-                    sandboxStageSuccess,
-                    SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SANDBOX);
-
-            if (sandboxLatencies.containsKey(IRequestSurfacePackageFromSdkCallback.LATENCY_SDK)) {
-                SdkSandboxStatsLog.write(
-                        SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                        method,
-                        sandboxLatencies.getInt(IRequestSurfacePackageFromSdkCallback.LATENCY_SDK),
-                        sdkStageSuccess,
-                        SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SDK);
-            }
-
-            SdkSandboxStatsLog.write(
-                    SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                    method,
-                    latencySandboxToSystemServer,
                     /*success=*/ true,
                     SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SANDBOX_TO_SYSTEM_SERVER);
         }
