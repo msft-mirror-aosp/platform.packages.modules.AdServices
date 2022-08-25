@@ -17,6 +17,7 @@ package android.adservices.adid {
     ctor public AdId(@NonNull String, boolean);
     method @NonNull public String getAdId();
     method public boolean isLimitAdTrackingEnabled();
+    field public static final String ZERO_OUT = "00000000-0000-0000-0000-000000000000";
   }
 
   public class AdIdManager {
