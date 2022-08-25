@@ -48,7 +48,7 @@ public class Sdk1 extends SandboxedSdkProvider {
     // Set of classification topics for the Test App. The returned topic should be one of these
     // Topics.
     private static final ImmutableSet<Integer> TOPIC_ID_SET =
-            ImmutableSet.of(10009, 10225, 10249, 10223, 10253);
+            ImmutableSet.of(10147, 10253, 10175, 10254, 10333);
 
     @Override
     public SandboxedSdk onLoadSdk(Bundle params) throws LoadSdkException {
