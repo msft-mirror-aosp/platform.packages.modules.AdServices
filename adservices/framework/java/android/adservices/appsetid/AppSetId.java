@@ -64,7 +64,7 @@ public class AppSetId {
         mAppSetIdScope = appSetIdScope;
     }
 
-    /** Retrieves the appSetId. The api always returns a non-null appSetId. */
+    /** Retrieves the appSetId. The api always returns a non-empty appSetId. */
     public @NonNull String getId() {
         return mAppSetId;
     }

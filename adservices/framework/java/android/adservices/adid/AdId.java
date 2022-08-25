@@ -30,6 +30,7 @@ import java.util.Objects;
 public class AdId {
     @NonNull private final String mAdId;
     private final boolean mLimitAdTrackingEnabled;
+    public static final String ZERO_OUT = "00000000-0000-0000-0000-000000000000";
 
     /**
      * Creates an instance of {@link AdId}
@@ -51,8 +52,7 @@ public class AdId {
      * android.adservices.common.AdServicesPermissions#ACCESS_ADSERVICES_AD_ID}.
      *
      * <p>When the user is {@link #isLimitAdTrackingEnabled limiting ad tracking}, the API returns
-     * 00000000-0000-0000-0000-000000000000. This disallows a caller to track the user for
-     * monetization purposes.
+     * {@link #ZERO_OUT}. This disallows a caller to track the user for monetization purposes.
      *
      * <p>Otherwise, a string unique to the device and user is returned, which can be used to track
      * users for advertising.
@@ -64,7 +64,7 @@ public class AdId {
     /**
      * Retrieves the limit ad tracking enabled setting.
      *
-     * <p>This value is true if user has limit ad tracking enabled, falseotherwise.
+     * <p>This value is true if user has limit ad tracking enabled, {@code false} otherwise.
      */
     public boolean isLimitAdTrackingEnabled() {
         return mLimitAdTrackingEnabled;
