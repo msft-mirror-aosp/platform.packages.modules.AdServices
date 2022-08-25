@@ -72,6 +72,7 @@ import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.sdksandbox.ILoadSdkInSandboxCallback;
 import com.android.sdksandbox.IRequestSurfacePackageFromSdkCallback;
+import com.android.sdksandbox.ISdkSandboxDisabledCallback;
 import com.android.sdksandbox.ISdkSandboxManagerToSdkSandboxCallback;
 import com.android.sdksandbox.ISdkSandboxService;
 import com.android.sdksandbox.SandboxLatencyInfo;
@@ -85,6 +86,8 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -142,6 +145,14 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private final String mAdServicesPackageName;
 
     private Injector mInjector;
+
+    // The device must have a change that allows the Webview provider to be visible in order for the
+    // sandbox to be enabled.
+    @GuardedBy("mLock")
+    private boolean mHasVisibilityPatch;
+
+    @GuardedBy("mLock")
+    private boolean mCheckedVisibilityPatch = false;
 
     static class Injector {
         long getCurrentTime() {
@@ -593,6 +604,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         // TODO(b/211575098): Use IndentingPrintWriter for better formatting
         synchronized (mLock) {
+            writer.println("Checked visibility patch exists: " + mCheckedVisibilityPatch);
+            if (mCheckedVisibilityPatch) {
+                writer.println("Build contains visibility patch: " + mHasVisibilityPatch);
+            }
             writer.println("mAppAndRemoteSdkLinks size: " + mAppAndRemoteSdkLinks.size());
         }
 
@@ -902,6 +917,61 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             stopSdkSandboxService(callingInfo, "App requesting sandbox kill");
         } finally {
             Binder.restoreCallingIdentity(token);
+        }
+    }
+
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    boolean isSdkSandboxDisabled(ISdkSandboxService boundService) {
+
+        synchronized (mLock) {
+            if (mCheckedVisibilityPatch) {
+                return !mHasVisibilityPatch;
+            }
+            SdkSandboxDisabledCallback callback = new SdkSandboxDisabledCallback();
+            try {
+                boundService.isDisabled(callback);
+                boolean isDisabled = callback.getIsDisabled();
+                mCheckedVisibilityPatch = true;
+                mHasVisibilityPatch = !isDisabled;
+                return isDisabled;
+            } catch (Exception e) {
+                Log.w(TAG, "Could not verify SDK sandbox state", e);
+                return true;
+            }
+        }
+    }
+
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    void clearSdkSandboxState() {
+        synchronized (mLock) {
+            mCheckedVisibilityPatch = false;
+        }
+    }
+
+    static class SdkSandboxDisabledCallback extends ISdkSandboxDisabledCallback.Stub {
+        CountDownLatch mLatch;
+        boolean mIsDisabled = false;
+
+        SdkSandboxDisabledCallback() {
+            mLatch = new CountDownLatch(1);
+        }
+
+        @Override
+        public void onResult(boolean isDisabled) {
+            mIsDisabled = isDisabled;
+            mLatch.countDown();
+        }
+
+        boolean getIsDisabled() {
+            try {
+                if (mLatch.await(1, TimeUnit.SECONDS)) {
+                    return mIsDisabled;
+                }
+                return true;
+            } catch (InterruptedException e) {
+                Log.w(TAG, "Interrupted while waiting for SDK sandbox state", e);
+                return true;
+            }
         }
     }
 
