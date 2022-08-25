@@ -147,6 +147,8 @@ public class SdkSandboxManagerUnitTest {
 
         assertThat(exception.getLoadSdkErrorCode()).isEqualTo(LOAD_SDK_NOT_FOUND);
         assertThat(exception.getMessage()).isEqualTo(ERROR_MSG);
+        assertNotNull(exception.getExtraInformation());
+        assertTrue(exception.getExtraInformation().isEmpty());
     }
 
     @Test
