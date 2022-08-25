@@ -30,6 +30,11 @@ import java.util.Objects;
 public class AdId {
     @NonNull private final String mAdId;
     private final boolean mLimitAdTrackingEnabled;
+
+    /**
+     * A zeroed-out {@link #getAdId ad id} that is returned when the user has {@link
+     * #isLimitAdTrackingEnabled limited ad tracking}.
+     */
     public static final String ZERO_OUT = "00000000-0000-0000-0000-000000000000";
 
     /**
