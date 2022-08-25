@@ -45,8 +45,7 @@
     <string name="notificationUI_container1_body_text_eu" msgid="1700290522706948241">"প্রাইভেসি স্যান্ডবক্সের নতুন ফিচার আপনাকে প্রাসঙ্গিক বিজ্ঞাপন দেখানোর জন্য অ্যাপকে অনুমতি দেয় তবে অন্যান্য ডেভেলপারদের ওয়েবসাইট বা অ্যাপে, আপনার অ্যাক্টিভিটি সম্পর্কে তথ্য পাওয়ার ক্ষেত্রে সীমাবদ্ধ করে।"</string>
     <string name="notificationUI_container1_control_text_eu" msgid="3158258148321255153">"এটি কীভাবে কাজ করে"</string>
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"কীভাবে অংশ নিতে হবে"</string>
-    <!-- no translation found for notificationUI_container2_body_text_eu (5763735880112009239) -->
-    <skip />
+    <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"বিটা চালু করার মাধ্যমে, অ্যাপগুলি আপনাকে বিজ্ঞাপন দেখাতে এইসব নতুন, আরও ব্যক্তিগত উপায় পরীক্ষা করার অনুমতি দেয়। আপনার গোপনীয়তা সেটিংসে যেকোনও সময় বিটা বন্ধ করতে পারবেন।"</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"না থাক"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"হ্যাঁ, আমি যোগ দেব"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"অংশগ্রহণ করার জন্য আপনাকে ধন্যবাদ"</string>
@@ -56,8 +55,7 @@
     <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"গোপনীয়তা সেটিংস"</string>
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"বুঝেছি"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"আপনি বিটা প্রোগ্রামে অংশগ্রহণ করছেন"</string>
-    <!-- no translation found for notificationUI_container2_body_text (758560159693325060) -->
-    <skip />
+    <string name="notificationUI_container2_body_text" msgid="758560159693325060">"আপনার ডিভাইসের জন্য প্রাইভেসি স্যান্ডবক্স চালু করা আছে এবং আপনাকে বিজ্ঞাপন দেখাতে এইসব নতুন, আরও ব্যক্তিগত উপায় অ্যাপগুলি পরীক্ষা করতে পারে। আপনার গোপনীয়তা সেটিংসে যেকোনও সময় বিটা বন্ধ করতে পারবেন।"</string>
     <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"গোপনীয়তা সেটিংস ম্যানেজ করুন"</string>
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"বুঝেছি"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Android-এর প্রাইভেসি স্যান্ডবক্স নতুন ফিচার প্রদান করে যা, আপনার পছন্দ হতে পারে এমন বিজ্ঞাপন দেখানোর জন্য অ্যাপ ব্যবহার করতে পারে। এইসব প্রযুক্তি ডিভাইস শনাক্তকারী ব্যবহার করে না।\n\nAndroid ও আপনার অ্যাপগুলি কী ধরনের বিজ্ঞাপনে আপনি আগ্রহী হতে পারেন তা অনুমান করতে এবং ডিভাইসে সাময়িকভাবে সেভ করতে পারবে। এটি অন্যান্য ডেভেলপারদের ওয়েবসাইট ও অ্যাপ জুড়ে আপনার অ্যাক্টিভিটি ট্র্যাক না করেই, আপনি আগ্রহী হতে পারেন এমন বিজ্ঞাপন দেখানোর জন্য অ্যাপকে অনুমতি দেয়।"</string>
