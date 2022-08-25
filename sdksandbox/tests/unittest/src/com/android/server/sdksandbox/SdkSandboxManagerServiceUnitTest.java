@@ -472,7 +472,8 @@ public class SdkSandboxManagerServiceUnitTest {
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
                 surfacePackageCallback);
-        mSdkSandboxService.sendSurfacePackageReady(/*sandboxLatencies=*/ new Bundle());
+        mSdkSandboxService.sendSurfacePackageReady(
+                new SandboxLatencyInfo(TIME_SYSTEM_SERVER_CALLED_SANDBOX));
         assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isTrue();
     }
 
@@ -1520,7 +1521,8 @@ public class SdkSandboxManagerServiceUnitTest {
                 TIME_APP_CALLED_SYSTEM_SERVER,
                 new Bundle(),
                 surfacePackageCallback);
-        mSdkSandboxService.sendSurfacePackageReady(/*sandboxLatencies=*/ new Bundle());
+        mSdkSandboxService.sendSurfacePackageReady(
+                new SandboxLatencyInfo(TIME_SYSTEM_SERVER_CALLED_SANDBOX));
 
         ExtendedMockito.verify(
                 () ->
@@ -1697,14 +1699,16 @@ public class SdkSandboxManagerServiceUnitTest {
                                         .SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_APP));
     }
 
-    private Bundle getFakedSandboxLatencies() {
-        final Bundle sandboxLatencies = new Bundle();
-        sandboxLatencies.putInt(
-                IRequestSurfacePackageFromSdkCallback.LATENCY_SYSTEM_SERVER_TO_SANDBOX, 1);
-        sandboxLatencies.putInt(IRequestSurfacePackageFromSdkCallback.LATENCY_SANDBOX, 2);
-        sandboxLatencies.putInt(IRequestSurfacePackageFromSdkCallback.LATENCY_SDK, 1);
+    private SandboxLatencyInfo getFakedSandboxLatencies() {
+        final SandboxLatencyInfo sandboxLatencyInfo =
+                new SandboxLatencyInfo(TIME_SYSTEM_SERVER_CALLED_SANDBOX);
+        sandboxLatencyInfo.setTimeSandboxReceivedCallFromSystemServer(
+                TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER);
+        sandboxLatencyInfo.setTimeSandboxCalledSdk(TIME_SANDBOX_CALLED_SDK);
+        sandboxLatencyInfo.setTimeSdkCallCompleted(TIME_SDK_CALL_COMPLETED);
+        sandboxLatencyInfo.setTimeSandboxCalledSystemServer(TIME_SANDBOX_CALLED_SYSTEM_SERVER);
 
-        return sandboxLatencies;
+        return sandboxLatencyInfo;
     }
 
     private void loadSdk() throws RemoteException {
@@ -1871,14 +1875,13 @@ public class SdkSandboxManagerServiceUnitTest {
                     exception, new SandboxLatencyInfo(TIME_SYSTEM_SERVER_CALLED_SANDBOX));
         }
 
-        void sendSurfacePackageReady(Bundle sandboxLatencies) throws RemoteException {
+        void sendSurfacePackageReady(SandboxLatencyInfo sandboxLatencyInfo) throws RemoteException {
             if (mSurfacePackageRequested) {
                 mRequestSurfacePackageFromSdkCallback.onSurfacePackageReady(
                         /*surfacePackage=*/ null,
                         /*surfacePackageId=*/ 1,
-                        /*timeSandboxCalledSystemServer=*/ 1L,
                         /*params=*/ new Bundle(),
-                        sandboxLatencies);
+                        sandboxLatencyInfo);
             }
         }
 
@@ -1896,8 +1899,8 @@ public class SdkSandboxManagerServiceUnitTest {
                     int displayId,
                     int width,
                     int height,
-                    long timeSystemServerCalledSandbox,
                     Bundle extraParams,
+                    SandboxLatencyInfo sandboxLatencyInfo,
                     IRequestSurfacePackageFromSdkCallback iRequestSurfacePackageFromSdkCallback) {
                 mSurfacePackageRequested = true;
                 mRequestSurfacePackageFromSdkCallback = iRequestSurfacePackageFromSdkCallback;
