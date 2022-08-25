@@ -15,9 +15,11 @@
  */
 package android.adservices.topics;
 
-import static android.adservices.topics.TopicsManager.EMPTY_SDK;
 
 import static com.google.common.truth.Truth.assertThat;
+
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 
 import androidx.test.filters.SmallTest;
 
@@ -28,24 +30,27 @@ import org.junit.Test;
  */
 @SmallTest
 public final class GetTopicsRequestTest {
-
     private static final String SOME_SDK_NAME = "SomeSDKName";
 
     @Test
-    public void testNonNullSdkName() {
-        GetTopicsRequest request =
-            new GetTopicsRequest.Builder().setSdkName(SOME_SDK_NAME).build();
-
-        assertThat(request.getSdkName()).isEqualTo(SOME_SDK_NAME);
+    public void testCreate() {
+        GetTopicsRequest request = GetTopicsRequest.create();
+        assertNull(request.getAdsSdkName());
     }
 
     @Test
-    public void testNullSdkName() {
+    public void testCreateWithAdsSdkName_nullSdkName() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    GetTopicsRequest.createWithAdsSdkName(/* adsSdkName */ null);
+                });
+    }
+
+    @Test
+    public void testCreateWithAdsSdkName_nonNullSdkName() {
         GetTopicsRequest request =
-            new GetTopicsRequest.Builder()
-                // Not setting mSdkName making it null.
-                .build();
-        // When sdkName is not set in builder, we will use EMPTY_SDK by default
-        assertThat(request.getSdkName()).isEqualTo(EMPTY_SDK);
+                GetTopicsRequest.createWithAdsSdkName(/* adsSdkName */ SOME_SDK_NAME);
+        assertThat(request.getAdsSdkName()).isEqualTo(SOME_SDK_NAME);
     }
 }

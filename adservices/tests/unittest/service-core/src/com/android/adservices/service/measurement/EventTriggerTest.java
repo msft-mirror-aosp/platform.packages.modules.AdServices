@@ -24,6 +24,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
 
+import java.util.Set;
+
 public class EventTriggerTest {
     private static JSONObject sFilterData1;
     private static JSONObject sFilterData2;
@@ -142,5 +144,56 @@ public class EventTriggerTest {
                                         .buildAggregateFilterData(sNotFilterData2)
                                         .build())
                         .build());
+    }
+
+    @Test
+    public void testHashCode_equals() throws Exception {
+        EventTrigger eventTrigger1 = createExample();
+        EventTrigger eventTrigger2 = createExample();
+        Set<EventTrigger> eventTriggerSet1 = Set.of(eventTrigger1);
+        Set<EventTrigger> eventTriggerSet2 = Set.of(eventTrigger2);
+        assertEquals(eventTrigger1.hashCode(), eventTrigger2.hashCode());
+        assertEquals(eventTrigger1, eventTrigger2);
+        assertEquals(eventTriggerSet1, eventTriggerSet2);
+    }
+
+    @Test
+    public void testHashCode_notEquals() throws Exception {
+        EventTrigger eventTrigger1 = createExample();
+        EventTrigger eventTrigger2 =
+                new EventTrigger.Builder()
+                        .setTriggerPriority(2L)
+                        .setTriggerData(101L)
+                        .setDedupKey(1001L)
+                        .setFilter(
+                                new AggregateFilterData.Builder()
+                                        .buildAggregateFilterData(sFilterData1)
+                                        .build())
+                        .setNotFilter(
+                                new AggregateFilterData.Builder()
+                                        .buildAggregateFilterData(sNotFilterData1)
+                                        .build())
+                        .build();
+        Set<EventTrigger> eventTriggerSet1 = Set.of(eventTrigger1);
+        Set<EventTrigger> eventTriggerSet2 = Set.of(eventTrigger2);
+        assertNotEquals(eventTrigger1.hashCode(), eventTrigger2.hashCode());
+        assertNotEquals(eventTrigger1, eventTrigger2);
+        assertNotEquals(eventTriggerSet1, eventTriggerSet2);
+    }
+
+    private EventTrigger createExample() throws JSONException {
+        return new EventTrigger.Builder()
+                .setTriggerPriority(1L)
+                .setTriggerData(101L)
+                .setDedupKey(1001L)
+                .setFilter(
+                        new AggregateFilterData.Builder()
+                                .buildAggregateFilterData(sFilterData1)
+                                .build())
+                .setNotFilter(
+                        new AggregateFilterData.Builder()
+                                .buildAggregateFilterData(sNotFilterData1)
+                                .build())
+                .build();
     }
 }

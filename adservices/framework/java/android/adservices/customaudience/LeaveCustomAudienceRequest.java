@@ -16,51 +16,36 @@
 
 package android.adservices.customaudience;
 
+import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 
 import java.util.Objects;
 
-/**
- * The request object used to leave a custom audience.
- */
+/** The request object is used to leave a custom audience. */
 public final class LeaveCustomAudienceRequest {
-
-    @Nullable
-    private final String mOwner;
-    @NonNull
-    private final String mBuyer;
-    @NonNull
-    private final String mName;
+    @NonNull private final AdTechIdentifier mBuyer;
+    @NonNull private final String mName;
 
     private LeaveCustomAudienceRequest(@NonNull LeaveCustomAudienceRequest.Builder builder) {
-        mOwner = builder.mOwner;
         mBuyer = builder.mBuyer;
         mName = builder.mName;
     }
 
     /**
-     * Returns a String representing the custom audience's owner application or null to be the
-     * calling application.
-     */
-    @Nullable
-    public String getOwner() {
-        return mOwner;
-    }
-
-    /**
-     * A buyer is identified by a domain in the form "buyerexample.com".
+     * Gets the buyer's {@link AdTechIdentifier}, as identified by a domain in the form
+     * "buyerexample.com".
      *
-     * @return a String containing the custom audience's buyer's domain
+     * @return an {@link AdTechIdentifier} containing the custom audience's buyer's domain
      */
     @NonNull
-    public String getBuyer() {
+    public AdTechIdentifier getBuyer() {
         return mBuyer;
     }
 
     /**
-     * This name of a custom audience is an opaque string provided by the owner and buyer on
-     * creation of the {@link CustomAudience} object.
+     * Gets the arbitrary string provided by the owner and buyer on creation of the {@link
+     * CustomAudience} object that represents a single custom audience.
      *
      * @return the String name of the custom audience
      */
@@ -77,8 +62,7 @@ public final class LeaveCustomAudienceRequest {
         if (this == o) return true;
         if (!(o instanceof LeaveCustomAudienceRequest)) return false;
         LeaveCustomAudienceRequest that = (LeaveCustomAudienceRequest) o;
-        return Objects.equals(mOwner, that.mOwner) && mBuyer.equals(that.mBuyer)
-                && mName.equals(that.mName);
+        return mBuyer.equals(that.mBuyer) && mName.equals(that.mName);
     }
 
     /**
@@ -86,41 +70,23 @@ public final class LeaveCustomAudienceRequest {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(mOwner, mBuyer, mName);
+        return Objects.hash(mBuyer, mName);
     }
 
     /** Builder for {@link LeaveCustomAudienceRequest} objects. */
     public static final class Builder {
-        @Nullable
-        private String mOwner;
-        @NonNull
-        private String mBuyer;
-        @NonNull
-        private String mName;
+        @Nullable private AdTechIdentifier mBuyer;
+        @Nullable private String mName;
 
-        public Builder() {
-        }
+        public Builder() {}
 
         /**
-         * Sets the owner application.
-         * <p>
-         * See {@link #getOwner()} for more information.
+         * Sets the buyer {@link AdTechIdentifier}.
          *
-         * @param owner application name or leave null to default to the calling app.
+         * <p>See {@link #getBuyer()} for more information.
          */
         @NonNull
-        public LeaveCustomAudienceRequest.Builder setOwner(@Nullable String owner) {
-            mOwner = owner;
-            return this;
-        }
-
-        /**
-         * Sets the buyer domain URL.
-         * <p>
-         * See {@link #getBuyer()} for more information.
-         */
-        @NonNull
-        public LeaveCustomAudienceRequest.Builder setBuyer(@NonNull String buyer) {
+        public LeaveCustomAudienceRequest.Builder setBuyer(@NonNull AdTechIdentifier buyer) {
             Objects.requireNonNull(buyer);
             mBuyer = buyer;
             return this;

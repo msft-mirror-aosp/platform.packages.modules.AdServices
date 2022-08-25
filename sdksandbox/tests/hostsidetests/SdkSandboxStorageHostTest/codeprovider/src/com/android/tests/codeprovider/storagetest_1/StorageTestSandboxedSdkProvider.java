@@ -16,9 +16,10 @@
 
 package com.android.tests.codeprovider.storagetest_1;
 
-import android.app.sdksandbox.SandboxedSdkContext;
+import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
+import android.os.Binder;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -26,49 +27,42 @@ import android.view.View;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.concurrent.Executor;
+
 
 public class StorageTestSandboxedSdkProvider extends SandboxedSdkProvider {
-    private static final String TAG = "StorageTestSandboxedSdkProvider";
+    private static final String TAG = "SdkSandboxStorageTestProvider";
     private static final String BUNDLE_KEY_PHASE_NAME = "phase-name";
 
-    private SandboxedSdkContext mContext;
-
     @Override
-    public void initSdk(SandboxedSdkContext context, Bundle params, Executor executor,
-            InitSdkCallback callback) {
-        callback.onInitSdkFinished(null);
-        mContext = context;
+    public SandboxedSdk onLoadSdk(Bundle params) {
+        return new SandboxedSdk(new Binder());
     }
 
     @Override
-    public View getView(Context windowContext, Bundle params) {
-        handlePhase(params);
+    public View getView(Context windowContext, Bundle params, int width, int height) {
+        try {
+            handlePhase(params);
+        } catch (Throwable e) {
+            Log.e(TAG, e.getMessage(), e);
+            throw new RuntimeException();
+        }
         return null;
     }
 
-    @Override
-    public void onExtraDataReceived(Bundle extraData) {
-    }
-
-    private void handlePhase(Bundle params) {
+    private void handlePhase(Bundle params) throws Exception {
         String phaseName = params.getString(BUNDLE_KEY_PHASE_NAME, "");
         Log.i(TAG, "Handling phase: " + phaseName);
-        try {
-            switch (phaseName) {
-                case "testSdkDataPackageDirectory_SharedStorageIsUsable":
-                    testSdkDataPackageDirectory_SharedStorageIsUsable();
-                    break;
-                case "testSdkDataSubDirectory_PerSdkStorageIsUsable":
-                    testSdkDataSubDirectory_PerSdkStorageIsUsable();
-                    break;
-                case "testSdkDataIsAttributedToApp":
-                    testSdkDataIsAttributedToApp();
-                    break;
-                default:
-            }
-        } catch (Exception e) {
-            Log.e(TAG, e.getMessage(), e);
+        switch (phaseName) {
+            case "testSdkDataPackageDirectory_SharedStorageIsUsable":
+                testSdkDataPackageDirectory_SharedStorageIsUsable();
+                break;
+            case "testSdkDataSubDirectory_PerSdkStorageIsUsable":
+                testSdkDataSubDirectory_PerSdkStorageIsUsable();
+                break;
+            case "testSdkDataIsAttributedToApp":
+                testSdkDataIsAttributedToApp();
+                break;
+            default:
         }
     }
 
@@ -86,7 +80,7 @@ public class StorageTestSandboxedSdkProvider extends SandboxedSdkProvider {
     }
 
     private void testSdkDataSubDirectory_PerSdkStorageIsUsable() throws Exception {
-        String sdkDataPath = mContext.getDataDir().toString();
+        String sdkDataPath = getContext().getDataDir().toString();
         // Read the file
         String input = Files.readAllLines(Paths.get(sdkDataPath, "readme.txt")).get(0);
 
@@ -115,10 +109,10 @@ public class StorageTestSandboxedSdkProvider extends SandboxedSdkProvider {
     }
 
     private String getSharedStoragePath() {
-        return mContext.getApplicationContext().getDataDir().toString();
+        return getContext().getApplicationContext().getDataDir().toString();
     }
 
     private String getSharedStorageCachePath() {
-        return mContext.getApplicationContext().getCacheDir().toString();
+        return getContext().getApplicationContext().getCacheDir().toString();
     }
 }

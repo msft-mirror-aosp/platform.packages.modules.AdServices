@@ -18,8 +18,7 @@ package com.android.adservices.service.measurement.registration;
 import android.annotation.NonNull;
 import android.net.Uri;
 
-import com.android.adservices.LogUtil;
-
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -38,25 +37,19 @@ class ResponseBasedFetcher {
     /**
      * Determine all redirects.
      *
-     * Generates a list of:
-     *   (url, allows_regular_redirects) tuples.
-     * Returns true if all steps succeed.
-     * Returns false if there are any failures.
+     * <p>Generates a list of: (url, allows_regular_redirects) tuples. Returns true if all steps
+     * succeed. Returns false if there are any failures.
      */
-    static void parseRedirects(
-            boolean initialFetch,
-            @NonNull Map<String, List<String>> headers,
-            @NonNull List<Uri> redirectsOut) {
+    static List<Uri> parseRedirects(@NonNull Map<String, List<String>> headers) {
+        List<Uri> redirects = new ArrayList<>();
         List<String> field = headers.get("Attribution-Reporting-Redirect");
         if (field != null) {
-            if (initialFetch) {
-                for (int i = 0; i < Math.min(field.size(), REDIRECT_LIMIT); i++) {
-                    redirectsOut.add(Uri.parse(field.get(i)));
-                }
-            } else {
-                LogUtil.d("Unexpected use of Attribution-Reporting-Redirect");
+            for (int i = 0; i < Math.min(field.size(), REDIRECT_LIMIT); i++) {
+                redirects.add(Uri.parse(field.get(i)));
             }
         }
+
+        return redirects;
     }
 
     /**

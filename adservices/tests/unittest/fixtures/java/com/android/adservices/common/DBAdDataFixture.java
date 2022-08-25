@@ -17,6 +17,7 @@
 package com.android.adservices.common;
 
 import android.adservices.common.AdDataFixture;
+import android.adservices.common.AdTechIdentifier;
 
 import com.android.adservices.data.common.DBAdData;
 
@@ -24,7 +25,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class DBAdDataFixture {
-    public static List<DBAdData> VALID_DB_AD_DATA_LIST = AdDataFixture.VALID_ADS.stream()
-            .map(DBAdData::fromServiceObject)
-            .collect(Collectors.toList());
+    public static List<DBAdData> getValidDbAdDataListByBuyer(AdTechIdentifier buyer) {
+        return AdDataFixture.getValidAdsByBuyer(buyer).stream()
+                .map(DBAdData::fromServiceObject)
+                .collect(Collectors.toList());
+    }
 }

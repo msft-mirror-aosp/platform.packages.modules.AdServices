@@ -15,13 +15,16 @@
  */
 package android.adservices.topics;
 
+import static com.google.common.truth.Truth.assertThat;
+
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
 
-import java.util.Arrays;
+import java.util.List;
 
 /**
  * Unit tests for {@link android.adservices.topics.GetTopicsResponse}
@@ -30,69 +33,56 @@ import java.util.Arrays;
 public final class GetTopicsResponseTest {
 
     @Test
-    public void testGetTopicsResponseBuilder_nullableThrows() throws Exception {
+    public void testGetTopicsResponseBuilder_nullableThrows() {
         assertThrows(
-            IllegalArgumentException.class,
-            () -> {
-                GetTopicsResponse unusedResponse =
-                    new GetTopicsResponse.Builder().setTopics(null).build();
-            });
-
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> {
-                GetTopicsResponse unusedResponse =
-                    new GetTopicsResponse.Builder().setTaxonomyVersions(null).build();
-            });
-
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> {
-                GetTopicsResponse unusedResponse =
-                    new GetTopicsResponse.Builder().setModelVersions(null).build();
-            });
-
-        // This should not throw.
-        GetTopicsResponse unusedResponse =
-            new GetTopicsResponse.Builder()
-                // Not setting anything default to empty.
-                .build();
+                NullPointerException.class,
+                () -> {
+                    GetTopicsResponse unusedResponse = new GetTopicsResponse.Builder(null).build();
+                });
     }
 
     @Test
-    public void testGetTopicsResponseBuilder_misMatchSizeThrows() {
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> {
-                GetTopicsResponse unusedResponse =
-                    new GetTopicsResponse.Builder()
-                        .setTaxonomyVersions(Arrays.asList(1L))
-                        .setModelVersions(Arrays.asList(3L, 4L))
-                        .setTopics(Arrays.asList(1, 2))
-                        .build();
-            });
+    public void testGetTopicsResponseBuilder() {
+        List<Topic> topics =
+                List.of(
+                        new Topic(
+                                /* mTaxonomyVersion */ 1L, /* mModelVersion */
+                                1L, /* mTopicId */
+                                0));
 
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> {
-                GetTopicsResponse unusedResponse =
-                    new GetTopicsResponse.Builder()
-                        // Not setting TaxonomyVersions implies empty.
-                        .setModelVersions(Arrays.asList(3L, 4L))
-                        .setTopics(Arrays.asList(1, 2))
-                        .build();
-            });
+        // Build GetTopicsResponse using topicList
+        GetTopicsResponse response = new GetTopicsResponse.Builder(topics).build();
 
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> {
-                GetTopicsResponse unusedResponse =
-                    new GetTopicsResponse.Builder()
-                        .setTaxonomyVersions(Arrays.asList(1L, 2L))
-                        .setModelVersions(Arrays.asList(3L, 4L))
-                        .setTopics(Arrays.asList(1))
-                        .build();
-            });
+        // Validate the topicList is same to what we created
+        assertEquals(topics, response.getTopics());
+    }
+
+    @Test
+    public void testEquals() {
+        List<Topic> topics =
+                List.of(
+                        new Topic(
+                                /* mTaxonomyVersion */ 1L, /* mModelVersion */
+                                1L, /* mTopicId */
+                                0));
+        GetTopicsResponse getTopicsResponse1 = new GetTopicsResponse.Builder(topics).build();
+        GetTopicsResponse getTopicsResponse2 = new GetTopicsResponse.Builder(topics).build();
+
+        assertThat(getTopicsResponse1.equals(getTopicsResponse2)).isTrue();
+    }
+
+    @Test
+    public void testHashCode() {
+        List<Topic> topics =
+                List.of(
+                        new Topic(
+                                /* mTaxonomyVersion */ 1L, /* mModelVersion */
+                                1L, /* mTopicId */
+                                0));
+        GetTopicsResponse getTopicsResponse1 = new GetTopicsResponse.Builder(topics).build();
+        GetTopicsResponse getTopicsResponse2 = new GetTopicsResponse.Builder(topics).build();
+
+        assertThat(getTopicsResponse1.hashCode()).isEqualTo(getTopicsResponse2.hashCode());
     }
 }
 

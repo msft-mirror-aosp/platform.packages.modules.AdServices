@@ -66,7 +66,7 @@ public class AdDataArgument {
             throws JSONException {
         return recordArg(
                 name,
-                stringArg(RENDER_URL_FIELD_NAME, adData.getRenderUrl().toString()),
+                stringArg(RENDER_URL_FIELD_NAME, adData.getRenderUri().toString()),
                 jsonArg(METADATA_FIELD_NAME, adData.getMetadata()));
     }
 }

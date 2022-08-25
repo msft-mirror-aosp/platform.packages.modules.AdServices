@@ -18,7 +18,6 @@ package android.adservices.measurement;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
-import android.content.AttributionSource;
 import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -54,25 +53,16 @@ public final class RegistrationRequest implements Parcelable {
     private final Uri mRegistrationUri;
     private final Uri mTopOriginUri;
     private final InputEvent mInputEvent;
-    private final AttributionSource mAttributionSource;
+    private final String mPackageName;
+    private final long mRequestTime;
 
-    /**
-     * Create a registration request.
-     */
-    private RegistrationRequest(
-            @RegistrationType int registrationType,
-            @NonNull Uri registrationUri,
-            @NonNull Uri topOriginUri,
-            @Nullable InputEvent inputEvent,
-            @NonNull AttributionSource attributionSource) {
-        Objects.requireNonNull(registrationUri);
-        Objects.requireNonNull(topOriginUri);
-        Objects.requireNonNull(attributionSource);
-        mRegistrationType = registrationType;
-        mRegistrationUri = registrationUri;
-        mTopOriginUri = topOriginUri;
-        mInputEvent = inputEvent;
-        mAttributionSource = attributionSource;
+    private RegistrationRequest(@NonNull Builder builder) {
+        mRegistrationType = builder.mRegistrationType;
+        mRegistrationUri = builder.mRegistrationUri;
+        mTopOriginUri = builder.mTopOriginUri;
+        mInputEvent = builder.mInputEvent;
+        mPackageName = builder.mPackageName;
+        mRequestTime = builder.mRequestTime;
     }
 
     /**
@@ -82,13 +72,14 @@ public final class RegistrationRequest implements Parcelable {
         mRegistrationType = in.readInt();
         mRegistrationUri = Uri.CREATOR.createFromParcel(in);
         mTopOriginUri = Uri.CREATOR.createFromParcel(in);
-        mAttributionSource = AttributionSource.CREATOR.createFromParcel(in);
+        mPackageName = in.readString();
         boolean hasInputEvent = in.readBoolean();
         if (hasInputEvent) {
             mInputEvent = InputEvent.CREATOR.createFromParcel(in);
         } else {
             mInputEvent = null;
         }
+        mRequestTime = in.readLong();
     }
 
     /**
@@ -120,13 +111,14 @@ public final class RegistrationRequest implements Parcelable {
         out.writeInt(mRegistrationType);
         mRegistrationUri.writeToParcel(out, flags);
         mTopOriginUri.writeToParcel(out, flags);
-        mAttributionSource.writeToParcel(out, flags);
+        out.writeString(mPackageName);
         if (mInputEvent != null) {
             out.writeBoolean(true);
             mInputEvent.writeToParcel(out, flags);
         } else {
             out.writeBoolean(false);
         }
+        out.writeLong(mRequestTime);
     }
 
     /**
@@ -157,11 +149,14 @@ public final class RegistrationRequest implements Parcelable {
         return mInputEvent;
     }
 
-    /**
-     * AttributionSource of the registration.
-     */
-    public @NonNull AttributionSource getAttributionSource() {
-        return mAttributionSource;
+    /** Client's package name used for the registration. */
+    public @NonNull String getPackageName() {
+        return mPackageName;
+    }
+
+    /** Time the request was created, as millis since boot excluding time in deep sleep. */
+    public @NonNull long getRequestTime() {
+        return mRequestTime;
     }
 
     /**
@@ -172,7 +167,8 @@ public final class RegistrationRequest implements Parcelable {
         private Uri mRegistrationUri;
         private Uri mTopOriginUri;
         private InputEvent mInputEvent;
-        private AttributionSource mAttributionSource;
+        private String mPackageName;
+        private long mRequestTime;
 
         public Builder() {
             mRegistrationType = INVALID;
@@ -218,13 +214,16 @@ public final class RegistrationRequest implements Parcelable {
             return this;
         }
 
-        /**
-         * See {@link RegistrationRequest#getAttributionSource}.
-         */
-        public @NonNull Builder setAttributionSource(
-                @NonNull AttributionSource attributionSource) {
-            Objects.requireNonNull(attributionSource);
-            mAttributionSource = attributionSource;
+        /** See {@link RegistrationRequest#getPackageName()}. */
+        public @NonNull Builder setPackageName(@NonNull String packageName) {
+            Objects.requireNonNull(packageName);
+            mPackageName = packageName;
+            return this;
+        }
+
+        /** See {@link RegistrationRequest#getRequestTime}. */
+        public @NonNull Builder setRequestTime(long requestTime) {
+            mRequestTime = requestTime;
             return this;
         }
 
@@ -245,25 +244,19 @@ public final class RegistrationRequest implements Parcelable {
                     && mRegistrationType != REGISTER_TRIGGER) {
                 throw new IllegalArgumentException("Invalid registrationType");
             }
-            // Ensure attributionSource has been set.
-            // throws IllegalArgumentException if mAttributionSource
-            // is null.
-            if (mAttributionSource == null) {
-                throw new IllegalArgumentException("attributionSource unset");
+            // Ensure the packageName has been set.
+            // throws IllegalArgumentException if the packageName is null.
+            if (mPackageName == null) {
+                throw new IllegalArgumentException("packageName unset");
             }
 
             // Check if topOrigin has been set.
             // However, if it's not set, caller package is defaulted
             if (mTopOriginUri == null) {
-                mTopOriginUri = Uri.parse("android-app://" + mAttributionSource.getPackageName());
+                mTopOriginUri = Uri.parse("android-app://" + mPackageName);
             }
 
-            return new RegistrationRequest(
-                    mRegistrationType,
-                    mRegistrationUri,
-                    mTopOriginUri,
-                    mInputEvent,
-                    mAttributionSource);
+            return new RegistrationRequest(this);
         }
     }
 }

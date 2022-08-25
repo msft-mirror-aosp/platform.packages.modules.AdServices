@@ -24,6 +24,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.ui.settings.fragments.AdServicesSettingsAppsFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsTopicsFragment;
 
@@ -34,19 +35,26 @@ import com.android.adservices.ui.settings.fragments.AdServicesSettingsTopicsFrag
  */
 public class MainViewModel extends AndroidViewModel {
     private final MutableLiveData<MainViewModelUiEvent> mEventTrigger = new MutableLiveData<>();
-    private MutableLiveData<Boolean> mAdServicesConsent;
-    private ConsentManager mConsentManager;
+    private final MutableLiveData<Boolean> mAdServicesConsent;
+    private final ConsentManager mConsentManager;
 
     /** UI event triggered by view model */
     public enum MainViewModelUiEvent {
         SWITCH_ON_PRIVACY_SANDBOX_BETA,
         SWITCH_OFF_PRIVACY_SANDBOX_BETA,
         DISPLAY_TOPICS_FRAGMENT,
+        DISPLAY_APPS_FRAGMENT,
     }
 
     public MainViewModel(@NonNull Application application) {
+        this(application, ConsentManager.getInstance(application));
+    }
+
+    @VisibleForTesting
+    public MainViewModel(@NonNull Application application, ConsentManager consentManager) {
         super(application);
-        setConsentManager(ConsentManager.getInstance(application));
+        mConsentManager = consentManager;
+        mAdServicesConsent = new MutableLiveData<>(getConsentFromConsentManager());
     }
 
     /**
@@ -56,9 +64,6 @@ public class MainViewModel extends AndroidViewModel {
      * @return {@link mAdServicesConsent} indicates if user has consented to PP API usage.
      */
     public MutableLiveData<Boolean> getConsent() {
-        if (mAdServicesConsent == null) {
-            mAdServicesConsent = new MutableLiveData<>(getConsentFromConsentManager());
-        }
         return mAdServicesConsent;
     }
 
@@ -68,15 +73,12 @@ public class MainViewModel extends AndroidViewModel {
      * @param newConsentValue the new value that user consent should be set to for PP APIs.
      */
     public void setConsent(Boolean newConsentValue) {
-        if (mAdServicesConsent == null) {
-            mAdServicesConsent = new MutableLiveData<>(getConsentFromConsentManager());
-        }
-        mAdServicesConsent.postValue(newConsentValue);
         if (newConsentValue) {
             mConsentManager.enable(getApplication().getPackageManager());
         } else {
-            mConsentManager.disable(getApplication().getPackageManager());
+            mConsentManager.disable(getApplication());
         }
+        mAdServicesConsent.postValue(getConsentFromConsentManager());
     }
 
     /** Returns an observable but immutable event enum representing an view action on UI. */
@@ -84,9 +86,22 @@ public class MainViewModel extends AndroidViewModel {
         return mEventTrigger;
     }
 
+    /**
+     * Sets the UI Event as handled so the action will not be handled again if activity is
+     * recreated.
+     */
+    public void uiEventHandled() {
+        mEventTrigger.postValue(null);
+    }
+
     /** Triggers {@link AdServicesSettingsTopicsFragment}. */
     public void topicsButtonClickHandler() {
         mEventTrigger.postValue(MainViewModelUiEvent.DISPLAY_TOPICS_FRAGMENT);
+    }
+
+    /** Triggers {@link AdServicesSettingsAppsFragment}. */
+    public void appsButtonClickHandler() {
+        mEventTrigger.postValue(MainViewModelUiEvent.DISPLAY_APPS_FRAGMENT);
     }
 
     /** Triggers {@link AdServicesSettingsTopicsFragment}. */
@@ -96,11 +111,6 @@ public class MainViewModel extends AndroidViewModel {
         } else {
             mEventTrigger.postValue(MainViewModelUiEvent.SWITCH_OFF_PRIVACY_SANDBOX_BETA);
         }
-    }
-
-    @VisibleForTesting
-    void setConsentManager(ConsentManager consentManager) {
-        mConsentManager = consentManager;
     }
 
     private boolean getConsentFromConsentManager() {

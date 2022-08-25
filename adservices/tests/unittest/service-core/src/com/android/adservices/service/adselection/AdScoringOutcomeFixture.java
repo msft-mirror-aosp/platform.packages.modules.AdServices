@@ -17,10 +17,12 @@
 package com.android.adservices.service.adselection;
 
 import android.adservices.adselection.AdBiddingOutcomeFixture;
+import android.adservices.common.AdTechIdentifier;
 
 public class AdScoringOutcomeFixture {
 
-    public static AdScoringOutcome.Builder anAdScoringBuilder(String buyerName, Double score) {
+    public static AdScoringOutcome.Builder anAdScoringBuilder(
+            AdTechIdentifier buyerName, Double score) {
 
         AdBiddingOutcome adBiddingOutcome =
                 AdBiddingOutcomeFixture.anAdBiddingOutcomeBuilder(buyerName, 1.0).build();

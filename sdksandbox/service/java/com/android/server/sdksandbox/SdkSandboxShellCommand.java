@@ -23,6 +23,7 @@ import android.os.Binder;
 import android.os.Process;
 import android.os.UserHandle;
 
+import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.BasicShellCommandHandler;
 import com.android.sdksandbox.ISdkSandboxService;
 
@@ -34,18 +35,32 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
 
     private final SdkSandboxManagerService mService;
     private final Context mContext;
+    private final Injector mInjector;
 
     private int mUserId = UserHandle.CURRENT.getIdentifier();
     private CallingInfo mCallingInfo;
 
-    SdkSandboxShellCommand(SdkSandboxManagerService service, Context context) {
+    static class Injector {
+        int getCallingUid() {
+            return Binder.getCallingUid();
+        }
+    }
+
+    @VisibleForTesting
+    SdkSandboxShellCommand(SdkSandboxManagerService service, Context context, Injector injector) {
         mService = service;
         mContext = context;
+        mInjector = injector;
+    }
+
+    SdkSandboxShellCommand(SdkSandboxManagerService service, Context context) {
+        this(service, context, new Injector());
     }
 
     @Override
     public int onCommand(String cmd) {
-        int callingUid = Binder.getCallingUid();
+        int callingUid = mInjector.getCallingUid();
+
         if (callingUid != Process.ROOT_UID && callingUid != Process.SHELL_UID) {
             throw new SecurityException("sdk_sandbox shell command is only callable by ADB");
         }
@@ -120,7 +135,7 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
 
     /** Callback for binding sandbox. Provides blocking interface {@link #isSuccessful()}. */
     private class LatchSandboxServiceConnectionCallback
-            implements SdkSandboxManagerService.SandboxServiceConnection.Callback {
+            implements SdkSandboxManagerService.SandboxBindingCallback {
 
         private final CountDownLatch mLatch = new CountDownLatch(1);
         private boolean mSuccess = false;

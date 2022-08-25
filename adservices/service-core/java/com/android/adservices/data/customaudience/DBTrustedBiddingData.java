@@ -74,6 +74,16 @@ public class DBTrustedBiddingData {
                 .build();
     }
 
+    /** Returns the estimated size, in bytes, of the strings contained in this object. */
+    public int size() {
+        int totalSize = mUrl.toString().getBytes().length;
+        for (String key : mKeys) {
+            totalSize += key.getBytes().length;
+        }
+
+        return totalSize;
+    }
+
     /**
      * The URL to use to request the data.
      */

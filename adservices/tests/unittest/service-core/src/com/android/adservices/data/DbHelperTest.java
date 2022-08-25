@@ -19,6 +19,7 @@ package com.android.adservices.data;
 import static com.android.adservices.data.DbTestUtil.doesIndexExist;
 import static com.android.adservices.data.DbTestUtil.doesTableExistAndColumnCountMatch;
 
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import android.content.Context;
@@ -29,14 +30,12 @@ import androidx.test.core.app.ApplicationProvider;
 import org.junit.Test;
 
 public class DbHelperTest {
-
-    private static final String TAG = "DbHelperTest";
-
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
 
     @Test
     public void testOnCreate() {
         SQLiteDatabase db = DbTestUtil.getDbHelperForTest().safeGetReadableDatabase();
+        assertNotNull(db);
         assertTrue(doesTableExistAndColumnCountMatch(db, "topics_taxonomy", 4));
         assertTrue(doesTableExistAndColumnCountMatch(db, "topics_app_classification_topics", 6));
         assertTrue(doesTableExistAndColumnCountMatch(db, "topics_caller_can_learn_topic", 6));
@@ -44,18 +43,19 @@ public class DbHelperTest {
         assertTrue(doesTableExistAndColumnCountMatch(db, "topics_returned_topics", 7));
         assertTrue(doesTableExistAndColumnCountMatch(db, "topics_usage_history", 3));
         assertTrue(doesTableExistAndColumnCountMatch(db, "topics_app_usage_history", 3));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_source", 19));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_trigger", 10));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_adtech_urls", 2));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_event_report", 12));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_attribution_rate_limit", 6));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_aggregate_report", 9));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_source", 23));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_trigger", 13));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_async_registration_contract", 13));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_event_report", 13));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_attribution", 9));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_aggregate_report", 10));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_aggregate_encryption_key", 4));
-        assertTrue(doesIndexExist(db, "idx_msmt_source_ad_rt_et"));
-        assertTrue(doesIndexExist(db, "idx_msmt_trigger_ad_rt_tt"));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "enrollment_data", 8));
+        assertTrue(doesIndexExist(db, "idx_msmt_source_ad_atd_ei_et"));
+        assertTrue(doesIndexExist(db, "idx_msmt_source_p_ad_wd_s_et"));
+        assertTrue(doesIndexExist(db, "idx_msmt_trigger_ad_atd_ei_tt"));
         assertTrue(doesIndexExist(db, "idx_msmt_source_et"));
         assertTrue(doesIndexExist(db, "idx_msmt_trigger_tt"));
-        assertTrue(doesIndexExist(db, "idx_msmt_attribution_rate_limit_ss_ds_tt"));
-        assertTrue(doesIndexExist(db, "idx_msmt_aggregate_encryption_key_et"));
+        assertTrue(doesIndexExist(db, "idx_msmt_attribution_ss_so_ds_do_atd_ei_tt"));
     }
 }

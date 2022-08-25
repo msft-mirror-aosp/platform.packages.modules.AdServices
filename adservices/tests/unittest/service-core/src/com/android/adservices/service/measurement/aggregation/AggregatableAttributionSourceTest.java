@@ -17,6 +17,7 @@
 package com.android.adservices.service.measurement.aggregation;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 import androidx.test.filters.SmallTest;
 
@@ -25,20 +26,25 @@ import org.junit.Test;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /** Unit tests for {@link AggregatableAttributionSource} */
 @SmallTest
 public final class AggregatableAttributionSourceTest {
 
-    @Test
-    public void testCreation() throws Exception {
+    private AggregatableAttributionSource createExample() {
         Map<String, BigInteger> aggregatableSource = new HashMap<>();
         aggregatableSource.put("campaignCounts", BigInteger.valueOf(159L));
         aggregatableSource.put("geoValue", BigInteger.valueOf(5L));
 
-        AggregatableAttributionSource attributionSource =
-                new AggregatableAttributionSource.Builder()
-                        .setAggregatableSource(aggregatableSource).build();
+        return new AggregatableAttributionSource.Builder()
+                .setAggregatableSource(aggregatableSource)
+                .build();
+    }
+
+    @Test
+    public void testCreation() throws Exception {
+        AggregatableAttributionSource attributionSource = createExample();
 
         assertEquals(attributionSource.getAggregatableSource().size(), 2);
         assertEquals(attributionSource.getAggregatableSource().get("campaignCounts")
@@ -51,6 +57,36 @@ public final class AggregatableAttributionSourceTest {
         AggregatableAttributionSource attributionSource =
                 new AggregatableAttributionSource.Builder().build();
         assertEquals(attributionSource.getAggregatableSource().size(), 0);
+    }
+
+    @Test
+    public void testHashCode_equals() throws Exception {
+        final AggregatableAttributionSource attributionSource1 = createExample();
+        final AggregatableAttributionSource attributionSource2 = createExample();
+        final Set<AggregatableAttributionSource> attributionSourceSet1 = Set.of(attributionSource1);
+        final Set<AggregatableAttributionSource> attributionSourceSet2 = Set.of(attributionSource2);
+        assertEquals(attributionSource1.hashCode(), attributionSource2.hashCode());
+        assertEquals(attributionSource1, attributionSource2);
+        assertEquals(attributionSourceSet1, attributionSourceSet2);
+    }
+
+    @Test
+    public void testHashCode_notEquals() throws Exception {
+        final AggregatableAttributionSource attributionSource1 = createExample();
+
+        Map<String, BigInteger> aggregatableSource = new HashMap<>();
+        aggregatableSource.put("campaignCounts", BigInteger.valueOf(159L));
+        aggregatableSource.put("geoValue", BigInteger.valueOf(1L));
+
+        final AggregatableAttributionSource attributionSource2 =
+                new AggregatableAttributionSource.Builder()
+                        .setAggregatableSource(aggregatableSource)
+                        .build();
+        final Set<AggregatableAttributionSource> attributionSourceSet1 = Set.of(attributionSource1);
+        final Set<AggregatableAttributionSource> attributionSourceSet2 = Set.of(attributionSource2);
+        assertNotEquals(attributionSource1.hashCode(), attributionSource2.hashCode());
+        assertNotEquals(attributionSource1, attributionSource2);
+        assertNotEquals(attributionSourceSet1, attributionSourceSet2);
     }
 }
 

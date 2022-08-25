@@ -16,70 +16,106 @@
 
 package com.android.adservices.service.topics.classifier;
 
-import static com.android.adservices.service.topics.classifier.OnDeviceClassifier.MAX_LABELS_PER_APP;
+import static com.android.adservices.service.Flags.CLASSIFIER_NUMBER_OF_TOP_LABELS;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.content.Context;
+import android.provider.DeviceConfig;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.topics.AppInfo;
 import com.android.adservices.service.topics.PackageManagerUtil;
+import com.android.modules.utils.testing.TestableDeviceConfig;
 
-import com.google.common.collect.ImmutableList;
+import com.google.android.libraries.mobiledatadownload.file.SynchronousFileStorage;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.mobiledatadownload.ClientConfigProto.ClientFile;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 /** Topic Classifier Test {@link OnDeviceClassifier}. */
 public class OnDeviceClassifierTest {
+    @Rule
+    public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
+            new TestableDeviceConfig.TestableDeviceConfigRule();
 
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static Preprocessor sPreprocessor;
-    private static OnDeviceClassifier sOnDeviceClassifier;
 
     @Mock private PackageManagerUtil mPackageManagerUtil;
+    @Mock private SynchronousFileStorage mMockFileStorage;
+    @Mock private ModelManager mModelManager;
+    @Mock Map<String, ClientFile> mMockDownloadedFiles;
+    private OnDeviceClassifier mOnDeviceClassifier;
 
     @Before
     public void setUp() throws IOException {
         MockitoAnnotations.initMocks(this);
+        mModelManager =
+                new ModelManager(
+                        sContext,
+                        ModelManager.BUNDLED_LABELS_FILE_PATH,
+                        ModelManager.BUNDLED_TOP_APP_FILE_PATH,
+                        ModelManager.BUNDLED_CLASSIFIER_ASSETS_METADATA_PATH,
+                        ModelManager.BUNDLED_MODEL_FILE_PATH,
+                        mMockFileStorage,
+                        mMockDownloadedFiles);
 
         sPreprocessor = new Preprocessor(sContext);
-        sOnDeviceClassifier =
+        mOnDeviceClassifier =
                 new OnDeviceClassifier(
-                        sPreprocessor, mPackageManagerUtil, sContext.getAssets(), new Random());
+                        sPreprocessor, mPackageManagerUtil, new Random(), mModelManager);
     }
 
     @Test
-    public void testClassify_packageManagerError_returnsDefaultClassifications() {
+    public void testGetInstance() {
+        OnDeviceClassifier firstInstance = OnDeviceClassifier.getInstance(sContext);
+        OnDeviceClassifier secondInstance = OnDeviceClassifier.getInstance(sContext);
+
+        assertThat(firstInstance).isNotNull();
+        assertThat(secondInstance).isNotNull();
+        // Verify singleton behaviour.
+        assertThat(firstInstance).isEqualTo(secondInstance);
+    }
+
+    @Test
+    public void testClassify_packageManagerError_returnsDefaultClassifications()
+            throws IOException {
         String appPackage1 = "com.example.adservices.samples.topics.sampleapp1";
         ImmutableSet<String> appPackages = ImmutableSet.of(appPackage1);
         // If fetch from PackageManagerUtil fails, we will use empty strings as descriptions.
         when(mPackageManagerUtil.getAppInformation(eq(appPackages))).thenReturn(ImmutableMap.of());
 
-        ImmutableMap<String, List<Integer>> classifications =
-                sOnDeviceClassifier.classify(appPackages);
+        ImmutableMap<String, List<Topic>> classifications =
+                mOnDeviceClassifier.classify(appPackages);
 
         verify(mPackageManagerUtil).getAppInformation(eq(appPackages));
         assertThat(classifications).hasSize(1);
         // Verify default classification.
-        assertThat(classifications.get(appPackage1)).hasSize(MAX_LABELS_PER_APP);
+        assertThat(classifications.get(appPackage1)).hasSize(CLASSIFIER_NUMBER_OF_TOP_LABELS);
         // Check all the returned labels for default empty string descriptions.
         assertThat(classifications.get(appPackage1))
-                .containsExactly(48, 20, 241, 1579, 467, 29, 1416, 12, 138, 1049);
+                .isEqualTo(createTopics(Arrays.asList(10230, 10253, 10227)));
     }
 
     @Test
@@ -101,22 +137,122 @@ public class OnDeviceClassifierTest {
         ImmutableSet<String> appPackages = ImmutableSet.of(appPackage1, appPackage2);
         when(mPackageManagerUtil.getAppInformation(eq(appPackages))).thenReturn(appInfoMap);
 
-        ImmutableMap<String, List<Integer>> classifications =
-                sOnDeviceClassifier.classify(appPackages);
+        ImmutableMap<String, List<Topic>> classifications =
+                mOnDeviceClassifier.classify(appPackages);
 
         verify(mPackageManagerUtil).getAppInformation(eq(appPackages));
         // Two values for two input package names.
         assertThat(classifications).hasSize(2);
-        // Verify size of the labels returned is MAX_LABELS_PER_APP.
-        assertThat(classifications.get(appPackage1)).hasSize(MAX_LABELS_PER_APP);
-        assertThat(classifications.get(appPackage2)).hasSize(MAX_LABELS_PER_APP);
+        // Verify size of the labels returned.
+        assertThat(classifications.get(appPackage1)).hasSize(2);
+        assertThat(classifications.get(appPackage2)).hasSize(CLASSIFIER_NUMBER_OF_TOP_LABELS);
 
-        // Check if the first 10 categories contains at least the top 5.
-        // Scores can differ a little on devices. Using this to reduce flakiness.
-        // Expected top 10: 69, 31, 374, 25, 694, 955, 216, 384, 11, 12
-        assertThat(classifications.get(appPackage1)).containsAtLeast(69, 31, 374, 25, 694);
-        // Expected top 10: 935, 1798, 529, 41, 933, 998, 39, 676, 622, 554
-        assertThat(classifications.get(appPackage2)).containsAtLeast(935, 1798, 529, 41, 933);
+        // Check if the first category matches in the top CLASSIFIER_NUMBER_OF_TOP_LABELS.
+        // Scores can differ a little on devices. Using this technique to reduce flakiness.
+        // Expected top 10: 10253, 10230, 10284, 10237, 10227, 10257, 10165, 10028, 10330, 10047
+        assertThat(classifications.get(appPackage1))
+                .containsAtLeastElementsIn(createTopics(Arrays.asList(10253)));
+        // Expected top 10: 10227, 10225, 10235, 10230, 10238, 10253, 10247, 10254, 10234, 10229
+        assertThat(classifications.get(appPackage2))
+                .containsAtLeastElementsIn(createTopics(Arrays.asList(10227)));
+    }
+
+    @Test
+    public void testClassify_successfulClassifications_overrideNumberOfTopLabels() {
+        // Check getClassification for sample descriptions.
+        String appPackage1 = "com.example.adservices.samples.topics.sampleapp1";
+        ImmutableMap<String, AppInfo> appInfoMap =
+                ImmutableMap.<String, AppInfo>builder()
+                        .put(appPackage1, new AppInfo("appName1", "Sample app description."))
+                        .build();
+        ImmutableSet<String> appPackages = ImmutableSet.of(appPackage1);
+        when(mPackageManagerUtil.getAppInformation(eq(appPackages))).thenReturn(appInfoMap);
+        // Override classifierNumberOfTopLabels.
+        int overrideNumberOfTopLabels = 2;
+        setClassifierNumberOfTopLabels(overrideNumberOfTopLabels);
+
+        ImmutableMap<String, List<Topic>> classifications =
+                mOnDeviceClassifier.classify(appPackages);
+
+        verify(mPackageManagerUtil).getAppInformation(eq(appPackages));
+        assertThat(classifications).hasSize(1);
+        // Verify size of the labels returned is equal to the override value.
+        assertThat(classifications.get(appPackage1)).hasSize(overrideNumberOfTopLabels);
+    }
+
+    @Test
+    public void testClassify_successfulClassifications_overrideClassifierThreshold() {
+        // Check getClassification for sample descriptions.
+        String appPackage1 = "com.example.adservices.samples.topics.sampleapp1";
+        ImmutableMap<String, AppInfo> appInfoMap =
+                ImmutableMap.<String, AppInfo>builder()
+                        .put(appPackage1, new AppInfo("appName1", "Sample app description."))
+                        .build();
+        ImmutableSet<String> appPackages = ImmutableSet.of(appPackage1);
+        when(mPackageManagerUtil.getAppInformation(eq(appPackages))).thenReturn(appInfoMap);
+        // Override classifierThreshold.
+        float overrideThreshold = 0.1f;
+        setClassifierThreshold(overrideThreshold);
+
+        ImmutableMap<String, List<Topic>> classifications =
+                mOnDeviceClassifier.classify(appPackages);
+
+        verify(mPackageManagerUtil).getAppInformation(eq(appPackages));
+        assertThat(classifications).hasSize(1);
+        // Expecting 2 values greater than 0.1 threshold.
+        assertThat(classifications.get(appPackage1)).hasSize(2);
+    }
+
+    @Test
+    public void testClassify_successfulClassificationsForUpdatedAppDescription() {
+        // Check getClassification for sample descriptions.
+        String appPackage1 = "com.example.adservices.samples.topics.sampleapp1";
+        ImmutableMap<String, AppInfo> oldAppInfoMap =
+                ImmutableMap.<String, AppInfo>builder()
+                        .put(appPackage1, new AppInfo("appName1", "Sample app description."))
+                        .build();
+        ImmutableMap<String, AppInfo> newAppInfoMap =
+                ImmutableMap.<String, AppInfo>builder()
+                        .put(
+                                appPackage1,
+                                new AppInfo(
+                                        "appName1",
+                                        "This xyz game is the best adventure game to thrill our"
+                                                + " users! Play, win and share with your friends to"
+                                                + " win more coins."))
+                        .build();
+        ImmutableSet<String> appPackages = ImmutableSet.of(appPackage1);
+        // Return old description first and then the new description.
+        when(mPackageManagerUtil.getAppInformation(eq(appPackages)))
+                .thenReturn(oldAppInfoMap)
+                .thenReturn(newAppInfoMap);
+
+        ImmutableMap<String, List<Topic>> firstClassifications =
+                mOnDeviceClassifier.classify(appPackages);
+        ImmutableMap<String, List<Topic>> secondClassifications =
+                mOnDeviceClassifier.classify(appPackages);
+
+        // Verify two calls to packageManagerUtil.
+        verify(mPackageManagerUtil, times(2)).getAppInformation(eq(appPackages));
+        // Two values for two input package names.
+        assertThat(secondClassifications).hasSize(1);
+        // Verify size of the labels returned is CLASSIFIER_NUMBER_OF_TOP_LABELS.
+        assertThat(secondClassifications.get(appPackage1)).hasSize(CLASSIFIER_NUMBER_OF_TOP_LABELS);
+
+        // Check if the first category matches in the top CLASSIFIER_NUMBER_OF_TOP_LABELS.
+        // Scores can differ a little on devices. Using this technique to reduce flakiness.
+        // Check different expected scores for different descriptions.
+        // Expected top 10: 10253, 10230, 10284, 10237, 10227, 10257, 10165, 10028, 10330, 10047
+        assertThat(firstClassifications.get(appPackage1))
+                .containsAtLeastElementsIn(createTopics(Arrays.asList(10253)));
+        // Expected top 10: 10227, 10225, 10235, 10230, 10238, 10253, 10247, 10254, 10234, 10229
+        assertThat(secondClassifications.get(appPackage1))
+                .containsAtLeastElementsIn(createTopics(Arrays.asList(10227)));
+    }
+
+    @Test
+    public void testClassify_emptyInput_emptyOutput() {
+        assertThat(mOnDeviceClassifier.classify(ImmutableSet.of())).isEmpty();
     }
 
     @Test
@@ -141,10 +277,10 @@ public class OnDeviceClassifierTest {
                                 .put(appPackage3, new AppInfo("appName3", commonAppDescription))
                                 .build());
 
-        ImmutableMap<String, List<Integer>> classifications =
-                sOnDeviceClassifier.classify(appPackages);
-        List<Integer> topTopics =
-                sOnDeviceClassifier.getTopTopics(
+        ImmutableMap<String, List<Topic>> classifications =
+                mOnDeviceClassifier.classify(appPackages);
+        List<Topic> topTopics =
+                mOnDeviceClassifier.getTopTopics(
                         classifications, numberOfTopTopics, numberOfRandomTopics);
 
         verify(mPackageManagerUtil).getAppInformation(eq(appPackages));
@@ -152,8 +288,8 @@ public class OnDeviceClassifierTest {
         // Check if the returned list has numberOfTopTopics topics.
         assertThat(topTopics).hasSize(numberOfTopTopics + numberOfRandomTopics);
         // Verify the top topics are from the description that was repeated.
-        ImmutableList<Integer> expectedLabelsForCommonDescription =
-                ImmutableList.of(935, 1798, 529, 41, 933, 998, 39, 676, 622, 554);
+        List<Topic> expectedLabelsForCommonDescription =
+                createTopics(Arrays.asList(10220, 10235, 10247, 10225));
         assertThat(topTopics.subList(0, numberOfTopTopics))
                 .containsAnyIn(expectedLabelsForCommonDescription);
     }
@@ -178,13 +314,13 @@ public class OnDeviceClassifierTest {
         ImmutableSet<String> appPackages = ImmutableSet.of(appPackage1, appPackage2);
         when(mPackageManagerUtil.getAppInformation(eq(appPackages))).thenReturn(appInfoMap);
 
-        ImmutableMap<String, List<Integer>> classifications =
-                sOnDeviceClassifier.classify(appPackages);
-        List<Integer> topTopics1 =
-                sOnDeviceClassifier.getTopTopics(
+        ImmutableMap<String, List<Topic>> classifications =
+                mOnDeviceClassifier.classify(appPackages);
+        List<Topic> topTopics1 =
+                mOnDeviceClassifier.getTopTopics(
                         classifications, numberOfTopTopics, numberOfRandomTopics);
-        List<Integer> topTopics2 =
-                sOnDeviceClassifier.getTopTopics(
+        List<Topic> topTopics2 =
+                mOnDeviceClassifier.getTopTopics(
                         classifications, numberOfTopTopics, numberOfRandomTopics);
 
         verify(mPackageManagerUtil).getAppInformation(eq(appPackages));
@@ -194,5 +330,44 @@ public class OnDeviceClassifierTest {
                 .isNotEqualTo(
                         topTopics2.subList(
                                 numberOfTopTopics, numberOfTopTopics + numberOfRandomTopics));
+    }
+
+    @Test
+    public void testBertModelVersion_matchesAssetsModelVersion() {
+        assertThat(mOnDeviceClassifier.getBertModelVersion())
+                .isEqualTo(mOnDeviceClassifier.getModelVersion());
+    }
+
+    @Test
+    public void testBertLabelsVersion_matchesAssetsLabelsVersion() {
+        assertThat(mOnDeviceClassifier.getBertLabelsVersion())
+                .isEqualTo(mOnDeviceClassifier.getLabelsVersion());
+    }
+
+    private Topic createTopic(int topicId) {
+        return Topic.create(
+                topicId,
+                mOnDeviceClassifier.getLabelsVersion(),
+                mOnDeviceClassifier.getModelVersion());
+    }
+
+    private List<Topic> createTopics(List<Integer> topicIds) {
+        return topicIds.stream().map(this::createTopic).collect(Collectors.toList());
+    }
+
+    private void setClassifierNumberOfTopLabels(int overrideValue) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "classifier_number_of_top_labels",
+                Integer.toString(overrideValue),
+                /* makeDefault */ false);
+    }
+
+    private void setClassifierThreshold(float overrideValue) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "classifier_threshold",
+                Float.toString(overrideValue),
+                /* makeDefault */ false);
     }
 }

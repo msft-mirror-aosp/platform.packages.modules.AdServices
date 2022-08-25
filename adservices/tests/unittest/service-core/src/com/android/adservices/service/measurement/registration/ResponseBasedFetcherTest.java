@@ -25,7 +25,6 @@ import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -35,10 +34,9 @@ import java.util.Map;
  */
 @SmallTest
 public final class ResponseBasedFetcherTest {
-    private static final String TAG = "ResponseBasedFetcherTest";
 
     @Test
-    public void testIsSuccess() throws Exception {
+    public void testIsSuccess() {
         assertTrue(ResponseBasedFetcher.isSuccess(200));
         assertFalse(ResponseBasedFetcher.isSuccess(404));
         assertFalse(ResponseBasedFetcher.isSuccess(500));
@@ -46,7 +44,7 @@ public final class ResponseBasedFetcherTest {
     }
 
     @Test
-    public void testIsRedirect() throws Exception {
+    public void testIsRedirect() {
         assertTrue(ResponseBasedFetcher.isRedirect(301));
         assertTrue(ResponseBasedFetcher.isRedirect(302));
         assertTrue(ResponseBasedFetcher.isRedirect(303));
@@ -59,45 +57,26 @@ public final class ResponseBasedFetcherTest {
     }
 
     @Test
-    public void testParseRedirectsNothingInitial() throws Exception {
-        ArrayList<Uri> redirs = new ArrayList();
-        ResponseBasedFetcher.parseRedirects(true, Map.of(), redirs);
+    public void testParseRedirectsNothingInitial() {
+        List<Uri> redirs = ResponseBasedFetcher.parseRedirects(Map.of());
         assertEquals(0, redirs.size());
     }
 
     @Test
-    public void testParseRedirectsNothingLater() throws Exception {
-        ArrayList<Uri> redirs = new ArrayList();
-        ResponseBasedFetcher.parseRedirects(false, Map.of(), redirs);
-        assertEquals(0, redirs.size());
-    }
-
-    @Test
-    public void testParseRedirectsARR() throws Exception {
-        ArrayList<Uri> redirs = new ArrayList();
-        ResponseBasedFetcher.parseRedirects(
-                true, Map.of("Attribution-Reporting-Redirect",
-                    List.of("foo.com", "bar.com")), redirs);
+    public void testParseRedirectsARR() {
+        List<Uri> redirs =
+                ResponseBasedFetcher.parseRedirects(
+                        Map.of("Attribution-Reporting-Redirect", List.of("foo.com", "bar.com")));
         assertEquals(2, redirs.size());
         assertEquals(Uri.parse("foo.com"), redirs.get(0));
         assertEquals(Uri.parse("bar.com"), redirs.get(1));
     }
 
     @Test
-    public void testParseRedirectsSingleElementARR() throws Exception {
-        ArrayList<Uri> redirs = new ArrayList();
-        ResponseBasedFetcher.parseRedirects(
-                true, Map.of("Attribution-Reporting-Redirect",
-                    List.of("foo.com")), redirs);
+    public void testParseRedirectsSingleElementARR() {
+        List<Uri> redirs =
+                ResponseBasedFetcher.parseRedirects(
+                        Map.of("Attribution-Reporting-Redirect", List.of("foo.com")));
         assertEquals(1, redirs.size());
-    }
-
-    @Test
-    public void testParseRedirectsARRLater() throws Exception {
-        ArrayList<Uri> redirs = new ArrayList();
-        ResponseBasedFetcher.parseRedirects(
-                false, Map.of("Attribution-Reporting-Redirect",
-                    List.of("foo.com", "bar.com")), redirs);
-        assertEquals(0, redirs.size());
     }
 }

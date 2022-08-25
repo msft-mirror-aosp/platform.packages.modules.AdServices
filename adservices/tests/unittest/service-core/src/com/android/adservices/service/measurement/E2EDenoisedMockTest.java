@@ -44,7 +44,13 @@ public class E2EDenoisedMockTest extends E2EMockTest {
             String name) throws DatastoreException {
         super(actions, expectedOutput, name);
         mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager);
-        mMeasurementImpl = TestObjectProvider.getMeasurementImpl(TestObjectProvider.Type.DENOISED,
-                sDatastoreManager, mSourceFetcher, mTriggerFetcher);
+        mMeasurementImpl =
+                TestObjectProvider.getMeasurementImpl(
+                        TestObjectProvider.Type.DENOISED,
+                        sDatastoreManager,
+                        mSourceFetcher,
+                        mTriggerFetcher,
+                        mClickVerifier,
+                        mFlags);
     }
 }

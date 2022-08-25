@@ -23,76 +23,124 @@ import android.os.Bundle;
 import android.view.SurfaceControlViewHost.SurfacePackage;
 import android.view.View;
 
-import java.util.concurrent.Executor;
+import java.util.Objects;
 
 /**
  * Encapsulates API which SDK sandbox can use to interact with SDKs loaded into it.
  *
- * <p> SDK has to implement this abstract class to generate an entry point
- * for SDK sandbox to be able to call it through.
+ * <p>SDK has to implement this abstract class to generate an entry point for SDK sandbox to be able
+ * to call it through.
  *
  * <p>Note: All APIs defined in this class are not stable and subject to change.
  */
 public abstract class SandboxedSdkProvider {
+    private Context mContext;
+    private SdkSandboxController mSdkSandboxController;
 
     /**
-     * Does the initialization work needed to start calling the SDK.
+     * Sets the SDK {@link Context} which can then be received using {@link
+     * SandboxedSdkProvider#getContext()}. This is called before {@link
+     * SandboxedSdkProvider#onLoadSdk} is invoked. No operations requiring a {@link Context} should
+     * be performed before then, as {@link SandboxedSdkProvider#getContext} will return null until
+     * this method has been called.
      *
-     * <p> This function is called by SDK sandbox after it loads SDK
+     * <p>Throws IllegalStateException if a base context has already been set.
      *
-     * <p> SDK should do any initialization work to be ready to handle upcoming requests. It
-     * should not include the initialization logic that depends on other SDKs being
-     * loaded into the SDK sandbox.
-     *
-     * @param sandboxedSdkContext a {@link SandboxedSdkContext}
-     *                            which is the context of the SDK loaded in the SDK sandbox process
-     * @param params list of params passed from App when it loads the SDK.
-     * @param executor the {@link Executor} on which to invoke the {@code callback}
-     * @param callback to notify App if the SDK successfully loaded
+     * @param context The new base context.
      */
-    public abstract void initSdk(
-            @NonNull SandboxedSdkContext sandboxedSdkContext, @NonNull Bundle params,
-            @NonNull Executor executor, @NonNull InitSdkCallback callback);
+    public final void attachContext(@NonNull Context context) {
+        if (mContext != null) {
+            throw new IllegalStateException("Context already set");
+        }
+        mContext = context;
+    }
+
+    /**
+     * Return the {@link Context} previously set through {@link SandboxedSdkProvider#attachContext}.
+     * This will return null if no context has been previously set.
+     */
+    @Nullable
+    public Context getContext() {
+        return mContext;
+    }
+
+    /**
+     * Set the {@link SdkSandboxController} for this provider.
+     *
+     * <p>This is called before {@link SandboxedSdkProvider#onLoadSdk} is invoked. No operations
+     * requiring a {@link SdkSandboxController} should be performed before then, as {@link
+     * SandboxedSdkProvider#getSdkSandboxController()} will return {@code null} until this method
+     * has been called.
+     *
+     * <p>This may be only used for testing purposes.
+     *
+     * <p>Clients can only call it on a "mock" provider they create for testing, and for all other
+     * instances a controller is already attached
+     *
+     * @param sdkSandboxController The controller to query sandbox Apis for this provider.
+     * @throws IllegalStateException if a controller has already been set
+     */
+    public final void attachSdkSandboxController(
+            @NonNull SdkSandboxController sdkSandboxController) {
+        Objects.requireNonNull(sdkSandboxController, "sdkToServiceCallback should not be null.");
+        if (mSdkSandboxController != null) {
+            throw new IllegalStateException("SdkSandboxController already set");
+        }
+        mSdkSandboxController = sdkSandboxController;
+    }
+
+    /**
+     * Fetches the controller attached to the {@link SandboxedSdkProvider}.
+     *
+     * <p>The controller is attached to the provider using {@link
+     * SandboxedSdkProvider#attachSdkSandboxController(SdkSandboxController)} by the platform when
+     * the sdk is loaded.
+     *
+     * @return sdkSandboxController The controller to query sandbox Apis for this provider or {@code
+     *     null} if the controller was not attached.
+     */
+    @Nullable
+    public final SdkSandboxController getSdkSandboxController() {
+        return mSdkSandboxController;
+    }
+
+    /**
+     * Does the work needed for the SDK to start handling requests.
+     *
+     * <p>This function is called by the SDK sandbox after it loads the SDK.
+     *
+     * <p>SDK should do any work to be ready to handle upcoming requests. It should not include the
+     * initialization logic that depends on other SDKs being loaded into the SDK sandbox. The SDK
+     * should not do any operations requiring a {@link Context} object before this method has been
+     * called.
+     *
+     * @param params list of params passed from the client when it loads the SDK. This can be empty.
+     * @return Returns a {@link SandboxedSdk}, passed back to the client. The IBinder used to create
+     *     the {@link SandboxedSdk} object will be used by the client to call into the SDK.
+     */
+    public abstract @NonNull SandboxedSdk onLoadSdk(@NonNull Bundle params) throws LoadSdkException;
+    /**
+     * Does the work needed for the SDK to free its resources before being unloaded.
+     *
+     * <p>This function is called by the SDK sandbox manager before it unloads the SDK. The SDK
+     * should fail any invocations on the Binder previously returned to the client through {@link
+     * SandboxedSdk#getInterface}.
+     */
+    public void beforeUnloadSdk() {}
 
     /**
      * Requests a view to be remotely rendered to the client app process.
      *
-     * <p>Returns {@link View} will be wrapped into {@link SurfacePackage}. the resulting
-     * {@link SurfacePackage} will be sent back to the client application.
+     * <p>Returns {@link View} will be wrapped into {@link SurfacePackage}. the resulting {@link
+     * SurfacePackage} will be sent back to the client application.
      *
      * @param windowContext the {@link Context} of the display which meant to show the view
      * @param params list of params passed from the client application requesting the view
+     * @param width The view returned will be laid as if in a window of this width, in pixels.
+     * @param height The view returned will be laid as if in a window of this height, in pixels.
      * @return a {@link View} which SDK sandbox pass to the client application requesting the view
      */
     @NonNull
-    public abstract View getView(@NonNull Context windowContext, @NonNull Bundle params);
-
-    /**
-     * Called when extra data sent from the app is received by an SDK.
-     */
-    public abstract void onExtraDataReceived(@NonNull Bundle extraData);
-
-    /**
-     * Callback for tracking the status of initializing the SDK.
-     *
-     * <p>This callback is created by the SDK sandbox, SDKs should use it to notify the
-     * SDK sandbox about the status of initialization.
-     */
-    public interface InitSdkCallback {
-        /**
-         * Called when sdk is successfully loaded.
-         *
-         * <p>After SDK successfully initialized, it must call this method on the callback object.
-         *
-         * @param params list of params to be passed to the client application
-         */
-        void onInitSdkFinished(@NonNull Bundle params);
-
-        /**
-         * <p>If SDK failed to initialize, it must call this method on the callback object.
-         *
-         * @param errorMessage a String description of the error
-         */
-        void onInitSdkError(@Nullable String errorMessage);
-    }
+    public abstract View getView(
+            @NonNull Context windowContext, @NonNull Bundle params, int width, int height);
 }

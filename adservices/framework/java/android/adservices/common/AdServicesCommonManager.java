@@ -16,23 +16,41 @@
 
 package android.adservices.common;
 
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_STATE;
+import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE;
+
+import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
+import android.annotation.RequiresPermission;
+import android.annotation.SystemApi;
 import android.content.Context;
-import android.net.Uri;
+import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
 
+import java.util.concurrent.Executor;
+
 /**
- * AdServicesCommonManager class.
- * Ths contains APIs common across the various PPAPIs.
+ * AdServicesCommonManager contains APIs common across the various AdServices. It provides two
+ * SystemApis:
+ *
+ * <ul>
+ *   <li>isAdServicesEnabled - allows to get AdServices state.
+ *   <li>setAdServicesEntryPointEnabled - allows to control AdServices state.
+ * </ul>
+ *
+ * <p>The instance of the {@link AdServicesCommonManager} can be obtained using {@link
+ * Context#getSystemService} and {@link AdServicesCommonManager} class.
+ *
  * @hide
  */
+@SystemApi
 public class AdServicesCommonManager {
-    public static final String AD_SERVICES_COMMON_SERVICE =
-            "ad_services_common_service";
+    /** @hide */
+    public static final String AD_SERVICES_COMMON_SERVICE = "ad_services_common_service";
 
     private final Context mContext;
     private final ServiceBinder<IAdServicesCommonService>
@@ -61,32 +79,67 @@ public class AdServicesCommonManager {
     }
 
     /**
-     * Delete a package's records.
+     * Get the AdService's enablement state which represents whether AdServices feature is enabled
+     * or not.
+     *
      * @hide
      */
-    public void onPackageFullyRemoved(@NonNull Uri packageUri) {
+    @SystemApi
+    @RequiresPermission(ACCESS_ADSERVICES_STATE)
+    public void isAdServicesEnabled(
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull OutcomeReceiver<Boolean, Exception> callback) {
         final IAdServicesCommonService service = getService();
         try {
-            service.onPackageFullyRemoved(packageUri);
+            service.isAdServicesEnabled(
+                    new IAdServicesCommonCallback.Stub() {
+                        @Override
+                        public void onResult(IsAdServicesEnabledResult result) {
+                            executor.execute(
+                                    () -> {
+                                        callback.onResult(result.getAdServicesEnabled());
+                                    });
+                        }
+
+                        @Override
+                        public void onFailure(int statusCode) {
+                            executor.execute(
+                                    () ->
+                                            callback.onError(
+                                                    AdServicesStatusUtils.asException(statusCode)));
+                        }
+                    });
         } catch (RemoteException e) {
-            LogUtil.e("RemoteException", e);
-        } finally {
-            mAdServicesCommonServiceBinder.unbindFromService();
+            LogUtil.e(e, "RemoteException");
+            executor.execute(
+                    () -> callback.onError(new IllegalStateException("Internal Error!", e)));
         }
     }
 
     /**
-     * Notify adservices that this app was installed for attribution purposes.
-     * @param packageUri installed package URI.
+     * Sets the AdService's enablement state based on the provided parameters.
+     *
+     * <p>As a result of the AdServices state, {@code adServicesEntryPointEnabled}, {@code
+     * adIdEnabled}, appropriate notification may be displayed to the user. It's displayed only once
+     * when all the following conditions are met:
+     *
+     * <ul>
+     *   <li>AdServices state - enabled.
+     *   <li>adServicesEntryPointEnabled - true.
+     * </ul>
+     *
+     * @param adServicesEntryPointEnabled indicate entry point enabled or not
+     * @param adIdEnabled indicate user opt-out of adid or not
+     * @hide
      */
-    public void onPackageAdded(@NonNull Uri packageUri) {
+    @SystemApi
+    @RequiresPermission(MODIFY_ADSERVICES_STATE)
+    public void setAdServicesEnabled(boolean adServicesEntryPointEnabled, boolean adIdEnabled) {
         final IAdServicesCommonService service = getService();
         try {
-            service.onPackageAdded(packageUri);
+            service.setAdServicesEnabled(adServicesEntryPointEnabled, adIdEnabled);
         } catch (RemoteException e) {
-            LogUtil.e("RemoteException", e);
-        } finally {
-            mAdServicesCommonServiceBinder.unbindFromService();
+            LogUtil.e(e, "RemoteException");
         }
     }
 }
