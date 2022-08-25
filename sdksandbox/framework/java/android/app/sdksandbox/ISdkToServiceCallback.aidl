@@ -13,15 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package com.android.sdksandbox;
+package android.app.sdksandbox;
 
 import android.os.Bundle;
+import android.content.pm.SharedLibraryInfo;
 
 /** @hide */
-oneway interface IDataReceivedCallback {
-    const int DATA_RECEIVED_INTERNAL_ERROR = 1;
-
-    void onDataReceivedSuccess(in Bundle params);
-    void onDataReceivedError(int errorCode, String errorMsg);
+interface ISdkToServiceCallback {
+   List<SharedLibraryInfo> getLoadedSdkLibrariesInfo(in String clientPackageName);
 }

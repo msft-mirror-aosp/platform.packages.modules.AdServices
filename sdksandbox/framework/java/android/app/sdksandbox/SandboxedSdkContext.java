@@ -36,9 +36,6 @@ import java.io.File;
  * <p>It is a wrapper of the client application (which loading SDK to the sandbox) context, to
  * represent the context of the SDK loaded by that application.
  *
- * <p>This context contains methods that an SDK loaded into sdk sandbox can use to interact with the
- * sdk sandbox process, or other SDKs loaded into the same sdk sandbox process.
- *
  * <p>An instance of the {@link SandboxedSdkContext} will be created by the SDK sandbox, and then
  * attached to the {@link SandboxedSdkProvider} after the SDK is loaded.
  *

@@ -14,25 +14,6 @@
  * limitations under the License.
  */
 
-package com.android.testcode2_1;
+package com.android.sdksandbox;
 
-import android.app.sdksandbox.SandboxedSdk;
-import android.app.sdksandbox.SandboxedSdkProvider;
-import android.content.Context;
-import android.os.Binder;
-import android.os.Bundle;
-import android.view.View;
-
-public class TestSandboxedSdkProvider2 extends SandboxedSdkProvider {
-
-    @Override
-    public SandboxedSdk onLoadSdk(Bundle params) {
-        return new SandboxedSdk(new Binder());
-    }
-
-    @Override
-    public View getView(Context windowContext, Bundle params, int width, int height) {
-        return null;
-    }
-
-}
+parcelable SandboxLatencyInfo;

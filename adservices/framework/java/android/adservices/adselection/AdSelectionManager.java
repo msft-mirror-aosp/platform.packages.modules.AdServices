@@ -16,10 +16,13 @@
 
 package android.adservices.adselection;
 
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
+
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
+import android.annotation.RequiresPermission;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.os.LimitExceededException;
@@ -121,6 +124,7 @@ public class AdSelectionManager {
      * <p>If the {@link LimitExceededException} is thrown, it is caused when the calling package
      * exceeds the allowed rate limits and is throttled.
      */
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void selectAds(
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull @CallbackExecutor Executor executor,
@@ -174,7 +178,7 @@ public class AdSelectionManager {
      * The receiver either returns a {@code void} for a successful run, or an {@link Exception}
      * indicates the error.
      */
-    @NonNull
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void reportImpression(
             @NonNull ReportImpressionRequest request,
             @NonNull Executor executor,

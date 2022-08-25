@@ -14,12 +14,21 @@
  * limitations under the License.
  */
 
-package android.app.sdksandbox;
+package com.android.sdksandbox;
 
-import android.os.Bundle;
+import android.annotation.NonNull;
+import android.app.sdksandbox.ISdkToServiceCallback;
+import android.app.sdksandbox.SdkSandboxController;
 
-/** @hide */
-oneway interface ISendDataCallback {
-    void onSendDataSuccess(in Bundle params);
-    void onSendDataError(int errorCode, String errorMsg);
+final class SdkSandboxControllerImpl implements SdkSandboxController {
+
+    private final String mClientPackageName;
+    private final ISdkToServiceCallback mManagerService;
+
+    // TODO(b/240671642): Add a CTS test setup for sdk-sandbox link
+    SdkSandboxControllerImpl(
+            @NonNull String clientPackageName, @NonNull ISdkToServiceCallback callback) {
+        mClientPackageName = clientPackageName;
+        mManagerService = callback;
+    }
 }
