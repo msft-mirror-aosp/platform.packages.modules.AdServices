@@ -36,7 +36,10 @@ import android.os.OutcomeReceiver;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.compatibility.common.util.ShellUtils;
+
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -62,6 +65,11 @@ public class MeasurementManagerTest {
                     "sdkName",
                     /* sdkCeDataDir = */ null,
                     /* sdkDeDataDir = */ null);
+
+    @Before
+    public void setUp() {
+        allowAllPpApis();
+    }
 
     @Test
     public void testRegisterSource_callingApp_expectedAttributionSource() throws Exception {
@@ -304,5 +312,9 @@ public class MeasurementManagerTest {
 
         Assert.assertEquals(
                 Integer.valueOf(MeasurementManager.MEASUREMENT_API_STATE_ENABLED), future.get());
+    }
+
+    private void allowAllPpApis() {
+        ShellUtils.runShellCommand("device_config put adservices ppapi_app_allow_list *");
     }
 }
