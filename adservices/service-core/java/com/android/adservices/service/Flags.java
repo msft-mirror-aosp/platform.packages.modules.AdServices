@@ -530,8 +530,8 @@ public interface Flags extends Dumpable {
     // TODO(b/236761740): We use this for now for testing. We need to update to the correct one
     // when we actually upload the models.
     String MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL =
-            "https://dl.google.com/mdi-serving/adservices/topics_classifier/manifest_configs/1"
-                    + "/manifest_config_1657744589741.binaryproto";
+            "https://dl.google.com/mdi-serving/adservices/topics_classifier/manifest_configs/2"
+                    + "/manifest_config_1661376643699.binaryproto";
 
     default String getMddTopicsClassifierManifestFileUrl() {
         return MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
