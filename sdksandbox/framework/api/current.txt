@@ -31,7 +31,7 @@ package android.app.sdksandbox {
     method public final void attachContext(@NonNull android.content.Context);
     method public final void attachSdkSandboxController(@NonNull android.app.sdksandbox.SdkSandboxController);
     method public void beforeUnloadSdk();
-    method @Nullable public android.content.Context getContext();
+    method @Nullable public final android.content.Context getContext();
     method @Nullable public final android.app.sdksandbox.SdkSandboxController getSdkSandboxController();
     method @NonNull public abstract android.view.View getView(@NonNull android.content.Context, @NonNull android.os.Bundle, int, int);
     method public abstract void onDataReceived(@NonNull android.os.Bundle, @NonNull android.app.sdksandbox.SandboxedSdkProvider.DataReceivedCallback);

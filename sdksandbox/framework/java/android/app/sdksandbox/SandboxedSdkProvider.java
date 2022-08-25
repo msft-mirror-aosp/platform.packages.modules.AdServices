@@ -60,7 +60,7 @@ public abstract class SandboxedSdkProvider {
      * This will return null if no context has been previously set.
      */
     @Nullable
-    public Context getContext() {
+    public final Context getContext() {
         return mContext;
     }
 
