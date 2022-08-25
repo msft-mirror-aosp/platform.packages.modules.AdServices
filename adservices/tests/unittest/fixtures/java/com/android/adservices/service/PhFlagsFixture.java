@@ -28,10 +28,16 @@ import android.provider.DeviceConfig;
 
 /**
  * In order to use this test fixture, make sure your test class includes a TestableDeviceConfigRule
- * Rule.
+ * Rule or adopts shell permissions as below.
  *
  * <p>{@code @Rule public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
  * new TestableDeviceConfig.TestableDeviceConfigRule(); }
+ *
+ * <p>OR
+ *
+ * <p>{@code
+ * InstrumentationRegistry.getInstrumentation().getUiAutomation().adoptShellPermissionIdentity(
+ * Manifest.permission.WRITE_DEVICE_CONFIG);}
  */
 public class PhFlagsFixture {
     public static void configureFledgeBackgroundFetchEligibleUpdateBaseIntervalS(
