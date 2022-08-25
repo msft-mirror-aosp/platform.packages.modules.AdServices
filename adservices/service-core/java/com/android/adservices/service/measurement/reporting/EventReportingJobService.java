@@ -25,6 +25,7 @@ import android.content.Context;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.FlagsFactory;
@@ -55,6 +56,7 @@ public final class EventReportingJobService extends JobService {
         LogUtil.d("EventReportingJobService: onStartJob: ");
         sBlockingExecutor.execute(() -> {
             boolean success = new EventReportingJobHandler(
+                    EnrollmentDao.getInstance(getApplicationContext()),
                     DatastoreManagerFactory.getDatastoreManager(
                             getApplicationContext()))
                     .performScheduledPendingReportsInWindow(

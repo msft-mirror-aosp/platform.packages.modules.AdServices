@@ -85,7 +85,6 @@ public class TriggerTest {
         values.put("geoValue", 1664);
         assertEquals(
                 TriggerFixture.getValidTriggerBuilder()
-                        .setAdTechDomain(Uri.parse("https://example.com"))
                         .setEnrollmentId("enrollment-id")
                         .setAttributionDestination(Uri.parse("https://example.com/aD"))
                         .setDestinationType(EventSurfaceType.WEB)
@@ -103,7 +102,6 @@ public class TriggerTest {
                                         .getAggregatableAttributionTrigger())
                         .build(),
                 TriggerFixture.getValidTriggerBuilder()
-                        .setAdTechDomain(Uri.parse("https://example.com"))
                         .setEnrollmentId("enrollment-id")
                         .setAttributionDestination(Uri.parse("https://example.com/aD"))
                         .setDestinationType(EventSurfaceType.WEB)
@@ -137,11 +135,6 @@ public class TriggerTest {
                         .setDestinationType(EventSurfaceType.APP).build(),
                 TriggerFixture.getValidTriggerBuilder()
                         .setDestinationType(EventSurfaceType.WEB).build());
-        assertNotEquals(
-                TriggerFixture.getValidTriggerBuilder()
-                        .setAdTechDomain(Uri.parse("https://1.com")).build(),
-                TriggerFixture.getValidTriggerBuilder()
-                        .setAdTechDomain(Uri.parse("https://2.com")).build());
         assertNotEquals(
                 TriggerFixture.getValidTriggerBuilder()
                         .setEnrollmentId("enrollment-id-1").build(),
@@ -222,7 +215,6 @@ public class TriggerTest {
     public void testTriggerBuilder_validateArgumentAttributionDestination() {
         assertInvalidTriggerArguments(
                 null,
-                TriggerFixture.ValidTriggerParams.AD_TECH_DOMAIN,
                 TriggerFixture.ValidTriggerParams.ENROLLMENT_ID,
                 TriggerFixture.ValidTriggerParams.REGISTRANT,
                 TriggerFixture.ValidTriggerParams.TRIGGER_TIME,
@@ -233,7 +225,6 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY);
         assertInvalidTriggerArguments(
                 Uri.parse("com.destination"),
-                TriggerFixture.ValidTriggerParams.AD_TECH_DOMAIN,
                 TriggerFixture.ValidTriggerParams.ENROLLMENT_ID,
                 TriggerFixture.ValidTriggerParams.REGISTRANT,
                 TriggerFixture.ValidTriggerParams.TRIGGER_TIME,
@@ -245,22 +236,10 @@ public class TriggerTest {
     }
 
     @Test
-    public void testTriggerBuilder_validateArgumentAdTechDomain() {
+    public void testTriggerBuilder_validateArgumentEnrollmentId() {
         assertInvalidTriggerArguments(
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION,
                 null,
-                TriggerFixture.ValidTriggerParams.ENROLLMENT_ID,
-                TriggerFixture.ValidTriggerParams.REGISTRANT,
-                TriggerFixture.ValidTriggerParams.TRIGGER_TIME,
-                TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS,
-                TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
-                TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
-                TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
-                TriggerFixture.ValidTriggerParams.DEBUG_KEY);
-        assertInvalidTriggerArguments(
-                TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION,
-                Uri.parse("com.adTechDomain"),
-                TriggerFixture.ValidTriggerParams.ENROLLMENT_ID,
                 TriggerFixture.ValidTriggerParams.REGISTRANT,
                 TriggerFixture.ValidTriggerParams.TRIGGER_TIME,
                 TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS,
@@ -269,28 +248,11 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY);
     }
-
-    // TODO (b/238924528): uncomment when enforcing enrollment
-    /*@Test
-    public void testTriggerBuilder_validateArgumentEnrollmentId() {
-        assertInvalidTriggerArguments(
-                TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION,
-                TriggerFixture.ValidTriggerParams.AD_TECH_DOMAIN,
-                null,
-                TriggerFixture.ValidTriggerParams.REGISTRANT,
-                TriggerFixture.ValidTriggerParams.TRIGGER_TIME,
-                TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS,
-                TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
-                TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
-                TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
-                TriggerFixture.ValidTriggerParams.DEBUG_KEY);
-    }*/
 
     @Test
     public void testTriggerBuilder_validateArgumentRegistrant() {
         assertInvalidTriggerArguments(
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION,
-                TriggerFixture.ValidTriggerParams.AD_TECH_DOMAIN,
                 TriggerFixture.ValidTriggerParams.ENROLLMENT_ID,
                 null,
                 TriggerFixture.ValidTriggerParams.TRIGGER_TIME,
@@ -301,7 +263,6 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY);
         assertInvalidTriggerArguments(
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION,
-                TriggerFixture.ValidTriggerParams.AD_TECH_DOMAIN,
                 TriggerFixture.ValidTriggerParams.ENROLLMENT_ID,
                 Uri.parse("com.registrant"),
                 TriggerFixture.ValidTriggerParams.TRIGGER_TIME,
@@ -462,7 +423,6 @@ public class TriggerTest {
 
     private void assertInvalidTriggerArguments(
             Uri attributionDestination,
-            Uri adTechDomain,
             String enrollmentId,
             Uri registrant,
             Long triggerTime,
@@ -476,7 +436,6 @@ public class TriggerTest {
                 () ->
                         new Trigger.Builder()
                                 .setAttributionDestination(attributionDestination)
-                                .setAdTechDomain(adTechDomain)
                                 .setEnrollmentId(enrollmentId)
                                 .setRegistrant(registrant)
                                 .setTriggerTime(triggerTime)

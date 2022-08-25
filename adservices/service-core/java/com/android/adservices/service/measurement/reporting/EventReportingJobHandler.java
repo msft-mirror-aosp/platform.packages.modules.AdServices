@@ -23,8 +23,10 @@ import android.adservices.common.AdServicesStatusUtils;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.service.measurement.EventReport;
+import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementReportsStats;
 import com.android.internal.annotations.VisibleForTesting;
@@ -42,9 +44,11 @@ import java.util.Optional;
  */
 public class EventReportingJobHandler {
 
+    private final EnrollmentDao mEnrollmentDao;
     private final DatastoreManager mDatastoreManager;
 
-    EventReportingJobHandler(DatastoreManager datastoreManager) {
+    EventReportingJobHandler(EnrollmentDao enrollmentDao, DatastoreManager datastoreManager) {
+        mEnrollmentDao = enrollmentDao;
         mDatastoreManager = datastoreManager;
     }
 
@@ -94,9 +98,15 @@ public class EventReportingJobHandler {
             return AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
         }
         try {
+            Optional<Uri> reportingOrigin = Enrollment.maybeGetReportingOrigin(
+                    eventReport.getEnrollmentId(), mEnrollmentDao);
+            if (!reportingOrigin.isPresent()) {
+                // We do not know here what the cause is of the failure to retrieve the reporting
+                // origin. INTERNAL_ERROR seems the closest to a "catch-all" error code.
+                return AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+            }
             JSONObject eventReportJsonPayload = createReportJsonPayload(eventReport);
-            int returnCode = makeHttpPostRequest(eventReport.getAdTechDomain(),
-                    eventReportJsonPayload);
+            int returnCode = makeHttpPostRequest(reportingOrigin.get(), eventReportJsonPayload);
 
             if (returnCode >= HttpURLConnection.HTTP_OK
                     && returnCode <= 299) {

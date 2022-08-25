@@ -23,10 +23,12 @@ import android.adservices.common.AdServicesStatusUtils;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementReportsStats;
 import com.android.internal.annotations.VisibleForTesting;
@@ -46,18 +48,22 @@ import java.util.concurrent.TimeUnit;
 
 public class AggregateReportingJobHandler {
 
+    private final EnrollmentDao mEnrollmentDao;
     private final DatastoreManager mDatastoreManager;
     private final AggregateEncryptionKeyManager mAggregateEncryptionKeyManager;
 
-    AggregateReportingJobHandler(DatastoreManager datastoreManager) {
+    AggregateReportingJobHandler(EnrollmentDao enrollmentDao, DatastoreManager datastoreManager) {
+        mEnrollmentDao = enrollmentDao;
         mDatastoreManager = datastoreManager;
         mAggregateEncryptionKeyManager = new AggregateEncryptionKeyManager(datastoreManager);
     }
 
     @VisibleForTesting
     AggregateReportingJobHandler(
+            EnrollmentDao enrollmentDao,
             DatastoreManager datastoreManager,
             AggregateEncryptionKeyManager aggregateEncryptionKeyManager) {
+        mEnrollmentDao = enrollmentDao;
         mDatastoreManager = datastoreManager;
         mAggregateEncryptionKeyManager = aggregateEncryptionKeyManager;
     }
@@ -119,9 +125,16 @@ public class AggregateReportingJobHandler {
             return AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
         }
         try {
-            JSONObject aggregateReportJsonBody = createReportJsonPayload(aggregateReport, key);
-            int returnCode = makeHttpPostRequest(aggregateReport.getAdTechDomain(),
-                    aggregateReportJsonBody);
+            Optional<Uri> reportingOrigin = Enrollment.maybeGetReportingOrigin(
+                    aggregateReport.getEnrollmentId(), mEnrollmentDao);
+            if (!reportingOrigin.isPresent()) {
+                // We do not know here what the cause is of the failure to retrieve the reporting
+                // origin. INTERNAL_ERROR seems the closest to a "catch-all" error code.
+                return AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+            }
+            JSONObject aggregateReportJsonBody = createReportJsonPayload(
+                    aggregateReport, reportingOrigin.get(), key);
+            int returnCode = makeHttpPostRequest(reportingOrigin.get(), aggregateReportJsonBody);
 
             if (returnCode >= HttpURLConnection.HTTP_OK
                     && returnCode <= 299) {
@@ -142,8 +155,8 @@ public class AggregateReportingJobHandler {
 
     /** Creates the JSON payload for the POST request from the AggregateReport. */
     @VisibleForTesting
-    JSONObject createReportJsonPayload(AggregateReport aggregateReport, AggregateEncryptionKey key)
-            throws JSONException {
+    JSONObject createReportJsonPayload(AggregateReport aggregateReport, Uri reportingOrigin,
+            AggregateEncryptionKey key) throws JSONException {
         return new AggregateReportBody.Builder()
                 .setReportId(aggregateReport.getId())
                 .setAttributionDestination(aggregateReport.getAttributionDestination().toString())
@@ -156,7 +169,7 @@ public class AggregateReportingJobHandler {
                                 TimeUnit.MILLISECONDS.toSeconds(
                                         aggregateReport.getScheduledReportTime())))
                 .setApiVersion(aggregateReport.getApiVersion())
-                .setReportingOrigin(aggregateReport.getAdTechDomain().toString())
+                .setReportingOrigin(reportingOrigin.toString())
                 .setDebugCleartextPayload(aggregateReport.getDebugCleartextPayload())
                 .build()
                 .toJson(key);
