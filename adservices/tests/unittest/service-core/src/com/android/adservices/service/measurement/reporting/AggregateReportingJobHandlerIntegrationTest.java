@@ -19,8 +19,6 @@ package com.android.adservices.service.measurement.reporting;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import android.net.Uri;
-
 import com.android.adservices.data.measurement.AbstractDbIntegrationTest;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
@@ -66,8 +64,7 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
 
     public enum Action {
         SINGLE_REPORT,
-        ALL_REPORTS,
-        ALL_REPORTS_FOR_APP,
+        ALL_REPORTS
     }
 
     @Override
@@ -105,12 +102,6 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
                         "Aggregate report failed.",
                         spyReportingService.performScheduledPendingReportsInWindow(
                                 startValue, endValue));
-                break;
-            case ALL_REPORTS_FOR_APP:
-                final Uri appName = Uri.parse((String) get("appName"));
-                Assert.assertTrue(
-                        "Aggregate report failed.",
-                        spyReportingService.performAllPendingReportsForGivenApp(appName));
                 break;
             case SINGLE_REPORT:
                 final int result = ((Number) Objects.requireNonNull(get("result"))).intValue();

@@ -204,8 +204,6 @@ public interface Flags extends Dumpable {
         return MEASUREMENT_NETWORK_READ_TIMEOUT_MS;
     }
 
-    /* The default measurement app name. */
-    String MEASUREMENT_APP_NAME = "";
     int MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(5);
     int MEASUREMENT_NETWORK_READ_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(30);
 
@@ -224,11 +222,6 @@ public interface Flags extends Dumpable {
 
     default boolean getMeasurementIsClickVerificationEnabled() {
         return MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED;
-    }
-
-    /** Returns the app name. */
-    default String getMeasurementAppName() {
-        return MEASUREMENT_APP_NAME;
     }
 
     /** Measurement manifest file url, used for MDD download. */
@@ -537,8 +530,8 @@ public interface Flags extends Dumpable {
     // TODO(b/236761740): We use this for now for testing. We need to update to the correct one
     // when we actually upload the models.
     String MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL =
-            "https://dl.google.com/mdi-serving/adservices/topics_classifier/manifest_configs/1"
-                    + "/manifest_config_1657744589741.binaryproto";
+            "https://dl.google.com/mdi-serving/adservices/topics_classifier/manifest_configs/2"
+                    + "/manifest_config_1661376643699.binaryproto";
 
     default String getMddTopicsClassifierManifestFileUrl() {
         return MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
