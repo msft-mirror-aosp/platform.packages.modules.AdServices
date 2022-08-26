@@ -53,8 +53,6 @@ public class SqliteObjectMapper {
                 builder::setTriggerDedupKey);
         setUriColumn(cursor, MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
                 builder::setAttributionDestination);
-        setUriColumn(cursor, MeasurementTables.EventReportContract.AD_TECH_DOMAIN,
-                builder::setAdTechDomain);
         setTextColumn(cursor, MeasurementTables.EventReportContract.ENROLLMENT_ID,
                 builder::setEnrollmentId);
         setLongColumn(cursor, MeasurementTables.EventReportContract.REPORT_TIME,
@@ -79,8 +77,6 @@ public class SqliteObjectMapper {
                 builder::setEventId);
         setLongColumn(cursor, MeasurementTables.SourceContract.PRIORITY,
                 builder::setPriority);
-        setUriColumn(cursor, MeasurementTables.SourceContract.AD_TECH_DOMAIN,
-                builder::setAdTechDomain);
         setTextColumn(cursor, MeasurementTables.SourceContract.ENROLLMENT_ID,
                 builder::setEnrollmentId);
         setUriColumn(cursor, MeasurementTables.SourceContract.PUBLISHER,
@@ -141,8 +137,6 @@ public class SqliteObjectMapper {
                 builder::setAttributionDestination);
         setIntColumn(cursor, MeasurementTables.TriggerContract.DESTINATION_TYPE,
                 builder::setDestinationType);
-        setUriColumn(cursor, MeasurementTables.TriggerContract.AD_TECH_DOMAIN,
-                builder::setAdTechDomain);
         setTextColumn(cursor, MeasurementTables.TriggerContract.ENROLLMENT_ID,
                 builder::setEnrollmentId);
         setIntColumn(cursor, MeasurementTables.TriggerContract.STATUS,
@@ -174,8 +168,6 @@ public class SqliteObjectMapper {
                 builder::setSourceRegistrationTime);
         setLongColumn(cursor, MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME,
                 builder::setScheduledReportTime);
-        setUriColumn(cursor, MeasurementTables.AggregateReport.AD_TECH_DOMAIN,
-                builder::setAdTechDomain);
         setTextColumn(cursor, MeasurementTables.AggregateReport.ENROLLMENT_ID,
                 builder::setEnrollmentId);
         setTextColumn(cursor, MeasurementTables.AggregateReport.DEBUG_CLEARTEXT_PAYLOAD,
