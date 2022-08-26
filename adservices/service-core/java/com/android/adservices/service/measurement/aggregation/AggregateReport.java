@@ -37,7 +37,6 @@ public class AggregateReport {
     private Uri mAttributionDestination;
     private long mSourceRegistrationTime;
     private long mScheduledReportTime;   // triggerTime + random([10min, 1hour])
-    private Uri mAdTechDomain;
     private String mEnrollmentId;
     private String mDebugCleartextPayload;
     private AggregateAttributionData mAggregateAttributionData;
@@ -60,7 +59,6 @@ public class AggregateReport {
         mAttributionDestination = null;
         mSourceRegistrationTime = 0L;
         mScheduledReportTime = 0L;
-        mAdTechDomain = null;
         mEnrollmentId = null;
         mDebugCleartextPayload = null;
         mAggregateAttributionData = null;
@@ -77,7 +75,6 @@ public class AggregateReport {
                 && Objects.equals(mAttributionDestination, aggregateReport.mAttributionDestination)
                 && mSourceRegistrationTime == aggregateReport.mSourceRegistrationTime
                 && mScheduledReportTime == aggregateReport.mScheduledReportTime
-                && Objects.equals(mAdTechDomain, aggregateReport.mAdTechDomain)
                 && Objects.equals(mEnrollmentId, aggregateReport.mEnrollmentId)
                 && Objects.equals(mDebugCleartextPayload, aggregateReport.mDebugCleartextPayload)
                 && Objects.equals(mAggregateAttributionData,
@@ -89,7 +86,7 @@ public class AggregateReport {
     @Override
     public int hashCode() {
         return Objects.hash(mId, mPublisher, mAttributionDestination, mSourceRegistrationTime,
-                mScheduledReportTime, mAdTechDomain, mEnrollmentId, mDebugCleartextPayload,
+                mScheduledReportTime, mEnrollmentId, mDebugCleartextPayload,
                 mAggregateAttributionData, mStatus);
     }
 
@@ -126,13 +123,6 @@ public class AggregateReport {
      */
     public long getScheduledReportTime() {
         return mScheduledReportTime;
-    }
-
-    /**
-     * Uri for report_to of source.
-     */
-    public Uri getAdTechDomain() {
-        return mAdTechDomain;
     }
 
     /**
@@ -244,14 +234,6 @@ public class AggregateReport {
          */
         public Builder setScheduledReportTime(long scheduledReportTime) {
             mAttributionReport.mScheduledReportTime = scheduledReportTime;
-            return this;
-        }
-
-        /**
-         * See {@link AggregateReport#getAdTechDomain()}.
-         */
-        public Builder setAdTechDomain(Uri adTechDomain) {
-            mAttributionReport.mAdTechDomain = adTechDomain;
             return this;
         }
 

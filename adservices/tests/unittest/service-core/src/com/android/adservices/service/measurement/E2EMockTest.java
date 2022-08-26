@@ -78,8 +78,8 @@ public abstract class E2EMockTest extends E2ETest {
 
     E2EMockTest(Collection<Action> actions, ReportObjects expectedOutput, String name) {
         super(actions, expectedOutput, name);
-        mSourceFetcher = Mockito.spy(new SourceFetcher());
-        mTriggerFetcher = Mockito.spy(new TriggerFetcher());
+        mSourceFetcher = Mockito.spy(new SourceFetcher(sContext));
+        mTriggerFetcher = Mockito.spy(new TriggerFetcher(sContext));
         mClickVerifier = Mockito.mock(ClickVerifier.class);
         mFlags = FlagsFactory.getFlagsForTest();
         when(mClickVerifier.isInputEventVerifiable(any(), anyLong())).thenReturn(true);
@@ -140,6 +140,7 @@ public abstract class E2EMockTest extends E2ETest {
     void processAction(ReportingJob reportingJob) throws IOException, JSONException {
         Object[] eventCaptures = EventReportingJobHandlerWrapper
                 .spyPerformScheduledPendingReportsInWindow(
+                        sEnrollmentDao,
                         sDatastoreManager,
                         reportingJob.mTimestamp
                                 - SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
@@ -147,6 +148,7 @@ public abstract class E2EMockTest extends E2ETest {
 
         Object[] aggregateCaptures = AggregateReportingJobHandlerWrapper
                 .spyPerformScheduledPendingReportsInWindow(
+                        sEnrollmentDao,
                         sDatastoreManager,
                         reportingJob.mTimestamp
                                 - SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
