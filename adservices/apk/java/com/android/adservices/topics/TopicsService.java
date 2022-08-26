@@ -25,6 +25,7 @@ import android.os.IBinder;
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.download.MddJobService;
+import com.android.adservices.download.MobileDataDownloadFactory;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -108,6 +109,7 @@ public class TopicsService extends Service {
             writer.println("Build is Debuggable, dumping information for TopicsService");
             EpochManager.getInstance(this).dump(writer, args);
             CacheManager.getInstance(this).dump(writer, args);
+            MobileDataDownloadFactory.dump(this, writer);
         } else {
             writer.println("Build is not Debuggable");
         }
