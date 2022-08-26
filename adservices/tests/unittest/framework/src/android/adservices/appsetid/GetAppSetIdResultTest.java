@@ -20,6 +20,7 @@ import android.os.Parcel;
 import androidx.test.filters.SmallTest;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 import org.junit.Test;
 
@@ -41,5 +42,15 @@ public final class GetAppSetIdResultTest {
 
         assertEquals(fromParcel.getAppSetId(), "UNITTEST_ID");
         assertEquals(fromParcel.getAppSetIdScope(), GetAppSetIdResult.SCOPE_APP);
+    }
+
+    @Test
+    public void testWriteToParcel_nullableThrows() throws Exception {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    GetAppSetIdResult unusedResponse =
+                            new GetAppSetIdResult.Builder().setAppSetId(null).build();
+                });
     }
 }
