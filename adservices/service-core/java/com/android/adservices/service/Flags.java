@@ -204,6 +204,7 @@ public interface Flags extends Dumpable {
         return MEASUREMENT_NETWORK_READ_TIMEOUT_MS;
     }
 
+    long MEASUREMENT_DB_SIZE_LIMIT = (1024 * 1024) * 10; // 10 MBs
     int MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(5);
     int MEASUREMENT_NETWORK_READ_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(30);
 
@@ -222,6 +223,11 @@ public interface Flags extends Dumpable {
 
     default boolean getMeasurementIsClickVerificationEnabled() {
         return MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED;
+    }
+
+    /** Returns the DB size limit for measurement. */
+    default long getMeasurementDbSizeLimit() {
+        return MEASUREMENT_DB_SIZE_LIMIT;
     }
 
     /** Measurement manifest file url, used for MDD download. */

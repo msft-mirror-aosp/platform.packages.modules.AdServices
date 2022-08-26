@@ -69,6 +69,7 @@ public final class PhFlags implements Flags {
             "measurement_network_connect_timeout_ms";
     static final String KEY_MEASUREMENT_NETWORK_READ_TIMEOUT_MS =
             "measurement_network_read_timeout_ms";
+    static final String KEY_MEASUREMENT_DB_SIZE_LIMIT = "measurement_db_size_limit";
     static final String KEY_MEASUREMENT_MANIFEST_FILE_URL = "mdd_measurement_manifest_file_url";
     static final String KEY_MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS =
             "measurement_registration_input_event_valid_window_ms";
@@ -468,6 +469,15 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_NETWORK_READ_TIMEOUT_MS,
                 /* defaultValue */ MEASUREMENT_NETWORK_READ_TIMEOUT_MS);
+    }
+
+    @Override
+    public long getMeasurementDbSizeLimit() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_DB_SIZE_LIMIT,
+                /* defaultValue */ MEASUREMENT_DB_SIZE_LIMIT);
     }
 
     @Override
@@ -1352,6 +1362,7 @@ public final class PhFlags implements Flags {
         writer.println("\t" + KEY_CLASSIFIER_TYPE + " = " + getClassifierType());
 
         writer.println("==== AdServices PH Flags Dump Measurement related flags: ====");
+        writer.println("\t" + KEY_MEASUREMENT_DB_SIZE_LIMIT + " = " + getMeasurementDbSizeLimit());
         writer.println(
                 "\t"
                         + KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS
