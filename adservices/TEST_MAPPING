@@ -91,6 +91,12 @@
     },
     {
       "name": "AdServicesApkUnitTests"
+    },
+    {
+      "name": "CtsAdIdEndToEndTest"
+    },
+    {
+      "name": "CtsAppSetIdEndToEndTest"
     }
   ]
 }
