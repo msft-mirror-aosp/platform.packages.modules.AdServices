@@ -21,7 +21,6 @@ import android.annotation.Nullable;
 import android.annotation.RequiresPermission;
 import android.app.Service;
 import android.app.sdksandbox.ISdkToServiceCallback;
-import android.app.sdksandbox.ISharedPreferencesSyncCallback;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SharedPreferencesKey;
@@ -147,8 +146,7 @@ public class SdkSandboxServiceImpl extends Service {
     }
 
     /** Sync data from client. */
-    public void syncDataFromClient(
-            SharedPreferencesUpdate update, ISharedPreferencesSyncCallback callback) {
+    public void syncDataFromClient(SharedPreferencesUpdate update) {
         SharedPreferences pref =
                 PreferenceManager.getDefaultSharedPreferences(mInjector.getContext());
         SharedPreferences.Editor editor = pref.edit();
@@ -158,12 +156,6 @@ public class SdkSandboxServiceImpl extends Service {
         }
         // TODO(b/239403323): What if writing to persistent storage fails?
         editor.apply();
-
-        try {
-            callback.onSuccess();
-        } catch (RemoteException ignore) {
-            // The app died. Safe to ignore as sandbox will be killed soon.
-        }
     }
 
     private void updateSharedPreferences(
@@ -410,12 +402,9 @@ public class SdkSandboxServiceImpl extends Service {
         }
 
         @Override
-        public void syncDataFromClient(
-                @NonNull SharedPreferencesUpdate update,
-                @NonNull ISharedPreferencesSyncCallback callback) {
+        public void syncDataFromClient(@NonNull SharedPreferencesUpdate update) {
             Objects.requireNonNull(update, "update should not be null");
-            Objects.requireNonNull(callback, "callback should not be null");
-            SdkSandboxServiceImpl.this.syncDataFromClient(update, callback);
+            SdkSandboxServiceImpl.this.syncDataFromClient(update);
         }
     }
 }

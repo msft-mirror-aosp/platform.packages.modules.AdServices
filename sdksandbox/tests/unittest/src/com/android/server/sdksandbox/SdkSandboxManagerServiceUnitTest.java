@@ -1033,7 +1033,6 @@ public class SdkSandboxManagerServiceUnitTest {
 
         // Verify that manager service calls sandbox to sync data
         assertThat(mSdkSandboxService.getLastSyncUpdate()).isSameInstanceAs(TEST_UPDATE);
-        assertThat(mSdkSandboxService.getLastSyncCallback()).isSameInstanceAs(callback);
     }
 
     @Test
@@ -1790,7 +1789,6 @@ public class SdkSandboxManagerServiceUnitTest {
         boolean mDataReceived = false;
 
         private SharedPreferencesUpdate mLastSyncUpdate = null;
-        private ISharedPreferencesSyncCallback mLastSyncCallback = null;
 
         FakeSdkSandboxService() {
             mManagerToSdkCallback = new FakeManagerToSdkCallback();
@@ -1817,10 +1815,8 @@ public class SdkSandboxManagerServiceUnitTest {
         public void unloadSdk(IBinder sdkToken) {}
 
         @Override
-        public void syncDataFromClient(
-                SharedPreferencesUpdate update, ISharedPreferencesSyncCallback callback) {
+        public void syncDataFromClient(SharedPreferencesUpdate update) {
             mLastSyncUpdate = update;
-            mLastSyncCallback = callback;
         }
 
         @Nullable
@@ -1831,11 +1827,6 @@ public class SdkSandboxManagerServiceUnitTest {
         @Nullable
         public SharedPreferencesUpdate getLastSyncUpdate() {
             return mLastSyncUpdate;
-        }
-
-        @Nullable
-        public ISharedPreferencesSyncCallback getLastSyncCallback() {
-            return mLastSyncCallback;
         }
 
         void sendLoadCodeSuccessful() throws RemoteException {

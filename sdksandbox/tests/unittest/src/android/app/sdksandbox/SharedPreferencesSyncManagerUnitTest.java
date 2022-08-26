@@ -34,7 +34,6 @@ import com.android.internal.annotations.GuardedBy;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -62,8 +61,6 @@ public class SharedPreferencesSyncManagerUnitTest {
                     new SharedPreferencesKey("hello2", SharedPreferencesKey.KEY_TYPE_STRING),
                     new SharedPreferencesKey("empty", SharedPreferencesKey.KEY_TYPE_STRING));
 
-    private static final int INTERNAL_ERROR_CODE = ISharedPreferencesSyncCallback.INTERNAL_ERROR;
-    private static final String INTERNAL_ERROR_MSG = "Some error occurred";
     private static final int SANDBOX_NOT_AVAILABLE_ERROR_CODE =
             ISharedPreferencesSyncCallback.SANDBOX_NOT_AVAILABLE;
     private static final String SANDBOX_NOT_AVAILABLE_ERROR_MSG = "Sandbox has not started yet";
@@ -121,6 +118,20 @@ public class SharedPreferencesSyncManagerUnitTest {
                 new SharedPreferencesKey("foo", SharedPreferencesKey.KEY_TYPE_INTEGER);
         mSyncManager.addSharedPreferencesSyncKeys(Set.of(fooInt));
         assertThat(mSyncManager.getSharedPreferencesSyncKeys()).containsExactly(fooInt);
+    }
+
+    @Test
+    public void test_removeKeys() throws Exception {
+        final SharedPreferencesKey foo =
+                new SharedPreferencesKey("foo", SharedPreferencesKey.KEY_TYPE_STRING);
+        final SharedPreferencesKey bar =
+                new SharedPreferencesKey("bar", SharedPreferencesKey.KEY_TYPE_STRING);
+        mSyncManager.addSharedPreferencesSyncKeys(Set.of(foo, bar));
+
+        // Remove key
+        mSyncManager.removeSharedPreferencesSyncKeys(Set.of(foo.getName()));
+
+        assertThat(mSyncManager.getSharedPreferencesSyncKeys()).containsExactly(bar);
     }
 
     @Test
@@ -219,7 +230,6 @@ public class SharedPreferencesSyncManagerUnitTest {
     public void test_updateListener_syncsFurtherUpdates() throws Exception {
         // Set specified keys for sycing and register listener
         mSyncManager.addSharedPreferencesSyncKeys(KEYS_TO_SYNC);
-        mSdkSandboxManagerService.getLastCallback().onSuccess();
 
         // Update the SharedPreference to trigger listeners
         getDefaultSharedPreferences().edit().putString(KEY_TO_UPDATE, "update").commit();
@@ -235,7 +245,6 @@ public class SharedPreferencesSyncManagerUnitTest {
     public void test_updateListener_ignoresUnspecifiedKeys() throws Exception {
         // Set specified keys for sycing and register listener
         mSyncManager.addSharedPreferencesSyncKeys(KEYS_TO_SYNC);
-        mSdkSandboxManagerService.getLastCallback().onSuccess();
 
         // Update the SharedPreference to trigger listeners
         getDefaultSharedPreferences().edit().putString("unspecified_key", "update").commit();
@@ -257,7 +266,6 @@ public class SharedPreferencesSyncManagerUnitTest {
                         new SharedPreferencesKey("long", SharedPreferencesKey.KEY_TYPE_LONG),
                         new SharedPreferencesKey("set", SharedPreferencesKey.KEY_TYPE_STRING_SET));
         mSyncManager.addSharedPreferencesSyncKeys(keysToSync);
-        mSdkSandboxManagerService.getLastCallback().onSuccess();
 
         // Clear the bulk update for ease of reasoning
         mSdkSandboxManagerService.clearUpdates();
@@ -307,7 +315,6 @@ public class SharedPreferencesSyncManagerUnitTest {
         populateDefaultSharedPreference(TEST_DATA);
         // Set keys to sync and then sync data to register listener
         mSyncManager.addSharedPreferencesSyncKeys(KEYS_TO_SYNC);
-        mSdkSandboxManagerService.getLastCallback().onSuccess();
 
         // Update the SharedPreference to trigger listeners
         getDefaultSharedPreferences().edit().remove(KEY_TO_UPDATE).commit();
@@ -325,7 +332,6 @@ public class SharedPreferencesSyncManagerUnitTest {
         populateDefaultSharedPreference(TEST_DATA);
         // Set keys to sync and then sync data to register listener
         mSyncManager.addSharedPreferencesSyncKeys(KEYS_TO_SYNC);
-        mSdkSandboxManagerService.getLastCallback().onSuccess();
 
         // Update the SharedPreference to trigger listeners
         getDefaultSharedPreferences().edit().putString(KEY_TO_UPDATE, null).commit();
@@ -342,7 +348,6 @@ public class SharedPreferencesSyncManagerUnitTest {
         populateDefaultSharedPreference(TEST_DATA);
         // Set keys to sync and then sync data to register listener
         mSyncManager.addSharedPreferencesSyncKeys(KEYS_TO_SYNC);
-        mSdkSandboxManagerService.getLastCallback().onSuccess();
 
         // Clear all keys
         getDefaultSharedPreferences().edit().clear().commit();
@@ -358,10 +363,8 @@ public class SharedPreferencesSyncManagerUnitTest {
     public void test_updateListener_multipleCalls_updateListenerRegisteredOnce() throws Exception {
         // Add keys to sync and then sync data to register listener
         mSyncManager.addSharedPreferencesSyncKeys(KEYS_TO_SYNC);
-        mSdkSandboxManagerService.getLastCallback().onSuccess();
 
         mSyncManager.addSharedPreferencesSyncKeys(KEYS_TO_SYNC);
-        mSdkSandboxManagerService.getLastCallback().onSuccess();
 
         // Verify updating SharedPreferences results in only one update
         mSdkSandboxManagerService.clearUpdates(); // For cleaner observation
@@ -373,43 +376,29 @@ public class SharedPreferencesSyncManagerUnitTest {
                 () -> mSdkSandboxManagerService.blockForReceivingUpdates(2));
     }
 
-    // TODO(b/239403323): When all keys are removed, update listener should not update
-
-    // TODO(b/239403323): Sync should just log errors and continue syncing.
-
     @Test
-    public void test_onError_bulksync_canBeRestarted() throws Exception {
+    public void test_syncDataFromClient_reusesCallback() throws Exception {
         // Set keys to sync and then sync data to register listener
         mSyncManager.addSharedPreferencesSyncKeys(KEYS_TO_SYNC);
+        mSdkSandboxManagerService.blockForReceivingUpdates(1);
+        final ISharedPreferencesSyncCallback bulkSyncCallback =
+                mSdkSandboxManagerService.getLastCallback();
 
-        // Report an error via the callback
-        mSdkSandboxManagerService
-                .getLastCallback()
-                .onError(INTERNAL_ERROR_CODE, INTERNAL_ERROR_MSG);
+        getDefaultSharedPreferences().edit().putString(KEY_TO_UPDATE, "update").commit();
+        mSdkSandboxManagerService.blockForReceivingUpdates(2);
+        final ISharedPreferencesSyncCallback updateListenerCallback1 =
+                mSdkSandboxManagerService.getLastCallback();
 
-        // Verify we can restart the sync
-        mSyncManager.addSharedPreferencesSyncKeys(KEYS_TO_SYNC);
+        getDefaultSharedPreferences().edit().putString(KEY_TO_UPDATE, "update2").commit();
+        mSdkSandboxManagerService.blockForReceivingUpdates(3);
+        final ISharedPreferencesSyncCallback updateListenerCallback2 =
+                mSdkSandboxManagerService.getLastCallback();
+
+        assertThat(bulkSyncCallback).isSameInstanceAs(updateListenerCallback1);
+        assertThat(bulkSyncCallback).isSameInstanceAs(updateListenerCallback2);
     }
-
-    @Ignore("b/239403323: Get rid of internal errors, since we are not notifying user about it")
-    @Test
-    public void test_onError_bulksync_stopsOnInternalError() throws Exception {
-        // Set keys to sync and then sync data to register listener
-        mSyncManager.addSharedPreferencesSyncKeys(KEYS_TO_SYNC);
-
-        // Report an error via the callback
-        mSdkSandboxManagerService
-                .getLastCallback()
-                .onError(INTERNAL_ERROR_CODE, INTERNAL_ERROR_MSG);
-
-        // Verify that sync is still running
-        assertThatSyncIsRunning();
-    }
-
-    // TODO(b/239403323): Verify behavior when in waiting state
 
     /** Test that we support starting sync before sandbox is created */
-    @Ignore("b/239403323: Make update listener registration independent of bulk sync")
     @Test
     public void test_onError_bulksync_SandboxNotAvailableError() throws Exception {
         // Set keys to sync and then sync data to register listener
@@ -420,37 +409,14 @@ public class SharedPreferencesSyncManagerUnitTest {
                 .getLastCallback()
                 .onError(SANDBOX_NOT_AVAILABLE_ERROR_CODE, SANDBOX_NOT_AVAILABLE_ERROR_MSG);
         // Verify that sync was still running
-        assertThatSyncIsRunning();
         assertThat(mSyncManager.isWaitingForSandbox()).isTrue();
-    }
-
-    @Test
-    public void test_onError_updateListener_canBeRestarted() throws Exception {
-        // Set keys to sync and then sync data to register listener
-        mSyncManager.addSharedPreferencesSyncKeys(KEYS_TO_SYNC);
-        mSdkSandboxManagerService.getLastCallback().onSuccess();
-
-        // Update the SharedPreference to trigger listeners
-        mSdkSandboxManagerService.clearUpdates(); // For ease of reasoning
-        getDefaultSharedPreferences().edit().putString(KEY_TO_UPDATE, "update").commit();
-
-        // Wait until update is received
-        mSdkSandboxManagerService.blockForReceivingUpdates(1);
-        // Report an error via the callback
-        mSdkSandboxManagerService
-                .getLastCallback()
-                .onError(INTERNAL_ERROR_CODE, INTERNAL_ERROR_MSG);
-
-        // Verify we can restart the sync
-        mSyncManager.addSharedPreferencesSyncKeys(KEYS_TO_SYNC);
     }
 
     /** Test that we support starting sync before sandbox is created */
     @Test
-    public void test_onError_updateListener_stopsOnSandboxNotAvailableError() throws Exception {
+    public void test_onError_updateListener_sandboxNotAvailableError() throws Exception {
         // Set keys to sync and then sync data to register listener
         mSyncManager.addSharedPreferencesSyncKeys(KEYS_TO_SYNC);
-        mSdkSandboxManagerService.getLastCallback().onSuccess();
 
         // Update the SharedPreference to trigger listeners
         mSdkSandboxManagerService.clearUpdates(); // For ease of reasoning
@@ -470,7 +436,6 @@ public class SharedPreferencesSyncManagerUnitTest {
     public void test_onError_updateListener_notRegisteredWhenWaitingForSandbox() throws Exception {
         // Set keys to sync and then sync data to register listener
         mSyncManager.addSharedPreferencesSyncKeys(KEYS_TO_SYNC);
-        mSdkSandboxManagerService.getLastCallback().onSuccess();
 
         // Send SyncManager to waiting state
         mSdkSandboxManagerService
