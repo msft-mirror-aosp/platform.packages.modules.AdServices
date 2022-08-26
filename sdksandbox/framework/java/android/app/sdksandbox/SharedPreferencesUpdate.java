@@ -23,6 +23,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
@@ -60,7 +61,7 @@ public final class SharedPreferencesUpdate implements Parcelable {
             };
 
     public SharedPreferencesUpdate(
-            @NonNull List<SharedPreferencesKey> keysToSync, @NonNull Bundle data) {
+            @NonNull Collection<SharedPreferencesKey> keysToSync, @NonNull Bundle data) {
         Objects.requireNonNull(keysToSync, "keysToSync should not be null");
         Objects.requireNonNull(data, "data should not be null");
 
