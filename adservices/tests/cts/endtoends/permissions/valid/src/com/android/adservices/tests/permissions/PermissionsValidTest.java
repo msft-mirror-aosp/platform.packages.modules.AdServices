@@ -84,7 +84,7 @@ public class PermissionsValidTest {
     @Test
     public void testValidPermissions_fledgeJoinCustomAudience()
             throws ExecutionException, InterruptedException {
-        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
+        PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
 
         try {
             AdvertisingCustomAudienceClient customAudienceClient =
@@ -103,13 +103,13 @@ public class PermissionsValidTest {
 
             customAudienceClient.joinCustomAudience(customAudience).get();
         } finally {
-            PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
+            PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
         }
     }
 
     @Test
     public void testValidPermissions_selectAds() {
-        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
+        PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
 
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 
@@ -127,13 +127,13 @@ public class PermissionsValidTest {
             // We only need to get past the permissions check for this test to be valid
             assertThat(exception.getMessage()).isNotEqualTo(PERMISSION_NOT_REQUESTED);
         } finally {
-            PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
+            PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
         }
     }
 
     @Test
     public void testValidPermissions_reportImpression() {
-        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
+        PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
 
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 
@@ -156,14 +156,14 @@ public class PermissionsValidTest {
             // We only need to get past the permissions check for this test to be valid
             assertThat(exception.getMessage()).isNotEqualTo(PERMISSION_NOT_REQUESTED);
         } finally {
-            PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
+            PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
         }
     }
 
     @Test
     public void testValidPermissions_fledgeLeaveCustomAudience()
             throws ExecutionException, InterruptedException {
-        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
+        PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
 
         try {
             AdvertisingCustomAudienceClient customAudienceClient =
@@ -178,7 +178,7 @@ public class PermissionsValidTest {
                             "exampleCustomAudience")
                     .get();
         } finally {
-            PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
+            PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
         }
     }
 

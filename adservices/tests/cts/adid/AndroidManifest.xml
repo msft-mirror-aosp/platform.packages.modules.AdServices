@@ -14,13 +14,16 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.android.senddatasdkprovider">
 
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.android.adservices.tests.adid" >
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID" />
     <application>
-        <sdk-library android:name="com.android.sendDataSdkProvider"
-                     android:versionMajor="1" />
-        <property android:name="android.sdksandbox.PROPERTY_SDK_PROVIDER_CLASS_NAME"
-                  android:value="com.android.senddatasdkprovider.SdkProvider" />
+        <property android:name="android.adservices.AD_SERVICES_CONFIG"
+                  android:resource="@xml/ad_services_config" />
     </application>
+    <instrumentation
+        android:name="androidx.test.runner.AndroidJUnitRunner"
+        android:targetPackage="com.android.adservices.tests.adid" >
+    </instrumentation>
 </manifest>

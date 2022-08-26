@@ -205,48 +205,4 @@ public class EventReportingJobHandlerTest {
         verify(mTransaction, times(5)).begin();
         verify(mTransaction, times(5)).end();
     }
-
-    @Test
-    public void testPerformAllPendingReportsForGivenAppForMultipleReports()
-            throws DatastoreException, IOException, JSONException {
-        EventReport eventReport1 =
-                new EventReport.Builder()
-                        .setId("eventReport1")
-                        .setStatus(EventReport.Status.PENDING)
-                        .setAdTechDomain(Uri.parse("https://adtech.domain"))
-                        .build();
-        JSONObject eventReportPayload1 =
-                new EventReportPayload.Builder().setReportId(eventReport1.getId()).build().toJson();
-        EventReport eventReport2 =
-                new EventReport.Builder()
-                        .setId("eventReport2")
-                        .setStatus(EventReport.Status.PENDING)
-                        .setAdTechDomain(Uri.parse("https://adtech.domain"))
-                        .build();
-        JSONObject eventReportPayload2 =
-                new EventReportPayload.Builder().setReportId(eventReport2.getId()).build().toJson();
-
-        when(mMeasurementDao.getPendingEventReportIdsForGivenApp(
-                        Uri.parse("https://adtech.domain")))
-                .thenReturn(List.of(eventReport1.getId(), eventReport2.getId()));
-        when(mMeasurementDao.getEventReport(eventReport1.getId())).thenReturn(eventReport1);
-        when(mMeasurementDao.getEventReport(eventReport2.getId())).thenReturn(eventReport2);
-        doReturn(HttpURLConnection.HTTP_OK)
-                .when(mSpyEventReportingJobHandler)
-                .makeHttpPostRequest(any(), any());
-        doReturn(eventReportPayload1)
-                .when(mSpyEventReportingJobHandler)
-                .createReportJsonPayload(eventReport1);
-        doReturn(eventReportPayload2)
-                .when(mSpyEventReportingJobHandler)
-                .createReportJsonPayload(eventReport2);
-
-        Assert.assertTrue(
-                mSpyEventReportingJobHandler.performAllPendingReportsForGivenApp(
-                        Uri.parse("https://adtech.domain")));
-
-        verify(mMeasurementDao, times(2)).markEventReportDelivered(any());
-        verify(mTransaction, times(5)).begin();
-        verify(mTransaction, times(5)).end();
-    }
 }

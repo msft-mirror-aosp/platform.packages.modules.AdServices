@@ -60,7 +60,7 @@ public abstract class SandboxedSdkProvider {
      * This will return null if no context has been previously set.
      */
     @Nullable
-    public Context getContext() {
+    public final Context getContext() {
         return mContext;
     }
 
@@ -143,37 +143,4 @@ public abstract class SandboxedSdkProvider {
     @NonNull
     public abstract View getView(
             @NonNull Context windowContext, @NonNull Bundle params, int width, int height);
-
-    /**
-     * Called when data sent from the app is received by an SDK.
-     *
-     * @param data the data sent by the app.
-     * @param callback to notify the app if the data has been successfully received.
-     */
-    public abstract void onDataReceived(
-            @NonNull Bundle data, @NonNull DataReceivedCallback callback);
-
-    /**
-     * Callback for tracking the status of data received from the client application.
-     *
-     * <p>This callback is created by the SDK sandbox. SDKs can use it to notify the SDK sandbox
-     * about the status of processing the data received.
-     */
-    public interface DataReceivedCallback {
-        /**
-         * After the SDK has completed processing the data received, it can call this method on the
-         * callback object and pass back any data if needed.
-         *
-         * @param params list of params to be passed to the client application.
-         */
-        void onDataReceivedSuccess(@NonNull Bundle params);
-
-        /**
-         * If the SDK fails to process the data received from the client application, it can call
-         * this method on the callback object.
-         *
-         * @param errorMessage a String description of the error
-         */
-        void onDataReceivedError(@NonNull String errorMessage);
-    }
 }

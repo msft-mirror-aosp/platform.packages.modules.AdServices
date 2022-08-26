@@ -39,7 +39,6 @@ android_test {
       ":LoadSdkWithInternalErrorSdkProvider",
       ":RequestSurfacePackageSuccessfullySdkProvider",
       ":RequestSurfacePackageWithInternalErrorSdkProvider",
-      ":SendDataSdkProvider",
       ":CodeProviderWithResources",
     ],
     min_sdk_version: "Tiramisu",

@@ -396,6 +396,7 @@ public class MeasurementManager {
 
         try {
             service.getMeasurementApiStatus(
+                    new StatusParam.Builder(getPackageName()).build(),
                     generateCallerMetadataWithCurrentTime(),
                     new IMeasurementApiStatusCallback.Stub() {
                         @Override
@@ -431,7 +432,7 @@ public class MeasurementManager {
 
     private CallerMetadata generateCallerMetadataWithCurrentTime() {
         return new CallerMetadata.Builder()
-                .setBinderElapsedTimestamp(System.currentTimeMillis())
+                .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
                 .build();
     }
 }

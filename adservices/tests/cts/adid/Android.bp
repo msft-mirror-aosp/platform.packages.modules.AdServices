@@ -16,15 +16,27 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-android_test_helper_app {
-    name: "SendDataSdkProvider",
-    defaults: ["platform_app_defaults",],
-    certificate: ":sdksandbox-test",
+android_test {
+    name: "CtsAdIdEndToEndTest",
     srcs: [
-       "src/**/*.java",
+        "src/**/*.java",
     ],
-    platform_apis: true,
     static_libs: [
-       "SdkSandboxTestUtils",
+        "adservices-clients",
+        "androidx.concurrent_concurrent-futures",
+        "compatibility-device-util-axt",
+        "truth-prebuilt",
+        "ub-uiautomator",
     ],
+    libs: [
+        "android.test.base",
+        "framework-adservices.impl",
+        "framework-sdksandbox.impl",
+    ],
+    test_suites: [
+        "cts",
+        "general-tests",
+        "mts-adservices"
+    ],
+    manifest: "AndroidManifest.xml",
 }
