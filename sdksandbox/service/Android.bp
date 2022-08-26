@@ -31,6 +31,10 @@ java_sdk_library {
         ":service-sdksandbox-sources",
         ":sdksandbox_aidl",
     ],
+    aidl: {
+        // TODO(b/161393989): Enable when TRACE_TAG_AIDL is exposed to mainline modules
+        generate_traces: false
+    },
     sdk_version: "system_server_current",
     min_sdk_version: "Tiramisu",
     permitted_packages: [
