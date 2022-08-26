@@ -62,12 +62,12 @@ public class MeasurementService extends Service {
     }
 
     private void schedulePeriodicJobs() {
-        AggregateReportingJobService.schedule(this);
-        AggregateFallbackReportingJobService.schedule(this);
-        AttributionJobService.schedule(this);
-        EventReportingJobService.schedule(this);
-        EventFallbackReportingJobService.schedule(this);
-        DeleteExpiredJobService.schedule(this);
+        AggregateReportingJobService.scheduleIfNeeded(this, false);
+        AggregateFallbackReportingJobService.scheduleIfNeeded(this, false);
+        AttributionJobService.scheduleIfNeeded(this, false);
+        EventReportingJobService.scheduleIfNeeded(this, false);
+        EventFallbackReportingJobService.scheduleIfNeeded(this, false);
+        DeleteExpiredJobService.scheduleIfNeeded(this, false);
     }
 
     @Override

@@ -152,7 +152,7 @@ public final class MeasurementServiceImplTest {
         when(mConsentManager.getConsent(any(PackageManager.class)))
                 .thenReturn(AdServicesApiConsent.GIVEN);
         when(mMockFlags.getWebContextClientAppAllowList()).thenReturn("*");
-        when(mMockThrottler.tryAcquire(any(), any())).thenReturn(true);
+        when(mMockThrottler.tryAcquire(any(), any())).thenReturn(true).thenReturn(false);
         when(mMockFlags.getWebContextClientAppAllowList()).thenReturn(ALLOW_ALL_PACKAGES);
         when(mMockFlags.getMeasurementApiRegisterSourceKillSwitch()).thenReturn(false);
         when(mMockFlags.getMeasurementApiRegisterTriggerKillSwitch()).thenReturn(false);
@@ -361,14 +361,13 @@ public final class MeasurementServiceImplTest {
                         }
                     };
 
-            final Throttler throttler = Throttler.getInstance(1);
             new MeasurementServiceImpl(
                             mMockMeasurementImpl,
                             mMockContext,
                             mClock,
                             mConsentManager,
                             mEnrollmentDao,
-                            throttler,
+                            mMockThrottler,
                             mMockFlags,
                             mMockAdServicesLogger)
                     .register(getDefaultRegistrationSourceRequest(), mCallerMetadata, callback);
@@ -378,7 +377,7 @@ public final class MeasurementServiceImplTest {
                             mClock,
                             mConsentManager,
                             mEnrollmentDao,
-                            throttler,
+                            mMockThrottler,
                             mMockFlags,
                             mMockAdServicesLogger)
                     .register(getDefaultRegistrationSourceRequest(), mCallerMetadata, callback);
@@ -417,14 +416,13 @@ public final class MeasurementServiceImplTest {
                         }
                     };
 
-            final Throttler throttler = Throttler.getInstance(1);
             new MeasurementServiceImpl(
                             mMockMeasurementImpl,
                             mMockContext,
                             mClock,
                             mConsentManager,
                             mEnrollmentDao,
-                            throttler,
+                            mMockThrottler,
                             mMockFlags,
                             mMockAdServicesLogger)
                     .register(getDefaultRegistrationTriggerRequest(), mCallerMetadata, callback);
@@ -434,7 +432,7 @@ public final class MeasurementServiceImplTest {
                             mClock,
                             mConsentManager,
                             mEnrollmentDao,
-                            throttler,
+                            mMockThrottler,
                             mMockFlags,
                             mMockAdServicesLogger)
                     .register(getDefaultRegistrationTriggerRequest(), mCallerMetadata, callback);
@@ -846,14 +844,13 @@ public final class MeasurementServiceImplTest {
                         }
                     };
 
-            final Throttler throttler = Throttler.getInstance(1);
             new MeasurementServiceImpl(
                             mMockMeasurementImpl,
                             mMockContext,
                             mClock,
                             mConsentManager,
                             mEnrollmentDao,
-                            throttler,
+                            mMockThrottler,
                             mMockFlags,
                             mMockAdServicesLogger)
                     .deleteRegistrations(getDefaultDeletionRequest(), mCallerMetadata, callback);
@@ -863,7 +860,7 @@ public final class MeasurementServiceImplTest {
                             mClock,
                             mConsentManager,
                             mEnrollmentDao,
-                            throttler,
+                            mMockThrottler,
                             mMockFlags,
                             mMockAdServicesLogger)
                     .deleteRegistrations(getDefaultDeletionRequest(), mCallerMetadata, callback);
@@ -1249,14 +1246,13 @@ public final class MeasurementServiceImplTest {
                         }
                     };
 
-            final Throttler throttler = Throttler.getInstance(1);
             new MeasurementServiceImpl(
                             mMockMeasurementImpl,
                             mMockContext,
                             mClock,
                             mConsentManager,
                             mEnrollmentDao,
-                            throttler,
+                            mMockThrottler,
                             mMockFlags,
                             mMockAdServicesLogger)
                     .registerWebSource(
@@ -1267,7 +1263,7 @@ public final class MeasurementServiceImplTest {
                             mClock,
                             mConsentManager,
                             mEnrollmentDao,
-                            throttler,
+                            mMockThrottler,
                             mMockFlags,
                             mMockAdServicesLogger)
                     .registerWebSource(
@@ -1503,14 +1499,13 @@ public final class MeasurementServiceImplTest {
                         }
                     };
 
-            final Throttler throttler = Throttler.getInstance(1);
             new MeasurementServiceImpl(
                             mMockMeasurementImpl,
                             mMockContext,
                             mClock,
                             mConsentManager,
                             mEnrollmentDao,
-                            throttler,
+                            mMockThrottler,
                             mMockFlags,
                             mMockAdServicesLogger)
                     .registerWebTrigger(
@@ -1521,7 +1516,7 @@ public final class MeasurementServiceImplTest {
                             mClock,
                             mConsentManager,
                             mEnrollmentDao,
-                            throttler,
+                            mMockThrottler,
                             mMockFlags,
                             mMockAdServicesLogger)
                     .registerWebTrigger(
