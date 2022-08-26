@@ -89,6 +89,9 @@ public class MeasurementManagerCtsTest {
         // To grant access to all pp api app
         ShellUtils.runShellCommand("device_config put adservices ppapi_app_allow_list *");
 
+        // We need to turn the Consent Manager into debug mode
+        overrideConsentManagerDebugMode();
+
         mMeasurementClient =
                 new MeasurementClient.Builder()
                         .setContext(sContext)
@@ -275,5 +278,10 @@ public class MeasurementManagerCtsTest {
     private void overrideDisableMeasurementEnrollmentCheck(String val) {
         ShellUtils.runShellCommand(
                 "setprop debug.adservices.disable_measurement_enrollment_check " + val);
+    }
+
+    // Override the Consent Manager behaviour - Consent Given
+    private void overrideConsentManagerDebugMode() {
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
     }
 }
