@@ -96,6 +96,9 @@ public class SandboxedTopicsManagerTest {
         // In this test, we use the loadSdk's callback as a 2-way communications between the Test
         // app (this class) and the Sdk running within the Sandbox process.
 
+        // We need to turn the Consent Manager into debug mode
+        overrideConsentManagerDebugMode();
+
         overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
 
         // We need to turn off random topic so that we can verify the returned topic.
@@ -142,6 +145,11 @@ public class SandboxedTopicsManagerTest {
     private void overrideEpochPeriod(long overrideEpochPeriod) {
         ShellUtils.runShellCommand(
                 "setprop debug.adservices.topics_epoch_job_period_ms " + overrideEpochPeriod);
+    }
+
+    // Override the Consent Manager behaviour - Consent Given
+    private void overrideConsentManagerDebugMode() {
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
     }
 
     // Override the Percentage For Random Topic in the test.

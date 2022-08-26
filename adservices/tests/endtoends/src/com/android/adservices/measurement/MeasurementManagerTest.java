@@ -293,6 +293,7 @@ public class MeasurementManagerTest {
     @Test
     public void testGetMeasurementApiStatus() throws Exception {
         MeasurementManager mm = Mockito.spy(sContext.getSystemService(MeasurementManager.class));
+        overrideConsentManagerDebugMode();
 
         CompletableFuture<Integer> future = new CompletableFuture<>();
         OutcomeReceiver<Integer, Exception> callback =
@@ -312,6 +313,11 @@ public class MeasurementManagerTest {
 
         Assert.assertEquals(
                 Integer.valueOf(MeasurementManager.MEASUREMENT_API_STATE_ENABLED), future.get());
+    }
+
+    // Override the Consent Manager behaviour - Consent Given
+    private void overrideConsentManagerDebugMode() {
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
     }
 
     private void allowAllPpApis() {

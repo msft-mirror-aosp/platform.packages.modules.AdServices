@@ -19,7 +19,6 @@ package com.android.adservices.service.consent;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_IN_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_OUT_SELECTED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
 
 import android.annotation.NonNull;
@@ -27,7 +26,7 @@ import android.app.job.JobScheduler;
 import android.content.Context;
 import android.content.pm.PackageManager;
 
-import androidx.annotation.VisibleForTesting;
+
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.common.BooleanFileDatastore;
@@ -37,6 +36,8 @@ import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.AdServicesConfig;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.UIStats;
@@ -58,7 +59,6 @@ import java.util.stream.Collectors;
  * <p> For Beta the consent is given for all {@link AdServicesApiType} or for none. </p>
  */
 public class ConsentManager {
-    public static final String EEA_DEVICE = "com.google.android.feature.EEA_DEVICE";
     private static final String ERROR_MESSAGE_DATASTORE_EXCEPTION_WHILE_GET_CONTENT =
             "getConsent method failed. Revoked consent is returned as fallback.";
     private static final String NOTIFICATION_DISPLAYED_ONCE = "NOTIFICATION-DISPLAYED-ONCE";
@@ -70,6 +70,7 @@ public class ConsentManager {
     private static final String STORAGE_XML_IDENTIFIER = "ConsentManagerStorageIdentifier.xml";
 
     private static volatile ConsentManager sConsentManager;
+    private final Flags mFlags;
     private volatile Boolean mInitialized = false;
 
     private final TopicsWorker mTopicsWorker;
@@ -87,7 +88,8 @@ public class ConsentManager {
             @NonNull AppConsentDao appConsentDao,
             @NonNull MeasurementImpl measurementImpl,
             @NonNull AdServicesLoggerImpl adServicesLoggerImpl,
-            @NonNull CustomAudienceDao customAudienceDao) {
+            @NonNull CustomAudienceDao customAudienceDao,
+            Flags flags) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(topicsWorker);
         Objects.requireNonNull(appConsentDao);
@@ -102,6 +104,7 @@ public class ConsentManager {
         mAdServicesLoggerImpl = adServicesLoggerImpl;
         mCustomAudienceDao = customAudienceDao;
         mExecutor = Executors.newSingleThreadExecutor();
+        mFlags = flags;
     }
 
     /**
@@ -124,8 +127,8 @@ public class ConsentManager {
                                     AppConsentDao.getInstance(context),
                                     MeasurementImpl.getInstance(context),
                                     AdServicesLoggerImpl.getInstance(),
-                                    CustomAudienceDatabase.getInstance(context)
-                                            .customAudienceDao());
+                                    CustomAudienceDatabase.getInstance(context).customAudienceDao(),
+                                    FlagsFactory.getFlags());
                 }
             }
         }
@@ -185,6 +188,9 @@ public class ConsentManager {
 
     /** Retrieves the consent for all PP API services. */
     public AdServicesApiConsent getConsent(@NonNull PackageManager packageManager) {
+        if (mFlags.getConsentManagerDebugMode()) {
+            return AdServicesApiConsent.GIVEN;
+        }
         try {
             init(packageManager);
             return AdServicesApiConsent.getConsent(mDatastore.get(CONSENT_KEY));
@@ -438,8 +444,6 @@ public class ConsentManager {
         initializeLoggingValues(packageManager);
         if (mDatastore.get(CONSENT_ALREADY_INITIALIZED_KEY) == null
                 || mDatastore.get(CONSENT_KEY) == null) {
-            boolean initialConsent = getInitialConsent(packageManager);
-            setInitialConsent(initialConsent);
             mDatastore.put(NOTIFICATION_DISPLAYED_ONCE, false);
             mDatastore.put(CONSENT_ALREADY_INITIALIZED_KEY, true);
         }
@@ -457,25 +461,13 @@ public class ConsentManager {
     }
 
     private void initializeLoggingValues(PackageManager packageManager) {
-        if (packageManager.hasSystemFeature(EEA_DEVICE)) {
-            mDeviceLoggingRegion = AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
-        } else {
-            mDeviceLoggingRegion = AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
-        }
-    }
-
-    private void setInitialConsent(boolean initialConsent) throws IOException {
-        if (initialConsent) {
-            setConsent(AdServicesApiConsent.GIVEN);
-        } else {
-            setConsent(AdServicesApiConsent.REVOKED);
-        }
-    }
-
-    @VisibleForTesting
-    boolean getInitialConsent(PackageManager packageManager) {
-        // The existence of this feature means that device should be treated as EU device.
-        return !packageManager.hasSystemFeature(EEA_DEVICE);
+        // TODO: fix it after background job CLs are submitted
+        //        if (DeviceRegionProvider.isEuDevice(context)) {
+        //            mDeviceLoggingRegion = AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
+        //        } else {
+        //            mDeviceLoggingRegion = AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
+        //        }
+        mDeviceLoggingRegion = AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
     }
 
     private void unscheduleAllBackgroundJobs(@NonNull JobScheduler jobScheduler) {

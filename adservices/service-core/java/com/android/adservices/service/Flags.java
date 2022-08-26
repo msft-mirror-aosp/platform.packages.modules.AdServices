@@ -564,6 +564,12 @@ public interface Flags extends Dumpable {
         return CONSENT_NOTIFICATION_DEBUG_MODE;
     }
 
+    boolean CONSENT_MANAGER_DEBUG_MODE = false;
+
+    default boolean getConsentManagerDebugMode() {
+        return CONSENT_MANAGER_DEBUG_MODE;
+    }
+
     // Group of All Killswitches
 
     /**
