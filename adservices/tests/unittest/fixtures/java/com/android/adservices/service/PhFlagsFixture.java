@@ -20,6 +20,10 @@ import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STAT
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION;
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S;
+import static com.android.adservices.service.PhFlags.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT;
+import static com.android.adservices.service.PhFlags.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS;
+import static com.android.adservices.service.PhFlags.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT;
+import static com.android.adservices.service.PhFlags.KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT;
 import static com.android.adservices.service.PhFlags.KEY_SDK_REQUEST_PERMITS_PER_SECOND;
 
 import static org.junit.Assert.assertEquals;
@@ -136,6 +140,42 @@ public class PhFlagsFixture {
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_SDK_REQUEST_PERMITS_PER_SECOND,
+                Integer.toString(value),
+                true);
+    }
+
+    /** Configures the maximum number of ads allowed per custom audience. */
+    public static void overrideFledgeCustomAudienceMaxNumAds(int value) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS,
+                Integer.toString(value),
+                true);
+    }
+
+    /** Configures the maximum total number of custom audiences in the datastore. */
+    public static void overrideFledgeCustomAudienceMaxCount(int value) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT,
+                Integer.toString(value),
+                true);
+    }
+
+    /** Configures the maximum number of custom audiences per owner application in the datastore. */
+    public static void overrideFledgeCustomAudiencePerAppMaxCount(int value) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT,
+                Integer.toString(value),
+                true);
+    }
+
+    /** Configures the maximum number of owner applications in the datastore. */
+    public static void overrideFledgeCustomAudienceMaxOwnerCount(int value) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT,
                 Integer.toString(value),
                 true);
     }
