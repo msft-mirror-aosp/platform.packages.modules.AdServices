@@ -1350,6 +1350,8 @@ public final class PhFlags implements Flags {
         writer.println("\t" + KEY_TOPICS_EPOCH_JOB_PERIOD_MS + " = " + getTopicsEpochJobPeriodMs());
         writer.println("\t" + KEY_TOPICS_EPOCH_JOB_FLEX_MS + " = " + getTopicsEpochJobFlexMs());
         writer.println("\t" + KEY_CLASSIFIER_TYPE + " = " + getClassifierType());
+        writer.println("\t" + KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL + " = "
+                + getMddTopicsClassifierManifestFileUrl());
 
         writer.println("==== AdServices PH Flags Dump Measurement related flags: ====");
         writer.println(
