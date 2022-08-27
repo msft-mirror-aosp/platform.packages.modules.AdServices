@@ -50,7 +50,8 @@ public class Trigger {
 
     private String mId;
     private Uri mAttributionDestination;
-    private Uri mAdTechDomain;
+    @EventSurfaceType private int mDestinationType;
+    private String mEnrollmentId;
     private long mTriggerTime;
     private String mEventTriggers;
     @Status private int mStatus;
@@ -68,13 +69,15 @@ public class Trigger {
     })
     @Retention(RetentionPolicy.SOURCE)
     public @interface Status {
-
         int PENDING = 0;
         int IGNORED = 1;
         int ATTRIBUTED = 2;
     }
+
     private Trigger() {
         mStatus = Status.PENDING;
+        // Making this default explicit since it anyway occur on an uninitialised int field.
+        mDestinationType = EventSurfaceType.APP;
     }
 
     @Override
@@ -85,7 +88,8 @@ public class Trigger {
         Trigger trigger = (Trigger) obj;
         return Objects.equals(mId, trigger.getId())
                 && Objects.equals(mAttributionDestination, trigger.mAttributionDestination)
-                && Objects.equals(mAdTechDomain, trigger.mAdTechDomain)
+                && mDestinationType == trigger.mDestinationType
+                && Objects.equals(mEnrollmentId, trigger.mEnrollmentId)
                 && mTriggerTime == trigger.mTriggerTime
                 && Objects.equals(mDebugKey, trigger.mDebugKey)
                 && Objects.equals(mEventTriggers, trigger.mEventTriggers)
@@ -103,7 +107,8 @@ public class Trigger {
         return Objects.hash(
                 mId,
                 mAttributionDestination,
-                mAdTechDomain,
+                mDestinationType,
+                mEnrollmentId,
                 mTriggerTime,
                 mEventTriggers,
                 mStatus,
@@ -128,11 +133,17 @@ public class Trigger {
         return mAttributionDestination;
     }
 
+    /** Destination type of the {@link Trigger}. */
+    @EventSurfaceType
+    public int getDestinationType() {
+        return mDestinationType;
+    }
+
     /**
-     * AdTech report destination domain for generated reports.
+     * AdTech enrollment ID.
      */
-    public Uri getAdTechDomain() {
-        return mAdTechDomain;
+    public String getEnrollmentId() {
+        return mEnrollmentId;
     }
 
     /**
@@ -340,10 +351,6 @@ public class Trigger {
         return eventTriggers;
     }
 
-    public DestinationType getDestinationType() {
-        return DestinationType.getDestinationType(mAttributionDestination);
-    }
-
     /**
      * Builder for {@link Trigger}.
      */
@@ -370,11 +377,17 @@ public class Trigger {
             return this;
         }
 
-        /** See {@link Trigger#getAdTechDomain()} ()}. */
+        /** See {@link Trigger#getDestinationType()}. */
         @NonNull
-        public Builder setAdTechDomain(Uri adTechDomain) {
-            Validation.validateUri(adTechDomain);
-            mBuilding.mAdTechDomain = adTechDomain;
+        public Builder setDestinationType(@EventSurfaceType int destinationType) {
+            mBuilding.mDestinationType = destinationType;
+            return this;
+        }
+
+        /** See {@link Trigger#getEnrollmentId()} ()}. */
+        @NonNull
+        public Builder setEnrollmentId(String enrollmentId) {
+            mBuilding.mEnrollmentId = enrollmentId;
             return this;
         }
 
@@ -448,7 +461,7 @@ public class Trigger {
         public Trigger build() {
             Validation.validateNonNull(
                     mBuilding.mAttributionDestination,
-                    mBuilding.mAdTechDomain,
+                    mBuilding.mEnrollmentId,
                     mBuilding.mRegistrant);
 
             return mBuilding;

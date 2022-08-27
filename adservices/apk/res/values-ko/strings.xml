@@ -22,10 +22,8 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="1644434244130657749">"애플리케이션이 AdServices Attribution API에 액세스하도록 허용합니다."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="2766614780488510189">"AdServices Custom Audience API 액세스"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"애플리케이션이 AdServices Custom Audience API에 액세스하도록 허용합니다."</string>
-    <!-- no translation found for permlab_accessAdServicesAdId (2754825914769538156) -->
-    <skip />
-    <!-- no translation found for permdesc_accessAdServicesAdId (7717770480967762044) -->
-    <skip />
+    <string name="permlab_accessAdServicesAdId" msgid="2754825914769538156">"AdId API 액세스"</string>
+    <string name="permdesc_accessAdServicesAdId" msgid="7717770480967762044">"애플리케이션이 AdId API에 액세스하도록 허용합니다."</string>
     <string name="permlab_accessAdServicesConsent" msgid="3203633397142568707">"AdServices Consent API 액세스"</string>
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"애플리케이션이 AdServices Consent API에 액세스하도록 허용합니다."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID API 액세스"</string>
@@ -34,72 +32,65 @@
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"애플리케이션이 App Set ID API에 액세스하도록 허용합니다."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service API 액세스"</string>
     <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"애플리케이션이 Consent Service API에 액세스하도록 허용합니다."</string>
+    <string name="permlab_modifyAdServicesState" msgid="3594653261299518914">"AdService의 지원 상태 수정 API 액세스"</string>
+    <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"애플리케이션이 AdService의 지원 상태 수정 API에 액세스하도록 허용합니다."</string>
+    <string name="permlab_accessAdServicesState" msgid="482058883975394398">"AdService의 지원 상태 API 액세스"</string>
+    <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"애플리케이션이 AdService의 지원 상태 API에 액세스하도록 허용합니다."</string>
     <string name="app_label" msgid="5985320129629013968">"Android 시스템"</string>
-    <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"개인 정보 보호 샌드박스 베타"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"개인 정보 보호 샌드박스 베타"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"개인 정보 보호 샌드박스 베타 전환"</string>
-    <string name="settingsUI_main_view_title" msgid="255982490790282252">"Android 광고 개인 정보 보호 베타"</string>
-    <string name="settingsUI_main_view_subtitle" msgid="3380585883687237827">"교차 앱 추적을 차단하는 새로운 개인 정보 보호 샌드박스 시스템 테스트"</string>
-    <string name="settingsUI_main_view_info_text1" msgid="8353580266621706164">"개인 정보 보호 샌드박스 작동 방식"</string>
-    <string name="settingsUI_main_view_info_text2" msgid="5144888171043725329">"사용자가 좋아할 만한 광고를 표시하기 위해 개인 정보 보호 샌드박스에 데이터가 수집되지만 사용자 또는 사용자 기기 식별이 불가능한 상태에서 공유됩니다."</string>
-    <string name="settingsUI_main_view_info_text3" msgid="9106658161862318732">"개인 정보 보호 샌드박스에는 어떤 유형의 정보가 저장되나요?"</string>
-    <string name="settingsUI_main_view_info_text4" msgid="5819359066240454954">"•  일반 관심분야"</string>
-    <string name="settingsUI_main_view_info_text5" msgid="6064832868440367397">"Android에서 사용자가 사용하는 앱을 토대로 이 데이터를 생성하여 개인 정보 보호 샌드박스에 추가합니다. 예를 들어 일반 관심분야가 \'스포츠\'일 수 있습니다. \n\n개인 정보 보호 설정에서 관심분야 목록을 확인하여 마음에 들지 않는 관심분야는 차단할 수 있습니다."</string>
-    <string name="settingsUI_main_view_info_text6" msgid="3406976290919982143">"•  특정 관심분야"</string>
-    <string name="settingsUI_main_view_info_text7" msgid="210269084665708892">"앱에서 사용자가 앱을 사용하는 방식에 따라 이 데이터를 생성하여 개인 정보 보호 샌드박스에 추가합니다. 예를 들어 운동화를 사려고 사용한 앱에서 sport_running 라벨을 추가할 수 있습니다.\n\n개인 정보 보호 설정에서 이러한 작업을 하는 앱 목록을 확인하여 개인 정보 보호 샌드박스에 데이터를 추가하길 원하지 않는 앱은 차단할 수 있습니다."</string>
-    <string name="settingsUI_topics_view_title" msgid="7437641813424176118">"관심분야 관리"</string>
-    <string name="settingsUI_topics_view_subtitle" msgid="5347912133908026725">"Android의 개인 정보 보호 샌드박스는 교차 앱 추적을 제한하는 한편 앱에서 사용자가 좋아할 만한 광고를 표시하도록 허용합니다. Android는 나 또는 내 기기를 식별할 수 없는 상태로 이러한 데이터를 광고주에게 공유합니다\n\nAndroid에서는 내가 사용하는 앱을 토대로 나의 일반 광고 관심분야를 생성하고 이 목록을 업데이트합니다. 관심분야를 차단하면 차단 해제하지 않는 한 목록에 다시 추가되지 않습니다. 하지만 관련된 일부 광고는 계속 표시될 수 있습니다"</string>
-    <string name="settingsUI_topics_view_info_text1" msgid="6729245512525985403">"일반 광고 관심분야"</string>
-    <string name="settingsUI_topics_view_info_text2" msgid="8355913397424818046">"Android에서 사용자가 사용하는 앱을 토대로 이러한 관심분야를 생성합니다.\n\n예를 들어 기기에 스포츠 앱이 여러 개 설치되어 있다면 Android에서 개인 정보 보호 샌드박스에서 \'스포츠\' 관심분야를 추가할 수 있습니다.\n\n나중에 이 데이터는 사용자 또는 사용자 기기를 식별할 수 없는 상태로 광고주에게 공유됩니다."</string>
-    <string name="settingsUI_apps_key" msgid="5279102708260885695">"apps_preference"</string>
-    <string name="settingsUI_apps_title" msgid="2177966577556486280">"특정한 분야에 대한 관심을 유도하는 앱"</string>
-    <string name="settingsUI_apps_summary" msgid="2382082513059909726">"특정한 분야에 대한 관심을 유도하는 앱 관리"</string>
-    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"차단한 앱"</string>
-    <string name="settingsUI_apps_view_title" msgid="3615627092403761282">"앱 관리"</string>
-    <string name="settingsUI_apps_view_subtitle" msgid="5257332567222983503">"일부 앱에서는 내가 앱을 사용하는 방식에 따라 특정 광고 관심분야에 관한 데이터를 생성하고 이를 개인 정보 보호 샌드박스에 저장합니다. Android에서는 내가 확인하거나 수정할 수 있도록 이러한 앱의 목록을 업데이트합니다\n\n내가 차단한 앱은 더 이상 특정 관심분야를 추가하지 않으며, 차단을 해제하지 않는 이상 앱이 목록에 다시 추가되지 않습니다. 차단된 앱에서 이미 생성한 관심분야는 삭제되지만 이와 관련된 일부 광고가 계속 표시될 수도 있습니다"</string>
-    <string name="settingsUI_apps_view_no_apps_text" msgid="1056905761942948495">"지금 표시할 앱 없음"</string>
-    <string name="settingsUI_reset_apps_title" msgid="3308597019425923552">"앱에서 생성한 데이터 초기화"</string>
-    <string name="settingsUI_apps_view_info_text1" msgid="503353133396835755">"특정 광고 관심분야"</string>
-    <string name="settingsUI_apps_view_info_text2" msgid="6562781312486257254">"사용자가 사용하는 일부 앱에서는 광고를 위해 특정 관심분야에 관한 데이터를 생성하고 이를 개인 정보 보호 샌드박스에 추가합니다.\n\n예를 들어 운동화 구매를 위해 사용한 앱에서 sport_running 라벨을 추가할 수 있습니다.\n\n개인 정보 보호 샌드박스에 수집된 데이터는 사용자 또는 사용자 기기 식별이 불가능한 상태로 공유됩니다. 그러므로 사용자가 관심을 보일 만한 광고가 계속 표시되지만 개인 정보는 더욱 강력하게 보호됩니다."</string>
-    <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="5700261138344146462">"지금 표시할 차단된 앱 없음"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"지금 표시할 관심분야 없음"</string>
-    <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
-    <string name="settingsUI_topics_title" msgid="4024683469932819788">"일반적인 관심분야"</string>
-    <string name="settingsUI_topics_summary" msgid="3146101472984434355">"일반적인 관심분야 관리"</string>
-    <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"광고에 사용되는 일반적인 관심분야 관리"</string>
+    <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Android의 광고 개인 정보 보호 베타에 참여하기"</string>
+    <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android는 앱에서 개인 정보 보호를 강화하면서 광고를 표시하는 방법을 개발 중입니다."</string>
+    <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"자세히 알아보기"</string>
+    <string name="notificationUI_header_title_eu" msgid="4955298263079910371">"Android 광고 개인 정보 보호 베타"</string>
+    <string name="notificationUI_container1_title_eu" msgid="8315199862119660570">"새로운 기능"</string>
+    <string name="notificationUI_container1_body_text_eu" msgid="1700290522706948241">"개인 정보 보호 샌드박스의 새로운 개인 정보 보호 기능을 이용하면 앱에서 관련성 있는 광고를 표시하되, 다른 개발자의 앱/웹사이트에서 이루어진 사용자 활동에 관해 해당 앱이 학습하는 정보를 제한할 수 있습니다."</string>
+    <string name="notificationUI_container1_control_text_eu" msgid="3158258148321255153">"작동 방식"</string>
+    <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"참여 방법"</string>
+    <!-- no translation found for notificationUI_container2_body_text_eu (5763735880112009239) -->
+    <skip />
+    <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"아니요"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"참여"</string>
+    <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"참여해 주셔서 감사합니다"</string>
+    <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Android 광고 개인 정보 보호 베타에 참여 중입니다. 기기에 개인 정보 보호 샌드박스가 사용 설정되어 있습니다\n\n개인 정보 보호 설정에서 언제든지 자세히 알아보거나 베타 참여를 중단할 수 있습니다"</string>
+    <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"참여하지 않기로 선택했습니다"</string>
+    <string name="notificationUI_confirmation_decline_subtitle" msgid="4194388733937808440">"응답해 주셔서 감사합니다. 기기에서 개인 정보 보호 샌드박스가 사용 중지되었습니다\n\n생각이 바뀌었거나 자세히 알아보고 싶다면 개인 정보 보호 설정으로 이동하세요."</string>
+    <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"개인 정보 보호 설정"</string>
+    <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"확인"</string>
+    <string name="notificationUI_container2_title" msgid="3844342008598264655">"베타 참여 중"</string>
+    <!-- no translation found for notificationUI_container2_body_text (758560159693325060) -->
+    <skip />
+    <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"개인 정보 보호 설정 관리"</string>
+    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"확인"</string>
+    <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Android의 개인 정보 보호 샌드박스는 앱에서 사용자가 좋아할 만한 광고를 표시할 수 있는 새로운 기능을 제공합니다. 이 새로운 기술은 기기 식별자를 사용하지 않습니다.\n\nAndroid와 앱은 사용자가 관심을 보일 만한 광고 종류를 추정하고 관심분야를 기기에 임시 저장합니다. 이렇게 하면 앱이 다른 개발자의 웹사이트/앱에서 이루어진 활동을 추적하지 않고도 사용자가 관심을 보일 만한 광고를 표시할 수 있습니다."</string>
+    <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"개인 정보 보호 샌드박스를 이용한 광고 개인 최적화"</string>
+    <string name="notificationUI_how_it_works_expanded_text3" msgid="603165966360369018">"•  Android에서 관심분야 추정"</string>
+    <string name="notificationUI_how_it_works_expanded_text4" msgid="3910573920883580609">"Android는 사용되는 앱을 기준으로 사용자의 주요 관심분야(예: ‘스포츠’ 또는 ‘여행’)를 정기적으로 추정합니다.\n\n나중에 앱에서 보다 관련성 높은 광고 표시를 위해 이러한 관심분야를 활용하도록 Android에 요청할 수 있습니다.\n\n개인 정보 보호 설정에서 현재 관심분야 목록을 보고 마음에 들지 않는 것을 차단할 수 있습니다."</string>
+    <string name="notificationUI_how_it_works_expanded_text5" msgid="7257714040472055781">"•  앱에서 관심분야 추정"</string>
+    <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"앱에서 관심분야를 추정하고 Android를 통해 임시로 저장할 수 있습니다. 예를 들어 러닝화 구입에 사용했던 앱은 ‘마라톤 뛰기’를 관심분야로 추정할 수 있습니다.\n\n나중에 이 관심분야를 바탕으로 다른 앱에서도 마라톤 관련 광고가 표시될 수 있습니다.\n\n개인 정보 보호 설정에서 관심분야를 저장한 앱 목록을 관리할 수 있습니다."</string>
+    <string name="settingsUI_main_view_title" msgid="1663691082473230496">"개인 정보 보호 샌드박스"</string>
+    <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Android 광고 개인 정보 보호 베타에 참여하기"</string>
+    <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"개인 정보 보호 샌드박스"</string>
+    <string name="settingsUI_topics_title" msgid="5996189869721397937">"Android에서 추정한 관심분야"</string>
+    <string name="settingsUI_apps_title" msgid="2772289096915264175">"관심분야를 추정하는 앱"</string>
+    <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"광고 측정"</string>
+    <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"앱은 개인 정보 보호 샌드박스를 사용하여 광고 효과를 측정할 수 있습니다. 이를 위해 광고주는 사용자의 광고 및 앱 상호작용에 관한 데이터를 Android를 통해 임시 저장할 수 있습니다. 저장할 수 있는 데이터의 양은 제한되며 정기적으로 삭제됩니다.\n\n언제든지 개인 정보 보호 샌드박스를 사용 중지하여 이 데이터를 삭제할 수 있습니다."</string>
+    <string name="settingsUI_topics_view_subtitle" msgid="6608135144119617292">"Android는 사용되는 앱을 기준으로 사용자의 주요 관심분야를 정기적으로 추정합니다. 앱은 보다 관련성 높은 광고를 표시하기 위해 Android에 이러한 관심분야를 사용하도록 요청할 수 있습니다\n\n관심분야를 차단하면 차단을 해제하지 않는 한 목록에 다시 추가되지 않습니다. 하지만 관련된 일부 광고는 계속 표시될 수 있습니다."</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"차단"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"차단 해제"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"차단한 관심분야"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"모든 관심분야 재설정"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="5717377146633882375">"지금 표시할 차단된 관심분야 없음"</string>
-    <string name="notificationUI_notification_content_eu" msgid="7419441022808120101">"교차 앱 추적을 제한하는 새로운 기능을 테스트합니다."</string>
-    <string name="notificationUI_header_title_eu" msgid="6822288197367284058">"광고 개인 정보 보호 베타에 참여"</string>
-    <string name="notificationUI_container3_title_eu" msgid="3157854074121291065">"취할 수 있는 조치"</string>
-    <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"아니요"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="7294736040084958697">"테스트하기"</string>
-    <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"참여해 주셔서 감사합니다"</string>
-    <string name="notificationUI_confirmation_accept_subtitle" msgid="722290263168711051">"개인 정보 보호 샌드박스 베타에 추가되었습니다. \n\n개인 정보 보호 설정에서 자세한 내용을 알아보거나 언제든지 베타 프로그램 참여를 종료할 수 있습니다"</string>
-    <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"참여하지 않기로 선택했습니다"</string>
-    <string name="notificationUI_confirmation_decline_subtitle" msgid="1869322730722065768">"응답해 주셔서 감사합니다. 개인 정보 보호 샌드박스 베타에 추가되지 않았습니다\n\n마음이 바뀌거나 자세한 내용을 알아보려면 개인 정보 보호 설정으로 이동하세요"</string>
-    <string name="notificationUI_notification_content" msgid="2096372976024736172">"교차 앱 추적을 제한하는 새로운 기능을 테스트하는 중입니다."</string>
-    <string name="notificationUI_header_title" msgid="857744302422337933">"Android의 교차 앱 추적 제한 테스트를 돕고 있습니다"</string>
-    <string name="notificationUI_header_subtitle" msgid="522289584167376388">"Android에서는 광고주의 교차 앱 추적을 제한하는 새로운 기능을 테스트 중입니다."</string>
-    <string name="notificationUI_container1_title" msgid="3837529978480615552">"교차 앱 추적이란?"</string>
-    <string name="notificationUI_container1_body_text" msgid="2564452110982505130">"앱 사용 관련 데이터는 기기와 연결된 다음 광고 목적으로 여러 앱에 공유될 수 있습니다."</string>
-    <string name="notificationUI_container2_title" msgid="4796199061758878885">"Android에서 하는 작업"</string>
-    <string name="notificationUI_container2_body_text" msgid="7717896223210525953">"Android에서는 사용자 또는 사용자 기기 식별이 불가능한 상태에서 광고 데이터를 안전하게 저장하고 공유하는 새로운 개인 정보 보호 샌드박스를 테스트하고 있습니다. \n\n이 새로운 시스템은 앱에서 다른 앱으로 데이터를 직접 전달하지 못하게 하면서도 좋아할 만한 광고는 표시하도록 허용합니다."</string>
-    <string name="notificationUI_container2_control_text" msgid="3031227311095645064">"작동 방식"</string>
-    <string name="notificationUI_container3_title" msgid="1283794406634157611">"기능 개선을 돕는 방법"</string>
-    <string name="notificationUI_container3_body_text" msgid="2636703086913037594">"표시되는 광고의 변화가 눈에 띄지 않을 수도 있습니다. 그러나 베타에 참여하면 Android에서 향후 교차 앱 추적을 제한하는 큰 도움이 됩니다. 언제든지 개인 정보 보호 설정에서 베타 참여를 취소할 수 있습니다."</string>
-    <string name="notificationUI_left_control_button_text" msgid="6459461402253858770">"개인 정보 보호 설정"</string>
-    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"확인"</string>
-    <string name="notificationUI_how_it_works_expanded_text1" msgid="1753701052925879129">"개인 정보 보호 샌드박스 작동 방식"</string>
-    <string name="notificationUI_how_it_works_expanded_text2" msgid="3117263986288195274">"개인 정보 보호 샌드박스에는 사용자가 관심을 보일 만한 광고를 표시하기 위한 데이터가 수집되지만 이 데이터는 사용자 또는 사용자 기기 식별이 불가능한 상태로 공유됩니다."</string>
-    <string name="notificationUI_how_it_works_expanded_text3" msgid="7270822532577167752">"개인 정보 보호 샌드박스에는 어떤 종류의 데이터가 저장되나요?"</string>
-    <string name="notificationUI_how_it_works_expanded_text4" msgid="5609475052636889205">"•  일반 관심분야"</string>
-    <string name="notificationUI_how_it_works_expanded_text5" msgid="6757375506547548599">"Android에서는 내가 사용하는 앱을 토대로 이 데이터를 생성하여 개인 정보 보호 샌드박스에 추가합니다. 나의 일반 관심분야에는 예를 들어 스포츠가 포함될 수 있습니다.\n\n개인 정보 보호 설정에서 관심분야 목록을 확인하여 마음에 들지 않는 관심분야는 차단할 수 있습니다."</string>
-    <string name="notificationUI_how_it_works_expanded_text6" msgid="2863877874268072458">"•  특정 관심분야"</string>
-    <string name="notificationUI_how_it_works_expanded_text7" msgid="2140515900209351523">"앱에서는 사용자가 앱을 사용하는 방식에 따라 이 데이터를 생성하여 개인 정보 보호 샌드박스에 추가합니다. 예를 들어 운동화 구매를 위해 사용한 앱에서 sport_running 라벨을 추가할 수 있습니다.\n\n개인 정보 보호 설정에서 이렇게 작동하는 앱 목록을 확인하고 샌드박스에 데이터를 추가하길 원하지 않는 앱은 차단할 수 있습니다."</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"지금 표시할 관심분야 없음"</string>
+    <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"개인 정보 보호 샌드박스"</string>
+    <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android의 광고 개인 정보 보호 베타는 앱에서 사용자가 좋아할 만한 광고를 표시할 수 있는 새로운 기능을 제공합니다. 이 새로운 기술은 기기 식별자를 사용하지 않습니다.\n\nAndroid는 사용자가 관심을 보일 만한 광고 종류를 추정하고 관심분야를 기기에 임시 저장합니다. 이렇게 하면 앱이 다른 개발자의 웹사이트/앱에서 이루어진 활동을 추적하지 않고도 관련성 있는 광고를 표시할 수 있습니다."</string>
+    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
+    <skip />
+    <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"앱에서 관심분야를 추정하고 Android를 통해 임시로 저장할 수 있습니다. 나중에 다른 앱이 이 관심분야를 토대로 광고를 표시할 수 있습니다\n\n특정 앱을 차단하면 그 앱은 더 이상 관심분야를 추정하지 않습니다. 차단을 해제하지 않는 한 앱은 목록에 다시 추가되지 않습니다. 차단된 앱에서 이미 추정한 관심분야는 삭제되지만 이와 관련된 일부 광고가 계속 표시될 수도 있습니다"</string>
+    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"차단한 앱"</string>
+    <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"앱에서 추정한 관심분야 초기화"</string>
+    <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"현재 관심분야를 추정할 만한 앱이 없습니다."</string>
+    <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"개인 정보 보호 샌드박스"</string>
+    <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android의 광고 개인 정보 보호 베타는 앱에서 사용자가 좋아할 만한 광고를 표시할 수 있는 새로운 기능을 제공합니다. 이 새로운 기술은 기기 식별자를 사용하지 않습니다.\n\n앱은 사용자가 관심을 보일 만한 광고 종류를 추정하고 관심분야를 기기에 임시 저장합니다. 이렇게 하면 앱이 다른 개발자의 웹사이트/앱에서 이루어진 활동을 추적하지 않고도 관련성 있는 광고를 표시할 수 있습니다."</string>
+    <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"차단한 앱이 없습니다."</string>
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"차단한 관심분야가 없습니다."</string>
     <string name="topic10001" msgid="1636806320891333775">"예술 및 엔터테인먼트"</string>
     <string name="topic10002" msgid="1226367977754287428">"연기 및 연극"</string>
     <string name="topic10003" msgid="6949890838957814881">"일본 애니메이션 및 망가"</string>

@@ -20,7 +20,8 @@ import android.app.sdksandbox.ILoadSdkCallback;
 import android.app.sdksandbox.IRequestSurfacePackageCallback;
 import android.app.sdksandbox.ISdkSandboxLifecycleCallback;
 import android.app.sdksandbox.ISdkSandboxManager;
-import android.app.sdksandbox.ISendDataCallback;
+import android.app.sdksandbox.ISharedPreferencesSyncCallback;
+import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.content.pm.SharedLibraryInfo;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -45,7 +46,8 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
             ILoadSdkCallback callback) {}
 
     @Override
-    public void unloadSdk(String callingPackageName, String sdkName) {}
+    public void unloadSdk(
+            String callingPackageName, String sdkName, long timeAppCalledSystemServer) {}
 
     @Override
     public void requestSurfacePackage(
@@ -59,12 +61,10 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
             Bundle params,
             IRequestSurfacePackageCallback callback) {}
 
-    @Override
-    public void sendData(
-            String callingPackageName, String sdkName, Bundle data, ISendDataCallback callback) {}
 
     @Override
-    public List<SharedLibraryInfo> getLoadedSdkLibrariesInfo(String callingPackageName) {
+    public List<SharedLibraryInfo> getLoadedSdkLibrariesInfo(
+            String callingPackageName, long timeAppCalledSystemServer) {
         return Collections.emptyList();
     }
 
@@ -72,7 +72,11 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
     public void stopSdkSandbox(String callingPackageName) throws RemoteException {}
 
     @Override
-    public void syncDataFromClient(String callingPackageName, Bundle data) {}
+    public void syncDataFromClient(
+            String callingPackageName,
+            long timeAppCalledSystemServer,
+            SharedPreferencesUpdate update,
+            ISharedPreferencesSyncCallback callback) {}
 
     @Override
     public void addSdkSandboxLifecycleCallback(
@@ -81,4 +85,7 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
     @Override
     public void removeSdkSandboxLifecycleCallback(
             String callingPackageName, ISdkSandboxLifecycleCallback callback) {}
+
+    @Override
+    public void logLatencyFromSystemServerToApp(String method, int latency) {}
 }

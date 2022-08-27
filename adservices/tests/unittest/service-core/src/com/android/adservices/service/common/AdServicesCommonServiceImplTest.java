@@ -19,11 +19,15 @@ package com.android.adservices.service.common;
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.ADSERVICES_ENTRY_POINT_STATUS_DISABLE;
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.ADSERVICES_ENTRY_POINT_STATUS_ENABLE;
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.KEY_ADSERVICES_ENTRY_POINT_STATUS;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
@@ -35,7 +39,9 @@ import android.os.IBinder;
 import android.os.RemoteException;
 
 import com.android.adservices.service.Flags;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,6 +50,8 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -59,14 +67,31 @@ public class AdServicesCommonServiceImplTest {
     @Captor ArgumentCaptor<Integer> mIntegerArgumentCaptor;
     private static final int BINDER_CONNECTION_TIMEOUT_MS = 5_000;
 
+    private MockitoSession mStaticMockSession = null;
+
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
         when(mFlags.getAdservicesEnableStatus()).thenReturn(true);
+
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(ConsentNotificationJobService.class)
+                        .strictness(Strictness.LENIENT)
+                        .initMocks(this)
+                        .startMocking();
+    }
+
+    @After
+    public void teardown() {
+        if (mStaticMockSession != null) {
+            mStaticMockSession.finishMocking();
+        }
     }
 
     @Test
     public void getAdserviceStatusTest() throws InterruptedException {
+        when(mFlags.getAdservicesEnableStatus()).thenReturn(true);
         mCommonService = new AdServicesCommonServiceImpl(mContext, mFlags);
         // Calling get adservice status, init set the flag to true, expect to return true
         IsAdServicesEnabledResult[] capturedResponseParcel = getStatusResult();
@@ -103,7 +128,7 @@ public class AdServicesCommonServiceImplTest {
                     }
 
                     @Override
-                    public void onFailure(String errorMessage) {
+                    public void onFailure(int statusCode) {
                         Assert.fail();
                     }
 
@@ -121,16 +146,32 @@ public class AdServicesCommonServiceImplTest {
         when(mSharedPreferences.edit()).thenReturn(mEditor);
         when(mEditor.putInt(anyString(), anyInt())).thenReturn(mEditor);
         Mockito.doNothing().when(mEditor).apply();
+        doNothing()
+                .when(
+                        () ->
+                                ConsentNotificationJobService.schedule(
+                                        any(Context.class), any(Boolean.class)));
+        when(mFlags.getAdservicesEnableStatus()).thenReturn(true);
+
         mCommonService = new AdServicesCommonServiceImpl(mContext, mFlags);
-        mCommonService.setAdServicesNotificationConditions(true, false);
+        mCommonService.setAdServicesEnabled(true, false);
         Thread.sleep(1000);
+
+        verify(
+                () -> ConsentNotificationJobService.schedule(any(Context.class), eq(false)),
+                times(1));
         Mockito.verify(mEditor)
                 .putInt(mStringArgumentCaptor.capture(), mIntegerArgumentCaptor.capture());
         assertThat(mStringArgumentCaptor.getValue()).isEqualTo(KEY_ADSERVICES_ENTRY_POINT_STATUS);
         assertThat(mIntegerArgumentCaptor.getValue())
                 .isEqualTo(ADSERVICES_ENTRY_POINT_STATUS_ENABLE);
-        mCommonService.setAdServicesNotificationConditions(false, false);
+
+        mCommonService.setAdServicesEnabled(false, true);
         Thread.sleep(1000);
+
+        verify(
+                () -> ConsentNotificationJobService.schedule(any(Context.class), eq(true)),
+                times(0));
         Mockito.verify(mEditor, times(2))
                 .putInt(mStringArgumentCaptor.capture(), mIntegerArgumentCaptor.capture());
         assertThat(mStringArgumentCaptor.getValue()).isEqualTo(KEY_ADSERVICES_ENTRY_POINT_STATUS);

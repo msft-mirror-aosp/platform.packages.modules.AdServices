@@ -32,14 +32,17 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.compatibility.common.util.ShellUtils;
 
-import org.junit.BeforeClass;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeoutException;
 
 /*
  * Test Topics API running within the Sandbox.
@@ -55,7 +58,10 @@ public class SandboxedTopicsManagerTest {
     private static final int EPOCH_JOB_ID = 2;
 
     // Override the Epoch Job Period to this value to speed up the epoch computation.
-    private static final long TEST_EPOCH_JOB_PERIOD_MS = 4000;
+    private static final long TEST_EPOCH_JOB_PERIOD_MS = 6000;
+
+    // Allow SDK to start as it takes longer after enabling more checks.
+    private static final long EXECUTION_WAITING_TIME = 500;
 
     // Default Epoch Period.
     private static final long TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000; // 7 days.
@@ -64,11 +70,18 @@ public class SandboxedTopicsManagerTest {
     private static final int TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC = 0;
     private static final int TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC = 5;
 
-    private static Context sContext;
+    private static final Context sContext =
+            InstrumentationRegistry.getInstrumentation().getContext();
 
-    @BeforeClass
-    public static void setup() {
-        sContext = InstrumentationRegistry.getInstrumentation().getContext();
+    @Before
+    public void setup() throws TimeoutException {
+        // Start a foreground activity
+        SimpleActivity.startAndWaitForSimpleActivity(sContext, Duration.ofMillis(1000));
+    }
+
+    @After
+    public void shutDown() {
+        SimpleActivity.stopSimpleActivity(sContext);
     }
 
     @Test
@@ -88,6 +101,9 @@ public class SandboxedTopicsManagerTest {
         // We need to turn off random topic so that we can verify the returned topic.
         overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
 
+        // Turn off MDD to avoid model mismatching
+        switchOnAndOffMDD(true);
+
         final SdkSandboxManager sdkSandboxManager =
                 sContext.getSystemService(SdkSandboxManager.class);
 
@@ -95,7 +111,7 @@ public class SandboxedTopicsManagerTest {
 
         sdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), CALLBACK_EXECUTOR, callback);
 
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        Thread.sleep(EXECUTION_WAITING_TIME);
 
         // Now force the Epoch Computation Job. This should be done in the same epoch for
         // callersCanLearnMap to have the entry for processing.
@@ -112,6 +128,7 @@ public class SandboxedTopicsManagerTest {
         overrideDisableTopicsEnrollmentCheck("0");
         overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
         overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+        switchOnAndOffMDD(false);
     }
 
     // Override the flag to disable Topics enrollment check.
@@ -132,6 +149,12 @@ public class SandboxedTopicsManagerTest {
         ShellUtils.runShellCommand(
                 "setprop debug.adservices.topics_percentage_for_random_topics "
                         + overridePercentage);
+    }
+
+    // Switch on/off for MDD service. Default value is false, which means MDD is enabled.
+    private void switchOnAndOffMDD(boolean isSwitchedOff) {
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.mdd_background_task_kill_switch " + isSwitchedOff);
     }
 
     /** Forces JobScheduler to run the Epoch Computation job */

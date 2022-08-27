@@ -47,9 +47,9 @@ public class CustomAudienceUpdatableDataFixture {
     public static String getFullSuccessfulJsonResponseString() throws JSONException {
         return toJsonResponseString(
                 CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString(),
-                DBTrustedBiddingDataFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER)
+                DBTrustedBiddingDataFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
                         .build(),
-                DBAdDataFixture.getValidDbAdDataListByBuyer(CommonFixture.VALID_BUYER));
+                DBAdDataFixture.getValidDbAdDataListByBuyer(CommonFixture.VALID_BUYER_1));
     }
 
     /**
@@ -265,9 +265,9 @@ public class CustomAudienceUpdatableDataFixture {
                                                 .toString())))
                 .setTrustedBiddingData(
                         DBTrustedBiddingDataFixture.getValidBuilderByBuyer(
-                                        CommonFixture.VALID_BUYER)
+                                        CommonFixture.VALID_BUYER_1)
                                 .build())
-                .setAds(DBAdDataFixture.getValidDbAdDataListByBuyer(CommonFixture.VALID_BUYER))
+                .setAds(DBAdDataFixture.getValidDbAdDataListByBuyer(CommonFixture.VALID_BUYER_1))
                 .setAttemptedUpdateTime(CommonFixture.FIXED_NOW)
                 .setInitialUpdateResult(BackgroundFetchRunner.UpdateResultType.SUCCESS)
                 .setContainsSuccessfulUpdate(true);

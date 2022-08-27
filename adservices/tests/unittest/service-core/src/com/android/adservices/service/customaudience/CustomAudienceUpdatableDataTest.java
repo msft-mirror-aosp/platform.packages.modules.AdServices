@@ -41,9 +41,9 @@ import java.util.List;
 
 public class CustomAudienceUpdatableDataTest {
     private static final DBTrustedBiddingData VALID_DB_TRUSTED_BIDDING_DATA =
-            DBTrustedBiddingDataFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER).build();
+            DBTrustedBiddingDataFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1).build();
     private static final List<DBAdData> VALID_DB_AD_DATA_LIST =
-            DBAdDataFixture.getValidDbAdDataListByBuyer(CommonFixture.VALID_BUYER);
+            DBAdDataFixture.getValidDbAdDataListByBuyer(CommonFixture.VALID_BUYER_1);
 
     @Test
     public void testBuildUpdatableDataSuccess() throws JSONException {
@@ -84,7 +84,7 @@ public class CustomAudienceUpdatableDataTest {
         CustomAudienceUpdatableData updatableDataFromResponseString =
                 CustomAudienceUpdatableData.createFromResponseString(
                         CommonFixture.FIXED_NOW,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         jsonResponse,
                         FlagsFactory.getFlagsForTest());
@@ -125,7 +125,7 @@ public class CustomAudienceUpdatableDataTest {
         CustomAudienceUpdatableData updatableDataFromResponseString =
                 CustomAudienceUpdatableData.createFromResponseString(
                         CommonFixture.FIXED_NOW,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         jsonResponse,
                         FlagsFactory.getFlagsForTest());
@@ -140,7 +140,7 @@ public class CustomAudienceUpdatableDataTest {
         CustomAudienceUpdatableData updatableDataFromEmptyString =
                 CustomAudienceUpdatableData.createFromResponseString(
                         CommonFixture.FIXED_NOW,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         "",
                         FlagsFactory.getFlagsForTest());
@@ -185,7 +185,7 @@ public class CustomAudienceUpdatableDataTest {
         CustomAudienceUpdatableData updatableDataFromResponseString =
                 CustomAudienceUpdatableData.createFromResponseString(
                         CommonFixture.FIXED_NOW,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         jsonResponse,
                         FlagsFactory.getFlagsForTest());
@@ -209,7 +209,7 @@ public class CustomAudienceUpdatableDataTest {
         CustomAudienceUpdatableData updatableDataWithoutHarmlessJunk =
                 CustomAudienceUpdatableData.createFromResponseString(
                         CommonFixture.FIXED_NOW,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         jsonResponseWithoutHarmlessJunk,
                         FlagsFactory.getFlagsForTest());
@@ -223,7 +223,7 @@ public class CustomAudienceUpdatableDataTest {
         CustomAudienceUpdatableData updatableDataWithHarmlessJunk =
                 CustomAudienceUpdatableData.createFromResponseString(
                         CommonFixture.FIXED_NOW,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         jsonResponseWithHarmlessJunk,
                         FlagsFactory.getFlagsForTest());
@@ -268,7 +268,7 @@ public class CustomAudienceUpdatableDataTest {
             CustomAudienceUpdatableData updatableData =
                     CustomAudienceUpdatableData.createFromResponseString(
                             CommonFixture.FIXED_NOW,
-                            CommonFixture.VALID_BUYER,
+                            CommonFixture.VALID_BUYER_1,
                             initialUpdateResult,
                             CustomAudienceUpdatableDataFixture.getEmptyJsonResponseString(),
                             FlagsFactory.getFlagsForTest());
@@ -285,7 +285,7 @@ public class CustomAudienceUpdatableDataTest {
         CustomAudienceUpdatableData updatableData =
                 CustomAudienceUpdatableData.createFromResponseString(
                         CommonFixture.FIXED_NOW,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         "this (input ,string .is -not real json'",
                         FlagsFactory.getFlagsForTest());
@@ -321,7 +321,7 @@ public class CustomAudienceUpdatableDataTest {
         CustomAudienceUpdatableData updatableDataFromResponseString =
                 CustomAudienceUpdatableData.createFromResponseString(
                         CommonFixture.FIXED_NOW,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         jsonResponse,
                         new FlagsWithSmallLimits());
@@ -367,7 +367,7 @@ public class CustomAudienceUpdatableDataTest {
         CustomAudienceUpdatableData updatableDataFromResponseString =
                 CustomAudienceUpdatableData.createFromResponseString(
                         CommonFixture.FIXED_NOW,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         jsonResponse,
                         new FlagsWithSmallLimits());

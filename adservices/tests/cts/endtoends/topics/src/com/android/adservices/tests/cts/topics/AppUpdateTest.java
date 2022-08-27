@@ -37,7 +37,6 @@ import com.android.adservices.LogUtil;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -70,19 +69,21 @@ import java.util.concurrent.Executors;
  *   <li>1. CTS Test Suite app calls topics API so that Topics API has usage at epoch T. Then
  *       trigger epoch computation and get top/returned topics at epoch T.
  *   <li>2. Install test app at epoch T+1 and it'll be assigned with returned topics at T.
- *   <li>3. Test app itself calls Topics API and it'll return the topics at T. Then test app calls
+ *   <li>3. Forces Maintenance job to run to reconcile app installation mismatching, in case
+ *       broadcast is missed due to system delay.
+ *   <li>4. Test app itself calls Topics API and it'll return the topics at T. Then test app calls
  *       Topics API through sdk, the sdk will be assigned with returned topic for epoch T at the
  *       serving flow. Both calls will send broadcast to this CTS test suite app and this test suite
  *       app will verify the results are expected
- *   <li>4. Uninstall test app and wait for 3 epochs.
- *   <li>5. Install test app again and it won't be assigned with topics as no usage in the past 3
+ *   <li>5. Uninstall test app and wait for 3 epochs.
+ *   <li>6. Install test app again and it won't be assigned with topics as no usage in the past 3
  *       epoch. Call topics API again via app only and sdk. Both calls should have empty response as
  *       all derived data been wiped off.
- *   <li>6. Finally verify the number of broadcast received is as expected. Then uninstall test app
+ *   <li>7. Finally verify the number of broadcast received is as expected. Then uninstall test app
  *       and unregister the listener.
  * </ul>
  *
- * <p>Expected running time: ~45s.
+ * <p>Expected running time: ~48s.
  */
 public class AppUpdateTest {
     @SuppressWarnings("unused")
@@ -122,8 +123,9 @@ public class AppUpdateTest {
         EMPTY_TOPIC_RESPONSE_BROADCAST,
     };
 
-    // The JobId of the Epoch Computation.
+    // The JobId of the Epoch Computation and Maintenance job.
     private static final int EPOCH_JOB_ID = 2;
+    private static final int MAINTENANCE_JOB_ID = 1;
 
     // Override the Epoch Job Period to this value to speed up the epoch computation.
     private static final long TEST_EPOCH_JOB_PERIOD_MS = 5000;
@@ -146,13 +148,12 @@ public class AppUpdateTest {
     public void setup() throws InterruptedException {
         // We need to skip 3 epochs so that if there is any usage from other test runs, it will
         // not be used for epoch retrieval.
-        //        Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
+        Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
 
-        //        registerTopicResponseReceiver();
+        registerTopicResponseReceiver();
     }
 
     @Test
-    @Ignore("b/241309845")
     public void testAppUpdate() throws Exception {
         overrideDisableTopicsEnrollmentCheck("1");
         overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
@@ -182,8 +183,11 @@ public class AppUpdateTest {
         Thread.sleep(TEST_EPOCH_JOB_PERIOD_MS);
 
         // Install test app1.
-        String installMessage = ShellUtils.runShellCommand("pm install -r " + TEST_APK_PATH);
-        assertThat(installMessage).contains("Success");
+        installTestSampleApp();
+        Thread.sleep(EXECUTION_WAITING_TIME);
+
+        // Forces Maintenance job if broadcast for installation is missed or delayed.
+        forceMaintenanceJob();
         Thread.sleep(EXECUTION_WAITING_TIME);
 
         // Invoke test app1. The test app1 should be assigned with topics as there are usages
@@ -194,15 +198,18 @@ public class AppUpdateTest {
         Thread.sleep(EXECUTION_WAITING_TIME);
 
         // Uninstall test app1. All derived data for test app1 should be wiped off.
-        // Note aosp_x86 requires --user 0 to uninstall though arm doesn't.
-        ShellUtils.runShellCommand("pm uninstall --user 0 " + TEST_PKG_NAME);
+        uninstallTestSampleApp();
 
         // Skip 3 epochs so that newly installed apps won't be assigned with topics.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
 
         // Install the test app1 again. It should not be assigned with new topics.
-        installMessage = ShellUtils.runShellCommand("pm install -r " + TEST_APK_PATH);
-        assertThat(installMessage).contains("Success");
+        installTestSampleApp();
+        Thread.sleep(EXECUTION_WAITING_TIME);
+
+        // Forces Maintenance job if broadcast for installation is missed or delayed.
+        // This is the second verification to justify the test even broadcast is missed.
+        forceMaintenanceJob();
         Thread.sleep(EXECUTION_WAITING_TIME);
 
         // Invoke test app1. It should get empty returned topics because its derived data was wiped
@@ -213,7 +220,7 @@ public class AppUpdateTest {
         // Unregistered the receiver and uninstall the test app1
         // Note aosp_x86 requires --user 0 to uninstall though arm doesn't.
         sContext.unregisterReceiver(mTopicsResponseReceiver);
-        ShellUtils.runShellCommand("pm uninstall --user 0 " + TEST_PKG_NAME);
+        uninstallTestSampleApp();
 
         // Finally, assert that the number of received broadcasts matches with expectation
         assertThat(mExpectedTopicResponseBroadCastIndex)
@@ -262,7 +269,8 @@ public class AppUpdateTest {
 
                             // topic is one of the 5 classification topics of the Test App.
                             assertThat(topics.length).isEqualTo(1);
-                            assertThat(topics[0]).isIn(Arrays.asList(147, 253, 175, 254, 33));
+                            assertThat(topics[0])
+                                    .isIn(Arrays.asList(10147, 10253, 10175, 10254, 10333));
                         }
 
                         mExpectedTopicResponseBroadCastIndex++;
@@ -270,6 +278,17 @@ public class AppUpdateTest {
                 };
 
         sContext.registerReceiver(mTopicsResponseReceiver, topicResponseIntentFilter);
+    }
+
+    // Install test sample app 1 and verify the installation.
+    private void installTestSampleApp() {
+        String installMessage = ShellUtils.runShellCommand("pm install -r " + TEST_APK_PATH);
+        assertThat(installMessage).contains("Success");
+    }
+
+    // Note aosp_x86 requires --user 0 to uninstall though arm doesn't.
+    private void uninstallTestSampleApp() {
+        ShellUtils.runShellCommand("pm uninstall --user 0 " + TEST_PKG_NAME);
     }
 
     // Override the flag to disable Topics enrollment check.
@@ -292,10 +311,20 @@ public class AppUpdateTest {
                         + overridePercentage);
     }
 
-    /** Forces JobScheduler to run the Epoch Computation job */
+    // Forces JobScheduler to run the Epoch Computation job.
     private void forceEpochComputationJob() {
         ShellUtils.runShellCommand(
                 "cmd jobscheduler run -f" + " " + ADSERVICES_PACKAGE_NAME + " " + EPOCH_JOB_ID);
+    }
+
+    // Forces JobScheduler to run the Maintenance job.
+    private void forceMaintenanceJob() {
+        ShellUtils.runShellCommand(
+                "cmd jobscheduler run -f"
+                        + " "
+                        + ADSERVICES_PACKAGE_NAME
+                        + " "
+                        + MAINTENANCE_JOB_ID);
     }
 
     // Used to get the package name. Copied over from com.android.adservices.AndroidServiceBinder

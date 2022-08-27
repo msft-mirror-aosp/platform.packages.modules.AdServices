@@ -30,6 +30,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.service.AdServicesConfig;
+import com.android.adservices.service.FlagsFactory;
 
 import java.util.concurrent.Executor;
 
@@ -42,6 +43,11 @@ public final class DeleteExpiredJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
+        if (FlagsFactory.getFlags().getMeasurementJobDeleteExpiredKillSwitch()) {
+            LogUtil.e("Delete Expired Job is disabled");
+            return false;
+        }
+
         LogUtil.d("DeleteExpiredJobService.onStartJob");
         sBackgroundExecutor.execute(() -> {
             DatastoreManagerFactory

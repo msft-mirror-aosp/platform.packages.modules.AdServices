@@ -17,7 +17,6 @@ package android.adservices.measurement;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
@@ -56,8 +55,8 @@ public final class DeletionParamTest {
         return new DeletionParam.Builder()
                 .setOriginUris(Collections.emptyList())
                 .setDomainUris(Collections.emptyList())
-                .setStart(null)
-                .setEnd(null)
+                .setStart(Instant.ofEpochMilli(Long.MIN_VALUE))
+                .setEnd(Instant.ofEpochMilli(Long.MAX_VALUE))
                 .setPackageName(sContext.getAttributionSource().getPackageName())
                 .build();
     }
@@ -79,8 +78,8 @@ public final class DeletionParamTest {
         assertTrue(request.getDomainUris().isEmpty());
         assertEquals(DeletionRequest.MATCH_BEHAVIOR_DELETE, request.getMatchBehavior());
         assertEquals(DeletionRequest.DELETION_MODE_ALL, request.getDeletionMode());
-        assertNull(request.getStart());
-        assertNull(request.getEnd());
+        assertEquals(Instant.ofEpochMilli(Long.MIN_VALUE), request.getStart());
+        assertEquals(Instant.ofEpochMilli(Long.MAX_VALUE), request.getEnd());
         assertNotNull(request.getPackageName());
     }
 

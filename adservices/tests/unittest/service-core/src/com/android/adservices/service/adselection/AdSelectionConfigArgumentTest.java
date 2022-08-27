@@ -24,8 +24,6 @@ import static com.android.adservices.service.js.JSScriptArgument.stringArrayArg;
 import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.adselection.AdSelectionConfig;
-import android.adservices.adselection.AdWithBid;
-import android.adservices.common.AdData;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
@@ -44,8 +42,6 @@ import java.util.stream.Collectors;
 public class AdSelectionConfigArgumentTest {
     public static final AdTechIdentifier BUYER_1 = AdTechIdentifier.fromString("buyer1");
     public static final AdTechIdentifier BUYER_2 = AdTechIdentifier.fromString("buyer2");
-    public static final AdWithBid AD_WITH_BID =
-            new AdWithBid(new AdData(Uri.parse("http://buyer.com/ads/1"), "{\"metadata\":1}"), 10);
     public static final AdSelectionConfig AD_SELECTION_CONFIG =
             new AdSelectionConfig.Builder()
                     .setSeller(AdTechIdentifier.fromString("seller"))

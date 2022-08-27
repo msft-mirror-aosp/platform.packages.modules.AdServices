@@ -16,7 +16,6 @@
 
 package android.adservices.adselection;
 
-import android.adservices.common.AdData;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
@@ -68,24 +67,8 @@ public class AdSelectionConfigFixture {
                     BUYER,
                     AdSelectionSignals.fromString("{\"buyer_signals\":0}"));
 
-    // Contextual Ads Components
-    public static final AdWithBid ADS_WITH_BID_1 =
-            createAdsWithBid(Uri.fromParts("adsScheme", "ssp1", null), "{\"metadata\":1}", 1.0);
-
-    public static final AdWithBid ADS_WITH_BID_2 =
-            createAdsWithBid(Uri.fromParts("adsScheme", "ssp2", null), "{\"metadata\":2}", 2.0);
-
-    public static final AdWithBid ADS_WITH_BID_3 =
-            createAdsWithBid(Uri.fromParts("adsScheme", "ssp3", null), "{\"metadata\":3}", 3.0);
-
     public static final Uri TRUSTED_SCORING_SIGNALS_URI =
             Uri.fromParts("https", SELLER.toString(), TRUSTED_SCORING_SIGNAL_FRAGMENT);
-
-    private static AdWithBid createAdsWithBid(Uri renderUri, String metaData, double bid) {
-        AdData asData = new AdData(renderUri, metaData);
-
-        return new AdWithBid(asData, bid);
-    }
 
     /** Creates an AdSelectionConfig object to be used in unit and integration tests */
     public static AdSelectionConfig anAdSelectionConfig() {

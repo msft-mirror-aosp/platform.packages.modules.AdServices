@@ -40,8 +40,6 @@
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_TOPICS" />
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_ATTRIBUTION" />
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE" />
-    <uses-permission android:name="android.permission.ADSERVICES_ACCESS_AD_ID" />
-    <uses-permission android:name="android.permission.ADSERVICES_ACCESS_APP_SET_ID" />
 
     <application android:usesNonSdkApi="false" android:forceQueryable="true">
         <service android:name=".SdkSandboxServiceImpl" android:exported="true">

@@ -115,6 +115,22 @@ public interface Flags extends Dumpable {
         return DEFAULT_CLASSIFIER_TYPE;
     }
 
+    /** Number of top labels allowed for every app. */
+    int CLASSIFIER_NUMBER_OF_TOP_LABELS = 3;
+
+    /** Returns the number of top labels allowed for every app after the classification process. */
+    default int getClassifierNumberOfTopLabels() {
+        return CLASSIFIER_NUMBER_OF_TOP_LABELS;
+    }
+
+    /** Threshold value for classification values. */
+    float CLASSIFIER_THRESHOLD = 0.1f;
+
+    /** Returns the threshold value for classification values. */
+    default float getClassifierThreshold() {
+        return CLASSIFIER_THRESHOLD;
+    }
+
     /* The default period for the Maintenance job. */
     long MAINTENANCE_JOB_PERIOD_MS = 86_400_000; // 1 day.
 
@@ -188,8 +204,6 @@ public interface Flags extends Dumpable {
         return MEASUREMENT_NETWORK_READ_TIMEOUT_MS;
     }
 
-    /* The default measurement app name. */
-    String MEASUREMENT_APP_NAME = "";
     int MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(5);
     int MEASUREMENT_NETWORK_READ_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(30);
 
@@ -210,11 +224,6 @@ public interface Flags extends Dumpable {
         return MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED;
     }
 
-    /** Returns the app name. */
-    default String getMeasurementAppName() {
-        return MEASUREMENT_APP_NAME;
-    }
-
     /** Measurement manifest file url, used for MDD download. */
     String MEASUREMENT_MANIFEST_FILE_URL =
             "https://dl.google.com/mdi-serving/adservices/adtech_enrollment/manifest_configs/1"
@@ -232,6 +241,9 @@ public interface Flags extends Dumpable {
     long FLEDGE_CUSTOM_AUDIENCE_MAX_ACTIVATION_DELAY_IN_MS =
             60L * 24L * 60L * 60L * 1000L; // 60 days
     long FLEDGE_CUSTOM_AUDIENCE_MAX_EXPIRE_IN_MS = 60L * 24L * 60L * 60L * 1000L; // 60 days
+    int FLEDGE_CUSTOM_AUDIENCE_MAX_NAME_SIZE_B = 200;
+    int FLEDGE_CUSTOM_AUDIENCE_MAX_DAILY_UPDATE_URI_SIZE_B = 400;
+    int FLEDGE_CUSTOM_AUDIENCE_MAX_BIDDING_LOGIC_URI_SIZE_B = 400;
     int FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B = 10 * 1024; // 10 KiB
     int FLEDGE_CUSTOM_AUDIENCE_MAX_TRUSTED_BIDDING_DATA_SIZE_B = 10 * 1024; // 10 KiB
     int FLEDGE_CUSTOM_AUDIENCE_MAX_ADS_SIZE_B = 10 * 1024; // 10 KiB
@@ -276,6 +288,27 @@ public interface Flags extends Dumpable {
      */
     default long getFledgeCustomAudienceMaxExpireInMs() {
         return FLEDGE_CUSTOM_AUDIENCE_MAX_EXPIRE_IN_MS;
+    }
+
+    /** Returns the maximum size in bytes allowed for name in each FLEDGE custom audience. */
+    default int getFledgeCustomAudienceMaxNameSizeB() {
+        return FLEDGE_CUSTOM_AUDIENCE_MAX_NAME_SIZE_B;
+    }
+
+    /**
+     * Returns the maximum size in bytes allowed for daily update uri in each FLEDGE custom
+     * audience.
+     */
+    default int getFledgeCustomAudienceMaxDailyUpdateUriSizeB() {
+        return FLEDGE_CUSTOM_AUDIENCE_MAX_DAILY_UPDATE_URI_SIZE_B;
+    }
+
+    /**
+     * Returns the maximum size in bytes allowed for bidding logic uri in each FLEDGE custom
+     * audience.
+     */
+    default int getFledgeCustomAudienceMaxBiddingLogicUriSizeB() {
+        return FLEDGE_CUSTOM_AUDIENCE_MAX_BIDDING_LOGIC_URI_SIZE_B;
     }
 
     /**
@@ -497,8 +530,8 @@ public interface Flags extends Dumpable {
     // TODO(b/236761740): We use this for now for testing. We need to update to the correct one
     // when we actually upload the models.
     String MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL =
-            "https://dl.google.com/mdi-serving/adservices/topics_classifier/manifest_configs/1"
-                    + "/manifest_config_1657744589741.binaryproto";
+            "https://dl.google.com/mdi-serving/adservices/topics_classifier/manifest_configs/2"
+                    + "/manifest_config_1661376643699.binaryproto";
 
     default String getMddTopicsClassifierManifestFileUrl() {
         return MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
@@ -547,6 +580,21 @@ public interface Flags extends Dumpable {
     // MEASUREMENT Killswitches
 
     /**
+     * Measurement Kill Switch. This overrides all specific measurement kill switch. The default
+     * value is false which means that Measurement is enabled. This flag is used for emergency
+     * turning off the whole Measurement API.
+     */
+    boolean MEASUREMENT_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Global Measurement. Measurement will be disabled if either
+     * the Global Kill Switch or the Measurement Kill Switch value is true.
+     */
+    default boolean getMeasurementKillSwitch() {
+        return MEASUREMENT_KILL_SWITCH;
+    }
+
+    /**
      * Measurement API Delete Registrations Kill Switch. The default value is false which means
      * Delete Registrations API is enabled. This flag is used for emergency turning off the Delete
      * Registrations API.
@@ -555,12 +603,14 @@ public interface Flags extends Dumpable {
 
     /**
      * Returns the kill switch value for Measurement API Delete Registrations. The API will be
-     * disabled if either the Global Kill Switch or the Measurement API Delete Registration Kill
-     * Switch value is true.
+     * disabled if either the Global Kill Switch, Measurement Kill Switch, or the Measurement API
+     * Delete Registration Kill Switch value is true.
      */
     default boolean getMeasurementApiDeleteRegistrationsKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch() || MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH;
     }
 
     /**
@@ -571,11 +621,14 @@ public interface Flags extends Dumpable {
 
     /**
      * Returns the kill switch value for Measurement API Status. The API will be disabled if either
-     * the Global Kill Switch or the Measurement API Status Kill Switch value is true.
+     * the Global Kill Switch, Measurement Kill Switch, or the Measurement API Status Kill Switch
+     * value is true.
      */
     default boolean getMeasurementApiStatusKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch() || MEASUREMENT_API_STATUS_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_API_STATUS_KILL_SWITCH;
     }
 
     /**
@@ -586,12 +639,14 @@ public interface Flags extends Dumpable {
 
     /**
      * Returns the kill switch value for Measurement API Register Source. The API will be disabled
-     * if either the Global Kill Switch or the Measurement API Register Source Kill Switch value is
-     * true.
+     * if either the Global Kill Switch, Measurement Kill Switch, or the Measurement API Register
+     * Source Kill Switch value is true.
      */
     default boolean getMeasurementApiRegisterSourceKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch() || MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH;
     }
 
     /**
@@ -602,12 +657,14 @@ public interface Flags extends Dumpable {
 
     /**
      * Returns the kill switch value for Measurement API Register Trigger. The API will be disabled
-     * if either the Global Kill Switch or the Measurement API Register Trigger Kill Switch value is
-     * true.
+     * if either the Global Kill Switch, Measurement Kill Switch, or the Measurement API Register
+     * Trigger Kill Switch value is true.
      */
     default boolean getMeasurementApiRegisterTriggerKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch() || MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH;
     }
 
     /**
@@ -619,12 +676,14 @@ public interface Flags extends Dumpable {
 
     /**
      * Returns the kill switch value for Measurement API Register Web Source. The API will be
-     * disabled if either the Global Kill Switch or the Measurement API Register Web Source Kill
-     * Switch value is true.
+     * disabled if either the Global Kill Switch, Measurement Kill Switch, or the Measurement API
+     * Register Web Source Kill Switch value is true.
      */
     default boolean getMeasurementApiRegisterWebSourceKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch() || MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH;
     }
 
     /**
@@ -636,12 +695,14 @@ public interface Flags extends Dumpable {
 
     /**
      * Returns the kill switch value for Measurement API Register Web Trigger. The API will be
-     * disabled if either the Global Kill Switch or the Measurement API Register Web Trigger Kill
-     * Switch value is true.
+     * disabled if either the Global Kill Switch, Measurement Kill Switch, or the Measurement API
+     * Register Web Trigger Kill Switch value is true.
      */
     default boolean getMeasurementApiRegisterWebTriggerKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch() || MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH;
     }
 
     /**
@@ -653,12 +714,14 @@ public interface Flags extends Dumpable {
 
     /**
      * Returns the kill switch value for Measurement Job Aggregate Fallback Reporting. The API will
-     * be disabled if either the Global Kill Switch or the Measurement Job Aggregate Fallback
-     * Reporting Kill Switch value is true.
+     * be disabled if either the Global Kill Switch, Measurement Kill Switch, or the Measurement Job
+     * Aggregate Fallback Reporting Kill Switch value is true.
      */
     default boolean getMeasurementJobAggregateFallbackReportingKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch() || MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH;
     }
 
     /**
@@ -670,12 +733,14 @@ public interface Flags extends Dumpable {
 
     /**
      * Returns the kill switch value for Measurement Job Aggregate Reporting. The API will be
-     * disabled if either the Global Kill Switch or the Measurement Job Aggregate Reporting Kill
-     * Switch value is true.
+     * disabled if either the Global Kill Switch, Measurement Kill Switch, or the Measurement Job
+     * Aggregate Reporting Kill Switch value is true.
      */
     default boolean getMeasurementJobAggregateReportingKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch() || MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH;
     }
 
     /**
@@ -686,11 +751,14 @@ public interface Flags extends Dumpable {
 
     /**
      * Returns the kill switch value for Measurement Job Attribution. The API will be disabled if
-     * either the Global Kill Switch or the Measurement Job Attribution Kill Switch value is true.
+     * either the Global Kill Switch, Measurement Kill Switch, or the Measurement Job Attribution
+     * Kill Switch value is true.
      */
     default boolean getMeasurementJobAttributionKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch() || MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH;
     }
 
     /**
@@ -701,12 +769,14 @@ public interface Flags extends Dumpable {
 
     /**
      * Returns the kill switch value for Measurement Job Delete Expired. The API will be disabled if
-     * either the Global Kill Switch or the Measurement Job Delete Expired Kill Switch value is
-     * true.
+     * either the Global Kill Switch, Measurement Kill Switch, or the Measurement Job Delete Expired
+     * Kill Switch value is true.
      */
     default boolean getMeasurementJobDeleteExpiredKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch() || MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH;
     }
 
     /**
@@ -718,12 +788,14 @@ public interface Flags extends Dumpable {
 
     /**
      * Returns the kill switch value for Measurement Job Event Fallback Reporting. The API will be
-     * disabled if either the Global Kill Switch or the Measurement Job Event Fallback Reporting
-     * Kill Switch value is true.
+     * disabled if either the Global Kill Switch, Measurement Kill Switch, or the Measurement Job
+     * Event Fallback Reporting Kill Switch value is true.
      */
     default boolean getMeasurementJobEventFallbackReportingKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch() || MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH;
     }
 
     /**
@@ -735,12 +807,14 @@ public interface Flags extends Dumpable {
 
     /**
      * Returns the kill switch value for Measurement Job Event Reporting. The API will be disabled
-     * if either the Global Kill Switch or the Measurement Job Event Reporting Kill Switch value is
-     * true.
+     * if either the Global Kill Switch, Measurement Kill Switch, or the Measurement Job Event
+     * Reporting Kill Switch value is true.
      */
     default boolean getMeasurementJobEventReportingKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch() || MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH;
     }
 
     /**
@@ -752,12 +826,14 @@ public interface Flags extends Dumpable {
 
     /**
      * Returns the kill switch value for Measurement Broadcast Receiver Install Attribution. The
-     * Broadcast Receiver will be disabled if either the Global Kill Switch or the Measurement Kill
-     * Switch value is true.
+     * Broadcast Receiver will be disabled if either the Global Kill Switch, Measurement Kill Switch
+     * or the Measurement Kill Switch value is true.
      */
     default boolean getMeasurementReceiverInstallAttributionKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch() || MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH;
     }
 
     /**
@@ -769,12 +845,14 @@ public interface Flags extends Dumpable {
 
     /**
      * Returns the kill switch value for Measurement Broadcast Receiver Delete Packages. The
-     * Broadcast Receiver will be disabled if either the Global Kill Switch or the Measurement Kill
-     * Switch value is true.
+     * Broadcast Receiver will be disabled if either the Global Kill Switch, Measurement Kill Switch
+     * or the Measurement Kill Switch value is true.
      */
     default boolean getMeasurementReceiverDeletePackagesKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch() || MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH;
     }
 
     // ADID Killswitch.
@@ -811,33 +889,93 @@ public interface Flags extends Dumpable {
      */
     boolean TOPICS_KILL_SWITCH = false; // By default, the Topics API is enabled.
 
+    /** @return value of Topics API kill switch */
     default boolean getTopicsKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
         return getGlobalKillSwitch() || TOPICS_KILL_SWITCH;
     }
 
+    // MDD Killswitches
+
+    /**
+     * MDD Background Task Kill Switch. The default value is false which means the MDD background
+     * task is enabled. This flag is used for emergency turning off the MDD background tasks.
+     */
+    boolean MDD_BACKGROUND_TASK_KILL_SWITCH = false;
+
+    /** @return value of Mdd Background Task kill switch */
+    default boolean getMddBackgroundTaskKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        return getGlobalKillSwitch() || MDD_BACKGROUND_TASK_KILL_SWITCH;
+    }
+
+    // FLEDGE Kill switches
+
+    /**
+     * Fledge Ad Selection API kill switch. The default value is false which means that Select Ads
+     * API is enabled by default. This flag should be should as emergency andon cord.
+     */
+    boolean FLEDGE_SELECT_ADS_KILL_SWITCH = false;
+
+    /** @return value of Fledge Ad Selection API kill switch */
+    default boolean getFledgeSelectAdsKillSwitch() {
+        // Check for global kill switch first, as it should override all other kill switches
+        return getGlobalKillSwitch() || FLEDGE_SELECT_ADS_KILL_SWITCH;
+    }
+
+    /**
+     * Fledge Join Custom Audience API kill switch. The default value is false which means that Join
+     * Custom Audience API is enabled by default. This flag should be should as emergency andon
+     * cord.
+     */
+    boolean FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH = false;
+
+    /** @return value of Fledge Join Custom Audience API kill switch */
+    default boolean getFledgeCustomAudienceServiceKillSwitch() {
+        // Check for global kill switch first, as it should override all other kill switches
+        return getGlobalKillSwitch() || FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
+    }
+
     /*
-     * The Allow List for PP APIs. This list has the list of app package names that we allow
-     * to use PP APIs.
-     * App Package Name that does not belongs to this Allow List will not be able use PP APIs.
+     * The allow-list for PP APIs. This list has the list of app package names that we allow
+     * using PP APIs.
+     * App Package Name that does not belong to this allow-list will not be able to use PP APIs.
      * If this list has special value "*", then all package names are allowed.
      * There must be not any empty space between comma.
      */
     String PPAPI_APP_ALLOW_LIST =
             "android.platform.test.scenario,"
                     + "android.adservices.crystalball,"
+                    + "android.adservices.cts,"
+                    + "android.adservices.debuggablects,"
+                    + "com.android.tests.sandbox.fledge,"
                     + "com.android.tests.sandbox.topics,"
+                    + "com.android.adservices.endtoendtest,"
                     + "com.android.adservices.tests.cts.endtoendtest,"
                     + "com.android.adservices.tests.cts.topics.testapp1," // CTS test sample app
                     + "com.android.adservices.tests.permissions.appoptout,"
                     + "com.android.adservices.tests.permissions.noperm,"
                     + "com.android.adservices.tests.permissions.valid,"
+                    + "com.example.adservices.samples.fledge.sampleapp,"
+                    + "com.example.adservices.samples.fledge.sampleapp1,"
+                    + "com.example.adservices.samples.fledge.sampleapp2,"
+                    + "com.example.adservices.samples.fledge.sampleapp3,"
+                    + "com.example.adservices.samples.fledge.sampleapp4,"
                     + "com.example.adservices.samples.topics.sampleapp1,"
                     + "com.example.adservices.samples.topics.sampleapp2,"
                     + "com.example.adservices.samples.topics.sampleapp3,"
                     + "com.example.adservices.samples.topics.sampleapp4,"
                     + "com.example.adservices.samples.topics.sampleapp5,"
-                    + "com.example.adservices.samples.topics.sampleapp6";
+                    + "com.example.adservices.samples.topics.sampleapp6,"
+                    + "com.android.adservices.servicecoretest";
+
+    /**
+     * The client app packages that are allowed to invoke web context APIs, i.e. {@link
+     * android.adservices.measurement.MeasurementManager#registerWebSource} and {@link
+     * android.adservices.measurement.MeasurementManager#deleteRegistrations}. App packages that do
+     * not belong to the list will be responded back with an error response.
+     */
+    String WEB_CONTEXT_CLIENT_ALLOW_LIST = "";
 
     /**
      * Returns the The Allow List for PP APIs. Only App Package Name belongs to this Allow List can
@@ -860,24 +998,38 @@ public interface Flags extends Dumpable {
         return SDK_REQUEST_PERMITS_PER_SECOND;
     }
 
-    // TODO(b/238924460): Remove after MDD download service is available and can be invoked from CTS
-    // tests.
+    // TODO(b/238924460): Enable by default after enrollment process is open.
     /**
-     * Disable enrollment check for Topics API. This is done only to allow CTS test to pass since
-     * there is currently no way to write the enrollment data from test in the same db that can be
-     * read from the service. Note: This should not be enabled in production, unless there's a
-     * problem with enrollment.
+     * Once the enrollment process is open, this should be false by default, such that enrollment is
+     * always enforced, unless there are bugs with enrollment. Disabling enforcement for now since
+     * we don't want to block alpha testing while the enrollment process is being set up.
      */
-    boolean DISABLE_TOPICS_ENROLLMENT_CHECK = false; // By default, enrollment check is enabled.
+    boolean DISABLE_TOPICS_ENROLLMENT_CHECK = true;
 
+    boolean DISABLE_FLEDGE_ENROLLMENT_CHECK = true; // By default, enrollment check is disabled
+
+    // TODO(b/243025320): Enable by default after enrollment process is open.
+    boolean DISABLE_MEASUREMENT_ENROLLMENT_CHECK = true;
+
+    /** @return {@code true} if the Topics API should disable the ad tech enrollment check */
     default boolean isDisableTopicsEnrollmentCheck() {
         return DISABLE_TOPICS_ENROLLMENT_CHECK;
+    }
+
+    /** @return {@code true} if the FLEDGE APIs should disable the ad tech enrollment check */
+    default boolean getDisableFledgeEnrollmentCheck() {
+        return DISABLE_FLEDGE_ENROLLMENT_CHECK;
+    }
+
+    default boolean isDisableMeasurementEnrollmentCheck() {
+        return DISABLE_MEASUREMENT_ENROLLMENT_CHECK;
     }
 
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE = true;
+    boolean ENFORCE_FOREGROUND_STATUS_TOPICS = true;
 
     /**
      * @return true if FLEDGE runAdSelection API should require that the calling API is running in
@@ -911,10 +1063,35 @@ public interface Flags extends Dumpable {
         return ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE;
     }
 
+    /** @return true if Topics API should require that the calling API is running in foreground. */
+    default boolean getEnforceForegroundStatusForTopics() {
+        return ENFORCE_FOREGROUND_STATUS_TOPICS;
+    }
+
     int FOREGROUND_STATUS_LEVEL = IMPORTANCE_FOREGROUND_SERVICE;
 
     /** @return the importance level to use to check if an application is in foreground. */
     default int getForegroundStatuslLevelForValidation() {
         return FOREGROUND_STATUS_LEVEL;
+    }
+
+    default String getWebContextClientAppAllowList() {
+        return WEB_CONTEXT_CLIENT_ALLOW_LIST;
+    }
+
+    boolean ENFORCE_ISOLATE_MAX_HEAP_SIZE = true;
+    long ISOLATE_MAX_HEAP_SIZE_BYTES = 2 * 1024 * 1024L; // 2 MB
+
+    /**
+     * @return true if we enforce to check that JavaScriptIsolate supports limiting the max heap
+     *     size
+     */
+    default boolean getEnforceIsolateMaxHeapSize() {
+        return ENFORCE_ISOLATE_MAX_HEAP_SIZE;
+    }
+
+    /** @return size in bytes we bound the heap memory for JavaScript isolate */
+    default long getIsolateMaxHeapSizeBytes() {
+        return ISOLATE_MAX_HEAP_SIZE_BYTES;
     }
 }

@@ -34,6 +34,7 @@ import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.DbHelper;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.measurement.actions.Action;
@@ -83,6 +84,8 @@ public abstract class E2ETest {
     private static final long REPORT_TIME_EPSILON = TimeUnit.HOURS.toMillis(2);
 
     static final Context sContext = ApplicationProvider.getApplicationContext();
+    static final EnrollmentDao sEnrollmentDao = EnrollmentDao.getInstance(
+            ApplicationProvider.getApplicationContext());
     static final DatastoreManager sDatastoreManager = DatastoreManagerFactory.getDatastoreManager(
             ApplicationProvider.getApplicationContext());
     private final Collection<Action> mActionsList;
@@ -681,7 +684,7 @@ public abstract class E2ETest {
         db.delete("msmt_source", null, null);
         db.delete("msmt_trigger", null, null);
         db.delete("msmt_event_report", null, null);
-        db.delete("msmt_attribution_rate_limit", null, null);
+        db.delete("msmt_attribution", null, null);
         db.delete("msmt_aggregate_report", null, null);
     }
 

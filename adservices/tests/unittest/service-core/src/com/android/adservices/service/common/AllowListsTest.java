@@ -20,53 +20,37 @@ import static com.android.adservices.service.common.AllowLists.ALLOW_ALL;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.mockito.Mockito.when;
-
 import androidx.test.filters.SmallTest;
 
-import com.android.adservices.service.Flags;
-
-import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 /** Unit tests for {@link com.android.adservices.service.common.AllowLists} */
 @SmallTest
 public class AllowListsTest {
-    @Mock Flags mMockFlags;
-
-    @Before
-    public void setup() {
-        MockitoAnnotations.initMocks(this);
-    }
-
     @Test
     public void testAppCanUsePpapi_allowAll() {
-        when(mMockFlags.getPpapiAppAllowList()).thenReturn(ALLOW_ALL);
-        assertThat(AllowLists.appCanUsePpapi(mMockFlags, "SomePackageName")).isTrue();
+        assertThat(AllowLists.isPackageAllowListed(ALLOW_ALL, "SomePackageName")).isTrue();
     }
 
     @Test
     public void testAppCanUsePpapi_emptyAllowList() {
-        when(mMockFlags.getPpapiAppAllowList()).thenReturn("");
-        assertThat(AllowLists.appCanUsePpapi(mMockFlags, "SomePackageName")).isFalse();
+        assertThat(AllowLists.isPackageAllowListed("", "SomePackageName")).isFalse();
     }
 
     @Test
     public void testAppCanUsePpapi_notEmptyAllowList() {
-        when(mMockFlags.getPpapiAppAllowList()).thenReturn("SomePackageName,AnotherPackageName");
-        assertThat(AllowLists.appCanUsePpapi(mMockFlags, "notAllowedPackageName")).isFalse();
-        assertThat(AllowLists.appCanUsePpapi(mMockFlags, "SomePackageName")).isTrue();
-        assertThat(AllowLists.appCanUsePpapi(mMockFlags, "AnotherPackageName")).isTrue();
+        String allowList = "SomePackageName,AnotherPackageName";
+        assertThat(AllowLists.isPackageAllowListed(allowList, "notAllowedPackageName")).isFalse();
+        assertThat(AllowLists.isPackageAllowListed(allowList, "SomePackageName")).isTrue();
+        assertThat(AllowLists.isPackageAllowListed(allowList, "AnotherPackageName")).isTrue();
     }
 
     @Test
     public void testAppCanUsePpapi_havingSpaceFail() {
-        when(mMockFlags.getPpapiAppAllowList()).thenReturn("SomePackageName, AnotherPackageName");
-        assertThat(AllowLists.appCanUsePpapi(mMockFlags, "notAllowedPackageName")).isFalse();
-        assertThat(AllowLists.appCanUsePpapi(mMockFlags, "SomePackageName")).isTrue();
+        String allowList = "SomePackageName, AnotherPackageName";
+        assertThat(AllowLists.isPackageAllowListed(allowList, "notAllowedPackageName")).isFalse();
+        assertThat(AllowLists.isPackageAllowListed(allowList, "SomePackageName")).isTrue();
         // There is a space in the package name list.
-        assertThat(AllowLists.appCanUsePpapi(mMockFlags, "AnotherPackageName")).isFalse();
+        assertThat(AllowLists.isPackageAllowListed(allowList, "AnotherPackageName")).isFalse();
     }
 }

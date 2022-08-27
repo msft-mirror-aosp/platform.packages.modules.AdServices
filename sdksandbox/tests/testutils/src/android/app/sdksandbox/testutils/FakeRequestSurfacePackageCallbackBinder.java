@@ -16,9 +16,10 @@
 
 package android.app.sdksandbox.testutils;
 
+import static android.app.sdksandbox.SdkSandboxManager.EXTRA_SURFACE_PACKAGE;
+
 import android.app.sdksandbox.IRequestSurfacePackageCallback;
 import android.app.sdksandbox.RequestSurfacePackageException;
-import android.app.sdksandbox.RequestSurfacePackageResponse;
 import android.os.Bundle;
 import android.view.SurfaceControlViewHost;
 
@@ -35,7 +36,8 @@ public class FakeRequestSurfacePackageCallbackBinder extends IRequestSurfacePack
     }
 
     @Override
-    public void onSurfacePackageError(int errorCode, String errorMsg) {
+    public void onSurfacePackageError(
+            int errorCode, String errorMsg, long timeSystemServerCalledApp) {
         mFakeRequestSurfacePackageCallback.onError(
                 new RequestSurfacePackageException(errorCode, errorMsg));
     }
@@ -44,9 +46,10 @@ public class FakeRequestSurfacePackageCallbackBinder extends IRequestSurfacePack
     public void onSurfacePackageReady(
             SurfaceControlViewHost.SurfacePackage surfacePackage,
             int surfacePackageId,
-            Bundle params) {
-        mFakeRequestSurfacePackageCallback.onResult(
-                new RequestSurfacePackageResponse(surfacePackage, params));
+            Bundle params,
+            long timeSystemServerCalledApp) {
+        params.putParcelable(EXTRA_SURFACE_PACKAGE, surfacePackage);
+        mFakeRequestSurfacePackageCallback.onResult(params);
     }
 
     public boolean isRequestSurfacePackageSuccessful() {

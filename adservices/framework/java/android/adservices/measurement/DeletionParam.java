@@ -16,7 +16,6 @@
 package android.adservices.measurement;
 
 import android.annotation.NonNull;
-import android.annotation.Nullable;
 import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -157,13 +156,13 @@ public final class DeletionParam implements Parcelable {
     }
 
     /** Instant in time the deletion starts, or null if none. */
-    @Nullable
+    @NonNull
     public Instant getStart() {
         return mStart;
     }
 
     /** Instant in time the deletion ends, or null if none. */
-    @Nullable
+    @NonNull
     public Instant getEnd() {
         return mEnd;
     }
@@ -216,14 +215,14 @@ public final class DeletionParam implements Parcelable {
 
         /** See {@link DeletionParam#getStart}. */
         @NonNull
-        public Builder setStart(@Nullable Instant start) {
+        public Builder setStart(@NonNull Instant start) {
             mStart = start;
             return this;
         }
 
         /** See {@link DeletionParam#getEnd}. */
         @NonNull
-        public Builder setEnd(@Nullable Instant end) {
+        public Builder setEnd(@NonNull Instant end) {
             mEnd = end;
             return this;
         }
@@ -239,9 +238,13 @@ public final class DeletionParam implements Parcelable {
         /** Build the DeletionRequest. */
         @NonNull
         public DeletionParam build() {
-            if (mPackageName == null || mOriginUris == null || mDomainUris == null) {
+            if (mPackageName == null
+                    || mOriginUris == null
+                    || mDomainUris == null
+                    || mStart == null
+                    || mEnd == null) {
                 throw new IllegalArgumentException(
-                        "PackageName, OriginUris, or DomainUris is null");
+                        "PackageName, OriginUris, DomainUris, Start, or End is null");
             }
             return new DeletionParam(this);
         }

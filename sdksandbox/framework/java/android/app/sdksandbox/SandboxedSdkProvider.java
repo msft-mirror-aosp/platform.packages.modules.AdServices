@@ -23,7 +23,7 @@ import android.os.Bundle;
 import android.view.SurfaceControlViewHost.SurfacePackage;
 import android.view.View;
 
-import java.util.concurrent.Executor;
+import java.util.Objects;
 
 /**
  * Encapsulates API which SDK sandbox can use to interact with SDKs loaded into it.
@@ -35,6 +35,7 @@ import java.util.concurrent.Executor;
  */
 public abstract class SandboxedSdkProvider {
     private Context mContext;
+    private SdkSandboxController mSdkSandboxController;
 
     /**
      * Sets the SDK {@link Context} which can then be received using {@link
@@ -59,8 +60,48 @@ public abstract class SandboxedSdkProvider {
      * This will return null if no context has been previously set.
      */
     @Nullable
-    public Context getContext() {
+    public final Context getContext() {
         return mContext;
+    }
+
+    /**
+     * Set the {@link SdkSandboxController} for this provider.
+     *
+     * <p>This is called before {@link SandboxedSdkProvider#onLoadSdk} is invoked. No operations
+     * requiring a {@link SdkSandboxController} should be performed before then, as {@link
+     * SandboxedSdkProvider#getSdkSandboxController()} will return {@code null} until this method
+     * has been called.
+     *
+     * <p>This may be only used for testing purposes.
+     *
+     * <p>Clients can only call it on a "mock" provider they create for testing, and for all other
+     * instances a controller is already attached
+     *
+     * @param sdkSandboxController The controller to query sandbox Apis for this provider.
+     * @throws IllegalStateException if a controller has already been set
+     */
+    public final void attachSdkSandboxController(
+            @NonNull SdkSandboxController sdkSandboxController) {
+        Objects.requireNonNull(sdkSandboxController, "sdkToServiceCallback should not be null.");
+        if (mSdkSandboxController != null) {
+            throw new IllegalStateException("SdkSandboxController already set");
+        }
+        mSdkSandboxController = sdkSandboxController;
+    }
+
+    /**
+     * Fetches the controller attached to the {@link SandboxedSdkProvider}.
+     *
+     * <p>The controller is attached to the provider using {@link
+     * SandboxedSdkProvider#attachSdkSandboxController(SdkSandboxController)} by the platform when
+     * the sdk is loaded.
+     *
+     * @return sdkSandboxController The controller to query sandbox Apis for this provider or {@code
+     *     null} if the controller was not attached.
+     */
+    @Nullable
+    public final SdkSandboxController getSdkSandboxController() {
+        return mSdkSandboxController;
     }
 
     /**
@@ -69,24 +110,21 @@ public abstract class SandboxedSdkProvider {
      * <p>This function is called by the SDK sandbox after it loads the SDK.
      *
      * <p>SDK should do any work to be ready to handle upcoming requests. It should not include the
-     * initialization logic that depends on other SDKs being loaded into the SDK sandbox. Any
-     * further initialization can be triggered by the client using {@link
-     * SdkSandboxManager#sendData}. The SDK should not do any operations requiring a {@link Context}
-     * object before this method has been called.
+     * initialization logic that depends on other SDKs being loaded into the SDK sandbox. The SDK
+     * should not do any operations requiring a {@link Context} object before this method has been
+     * called.
      *
-     * @param params list of params passed from App when it loads the SDK.
-     * @param executor the {@link Executor} on which to invoke the {@code callback}
-     * @param callback to notify App if the SDK successfully loaded
+     * @param params list of params passed from the client when it loads the SDK. This can be empty.
+     * @return Returns a {@link SandboxedSdk}, passed back to the client. The IBinder used to create
+     *     the {@link SandboxedSdk} object will be used by the client to call into the SDK.
      */
-    public abstract void onLoadSdk(
-            @NonNull Bundle params,
-            @NonNull Executor executor,
-            @NonNull OnLoadSdkCallback callback);
-
+    public abstract @NonNull SandboxedSdk onLoadSdk(@NonNull Bundle params) throws LoadSdkException;
     /**
      * Does the work needed for the SDK to free its resources before being unloaded.
      *
-     * <p>This function is called by the SDK sandbox manager before it unloads the SDK.
+     * <p>This function is called by the SDK sandbox manager before it unloads the SDK. The SDK
+     * should fail any invocations on the Binder previously returned to the client through {@link
+     * SandboxedSdk#getInterface}.
      */
     public void beforeUnloadSdk() {}
 
@@ -105,62 +143,4 @@ public abstract class SandboxedSdkProvider {
     @NonNull
     public abstract View getView(
             @NonNull Context windowContext, @NonNull Bundle params, int width, int height);
-
-    /**
-     * Called when data sent from the app is received by an SDK.
-     *
-     * @param data the data sent by the app.
-     * @param callback to notify the app if the data has been successfully received.
-     */
-    public abstract void onDataReceived(
-            @NonNull Bundle data, @NonNull DataReceivedCallback callback);
-
-    /**
-     * Callback for tracking the status of initializing the SDK.
-     *
-     * <p>This callback is created by the SDK sandbox, SDKs should use it to notify the SDK sandbox
-     * about the status of {@link SandboxedSdkProvider#onLoadSdk(Bundle, Executor,
-     * OnLoadSdkCallback)}
-     */
-    public interface OnLoadSdkCallback {
-        /**
-         * Called when sdk is successfully loaded.
-         *
-         * <p>After SDK successfully initialized, it must call this method on the callback object.
-         *
-         * @param params list of params to be passed to the client application
-         */
-        void onLoadSdkFinished(@NonNull Bundle params);
-
-        /**
-         * If SDK failed to initialize, it must call this method on the callback object.
-         *
-         * @param errorMessage a String description of the error
-         */
-        void onLoadSdkError(@NonNull String errorMessage);
-    }
-
-    /**
-     * Callback for tracking the status of data received from the client application.
-     *
-     * <p>This callback is created by the SDK sandbox. SDKs can use it to notify the SDK sandbox
-     * about the status of processing the data received.
-     */
-    public interface DataReceivedCallback {
-        /**
-         * After the SDK has completed processing the data received, it can call this method on the
-         * callback object and pass back any data if needed.
-         *
-         * @param params list of params to be passed to the client application.
-         */
-        void onDataReceivedSuccess(@NonNull Bundle params);
-
-        /**
-         * If the SDK fails to process the data received from the client application, it can call
-         * this method on the callback object.
-         *
-         * @param errorMessage a String description of the error
-         */
-        void onDataReceivedError(@NonNull String errorMessage);
-    }
 }

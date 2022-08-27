@@ -22,10 +22,8 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="1644434244130657749">"ອະນຸຍາດໃຫ້ແອັບພລິເຄຊັນເຂົ້າເຖິງ AdServices Attribution API."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="2766614780488510189">"ເຂົ້າເຖິງ AdServices Custom Audience API"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"ອະນຸຍາດໃຫ້ແອັບພລິເຄຊັນເຂົ້າເຖິງ AdServices Custom Audience API."</string>
-    <!-- no translation found for permlab_accessAdServicesAdId (2754825914769538156) -->
-    <skip />
-    <!-- no translation found for permdesc_accessAdServicesAdId (7717770480967762044) -->
-    <skip />
+    <string name="permlab_accessAdServicesAdId" msgid="2754825914769538156">"ເຂົ້າເຖິງ AdId API"</string>
+    <string name="permdesc_accessAdServicesAdId" msgid="7717770480967762044">"ອະນຸຍາດໃຫ້ແອັບພລິເຄຊັນເຂົ້າເຖິງ AdId API."</string>
     <string name="permlab_accessAdServicesConsent" msgid="3203633397142568707">"ເຂົ້າເຖິງ AdServices Consent API"</string>
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"ອະນຸຍາດໃຫ້ແອັບພລິເຄຊັນເຂົ້າເຖິງ AdServices Consent API."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"ເຂົ້າເຖິງ Ad ID API"</string>
@@ -34,72 +32,65 @@
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"ອະນຸຍາດໃຫ້ແອັບພລິເຄຊັນເຂົ້າເຖິງ App Set ID API."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"ເຂົ້າເຖິງ Consent Service API"</string>
     <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"ອະນຸຍາດໃຫ້ແອັບພລິເຄຊັນເຂົ້າເຖິງ Consent Service API."</string>
+    <string name="permlab_modifyAdServicesState" msgid="3594653261299518914">"ເຂົ້າເຖິງ API ການແກ້ໄຂສະຖານະການເປີດນຳໃຊ້ຂອງ AdService"</string>
+    <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"ອະນຸຍາດໃຫ້ແອັບພລິເຄຊັນເຂົ້າເຖິງ API ການແກ້ໄຂສະຖານະການເປີດນຳໃຊ້ຂອງ AdService."</string>
+    <string name="permlab_accessAdServicesState" msgid="482058883975394398">"ເຂົ້າເຖິງ API ສະຖານະການເປີດນຳໃຊ້ຂອງ AdService"</string>
+    <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"ອະນຸຍາດໃຫ້ແອັບພລິເຄຊັນເຂົ້າເຖິງ API ສະຖານະການເປີດນຳໃຊ້ຂອງ AdService."</string>
     <string name="app_label" msgid="5985320129629013968">"ລະບົບ Android"</string>
-    <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"Privacy Sandbox ເບຕ້າ"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"Privacy Sandbox ເບຕ້າ"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"ສະຫຼັບ Privacy Sandbox ເບຕ້າ"</string>
-    <string name="settingsUI_main_view_title" msgid="255982490790282252">"ເບຕ້າຄວາມເປັນສ່ວນຕົວໂຄສະນາຂອງ Android"</string>
-    <string name="settingsUI_main_view_subtitle" msgid="3380585883687237827">"ທົດສອບລະບົບ Privacy Sandbox ໃໝ່ທີ່ຈຳກັບການຕິດຕາມຂ້າມແອັບ"</string>
-    <string name="settingsUI_main_view_info_text1" msgid="8353580266621706164">"Privacy Sandbox ເຮັດວຽກແນວໃດ"</string>
-    <string name="settingsUI_main_view_info_text2" msgid="5144888171043725329">"ຂໍ້ມູນແມ່ນໄດ້ຮັບການເກັບກຳໃນ Privacy Sandbox ເພື່ອສະແດງໃຫ້ທ່ານເຫັນໂຄສະນາທີ່ທ່ານອາດຈະມັກ, ແຕ່ໄດ້ຖືກແບ່ງປັນໂດຍທີ່ບໍ່ມີການລະບຸຕົວທ່ານ ຫຼື ອຸປະກອນຂອງທ່ານ."</string>
-    <string name="settingsUI_main_view_info_text3" msgid="9106658161862318732">"ຂໍ້ມູນປະເພດໃດທີ່ຖືກຈັດເກັບໃນ Privacy Sandbox?"</string>
-    <string name="settingsUI_main_view_info_text4" msgid="5819359066240454954">"•  ຄວາມສົນໃຈທົ່ວໄປ"</string>
-    <string name="settingsUI_main_view_info_text5" msgid="6064832868440367397">"Android ສ້າງຂໍ້ມູນນີ້ຂຶ້ນມາໂດຍອີງຕາມແອັບທີ່ທ່ານໃຊ້ ແລະ ເພີ່ມມັນເຂົ້າໃສ່ໃນ Privacy Sandbox. ຍົກຕົວຢ່າງ: ໜຶ່ງໃນຄວາມສົນໃຈທົ່ວໄປຂອງທ່ານອາດຈະແມ່ນ “ກິລາ.” \n\nທ່ານສາມາດເຫັນລາຍຊື່ຂອງສິ່ງທີ່ທ່ານສົນໃຈໃນການຕັ້ງຄ່າຄວາມເປັນສ່ວນຕົວຂອງທ່ານ ແລະ ບລັອກສິ່ງອື່ນໆທີ່ທ່ານບໍ່ມັກ."</string>
-    <string name="settingsUI_main_view_info_text6" msgid="3406976290919982143">"•  ຄວາມສົນໃຈສະເພາະ"</string>
-    <string name="settingsUI_main_view_info_text7" msgid="210269084665708892">"ແອັບຂອງທ່ານສ້າງຂໍ້ມູນນີ້ຂຶ້ນມາໂດຍອີງຕາມວິທີທີ່ທ່ານໃຊ້ພວກມັນ ແລະ ເພີ່ມມັນເຂົ້າໃສ່ Privacy Sandbox. ຍົກຕົວຢ່າງ: ແອັບທີ່ທ່ານໃຊ້ຊື້ເຄື່ອງສຳລັບເກີບເພື່ອໃຊ້ແລ່ນອາດຈະຖືກເພີ່ມປ້າຍ sport_running.\n\nໃນການຕັ້ງຄ່າຄວາມເປັນສ່ວນຕົວຂອງທ່ານ, ທ່ານສາມາດເຫັນລາຍຊື່ຂອງແອັບທີ່ເຮັດສິ່ງນີ້ໄດ້ ແລະ ບລັອກແອັບຕ່າງໆຈາກການປະກອບສ່ວນຂໍ້ມູນໃຫ້ແກ່ Privacy Sandbox."</string>
-    <string name="settingsUI_topics_view_title" msgid="7437641813424176118">"ຈັດການຄວາມສົນໃຈ"</string>
-    <string name="settingsUI_topics_view_subtitle" msgid="5347912133908026725">"Privacy Sandbox ຂອງ Android ຈຳກັດການຕິດຕາມຂ້າມແອັບໃນຂະນະທີ່ຍັງຄົງອະນຸຍາດໃຫ້ແອັບສະແດງໂຄສະນາທີ່ທ່ານອາດມັກໃຫ້ທ່ານເຫັນ. Android ແບ່ງປັນຂໍ້ມູນເຫຼົ່ານີ້ກັບຜູ້ລົງໂຄສະນາໂດຍບໍ່ໄດ້ລະບຸຕົວທ່ານ ຫຼື ອຸປະກອນຂອງທ່ານ.\n\nໂດຍອ້າງອີງຈາກແອັບທີ່ທ່ານໃຊ້, Android ຈະສ້າງ ແລະ ອັບເດດລາຍການນີ້ຕາມຄວາມສົນໃນໂຄສະນາທົ່ວໄປຂອງທ່ານ. ຖ້າທ່ານບລັອກຄວາມສົນໃຈ, ມັນຈະບໍ່ຖືກເພີ່ມໃສ່ລາຍການນີ້ອີກເວັ້ນແຕ່ທ່ານຈະຍົກເລີກການບລັອກມັນ. ທ່ານອາດຈະຍັງເຫັນໂຄສະນາທີ່ກ່ຽວຂ້ອງບາງຢ່າງ."</string>
-    <string name="settingsUI_topics_view_info_text1" msgid="6729245512525985403">"ຄວາມສົນໃຈໂຄສະນາທົ່ວໄປ"</string>
-    <string name="settingsUI_topics_view_info_text2" msgid="8355913397424818046">"Android ສ້າງຄວາມສົນໃຈນີ້ຂຶ້ນມາໂດຍອີງຕາມແອັບທີ່ທ່ານໃຊ້.\n\nຍົກຕົວຢ່າງ: ຖ້າທ່ານມີແອັບກິລາສອງສາມແອັບຢູ່ອຸປະກອນຂອງທ່ານ, Android ອາດຈະເພີ່ມຄວາມສົນໃຈ “ກິລາ” ໃສ່ Privacy Sandbox.\n\nຕໍ່ມາ, ຂໍ້ມູນນີ້ແມ່ນໄດ້ຖືກແບ່ງປັນກັບຜູ້ລົງໂຄສະນາໂດຍທີ່ບໍ່ໄດ້ລະບຸຕົວທ່ານ ຫຼື ອຸປະກອນຂອງທ່ານ."</string>
-    <string name="settingsUI_apps_key" msgid="5279102708260885695">"apps_preference"</string>
-    <string name="settingsUI_apps_title" msgid="2177966577556486280">"ແອັບຂອງທ່ານຈະສ້າງຄວາມສົນໃຈສະເພາະ"</string>
-    <string name="settingsUI_apps_summary" msgid="2382082513059909726">"ຈັດການແອັບຂອງທ່ານທີ່ສ້າງຄວາມສົນໃຈສະເພາະ"</string>
-    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"ແອັບທີ່ທ່ານໄດ້ບລັອກ"</string>
-    <string name="settingsUI_apps_view_title" msgid="3615627092403761282">"ຈັດການແອັບ"</string>
-    <string name="settingsUI_apps_view_subtitle" msgid="5257332567222983503">"ໂດຍອ້າງອີງຈາກວິທີທີ່ທ່ານໃຊ້ພວກມັນ, ແອັບຈໍານວນໜຶ່ງຈະສ້າງຂໍ້ມູນກ່ຽວກັບຄວາມສົນໃຈໂຄສະນາສະເພາະຂອງທ່ານສໍາລັບ Privacy Sandbox. Android ອັບເດດລາຍການແອັບນີ້ເພື່ອໃຫ້ທ່ານສາມາດເບິ່ງ ຫຼື ແກ້ໄຂມັນໄດ້.\n\nຖ້າທ່ານບລັອກແອັບ, ມັນຈະບໍ່ເພີ່ມຄວາມສົນໃຈສະເພາະເພີ່ມເຕີມອີກ. ມັນຈະບໍ່ຖືກເພີ່ມໃສ່ລາຍການນີ້ອີກເວັ້ນແຕ່ທ່ານຈະຍົກເລີກການບລັອກມັນ. ຄວາມສົນໃຈທີ່ຖືກສ້າງໂດຍແອັບຈະຖືກລຶບ, ແຕ່ທ່ານອາດຈະຍັງເຫັນໂຄສະນາທີ່ກ່ຽວຂ້ອງຈໍານວນໜຶ່ງ."</string>
-    <string name="settingsUI_apps_view_no_apps_text" msgid="1056905761942948495">"ບໍ່ມີແອັບໃຫ້ສະແດງໃນຕອນນີ້"</string>
-    <string name="settingsUI_reset_apps_title" msgid="3308597019425923552">"ຣີເຊັດຂໍ້ມູນທີ່ຖືກສ້າງຂຶ້ນໂດຍແອັບ"</string>
-    <string name="settingsUI_apps_view_info_text1" msgid="503353133396835755">"ຄວາມສົນໃຈໂຄສະນາສະເພາະ"</string>
-    <string name="settingsUI_apps_view_info_text2" msgid="6562781312486257254">"ແອັບຈໍານວນໜຶ່ງທີ່ທ່ານໃຊ້ສ້າງຂໍ້ມູນກ່ຽວກັບຄວາມຈົນໃຈສະເພາະຂອງທ່ານສໍາລັບການໂຄສະນາ ແລະ ເພີ່ມມັນໃສ່ Privacy Sandbox.\n\nຕົວຢ່າງ: ແອັບທີ່ທ່ານໃຊ້ສໍາລັບການຊື້ເກີບແລ່ນອາດຈະເພີ່ມປ້າຍກຳກັບ sport_running.\n\nຫຼັງຈາກນັ້ນ, ຂໍ້ມູນທີ່ຖືກເກັບກໍາໃນ Privacy Sandbox ແມ່ນຖືກແບ່ງປັນກັບຜູ້ລົງໂຄສະນາໂດຍບໍ່ລະບຸຕົວຕົນທ່ານ ຫຼື ອຸປະກອນຂອງທ່ານ. ສະນັ້ນທ່ານຍັງຈະເຫັນໂຄສະນາທີ່ທ່ານອາດຈະຖືກໃຈ, ແຕ່ມີການປົກປ້ອງຄວາມເປັນສ່ວນຕົວຫຼາຍຂຶ້ນ."</string>
-    <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="5700261138344146462">"ບໍ່ມີແອັບທີ່ຖືກບລັອກໃຫ້ສະແດງໃນຕອນນີ້"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"ບໍ່ມີຄວາມໃຈເພື່ອສະແດງຂຶ້ນໃນຕອນນີ້"</string>
-    <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
-    <string name="settingsUI_topics_title" msgid="4024683469932819788">"ຄວາມສົນໃຈທົ່ວໄປຂອງທ່ານ"</string>
-    <string name="settingsUI_topics_summary" msgid="3146101472984434355">"ຈັດການຄວາມສົນໃຈທົ່ວໄປຂອງທ່ານ"</string>
-    <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"ຈັດການຄວາມສົນໃຈທົ່ວໄປຂອງທ່ານສຳລັບໂຄສະນາ"</string>
+    <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"ເຂົ້າຮ່ວມເວີຊັນເບຕ້າຂອງຄວາມເປັນສ່ວນຕົວສຳລັບໂຄສະນາໃນ Android"</string>
+    <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android ກຳລັງສຳຫຼວດການສະແດງໂຄສະນາທີ່ມີຄວາມເປັນສ່ວນຕົວຫຼາຍຂຶ້ນສຳລັບແອັບໃຫ້ແກ່ທ່ານ."</string>
+    <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"ສຶກສາເພີ່ມເຕີມ"</string>
+    <string name="notificationUI_header_title_eu" msgid="4955298263079910371">"ເວີຊັນເບຕ້າຂອງຄວາມເປັນສ່ວນຕົວສຳລັບໂຄສະນາໃນ Android"</string>
+    <string name="notificationUI_container1_title_eu" msgid="8315199862119660570">"ມີຫຍັງໃໝ່"</string>
+    <string name="notificationUI_container1_body_text_eu" msgid="1700290522706948241">"ຄຸນສົມບັດຄວາມເປັນສ່ວນຕົວໃໝ່ໃນ Privacy Sandbox ຊ່ວຍໃຫ້ແອັບຕ່າງໆສະແດງໂຄສະນາທີ່ກ່ຽວຂ້ອງໃຫ້ທ່ານ, ແຕ່ຈະຈຳກັດສິ່ງທີ່ແອັບເຫຼົ່ານີ້ສາມາດສຶກສາກ່ຽວກັບການເຄື່ອນໄຫວຂອງທ່ານຢູ່ເວັບໄຊ ແລະ ແອັບຈາກນັກພັດທະນາອື່ນໆ."</string>
+    <string name="notificationUI_container1_control_text_eu" msgid="3158258148321255153">"ວິທີການເຮັດວຽກຂອງມັນ"</string>
+    <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"ວິທີການເຂົ້າຮ່ວມ"</string>
+    <!-- no translation found for notificationUI_container2_body_text_eu (5763735880112009239) -->
+    <skip />
+    <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"ບໍ່, ຂອບໃຈ"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"ແມ່ນ, ຂ້ອຍຈະເຂົ້າຮ່ວມ"</string>
+    <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"ຂໍຂອບໃຈທີ່ທ່ານເຂົ້າຮ່ວມ"</string>
+    <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"ທ່ານເປັນສ່ວນໜຶ່ງຂອງເວີຊັນເບຕ້າຂອງຄວາມເປັນສ່ວນຕົວສຳລັບໂຄສະນາໃນ Android. Privacy Sandbox ຖືກເປີດໄວ້ສຳລັບອຸປະກອນຂອງທ່ານ.\n\nທ່ານສາມາດສຶກສາເພີ່ມເຕີມ ຫຼື ປິດໃຊ້ເວີຊັນເບຕ້າຕອນໃດກໍໄດ້ໃນການຕັ້ງຄ່າຄວາມເປັນສ່ວນຕົວຂອງທ່ານ."</string>
+    <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"ທ່ານໄດ້ເລືອກທີ່ຈະບໍ່ເຂົ້າຮ່ວມ"</string>
+    <string name="notificationUI_confirmation_decline_subtitle" msgid="4194388733937808440">"ຂໍຂອບໃຈສຳລັບຄຳຕອບຂອງທ່ານ. Privacy Sandbox ຖືກເປີດໄວ້ສຳລັບອຸປະກອນຂອງທ່ານ.\n\nຫາກທ່ານປ່ຽນໃຈ ຫຼື ຕ້ອງການສຶກສາເພີ່ມເຕີມ, ກະລຸນາເຂົ້າໄປການຕັ້ງຄ່າຄວາມເປັນສ່ວນຕົວຂອງທ່ານ."</string>
+    <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"ການຕັ້ງຄ່າຄວາມເປັນສ່ວນຕົວ"</string>
+    <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"ເຂົ້າໃຈແລ້ວ"</string>
+    <string name="notificationUI_container2_title" msgid="3844342008598264655">"ທ່ານເປັນສ່ວນໜຶ່ງຂອງເວີຊັນເບຕ້າ"</string>
+    <!-- no translation found for notificationUI_container2_body_text (758560159693325060) -->
+    <skip />
+    <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"ຈັດການການຕັ້ງຄ່າຄວາມເປັນສ່ວນຕົວ"</string>
+    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"ເຂົ້າໃຈແລ້ວ"</string>
+    <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Privacy Sandbox ຂອງ Android ມີຄຸນສົມບັດໃໝ່ໆທີ່ແອັບສາມາດໃຊ້ເພື່ອສະແດງໂຄສະນາທີ່ທ່ານອາດມັກໃຫ້ແກ່ທ່ານ. ເທັກໂນໂລຢີເຫຼົ່ານີ້ບໍ່ໄດ້ໃຊ້ຕົວລະບຸອຸປະກອນ.\n\nAndroid ແລະ ແອັບຂອງທ່ານສາມາດຄາດການປະເພດຂອງໂຄສະນາທີ່ທ່ານອາດສົນໃຈ ແລະ ບັນທຶກຄວາມສົນໃຈໄວ້ຢູ່ອຸປະກອນຂອງທ່ານຊົ່ວຄາວ. ສິ່ງນີ້ຊ່ວຍໃຫ້ແອັບຕ່າງໆສະແດງໂຄສະນາທີ່ທ່ານອາດມັກໃຫ້ແກ່ທ່ານໂດຍທີ່ບໍ່ຕ້ອງຕິດຕາມການເຄື່ອນໄຫວຂອງທ່ານຢູ່ເວັບໄຊ ແລະ ແອັບຈາກນັກພັດທະນາອື່ນໆ."</string>
+    <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"ການປັບແຕ່ງໂຄສະນາເປັນແບບສ່ວນຕົວດ້ວຍ Privacy Sandbox"</string>
+    <string name="notificationUI_how_it_works_expanded_text3" msgid="603165966360369018">"•  ຄວາມສົນໃຈທີ່ຄາດການໂດຍ Android"</string>
+    <string name="notificationUI_how_it_works_expanded_text4" msgid="3910573920883580609">"Android ຄາດການສິ່ງທີ່ທ່ານສົນໃຈຫຼາຍທີ່ສຸດເປັນໄລຍະໂດຍອີງຕາມແອັບທີ່ທ່ານໃຊ້ ເຊັ່ນ: \"ກິລາ\" ຫຼື \"ທ່ອງທ່ຽວ.\"\n\nຈາກນັ້ນ, ແອັບສາມາດຂໍໃຫ້ Android ໃຊ້ຄວາມສົນໃຈເຫຼົ່ານັ້ນເພື່ອສະແດງໂຄສະນາທີ່ກ່ຽວຂ້ອງຫຼາຍຂຶ້ນໃຫ້ແກ່ທ່ານ.\n\nທ່ານສາມາດເບິ່ງລາຍການຄວາມສົນໃຈໃນປັດຈຸບັນໄດ້ໃນການຕັ້ງຄ່າຄວາມເປັນສ່ວນຕົວຂອງທ່ານ ແລະ ບລັອກສິ່ງໃດໆກໍຕາມທີ່ທ່ານບໍ່ມັກ."</string>
+    <string name="notificationUI_how_it_works_expanded_text5" msgid="7257714040472055781">"•  ຄວາມສົນໃຈທີ່ຄາດການໂດຍແອັບ"</string>
+    <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"ແອັບສາມາດຄາດການຄວາມສົນໃຈຂອງທ່ານ ແລະ ບັນທຶກສິ່ງເຫຼົ່ານີ້ໄວ້ກັບ Android ແບບຊົ່ວຄາວໄດ້. ຕົວຢ່າງ: ແອັບທີ່ທ່ານໃຊ້ຊື້ເກີບແລ່ນອາດຄາດການຄວາມສົນໃຈຂອງທ່ານເປັນ \"ການແລ່ນມາລາທອນ.\"\n\nຈາກນັ້ນ, ແອັບອື່ນສາມາດສະແດງໂຄສະນາທີ່ກ່ຽວຂ້ອງກັບມາລາທອນໃຫ້ທ່ານເຫັນໂດຍອີງຕາມຄວາມສົນໃຈນີ້.\n\nໃນການຕັ້ງຄ່າຄວາມເປັນສ່ວນຕົວຂອງທ່ານ, ທ່ານສາມາດຈັດການລາຍການແອັບທີ່ໄດ້ບັນທຶກຄວາມສົນໃຈໄວ້."</string>
+    <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
+    <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"ເຂົ້າຮ່ວມເວີຊັນເບຕ້າຂອງຄວາມເປັນສ່ວນຕົວສຳລັບໂຄສະນາໃນ Android"</string>
+    <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Privacy Sandbox"</string>
+    <string name="settingsUI_topics_title" msgid="5996189869721397937">"ຄວາມສົນໃຈທີ່ຄາດການໂດຍ Android"</string>
+    <string name="settingsUI_apps_title" msgid="2772289096915264175">"ແອັບທີ່ຄາດການຄວາມສົນໃຈ"</string>
+    <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"ການວັດແທກໂຄສະນາ"</string>
+    <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"ແອັບສາມາດໃຊ້ Privacy Sandbox ເພື່ອວັດແທກປະສິດທິຜົນຂອງໂຄສະນາຂອງພວກມັນ. ເພື່ອດຳເນີນການນີ້, ຜູ້ລົງໂຄສະນາສາມາດບັນທຶກຂໍ້ມູນທີ່ທ່ານໂຕ້ຕອບກັບໂຄສະນາ ແລະ ແອັບໄວ້ກັບ Android ຊົ່ວຄາວໄດ້. ປະລິມານຂໍ້ມູນທີ່ພວກມັນສາມາດບັນທຶກໄວ້ແມ່ນຖືກຈຳກັດ ແລະ ຈະຖືກລຶບອອກເປັນປະຈຳ.\n\nທ່ານສາມາດລຶບຂໍ້ມູນນີ້ຕອນໃດກໍໄດ້ໂດຍການປິດໃຊ້ Privacy Sandbox."</string>
+    <string name="settingsUI_topics_view_subtitle" msgid="6608135144119617292">"Android ຄາດການສິ່ງທີ່ທ່ານສົນໃຈຫຼາຍທີ່ສຸດເປັນໄລຍະໂດຍອີງຕາມແອັບທີ່ທ່ານໃຊ້. ແອັບຕ່າງໆສາມາດຂໍໃຫ້ Android ໃຊ້ຄວາມສົນໃຈເຫຼົ່ານີ້ເພື່ອສະແດງໂຄສະນາທີ່ກ່ຽວຂ້ອງຫຼາຍຂຶ້ນໃຫ້ແກ່ທ່ານ.\n\nຫາກທ່ານບລັອກຄວາມສົນໃຈໃດໜຶ່ງ, ມັນຈະບໍ່ຖືກເພີ່ມໃສ່ລາຍການດັ່ງກ່າວອີກ ເວັ້ນແຕ່ວ່າທ່ານຈະຍົກເລີກການບລັອກມັນ. ທ່ານອາດຈະຍັງເຫັນໂຄສະນາທີ່ກ່ຽວຂ້ອງບາງຢ່າງ."</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"ບລັອກ"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"ຍົກເລີກການບລັອກ"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"ຄວາມສົນໃຈທີ່ທ່ານໄດ້ບລັອກ"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"ຣີເຊັດຄວາມສົນໃຈທັງໝົດ"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="5717377146633882375">"ບໍ່ມີການສະແດງຄວາມສົນໃຈທີ່ຖືກບລັອກໃນຕອນນີ້"</string>
-    <string name="notificationUI_notification_content_eu" msgid="7419441022808120101">"ທົດສອບຄຸນສົມບັດໃໝ່ທີ່ຈະຈຳກັດການຕິດຕາມຂ້າມແອັບ"</string>
-    <string name="notificationUI_header_title_eu" msgid="6822288197367284058">"ເຂົ້າຮ່ວມຄວາມເປັນສ່ວນຕົວໂຄສະນາເບຕ້າ"</string>
-    <string name="notificationUI_container3_title_eu" msgid="3157854074121291065">"ສິ່ງທີ່ທ່ານສາມາດເຮັດໄດ້"</string>
-    <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"ບໍ່, ຂອບໃຈ"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="7294736040084958697">"ແມ່ນແລ້ວ, ຂ້ອຍຈະລອງເບິ່ງ"</string>
-    <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"ຂໍຂອບໃຈທີ່ທ່ານເຂົ້າຮ່ວມ"</string>
-    <string name="notificationUI_confirmation_accept_subtitle" msgid="722290263168711051">"ຕອນນີ້ທ່ານເປັນສ່ວນໜຶ່ງຂອງ Privacy Sandbox ເບຕ້າ. \n\nທ່ານສາມາດສຶກສາເພີ່ມເຕີມ ຫຼື ອອກຈາກເບຕ້າໄດ້ທຸກເວລາໃນການຕັ້ງຄ່າຄວາມເປັນສ່ວນຕົວຂອງທ່ານ."</string>
-    <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"ທ່ານໄດ້ເລືອກທີ່ຈະບໍ່ເຂົ້າຮ່ວມ"</string>
-    <string name="notificationUI_confirmation_decline_subtitle" msgid="1869322730722065768">"ຂໍຂອບໃຈສຳລັບຄຳຕອບຂອງທ່ານ. ທ່ານຍັງບໍ່ໄດ້ຖືກເພີ່ມເຂົ້າໃນ Privacy Sandbox ເບຕ້າເທື່ອ.\n\nຖ້າທ່ານປ່ຽນໃຈ ຫຼື ຕ້ອງການສຶກສາເພີ່ມເຕີມ, ໃຫ້ໄປທີ່ການຕັ້ງຄ່າຄວາມເປັນສ່ວນຕົວຂອງທ່ານ."</string>
-    <string name="notificationUI_notification_content" msgid="2096372976024736172">"ທ່ານກຳລັງທົດສອບຄຸນສົມບັດໃໝ່ທີ່ຈຳກັດການຕິດຕາມຂ້າມແອັບ"</string>
-    <string name="notificationUI_header_title" msgid="857744302422337933">"ທ່ານກຳລັງຊ່ວຍ Android ຈຳກັດການຕິດຕາມຂ້າມແອັບ"</string>
-    <string name="notificationUI_header_subtitle" msgid="522289584167376388">"Android ກຳລັງທົດສອບຄຸນສົມບັດໃໝ່ທີ່ຈະຈຳກັດການຕິດຕາມຂ້າມແອັບໂດຍຜູ້ລົງໂຄສະນາ"</string>
-    <string name="notificationUI_container1_title" msgid="3837529978480615552">"ການຕິດຕາມຂ້າມແອັບແມ່ນຫຍັງ?"</string>
-    <string name="notificationUI_container1_body_text" msgid="2564452110982505130">"ຕອນນີ້ຂໍ້ມູນກ່ຽວກັບການນຳໃຊ້ແອັບຂອງທ່ານສາມາດເຊື່ອມໂຍງເຂົ້າກັບອຸປະກອນຂອງທ່ານໄດ້ຢ່າງງ່າຍດາຍ ແລ້ວຍັງສາມາດແບ່ງປັນຜ່ານແອັບຕ່າງໆເພື່ອຈຸດປະສົງໃນການໂຄສະນາໄດ້ນຳ."</string>
-    <string name="notificationUI_container2_title" msgid="4796199061758878885">"ສິ່ງທີ່ Android ກຳລັງດຳເນີນການ"</string>
-    <string name="notificationUI_container2_body_text" msgid="7717896223210525953">"Android ກຳລັງທົດສອບ Privacy Sandbox ໃໝ່ທີ່ຈັດເກັບຂໍ້ມູນໄດ້ຢ່າງປອດໄພ ແລະ ແບ່ງປັນຂໍ້ມູນການໂຄສະນາໄດ້ໂດຍບໍ່ຕ້ອງລະບຸຕົວຕົນຂອງທ່ານ ຫຼື ອຸປະກອນຂອງທ່ານ. \n\nລະບົບໃໝ່ນີ້ຊ່ວຍປ້ອງກັນບໍ່ໃຫ້ແອັບສົ່ງຂໍ້ມູນໄປຫາແອັບອື່ນໂດຍກົງ, ແຕ່ຍັງອະນຸຍາດໃຫ້ມີການສະແດງໂຄສະນາທີ່ທ່ານອາດຈະສົນໃຈຢູ່."</string>
-    <string name="notificationUI_container2_control_text" msgid="3031227311095645064">"ວິທີການເຮັດວຽກຂອງມັນ"</string>
-    <string name="notificationUI_container3_title" msgid="1283794406634157611">"ທ່ານກໍາລັງຊ່ວຍແນວໃດ"</string>
-    <string name="notificationUI_container3_body_text" msgid="2636703086913037594">"ໃນຂະນະທີ່ທ່ານອາດຈະບໍ່ສັງເກດເຫັນການປ່ຽນແປງໃນໂຄສະນາທີ່ທ່ານເຫັນ, ການເປັນສ່ວນໜຶ່ງຂອງເບຕ້າຈະຊ່ວຍ Android ຈໍາກັດການຕິດຕາມຂ້າມແອັບເມື່ອເວລາຜ່ານໄປ. ທ່ານສາມາດອອກຈາກເບຕ້າໄດ້ທຸກເວລາໂດຍການໄປທີ່ການຕັ້ງຄ່າຄວາມເປັນສ່ວນຕົວຂອງທ່ານ."</string>
-    <string name="notificationUI_left_control_button_text" msgid="6459461402253858770">"ການຕັ້ງຄ່າຄວາມເປັນສ່ວນຕົວ"</string>
-    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"ເຂົ້າໃຈແລ້ວ"</string>
-    <string name="notificationUI_how_it_works_expanded_text1" msgid="1753701052925879129">"Privacy Sandbox ເຮັດວຽກແນວໃດ"</string>
-    <string name="notificationUI_how_it_works_expanded_text2" msgid="3117263986288195274">"ຂໍ້ມູນແມ່ນໄດ້ຮັບການເກັບກຳໃນ Privacy Sandbox ເພື່ອສະແດງໃຫ້ທ່ານເຫັນໂຄສະນາທີ່ທ່ານອາດຈະມັກ, ແຕ່ໄດ້ຖືກແບ່ງປັນໂດຍທີ່ບໍ່ມີການລະບຸຕົວທ່ານ ຫຼື ອຸປະກອນຂອງທ່ານ."</string>
-    <string name="notificationUI_how_it_works_expanded_text3" msgid="7270822532577167752">"ຂໍ້ມູນປະເພດໃດທີ່ຈະຖືກຈັດເກັບໄວ້ໃນ Privacy Sandbox?"</string>
-    <string name="notificationUI_how_it_works_expanded_text4" msgid="5609475052636889205">"•  ຄວາມສົນໃຈທົ່ວໄປ"</string>
-    <string name="notificationUI_how_it_works_expanded_text5" msgid="6757375506547548599">"Android ສ້າງຂໍ້ມູນນີ້ຂຶ້ນມາໂດຍອ້າງອີງຈາກແອັບທີ່ທ່ານໃຊ້ ແລະ ເພີ່ມມັນເຂົ້າໃສ່ໃນ Privacy Sandbox. ຍົກຕົວຢ່າງ: ໜຶ່ງໃນຄວາມສົນໃຈທົ່ວໄປຂອງທ່ານອາດຈະແມ່ນກິລາ.\n\nທ່ານສາມາດເຫັນລາຍຊື່ຂອງສິ່ງທີ່ທ່ານສົນໃຈໃນການຕັ້ງຄ່າຄວາມເປັນສ່ວນຕົວຂອງທ່ານ ແລະ ບລັອກສິ່ງຕ່າງໆທີ່ທ່ານບໍ່ມັກໄດ້."</string>
-    <string name="notificationUI_how_it_works_expanded_text6" msgid="2863877874268072458">"•  ຄວາມສົນໃຈສະເພາະ"</string>
-    <string name="notificationUI_how_it_works_expanded_text7" msgid="2140515900209351523">"ແອັບຂອງທ່ານສ້າງຂໍ້ມູນນີ້ຂຶ້ນມາໂດຍອີງຕາມວິທີທີ່ທ່ານໃຊ້ພວກມັນ ແລະ ເພີ່ມມັນເຂົ້າໃສ່ Privacy Sandbox. ຕົວຢ່າງ: ແອັບທີ່ທ່ານໃຊ້ເພື່ອຊື້ເກີບແລ່ນອາດຈະຖືກເພີ່ມປ້າຍ sport_running.\n\nໃນການຕັ້ງຄ່າຄວາມເປັນສ່ວນຕົວຂອງທ່ານ, ທ່ານສາມາດເຫັນລາຍຊື່ແອັບທີ່ເຮັດສິ່ງນີ້ໄດ້ ແລະ ບລັອກແອັບໃດໆຈາກການປະກອບສ່ວນຂໍ້ມູນໃຫ້ sandbox."</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"ບໍ່ມີຄວາມໃຈເພື່ອສະແດງຂຶ້ນໃນຕອນນີ້"</string>
+    <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
+    <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"ເວີຊັນເບຕ້າຂອງຄວາມເປັນສ່ວນຕົວສຳລັບໂຄສະນາໃນ Android ມີຄຸນສົມບັດໃໝ່ໆທີ່ແອັບສາມາດໃຊ້ເພື່ອສະແດງໂຄສະນາທີ່ທ່ານອາດມັກໃຫ້ແກ່ທ່ານ. ເທັກໂນໂລຢີເຫຼົ່ານີ້ບໍ່ໄດ້ໃຊ້ຕົວລະບຸອຸປະກອນ.\n\nAndroid ສາມາດຄາດການປະເພດຂອງໂຄສະນາທີ່ທ່ານອາດສົນໃຈ ແລະ ບັນທຶກຄວາມສົນໃຈເຫຼົ່ານີ້ໄວ້ຢູ່ອຸປະກອນຂອງທ່ານຊົ່ວຄາວ. ສິ່ງນີ້ຊ່ວຍໃຫ້ແອັບຕ່າງໆສະແດງໂຄສະນາທີ່ກ່ຽວຂ້ອງໃຫ້ແກ່ທ່ານໂດຍທີ່ບໍ່ຕ້ອງຕິດຕາມການເຄື່ອນໄຫວຂອງທ່ານຢູ່ເວັບໄຊ ແລະ ແອັບຈາກນັກພັດທະນາອື່ນໆ."</string>
+    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
+    <skip />
+    <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"ແອັບສາມາດຄາດການຄວາມສົນໃຈຂອງທ່ານ ແລະ ບັນທຶກສິ່ງເຫຼົ່ານີ້ໄວ້ກັບ Android ແບບຊົ່ວຄາວໄດ້. ຈາກນັ້ນ, ແອັບອື່ນສາມາດສະແດງໂຄສະນາໂດຍອີງຕາມຄວາມສົນໃຈເຫຼົ່ານີ້ໃຫ້ທ່ານໄດ້.\n\nຫາກທ່ານບລັອກແອັບໃດໜຶ່ງ, ມັນຈະບໍ່ຄາດການຄວາມສົນໃຈອີກຕໍ່ໄປ. ມັນຈະບໍ່ຖືກເພີ່ມໃສ່ລາຍການນີ້ຂອງແອັບອີກຄັ້ງ ເວັ້ນແຕ່ວ່າທ່ານຍົກເລີກການບລັອກມັນ. ຄວາມສົນໃຈທີ່ແອັບຄາດການໄວ້ແລ້ວຈະຖືກລຶບ, ແຕ່ທ່ານອາດຍັງເຫັນໂຄສະນາບາງຢ່າງທີ່ກ່ຽວຂ້ອງຢູ່."</string>
+    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"ແອັບທີ່ທ່ານໄດ້ບລັອກ"</string>
+    <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"ຣີເຊັດຄວາມສົນໃຈທີ່ຄາດການໂດຍແອັບ"</string>
+    <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"ບໍ່ມີແອັບໃດຄາດການຄວາມສົນໃຈຂອງທ່ານໃນຕອນນີ້"</string>
+    <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
+    <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"ເວີຊັນເບຕ້າຂອງຄວາມເປັນສ່ວນຕົວສຳລັບໂຄສະນາໃນ Android ມີຄຸນສົມບັດໃໝ່ໆທີ່ແອັບສາມາດໃຊ້ເພື່ອສະແດງໂຄສະນາທີ່ທ່ານອາດມັກໃຫ້ແກ່ທ່ານ. ເທັກໂນໂລຢີເຫຼົ່ານີ້ບໍ່ໄດ້ໃຊ້ຕົວລະບຸອຸປະກອນ.\n\nແອັບສາມາດຄາດການປະເພດຂອງໂຄສະນາທີ່ທ່ານອາດສົນໃຈ ແລະ ບັນທຶກຄວາມສົນໃຈເຫຼົ່ານີ້ໄວ້ຢູ່ອຸປະກອນຂອງທ່ານຊົ່ວຄາວ. ສິ່ງນີ້ຊ່ວຍໃຫ້ແອັບຕ່າງໆສະແດງໂຄສະນາທີ່ກ່ຽວຂ້ອງໃຫ້ແກ່ທ່ານໂດຍທີ່ບໍ່ຕ້ອງຕິດຕາມການເຄື່ອນໄຫວຂອງທ່ານຢູ່ເວັບໄຊ ແລະ ແອັບຈາກນັກພັດທະນາອື່ນໆ."</string>
+    <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"ທ່ານບໍ່ມີແອັບໃດຖືກບລັອກ"</string>
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"ທ່ານບໍ່ມີຄວາມສົນໃຈໃດຖືກບລັອກ"</string>
     <string name="topic10001" msgid="1636806320891333775">"ສິນລະປະ ແລະ ການບັນເທີງ"</string>
     <string name="topic10002" msgid="1226367977754287428">"ການສະແດງ ແລະ ໂຮງຮູບເງົາ"</string>
     <string name="topic10003" msgid="6949890838957814881">"ອະນິເມະ ແລະ ມັງງະ"</string>

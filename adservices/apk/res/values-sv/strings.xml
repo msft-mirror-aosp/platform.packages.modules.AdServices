@@ -22,10 +22,8 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="1644434244130657749">"Tillåter att en app får åtkomst till AdServices Attribution API:er."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="2766614780488510189">"få åtkomst till AdServices Custom Audience API"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"Tillåter att en app får åtkomst till AdServices Custom Audience API."</string>
-    <!-- no translation found for permlab_accessAdServicesAdId (2754825914769538156) -->
-    <skip />
-    <!-- no translation found for permdesc_accessAdServicesAdId (7717770480967762044) -->
-    <skip />
+    <string name="permlab_accessAdServicesAdId" msgid="2754825914769538156">"Få åtkomst till Ad ID API"</string>
+    <string name="permdesc_accessAdServicesAdId" msgid="7717770480967762044">"Tillåter att en app får åtkomst till Ad ID API."</string>
     <string name="permlab_accessAdServicesConsent" msgid="3203633397142568707">"få åtkomst till AdServices Consent API"</string>
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Tillåter att en app får åtkomst till AdServices Consent API."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Få åtkomst till Ad ID API"</string>
@@ -34,72 +32,69 @@
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Tillåter att en app får åtkomst till App Set ID API."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Få åtkomst till Consent Service API"</string>
     <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"Tillåter att en app får åtkomst till Consent Service API."</string>
+    <!-- no translation found for permlab_modifyAdServicesState (3594653261299518914) -->
+    <skip />
+    <!-- no translation found for permdesc_modifyAdServicesState (2485849128464307209) -->
+    <skip />
+    <!-- no translation found for permlab_accessAdServicesState (482058883975394398) -->
+    <skip />
+    <!-- no translation found for permdesc_accessAdServicesState (1165015604618567202) -->
+    <skip />
     <string name="app_label" msgid="5985320129629013968">"Android-system"</string>
-    <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"Privacy Sandbox (beta)"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"Privacy Sandbox (beta)"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"Aktivera och inaktivera Privacy Sandbox (beta)"</string>
-    <string name="settingsUI_main_view_title" msgid="255982490790282252">"Androids betaversion av annonsintegritet"</string>
-    <string name="settingsUI_main_view_subtitle" msgid="3380585883687237827">"Testa det nya Privacy Sandbox-systemet som begränsar spårning mellan appar"</string>
-    <string name="settingsUI_main_view_info_text1" msgid="8353580266621706164">"Så här fungerar Privacy Sandbox"</string>
-    <string name="settingsUI_main_view_info_text2" msgid="5144888171043725329">"Data samlas i Privacy Sandbox för att visa dig annonser du kanske gillar. Datan delas utan att identifiera dig eller din enhet."</string>
-    <string name="settingsUI_main_view_info_text3" msgid="9106658161862318732">"Vilken sorts data sparas i Privacy Sandbox?"</string>
-    <string name="settingsUI_main_view_info_text4" msgid="5819359066240454954">"•  Allmänna intressen"</string>
-    <string name="settingsUI_main_view_info_text5" msgid="6064832868440367397">"Android genererar denna data baserat på apparna du använder och lägger till den i Privacy Sandbox. Ett av dina allmänna intressen kan till exempel vara Sport. \n\nDu kan se listan över dina intressen i integritetsinställningarna och blockera dem du inte gillar."</string>
-    <string name="settingsUI_main_view_info_text6" msgid="3406976290919982143">"•  Specifika intressen"</string>
-    <string name="settingsUI_main_view_info_text7" msgid="210269084665708892">"Dina appar genererar denna data baserat på hur du använder dem och lägger till den i Privacy Sandbox. I appar som du använder för att köpa löparskor kan etiketten sport_running läggas till.\n\nI integritetsinställningarna kan du se listan över appar där detta görs och blockera eventuella appar från att förse Privacy Sandbox med data."</string>
-    <string name="settingsUI_topics_view_title" msgid="7437641813424176118">"Hantera intressen"</string>
-    <string name="settingsUI_topics_view_subtitle" msgid="5347912133908026725">"Androids Privacy Sandbox begränsar spårning mellan appar samtidigt som appar tillåts att visa dig annonser du kanske gillar. Android delar denna data med annonsörer utan att identifiera dig eller din enhet.\n\nBaserat på apparna du använder genererar och uppdaterar Android listan över dina allmänna intressen som annonser baseras på. Om du blockerar ett intresse läggs det inte till i listan igen förrän du tar bort blockeringen. Du kanske fortfarande ser relaterade annonser."</string>
-    <string name="settingsUI_topics_view_info_text1" msgid="6729245512525985403">"Allmänna intressen som annonser baseras på"</string>
-    <string name="settingsUI_topics_view_info_text2" msgid="8355913397424818046">"Android genererar dessa intressen baserat på apparna du använder.\n\nOm du till exempel har flera sportappar på enheten kan Android lägga till intresset Sport i Privacy Sandbox.\n\nSenare delas denna data med annonsörer utan att identifiera dig eller din enhet."</string>
-    <string name="settingsUI_apps_key" msgid="5279102708260885695">"apps_preference"</string>
-    <string name="settingsUI_apps_title" msgid="2177966577556486280">"Dina appar som genererar särskilda intressen"</string>
-    <string name="settingsUI_apps_summary" msgid="2382082513059909726">"Hantera appar som genererar särskilda intressen"</string>
-    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Appar som du har blockerat"</string>
-    <string name="settingsUI_apps_view_title" msgid="3615627092403761282">"Hantera appar"</string>
-    <string name="settingsUI_apps_view_subtitle" msgid="5257332567222983503">"Vissa appar kan generera data om dina specifika annonsintressen åt Privacy Sandbox, beroende på hur du använder dem. Android uppdaterar den här listan över appar så att du kan visa eller redigera den.\n\nOm du blockerar en app lägger den inte till mer information om dina specifika intressen. Den läggs inte till i den här listan igen om du inte tar bort blockeringen. Intressen som redan genererats av appen tas bort men du kan fortfarande se relaterade annonser."</string>
-    <string name="settingsUI_apps_view_no_apps_text" msgid="1056905761942948495">"Det finns inga appar att visa just nu"</string>
-    <string name="settingsUI_reset_apps_title" msgid="3308597019425923552">"Återställ data som genererats av appar"</string>
-    <string name="settingsUI_apps_view_info_text1" msgid="503353133396835755">"Specifika annonsintressen"</string>
-    <string name="settingsUI_apps_view_info_text2" msgid="6562781312486257254">"Vissa appar som du använder genererar data om specifika intressen för annonsering och lägger till denna i Privacy Sandbox.\n\nEn app som du använder för att köpa löparskor kan exempelvis lägga till etiketten sport_running.\n\nSenare delas datan som samlats in i Privacy Sandbox med annonsörer utan att identifiera dig eller din enhet. Så du ser fortfarande annonser som kan intressera dig, men du får ett bättre integritetsskydd."</string>
-    <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="5700261138344146462">"Det finns inga blockerade appar att visa just nu"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Det finns inga intressen att visa just nu"</string>
-    <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
-    <string name="settingsUI_topics_title" msgid="4024683469932819788">"Dina allmänna intressen"</string>
-    <string name="settingsUI_topics_summary" msgid="3146101472984434355">"Hantera allmänna intressen"</string>
-    <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"Hantera dina allmänna intressen för annonser"</string>
+    <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Gå med i Androids betaprogram för annonsintegritet"</string>
+    <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android utforskar mer privata sätt för appar att visa annonser."</string>
+    <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Läs mer"</string>
+    <string name="notificationUI_header_title_eu" msgid="4955298263079910371">"Androids betaprogram för annonsintegritet"</string>
+    <string name="notificationUI_container1_title_eu" msgid="8315199862119660570">"Nyheter"</string>
+    <string name="notificationUI_container1_body_text_eu" msgid="1700290522706948241">"De nya integritetsfunktionerna i Privacy Sandbox gör det möjligt för appar att visa relevanta annonser, men de begränsar vilken information dessa appar kan få om dina aktiviteter på webbplatser och i appar från andra utvecklare."</string>
+    <string name="notificationUI_container1_control_text_eu" msgid="3158258148321255153">"Så fungerar det"</string>
+    <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Så här deltar du"</string>
+    <!-- no translation found for notificationUI_container2_body_text_eu (5763735880112009239) -->
+    <skip />
+    <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Nej tack"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"Ja, jag vill gå med"</string>
+    <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Tack för ditt deltagande"</string>
+    <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Du deltar i Androids betaprogram för annonsintegritet. Privacy Sandbox har aktiverats för enheten.\n\nDu kan läsa mer eller inaktivera betaprogrammet när du vill i integritetsinställningarna."</string>
+    <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Du har valt att inte delta"</string>
+    <string name="notificationUI_confirmation_decline_subtitle" msgid="4194388733937808440">"Tack för ditt svar. Privacy Sandbox har inaktiverats för enheten.\n\nOm du ändrar dig eller vill läsa mer kan du öppna integritetsinställningar."</string>
+    <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"Integritetsinställningar"</string>
+    <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"OK"</string>
+    <string name="notificationUI_container2_title" msgid="3844342008598264655">"Du deltar i betaprogrammet"</string>
+    <!-- no translation found for notificationUI_container2_body_text (758560159693325060) -->
+    <skip />
+    <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"Hantera integritetsinställningar"</string>
+    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"OK"</string>
+    <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Androids Privacy Sandbox tillhandahåller nya funktioner som appar kan använda för att visa annonser som kan intressera dig. Med dessa funktioner används inte enhetsidentifierare.\n\nAndroid och dina appar kan uppskatta vilka typer av annonser du kan vara intresserad av och spara dina intressen tillfälligt på enheten. Det innebär att appar kan visa annonser som du kanske gillar, utan att spåra dina aktivitet på webbplatser och i appar från andra utvecklare."</string>
+    <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"Annonsanpassning med Privacy Sandbox"</string>
+    <string name="notificationUI_how_it_works_expanded_text3" msgid="603165966360369018">"•  Intressen uppskattas av Android"</string>
+    <string name="notificationUI_how_it_works_expanded_text4" msgid="3910573920883580609">"Android uppskattar regelbundet dina främsta intressen utifrån de appar du använder, till exempel sport eller resor.\n\nSedan kan en app begära att få använda dessa intressen från Android för att visa mer relevanta annonser.\n\nDu kan se listan med befintliga intressen i integritetsinställningarna och blockera alla du inte gillar."</string>
+    <string name="notificationUI_how_it_works_expanded_text5" msgid="7257714040472055781">"•  Intressen uppskattas av appar"</string>
+    <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"Appar kan uppskatta dina intressen och spara dem tillfälligt med Android. Om du till exempel använder en app för att köpa löparskor kan den uppskatta dina intressen som ”springa maraton”.\n\nSedan kan en annan app visa en annons relaterad till maraton utifrån detta intresse.\n\nDu kan hantera listan över appar som har sparade intressen i integritetsinställningarna."</string>
+    <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
+    <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Delta i Androids betaprogram för annonsintegritet"</string>
+    <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Privacy Sandbox"</string>
+    <string name="settingsUI_topics_title" msgid="5996189869721397937">"Intressen som uppskattats av Android"</string>
+    <string name="settingsUI_apps_title" msgid="2772289096915264175">"Appar som uppskattar intressen"</string>
+    <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"Annonsmätning"</string>
+    <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"Appar kan använda Privacy Sandbox för att mäta hur effektiva annonserna i dem är. För att göra detta kan annonsörer tillfälligt spara data via Android om dina interaktioner med annonserna och apparna. Hur mycket data som kan sparas begränsas och datan raderas regelbundet.\n\nDu kan radera denna data när du vill genom att inaktivera Privacy Sandbox."</string>
+    <string name="settingsUI_topics_view_subtitle" msgid="6608135144119617292">"Android uppskattar regelbundet dina främsta intressen utifrån de appar du använder. Appar kan begära att få använda dessa intressen från Android för att visa mer relevanta annonser.\n\nOm du blockerar ett intresse läggs det inte till i listan igen förrän du tar bort blockeringen. Du kanske fortfarande ser relaterade annonser."</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Blockera"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Avblockera"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Intressen som du har blockerat"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Återställ alla intressen"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="5717377146633882375">"Det finns inga blockerade intressen att visa just nu"</string>
-    <string name="notificationUI_notification_content_eu" msgid="7419441022808120101">"Testa nya funktioner som begränsar spårning mellan appar"</string>
-    <string name="notificationUI_header_title_eu" msgid="6822288197367284058">"Gå med i betaprogrammet för annonsintegritet"</string>
-    <string name="notificationUI_container3_title_eu" msgid="3157854074121291065">"Vad du kan göra"</string>
-    <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Nej tack"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="7294736040084958697">"Ja, jag testar"</string>
-    <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Tack för ditt deltagande"</string>
-    <string name="notificationUI_confirmation_accept_subtitle" msgid="722290263168711051">"Du är nu en del av betaversionen av Privacy Sandbox. \n\nI integritetsinställningarna kan du läsa mer eller lämna betaversionen när som helst."</string>
-    <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Du har valt att inte delta"</string>
-    <string name="notificationUI_confirmation_decline_subtitle" msgid="1869322730722065768">"Tack för ditt svar. Du har inte lagts till i betaprogrammet för Privacy Sandbox.\n\nOm du ändrar dig eller vill läsa mer öppnar du integritetsinställningarna."</string>
-    <string name="notificationUI_notification_content" msgid="2096372976024736172">"Du testar nya funktioner som begränsar spårning mellan appar"</string>
-    <string name="notificationUI_header_title" msgid="857744302422337933">"Du hjälper Android att begränsa spårning mellan appar"</string>
-    <string name="notificationUI_header_subtitle" msgid="522289584167376388">"Android testar en ny funktion som begränsar spårning mellan appar för annonsörer"</string>
-    <string name="notificationUI_container1_title" msgid="3837529978480615552">"Vad är spårning mellan appar?"</string>
-    <string name="notificationUI_container1_body_text" msgid="2564452110982505130">"I dagsläget kan data om din appanvändning enkelt kopplas till din enhet och delas mellan appar i annonssyften."</string>
-    <string name="notificationUI_container2_title" msgid="4796199061758878885">"Vad Android gör"</string>
-    <string name="notificationUI_container2_body_text" msgid="7717896223210525953">"Android testar en ny Privacy Sandbox som säkert lagrar och delar annonsdata – utan att du eller din enhet identifieras. \n\nTack vare det nya systemet förhindras appar från att dela din data direkt med andra appar, men du kan ändå få anpassade annonser."</string>
-    <string name="notificationUI_container2_control_text" msgid="3031227311095645064">"Så fungerar det"</string>
-    <string name="notificationUI_container3_title" msgid="1283794406634157611">"Så här hjälper du oss"</string>
-    <string name="notificationUI_container3_body_text" msgid="2636703086913037594">"Du kanske inte märker någon skillnad i annonserna som visas, men när du är med i betaprogrammet bidrar du till att Android begränsar spårning mellan appar på sikt. Du kan lämna betaprogrammet när du vill via integritetsinställningarna."</string>
-    <string name="notificationUI_left_control_button_text" msgid="6459461402253858770">"Integritetsinställningar"</string>
-    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"OK"</string>
-    <string name="notificationUI_how_it_works_expanded_text1" msgid="1753701052925879129">"Så här fungerar Privacy Sandbox"</string>
-    <string name="notificationUI_how_it_works_expanded_text2" msgid="3117263986288195274">"Data samlas i Privacy Sandbox för att visa dig annonser du kanske gillar. Datan delas utan att identifiera dig eller din enhet."</string>
-    <string name="notificationUI_how_it_works_expanded_text3" msgid="7270822532577167752">"Vilken typ av data lagras i Privacy Sandbox?"</string>
-    <string name="notificationUI_how_it_works_expanded_text4" msgid="5609475052636889205">"•  Allmänna intressen"</string>
-    <string name="notificationUI_how_it_works_expanded_text5" msgid="6757375506547548599">"Android genererar denna data baserat på apparna du använder och lägger till den i Privacy Sandbox. Ett av dina allmänna intressen kan till exempel vara Sport.\n\nDu kan se listan över dina intressen i integritetsinställningarna och blockera dem du inte gillar."</string>
-    <string name="notificationUI_how_it_works_expanded_text6" msgid="2863877874268072458">"•  Specifika intressen"</string>
-    <string name="notificationUI_how_it_works_expanded_text7" msgid="2140515900209351523">"Dina appar genererar denna data baserat på hur du använder dem och lägger till den i Privacy Sandbox. I en app som du använder för att köpa löparskor kan exempelvis etiketten sport_running läggas till.\n\nI integritetsinställningarna kan du se listan över appar där detta görs och blockera eventuella appar från att förse Privacy Sandbox med data."</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Det finns inga intressen att visa just nu"</string>
+    <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
+    <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Androids betaprogram för annonsintegritet tillhandahåller nya funktioner som appar kan använda för att visa annonser som kan intressera dig. Med dessa funktioner används inte enhetsidentifierare.\n\nAndroid kan uppskatta vilka typer av annonser du kan vara intresserad av och spara dessa intressen tillfälligt på enheten. Det innebär att appar kan visa relevanta annonser, utan att spåra dina aktivitet på webbplatser och i appar från andra utvecklare."</string>
+    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
+    <skip />
+    <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Appar kan uppskatta dina intressen och spara dem tillfälligt med Android. Sedan kan en annan app visa annonser utifrån dessa intressen.\n\nOm du blockerar en app uppskattar den inte längre dina intressen. Den läggs inte till i den här applistan igen såvida du inte tar bort blockeringen. Intressen som redan uppskattats av appen raderas, men du kan fortfarande se relaterade annonser."</string>
+    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Appar som du har blockerat"</string>
+    <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Återställ intressen som uppskattats av appar"</string>
+    <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Inga appar genererar intressen för dig just nu"</string>
+    <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
+    <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Androids betaprogram för annonsintegritet tillhandahåller nya funktioner som appar kan använda för att visa annonser som kan intressera dig. Med dessa funktioner används inte enhetsidentifierare.\n\nAndroid kan uppskatta vilka typer av annonser du kan vara intresserad av och spara dessa intressen tillfälligt på enheten. Det innebär att appar kan visa relevanta annonser, utan att spåra dina aktivitet på webbplatser och i appar från andra utvecklare."</string>
+    <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Du har inga blockerade appar"</string>
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Du har inga blockerade intressen"</string>
     <string name="topic10001" msgid="1636806320891333775">"Konst och underhållning"</string>
     <string name="topic10002" msgid="1226367977754287428">"Skådespeleri och teater"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime och manga"</string>

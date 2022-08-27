@@ -54,19 +54,23 @@ public class CustomAudienceValidator implements Validator<CustomAudience> {
     @NonNull private final CustomAudienceTimestampValidator mCustomAudienceTimestampValidator;
     @NonNull private final AdTechIdentifierValidator mBuyerValidator;
     @NonNull private final JsonValidator mUserBiddingSignalsValidator;
+    @NonNull private final CustomAudienceFieldSizeValidator mCustomAudienceFieldSizeValidator;
 
     @VisibleForTesting
     public CustomAudienceValidator(
             @NonNull CustomAudienceTimestampValidator customAudienceTimestampValidator,
             @NonNull AdTechIdentifierValidator buyerValidator,
-            @NonNull JsonValidator userBiddingSignalsValidator) {
+            @NonNull JsonValidator userBiddingSignalsValidator,
+            @NonNull CustomAudienceFieldSizeValidator customAudienceFieldSizeValidator) {
         Objects.requireNonNull(customAudienceTimestampValidator);
         Objects.requireNonNull(buyerValidator);
         Objects.requireNonNull(userBiddingSignalsValidator);
+        Objects.requireNonNull(customAudienceFieldSizeValidator);
 
         mCustomAudienceTimestampValidator = customAudienceTimestampValidator;
         mBuyerValidator = buyerValidator;
         mUserBiddingSignalsValidator = userBiddingSignalsValidator;
+        mCustomAudienceFieldSizeValidator = customAudienceFieldSizeValidator;
     }
 
     @VisibleForTesting
@@ -75,7 +79,8 @@ public class CustomAudienceValidator implements Validator<CustomAudience> {
                 new CustomAudienceTimestampValidator(clock, flags),
                 new AdTechIdentifierValidator(
                         CUSTOM_AUDIENCE_CLASS_NAME, ValidatorUtil.AD_TECH_ROLE_BUYER),
-                new JsonValidator(CUSTOM_AUDIENCE_CLASS_NAME, USER_BIDDING_SIGNALS_FIELD_NAME));
+                new JsonValidator(CUSTOM_AUDIENCE_CLASS_NAME, USER_BIDDING_SIGNALS_FIELD_NAME),
+                new CustomAudienceFieldSizeValidator(flags));
     }
 
     /**
@@ -110,6 +115,7 @@ public class CustomAudienceValidator implements Validator<CustomAudience> {
 
         validateFieldFormat(customAudience, violations);
         mCustomAudienceTimestampValidator.addValidation(customAudience, violations);
+        mCustomAudienceFieldSizeValidator.addValidation(customAudience, violations);
     }
 
     private void validateFieldFormat(

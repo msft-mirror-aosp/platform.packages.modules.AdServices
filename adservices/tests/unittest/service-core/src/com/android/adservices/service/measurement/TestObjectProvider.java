@@ -74,7 +74,7 @@ class TestObjectProvider {
                                     triggerFetcher,
                                     clickVerifier));
             // Disable Impression Noise
-            doReturn(Collections.emptyList()).when(measurementImpl).getSourceEventReports(any());
+            doReturn(Collections.emptyList()).when(measurementImpl).generateFakeEventReports(any());
             return measurementImpl;
         } else if (type == Type.NOISY) {
             MeasurementImpl measurementImpl =
@@ -97,7 +97,7 @@ class TestObjectProvider {
                                         .setReportTime(source.getExpiryTime() + ONE_HOUR_IN_MILLIS)
                                         .setTriggerData(0)
                                         .setAttributionDestination(source.getAppDestination())
-                                        .setAdTechDomain(source.getAdTechDomain())
+                                        .setEnrollmentId(source.getEnrollmentId())
                                         .setTriggerTime(0)
                                         .setTriggerPriority(0L)
                                         .setTriggerDedupKey(null)
@@ -105,7 +105,9 @@ class TestObjectProvider {
                                         .setStatus(EventReport.Status.PENDING)
                                         .build());
                     };
-            doAnswer(answerSourceEventReports).when(measurementImpl).getSourceEventReports(any());
+            doAnswer(answerSourceEventReports)
+                    .when(measurementImpl)
+                    .generateFakeEventReports(any());
             return measurementImpl;
         }
 
