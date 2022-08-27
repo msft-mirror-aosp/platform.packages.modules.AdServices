@@ -45,8 +45,7 @@
     <string name="notificationUI_container1_body_text_eu" msgid="1700290522706948241">"Las nuevas funciones de privacidad de Privacy Sandbox permiten que las aplicaciones te muestren anuncios relevantes, pero restringen lo que esas aplicaciones pueden llegar a saber sobre tus actividades en sitios web y aplicaciones de otros desarrolladores."</string>
     <string name="notificationUI_container1_control_text_eu" msgid="3158258148321255153">"Cómo funciona"</string>
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Cómo participar"</string>
-    <!-- no translation found for notificationUI_container2_body_text_eu (5763735880112009239) -->
-    <skip />
+    <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Al activar la beta, las aplicaciones pueden probar estas nuevas formas más privadas de mostrarte anuncios. Puedes desactivar la beta cuando quieras en la configuración de privacidad."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"No, gracias"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"Sí, quiero unirme"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Gracias por tu participación"</string>
@@ -56,8 +55,7 @@
     <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"Configuración de privacidad"</string>
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"Entendido"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"Formas parte de la beta"</string>
-    <!-- no translation found for notificationUI_container2_body_text (758560159693325060) -->
-    <skip />
+    <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Privacy Sandbox está activado en tu dispositivo. Las aplicaciones pueden probar estas nuevas formas más privadas de mostrarte anuncios. Puedes desactivar la beta cuando quieras en la configuración de privacidad."</string>
     <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"Gestionar configuración de privacidad"</string>
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Entendido"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Privacy Sandbox de Android proporciona nuevas funciones que las aplicaciones pueden usar para mostrarte anuncios que podrían interesarte. Estas tecnologías no usan identificadores de dispositivo.\n\nTanto Android como tus aplicaciones pueden estimar el tipo de anuncios que podrían interesarte y guardar los intereses temporalmente en tu dispositivo. Esto permite que las aplicaciones te muestren anuncios que podrían interesarte sin monitorizar tu actividad en sitios web ni aplicaciones de otros desarrolladores."</string>

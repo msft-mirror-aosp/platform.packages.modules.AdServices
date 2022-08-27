@@ -45,7 +45,7 @@
     <string name="notificationUI_container1_body_text_eu" msgid="1700290522706948241">"Nove funkcije privatnosti u Okruženju zaštićene privatnosti omogućavaju aplikacijama da vam prikazuju relevantne oglase, ali ograničavaju ono što te aplikacije mogu saznati o vašim aktivnostima na web lokacijama i u aplikacijama drugih programera."</string>
     <string name="notificationUI_container1_control_text_eu" msgid="3158258148321255153">"Kako funkcionira"</string>
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Kako učestvovati"</string>
-    <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Uključivanje beta verzije aplikacijama omogućuje ispitivanje novih, privatnijih načina za prikazivanje oglasa. Beta verziju uvijek možete isključiti u postavkama privatnosti."</string>
+    <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Uključivanje beta verzije omogućava aplikacijama da testiraju ove nove, privatnije načine za prikazivanje oglasa. Možete isključiti beta verziju bilo kada u postavkama privatnosti."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Ne, hvala"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"Da, pridružit ću se"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Hvala na učešću"</string>
@@ -55,7 +55,7 @@
     <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"Postavke privatnosti"</string>
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"Razumijem"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"Koristite beta verziju"</string>
-    <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Privacy Sandbox uključen je za vaš uređaj i aplikacije mogu ispitati nove, privatnije načine za prikazivanje oglasa. Beta verziju uvijek možete isključiti u postavkama privatnosti."</string>
+    <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Okruženje zaštićene privatnosti je uključeno za vaš uređaj i aplikacije mogu testirati ove nove, privatnije načine za prikazivanje oglasa. Možete isključiti beta verziju bilo kada u postavkama privatnosti."</string>
     <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"Upravljajte postavkama privatnosti"</string>
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Razumijem"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Androidovo Okruženje zaštićene privatnosti pruža nove funkcije koje aplikacije mogu koristiti za prikazivanje oglasa koji bi vam se mogli svidjeti. Ove tehnologije ne koriste identifikatore uređaja.\n\nAndroid i vaše aplikacije mogu procijeniti vrste oglasa koji vas mogu zanimati te privremeno sačuvati interesovanja na vašem uređaju. Ovo omogućava aplikacijama da vam prikazuju oglase koji bi vam se mogli svidjeti, ali bez praćenja vaše aktivnosti na web lokacijama i u aplikacijama drugih programera."</string>

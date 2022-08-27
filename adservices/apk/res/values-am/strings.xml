@@ -45,8 +45,7 @@
     <string name="notificationUI_container1_body_text_eu" msgid="1700290522706948241">"በግላዊነት Sandbox ውስጥ ያሉት አዲስ የግላዊነት ባህሪያት መተግበሪያዎች ተዛማጅነት ያላቸው ማስታወቂያዎችን ለእርስዎ እንዲያሳዩ ያስችላሉ፣ ነገር ግን እነዚህ መተግበሪያዎች በሌሎች ገንቢዎች በተሰሩ ድር ጣቢያዎች እና መተግበሪያዎች ላይ ስለ እርስዎ እንቅስቃሴዎች ማወቅ የሚችሉትን ይገድባሉ።"</string>
     <string name="notificationUI_container1_control_text_eu" msgid="3158258148321255153">"እንዴት እንደሚሠራ"</string>
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"እንዴት መሳተፍ እንደሚቻል"</string>
-    <!-- no translation found for notificationUI_container2_body_text_eu (5763735880112009239) -->
-    <skip />
+    <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"የቅድመ-ይሁንታውን ማብራት መተግበሪያዎች ለእርስዎ ማስታወቂያዎችን ለማሳየት እነዚህን አዲስና ይበልጥ የግል የሆኑ መንገዶች እንዲሞክሩ ያስችላቸዋል። በማንኛውም ጊዜ በእርስዎ የግላዊነት ቅንብሮች ውስጥ ቅድመ-ይሁንታውን ማጥፋት ይችላሉ።"</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"አይ፣ አመሰግናለሁ"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"አዎ፣ እቀላቀላለሁ"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"ስለተሳትፎዎ እናመሰግናለን"</string>
@@ -56,8 +55,7 @@
     <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"የግላዊነት ቅንብሮች"</string>
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"ገባኝ"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"የቅድመ ይሁንታው አካል ነዎት"</string>
-    <!-- no translation found for notificationUI_container2_body_text (758560159693325060) -->
-    <skip />
+    <string name="notificationUI_container2_body_text" msgid="758560159693325060">"የግላዊነት Sandbox ለእርስዎ መሣሪያ በርቷል እና መተግበሪያዎች ለእርስዎ ማስታወቂያዎችን ለማሳየት እነዚህን አዲስና ይበልጥ የግል የሆኑ መንገዶች መሞከር ይችላሉ። በማንኛውም ጊዜ በእርስዎ የግላዊነት ቅንብሮች ውስጥ ቅድመ-ይሁንታውን ማጥፋት ይችላሉ።"</string>
     <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"የግላዊነት ቅንብሮችን አስተዳድር"</string>
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"ገባኝ"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"የAndroid የግላዊነት Sandbox መተግበሪያዎች እርስዎ ሊወዷቸው የሚችሉ ማስታወቂያዎችን ለእርስዎ ለማሳየት ሊጠቀሙባቸው የሚችሏቸው አዲስ ባህሪያትን ያቀርባል። እነዚህ ቴክኖሎጂዎች የመሣሪያ ለዪዎችን አይጠቀሙም።\n\nAndroid እና መተግበሪያዎችዎ እርስዎ ሊፈልጓቸው የሚችሉ የማስታወቂያ አይነቶችን መገመት እና ዝንባሌዎቹን በመሣሪያዎ ላይ በጊዜያዊነት ማስቀመጥ ይችላሉ። ይህ መተግበሪያዎች በሌሎች ገንቢዎች በተሰሩ ድር ጣቢያዎች እና መተግበሪያዎች ላይ የሚኖርዎትን እንቅስቃሴ ሳይከታተሉ እርስዎ ሊወዷቸው የሚችሉ ማስታወቂያዎችን ለእርስዎ እንዲያሳዩ ያስችላቸዋል።"</string>
