@@ -180,6 +180,9 @@ public final class GetAdIdResult extends AdServicesResponse {
 
         /** Builds a {@link GetAdIdResult} instance. */
         public @NonNull GetAdIdResult build() {
+            if (mAdId == null) {
+                throw new IllegalArgumentException("adId is null");
+            }
 
             return new GetAdIdResult(mStatusCode, mErrorMessage, mAdId, mLimitAdTrackingEnabled);
         }
