@@ -47,9 +47,6 @@ public class SandboxedSdkWebViewProvider extends SandboxedSdkProvider {
         }
     }
 
-    @Override
-    public void onDataReceived(Bundle data, DataReceivedCallback callback) {}
-
     private class TestWebView {
 
         WebView mWebView = null;

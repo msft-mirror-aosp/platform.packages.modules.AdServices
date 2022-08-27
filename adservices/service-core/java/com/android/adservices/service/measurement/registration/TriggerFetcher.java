@@ -21,11 +21,14 @@ import android.adservices.measurement.RegistrationRequest;
 import android.adservices.measurement.WebTriggerParams;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.annotation.NonNull;
+import android.content.Context;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
+import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONArray;
@@ -54,26 +57,30 @@ public class TriggerFetcher {
     private final ExecutorService mIoExecutor = AdServicesExecutors.getBlockingExecutor();
     private final AdIdPermissionFetcher mAdIdPermissionFetcher;
     private final MeasurementHttpClient mNetworkConnection = new MeasurementHttpClient();
+    private final EnrollmentDao mEnrollmentDao;
 
-    public TriggerFetcher() {
-        this(new AdIdPermissionFetcher());
+    public TriggerFetcher(Context context) {
+        mEnrollmentDao = EnrollmentDao.getInstance(context);
+        mAdIdPermissionFetcher = new AdIdPermissionFetcher();
     }
 
     @VisibleForTesting
-    TriggerFetcher(AdIdPermissionFetcher adIdPermissionFetcher) {
-        this.mAdIdPermissionFetcher = adIdPermissionFetcher;
+    public TriggerFetcher(EnrollmentDao enrollmentDao,
+            AdIdPermissionFetcher adIdPermissionFetcher) {
+        mEnrollmentDao = enrollmentDao;
+        mAdIdPermissionFetcher = adIdPermissionFetcher;
     }
 
     private boolean parseTrigger(
             @NonNull Uri topOrigin,
-            @NonNull Uri registrationUri,
+            @NonNull String enrollmentId,
             @NonNull Map<String, List<String>> headers,
             @NonNull List<TriggerRegistration> addToResults,
             boolean isWebSource,
             boolean isAllowDebugKey) {
         TriggerRegistration.Builder result = new TriggerRegistration.Builder();
         result.setTopOrigin(topOrigin);
-        result.setRegistrationUri(registrationUri);
+        result.setEnrollmentId(enrollmentId);
         List<String> field;
         field = headers.get("Attribution-Reporting-Register-Trigger");
         if (field == null || field.size() != 1) {
@@ -116,7 +123,7 @@ public class TriggerFetcher {
             addToResults.add(result.build());
             return true;
         } catch (JSONException e) {
-            LogUtil.e("Trigger Parsing failed", e);
+            LogUtil.e(e, "Trigger Parsing failed");
             return false;
         }
     }
@@ -145,6 +152,13 @@ public class TriggerFetcher {
             LogUtil.d(e, "Malformed registration registrationUri URL");
             return;
         }
+        Optional<String> enrollmentId =
+                Enrollment.maybeGetEnrollmentId(registrationUri, mEnrollmentDao);
+        if (!enrollmentId.isPresent()) {
+            LogUtil.d("fetchTrigger: unable to find enrollment ID. Registration URI: %s",
+                    registrationUri);
+            return;
+        }
         HttpURLConnection urlConnection;
         try {
             urlConnection = (HttpURLConnection) openUrl(url);
@@ -168,7 +182,7 @@ public class TriggerFetcher {
             final boolean parsed =
                     parseTrigger(
                             topOrigin,
-                            registrationUri,
+                            enrollmentId.get(),
                             headers,
                             registrationsOut,
                             isWebSource,

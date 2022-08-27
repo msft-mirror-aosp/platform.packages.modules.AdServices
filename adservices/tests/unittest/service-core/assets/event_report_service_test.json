@@ -11,7 +11,6 @@
             "id": "ER1",
             "sourceId": 1,
             "attributionDestination": "android-app://com.example2/d1",
-            "adTechDomain": "https://www.example3.com",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000002,
@@ -32,7 +31,6 @@
             "id": "ER1",
             "sourceId": 1,
             "attributionDestination": "android-app://com.example2/d1",
-            "adTechDomain": "https://www.example3.com",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000002,
@@ -62,7 +60,6 @@
             "id": "ER1",
             "sourceId": 1,
             "attributionDestination": "android-app://com.example2/d1",
-            "adTechDomain": "https://www.example3.com",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000002,
@@ -83,7 +80,6 @@
             "id": "ER1",
             "sourceId": 1,
             "attributionDestination": "android-app://com.example2/d1",
-            "adTechDomain": "https://www.example3.com",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000002,
@@ -113,7 +109,6 @@
             "id": "ER1",
             "sourceId": 1,
             "attributionDestination": "android-app://com.example2/d1",
-            "adTechDomain": "https://www.example3.com",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000002,
@@ -134,7 +129,6 @@
             "id": "ER1",
             "sourceId": 1,
             "attributionDestination": "android-app://com.example2/d1",
-            "adTechDomain": "https://www.example3.com",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000002,
@@ -154,198 +148,6 @@
       }
     },
     {
-      "name": "Multiple reports for given app",
-      "input": {
-        "sources": [
-          {
-            "id": "S1",
-            "eventId": 1,
-            "sourceType": "navigation",
-            "publisher": "https://www.example1.com/s1",
-            "appDestination": "android-app://com.example2/d1",
-            "adTechDomain": "https://www.example3.com",
-            "enrollmentId": "enrollment-id-3",
-            "eventTime": 8640000001,
-            "expiryTime": 8640000030,
-            "priority": 100,
-            "status": 0,
-            "registrant": "android-app://com.example.1"
-          },
-          {
-            "id": "S2",
-            "eventId": 2,
-            "sourceType": "navigation",
-            "publisher": "https://www.example1.com/s1",
-            "appDestination": "android-app://com.example2/d1",
-            "adTechDomain": "https://www.example3.com",
-            "enrollmentId": "enrollment-id-3",
-            "eventTime": 8640000001,
-            "expiryTime": 8640000030,
-            "priority": 100,
-            "status": 0,
-            "registrant": "android-app://com.example.2"
-          },
-          {
-            "id": "S3",
-            "eventId": 3,
-            "sourceType": "navigation",
-            "publisher": "https://www.example1.com/s1",
-            "appDestination": "android-app://com.example2/d1",
-            "adTechDomain": "https://www.example3.com",
-            "enrollmentId": "enrollment-id-3",
-            "eventTime": 8640000001,
-            "expiryTime": 8640000030,
-            "priority": 100,
-            "status": 0,
-            "registrant": "android-app://com.example.1"
-          }
-        ],
-        "triggers": [],
-        "attributions": [],
-        "event_reports": [
-          {
-            "id": "ER1",
-            "sourceId": 1,
-            "attributionDestination": "android-app://com.example2/d1",
-            "adTechDomain": "https://www.example3.com",
-            "enrollmentId": "enrollment-id-3",
-            "triggerData": 2,
-            "triggerTime": 8640000002,
-            "status": 0,
-            "reportTime": 8643600030,
-            "triggerPriority": 101,
-            "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263
-          },
-          {
-            "id": "ER2",
-            "sourceId": 2,
-            "attributionDestination": "android-app://com.example2/d1",
-            "adTechDomain": "https://www.example3.com",
-            "enrollmentId": "enrollment-id-3",
-            "triggerData": 2,
-            "triggerTime": 8640000002,
-            "status": 0,
-            "reportTime": 8643600030,
-            "triggerPriority": 101,
-            "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263
-          },
-          {
-            "id": "ER3",
-            "sourceId": 3,
-            "attributionDestination": "android-app://com.example2/d1",
-            "adTechDomain": "https://www.example3.com",
-            "enrollmentId": "enrollment-id-3",
-            "triggerData": 2,
-            "triggerTime": 8640000002,
-            "status": 0,
-            "reportTime": 8643600030,
-            "triggerPriority": 101,
-            "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263
-          }
-        ]
-      },
-      "output": {
-        "sources": [
-          {
-            "id": "S1",
-            "eventId": 1,
-            "sourceType": "navigation",
-            "publisher": "https://www.example1.com/s1",
-            "appDestination": "android-app://com.example2/d1",
-            "adTechDomain": "https://www.example3.com",
-            "enrollmentId": "enrollment-id-3",
-            "eventTime": 8640000001,
-            "expiryTime": 8640000030,
-            "priority": 100,
-            "status": 0,
-            "registrant": "android-app://com.example.1"
-          },
-          {
-            "id": "S2",
-            "eventId": 2,
-            "sourceType": "navigation",
-            "publisher": "https://www.example1.com/s1",
-            "appDestination": "android-app://com.example2/d1",
-            "adTechDomain": "https://www.example3.com",
-            "enrollmentId": "enrollment-id-3",
-            "eventTime": 8640000001,
-            "expiryTime": 8640000030,
-            "priority": 100,
-            "status": 0,
-            "registrant": "android-app://com.example.2"
-          },
-          {
-            "id": "S3",
-            "eventId": 3,
-            "sourceType": "navigation",
-            "publisher": "https://www.example1.com/s1",
-            "appDestination": "android-app://com.example2/d1",
-            "adTechDomain": "https://www.example3.com",
-            "enrollmentId": "enrollment-id-3",
-            "eventTime": 8640000001,
-            "expiryTime": 8640000030,
-            "priority": 100,
-            "status": 0,
-            "registrant": "android-app://com.example.1"
-          }
-        ],
-        "triggers": [],
-        "attributions": [],
-        "event_reports": [
-          {
-            "id": "ER1",
-            "sourceId": 1,
-            "attributionDestination": "android-app://com.example2/d1",
-            "adTechDomain": "https://www.example3.com",
-            "enrollmentId": "enrollment-id-3",
-            "triggerData": 2,
-            "triggerTime": 8640000002,
-            "status": 1,
-            "reportTime": 8643600030,
-            "triggerPriority": 101,
-            "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263
-          },
-          {
-            "id": "ER2",
-            "sourceId": 2,
-            "attributionDestination": "android-app://com.example2/d1",
-            "adTechDomain": "https://www.example3.com",
-            "enrollmentId": "enrollment-id-3",
-            "triggerData": 2,
-            "triggerTime": 8640000002,
-            "status": 0,
-            "reportTime": 8643600030,
-            "triggerPriority": 101,
-            "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263
-          },
-          {
-            "id": "ER3",
-            "sourceId": 3,
-            "attributionDestination": "android-app://com.example2/d1",
-            "adTechDomain": "https://www.example3.com",
-            "enrollmentId": "enrollment-id-3",
-            "triggerData": 2,
-            "triggerTime": 8640000002,
-            "status": 1,
-            "reportTime": 8643600030,
-            "triggerPriority": 101,
-            "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263
-          }
-        ]
-      },
-      "param": {
-        "responseCode": 200,
-        "action": "ALL_REPORTS_FOR_APP",
-        "appName": "android-app://com.example.1"
-      }
-    },
-    {
       "name": "Multiple reports inside window for upload",
       "input":{
         "sources": [],
@@ -356,7 +158,6 @@
             "id": "ER1",
             "sourceId": 1,
             "attributionDestination": "android-app://com.example2/d1",
-            "adTechDomain": "https://www.example3.com",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000002,
@@ -370,7 +171,6 @@
             "id": "ER2",
             "sourceId": 2,
             "attributionDestination": "android-app://com.example2/d1",
-            "adTechDomain": "https://www.example3.com",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8440000002,
@@ -391,7 +191,6 @@
             "id": "ER1",
             "sourceId": 1,
             "attributionDestination": "android-app://com.example2/d1",
-            "adTechDomain": "https://www.example3.com",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000002,
@@ -405,7 +204,6 @@
             "id": "ER2",
             "sourceId": 2,
             "attributionDestination": "android-app://com.example2/d1",
-            "adTechDomain": "https://www.example3.com",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8440000002,
@@ -435,7 +233,6 @@
             "id": "ER1",
             "sourceId": 1,
             "attributionDestination": "android-app://com.example2/d1",
-            "adTechDomain": "https://www.example3.com",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000002,
@@ -449,7 +246,6 @@
             "id": "ER2",
             "sourceId": 2,
             "attributionDestination": "android-app://com.example2/d1",
-            "adTechDomain": "https://www.example3.com",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8440000002,
@@ -463,7 +259,6 @@
             "id": "ER3",
             "sourceId": 3,
             "attributionDestination": "android-app://com.example2/d1",
-            "adTechDomain": "https://www.example3.com",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8240000002,
@@ -484,7 +279,6 @@
             "id": "ER1",
             "sourceId": 1,
             "attributionDestination": "android-app://com.example2/d1",
-            "adTechDomain": "https://www.example3.com",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000002,
@@ -498,7 +292,6 @@
             "id": "ER2",
             "sourceId": 2,
             "attributionDestination": "android-app://com.example2/d1",
-            "adTechDomain": "https://www.example3.com",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8440000002,
@@ -512,7 +305,6 @@
             "id": "ER2",
             "sourceId": 3,
             "attributionDestination": "android-app://com.example2/d1",
-            "adTechDomain": "https://www.example3.com",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8240000002,
@@ -529,6 +321,56 @@
         "action": "ALL_REPORTS",
         "start": 8343600030,
         "end": 8543600030
+      }
+    },
+    {
+      "name": "Single pending report, retrieving enrollment fails",
+      "input": {
+        "sources": [],
+        "triggers": [],
+        "attributions": [],
+        "event_reports": [
+          {
+            "id": "ER1",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.example2/d1",
+            "enrollmentId": "enrollment-id-3",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": 8643600030,
+            "triggerPriority": 101,
+            "sourceType": "navigation",
+            "randomizedTriggerRate":  0.0024263
+          }
+        ]
+      },
+      "output": {
+        "sources": [],
+        "triggers": [],
+        "attributions": [],
+        "event_reports": [
+          {
+            "id": "ER1",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.example2/d1",
+            "enrollmentId": "enrollment-id-3",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": 8643600030,
+            "triggerPriority": 101,
+            "sourceType": "navigation",
+            "randomizedTriggerRate":  0.0024263
+          }
+        ]
+      },
+      "param": {
+        "responseCode": 200,
+        "action": "SINGLE_REPORT",
+        "result": 1,
+        "id": "ER1",
+	"notEnrolled": true
       }
     }
   ]

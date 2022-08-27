@@ -15,12 +15,14 @@
  */
 package android.adservices.topics;
 
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_TOPICS;
 import static android.adservices.common.AdServicesStatusUtils.ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
+import android.annotation.RequiresPermission;
 import android.annotation.TestApi;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
@@ -111,6 +113,7 @@ public final class TopicsManager {
      * @throws LimitExceededException if rate limit was reached.
      */
     @NonNull
+    @RequiresPermission(ACCESS_ADSERVICES_TOPICS)
     public void getTopics(
             @NonNull GetTopicsRequest getTopicsRequest,
             @NonNull @CallbackExecutor Executor executor,

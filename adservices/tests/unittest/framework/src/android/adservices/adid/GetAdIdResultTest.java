@@ -20,6 +20,7 @@ import android.os.Parcel;
 import androidx.test.filters.SmallTest;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 import org.junit.Test;
 
@@ -38,5 +39,15 @@ public final class GetAdIdResultTest {
 
         assertEquals(fromParcel.getAdId(), "UNITTEST_ADID");
         assertEquals(fromParcel.isLatEnabled(), true);
+    }
+
+    @Test
+    public void testWriteToParcel_nullableThrows() throws Exception {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    GetAdIdResult unusedResponse =
+                            new GetAdIdResult.Builder().setAdId(null).build();
+                });
     }
 }

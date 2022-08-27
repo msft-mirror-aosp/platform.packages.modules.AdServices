@@ -65,6 +65,8 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
 
+import junit.framework.AssertionFailedError;
+
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -220,6 +222,7 @@ public class SettingsActivityTest {
      */
     @Test
     public void test_FragmentContainer_isDisplayed() {
+        giveConsentIfNeeded();
         onView(withId(R.id.fragment_container_view)).check(matches(isDisplayed()));
     }
 
@@ -229,6 +232,7 @@ public class SettingsActivityTest {
      */
     @Test
     public void test_MainFragmentView_isDisplayed() {
+        giveConsentIfNeeded();
         onView(withText(R.string.settingsUI_privacy_sandbox_beta_switch_title))
                 .perform(nestedScrollTo())
                 .check(matches(isDisplayed()));
@@ -243,6 +247,7 @@ public class SettingsActivityTest {
     /** Test if {@link MainViewModel} works if Activity is recreated (simulates rotate phone). */
     @Test
     public void test_MainViewModel_getConsent() {
+        giveConsentIfNeeded();
         onView(withId(R.id.main_fragment))
                 .check(
                         matches(
@@ -280,6 +285,8 @@ public class SettingsActivityTest {
      */
     @Test
     public void test_TopicsView() {
+        giveConsentIfNeeded();
+
         assertMainFragmentDisplayed();
 
         onView(withText(R.string.settingsUI_topics_title)).perform(nestedScrollTo(), click());
@@ -297,6 +304,8 @@ public class SettingsActivityTest {
      */
     @Test
     public void test_BlockedTopicsView() {
+        giveConsentIfNeeded();
+
         assertMainFragmentDisplayed();
 
         onView(withText(R.string.settingsUI_topics_title)).perform(nestedScrollTo(), click());
@@ -322,6 +331,8 @@ public class SettingsActivityTest {
      */
     @Test
     public void test_AppsView() {
+        giveConsentIfNeeded();
+
         assertMainFragmentDisplayed();
 
         onView(withText(R.string.settingsUI_apps_title)).perform(nestedScrollTo(), click());
@@ -339,6 +350,8 @@ public class SettingsActivityTest {
      */
     @Test
     public void test_BlockedAppsView() {
+        giveConsentIfNeeded();
+
         assertMainFragmentDisplayed();
 
         onView(withText(R.string.settingsUI_apps_title)).perform(nestedScrollTo(), click());
@@ -382,5 +395,22 @@ public class SettingsActivityTest {
 
     private void assertBlockedAppsFragmentDisplayed() {
         onView(withId(R.id.blocked_apps_list)).check(matches(isDisplayed()));
+    }
+
+    private void giveConsentIfNeeded() {
+        try {
+            onView(withId(R.id.main_fragment))
+                    .check(
+                            matches(
+                                    hasDescendant(
+                                            Matchers.allOf(
+                                                    withClassName(
+                                                            Matchers.is(Switch.class.getName())),
+                                                    isChecked()))));
+        } catch (AssertionFailedError e) {
+            // Give consent
+            onView(withText(R.string.settingsUI_privacy_sandbox_beta_switch_title))
+                    .perform(nestedScrollTo(), click());
+        }
     }
 }

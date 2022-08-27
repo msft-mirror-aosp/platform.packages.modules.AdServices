@@ -16,12 +16,16 @@
 
 package android.adservices.adselection;
 
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
+
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
+import android.annotation.RequiresPermission;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
+import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 import android.os.TransactionTooLargeException;
@@ -47,15 +51,8 @@ public class AdSelectionManager {
      */
     public static final String AD_SELECTION_SERVICE = "ad_selection_service";
 
-    /**
-     * This field will be used once full implementation is ready.
-     *
-     * <p>TODO(b/212300065) remove the warning suppression once the service is implemented.
-     */
-    @SuppressWarnings("unused")
-    private final Context mContext;
-
-    private final ServiceBinder<AdSelectionService> mServiceBinder;
+    @NonNull private Context mContext;
+    @NonNull private ServiceBinder<AdSelectionService> mServiceBinder;
 
     /**
      * Create AdSelectionManager
@@ -65,12 +62,31 @@ public class AdSelectionManager {
     public AdSelectionManager(@NonNull Context context) {
         Objects.requireNonNull(context);
 
+        // In case the AdSelectionManager is initiated from inside a sdk_sandbox process the
+        // fields will be immediately rewritten by the initialize method below.
+        initialize(context);
+    }
+
+    /**
+     * Initializes {@link AdSelectionManager} with the given {@code context}.
+     *
+     * <p>This method is called by the {@link SandboxedSdkContext} to propagate the correct context.
+     * For more information check the javadoc on the {@link
+     * android.app.sdksandbox.SdkSandboxSystemServiceRegistry}.
+     *
+     * @hide
+     * @see android.app.sdksandbox.SdkSandboxSystemServiceRegistry
+     */
+    public AdSelectionManager initialize(@NonNull Context context) {
+        Objects.requireNonNull(context);
+
         mContext = context;
         mServiceBinder =
                 ServiceBinder.getServiceBinder(
                         context,
                         AdServicesCommon.ACTION_AD_SELECTION_SERVICE,
                         AdSelectionService.Stub::asInterface);
+        return this;
     }
 
     @NonNull
@@ -104,7 +120,11 @@ public class AdSelectionManager {
      *
      * <p>If the {@link TimeoutException} is thrown, it is caused when a timeout is encountered
      * during bidding, scoring, or overall selection process to find winning Ad.
+     *
+     * <p>If the {@link LimitExceededException} is thrown, it is caused when the calling package
+     * exceeds the allowed rate limits and is throttled.
      */
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void selectAds(
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull @CallbackExecutor Executor executor,
@@ -158,7 +178,7 @@ public class AdSelectionManager {
      * The receiver either returns a {@code void} for a successful run, or an {@link Exception}
      * indicates the error.
      */
-    @NonNull
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void reportImpression(
             @NonNull ReportImpressionRequest request,
             @NonNull Executor executor,
