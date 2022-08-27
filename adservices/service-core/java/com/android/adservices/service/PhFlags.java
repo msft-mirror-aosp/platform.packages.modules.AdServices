@@ -225,6 +225,9 @@ public final class PhFlags implements Flags {
     // Consent Notification debug mode keys.
     static final String KEY_CONSENT_NOTIFICATION_DEBUG_MODE = "consent_notification_debug_mode";
 
+    // Consent Manager debug mode keys.
+    static final String KEY_CONSENT_MANAGER_DEBUG_MODE = "consent_manager_debug_mode";
+
     // App/SDK AllowList/DenyList keys that have access to the web registration APIs
     static final String KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST = "web_context_client_allow_list";
 
@@ -1313,6 +1316,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getConsentManagerDebugMode() {
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(KEY_CONSENT_MANAGER_DEBUG_MODE),
+                /* defaultValue */ CONSENT_MANAGER_DEBUG_MODE);
+    }
+
+    @Override
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
         writer.println("==== AdServices PH Flags Dump Enrollment ====");
         writer.println(
@@ -1350,6 +1360,8 @@ public final class PhFlags implements Flags {
         writer.println("\t" + KEY_TOPICS_EPOCH_JOB_PERIOD_MS + " = " + getTopicsEpochJobPeriodMs());
         writer.println("\t" + KEY_TOPICS_EPOCH_JOB_FLEX_MS + " = " + getTopicsEpochJobFlexMs());
         writer.println("\t" + KEY_CLASSIFIER_TYPE + " = " + getClassifierType());
+        writer.println("\t" + KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL + " = "
+                + getMddTopicsClassifierManifestFileUrl());
 
         writer.println("==== AdServices PH Flags Dump Measurement related flags: ====");
         writer.println(

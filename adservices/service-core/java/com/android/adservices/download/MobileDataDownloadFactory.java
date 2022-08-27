@@ -23,6 +23,7 @@ import androidx.annotation.NonNull;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 
 import com.google.android.downloader.AndroidDownloaderLogger;
 import com.google.android.downloader.ConnectivityHandler;
@@ -53,6 +54,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.mobiledatadownload.DownloadConfigProto.ManifestFileFlag;
 import com.google.protobuf.MessageLite;
 
+import java.io.PrintWriter;
 import java.util.concurrent.Executor;
 
 /** Mobile Data Download Factory. */
@@ -63,6 +65,8 @@ public class MobileDataDownloadFactory {
     private static final String MDD_METADATA_SHARED_PREFERENCES = "mdd_metadata_store";
     private static final String TOPICS_MANIFEST_ID = "TopicsManifestId";
     private static final String MEASUREMENT_MANIFEST_ID = "MeasurementManifestId";
+
+    private static final int MAX_ADB_LOGCAT_SIZE = 4000;
 
     /** Returns a singleton of MobileDataDownload for the whole PPAPI app. */
     @NonNull
@@ -279,5 +283,21 @@ public class MobileDataDownloadFactory {
                             }
                         })
                 .build();
+    }
+
+    /**
+     * Dump MDD Debug Info.
+     */
+    public static void dump(Context context, @NonNull PrintWriter writer) {
+        String debugString = MobileDataDownloadFactory.getMdd(context,
+                FlagsFactory.getFlags()).getDebugInfoAsString();
+        writer.println("***====*** MDD Lib dump: ***====***");
+
+        for (int i = 0; i <= debugString.length() / MAX_ADB_LOGCAT_SIZE; i++) {
+            int start = i * MAX_ADB_LOGCAT_SIZE;
+            int end = (i + 1) * MAX_ADB_LOGCAT_SIZE;
+            end = Math.min(debugString.length(), end);
+            writer.println(debugString.substring(start, end));
+        }
     }
 }

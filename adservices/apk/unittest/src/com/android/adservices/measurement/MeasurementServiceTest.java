@@ -18,6 +18,7 @@ package com.android.adservices.measurement;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.doReturn;
 
 import android.content.Intent;
@@ -110,19 +111,29 @@ public class MeasurementServiceTest {
             ExtendedMockito.doReturn(mMockMeasurementImpl)
                     .when(() -> MeasurementImpl.getInstance(any()));
 
-            ExtendedMockito.doNothing().when(() -> AggregateReportingJobService.schedule(any()));
+            ExtendedMockito.doNothing()
+                    .when(() -> AggregateReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
             ExtendedMockito.doNothing()
-                    .when(() -> AggregateFallbackReportingJobService.schedule(any()));
-
-            ExtendedMockito.doNothing().when(() -> AttributionJobService.schedule(any()));
-
-            ExtendedMockito.doNothing().when(() -> EventReportingJobService.schedule(any()));
+                    .when(
+                            () ->
+                                    AggregateFallbackReportingJobService.scheduleIfNeeded(
+                                            any(), anyBoolean()));
 
             ExtendedMockito.doNothing()
-                    .when(() -> EventFallbackReportingJobService.schedule(any()));
+                    .when(() -> AttributionJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-            ExtendedMockito.doNothing().when(() -> DeleteExpiredJobService.schedule(any()));
+            ExtendedMockito.doNothing()
+                    .when(() -> EventReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+            ExtendedMockito.doNothing()
+                    .when(
+                            () ->
+                                    EventFallbackReportingJobService.scheduleIfNeeded(
+                                            any(), anyBoolean()));
+
+            ExtendedMockito.doNothing()
+                    .when(() -> DeleteExpiredJobService.scheduleIfNeeded(any(), anyBoolean()));
 
             MeasurementService measurementService = new MeasurementService();
             measurementService.onCreate();

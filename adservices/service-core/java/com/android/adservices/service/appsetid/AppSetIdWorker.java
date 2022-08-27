@@ -121,6 +121,8 @@ public class AppSetIdWorker {
                 callback.onResult(result);
             } catch (RemoteException e) {
                 LogUtil.e("RemoteException");
+            } finally {
+                return;
             }
         }
 

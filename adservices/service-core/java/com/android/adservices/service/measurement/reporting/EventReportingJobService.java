@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID;
+
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
@@ -30,6 +32,7 @@ import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.SystemHealthParams;
+import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.concurrent.Executor;
 
@@ -49,11 +52,11 @@ public final class EventReportingJobService extends JobService {
     @Override
     public boolean onStartJob(JobParameters params) {
         if (FlagsFactory.getFlags().getMeasurementJobEventReportingKillSwitch()) {
-            LogUtil.e("Event Reporting Job is disabled");
-            return false;
+            LogUtil.e("EventReportingJobService is disabled");
+            return skipAndCancelBackgroundJob(params);
         }
 
-        LogUtil.d("EventReportingJobService: onStartJob: ");
+        LogUtil.d("EventReportingJobService.onStartJob: ");
         sBlockingExecutor.execute(() -> {
             boolean success = new EventReportingJobHandler(
                     EnrollmentDao.getInstance(getApplicationContext()),
@@ -65,8 +68,6 @@ public final class EventReportingJobService extends JobService {
                             System.currentTimeMillis());
             jobFinished(params, !success);
         });
-
-        LogUtil.d("EventReportingJobService.onStartJob");
         return true;
     }
 
@@ -76,12 +77,9 @@ public final class EventReportingJobService extends JobService {
         return true;
     }
 
-    /**
-     * Schedules {@link EventReportingJobService}
-     */
-    public static void schedule(Context context) {
-        final JobScheduler jobScheduler = context.getSystemService(
-                JobScheduler.class);
+    /** Schedules {@link EventReportingJobService} */
+    @VisibleForTesting
+    static void schedule(Context context, JobScheduler jobScheduler) {
         final JobInfo job = new JobInfo.Builder(
                 AdServicesConfig.MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID,
                 new ComponentName(context, EventReportingJobService.class))
@@ -91,6 +89,46 @@ public final class EventReportingJobService extends JobService {
                 .setPeriodic(AdServicesConfig.getMeasurementEventMainReportingJobPeriodMs())
                 .build();
         jobScheduler.schedule(job);
-        LogUtil.d("Scheduling Event Main Reporting job ...");
+    }
+
+    /**
+     * Schedule Event Reporting Job if it is not already scheduled
+     *
+     * @param context the context
+     * @param forceSchedule flag to indicate whether to force rescheduling the job.
+     */
+    public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
+        if (FlagsFactory.getFlags().getMeasurementJobEventReportingKillSwitch()) {
+            LogUtil.d("EventReportingJobService is disabled, skip scheduling");
+            return;
+        }
+
+        final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
+        if (jobScheduler == null) {
+            LogUtil.e("JobScheduler not found");
+            return;
+        }
+
+        final JobInfo job = jobScheduler.getPendingJob(MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID);
+        // Schedule if it hasn't been scheduled already or force rescheduling
+        if (job == null || forceSchedule) {
+            schedule(context, jobScheduler);
+            LogUtil.d("Scheduled EventReportingJobService");
+        } else {
+            LogUtil.d("EventReportingJobService already scheduled, skipping reschedule");
+        }
+    }
+
+    private boolean skipAndCancelBackgroundJob(final JobParameters params) {
+        final JobScheduler jobScheduler = this.getSystemService(JobScheduler.class);
+        if (jobScheduler != null) {
+            jobScheduler.cancel(MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID);
+        }
+
+        // Tell the JobScheduler that the job has completed and does not need to be rescheduled.
+        jobFinished(params, false);
+
+        // Returning false means that this job has completed its work.
+        return false;
     }
 }
