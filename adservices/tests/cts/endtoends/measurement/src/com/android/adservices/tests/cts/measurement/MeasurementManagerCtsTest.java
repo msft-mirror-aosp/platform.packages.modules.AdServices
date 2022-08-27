@@ -45,7 +45,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -161,7 +160,6 @@ public class MeasurementManagerCtsTest {
         overrideDisableMeasurementEnrollmentCheck("0");
     }
 
-    @Ignore("b/243204209")
     @Test
     public void testDeleteRegistrations_withRequest_withNoOrigin_withNoRange_withCallback_NoErrors()
             throws Exception {
@@ -172,7 +170,6 @@ public class MeasurementManagerCtsTest {
         overrideDisableMeasurementEnrollmentCheck("0");
     }
 
-    @Ignore("b/243204209")
     @Test
     public void testDeleteRegistrations_withRequest_withNoRange_withCallback_NoErrors()
             throws Exception {
@@ -219,7 +216,6 @@ public class MeasurementManagerCtsTest {
         overrideDisableMeasurementEnrollmentCheck("0");
     }
 
-    @Ignore
     @Test
     public void testDeleteRegistrations_withRequest_withInvalidArguments_withCallback_hasError()
             throws Exception {
@@ -245,6 +241,7 @@ public class MeasurementManagerCtsTest {
                 new DeletionRequest.Builder()
                         .setOriginUris(Collections.singletonList(ORIGIN_URI))
                         .setDomainUris(Collections.singletonList(DOMAIN_URI))
+                        .setStart(Instant.now().plusMillis(1000))
                         .setEnd(Instant.now())
                         .build();
 
