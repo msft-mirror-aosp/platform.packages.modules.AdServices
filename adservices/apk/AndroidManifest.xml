@@ -105,7 +105,7 @@
     <application
             android:label="@string/app_label"
             android:forceQueryable="true"
-            android:allowBackup="true"
+            android:allowBackup="false"
             android:supportsRtl="true"
             android:theme="@style/FilterTouches">
         <service android:name="com.android.adservices.adselection.AdSelectionService"

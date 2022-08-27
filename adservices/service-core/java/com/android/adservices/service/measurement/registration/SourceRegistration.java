@@ -33,7 +33,7 @@ import java.util.Optional;
  */
 public final class SourceRegistration {
     private final Uri mTopOrigin;
-    private final Uri mRegistrationUri;
+    private final String mEnrollmentId;
     private final Uri mAppDestination;
     private final Uri mWebDestination;
     private final long mSourceEventId;
@@ -48,7 +48,7 @@ public final class SourceRegistration {
     /** Create a new source registration. */
     private SourceRegistration(
             @NonNull Uri topOrigin,
-            @NonNull Uri registrationUri,
+            @NonNull String enrollmentId,
             @Nullable Uri appDestination,
             @Nullable Uri webDestination,
             long sourceEventId,
@@ -60,7 +60,7 @@ public final class SourceRegistration {
             @Nullable String aggregateSource,
             @Nullable String aggregateFilterData) {
         mTopOrigin = topOrigin;
-        mRegistrationUri = registrationUri;
+        mEnrollmentId = enrollmentId;
         mAppDestination = appDestination;
         mWebDestination = webDestination;
         mSourceEventId = sourceEventId;
@@ -84,7 +84,7 @@ public final class SourceRegistration {
                 && mInstallAttributionWindow == that.mInstallAttributionWindow
                 && mInstallCooldownWindow == that.mInstallCooldownWindow
                 && Objects.equals(mTopOrigin, that.mTopOrigin)
-                && Objects.equals(mRegistrationUri, that.mRegistrationUri)
+                && Objects.equals(mEnrollmentId, that.mEnrollmentId)
                 && Objects.equals(mAppDestination, that.mAppDestination)
                 && Objects.equals(mWebDestination, that.mWebDestination)
                 && Objects.equals(mAggregateSource, that.mAggregateSource)
@@ -96,7 +96,7 @@ public final class SourceRegistration {
     public int hashCode() {
         return Objects.hash(
                 mTopOrigin,
-                mRegistrationUri,
+                mEnrollmentId,
                 mAppDestination,
                 mWebDestination,
                 mSourceEventId,
@@ -115,10 +115,10 @@ public final class SourceRegistration {
         return mTopOrigin;
     }
 
-    /** Uri used to request this registration. */
+    /** Enrollment ID associated with this registration. */
     @NonNull
-    public Uri getRegistrationUri() {
-        return mRegistrationUri;
+    public String getEnrollmentId() {
+        return mEnrollmentId;
     }
 
     /** OS (app) destination Uri. */
@@ -189,7 +189,7 @@ public final class SourceRegistration {
      */
     public static final class Builder {
         private Uri mTopOrigin;
-        private Uri mRegistrationUri;
+        private String mEnrollmentId;
         private Uri mAppDestination;
         private Uri mWebDestination;
         private long mSourceEventId;
@@ -215,11 +215,10 @@ public final class SourceRegistration {
             return this;
         }
 
-        /** See {@link SourceRegistration#getRegistrationUri}. */
+        /** See {@link SourceRegistration#getEnrollmentId}. */
         @NonNull
-        public Builder setRegistrationUri(@NonNull Uri registrationUri) {
-            Validation.validateUri(registrationUri);
-            mRegistrationUri = registrationUri;
+        public Builder setEnrollmentId(@NonNull String enrollmentId) {
+            mEnrollmentId = enrollmentId;
             return this;
         }
 
@@ -303,7 +302,7 @@ public final class SourceRegistration {
         /** Build the SourceRegistration. */
         @NonNull
         public SourceRegistration build() {
-            Validation.validateNonNull(mTopOrigin, mRegistrationUri);
+            Validation.validateNonNull(mTopOrigin, mEnrollmentId);
 
             if (mAppDestination == null && mWebDestination == null) {
                 throw new IllegalArgumentException(
@@ -312,7 +311,7 @@ public final class SourceRegistration {
 
             return new SourceRegistration(
                     mTopOrigin,
-                    mRegistrationUri,
+                    mEnrollmentId,
                     mAppDestination,
                     mWebDestination,
                     mSourceEventId,

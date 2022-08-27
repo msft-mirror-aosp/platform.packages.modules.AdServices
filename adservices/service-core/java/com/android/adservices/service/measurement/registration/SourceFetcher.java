@@ -29,11 +29,14 @@ import android.adservices.measurement.WebSourceParams;
 import android.adservices.measurement.WebSourceRegistrationRequest;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.content.Context;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
+import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.Web;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -67,14 +70,17 @@ public class SourceFetcher {
     private final String mDefaultAndroidAppScheme = "android-app";
     private final String mDefaultAndroidAppUriPrefix = mDefaultAndroidAppScheme + "://";
     private final MeasurementHttpClient mNetworkConnection = new MeasurementHttpClient();
+    private final EnrollmentDao mEnrollmentDao;
 
-    public SourceFetcher() {
-        this(new AdIdPermissionFetcher());
+    public SourceFetcher(Context context) {
+        mEnrollmentDao = EnrollmentDao.getInstance(context);
+        mAdIdPermissionFetcher = new AdIdPermissionFetcher();
     }
 
     @VisibleForTesting
-    SourceFetcher(AdIdPermissionFetcher adIdPermissionFetcher) {
-        this.mAdIdPermissionFetcher = adIdPermissionFetcher;
+    public SourceFetcher(EnrollmentDao enrollmentDao, AdIdPermissionFetcher adIdPermissionFetcher) {
+        mEnrollmentDao = enrollmentDao;
+        mAdIdPermissionFetcher = adIdPermissionFetcher;
     }
 
     private boolean parseCommonSourceParams(
@@ -214,7 +220,7 @@ public class SourceFetcher {
 
     private boolean parseSource(
             @NonNull Uri topOrigin,
-            @NonNull Uri registrationUri,
+            @NonNull String enrollmentId,
             @Nullable Uri appDestination,
             @Nullable Uri webDestination,
             boolean shouldValidateDestination,
@@ -224,7 +230,7 @@ public class SourceFetcher {
             boolean isAllowDebugKey) {
         SourceRegistration.Builder result = new SourceRegistration.Builder();
         result.setTopOrigin(topOrigin);
-        result.setRegistrationUri(registrationUri);
+        result.setEnrollmentId(enrollmentId);
         List<String> field;
         field = headers.get("Attribution-Reporting-Register-Source");
         if (field == null || field.size() != 1) {
@@ -263,6 +269,7 @@ public class SourceFetcher {
 
     /** Provided a testing hook. */
     @NonNull
+    @VisibleForTesting
     public URLConnection openUrl(@NonNull URL url) throws IOException {
         return mNetworkConnection.setup(url);
     }
@@ -289,6 +296,13 @@ public class SourceFetcher {
             LogUtil.d(e, "Malformed registration target URL");
             return;
         }
+        Optional<String> enrollmentId =
+                Enrollment.maybeGetEnrollmentId(registrationUri, mEnrollmentDao);
+        if (!enrollmentId.isPresent()) {
+            LogUtil.d("fetchSource: unable to find enrollment ID. Registration URI: %s",
+                    registrationUri);
+            return;
+        }
         HttpURLConnection urlConnection;
         try {
             urlConnection = (HttpURLConnection) openUrl(url);
@@ -311,7 +325,7 @@ public class SourceFetcher {
             final boolean parsed =
                     parseSource(
                             topOrigin,
-                            registrationUri,
+                            enrollmentId.get(),
                             appDestination,
                             webDestination,
                             shouldValidateDestination,

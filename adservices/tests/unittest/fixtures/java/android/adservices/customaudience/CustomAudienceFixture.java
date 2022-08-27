@@ -80,7 +80,6 @@ public final class CustomAudienceFixture {
 
     public static CustomAudience.Builder getValidBuilderForBuyer(AdTechIdentifier buyer) {
         return new CustomAudience.Builder()
-                .setOwnerPackageName(CustomAudienceFixture.VALID_OWNER)
                 .setBuyer(buyer)
                 .setName(CustomAudienceFixture.VALID_NAME)
                 .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)

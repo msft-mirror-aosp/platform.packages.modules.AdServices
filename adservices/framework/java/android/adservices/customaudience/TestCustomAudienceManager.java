@@ -16,10 +16,13 @@
 
 package android.adservices.customaudience;
 
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
+
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
+import android.annotation.RequiresPermission;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 
@@ -32,11 +35,16 @@ import java.util.concurrent.Executor;
 public class TestCustomAudienceManager {
 
     private final CustomAudienceManager mCustomAudienceManager;
+    private final String mCallerPackageName;
 
-    TestCustomAudienceManager(@NonNull CustomAudienceManager customAudienceManager) {
+    TestCustomAudienceManager(
+            @NonNull CustomAudienceManager customAudienceManager,
+            @NonNull String callerPackageName) {
         Objects.requireNonNull(customAudienceManager);
+        Objects.requireNonNull(callerPackageName);
 
         mCustomAudienceManager = customAudienceManager;
+        mCallerPackageName = callerPackageName;
     }
 
     /**
@@ -54,6 +62,7 @@ public class TestCustomAudienceManager {
      *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
      *     Exception} indicates the error.
      */
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void overrideCustomAudienceRemoteInfo(
             @NonNull AddCustomAudienceOverrideRequest request,
             @NonNull @CallbackExecutor Executor executor,
@@ -64,7 +73,7 @@ public class TestCustomAudienceManager {
         try {
             final ICustomAudienceService service = mCustomAudienceManager.getService();
             service.overrideCustomAudienceRemoteInfo(
-                    request.getOwnerPackageName(),
+                    mCallerPackageName,
                     request.getBuyer(),
                     request.getName(),
                     request.getBiddingLogicJs(),
@@ -101,6 +110,7 @@ public class TestCustomAudienceManager {
      *     receiver either returns a {@code void} for a successful run, or an {@link Exception}
      *     indicates the error.
      */
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void removeCustomAudienceRemoteInfoOverride(
             @NonNull RemoveCustomAudienceOverrideRequest request,
             @NonNull @CallbackExecutor Executor executor,
@@ -111,7 +121,7 @@ public class TestCustomAudienceManager {
         try {
             final ICustomAudienceService service = mCustomAudienceManager.getService();
             service.removeCustomAudienceRemoteInfoOverride(
-                    request.getOwnerPackageName(),
+                    mCallerPackageName,
                     request.getBuyer(),
                     request.getName(),
                     new CustomAudienceOverrideCallback.Stub() {
@@ -144,6 +154,7 @@ public class TestCustomAudienceManager {
      *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
      *     Exception} indicates the error.
      */
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void resetAllCustomAudienceOverrides(
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<Object, Exception> receiver) {

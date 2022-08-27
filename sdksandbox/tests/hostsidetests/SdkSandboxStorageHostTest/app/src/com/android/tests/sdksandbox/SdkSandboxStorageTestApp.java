@@ -71,6 +71,7 @@ public class SdkSandboxStorageTestApp {
         mContext = ApplicationProvider.getApplicationContext();
         mSdkSandboxManager = mContext.getSystemService(SdkSandboxManager.class);
         assertThat(mSdkSandboxManager).isNotNull();
+        mRule.getScenario();
     }
 
     // Run a phase of the test inside the code loaded for this app
@@ -91,8 +92,6 @@ public class SdkSandboxStorageTestApp {
 
     @Test
     public void loadSdk() throws Exception {
-        mRule.getScenario();
-
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
@@ -106,12 +105,7 @@ public class SdkSandboxStorageTestApp {
 
     @Test
     public void testSdkDataPackageDirectory_SharedStorageIsUsable() throws Exception {
-        mRule.getScenario();
-
-        // First load SDK
-        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
-        mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        loadSdk();
 
         // Run phase inside the SDK
         runPhaseInsideCode("testSdkDataPackageDirectory_SharedStorageIsUsable");
@@ -119,26 +113,14 @@ public class SdkSandboxStorageTestApp {
 
     @Test
     public void testSdkDataSubDirectory_PerSdkStorageIsUsable() throws Exception {
-        mRule.getScenario();
+        loadSdk();
 
-        // First load SDK
-        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
-        mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
-
-        // Run phase inside the SDK
         runPhaseInsideCode("testSdkDataSubDirectory_PerSdkStorageIsUsable");
     }
 
     @Test
     public void testSdkDataIsAttributedToApp() throws Exception {
-        mRule.getScenario();
-
-        // First load sdk
-        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
-        mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
-        // Wait for sdk to finish loading
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        loadSdk();
 
         final StorageStatsManager stats = InstrumentationRegistry.getInstrumentation().getContext()
                                                 .getSystemService(StorageStatsManager.class);

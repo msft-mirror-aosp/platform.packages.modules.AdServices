@@ -92,7 +92,6 @@ public class PermissionsAppOptOutTest {
 
         CustomAudience customAudience =
                 new CustomAudience.Builder()
-                        .setOwnerPackageName(sContext.getPackageName())
                         .setBuyer(AdTechIdentifier.fromString("buyer.example.com"))
                         .setName("exampleCustomAudience")
                         .setDailyUpdateUrl(Uri.parse("https://buyer.example.com/daily-update"))
@@ -122,7 +121,6 @@ public class PermissionsAppOptOutTest {
                         () ->
                                 customAudienceClient
                                         .leaveCustomAudience(
-                                                sContext.getPackageName(),
                                                 AdTechIdentifier.fromString("buyer.example.com"),
                                                 "exampleCustomAudience")
                                         .get());

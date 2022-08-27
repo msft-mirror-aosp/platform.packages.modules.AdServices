@@ -24,9 +24,11 @@ import android.os.Bundle;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.util.ArrayMap;
+import android.util.ArraySet;
 import android.util.Log;
 
 import com.android.internal.annotations.GuardedBy;
+import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -36,20 +38,22 @@ import java.util.Set;
 /**
  * Syncs specified keys in default {@link SharedPreferences} to Sandbox.
  *
+ * <p>This class is a singleton since we want to maintain sync between app process and sandbox
+ * process.
+ *
  * @hide
  */
 public class SharedPreferencesSyncManager {
 
     private static final String TAG = "SdkSandboxManager";
 
+    private static SharedPreferencesSyncManager sInstance = null;
+
     private final ISdkSandboxManager mService;
     private final Context mContext;
     private final Object mLock = new Object();
+    private final ISharedPreferencesSyncCallback mCallback = new SharedPreferencesSyncCallback();
 
-    @GuardedBy("mLock")
-    private boolean mIsRunning = false;
-
-    // Set to true if initial bulk sync fails due to sandbox being unavailable
     @GuardedBy("mLock")
     private boolean mWaitingForSandbox = false;
 
@@ -57,71 +61,57 @@ public class SharedPreferencesSyncManager {
     @GuardedBy("mLock")
     private ChangeListener mListener = null;
 
+    // Map of keyName->SharedPreferenceKey that this manager needs to keep in sync.
     @GuardedBy("mLock")
-    private SharedPreferencesSyncCallback mCallback = null;
+    private ArrayMap<String, SharedPreferencesKey> mKeysToSync = new ArrayMap<>();
 
-    /**
-     * Type of keys that needs to be synced.
-     *
-     * <p>Generated from {@link #mKeysToSync}.
-     */
-    @Nullable
-    @GuardedBy("mLock")
-    private ArrayMap<String, Integer> mTypeOfKey = null;
-
-    // List of keys that this manager needs to keep in sync.
-    @Nullable
-    @GuardedBy("mLock")
-    private ArrayList<KeyWithType> mKeysToSync = null;
-
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
     public SharedPreferencesSyncManager(
             @NonNull Context context, @NonNull ISdkSandboxManager service) {
         mContext = context.getApplicationContext();
         mService = service;
     }
 
+    /** Returns a singleton instance of this class. */
+    public static synchronized SharedPreferencesSyncManager getInstance(
+            @NonNull Context context, @NonNull ISdkSandboxManager service) {
+        if (sInstance == null) {
+            sInstance = new SharedPreferencesSyncManager(context, service);
+        }
+        return sInstance;
+    }
+
     // TODO(b/237410689): Update links to getClientSharedPreferences when cl is merged.
     /**
-     * Starts syncing data from app's default {@link SharedPreferences} to SdkSandbox.
+     * Adds {@link SharedPreferencesKey}s to set of keys being synced from app's default {@link
+     * SharedPreferences} to SdkSandbox.
      *
-     * <p>Synced data will be available for sdks to read using their {@code
+     * <p>Synced data will be available for sdks to read using the {@code
      * getClientSharedPreferences} api.
      *
-     * <p>Only specified keys provided in {@code keysWithTypeToSync} will be synced. Only one set of
-     * keys can be synced at a time. Calling this API while sync is already running will throw
-     * {@link IllegalStateException}. If you want to modify the set of keys being synced, you need
-     * to call {@link #stopSharedPreferencesSync()} first. When you modify the set of keys being
-     * synced, the synced value of old keys will not be erased from the Sandbox. To avoid storage
-     * leak, always sync removal of keys from default {@link SharedPreferences} before updating the
-     * keys.
+     * <p>To stop syncing any key that has been added using this API, use {@link
+     * #removeSharedPreferencesSyncKeys(Set)}.
      *
-     * <p>If this API is called before Sandbox has started, {@link SdkSandboxManager} will wait for
-     * sandbox to start and then start the syncing. If Sandbox is already running, it will start the
-     * sync immediately. Once data has been synced once successfully, {@link
-     * ISharedPreferencesSyncCallback#onStart()} will be called. From there on, updates to any of
-     * the keys will also be propagated to the Sandbox. If there is an error at any point, {@link
-     * ISyncSharedPreferencesDataCallback#onError(int, String)} will be called and sync will break.
-     * Sync will also break if {@link #stopSharedPreferencesSync()} is called. To restart the sync,
-     * the user needs to call this API again.
+     * <p>If a provided {@link SharedPreferencesKey} conflicts with an existing key in the pool,
+     * i.e., they have the same name but different type, then the old key is replaced with the new
+     * one.
+     *
+     * <p>The sync breaks if the app restarts and user must call this API to rebuild the pool of
+     * keys for syncing.
      *
      * @param keysWithTypeToSync set of keys and their type that will be synced to Sandbox.
-     * @param callback callback to receive notification for change in sync status.
      */
-    public void startSharedPreferencesSync(
-            @NonNull Set<KeyWithType> keysWithTypeToSync,
-            @NonNull SharedPreferencesSyncCallback callback) {
+    public void addSharedPreferencesSyncKeys(
+            @NonNull Set<SharedPreferencesKey> keysWithTypeToSync) {
         // TODO(b/239403323): Validate the parameters in SdkSandboxManager
         synchronized (mLock) {
-            if (mIsRunning) {
-                throw new IllegalStateException("Sync is already in progress");
+            for (SharedPreferencesKey keyWithType : keysWithTypeToSync) {
+                mKeysToSync.put(keyWithType.getName(), keyWithType);
             }
 
-            mIsRunning = true;
-            mCallback = callback;
-            mKeysToSync = new ArrayList<>(keysWithTypeToSync);
-            mTypeOfKey = new ArrayMap<>();
-            for (KeyWithType keyWithTypeToSync : mKeysToSync) {
-                mTypeOfKey.put(keyWithTypeToSync.getName(), keyWithTypeToSync.getType());
+            if (mListener == null) {
+                mListener = new ChangeListener();
+                getDefaultSharedPreferences().registerOnSharedPreferenceChangeListener(mListener);
             }
 
             syncData();
@@ -129,39 +119,49 @@ public class SharedPreferencesSyncManager {
     }
 
     /**
-     * Stops syncing data from app's default {@link SharedPreferences} to SdkSandbox.
+     * Removes keys from set of {@link SharedPreferencesKey}s that have been added using {@link
+     * #addSharedPreferencesSyncKeys(Set)}
      *
-     * <p>This breaks any existing sync started using {@link #startSharedPreferencesSync(Set,
-     * SharedPreferencesSyncCallback)}. If there is no active sync present, then calling this is a
-     * no-op.
+     * <p>Removed keys will be erased from SdkSandbox if they have been synced already.
      *
-     * <p>Data synced to Sandbox so far won't be erased.
+     * @param keys set of key names that should no longer be synced to Sandbox.
      */
-    public boolean stopSharedPreferencesSync() {
+    public void removeSharedPreferencesSyncKeys(@NonNull Set<String> keys) {
         synchronized (mLock) {
-            if (mIsRunning) {
-                mCallback.onStop();
-                cleanUp();
-                return true;
+            for (String key : keys) {
+                mKeysToSync.remove(key);
             }
-            return false;
+            // TODO(b/19742283): removed keys need to be erased from sandbox.
         }
     }
 
-    @GuardedBy("mLock")
-    private void cleanUp() {
-        getDefaultSharedPreferences().unregisterOnSharedPreferenceChangeListener(mListener);
-        mCallback = null;
-        mListener = null;
-        mIsRunning = false;
-        mWaitingForSandbox = false;
+    /**
+     * Returns the set of all {@link SharedPreferencesKey} that are being synced from app's default
+     * {@link SharedPreferences} to sandbox.
+     */
+    public Set<SharedPreferencesKey> getSharedPreferencesSyncKeys() {
+        synchronized (mLock) {
+            return new ArraySet(mKeysToSync.values());
+        }
     }
 
-    // TODO(b/239403323): On sandbox restart, we need to sync again.
+    /**
+     * Returns true if sync is in waiting state.
+     *
+     * <p>Sync transitions into waiting state whenever sdksandbox is unavailable. It resumes syncing
+     * again when SdkSandboxManager notifies us that sdksandbox is available again.
+     */
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    public boolean isWaitingForSandbox() {
+        synchronized (mLock) {
+            return mWaitingForSandbox;
+        }
+    }
+
     /**
      * Syncs data to SdkSandbox.
      *
-     * <p>Syncs values of specified keys {@code mKeysToSync} from the default {@link
+     * <p>Syncs values of specified keys {@link #mKeysToSync} from the default {@link
      * SharedPreferences} of the app.
      *
      * <p>Once bulk sync is complete, it also registers listener for updates which maintains the
@@ -170,14 +170,11 @@ public class SharedPreferencesSyncManager {
     private void syncData() {
         synchronized (mLock) {
             // Do not sync if keys have not been specified by the client.
-            if (mKeysToSync == null || mKeysToSync.isEmpty()) {
+            if (mKeysToSync.isEmpty()) {
                 return;
             }
 
             bulkSyncData();
-
-            // Register listener for syncing future updates
-            getDefaultSharedPreferences().registerOnSharedPreferenceChangeListener(mListener);
         }
     }
 
@@ -186,75 +183,20 @@ public class SharedPreferencesSyncManager {
         // Collect data in a bundle
         final Bundle data = new Bundle();
         final SharedPreferences pref = getDefaultSharedPreferences();
-        for (int i = 0; i < mTypeOfKey.size(); i++) {
-            final String key = mTypeOfKey.keyAt(i);
+        for (int i = 0; i < mKeysToSync.size(); i++) {
+            final String key = mKeysToSync.keyAt(i);
             updateBundle(data, pref, key);
         }
-        final SharedPreferencesUpdate update = new SharedPreferencesUpdate(mKeysToSync, data);
+        final SharedPreferencesUpdate update =
+                new SharedPreferencesUpdate(mKeysToSync.values(), data);
         try {
             mService.syncDataFromClient(
                     mContext.getPackageName(),
                     /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
                     update,
-                    new ISharedPreferencesSyncCallback.Stub() {
-                        @Override
-                        public void onSuccess() {
-                            handleSuccess();
-                        }
-
-                        @Override
-                        public void onSandboxStart() {
-                            handleSandboxStart();
-                        }
-
-                        @Override
-                        public void onError(int errorCode, String errorMsg) {
-                            handleError(errorCode, errorMsg);
-                        }
-                    });
+                    mCallback);
         } catch (RemoteException e) {
-            handleError(
-                    ISharedPreferencesSyncCallback.INTERNAL_ERROR,
-                    "Couldn't connect to SdkSandboxManagerService: " + e.getMessage());
-        }
-    }
-
-    private void handleSuccess() {
-        synchronized (mLock) {
-            if (mIsRunning && !mWaitingForSandbox && mListener == null) {
-                mListener = new ChangeListener();
-                getDefaultSharedPreferences().registerOnSharedPreferenceChangeListener(mListener);
-            }
-        }
-    }
-
-    private void handleSandboxStart() {
-        synchronized (mLock) {
-            if (mWaitingForSandbox) {
-                // Retry bulk sync if we were waiting for sandbox to start
-                mWaitingForSandbox = false;
-                bulkSyncData();
-            }
-        }
-    }
-
-    private void handleError(int errorCode, String errorMsg) {
-        synchronized (mLock) {
-            if (!mIsRunning) {
-                return;
-            }
-
-            // If we are not waiting for sandbox and we haven't registered a listener yet, then
-            // this error is from initial bulk sync request.
-            if (!mWaitingForSandbox
-                    && mListener == null
-                    && errorCode == ISharedPreferencesSyncCallback.SANDBOX_NOT_AVAILABLE) {
-                // Wait for sandbox to start. When it starts, server will call onSandboxStart
-                mWaitingForSandbox = true;
-                return;
-            }
-            mCallback.onError(errorCode, errorMsg);
-            cleanUp();
+            Log.e(TAG, "Couldn't connect to SdkSandboxManagerService: " + e.getMessage());
         }
     }
 
@@ -268,8 +210,8 @@ public class SharedPreferencesSyncManager {
         public void onSharedPreferenceChanged(SharedPreferences pref, @Nullable String key) {
             // Sync specified keys only
             synchronized (mLock) {
-                // Do not sync if sync has been stopped
-                if (!mIsRunning) {
+                // Do not sync if we are in waiting state
+                if (mWaitingForSandbox) {
                     return;
                 }
 
@@ -278,14 +220,16 @@ public class SharedPreferencesSyncManager {
                     bulkSyncData();
                     return;
                 }
-                if (mTypeOfKey == null || !mTypeOfKey.containsKey(key)) {
+
+                if (!mKeysToSync.containsKey(key)) {
                     return;
                 }
 
                 final Bundle data = new Bundle();
                 updateBundle(data, pref, key);
 
-                final KeyWithType keyWithType = new KeyWithType(key, mTypeOfKey.get(key));
+                final SharedPreferencesKey keyWithType =
+                        new SharedPreferencesKey(key, mKeysToSync.get(key).getType());
                 final SharedPreferencesUpdate update =
                         new SharedPreferencesUpdate(List.of(keyWithType), data);
                 try {
@@ -293,23 +237,9 @@ public class SharedPreferencesSyncManager {
                             mContext.getPackageName(),
                             /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
                             update,
-                            // When live syncing, we are only interested in knowing about errors.
-                            new ISharedPreferencesSyncCallback.Stub() {
-                                @Override
-                                public void onSuccess() {}
-
-                                @Override
-                                public void onSandboxStart() {}
-
-                                @Override
-                                public void onError(int errorCode, String errorMsg) {
-                                    handleError(errorCode, errorMsg);
-                                }
-                            });
+                            mCallback);
                 } catch (RemoteException e) {
-                    handleError(
-                            ISharedPreferencesSyncCallback.INTERNAL_ERROR,
-                            "Couldn't connect to SdkSandboxManagerService: " + e.getMessage());
+                    Log.e(TAG, "Couldn't connect to SdkSandboxManagerService: " + e.getMessage());
                 }
             }
         }
@@ -323,25 +253,25 @@ public class SharedPreferencesSyncManager {
             return;
         }
 
-        final int type = mTypeOfKey.get(key);
+        final int type = mKeysToSync.get(key).getType();
         try {
             switch (type) {
-                case KeyWithType.KEY_TYPE_STRING:
+                case SharedPreferencesKey.KEY_TYPE_STRING:
                     data.putString(key, pref.getString(key, ""));
                     break;
-                case KeyWithType.KEY_TYPE_BOOLEAN:
+                case SharedPreferencesKey.KEY_TYPE_BOOLEAN:
                     data.putBoolean(key, pref.getBoolean(key, false));
                     break;
-                case KeyWithType.KEY_TYPE_INTEGER:
+                case SharedPreferencesKey.KEY_TYPE_INTEGER:
                     data.putInt(key, pref.getInt(key, 0));
                     break;
-                case KeyWithType.KEY_TYPE_FLOAT:
+                case SharedPreferencesKey.KEY_TYPE_FLOAT:
                     data.putFloat(key, pref.getFloat(key, 0.0f));
                     break;
-                case KeyWithType.KEY_TYPE_LONG:
+                case SharedPreferencesKey.KEY_TYPE_LONG:
                     data.putLong(key, pref.getLong(key, 0L));
                     break;
-                case KeyWithType.KEY_TYPE_STRING_SET:
+                case SharedPreferencesKey.KEY_TYPE_STRING_SET:
                     data.putStringArrayList(
                             key, new ArrayList<>(pref.getStringSet(key, Collections.emptySet())));
                     break;
@@ -366,34 +296,31 @@ public class SharedPreferencesSyncManager {
         }
     }
 
-    // TODO(b/239403323): Move to SdkSandboxManager
-    /** Callback to receive notification about sync status. */
-    public interface SharedPreferencesSyncCallback {
+    private class SharedPreferencesSyncCallback extends ISharedPreferencesSyncCallback.Stub {
+        @Override
+        public void onSandboxStart() {
+            synchronized (mLock) {
+                if (mWaitingForSandbox) {
+                    // Retry bulk sync if we were waiting for sandbox to start
+                    mWaitingForSandbox = false;
+                    bulkSyncData();
+                }
+            }
+        }
 
-        /**
-         * Called when a pipeline for syncing has been successfully established.
-         *
-         * <p>All keys have been synced at least once and new updates will now be propagated to
-         * sandbox automatically, until the sync is broken due to error or by calling {@link
-         * stopSharedPreferencesSync}.
-         */
-        void onStart();
-
-        /**
-         * Called when sync is broken by calling {@link stopSharedPreferencesSync} api.
-         *
-         * <p>This breaks the sync and user needs to call {@link startSharedPreferenceSync} again to
-         * restart syncing.
-         */
-        void onStop();
-
-        // TODO(b/239403323): Create intdef for errorcodes.
-        /**
-         * Called when there is an error in the sync process.
-         *
-         * <p>This breaks the sync and user needs to call {@link startSharedPreferenceSync} again to
-         * restart syncing.
-         */
-        void onError(int errorCode, String errorMsg);
+        @Override
+        public void onError(int errorCode, String errorMsg) {
+            synchronized (mLock) {
+                // Transition to waiting state when sandbox is unavailable
+                if (!mWaitingForSandbox
+                        && errorCode == ISharedPreferencesSyncCallback.SANDBOX_NOT_AVAILABLE) {
+                    Log.w(TAG, "Waiting for SdkSandbox: " + errorMsg);
+                    // Wait for sandbox to start. When it starts, server will call onSandboxStart
+                    mWaitingForSandbox = true;
+                    return;
+                }
+                Log.e(TAG, "errorCode: " + errorCode + " errorMsg: " + errorMsg);
+            }
+        }
     }
 }

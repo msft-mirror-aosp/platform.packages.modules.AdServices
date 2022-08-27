@@ -29,7 +29,7 @@ import android.net.Uri;
   * @hide
   */
 interface ICustomAudienceService {
-    void joinCustomAudience(in CustomAudience customAudience, in ICustomAudienceCallback callback);
+    void joinCustomAudience(in CustomAudience customAudience, in String ownerPackageName, in ICustomAudienceCallback callback);
     void leaveCustomAudience(in String ownerPackageName, in AdTechIdentifier buyer, in String name,
             in ICustomAudienceCallback callback);
 

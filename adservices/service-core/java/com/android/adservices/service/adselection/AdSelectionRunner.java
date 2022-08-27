@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
+import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_SELECT_ADS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
 
 import android.adservices.adselection.AdSelectionCallback;
@@ -31,6 +32,7 @@ import android.annotation.Nullable;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.net.Uri;
+import android.os.LimitExceededException;
 import android.os.RemoteException;
 import android.util.Pair;
 
@@ -46,6 +48,7 @@ import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -74,6 +77,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 
@@ -105,6 +109,9 @@ public final class AdSelectionRunner {
     @VisibleForTesting
     static final String AD_SELECTION_TIMED_OUT = "Ad selection exceeded allowed time limit";
 
+    @VisibleForTesting
+    static final String AD_SELECTION_THROTTLED = "Ad selection exceeded allowed rate limit";
+
     public static final long DAY_IN_SECONDS = 60 * 60 * 24;
 
     @NonNull private final Context mContext;
@@ -122,6 +129,7 @@ public final class AdSelectionRunner {
     @NonNull private final Flags mFlags;
     @NonNull private final AppImportanceFilter mAppImportanceFilter;
     private final int mCallerUid;
+    @NonNull private final Supplier<Throttler> mThrottlerSupplier;
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
     @NonNull private final FledgeAllowListsFilter mFledgeAllowListsFilter;
 
@@ -137,6 +145,7 @@ public final class AdSelectionRunner {
             @NonNull final DevContext devContext,
             @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull final Flags flags,
+            @NonNull final Supplier<Throttler> throttlerSupplier,
             int callerUid,
             @NonNull final FledgeAuthorizationFilter fledgeAuthorizationFilter,
             @NonNull final FledgeAllowListsFilter fledgeAllowListsFilter) {
@@ -151,6 +160,7 @@ public final class AdSelectionRunner {
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(appImportanceFilter);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(throttlerSupplier);
         Objects.requireNonNull(fledgeAuthorizationFilter);
         Objects.requireNonNull(fledgeAllowListsFilter);
         mContext = context;
@@ -185,6 +195,7 @@ public final class AdSelectionRunner {
         mAdSelectionIdGenerator = new AdSelectionIdGenerator();
         mClock = Clock.systemUTC();
         mFlags = flags;
+        mThrottlerSupplier = throttlerSupplier;
         mAppImportanceFilter = appImportanceFilter;
         mCallerUid = callerUid;
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
@@ -207,6 +218,7 @@ public final class AdSelectionRunner {
             @NonNull final AdServicesLogger adServicesLogger,
             @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull final Flags flags,
+            @NonNull final Supplier<Throttler> throttlerSupplier,
             int callerUid,
             @NonNull final FledgeAuthorizationFilter fledgeAuthorizationFilter,
             @NonNull final FledgeAllowListsFilter fledgeAllowListsFilter) {
@@ -239,6 +251,7 @@ public final class AdSelectionRunner {
         mClock = clock;
         mAdServicesLogger = adServicesLogger;
         mFlags = flags;
+        mThrottlerSupplier = throttlerSupplier;
         mAppImportanceFilter = appImportanceFilter;
         mCallerUid = callerUid;
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
@@ -357,9 +370,12 @@ public final class AdSelectionRunner {
                 resultCode = AdServicesStatusUtils.STATUS_UNAUTHORIZED;
             } else if (t instanceof IllegalArgumentException) {
                 resultCode = AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+            } else if (t instanceof LimitExceededException) {
+                resultCode = AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
             } else {
                 resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
             }
+
             FledgeErrorResponse selectionFailureResponse =
                     new FledgeErrorResponse.Builder()
                             .setErrorMessage(
@@ -727,6 +743,27 @@ public final class AdSelectionRunner {
     }
 
     /**
+     * Ensures that the caller package is not throttled from calling the current API
+     *
+     * @param callerPackageName the package name, which should be verified
+     * @throws LimitExceededException if the provided {@code callerPackageName} exceeds its rate
+     *     limits
+     * @return an ignorable {@code null}
+     */
+    private Void assertCallerNotThrottled(final String callerPackageName)
+            throws LimitExceededException {
+        LogUtil.v("Checking if API is throttled for package: %s ", callerPackageName);
+        Throttler throttler = mThrottlerSupplier.get();
+        boolean isThrottled = !throttler.tryAcquire(FLEDGE_API_SELECT_ADS, callerPackageName);
+
+        if (isThrottled) {
+            LogUtil.e("Rate Limit Reached for API: %s", FLEDGE_API_SELECT_ADS);
+            throw new LimitExceededException(AD_SELECTION_THROTTLED);
+        }
+        return null;
+    }
+
+    /**
      * Validates the {@code runAdSelection} request.
      *
      * @param adSelectionConfig the adSelectionConfig to be validated
@@ -739,11 +776,14 @@ public final class AdSelectionRunner {
      * @throws FledgeAllowListsFilter.AppNotAllowedException if the package is not authorized.
      * @throws ConsentManager.RevokedConsentException if FLEDGE or the Privacy Sandbox do not have
      *     user consent
+     * @throws LimitExceededException if the provided {@code callerPackageName} exceeds the rate
+     *     limits
      * @throws IllegalArgumentException if the provided {@code adSelectionConfig} is not valid
      * @return an ignorable {@code null}
      */
     private Void validateRequest(AdSelectionConfig adSelectionConfig, String callerPackageName) {
         assertCallerPackageName(callerPackageName);
+        assertCallerNotThrottled(callerPackageName);
         maybeAssertForegroundCaller();
         assertFledgeEnrollment(adSelectionConfig, callerPackageName);
         assertAppInAllowList(callerPackageName);

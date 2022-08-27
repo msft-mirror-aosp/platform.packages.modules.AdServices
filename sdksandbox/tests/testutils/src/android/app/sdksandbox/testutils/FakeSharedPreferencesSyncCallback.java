@@ -24,19 +24,11 @@ import java.util.concurrent.TimeUnit;
 public class FakeSharedPreferencesSyncCallback extends ISharedPreferencesSyncCallback.Stub {
     private CountDownLatch mSyncDataLatch = new CountDownLatch(1);
 
-    boolean mOnSuccessCalled = false;
-
     boolean mOnSandboxStartCalled = false;
 
     boolean mOnErrorCalled = false;
     private int mErrorCode;
     private String mErrorMsg;
-
-    @Override
-    public void onSuccess() {
-        mOnSuccessCalled = true;
-        mSyncDataLatch.countDown();
-    }
 
     @Override
     public void onSandboxStart() {
@@ -50,11 +42,6 @@ public class FakeSharedPreferencesSyncCallback extends ISharedPreferencesSyncCal
         mErrorCode = errorCode;
         mErrorMsg = errorMsg;
         mSyncDataLatch.countDown();
-    }
-
-    public boolean isSuccessful() {
-        waitForLatch(mSyncDataLatch);
-        return mOnSuccessCalled;
     }
 
     public boolean hasSandboxStarted() {

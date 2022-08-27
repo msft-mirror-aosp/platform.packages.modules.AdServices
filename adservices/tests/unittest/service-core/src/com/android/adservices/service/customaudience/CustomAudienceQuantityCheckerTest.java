@@ -51,9 +51,20 @@ public class CustomAudienceQuantityCheckerTest {
     public void testNullCustomAudience_throwNPE() {
         assertThrows(
                 NullPointerException.class,
-                () -> {
-                    mChecker.check(null);
-                });
+                () -> mChecker.check(null, CustomAudienceFixture.VALID_OWNER));
+        verifyNoMoreInteractions(mCustomAudienceDao);
+    }
+
+    @Test
+    public void testNullCallerPackageName_throwNPE() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        mChecker.check(
+                                CustomAudienceFixture.getValidBuilderForBuyer(
+                                                CommonFixture.VALID_BUYER_1)
+                                        .build(),
+                                null));
         verifyNoMoreInteractions(mCustomAudienceDao);
     }
 
@@ -67,7 +78,8 @@ public class CustomAudienceQuantityCheckerTest {
                                 1L,
                                 FLAGS.getFledgeCustomAudienceMaxOwnerCount()));
         mChecker.check(
-                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build());
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build(),
+                CustomAudienceFixture.VALID_OWNER);
         verify(mCustomAudienceDao).getCustomAudienceStats(CustomAudienceFixture.VALID_OWNER);
         verifyNoMoreInteractions(mCustomAudienceDao);
     }
@@ -85,12 +97,12 @@ public class CustomAudienceQuantityCheckerTest {
         assertViolations(
                 assertThrows(
                         IllegalArgumentException.class,
-                        () -> {
-                            mChecker.check(
-                                    CustomAudienceFixture.getValidBuilderForBuyer(
-                                                    CommonFixture.VALID_BUYER_1)
-                                            .build());
-                        }),
+                        () ->
+                                mChecker.check(
+                                        CustomAudienceFixture.getValidBuilderForBuyer(
+                                                        CommonFixture.VALID_BUYER_1)
+                                                .build(),
+                                        CustomAudienceFixture.VALID_OWNER)),
                 CustomAudienceQuantityChecker
                         .THE_MAX_NUMBER_OF_OWNER_ALLOWED_FOR_THE_DEVICE_HAD_REACHED);
 
@@ -114,7 +126,8 @@ public class CustomAudienceQuantityCheckerTest {
                                 mChecker.check(
                                         CustomAudienceFixture.getValidBuilderForBuyer(
                                                         CommonFixture.VALID_BUYER_1)
-                                                .build())),
+                                                .build(),
+                                        CustomAudienceFixture.VALID_OWNER)),
                 CustomAudienceQuantityChecker
                         .THE_MAX_NUMBER_OF_CUSTOM_AUDIENCE_FOR_THE_DEVICE_HAD_REACHED);
         verify(mCustomAudienceDao).getCustomAudienceStats(CustomAudienceFixture.VALID_OWNER);
@@ -133,12 +146,12 @@ public class CustomAudienceQuantityCheckerTest {
         assertViolations(
                 assertThrows(
                         IllegalArgumentException.class,
-                        () -> {
-                            mChecker.check(
-                                    CustomAudienceFixture.getValidBuilderForBuyer(
-                                                    CommonFixture.VALID_BUYER_1)
-                                            .build());
-                        }),
+                        () ->
+                                mChecker.check(
+                                        CustomAudienceFixture.getValidBuilderForBuyer(
+                                                        CommonFixture.VALID_BUYER_1)
+                                                .build(),
+                                        CustomAudienceFixture.VALID_OWNER)),
                 CustomAudienceQuantityChecker
                         .THE_MAX_NUMBER_OF_CUSTOM_AUDIENCE_FOR_THE_OWNER_HAD_REACHED);
 
@@ -153,7 +166,8 @@ public class CustomAudienceQuantityCheckerTest {
                         new CustomAudienceDao.CustomAudienceStats(
                                 CustomAudienceFixture.VALID_OWNER, 0L, 0L, 0L));
         mChecker.check(
-                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build());
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build(),
+                CustomAudienceFixture.VALID_OWNER);
 
         verify(mCustomAudienceDao).getCustomAudienceStats(CustomAudienceFixture.VALID_OWNER);
         verifyNoMoreInteractions(mCustomAudienceDao);

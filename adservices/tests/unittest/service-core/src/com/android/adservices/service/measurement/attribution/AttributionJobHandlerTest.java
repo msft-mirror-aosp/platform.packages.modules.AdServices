@@ -227,11 +227,11 @@ public class AttributionJobHandlerTest {
         List<Source> matchingSourceList = new ArrayList<>();
         matchingSourceList.add(source);
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
-        when(mMeasurementDao.countDistinctAdTechsPerPublisherXDestinationInAttribution(
+        when(mMeasurementDao.countDistinctEnrollmentsPerPublisherXDestinationInAttribution(
                 any(), any(), any(), anyLong(), anyLong())).thenReturn(10);
         AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
         attributionService.performPendingAttributions();
-        verify(mMeasurementDao).countDistinctAdTechsPerPublisherXDestinationInAttribution(
+        verify(mMeasurementDao).countDistinctEnrollmentsPerPublisherXDestinationInAttribution(
                 any(), any(), any(), anyLong(), anyLong());
         ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
         verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
@@ -1074,9 +1074,9 @@ public class AttributionJobHandlerTest {
                         .setTriggerData(1L)
                         .setTriggerTime(234324L)
                         .setSourceId(source.getEventId())
-                        .setAdTechDomain(source.getAdTechDomain())
                         .setStatus(EventReport.Status.PENDING)
                         .setAttributionDestination(source.getAppDestination())
+                        .setEnrollmentId(source.getEnrollmentId())
                         .setReportTime(
                                 source.getReportingTime(
                                         trigger.getTriggerTime(), trigger.getDestinationType()))
@@ -1152,9 +1152,9 @@ public class AttributionJobHandlerTest {
                         .setTriggerData(1L)
                         .setTriggerTime(234324L)
                         .setSourceId(source.getEventId())
-                        .setAdTechDomain(source.getAdTechDomain())
                         .setStatus(EventReport.Status.PENDING)
                         .setAttributionDestination(source.getAppDestination())
+                        .setEnrollmentId(source.getEnrollmentId())
                         .setReportTime(
                                 source.getReportingTime(
                                         trigger.getTriggerTime(), trigger.getDestinationType()))
@@ -1233,9 +1233,9 @@ public class AttributionJobHandlerTest {
                         .setTriggerData(3L)
                         .setTriggerTime(234324L)
                         .setSourceId(source.getEventId())
-                        .setAdTechDomain(source.getAdTechDomain())
                         .setStatus(EventReport.Status.PENDING)
                         .setAttributionDestination(source.getAppDestination())
+                        .setEnrollmentId(source.getEnrollmentId())
                         .setReportTime(
                                 source.getReportingTime(
                                         trigger.getTriggerTime(), trigger.getDestinationType()))

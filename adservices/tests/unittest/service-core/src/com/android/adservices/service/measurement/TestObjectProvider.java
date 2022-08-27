@@ -97,7 +97,7 @@ class TestObjectProvider {
                                         .setReportTime(source.getExpiryTime() + ONE_HOUR_IN_MILLIS)
                                         .setTriggerData(0)
                                         .setAttributionDestination(source.getAppDestination())
-                                        .setAdTechDomain(source.getAdTechDomain())
+                                        .setEnrollmentId(source.getEnrollmentId())
                                         .setTriggerTime(0)
                                         .setTriggerPriority(0L)
                                         .setTriggerDedupKey(null)

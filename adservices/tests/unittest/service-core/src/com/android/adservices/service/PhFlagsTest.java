@@ -22,6 +22,7 @@ import static com.android.adservices.service.Flags.CLASSIFIER_NUMBER_OF_TOP_LABE
 import static com.android.adservices.service.Flags.CLASSIFIER_THRESHOLD;
 import static com.android.adservices.service.Flags.DEFAULT_CLASSIFIER_TYPE;
 import static com.android.adservices.service.Flags.DISABLE_FLEDGE_ENROLLMENT_CHECK;
+import static com.android.adservices.service.Flags.DISABLE_MEASUREMENT_ENROLLMENT_CHECK;
 import static com.android.adservices.service.Flags.DISABLE_TOPICS_ENROLLMENT_CHECK;
 import static com.android.adservices.service.Flags.DOWNLOADER_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DOWNLOADER_MAX_DOWNLOAD_THREADS;
@@ -67,6 +68,7 @@ import static com.android.adservices.service.Flags.GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.Flags.ISOLATE_MAX_HEAP_SIZE_BYTES;
 import static com.android.adservices.service.Flags.MAINTENANCE_JOB_FLEX_MS;
 import static com.android.adservices.service.Flags.MAINTENANCE_JOB_PERIOD_MS;
+import static com.android.adservices.service.Flags.MDD_BACKGROUND_TASK_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
 import static com.android.adservices.service.Flags.MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL;
 import static com.android.adservices.service.Flags.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS;
@@ -77,7 +79,6 @@ import static com.android.adservices.service.Flags.MEASUREMENT_API_REGISTER_TRIG
 import static com.android.adservices.service.Flags.MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_API_STATUS_KILL_SWITCH;
-import static com.android.adservices.service.Flags.MEASUREMENT_APP_NAME;
 import static com.android.adservices.service.Flags.MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED;
@@ -111,6 +112,7 @@ import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_NUMBER_OF_TO
 import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_THRESHOLD;
 import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_TYPE;
 import static com.android.adservices.service.PhFlags.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
+import static com.android.adservices.service.PhFlags.KEY_DISABLE_MEASUREMENT_ENROLLMENT_CHECK;
 import static com.android.adservices.service.PhFlags.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK;
 import static com.android.adservices.service.PhFlags.KEY_DOWNLOADER_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.PhFlags.KEY_DOWNLOADER_MAX_DOWNLOAD_THREADS;
@@ -152,6 +154,7 @@ import static com.android.adservices.service.PhFlags.KEY_GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_ISOLATE_MAX_HEAP_SIZE_BYTES;
 import static com.android.adservices.service.PhFlags.KEY_MAINTENANCE_JOB_FLEX_MS;
 import static com.android.adservices.service.PhFlags.KEY_MAINTENANCE_JOB_PERIOD_MS;
+import static com.android.adservices.service.PhFlags.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS;
@@ -162,7 +165,6 @@ import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_API_REGISTE
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_API_STATUS_KILL_SWITCH;
-import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_APP_NAME;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED;
@@ -191,6 +193,8 @@ import static com.android.adservices.service.PhFlags.KEY_TOPICS_NUMBER_OF_TOP_TO
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
 
 import static com.google.common.truth.Truth.assertThat;
+
+import static org.junit.Assert.assertThrows;
 
 import android.provider.DeviceConfig;
 
@@ -230,6 +234,18 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getTopicsEpochJobPeriodMs()).isEqualTo(phOverridingValue);
+
+        final long illegalPhOverridingValue = -1;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_TOPICS_EPOCH_JOB_PERIOD_MS,
+                Long.toString(illegalPhOverridingValue),
+                /* makeDefault */ false);
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    phFlags.getTopicsEpochJobPeriodMs();
+                });
     }
 
     @Test
@@ -248,6 +264,20 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getTopicsEpochJobFlexMs()).isEqualTo(phOverridingValue);
+
+        // Validate that topicsEpochJobFlexMs got from PH > 0 and
+        // less than topicsEpochJobPeriodMs
+        final long illegalPhOverridingValue = -1;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_TOPICS_EPOCH_JOB_FLEX_MS,
+                Long.toString(illegalPhOverridingValue),
+                /* makeDefault */ false);
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    phFlags.getTopicsEpochJobFlexMs();
+                });
     }
 
     @Test
@@ -265,6 +295,19 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getTopicsPercentageForRandomTopic()).isEqualTo(phOverridingValue);
+
+        // Validate that topicsPercentageForRandomTopic got from PH is between 0 and 100
+        final long illegalPhOverridingValue = -1;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC,
+                Long.toString(illegalPhOverridingValue),
+                /* makeDefault */ false);
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    phFlags.getTopicsPercentageForRandomTopic();
+                });
     }
 
     @Test
@@ -282,6 +325,19 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getTopicsNumberOfRandomTopics()).isEqualTo(phOverridingValue);
+
+        // Validate that topicsNumberOfRandomTopics got from PH >= 0
+        final long illegalPhOverridingValue = -1;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_TOPICS_NUMBER_OF_RANDOM_TOPICS,
+                Long.toString(illegalPhOverridingValue),
+                /* makeDefault */ false);
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    phFlags.getTopicsNumberOfRandomTopics();
+                });
     }
 
     @Test
@@ -299,6 +355,19 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getTopicsNumberOfTopTopics()).isEqualTo(phOverridingValue);
+
+        // Validate that topicsNumberOfTopTopics got from PH >= 0
+        final long illegalPhOverridingValue = -1;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_TOPICS_NUMBER_OF_TOP_TOPICS,
+                Long.toString(illegalPhOverridingValue),
+                /* makeDefault */ false);
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    phFlags.getTopicsNumberOfTopTopics();
+                });
     }
 
     @Test
@@ -316,6 +385,19 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getTopicsNumberOfLookBackEpochs()).isEqualTo(phOverridingValue);
+
+        // Validate that topicsNumberOfLookBackEpochs got from PH >= 0
+        final long illegalPhOverridingValue = -1;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS,
+                Long.toString(illegalPhOverridingValue),
+                /* makeDefault */ false);
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    phFlags.getTopicsNumberOfLookBackEpochs();
+                });
     }
 
     @Test
@@ -383,6 +465,19 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMaintenanceJobPeriodMs()).isEqualTo(phOverridingValue);
+
+        // Validate that maintenanceJobPeriodMs got from PH > 0
+        final long illegalPhOverridingValue = -1;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MAINTENANCE_JOB_PERIOD_MS,
+                Long.toString(illegalPhOverridingValue),
+                /* makeDefault */ false);
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    phFlags.getMaintenanceJobPeriodMs();
+                });
     }
 
     @Test
@@ -400,6 +495,20 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMaintenanceJobFlexMs()).isEqualTo(phOverridingValue);
+
+        // Validate that maintenanceJobFlexMs got from PH > 0 and less
+        // than maintenanceJobPeriodMs
+        final long illegalPhOverridingValue = -1;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MAINTENANCE_JOB_FLEX_MS,
+                Long.toString(illegalPhOverridingValue),
+                /* makeDefault */ false);
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    phFlags.getMaintenanceJobFlexMs();
+                });
     }
 
     @Test
@@ -662,26 +771,6 @@ public class PhFlagsTest {
         Flags flags = FlagsFactory.getFlagsForTest();
         assertThat(flags.getMeasurementAggregateFallbackReportingJobPeriodMs())
                 .isEqualTo(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS);
-    }
-
-    @Test
-    public void testGetMeasurementAppName() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(FlagsFactory.getFlags().getMeasurementAppName()).isEqualTo(MEASUREMENT_APP_NAME);
-
-        final String phOverridingValue = "testAppName";
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_APP_NAME,
-                phOverridingValue,
-                /* makeDefault */ false);
-
-        Flags phFlags = FlagsFactory.getFlags();
-        assertThat(phFlags.getMeasurementAppName()).isEqualTo(phOverridingValue);
-
-        Flags flags = FlagsFactory.getFlagsForTest();
-        assertThat(flags.getMeasurementAppName()).isEqualTo(MEASUREMENT_APP_NAME);
     }
 
     @Test
@@ -2159,6 +2248,24 @@ public class PhFlagsTest {
     }
 
     @Test
+    public void testGetMddBackgroundTaskKillSwitch() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getMddBackgroundTaskKillSwitch())
+                .isEqualTo(MDD_BACKGROUND_TASK_KILL_SWITCH);
+
+        // Now overriding with the value from PH.
+        final boolean phOverridingValue = true;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MDD_BACKGROUND_TASK_KILL_SWITCH,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getMddBackgroundTaskKillSwitch()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
     public void test_globalKillswitchOverrides_getAdIdKillSwitch() {
         // Without any overriding, AdId Killswitch is off.
         assertThat(FlagsFactory.getFlags().getAdIdKillSwitch()).isEqualTo(ADID_KILL_SWITCH);
@@ -2320,6 +2427,19 @@ public class PhFlagsTest {
         // Now verify that the PhFlag value was overridden.
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getSdkRequestPermitsPerSecond()).isEqualTo(phOverridingValue);
+
+        final float illegalPhOverridingValue = -1;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_SDK_REQUEST_PERMITS_PER_SECOND,
+                Float.toString(illegalPhOverridingValue),
+                /* makeDefault */ false);
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    phFlags.getSdkRequestPermitsPerSecond();
+                });
     }
 
     @Test
@@ -2337,6 +2457,19 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getNumberOfEpochsToKeepInHistory()).isEqualTo(phOverridingValue);
+
+        final long illegalPhOverridingValue = -1;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY,
+                Long.toString(illegalPhOverridingValue),
+                /* makeDefault */ false);
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    phFlags.getNumberOfEpochsToKeepInHistory();
+                });
     }
 
     @Test
@@ -2438,6 +2571,23 @@ public class PhFlagsTest {
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getDisableFledgeEnrollmentCheck()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testIsDisableMeasurementEnrollmentCheck() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().isDisableMeasurementEnrollmentCheck())
+                .isEqualTo(DISABLE_MEASUREMENT_ENROLLMENT_CHECK);
+
+        final boolean phOverridingValue = true;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_DISABLE_MEASUREMENT_ENROLLMENT_CHECK,
                 Boolean.toString(phOverridingValue),
                 /* makeDefault */ false);
 

@@ -50,7 +50,7 @@ public class DeleteExpiredDynamicIntegrationTest extends AbstractDbIntegrationTe
 
         Source source =
                 new Source.Builder()
-                        .setAdTechDomain(Uri.parse("https://example.com"))
+                        .setEnrollmentId("enrollment-id")
                         .setAppDestination(Uri.parse("android-app://com.example.app/aD"))
                         .setPublisher(Uri.parse("https://example.com/aS"))
                         .setId("non-expired")
