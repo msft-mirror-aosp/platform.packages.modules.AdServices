@@ -25,6 +25,7 @@ import java.util.List;
 /** Utility class supporting ad services API unit tests */
 public class AdDataFixture {
     private static final String VALID_METADATA = "{'example': 'metadata', 'valid': true}";
+    private static final String INVALID_METADATA = "not.{real!metadata} = 1";
 
     public static Uri getValidRenderUrlByBuyer(AdTechIdentifier buyer, int sequence) {
         return CommonFixture.getUri(buyer, "/testing/hello" + sequence);
@@ -32,21 +33,36 @@ public class AdDataFixture {
 
     public static List<AdData> getValidAdsByBuyer(AdTechIdentifier buyer) {
         return ImmutableList.of(
+                getValidAdDataByBuyer(buyer, 1),
+                getValidAdDataByBuyer(buyer, 2),
+                getValidAdDataByBuyer(buyer, 3),
+                getValidAdDataByBuyer(buyer, 4));
+    }
+
+    public static List<AdData> getInvalidAdsByBuyer(AdTechIdentifier buyer) {
+        return ImmutableList.of(
                 new AdData.Builder()
                         .setRenderUri(getValidRenderUrlByBuyer(buyer, 1))
-                        .setMetadata(VALID_METADATA)
+                        .setMetadata(INVALID_METADATA)
                         .build(),
                 new AdData.Builder()
                         .setRenderUri(getValidRenderUrlByBuyer(buyer, 2))
-                        .setMetadata(VALID_METADATA)
+                        .setMetadata(INVALID_METADATA)
                         .build(),
                 new AdData.Builder()
                         .setRenderUri(getValidRenderUrlByBuyer(buyer, 3))
-                        .setMetadata(VALID_METADATA)
+                        .setMetadata(INVALID_METADATA)
                         .build(),
                 new AdData.Builder()
                         .setRenderUri(getValidRenderUrlByBuyer(buyer, 4))
-                        .setMetadata(VALID_METADATA)
+                        .setMetadata(INVALID_METADATA)
                         .build());
+    }
+
+    public static AdData getValidAdDataByBuyer(AdTechIdentifier buyer, int sequenceNumber) {
+        return new AdData.Builder()
+                .setRenderUri(getValidRenderUrlByBuyer(buyer, sequenceNumber))
+                .setMetadata(VALID_METADATA)
+                .build();
     }
 }
