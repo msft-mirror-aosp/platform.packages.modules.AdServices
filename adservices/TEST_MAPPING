@@ -52,9 +52,13 @@
       // Install com.google.android.adservices.apex and run SandboxedFledgeManagerTests.
       "name": "CtsSandboxedFledgeManagerTests[com.google.android.adservices.apex]"
     },
-      // Install com.google.android.adservices.apex and run CtsAdIdEndToEndTest.
     {
+      // Install com.google.android.adservices.apex and run CtsAdIdEndToEndTest.
       "name": "CtsAdIdEndToEndTest[com.google.android.adservices.apex]"
+    },
+    {
+      // Install com.google.android.adservices.apex and run CtsAppSetIdEndToEndTest.
+      "name": "CtsAppSetIdEndToEndTest[com.google.android.adservices.apex]"
     }
   ],
   "presubmit": [
@@ -87,6 +91,12 @@
     },
     {
       "name": "AdServicesApkUnitTests"
+    },
+    {
+      "name": "CtsAdIdEndToEndTest"
+    },
+    {
+      "name": "CtsAppSetIdEndToEndTest"
     }
   ]
 }

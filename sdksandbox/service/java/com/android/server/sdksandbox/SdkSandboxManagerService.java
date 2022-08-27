@@ -641,28 +641,24 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         ISdkSandboxService service = mServiceProvider.getBoundServiceForApp(callingInfo);
         if (service != null) {
             try {
-                service.syncDataFromClient(update, callback);
+                service.syncDataFromClient(update);
             } catch (RemoteException e) {
-                syncDataOnError(
-                        callback, ISharedPreferencesSyncCallback.INTERNAL_ERROR, e.getMessage());
+                syncDataOnError(callingInfo, callback, e.getMessage());
             }
         } else {
-            syncDataOnError(
-                    callback,
-                    ISharedPreferencesSyncCallback.SANDBOX_NOT_AVAILABLE,
-                    "Sandbox not available");
-            // Store reference to the callback so that we can notify SdkSandboxManager when sandbox
-            // starts
-            synchronized (mLock) {
-                mSyncDataCallbacks.put(callingInfo, callback);
-            }
+            syncDataOnError(callingInfo, callback, "Sandbox not available");
         }
     }
 
     private void syncDataOnError(
-            ISharedPreferencesSyncCallback callback, int errorCode, String errorMsg) {
+            CallingInfo callingInfo, ISharedPreferencesSyncCallback callback, String errorMsg) {
+        // Store reference to the callback so that we can notify SdkSandboxManager when sandbox
+        // starts
+        synchronized (mLock) {
+            mSyncDataCallbacks.put(callingInfo, callback);
+        }
         try {
-            callback.onError(errorCode, errorMsg);
+            callback.onError(ISharedPreferencesSyncCallback.SANDBOX_NOT_AVAILABLE, errorMsg);
         } catch (RemoteException ignore) {
             // App died. Sync will be re-established again by app later.
         }
