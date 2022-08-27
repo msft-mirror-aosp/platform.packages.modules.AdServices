@@ -161,6 +161,9 @@ public class AppUpdateTest {
         // We need to turn off random topic so that we can verify the returned topic.
         overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
 
+        // We need to turn the Consent Manager into debug mode
+        overrideConsentManagerDebugMode();
+
         // Invoke Topics API once to compute top topics so that following installed test apps are
         // able to get top topics assigned when getting installed.
         AdvertisingTopicsClient advertisingTopicsClient =
@@ -309,6 +312,11 @@ public class AppUpdateTest {
         ShellUtils.runShellCommand(
                 "setprop debug.adservices.topics_percentage_for_random_topics "
                         + overridePercentage);
+    }
+
+    // Override the Consent Manager behaviour - Consent Given
+    private void overrideConsentManagerDebugMode() {
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
     }
 
     // Forces JobScheduler to run the Epoch Computation job.

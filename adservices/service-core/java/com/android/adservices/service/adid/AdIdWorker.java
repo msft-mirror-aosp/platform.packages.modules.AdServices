@@ -120,6 +120,8 @@ public class AdIdWorker {
                 callback.onResult(result);
             } catch (RemoteException e) {
                 LogUtil.e("RemoteException");
+            } finally {
+                return;
             }
         }
 
