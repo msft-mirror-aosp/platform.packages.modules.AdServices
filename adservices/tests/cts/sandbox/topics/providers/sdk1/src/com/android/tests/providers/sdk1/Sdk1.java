@@ -48,7 +48,7 @@ public class Sdk1 extends SandboxedSdkProvider {
     // Set of classification topics for the Test App. The returned topic should be one of these
     // Topics.
     private static final ImmutableSet<Integer> TOPIC_ID_SET =
-            ImmutableSet.of(10009, 10225, 10249, 10223, 10253);
+            ImmutableSet.of(10147, 10253, 10175, 10254, 10333);
 
     @Override
     public SandboxedSdk onLoadSdk(Bundle params) throws LoadSdkException {
@@ -112,9 +112,6 @@ public class Sdk1 extends SandboxedSdkProvider {
     public View getView(Context windowContext, Bundle params, int width, int height) {
         return null;
     }
-
-    @Override
-    public void onDataReceived(Bundle data, DataReceivedCallback callback) {}
 
     private GetTopicsResponse callTopicsApi() throws Exception {
         AdvertisingTopicsClient advertisingTopicsClient =

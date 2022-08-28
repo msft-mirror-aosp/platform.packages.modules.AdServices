@@ -177,6 +177,8 @@ public class AdServicesStatusUtils {
                         SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE);
             case STATUS_TIMEOUT:
                 return new TimeoutException(TIMED_OUT_ERROR_MESSAGE);
+            case STATUS_RATE_LIMIT_REACHED:
+                return new LimitExceededException(RATE_LIMIT_REACHED_ERROR_MESSAGE);
             default:
                 return new IllegalStateException();
         }
@@ -200,6 +202,7 @@ public class AdServicesStatusUtils {
                 STATUS_SUCCESS,
                 STATUS_INTERNAL_ERROR,
                 STATUS_INVALID_ARGUMENT,
+                STATUS_RATE_LIMIT_REACHED,
                 STATUS_UNKNOWN_ERROR,
                 STATUS_IO_ERROR,
                 STATUS_KILLSWITCH_ENABLED,

@@ -35,6 +35,4 @@ public class SdkProvider extends SandboxedSdkProvider {
         throw new RuntimeException("General Exception");
     }
 
-    @Override
-    public void onDataReceived(Bundle data, DataReceivedCallback callback) {}
 }

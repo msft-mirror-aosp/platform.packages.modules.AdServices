@@ -79,6 +79,9 @@ public class TopicsManagerTest {
         // We need to turn off random topic so that we can verify the returned topic.
         overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
 
+        // We need to turn the Consent Manager into debug mode
+        overrideConsentManagerDebugMode();
+
         // The Test App has 2 SDKs: sdk1 calls the Topics API and sdk2 does not.
         // Sdk1 calls the Topics API.
         AdvertisingTopicsClient advertisingTopicsClient1 =
@@ -153,6 +156,11 @@ public class TopicsManagerTest {
         ShellUtils.runShellCommand(
                 "setprop debug.adservices.topics_percentage_for_random_topics "
                         + overridePercentage);
+    }
+
+    // Override the Consent Manager behaviour - Consent Given
+    private void overrideConsentManagerDebugMode() {
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
     }
 
     /** Forces JobScheduler to run the Epoch Computation job */

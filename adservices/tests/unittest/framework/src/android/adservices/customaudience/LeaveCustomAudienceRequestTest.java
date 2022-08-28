@@ -74,10 +74,7 @@ public class LeaveCustomAudienceRequestTest {
         LeaveCustomAudienceRequest obj3 =
                 LeaveCustomAudienceRequestFixture.getLeaveCustomAudienceRequestWithName(
                         "differentName");
-        LeaveCustomAudienceRequest obj4 =
-                LeaveCustomAudienceRequestFixture.getLeaveCustomAudienceRequestWithOwner(
-                        "com.different.package");
 
-        CommonFixture.assertDifferentHashCode(obj1, obj2, obj3, obj4);
+        CommonFixture.assertDifferentHashCode(obj1, obj2, obj3);
     }
 }

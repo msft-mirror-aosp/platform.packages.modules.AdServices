@@ -116,7 +116,7 @@ public interface Flags extends Dumpable {
     }
 
     /** Number of top labels allowed for every app. */
-    int CLASSIFIER_NUMBER_OF_TOP_LABELS = 10;
+    int CLASSIFIER_NUMBER_OF_TOP_LABELS = 3;
 
     /** Returns the number of top labels allowed for every app after the classification process. */
     default int getClassifierNumberOfTopLabels() {
@@ -124,7 +124,7 @@ public interface Flags extends Dumpable {
     }
 
     /** Threshold value for classification values. */
-    float CLASSIFIER_THRESHOLD = 0.0f;
+    float CLASSIFIER_THRESHOLD = 0.1f;
 
     /** Returns the threshold value for classification values. */
     default float getClassifierThreshold() {
@@ -204,8 +204,6 @@ public interface Flags extends Dumpable {
         return MEASUREMENT_NETWORK_READ_TIMEOUT_MS;
     }
 
-    /* The default measurement app name. */
-    String MEASUREMENT_APP_NAME = "";
     int MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(5);
     int MEASUREMENT_NETWORK_READ_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(30);
 
@@ -224,11 +222,6 @@ public interface Flags extends Dumpable {
 
     default boolean getMeasurementIsClickVerificationEnabled() {
         return MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED;
-    }
-
-    /** Returns the app name. */
-    default String getMeasurementAppName() {
-        return MEASUREMENT_APP_NAME;
     }
 
     /** Measurement manifest file url, used for MDD download. */
@@ -537,8 +530,8 @@ public interface Flags extends Dumpable {
     // TODO(b/236761740): We use this for now for testing. We need to update to the correct one
     // when we actually upload the models.
     String MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL =
-            "https://dl.google.com/mdi-serving/adservices/topics_classifier/manifest_configs/1"
-                    + "/manifest_config_1657744589741.binaryproto";
+            "https://dl.google.com/mdi-serving/adservices/topics_classifier/manifest_configs/2"
+                    + "/manifest_config_1661376643699.binaryproto";
 
     default String getMddTopicsClassifierManifestFileUrl() {
         return MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
@@ -569,6 +562,12 @@ public interface Flags extends Dumpable {
 
     default boolean getConsentNotificationDebugMode() {
         return CONSENT_NOTIFICATION_DEBUG_MODE;
+    }
+
+    boolean CONSENT_MANAGER_DEBUG_MODE = false;
+
+    default boolean getConsentManagerDebugMode() {
+        return CONSENT_MANAGER_DEBUG_MODE;
     }
 
     // Group of All Killswitches
@@ -963,6 +962,11 @@ public interface Flags extends Dumpable {
                     + "com.android.adservices.tests.permissions.appoptout,"
                     + "com.android.adservices.tests.permissions.noperm,"
                     + "com.android.adservices.tests.permissions.valid,"
+                    + "com.example.adservices.samples.fledge.sampleapp,"
+                    + "com.example.adservices.samples.fledge.sampleapp1,"
+                    + "com.example.adservices.samples.fledge.sampleapp2,"
+                    + "com.example.adservices.samples.fledge.sampleapp3,"
+                    + "com.example.adservices.samples.fledge.sampleapp4,"
                     + "com.example.adservices.samples.topics.sampleapp1,"
                     + "com.example.adservices.samples.topics.sampleapp2,"
                     + "com.example.adservices.samples.topics.sampleapp3,"
@@ -1000,17 +1004,18 @@ public interface Flags extends Dumpable {
         return SDK_REQUEST_PERMITS_PER_SECOND;
     }
 
-    // TODO(b/238924460): Remove after MDD download service is available and can be invoked from CTS
-    // tests.
+    // TODO(b/238924460): Enable by default after enrollment process is open.
     /**
-     * Disable enrollment check for Topics API. This is done only to allow CTS test to pass since
-     * there is currently no way to write the enrollment data from test in the same db that can be
-     * read from the service. Note: This should not be enabled in production, unless there's a
-     * problem with enrollment.
+     * Once the enrollment process is open, this should be false by default, such that enrollment is
+     * always enforced, unless there are bugs with enrollment. Disabling enforcement for now since
+     * we don't want to block alpha testing while the enrollment process is being set up.
      */
-    boolean DISABLE_TOPICS_ENROLLMENT_CHECK = false; // By default, enrollment check is enabled.
+    boolean DISABLE_TOPICS_ENROLLMENT_CHECK = true;
 
     boolean DISABLE_FLEDGE_ENROLLMENT_CHECK = true; // By default, enrollment check is disabled
+
+    // TODO(b/243025320): Enable by default after enrollment process is open.
+    boolean DISABLE_MEASUREMENT_ENROLLMENT_CHECK = true;
 
     /** @return {@code true} if the Topics API should disable the ad tech enrollment check */
     default boolean isDisableTopicsEnrollmentCheck() {
@@ -1020,6 +1025,10 @@ public interface Flags extends Dumpable {
     /** @return {@code true} if the FLEDGE APIs should disable the ad tech enrollment check */
     default boolean getDisableFledgeEnrollmentCheck() {
         return DISABLE_FLEDGE_ENROLLMENT_CHECK;
+    }
+
+    default boolean isDisableMeasurementEnrollmentCheck() {
+        return DISABLE_MEASUREMENT_ENROLLMENT_CHECK;
     }
 
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION = true;

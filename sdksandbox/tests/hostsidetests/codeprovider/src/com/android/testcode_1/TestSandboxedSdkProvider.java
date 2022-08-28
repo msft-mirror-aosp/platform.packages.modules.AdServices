@@ -35,6 +35,4 @@ public class TestSandboxedSdkProvider extends SandboxedSdkProvider {
         return null;
     }
 
-    @Override
-    public void onDataReceived(Bundle data, DataReceivedCallback callback) {}
 }

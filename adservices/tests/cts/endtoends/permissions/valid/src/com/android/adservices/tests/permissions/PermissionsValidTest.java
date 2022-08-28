@@ -84,7 +84,7 @@ public class PermissionsValidTest {
     @Test
     public void testValidPermissions_fledgeJoinCustomAudience()
             throws ExecutionException, InterruptedException {
-        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
+        PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
 
         try {
             AdvertisingCustomAudienceClient customAudienceClient =
@@ -95,7 +95,6 @@ public class PermissionsValidTest {
 
             CustomAudience customAudience =
                     new CustomAudience.Builder()
-                            .setOwnerPackageName(sContext.getPackageName())
                             .setBuyer(AdTechIdentifier.fromString("test.com"))
                             .setName("exampleCustomAudience")
                             .setDailyUpdateUrl(Uri.parse("https://test.com/daily-update"))
@@ -104,13 +103,13 @@ public class PermissionsValidTest {
 
             customAudienceClient.joinCustomAudience(customAudience).get();
         } finally {
-            PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
+            PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
         }
     }
 
     @Test
     public void testValidPermissions_selectAds() {
-        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
+        PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
 
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 
@@ -128,13 +127,13 @@ public class PermissionsValidTest {
             // We only need to get past the permissions check for this test to be valid
             assertThat(exception.getMessage()).isNotEqualTo(PERMISSION_NOT_REQUESTED);
         } finally {
-            PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
+            PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
         }
     }
 
     @Test
     public void testValidPermissions_reportImpression() {
-        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
+        PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
 
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 
@@ -157,14 +156,14 @@ public class PermissionsValidTest {
             // We only need to get past the permissions check for this test to be valid
             assertThat(exception.getMessage()).isNotEqualTo(PERMISSION_NOT_REQUESTED);
         } finally {
-            PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
+            PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
         }
     }
 
     @Test
     public void testValidPermissions_fledgeLeaveCustomAudience()
             throws ExecutionException, InterruptedException {
-        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
+        PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
 
         try {
             AdvertisingCustomAudienceClient customAudienceClient =
@@ -175,12 +174,11 @@ public class PermissionsValidTest {
 
             customAudienceClient
                     .leaveCustomAudience(
-                            sContext.getPackageName(),
                             AdTechIdentifier.fromString("test.com"),
                             "exampleCustomAudience")
                     .get();
         } finally {
-            PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
+            PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
         }
     }
 

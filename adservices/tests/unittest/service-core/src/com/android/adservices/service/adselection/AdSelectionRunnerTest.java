@@ -16,11 +16,13 @@
 
 package com.android.adservices.service.adselection;
 
+import static com.android.adservices.service.adselection.AdSelectionRunner.AD_SELECTION_THROTTLED;
 import static com.android.adservices.service.adselection.AdSelectionRunner.AD_SELECTION_TIMED_OUT;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_AD_SELECTION_FAILURE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_CA_AVAILABLE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_VALID_BIDS_FOR_SCORING;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_WINNING_AD_FOUND;
+import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_SELECT_ADS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
 import static com.android.adservices.stats.FledgeApiCallStatsMatcher.aCallStatForFledgeApiWithStatus;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
@@ -35,6 +37,8 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 
 import android.adservices.adselection.AdBiddingOutcomeFixture;
 import android.adservices.adselection.AdSelectionCallback;
@@ -72,6 +76,7 @@ import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -102,6 +107,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Supplier;
 
 /**
  * This test covers strictly the unit of {@link AdSelectionRunner} The dependencies in this test are
@@ -131,6 +137,7 @@ public class AdSelectionRunnerTest {
     @Mock private AppImportanceFilter mAppImportanceFilter;
     @Spy private Clock mClock = Clock.systemUTC();
     @Mock private ConsentManager mConsentManagerMock;
+    @Mock private Throttler mMockThrottler;
 
     private Flags mFlags =
             new Flags() {
@@ -145,6 +152,7 @@ public class AdSelectionRunnerTest {
     private ExecutorService mBackgroundExecutorService;
     private CustomAudienceDao mCustomAudienceDao;
     private AdSelectionEntryDao mAdSelectionEntryDao;
+    private Supplier<Throttler> mThrottlerSupplier = () -> mMockThrottler;
     @Spy private AdServicesLogger mAdServicesLoggerSpy = AdServicesLoggerImpl.getInstance();
     private final FledgeAuthorizationFilter mFledgeAuthorizationFilter =
             FledgeAuthorizationFilter.create(mContext, mAdServicesLoggerSpy);
@@ -218,6 +226,7 @@ public class AdSelectionRunnerTest {
                 AdScoringOutcomeFixture.anAdScoringBuilder(BUYER_2, 3.0).build();
         mAdScoringOutcomeList =
                 Arrays.asList(mAdScoringOutcomeForBuyer1, mAdScoringOutcomeForBuyer2);
+        when(mMockThrottler.tryAcquire(eq(FLEDGE_API_SELECT_ADS), anyString())).thenReturn(true);
     }
 
     private DBCustomAudience createDBCustomAudience(final AdTechIdentifier buyer) {
@@ -316,6 +325,7 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
+                        mThrottlerSupplier,
                         CALLER_UID,
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter);
@@ -402,6 +412,7 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
+                        mThrottlerSupplier,
                         CALLER_UID,
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter);
@@ -514,6 +525,7 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
+                        mThrottlerSupplier,
                         CALLER_UID,
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter);
@@ -590,6 +602,7 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
+                        mThrottlerSupplier,
                         CALLER_UID,
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter);
@@ -640,6 +653,7 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
+                        mThrottlerSupplier,
                         CALLER_UID,
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter);
@@ -681,6 +695,7 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
+                        mThrottlerSupplier,
                         CALLER_UID,
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter);
@@ -763,6 +778,7 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
+                        mThrottlerSupplier,
                         CALLER_UID,
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter);
@@ -895,6 +911,7 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
+                        mThrottlerSupplier,
                         CALLER_UID,
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter);
@@ -997,6 +1014,7 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
+                        mThrottlerSupplier,
                         CALLER_UID,
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter);
@@ -1106,6 +1124,7 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
+                        mThrottlerSupplier,
                         CALLER_UID,
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter);
@@ -1217,6 +1236,7 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
+                        mThrottlerSupplier,
                         CALLER_UID,
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter);
@@ -1353,6 +1373,7 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         mFlags,
+                        mThrottlerSupplier,
                         CALLER_UID,
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter);
@@ -1470,6 +1491,7 @@ public class AdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mAppImportanceFilter,
                         flagsWithSmallerLimits,
+                        mThrottlerSupplier,
                         CALLER_UID,
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter);
@@ -1485,6 +1507,50 @@ public class AdSelectionRunnerTest {
         Assert.assertEquals(
                 "Error response code mismatch",
                 AdServicesStatusUtils.STATUS_TIMEOUT,
+                response.getStatusCode());
+    }
+
+    @Test
+    public void testRunAdSelectionThrottledFailure() throws AdServicesException {
+        when(mClock.instant()).thenReturn(Clock.systemUTC().instant());
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        // Creating ad selection config for happy case with all the buyers in place
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        // Throttle Ad Selection request
+        when(mMockThrottler.tryAcquire(eq(FLEDGE_API_SELECT_ADS), anyString())).thenReturn(false);
+
+        mAdSelectionRunner =
+                new AdSelectionRunner(
+                        mContext,
+                        mCustomAudienceDao,
+                        mAdSelectionEntryDao,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mConsentManagerMock,
+                        mMockAdsScoreGenerator,
+                        mMockAdBidGenerator,
+                        mMockAdSelectionIdGenerator,
+                        mClock,
+                        mAdServicesLoggerSpy,
+                        mAppImportanceFilter,
+                        mFlags,
+                        mThrottlerSupplier,
+                        CALLER_UID,
+                        mFledgeAuthorizationFilter,
+                        mFledgeAllowListsFilter);
+
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
+
+        assertFalse(resultsCallback.mIsSuccess);
+        FledgeErrorResponse response = resultsCallback.mFledgeErrorResponse;
+        verifyErrorMessageIsCorrect(response.getErrorMessage(), AD_SELECTION_THROTTLED);
+        Assert.assertEquals(
+                "Error response code mismatch",
+                AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED,
                 response.getStatusCode());
     }
 

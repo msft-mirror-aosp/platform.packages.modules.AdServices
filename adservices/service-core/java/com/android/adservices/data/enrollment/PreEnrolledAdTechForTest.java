@@ -92,5 +92,4 @@ final class PreEnrolledAdTechForTest {
                     .setRemarketingResponseBasedRegistrationUrl(Arrays.asList("https://test.com"))
                     .setEncryptionKeyUrl(Arrays.asList("https://test.com/keys"))
                     .build();
-
 }

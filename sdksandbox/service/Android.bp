@@ -82,4 +82,10 @@ java_sdk_library {
     ],
     installable: true,
     apex_available: ["com.android.adservices"],
+    jacoco: {
+        exclude_filter: [
+            "android.app.sdksandbox.**",
+            "com.android.sdksandbox.**",
+        ],
+    },
 }

@@ -65,13 +65,8 @@ public final class PermissionHelper {
     }
 
     /** @return {@code true} if the caller has the permission to invoke Attribution APIs. */
-    public static boolean hasAttributionPermission(
-            @NonNull Context context, boolean useSandboxCheck, @NonNull String sdkName) {
-        // Note: Checking permission declared by Sdk running in Sandbox is only for accounting
-        // purposes and should not be used as a security measure.
-        if (useSandboxCheck) {
-            // TODO(b/236267953): Add check for SDK permission.
-        }
+    public static boolean hasAttributionPermission(@NonNull Context context) {
+        // TODO(b/236267953): Add check for SDK permission.
         int status =
                 context.checkCallingOrSelfPermission(
                         AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION);

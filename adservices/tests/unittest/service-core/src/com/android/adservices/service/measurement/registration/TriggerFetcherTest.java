@@ -37,6 +37,9 @@ import android.net.Uri;
 import androidx.test.filters.SmallTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.enrollment.EnrollmentData;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -63,6 +66,10 @@ import javax.net.ssl.HttpsURLConnection;
 @SmallTest
 public final class TriggerFetcherTest {
     private static final String TRIGGER_URI = "https://foo.com";
+    private static final String ENROLLMENT_ID = "enrollment-id";
+    private static final EnrollmentData ENROLLMENT = new EnrollmentData.Builder()
+            .setEnrollmentId("enrollment-id")
+            .build();
     private static final String TOP_ORIGIN = "https://baz.com";
     private static final long TRIGGER_DATA = 7;
     private static final long PRIORITY = 1;
@@ -118,11 +125,15 @@ public final class TriggerFetcherTest {
     @Mock HttpsURLConnection mUrlConnection1;
     @Mock HttpsURLConnection mUrlConnection2;
     @Mock AdIdPermissionFetcher mAdIdPermissionFetcher;
+    @Mock EnrollmentDao mEnrollmentDao;
 
     @Before
     public void setup() {
-        mFetcher = spy(new TriggerFetcher(mAdIdPermissionFetcher));
+        mFetcher = spy(new TriggerFetcher(mEnrollmentDao, mAdIdPermissionFetcher));
         when(mAdIdPermissionFetcher.isAdIdPermissionEnabled()).thenReturn(false);
+        // For convenience, return the same enrollment-ID since we're using many arbitrary
+        // registration URIs and not yet enforcing uniqueness of enrollment.
+        when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(any())).thenReturn(ENROLLMENT);
     }
 
     @Test
@@ -140,9 +151,25 @@ public final class TriggerFetcherTest {
         List<TriggerRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals(TOP_ORIGIN, result.get(0).getTopOrigin().toString());
-        assertEquals(TRIGGER_URI, result.get(0).getRegistrationUri().toString());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
         assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.get(0).getEventTriggers());
         verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testBasicTriggerRequest_failsWhenNotEnrolled() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(any())).thenReturn(null);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{" + "'event_trigger_data':" + EVENT_TRIGGERS_1 + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertFalse(fetch.isPresent());
+        verify(mFetcher, never()).openUrl(any());
     }
 
     @Test
@@ -171,7 +198,7 @@ public final class TriggerFetcherTest {
         List<TriggerRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals(TOP_ORIGIN, result.get(0).getTopOrigin().toString());
-        assertEquals(TRIGGER_URI, result.get(0).getRegistrationUri().toString());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
         assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.get(0).getEventTriggers());
         assertEquals(DEBUG_KEY, result.get(0).getDebugKey()); // todo
 
@@ -204,7 +231,7 @@ public final class TriggerFetcherTest {
         List<TriggerRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals(TOP_ORIGIN, result.get(0).getTopOrigin().toString());
-        assertEquals(TRIGGER_URI, result.get(0).getRegistrationUri().toString());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
         assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.get(0).getEventTriggers());
         assertNull(result.get(0).getDebugKey());
 
@@ -259,7 +286,7 @@ public final class TriggerFetcherTest {
         List<TriggerRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals(TOP_ORIGIN, result.get(0).getTopOrigin().toString());
-        assertEquals(TRIGGER_URI, result.get(0).getRegistrationUri().toString());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
         assertEquals("[{}]", result.get(0).getEventTriggers());
         verify(mUrlConnection).setRequestMethod("POST");
     }
@@ -291,7 +318,7 @@ public final class TriggerFetcherTest {
         List<TriggerRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals(TOP_ORIGIN, result.get(0).getTopOrigin().toString());
-        assertEquals(TRIGGER_URI, result.get(0).getRegistrationUri().toString());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
         assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.get(0).getEventTriggers());
         verify(mUrlConnection, times(2)).setRequestMethod("POST");
     }
@@ -337,7 +364,7 @@ public final class TriggerFetcherTest {
         List<TriggerRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
-        assertEquals("https://foo.com", result.get(0).getRegistrationUri().toString());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
         assertEquals(
                 new JSONArray(aggregatable_trigger_data).toString(),
                 result.get(0).getAggregateTriggerData());
@@ -390,7 +417,7 @@ public final class TriggerFetcherTest {
         List<TriggerRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
-        assertEquals("https://foo.com", result.get(0).getRegistrationUri().toString());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
         assertEquals(
                 new JSONObject(aggregatable_values).toString(), result.get(0).getAggregateValues());
         verify(mUrlConnection).setRequestMethod("POST");
@@ -440,7 +467,7 @@ public final class TriggerFetcherTest {
         List<TriggerRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
-        assertEquals("https://foo.com", result.get(0).getRegistrationUri().toString());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
         assertEquals(new JSONObject(filters).toString(), result.get(0).getFilters());
         verify(mUrlConnection).setRequestMethod("POST");
     }
@@ -452,14 +479,14 @@ public final class TriggerFetcherTest {
                 new TriggerRegistration.Builder()
                         .setTopOrigin(Uri.parse(TOP_ORIGIN))
                         .setEventTriggers(new JSONArray(EVENT_TRIGGERS_1).toString())
-                        .setRegistrationUri(REGISTRATION_URI_1)
+                        .setEnrollmentId(ENROLLMENT_ID)
                         .setDebugKey(DEBUG_KEY)
                         .build();
         TriggerRegistration expectedResult2 =
                 new TriggerRegistration.Builder()
                         .setTopOrigin(Uri.parse(TOP_ORIGIN))
                         .setEventTriggers(new JSONArray(EVENT_TRIGGERS_2).toString())
-                        .setRegistrationUri(REGISTRATION_URI_2)
+                        .setEnrollmentId(ENROLLMENT_ID)
                         .build();
 
         WebTriggerRegistrationRequest request =
@@ -541,7 +568,7 @@ public final class TriggerFetcherTest {
                 new TriggerRegistration.Builder()
                         .setTopOrigin(Uri.parse(TOP_ORIGIN))
                         .setEventTriggers(new JSONArray(EVENT_TRIGGERS_1).toString())
-                        .setRegistrationUri(REGISTRATION_URI_1)
+                        .setEnrollmentId(ENROLLMENT_ID)
                         .setFilters(new JSONObject(filters).toString())
                         .setAggregateTriggerData(new JSONArray(aggregatableTriggerData).toString())
                         .setAggregateValues(new JSONObject(aggregatableValues).toString())
@@ -578,7 +605,7 @@ public final class TriggerFetcherTest {
                 new TriggerRegistration.Builder()
                         .setTopOrigin(Uri.parse(TOP_ORIGIN))
                         .setEventTriggers(new JSONArray(EVENT_TRIGGERS_1).toString())
-                        .setRegistrationUri(REGISTRATION_URI_1)
+                        .setEnrollmentId(ENROLLMENT_ID)
                         .build();
 
         // Execution
