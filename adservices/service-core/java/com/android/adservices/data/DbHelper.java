@@ -32,6 +32,7 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
 
+import java.io.File;
 import java.util.List;
 
 /**
@@ -44,6 +45,7 @@ public final class DbHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "adservices.db";
 
     private static DbHelper sSingleton = null;
+    private final File mDbFile;
 
     /**
      * It's only public to unit test.
@@ -55,6 +57,7 @@ public final class DbHelper extends SQLiteOpenHelper {
     @VisibleForTesting
     public DbHelper(@NonNull Context context, @NonNull String dbName, int dbVersion) {
         super(context, dbName, null, dbVersion);
+        mDbFile = context.getDatabasePath(dbName);
     }
 
     /** Returns an instance of the DbHelper given a context. */
@@ -116,6 +119,10 @@ public final class DbHelper extends SQLiteOpenHelper {
         LogUtil.d("DbHelper.onUpgrade.");
         getOrderedDbMigrators()
                 .forEach(dbMigrator -> dbMigrator.performMigration(db, oldVersion, newVersion));
+    }
+
+    public long getDbFileSize() {
+        return mDbFile != null && mDbFile.exists() ? mDbFile.length() : -1;
     }
 
     private static List<IMeasurementDbMigrator> getOrderedDbMigrators() {
