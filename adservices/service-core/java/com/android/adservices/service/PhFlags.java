@@ -1326,12 +1326,18 @@ public final class PhFlags implements Flags {
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
         writer.println("==== AdServices PH Flags Dump Enrollment ====");
         writer.println(
-                "\t" + DISABLE_TOPICS_ENROLLMENT_CHECK + " = " + isDisableTopicsEnrollmentCheck());
-        writer.println(
-                "\t" + DISABLE_FLEDGE_ENROLLMENT_CHECK + " = " + getDisableFledgeEnrollmentCheck());
+                "\t"
+                        + KEY_DISABLE_TOPICS_ENROLLMENT_CHECK
+                        + " = "
+                        + isDisableTopicsEnrollmentCheck());
         writer.println(
                 "\t"
-                        + DISABLE_MEASUREMENT_ENROLLMENT_CHECK
+                        + KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK
+                        + " = "
+                        + getDisableFledgeEnrollmentCheck());
+        writer.println(
+                "\t"
+                        + KEY_DISABLE_MEASUREMENT_ENROLLMENT_CHECK
                         + " = "
                         + isDisableMeasurementEnrollmentCheck());
 
@@ -1352,16 +1358,64 @@ public final class PhFlags implements Flags {
                         + " = "
                         + getMddBackgroundTaskKillSwitch());
 
+        writer.println("==== AdServices PH Flags Dump AllowList ====");
+        writer.println("\t" + KEY_PPAPI_APP_ALLOW_LIST + " = " + getPpapiAppAllowList());
+
         writer.println("==== AdServices PH Flags Dump MDD related flags: ====");
         writer.println(
                 "\t" + KEY_MEASUREMENT_MANIFEST_FILE_URL + " = " + getMeasurementManifestFileUrl());
+        writer.println(
+                "\t"
+                        + KEY_DOWNLOADER_CONNECTION_TIMEOUT_MS
+                        + " = "
+                        + getDownloaderConnectionTimeoutMs());
+        writer.println(
+                "\t" + KEY_DOWNLOADER_READ_TIMEOUT_MS + " = " + getDownloaderReadTimeoutMs());
+        writer.println(
+                "\t"
+                        + KEY_DOWNLOADER_MAX_DOWNLOAD_THREADS
+                        + " = "
+                        + getDownloaderMaxDownloadThreads());
+        writer.println(
+                "\t"
+                        + KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL
+                        + " = "
+                        + getMddTopicsClassifierManifestFileUrl());
 
         writer.println("==== AdServices PH Flags Dump Topics related flags ====");
         writer.println("\t" + KEY_TOPICS_EPOCH_JOB_PERIOD_MS + " = " + getTopicsEpochJobPeriodMs());
         writer.println("\t" + KEY_TOPICS_EPOCH_JOB_FLEX_MS + " = " + getTopicsEpochJobFlexMs());
+        writer.println(
+                "\t"
+                        + KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC
+                        + " = "
+                        + getTopicsPercentageForRandomTopic());
+        writer.println(
+                "\t" + KEY_TOPICS_NUMBER_OF_TOP_TOPICS + " = " + getTopicsNumberOfTopTopics());
+        writer.println(
+                "\t"
+                        + KEY_TOPICS_NUMBER_OF_RANDOM_TOPICS
+                        + " = "
+                        + getTopicsNumberOfRandomTopics());
+        writer.println(
+                "\t"
+                        + KEY_TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS
+                        + " = "
+                        + getTopicsNumberOfLookBackEpochs());
+
+        writer.println(
+                "\t"
+                        + KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS
+                        + " = "
+                        + getClassifierNumberOfTopLabels());
         writer.println("\t" + KEY_CLASSIFIER_TYPE + " = " + getClassifierType());
-        writer.println("\t" + KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL + " = "
-                + getMddTopicsClassifierManifestFileUrl());
+        writer.println("\t" + KEY_CLASSIFIER_THRESHOLD + " = " + getClassifierThreshold());
+
+        writer.println(
+                "\t"
+                        + KEY_ENFORCE_FOREGROUND_STATUS_TOPICS
+                        + " = "
+                        + getEnforceForegroundStatusForTopics());
 
         writer.println("==== AdServices PH Flags Dump Measurement related flags: ====");
         writer.println(
@@ -1597,5 +1651,10 @@ public final class PhFlags implements Flags {
 
         writer.println("==== AdServices PH Flags Dump STATUS ====");
         writer.println("\t" + KEY_ADSERVICES_ENABLE_STATUS + " = " + getAdservicesEnableStatus());
+        writer.println(
+                "\t"
+                        + KEY_FOREGROUND_STATUS_LEVEL
+                        + " = "
+                        + getForegroundStatuslLevelForValidation());
     }
 }
