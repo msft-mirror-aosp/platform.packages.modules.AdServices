@@ -17,15 +17,12 @@
 package com.android.adservices.service.topics.classifier;
 
 import android.annotation.NonNull;
-import android.content.Context;
 
-import com.android.adservices.LogUtil;
 import com.android.adservices.data.topics.Topic;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,24 +59,9 @@ public class PrecomputedClassifier implements Classifier {
     private long mModelVersion;
     private long mLabelsVersion;
 
-    PrecomputedClassifier(@NonNull ModelManager modelManager) throws IOException {
+    PrecomputedClassifier(@NonNull ModelManager modelManager) {
         mModelManager = modelManager;
         mLoaded = false;
-    }
-
-    /** Returns an instance of the PrecomputedClassifier given a context. */
-    @NonNull
-    public static PrecomputedClassifier getInstance(@NonNull Context context) {
-        synchronized (PrecomputedClassifier.class) {
-            if (sSingleton == null) {
-                try {
-                    sSingleton = new PrecomputedClassifier(ModelManager.getInstance(context));
-                } catch (IOException e) {
-                    LogUtil.e(e, "Unable to read precomputed labels and app topics list");
-                }
-            }
-        }
-        return sSingleton;
     }
 
     @NonNull
