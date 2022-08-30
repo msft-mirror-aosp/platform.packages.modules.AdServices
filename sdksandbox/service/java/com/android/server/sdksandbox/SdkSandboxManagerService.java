@@ -253,7 +253,17 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     @Override
     public void addSdkSandboxProcessDeathCallback(
-            String callingPackageName, ISdkSandboxProcessDeathCallback callback) {
+            String callingPackageName,
+            long timeAppCalledSystemServer,
+            ISdkSandboxProcessDeathCallback callback) {
+        final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
+        SdkSandboxStatsLog.write(
+                SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__ADD_SDK_SANDBOX_LIFECYCLE_CALLBACK,
+                /*latency=*/ (int)
+                        (timeSystemServerReceivedCallFromApp - timeAppCalledSystemServer),
+                /*success=*/ true,
+                SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER);
         final int callingUid = Binder.getCallingUid();
         final CallingInfo callingInfo = new CallingInfo(callingUid, callingPackageName);
         enforceCallingPackageBelongsToUid(callingInfo);
@@ -268,6 +278,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 mSandboxLifecycleCallbacks.put(callingInfo, sandboxLifecycleCallbacks);
             }
         }
+        SdkSandboxStatsLog.write(
+                SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__ADD_SDK_SANDBOX_LIFECYCLE_CALLBACK,
+                /*latency=*/ (int)
+                        (mInjector.getCurrentTime() - timeSystemServerReceivedCallFromApp),
+                /*success=*/ true,
+                SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX);
     }
 
     @Override

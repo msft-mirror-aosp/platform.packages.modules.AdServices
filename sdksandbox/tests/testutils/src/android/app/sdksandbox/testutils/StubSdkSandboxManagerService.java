@@ -80,7 +80,9 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     @Override
     public void addSdkSandboxProcessDeathCallback(
-            String callingPackageName, ISdkSandboxProcessDeathCallback callback) {}
+            String callingPackageName,
+            long timeAppCalledSystemServer,
+            ISdkSandboxProcessDeathCallback callback) {}
 
     @Override
     public void removeSdkSandboxProcessDeathCallback(
