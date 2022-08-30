@@ -197,6 +197,7 @@ public final class PhFlags implements Flags {
             "measurement_receiver_delete_packages_kill_switch";
     static final String KEY_TOPICS_KILL_SWITCH = "topics_kill_switch";
     static final String KEY_MDD_BACKGROUND_TASK_KILL_SWITCH = "mdd_background_task_kill_switch";
+    static final String KEY_MDD_LOGGER_KILL_SWITCH = "mdd_logger_kill_switch";
     static final String KEY_ADID_KILL_SWITCH = "adid_kill_switch";
     static final String KEY_APPSETID_KILL_SWITCH = "appsetid_kill_switch";
     static final String KEY_FLEDGE_SELECT_ADS_KILL_SWITCH = "fledge_select_ads_kill_switch";
@@ -1116,6 +1117,21 @@ public final class PhFlags implements Flags {
                                 /* defaultValue */ MDD_BACKGROUND_TASK_KILL_SWITCH));
     }
 
+    // MDD Logger Killswitches
+    @Override
+    public boolean getMddLoggerKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        return getGlobalKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(KEY_MDD_LOGGER_KILL_SWITCH),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                /* flagName */ KEY_MDD_LOGGER_KILL_SWITCH,
+                                /* defaultValue */ MDD_LOGGER_KILL_SWITCH));
+    }
+
     // FLEDGE Kill switches
 
     @Override
@@ -1367,6 +1383,7 @@ public final class PhFlags implements Flags {
                         + KEY_MDD_BACKGROUND_TASK_KILL_SWITCH
                         + " = "
                         + getMddBackgroundTaskKillSwitch());
+        writer.println("\t" + KEY_MDD_LOGGER_KILL_SWITCH + " = " + getMddLoggerKillSwitch());
 
         writer.println("==== AdServices PH Flags Dump AllowList ====");
         writer.println("\t" + KEY_PPAPI_APP_ALLOW_LIST + " = " + getPpapiAppAllowList());
