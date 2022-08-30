@@ -131,6 +131,22 @@ public interface Flags extends Dumpable {
         return CLASSIFIER_THRESHOLD;
     }
 
+    /** Number of max words allowed in the description for topics classifier. */
+    int CLASSIFIER_DESCRIPTION_MAX_WORDS = 500;
+
+    /** Returns the number of max words allowed in the description for topics classifier. */
+    default int getClassifierDescriptionMaxWords() {
+        return CLASSIFIER_DESCRIPTION_MAX_WORDS;
+    }
+
+    /** Number of max characters allowed in the description for topics classifier. */
+    int CLASSIFIER_DESCRIPTION_MAX_LENGTH = 2500;
+
+    /** Returns the number of max characters allowed in the description for topics classifier. */
+    default int getClassifierDescriptionMaxLength() {
+        return CLASSIFIER_DESCRIPTION_MAX_LENGTH;
+    }
+
     /* The default period for the Maintenance job. */
     long MAINTENANCE_JOB_PERIOD_MS = 86_400_000; // 1 day.
 
