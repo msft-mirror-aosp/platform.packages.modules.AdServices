@@ -496,10 +496,10 @@ public interface Flags extends Dumpable {
         return FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
     }
 
-    boolean ADSERVICES_ENABLE_STATUS = false;
+    boolean ADSERVICES_ENABLED = false;
 
-    default boolean getAdservicesEnableStatus() {
-        return ADSERVICES_ENABLE_STATUS;
+    default boolean getAdServicesEnabled() {
+        return ADSERVICES_ENABLED;
     }
 
     /** Dump some debug info for the flags */
