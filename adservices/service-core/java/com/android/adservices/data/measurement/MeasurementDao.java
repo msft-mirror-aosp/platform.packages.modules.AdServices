@@ -590,15 +590,17 @@ class MeasurementDao implements IMeasurementDao {
                         MeasurementTables.AttributionContract.SOURCE_SITE,
                         MeasurementTables.AttributionContract.DESTINATION_SITE,
                         MeasurementTables.AttributionContract.TRIGGER_TIME);
-        return Integer.valueOf((int) DatabaseUtils.longForQuery(
-                mSQLTransaction.getDatabase(),
-                query,
-                new String[] {
-                        sourceSite.toString(),
-                        destinationSite.toString(),
-                        excludedEnrollmentId,
-                        String.valueOf(windowEndTime),
-                        String.valueOf(windowStartTime) }));
+        return (int)
+                DatabaseUtils.longForQuery(
+                        mSQLTransaction.getDatabase(),
+                        query,
+                        new String[] {
+                            sourceSite.toString(),
+                            destinationSite.toString(),
+                            excludedEnrollmentId,
+                            String.valueOf(windowEndTime),
+                            String.valueOf(windowStartTime)
+                        });
     }
 
     @Override
@@ -648,15 +650,17 @@ class MeasurementDao implements IMeasurementDao {
                         MeasurementTables.SourceContract.APP_DESTINATION,
                         MeasurementTables.SourceContract.WEB_DESTINATION,
                         MeasurementTables.SourceContract.EVENT_TIME);
-        return Integer.valueOf((int) DatabaseUtils.longForQuery(
-                mSQLTransaction.getDatabase(),
-                query,
-                new String[] {
-                        destination.toString(),
-                        destination.toString(),
-                        excludedEnrollmentId,
-                        String.valueOf(windowEndTime),
-                        String.valueOf(windowStartTime) }));
+        return (int)
+                DatabaseUtils.longForQuery(
+                        mSQLTransaction.getDatabase(),
+                        query,
+                        new String[] {
+                            destination.toString(),
+                            destination.toString(),
+                            excludedEnrollmentId,
+                            String.valueOf(windowEndTime),
+                            String.valueOf(windowStartTime)
+                        });
     }
 
     @Override
@@ -901,7 +905,8 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     private static Function<String, String> getRegistrantMatcher(Uri registrant) {
-        return (String columnName) -> columnName + " = '" + registrant + "'";
+        return (String columnName) ->
+                columnName + " = " + DatabaseUtils.sqlEscapeString(registrant.toString());
     }
 
     private static Function<String, String> getTimeMatcher(Instant start, Instant end) {
@@ -952,7 +957,7 @@ class MeasurementDao implements IMeasurementDao {
                 }
                 whereBuilder.append(
                         origins.stream()
-                                .map((o) -> "'" + o + "'")
+                                .map((o) -> DatabaseUtils.sqlEscapeString(o.toString()))
                                 .collect(Collectors.joining(", ")));
                 whereBuilder.append(")");
             }
@@ -991,17 +996,15 @@ class MeasurementDao implements IMeasurementDao {
                                                 ("("
                                                         + columnName
                                                         + operator
-                                                        + "'"
-                                                        + uri.getScheme()
-                                                        + "://%."
-                                                        + uri.getAuthority()
-                                                        + "'"
+                                                        + DatabaseUtils.sqlEscapeString(
+                                                                uri.getScheme()
+                                                                        + "://%."
+                                                                        + uri.getAuthority())
                                                         + concatOperator
                                                         + columnName
                                                         + equalityOperator
-                                                        + "'"
-                                                        + uri
-                                                        + "'"
+                                                        + DatabaseUtils.sqlEscapeString(
+                                                                uri.toString())
                                                         + ")"))
                                 .collect(Collectors.joining(concatOperator)));
                 whereBuilder.append(" ) ");
@@ -1061,7 +1064,7 @@ class MeasurementDao implements IMeasurementDao {
                         String.format(
                                 Locale.ENGLISH,
                                 MeasurementTables.SourceContract.APP_DESTINATION
-                                        + " = \"%s\" AND "
+                                        + " = %1$s AND "
                                         + MeasurementTables.SourceContract.EVENT_TIME
                                         + " <= %2$d AND "
                                         + MeasurementTables.SourceContract.EXPIRY_TIME
@@ -1071,7 +1074,7 @@ class MeasurementDao implements IMeasurementDao {
                                         + MeasurementTables.SourceContract
                                                 .INSTALL_ATTRIBUTION_WINDOW
                                         + " >= %2$d",
-                                uri.toString(),
+                                DatabaseUtils.sqlEscapeString(uri.toString()),
                                 eventTimestamp),
                         /* groupBy= */ null,
                         /* having= */ null,
@@ -1253,16 +1256,17 @@ class MeasurementDao implements IMeasurementDao {
         if (publisherType == EventSurfaceType.APP) {
             return String.format(
                     Locale.ENGLISH,
-                    "%s = '%s'",
+                    "%s = %s",
                     MeasurementTables.SourceContract.PUBLISHER,
-                    publisher.toString());
+                    DatabaseUtils.sqlEscapeString(publisher.toString()));
         } else {
             return String.format(
                     Locale.ENGLISH,
-                    "(%1$s = '%2$s://%3$s' OR %1$s LIKE '%2$s://%%.%3$s')",
+                    "(%1$s = %2$s OR %1$s LIKE %3$s)",
                     MeasurementTables.SourceContract.PUBLISHER,
-                    publisher.getScheme(),
-                    publisher.getEncodedAuthority());
+                    DatabaseUtils.sqlEscapeString(publisher.toString()),
+                    DatabaseUtils.sqlEscapeString(
+                            publisher.getScheme() + "://%." + publisher.getEncodedAuthority()));
         }
     }
 
