@@ -27,6 +27,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 public class DbHelperTest {
@@ -57,5 +58,23 @@ public class DbHelperTest {
         assertTrue(doesIndexExist(db, "idx_msmt_source_et"));
         assertTrue(doesIndexExist(db, "idx_msmt_trigger_tt"));
         assertTrue(doesIndexExist(db, "idx_msmt_attribution_ss_so_ds_do_ei_tt"));
+    }
+
+    @Test
+    public void testGetDbFileSize() {
+        final String databaseName = "testsize.db";
+        DbHelper dbHelper = new DbHelper(sContext, databaseName, 1);
+
+        // Create database
+        dbHelper.getReadableDatabase();
+
+        // Verify size should be more than 0 bytes as database was created
+        Assert.assertTrue(dbHelper.getDbFileSize() > 0);
+
+        // Delete database file
+        sContext.getDatabasePath(databaseName).delete();
+
+        // Verify database does not exist anymore
+        Assert.assertEquals(-1, dbHelper.getDbFileSize());
     }
 }

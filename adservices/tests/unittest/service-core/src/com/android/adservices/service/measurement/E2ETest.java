@@ -48,6 +48,7 @@ import com.android.adservices.service.measurement.actions.ReportObjects;
 import com.android.adservices.service.measurement.actions.ReportingJob;
 import com.android.adservices.service.measurement.actions.UninstallApp;
 import com.android.adservices.service.measurement.attribution.AttributionJobHandlerWrapper;
+import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import com.google.common.collect.ImmutableList;
 
@@ -55,6 +56,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -82,6 +84,10 @@ import java.util.concurrent.TimeUnit;
  * Consider @RunWith(Parameterized.class)
  */
 public abstract class E2ETest {
+    @Rule
+    public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
+            new TestableDeviceConfig.TestableDeviceConfigRule();
+
     // Used to fuzzy-match expected report (not delivery) time
     private static final long REPORT_TIME_EPSILON = TimeUnit.HOURS.toMillis(2);
     private static final EnrollmentData AD_TECH_1 =
