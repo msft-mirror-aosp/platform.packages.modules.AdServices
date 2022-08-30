@@ -85,9 +85,11 @@ import com.android.adservices.service.measurement.registration.SourceRegistratio
 import com.android.adservices.service.measurement.registration.TriggerFetcher;
 import com.android.adservices.service.measurement.registration.TriggerRegistration;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -113,6 +115,9 @@ import java.util.stream.IntStream;
 /** Unit tests for {@link MeasurementImpl} */
 @SmallTest
 public final class MeasurementImplTest {
+    @Rule
+    public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
+            new TestableDeviceConfig.TestableDeviceConfigRule();
 
     private static final Context DEFAULT_CONTEXT = ApplicationProvider.getApplicationContext();
     private static final Uri URI_WITHOUT_APP_SCHEME = Uri.parse("com.example.abc");
