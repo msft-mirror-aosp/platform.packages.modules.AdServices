@@ -40,7 +40,7 @@ import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallbackBinder;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallbackBinder;
-import android.app.sdksandbox.testutils.FakeSdkSandboxLifecycleCallbackBinder;
+import android.app.sdksandbox.testutils.FakeSdkSandboxProcessDeathCallbackBinder;
 import android.app.sdksandbox.testutils.FakeSharedPreferencesSyncCallback;
 import android.content.ComponentName;
 import android.content.Context;
@@ -573,11 +573,11 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
-    public void testAddSdkSandboxLifecycleCallback_BeforeStartingSandbox() throws Exception {
+    public void testAddSdkSandboxProcessDeathCallback_BeforeStartingSandbox() throws Exception {
         // Register for sandbox death event
-        FakeSdkSandboxLifecycleCallbackBinder lifecycleCallback =
-                new FakeSdkSandboxLifecycleCallbackBinder();
-        mService.addSdkSandboxLifecycleCallback(TEST_PACKAGE, lifecycleCallback);
+        FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback =
+                new FakeSdkSandboxProcessDeathCallbackBinder();
+        mService.addSdkSandboxProcessDeathCallback(TEST_PACKAGE, lifecycleCallback);
 
         // Load SDK and start the sandbox
         loadSdk();
@@ -595,14 +595,14 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
-    public void testAddSdkSandboxLifecycleCallback_AfterStartingSandbox() throws Exception {
+    public void testAddSdkSandboxProcessDeathCallback_AfterStartingSandbox() throws Exception {
         // Load SDK and start the sandbox
         loadSdk();
 
         // Register for sandbox death event
-        FakeSdkSandboxLifecycleCallbackBinder lifecycleCallback =
-                new FakeSdkSandboxLifecycleCallbackBinder();
-        mService.addSdkSandboxLifecycleCallback(TEST_PACKAGE, lifecycleCallback);
+        FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback =
+                new FakeSdkSandboxProcessDeathCallbackBinder();
+        mService.addSdkSandboxProcessDeathCallback(TEST_PACKAGE, lifecycleCallback);
 
         // Kill the sandbox
         ArgumentCaptor<IBinder.DeathRecipient> deathRecipientCaptor =
@@ -617,19 +617,19 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
-    public void testMultipleAddSdkSandboxLifecycleCallbacks() throws Exception {
+    public void testMultipleAddSdkSandboxProcessDeathCallbacks() throws Exception {
         // Load SDK and start the sandbox
         loadSdk();
 
         // Register for sandbox death event
-        FakeSdkSandboxLifecycleCallbackBinder lifecycleCallback1 =
-                new FakeSdkSandboxLifecycleCallbackBinder();
-        mService.addSdkSandboxLifecycleCallback(TEST_PACKAGE, lifecycleCallback1);
+        FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback1 =
+                new FakeSdkSandboxProcessDeathCallbackBinder();
+        mService.addSdkSandboxProcessDeathCallback(TEST_PACKAGE, lifecycleCallback1);
 
         // Register for sandbox death event again
-        FakeSdkSandboxLifecycleCallbackBinder lifecycleCallback2 =
-                new FakeSdkSandboxLifecycleCallbackBinder();
-        mService.addSdkSandboxLifecycleCallback(TEST_PACKAGE, lifecycleCallback2);
+        FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback2 =
+                new FakeSdkSandboxProcessDeathCallbackBinder();
+        mService.addSdkSandboxProcessDeathCallback(TEST_PACKAGE, lifecycleCallback2);
 
         // Kill the sandbox
         ArgumentCaptor<IBinder.DeathRecipient> deathRecipientCaptor =
@@ -645,22 +645,22 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
-    public void testRemoveSdkSandboxLifecycleCallback() throws Exception {
+    public void testRemoveSdkSandboxProcessDeathCallback() throws Exception {
         // Load SDK and start the sandbox
         loadSdk();
 
         // Register for sandbox death event
-        FakeSdkSandboxLifecycleCallbackBinder lifecycleCallback1 =
-                new FakeSdkSandboxLifecycleCallbackBinder();
-        mService.addSdkSandboxLifecycleCallback(TEST_PACKAGE, lifecycleCallback1);
+        FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback1 =
+                new FakeSdkSandboxProcessDeathCallbackBinder();
+        mService.addSdkSandboxProcessDeathCallback(TEST_PACKAGE, lifecycleCallback1);
 
         // Register for sandbox death event again
-        FakeSdkSandboxLifecycleCallbackBinder lifecycleCallback2 =
-                new FakeSdkSandboxLifecycleCallbackBinder();
-        mService.addSdkSandboxLifecycleCallback(TEST_PACKAGE, lifecycleCallback2);
+        FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback2 =
+                new FakeSdkSandboxProcessDeathCallbackBinder();
+        mService.addSdkSandboxProcessDeathCallback(TEST_PACKAGE, lifecycleCallback2);
 
         // Unregister one of the lifecycle callbacks
-        mService.removeSdkSandboxLifecycleCallback(TEST_PACKAGE, lifecycleCallback1);
+        mService.removeSdkSandboxProcessDeathCallback(TEST_PACKAGE, lifecycleCallback1);
 
         // Kill the sandbox
         ArgumentCaptor<IBinder.DeathRecipient> deathRecipientCaptor =

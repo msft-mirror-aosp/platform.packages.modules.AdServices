@@ -18,11 +18,11 @@ package android.app.sdksandbox.testutils;
 
 import android.app.sdksandbox.SdkSandboxManager;
 
-public class FakeSdkSandboxLifecycleCallback
-        implements SdkSandboxManager.SdkSandboxLifecycleCallback {
+public class FakeSdkSandboxProcessDeathCallback
+        implements SdkSandboxManager.SdkSandboxProcessDeathCallback {
     public volatile boolean sandboxDeathDetected;
 
-    public FakeSdkSandboxLifecycleCallback() {
+    public FakeSdkSandboxProcessDeathCallback() {
         sandboxDeathDetected = false;
     }
 
