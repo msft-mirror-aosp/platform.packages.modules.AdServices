@@ -31,6 +31,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.measurement.AsyncRegistration;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
@@ -1327,5 +1328,133 @@ class MeasurementDao implements IMeasurementDao {
         };
         Arrays.sort(instants);
         return instants[1];
+    }
+
+    public void insertAsyncRegistration(@NonNull AsyncRegistration asyncRegistration)
+            throws DatastoreException {
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.AsyncRegistrationContract.ID, asyncRegistration.getId());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.ENROLLMENT_ID,
+                asyncRegistration.getEnrollmentId());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.REGISTRATION_URI,
+                asyncRegistration.getRegistrationUri().toString());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.WEB_DESTINATION,
+                getNullableUriString(asyncRegistration.getWebDestination()));
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.VERIFIED_DESTINATION,
+                getNullableUriString(asyncRegistration.getVerifiedDestination()));
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.OS_DESTINATION,
+                getNullableUriString(asyncRegistration.getOsDestination()));
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.REGISTRANT,
+                getNullableUriString(asyncRegistration.getRegistrant()));
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.TOP_ORIGIN,
+                asyncRegistration.getTopOrigin().toString());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.REDIRECT,
+                asyncRegistration.getRedirect());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.SOURCE_TYPE,
+                asyncRegistration.getSourceType().ordinal());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.REQUEST_TIME,
+                asyncRegistration.getRequestTime());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.RETRY_COUNT,
+                asyncRegistration.getRetryCount());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.LAST_PROCESSING_TIME,
+                asyncRegistration.getLastProcessingTime());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.TYPE,
+                asyncRegistration.getType().ordinal());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.DEBUG_KEY_ALLOWED,
+                asyncRegistration.getDebugKeyAllowed());
+        long rowId =
+                mSQLTransaction
+                        .getDatabase()
+                        .insert(
+                                MeasurementTables.AsyncRegistrationContract.TABLE,
+                                /*nullColumnHack=*/ null,
+                                values);
+        LogUtil.d("MeasurementDao: insertAsyncRegistration: rowId=" + rowId);
+        if (rowId == -1) {
+            throw new DatastoreException("Async Registration insertion failed.");
+        }
+    }
+
+    @Override
+    public void deleteAsyncRegistration(@NonNull String id) throws DatastoreException {
+        SQLiteDatabase db = mSQLTransaction.getDatabase();
+        db.delete(
+                MeasurementTables.AsyncRegistrationContract.TABLE,
+                MeasurementTables.AsyncRegistrationContract.ID + " = ?",
+                new String[] {id});
+    }
+
+    @Override
+    public AsyncRegistration fetchNextQueuedAsyncRegistration(
+            short retryLimit, List<String> failedAdTechEnrollmentIds) throws DatastoreException {
+        StringBuilder notIn = new StringBuilder();
+        StringBuilder lessThanRetryLimit = new StringBuilder();
+        lessThanRetryLimit.append(" < ? ");
+
+        if (!failedAdTechEnrollmentIds.isEmpty()) {
+            lessThanRetryLimit.append(
+                    "AND " + MeasurementTables.AsyncRegistrationContract.ENROLLMENT_ID);
+            notIn.append(" NOT IN ");
+            notIn.append(
+                    "("
+                            + failedAdTechEnrollmentIds.stream()
+                                    .map((o) -> "'" + o + "'")
+                                    .collect(Collectors.joining(", "))
+                            + ")");
+        }
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                MeasurementTables.AsyncRegistrationContract.TABLE,
+                                /*columns=*/ null,
+                                MeasurementTables.AsyncRegistrationContract.RETRY_COUNT
+                                        + lessThanRetryLimit.toString()
+                                        + notIn.toString(),
+                                new String[] {String.valueOf(retryLimit)},
+                                /*groupBy=*/ null,
+                                /*having=*/ null,
+                                /*orderBy=*/ MeasurementTables.AsyncRegistrationContract
+                                        .REQUEST_TIME,
+                                /*limit=*/ "1")) {
+            if (cursor.getCount() == 0) {
+                return null;
+            }
+            cursor.moveToNext();
+            return SqliteObjectMapper.constructAsyncRegistration(cursor);
+        }
+    }
+
+    @Override
+    public void updateRetryCount(AsyncRegistration asyncRegistration) throws DatastoreException {
+        ContentValues values = new ContentValues();
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.RETRY_COUNT,
+                asyncRegistration.getRetryCount());
+        long rows =
+                mSQLTransaction
+                        .getDatabase()
+                        .update(
+                                MeasurementTables.AsyncRegistrationContract.TABLE,
+                                values,
+                                MeasurementTables.AsyncRegistrationContract.ID + " = ?",
+                                new String[] {asyncRegistration.getId()});
+        if (rows != 1) {
+            throw new DatastoreException("Retry Count update failed.");
+        }
     }
 }
