@@ -86,7 +86,8 @@ public class MeasurementManagerCtsTest {
         ShellUtils.runShellCommand("device_config put adservices web_context_client_allow_list *");
 
         // To grant access to all pp api app
-        ShellUtils.runShellCommand("device_config put adservices ppapi_app_allow_list *");
+        ShellUtils.runShellCommand(
+                "device_config put adservices ppapi_app_signature_bypass_list *");
 
         // We need to turn the Consent Manager into debug mode
         overrideConsentManagerDebugMode();

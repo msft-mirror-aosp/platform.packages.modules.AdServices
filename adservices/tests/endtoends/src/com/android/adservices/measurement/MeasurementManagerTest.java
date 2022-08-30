@@ -321,6 +321,7 @@ public class MeasurementManagerTest {
     }
 
     private void allowAllPpApis() {
-        ShellUtils.runShellCommand("device_config put adservices ppapi_app_allow_list *");
+        ShellUtils.runShellCommand(
+                "device_config put adservices ppapi_app_signature_bypass_list *");
     }
 }

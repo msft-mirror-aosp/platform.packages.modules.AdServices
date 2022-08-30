@@ -959,14 +959,14 @@ public interface Flags extends Dumpable {
         return getGlobalKillSwitch() || FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
     }
 
+    // TODO(b/243048002): Change Signature Allow List from using packageName to signature
     /*
-     * The allow-list for PP APIs. This list has the list of app package names that we allow
-     * using PP APIs.
-     * App Package Name that does not belong to this allow-list will not be able to use PP APIs.
-     * If this list has special value "*", then all package names are allowed.
-     * There must be not any empty space between comma.
+     * The bypass list for ppapi app signature allow list. The app with package names on this list
+     * won't be checked for signature.
+     *
+     * Note this list should only contain apps for test purpose
      */
-    String PPAPI_APP_ALLOW_LIST =
+    String PPAPI_APP_SIGNATURE_BYPASS_LIST =
             "android.platform.test.scenario,"
                     + "android.adservices.crystalball,"
                     + "android.adservices.cts,"
@@ -974,7 +974,6 @@ public interface Flags extends Dumpable {
                     + "com.android.tests.sandbox.fledge,"
                     + "com.android.tests.sandbox.topics,"
                     + "com.android.adservices.endtoendtest,"
-                    + "com.android.adservices.tests.cts.endtoendtest,"
                     + "com.android.adservices.tests.cts.topics.testapp1," // CTS test sample app
                     + "com.android.adservices.tests.permissions.appoptout,"
                     + "com.android.adservices.tests.permissions.noperm,"
@@ -993,20 +992,38 @@ public interface Flags extends Dumpable {
                     + "com.android.adservices.servicecoretest";
 
     /**
+     * Returns bypass List for PPAPI app signature check. Apps with package name on this list will
+     * bypass the signature check
+     */
+    default String getPpapiAppSignatureBypassList() {
+        return PPAPI_APP_SIGNATURE_BYPASS_LIST;
+    }
+
+    /*
+     * The allow-list for PP APIs. This list has the list of app signatures that we allow
+     * using PP APIs. App Package signatures that do not belong to this allow-list will not be
+     * able to use PP APIs, unless the package name of this app is in the bypass list.
+     *
+     * If this list has special value "*", then all package signatures are allowed.
+     *
+     * There must be not any empty space between comma.
+     */
+    String PPAPI_APP_SIGNATURE_ALLOW_LIST =
+            // com.android.adservices.tests.cts.endtoendtest
+            "a40da80a59d170caa950cf15c18c454d47a39b26989d8b640ecd745ba71bf5dc,";
+
+    /** Only App signatures belonging to this Allow List can use PP APIs. */
+    default String getPpapiAppSignatureAllowList() {
+        return PPAPI_APP_SIGNATURE_ALLOW_LIST;
+    }
+
+    /**
      * The client app packages that are allowed to invoke web context APIs, i.e. {@link
      * android.adservices.measurement.MeasurementManager#registerWebSource} and {@link
      * android.adservices.measurement.MeasurementManager#deleteRegistrations}. App packages that do
      * not belong to the list will be responded back with an error response.
      */
     String WEB_CONTEXT_CLIENT_ALLOW_LIST = "";
-
-    /**
-     * Returns the The Allow List for PP APIs. Only App Package Name belongs to this Allow List can
-     * use PP APIs.
-     */
-    default String getPpapiAppAllowList() {
-        return PPAPI_APP_ALLOW_LIST;
-    }
 
     // Rate Limit Flags.
 
