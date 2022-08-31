@@ -16,7 +16,6 @@
 
 package com.android.adservices.download;
 
-
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.Mockito.doReturn;
@@ -76,7 +75,6 @@ public class MobileDataDownloadTest {
 
     private StaticMockitoSession mStaticMockSession = null;
     @Mock Flags mMockFlags;
-    @Mock MddLogger mMockMddLogger;
 
     @Before
     public void setup() {
@@ -100,7 +98,8 @@ public class MobileDataDownloadTest {
     @Test
     public void testCreateMddManagerSuccessfully() throws ExecutionException, InterruptedException {
         MobileDataDownload mdd =
-                MobileDataDownloadFactory.getMdd(mContext, FlagsFactory.getFlagsForTest());
+                MobileDataDownloadFactory.getMddForTesting(
+                        mContext, FlagsFactory.getFlagsForTest());
 
         DataFileGroup dataFileGroup =
                 createDataFileGroup(
@@ -142,7 +141,8 @@ public class MobileDataDownloadTest {
     public void testTopicsManifestFileGroupPopulator()
             throws ExecutionException, InterruptedException, TimeoutException {
         MobileDataDownload mdd =
-                MobileDataDownloadFactory.getMdd(mContext, FlagsFactory.getFlagsForTest());
+                MobileDataDownloadFactory.getMddForTesting(
+                        mContext, FlagsFactory.getFlagsForTest());
 
         mdd.handleTask(TaskScheduler.WIFI_CHARGING_PERIODIC_TASK)
                 .get(MAX_HANDLE_TASK_WAIT_TIME_SECS, SECONDS);
