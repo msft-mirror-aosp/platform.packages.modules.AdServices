@@ -45,7 +45,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -87,7 +86,11 @@ public class MeasurementManagerCtsTest {
         ShellUtils.runShellCommand("device_config put adservices web_context_client_allow_list *");
 
         // To grant access to all pp api app
-        ShellUtils.runShellCommand("device_config put adservices ppapi_app_allow_list *");
+        ShellUtils.runShellCommand(
+                "device_config put adservices ppapi_app_signature_bypass_list *");
+
+        // We need to turn the Consent Manager into debug mode
+        overrideConsentManagerDebugMode();
 
         mMeasurementClient =
                 new MeasurementClient.Builder()
@@ -158,7 +161,6 @@ public class MeasurementManagerCtsTest {
         overrideDisableMeasurementEnrollmentCheck("0");
     }
 
-    @Ignore("b/243204209")
     @Test
     public void testDeleteRegistrations_withRequest_withNoOrigin_withNoRange_withCallback_NoErrors()
             throws Exception {
@@ -169,7 +171,6 @@ public class MeasurementManagerCtsTest {
         overrideDisableMeasurementEnrollmentCheck("0");
     }
 
-    @Ignore("b/243204209")
     @Test
     public void testDeleteRegistrations_withRequest_withNoRange_withCallback_NoErrors()
             throws Exception {
@@ -216,7 +217,6 @@ public class MeasurementManagerCtsTest {
         overrideDisableMeasurementEnrollmentCheck("0");
     }
 
-    @Ignore
     @Test
     public void testDeleteRegistrations_withRequest_withInvalidArguments_withCallback_hasError()
             throws Exception {
@@ -242,6 +242,7 @@ public class MeasurementManagerCtsTest {
                 new DeletionRequest.Builder()
                         .setOriginUris(Collections.singletonList(ORIGIN_URI))
                         .setDomainUris(Collections.singletonList(DOMAIN_URI))
+                        .setStart(Instant.now().plusMillis(1000))
                         .setEnd(Instant.now())
                         .build();
 
@@ -275,5 +276,10 @@ public class MeasurementManagerCtsTest {
     private void overrideDisableMeasurementEnrollmentCheck(String val) {
         ShellUtils.runShellCommand(
                 "setprop debug.adservices.disable_measurement_enrollment_check " + val);
+    }
+
+    // Override the Consent Manager behaviour - Consent Given
+    private void overrideConsentManagerDebugMode() {
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
     }
 }

@@ -111,6 +111,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 
@@ -689,6 +690,7 @@ public class AdSelectionE2ETest {
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(),
                 String.format(
+                        Locale.ENGLISH,
                         AdSelectionRunner.AD_SELECTION_ERROR_PATTERN,
                         AdSelectionRunner.ERROR_AD_SELECTION_FAILURE,
                         AdSelectionRunner.ERROR_NO_CA_AVAILABLE));
@@ -777,6 +779,7 @@ public class AdSelectionE2ETest {
         assertTrue(
                 resultsCallback.mFledgeErrorResponse != null
                         ? String.format(
+                                Locale.ENGLISH,
                                 "Expected callback to succeed but it failed with status %d and"
                                         + " message '%s'",
                                 resultsCallback.mFledgeErrorResponse.getStatusCode(),
@@ -2224,13 +2227,17 @@ public class AdSelectionE2ETest {
             final String actualErrorMassage, final String expectedErrorReason) {
         assertTrue(
                 String.format(
+                        Locale.ENGLISH,
                         "Actual error [%s] does not begin with [%s]",
-                        actualErrorMassage, ERROR_AD_SELECTION_FAILURE),
+                        actualErrorMassage,
+                        ERROR_AD_SELECTION_FAILURE),
                 actualErrorMassage.startsWith(ERROR_AD_SELECTION_FAILURE));
         assertTrue(
                 String.format(
+                        Locale.ENGLISH,
                         "Actual error [%s] does not contain expected message: [%s]",
-                        actualErrorMassage, expectedErrorReason),
+                        actualErrorMassage,
+                        expectedErrorReason),
                 actualErrorMassage.contains(expectedErrorReason));
     }
 
@@ -2263,7 +2270,7 @@ public class AdSelectionE2ETest {
                 + "         end = new Date().getTime();\n"
                 + "      }\n"
                 + "    }\n"
-                + String.format("    wait(\"%d\");\n", waitTime);
+                + String.format(Locale.ENGLISH, "    wait(\"%d\");\n", waitTime);
     }
 
     static class AdSelectionTestCallback extends AdSelectionCallback.Stub {

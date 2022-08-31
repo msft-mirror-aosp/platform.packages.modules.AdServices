@@ -36,6 +36,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.LogUtil;
 import com.android.compatibility.common.util.ShellUtils;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -150,17 +151,32 @@ public class AppUpdateTest {
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
 
-        registerTopicResponseReceiver();
-    }
-
-    @Test
-    public void testAppUpdate() throws Exception {
         overrideDisableTopicsEnrollmentCheck("1");
         overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
 
         // We need to turn off random topic so that we can verify the returned topic.
         overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
 
+        // We need to turn the Consent Manager into debug mode
+        overrideConsentManagerDebugMode();
+
+        // Turn off MDD to avoid model mismatching
+        switchOnAndOffMDD(true);
+
+        registerTopicResponseReceiver();
+    }
+
+    @After
+    public void tearDown() {
+        // Reset back the original values.
+        overrideDisableTopicsEnrollmentCheck("0");
+        overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
+        overridePercentageForRandomTopic(DEFAULT_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+        switchOnAndOffMDD(false);
+    }
+
+    @Test
+    public void testAppUpdate() throws Exception {
         // Invoke Topics API once to compute top topics so that following installed test apps are
         // able to get top topics assigned when getting installed.
         AdvertisingTopicsClient advertisingTopicsClient =
@@ -225,11 +241,6 @@ public class AppUpdateTest {
         // Finally, assert that the number of received broadcasts matches with expectation
         assertThat(mExpectedTopicResponseBroadCastIndex)
                 .isEqualTo(EXPECTED_TOPIC_RESPONSE_BROADCASTS.length);
-
-        // Reset back the original values.
-        overrideDisableTopicsEnrollmentCheck("0");
-        overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
-        overridePercentageForRandomTopic(DEFAULT_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
     }
 
     // Broadcast Receiver to receive getTopicResponse broadcast from test apps
@@ -280,6 +291,12 @@ public class AppUpdateTest {
         sContext.registerReceiver(mTopicsResponseReceiver, topicResponseIntentFilter);
     }
 
+    // Switch on/off for MDD service. Default value is false, which means MDD is enabled.
+    private void switchOnAndOffMDD(boolean isSwitchedOff) {
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.mdd_background_task_kill_switch " + isSwitchedOff);
+    }
+
     // Install test sample app 1 and verify the installation.
     private void installTestSampleApp() {
         String installMessage = ShellUtils.runShellCommand("pm install -r " + TEST_APK_PATH);
@@ -309,6 +326,11 @@ public class AppUpdateTest {
         ShellUtils.runShellCommand(
                 "setprop debug.adservices.topics_percentage_for_random_topics "
                         + overridePercentage);
+    }
+
+    // Override the Consent Manager behaviour - Consent Given
+    private void overrideConsentManagerDebugMode() {
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
     }
 
     // Forces JobScheduler to run the Epoch Computation job.

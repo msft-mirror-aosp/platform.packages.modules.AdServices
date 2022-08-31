@@ -53,6 +53,8 @@ public final class PhFlags implements Flags {
     static final String KEY_CLASSIFIER_TYPE = "classifier_type";
     static final String KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS = "classifier_number_of_top_labels";
     static final String KEY_CLASSIFIER_THRESHOLD = "classifier_threshold";
+    static final String KEY_CLASSIFIER_DESCRIPTION_MAX_WORDS = "classifier_description_max_words";
+    static final String KEY_CLASSIFIER_DESCRIPTION_MAX_LENGTH = "classifier_description_max_length";
 
     // Measurement keys
     static final String KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS =
@@ -69,6 +71,7 @@ public final class PhFlags implements Flags {
             "measurement_network_connect_timeout_ms";
     static final String KEY_MEASUREMENT_NETWORK_READ_TIMEOUT_MS =
             "measurement_network_read_timeout_ms";
+    static final String KEY_MEASUREMENT_DB_SIZE_LIMIT = "measurement_db_size_limit";
     static final String KEY_MEASUREMENT_MANIFEST_FILE_URL = "mdd_measurement_manifest_file_url";
     static final String KEY_MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS =
             "measurement_registration_input_event_valid_window_ms";
@@ -196,6 +199,7 @@ public final class PhFlags implements Flags {
             "measurement_receiver_delete_packages_kill_switch";
     static final String KEY_TOPICS_KILL_SWITCH = "topics_kill_switch";
     static final String KEY_MDD_BACKGROUND_TASK_KILL_SWITCH = "mdd_background_task_kill_switch";
+    static final String KEY_MDD_LOGGER_KILL_SWITCH = "mdd_logger_kill_switch";
     static final String KEY_ADID_KILL_SWITCH = "adid_kill_switch";
     static final String KEY_APPSETID_KILL_SWITCH = "appsetid_kill_switch";
     static final String KEY_FLEDGE_SELECT_ADS_KILL_SWITCH = "fledge_select_ads_kill_switch";
@@ -203,7 +207,8 @@ public final class PhFlags implements Flags {
             "fledge_custom_audience_service_kill_switch";
 
     // App/SDK AllowList/DenyList keys
-    static final String KEY_PPAPI_APP_ALLOW_LIST = "ppapi_app_allow_list";
+    static final String KEY_PPAPI_APP_SIGNATURE_BYPASS_LIST = "ppapi_app_signature_bypass_list";
+    static final String KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST = "ppapi_app_signature_allow_list";
 
     // Rate Limit keys
     static final String KEY_SDK_REQUEST_PERMITS_PER_SECOND = "sdk_request_permits_per_second";
@@ -224,6 +229,9 @@ public final class PhFlags implements Flags {
 
     // Consent Notification debug mode keys.
     static final String KEY_CONSENT_NOTIFICATION_DEBUG_MODE = "consent_notification_debug_mode";
+
+    // Consent Manager debug mode keys.
+    static final String KEY_CONSENT_MANAGER_DEBUG_MODE = "consent_manager_debug_mode";
 
     // App/SDK AllowList/DenyList keys that have access to the web registration APIs
     static final String KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST = "web_context_client_allow_list";
@@ -370,6 +378,24 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public int getClassifierDescriptionMaxWords() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_CLASSIFIER_DESCRIPTION_MAX_WORDS,
+                /* defaultValue */ CLASSIFIER_DESCRIPTION_MAX_WORDS);
+    }
+
+    @Override
+    public int getClassifierDescriptionMaxLength() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_CLASSIFIER_DESCRIPTION_MAX_LENGTH,
+                /* defaultValue */ CLASSIFIER_DESCRIPTION_MAX_LENGTH);
+    }
+
+    @Override
     public long getMaintenanceJobPeriodMs() {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig) and then
         // hard-coded value.
@@ -468,6 +494,15 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_NETWORK_READ_TIMEOUT_MS,
                 /* defaultValue */ MEASUREMENT_NETWORK_READ_TIMEOUT_MS);
+    }
+
+    @Override
+    public long getMeasurementDbSizeLimit() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_DB_SIZE_LIMIT,
+                /* defaultValue */ MEASUREMENT_DB_SIZE_LIMIT);
     }
 
     @Override
@@ -1103,6 +1138,21 @@ public final class PhFlags implements Flags {
                                 /* defaultValue */ MDD_BACKGROUND_TASK_KILL_SWITCH));
     }
 
+    // MDD Logger Killswitches
+    @Override
+    public boolean getMddLoggerKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        return getGlobalKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(KEY_MDD_LOGGER_KILL_SWITCH),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                /* flagName */ KEY_MDD_LOGGER_KILL_SWITCH,
+                                /* defaultValue */ MDD_LOGGER_KILL_SWITCH));
+    }
+
     // FLEDGE Kill switches
 
     @Override
@@ -1133,14 +1183,23 @@ public final class PhFlags implements Flags {
                                 /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH));
     }
 
-    // TOPICS AllowLists
+    // PPAPI Signature check Bypass List
     @Override
-    public String getPpapiAppAllowList() {
+    public String getPpapiAppSignatureBypassList() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getString(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_PPAPI_APP_ALLOW_LIST,
-                /* defaultValue */ PPAPI_APP_ALLOW_LIST);
+                /* flagName */ KEY_PPAPI_APP_SIGNATURE_BYPASS_LIST,
+                /* defaultValue */ PPAPI_APP_SIGNATURE_BYPASS_LIST);
+    }
+
+    // PPAPI Signature allow-list.
+    @Override
+    public String getPpapiAppSignatureAllowList() {
+        return DeviceConfig.getString(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST,
+                /* defaultValue */ PPAPI_APP_SIGNATURE_ALLOW_LIST);
     }
 
     // Rate Limit Flags.
@@ -1313,15 +1372,28 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getConsentManagerDebugMode() {
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(KEY_CONSENT_MANAGER_DEBUG_MODE),
+                /* defaultValue */ CONSENT_MANAGER_DEBUG_MODE);
+    }
+
+    @Override
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
         writer.println("==== AdServices PH Flags Dump Enrollment ====");
         writer.println(
-                "\t" + DISABLE_TOPICS_ENROLLMENT_CHECK + " = " + isDisableTopicsEnrollmentCheck());
-        writer.println(
-                "\t" + DISABLE_FLEDGE_ENROLLMENT_CHECK + " = " + getDisableFledgeEnrollmentCheck());
+                "\t"
+                        + KEY_DISABLE_TOPICS_ENROLLMENT_CHECK
+                        + " = "
+                        + isDisableTopicsEnrollmentCheck());
         writer.println(
                 "\t"
-                        + DISABLE_MEASUREMENT_ENROLLMENT_CHECK
+                        + KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK
+                        + " = "
+                        + getDisableFledgeEnrollmentCheck());
+        writer.println(
+                "\t"
+                        + KEY_DISABLE_MEASUREMENT_ENROLLMENT_CHECK
                         + " = "
                         + isDisableMeasurementEnrollmentCheck());
 
@@ -1341,17 +1413,78 @@ public final class PhFlags implements Flags {
                         + KEY_MDD_BACKGROUND_TASK_KILL_SWITCH
                         + " = "
                         + getMddBackgroundTaskKillSwitch());
+        writer.println("\t" + KEY_MDD_LOGGER_KILL_SWITCH + " = " + getMddLoggerKillSwitch());
+
+        writer.println("==== AdServices PH Flags Dump AllowList ====");
+        writer.println(
+                "\t"
+                        + KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST
+                        + " = "
+                        + getPpapiAppSignatureAllowList());
+        writer.println(
+                "\t"
+                        + KEY_PPAPI_APP_SIGNATURE_BYPASS_LIST
+                        + " = "
+                        + getPpapiAppSignatureBypassList());
 
         writer.println("==== AdServices PH Flags Dump MDD related flags: ====");
         writer.println(
                 "\t" + KEY_MEASUREMENT_MANIFEST_FILE_URL + " = " + getMeasurementManifestFileUrl());
+        writer.println(
+                "\t"
+                        + KEY_DOWNLOADER_CONNECTION_TIMEOUT_MS
+                        + " = "
+                        + getDownloaderConnectionTimeoutMs());
+        writer.println(
+                "\t" + KEY_DOWNLOADER_READ_TIMEOUT_MS + " = " + getDownloaderReadTimeoutMs());
+        writer.println(
+                "\t"
+                        + KEY_DOWNLOADER_MAX_DOWNLOAD_THREADS
+                        + " = "
+                        + getDownloaderMaxDownloadThreads());
+        writer.println(
+                "\t"
+                        + KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL
+                        + " = "
+                        + getMddTopicsClassifierManifestFileUrl());
 
         writer.println("==== AdServices PH Flags Dump Topics related flags ====");
         writer.println("\t" + KEY_TOPICS_EPOCH_JOB_PERIOD_MS + " = " + getTopicsEpochJobPeriodMs());
         writer.println("\t" + KEY_TOPICS_EPOCH_JOB_FLEX_MS + " = " + getTopicsEpochJobFlexMs());
+        writer.println(
+                "\t"
+                        + KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC
+                        + " = "
+                        + getTopicsPercentageForRandomTopic());
+        writer.println(
+                "\t" + KEY_TOPICS_NUMBER_OF_TOP_TOPICS + " = " + getTopicsNumberOfTopTopics());
+        writer.println(
+                "\t"
+                        + KEY_TOPICS_NUMBER_OF_RANDOM_TOPICS
+                        + " = "
+                        + getTopicsNumberOfRandomTopics());
+        writer.println(
+                "\t"
+                        + KEY_TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS
+                        + " = "
+                        + getTopicsNumberOfLookBackEpochs());
+
+        writer.println(
+                "\t"
+                        + KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS
+                        + " = "
+                        + getClassifierNumberOfTopLabels());
         writer.println("\t" + KEY_CLASSIFIER_TYPE + " = " + getClassifierType());
+        writer.println("\t" + KEY_CLASSIFIER_THRESHOLD + " = " + getClassifierThreshold());
+
+        writer.println(
+                "\t"
+                        + KEY_ENFORCE_FOREGROUND_STATUS_TOPICS
+                        + " = "
+                        + getEnforceForegroundStatusForTopics());
 
         writer.println("==== AdServices PH Flags Dump Measurement related flags: ====");
+        writer.println("\t" + KEY_MEASUREMENT_DB_SIZE_LIMIT + " = " + getMeasurementDbSizeLimit());
         writer.println(
                 "\t"
                         + KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS
@@ -1585,5 +1718,10 @@ public final class PhFlags implements Flags {
 
         writer.println("==== AdServices PH Flags Dump STATUS ====");
         writer.println("\t" + KEY_ADSERVICES_ENABLE_STATUS + " = " + getAdservicesEnableStatus());
+        writer.println(
+                "\t"
+                        + KEY_FOREGROUND_STATUS_LEVEL
+                        + " = "
+                        + getForegroundStatuslLevelForValidation());
     }
 }

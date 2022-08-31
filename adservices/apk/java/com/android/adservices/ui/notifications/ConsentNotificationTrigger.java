@@ -108,6 +108,11 @@ public class ConsentNotificationTrigger {
             return;
         }
 
+        // if the device is not an EU device and notifications are not disabled, set the consent
+        if (!isEuDevice) {
+            ConsentManager.getInstance(context).enable(context.getPackageManager());
+        }
+
         createNotificationChannel(context);
         NotificationCompat.Builder consentNotificationBuilder =
                 getConsentNotificationBuilder(context, isEuDevice);

@@ -16,10 +16,9 @@
 
 package com.android.adservices.service.consent;
 
-import static com.android.adservices.service.consent.ConsentManager.EEA_DEVICE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_IN_SELECTED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -35,7 +34,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
 
 import android.app.job.JobScheduler;
 import android.content.Context;
@@ -111,7 +109,8 @@ public class ConsentManagerTest {
                         mAppConsentDao,
                         mMeasurementImpl,
                         mAdServicesLoggerImpl,
-                        mCustomAudienceDaoMock);
+                        mCustomAudienceDaoMock,
+                        mMockFlags);
     }
 
     @After
@@ -121,7 +120,6 @@ public class ConsentManagerTest {
 
     @Test
     public void testConsentIsGivenAfterEnabling() {
-        when(mPackageManagerMock.hasSystemFeature(EEA_DEVICE)).thenReturn(true);
         mConsentManager.enable(mPackageManagerMock);
 
         assertTrue(mConsentManager.getConsent(mPackageManagerMock).isGiven());
@@ -130,7 +128,6 @@ public class ConsentManagerTest {
     @Test
     public void testConsentIsRevokedAfterDisabling() {
         doReturn(mPackageManagerMock).when(mContextSpy).getPackageManager();
-        when(mPackageManagerMock.hasSystemFeature(EEA_DEVICE)).thenReturn(true);
         mConsentManager.disable(mContextSpy);
 
         assertFalse(mConsentManager.getConsent(mPackageManagerMock).isGiven());
@@ -140,7 +137,6 @@ public class ConsentManagerTest {
     public void testJobsAreUnscheduledAfterDisabling() {
         doReturn(mPackageManagerMock).when(mContextSpy).getPackageManager();
         doReturn(mJobSchedulerMock).when(mContextSpy).getSystemService(JobScheduler.class);
-        when(mPackageManagerMock.hasSystemFeature(EEA_DEVICE)).thenReturn(true);
         mConsentManager.disable(mContextSpy);
 
         verify(mJobSchedulerMock).cancel(AdServicesConfig.MAINTENANCE_JOB_ID);
@@ -168,7 +164,6 @@ public class ConsentManagerTest {
     @Test
     public void testDataIsResetAfterConsentIsRevoked() throws IOException {
         doReturn(mPackageManagerMock).when(mContextSpy).getPackageManager();
-        when(mPackageManagerMock.hasSystemFeature(EEA_DEVICE)).thenReturn(true);
         mConsentManager.disable(mContextSpy);
 
         SystemClock.sleep(1000);
@@ -180,23 +175,8 @@ public class ConsentManagerTest {
     }
 
     @Test
-    public void testConsentIsEnabledForEuConfig() {
-        when(mPackageManagerMock.hasSystemFeature(EEA_DEVICE)).thenReturn(true);
-
-        assertFalse(mConsentManager.getInitialConsent(mPackageManagerMock));
-    }
-
-    @Test
-    public void testConsentIsEnabledForNonEuConfig() {
-        when(mPackageManagerMock.hasSystemFeature(EEA_DEVICE)).thenReturn(false);
-
-        assertTrue(mConsentManager.getInitialConsent(mPackageManagerMock));
-    }
-
-    @Test
     public void testIsFledgeConsentRevokedForAppWithFullApiConsent()
             throws IOException, PackageManager.NameNotFoundException {
-        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
         mConsentManager.enable(mPackageManagerMock);
         assertTrue(mConsentManager.getConsent(mPackageManagerMock).isGiven());
 
@@ -228,7 +208,6 @@ public class ConsentManagerTest {
     public void testIsFledgeConsentRevokedForAppWithoutPrivacySandboxConsent()
             throws PackageManager.NameNotFoundException {
         doReturn(mPackageManagerMock).when(mContextSpy).getPackageManager();
-        doReturn(true).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
         mConsentManager.disable(mContextSpy);
         assertFalse(mConsentManager.getConsent(mPackageManagerMock).isGiven());
 
@@ -250,7 +229,6 @@ public class ConsentManagerTest {
     @Test
     public void testIsFledgeConsentRevokedForNotFoundAppThrows()
             throws PackageManager.NameNotFoundException {
-        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
         mConsentManager.enable(mPackageManagerMock);
         assertTrue(mConsentManager.getConsent(mPackageManagerMock).isGiven());
 
@@ -269,7 +247,6 @@ public class ConsentManagerTest {
     @Test
     public void testIsFledgeConsentRevokedForAppAfterSettingFledgeUseWithFullApiConsent()
             throws IOException, PackageManager.NameNotFoundException {
-        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
         mConsentManager.enable(mPackageManagerMock);
         assertTrue(mConsentManager.getConsent(mPackageManagerMock).isGiven());
 
@@ -301,7 +278,6 @@ public class ConsentManagerTest {
     public void testIsFledgeConsentRevokedForAppAfterSettingFledgeUseWithoutPrivacySandboxConsent()
             throws PackageManager.NameNotFoundException {
         doReturn(mPackageManagerMock).when(mContextSpy).getPackageManager();
-        doReturn(true).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
         mConsentManager.disable(mContextSpy);
         assertFalse(mConsentManager.getConsent(mPackageManagerMock).isGiven());
 
@@ -323,7 +299,6 @@ public class ConsentManagerTest {
     @Test
     public void testIsFledgeConsentRevokedForAppAfterSettingFledgeUseThrows()
             throws PackageManager.NameNotFoundException {
-        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
         mConsentManager.enable(mPackageManagerMock);
         assertTrue(mConsentManager.getConsent(mPackageManagerMock).isGiven());
 
@@ -342,7 +317,6 @@ public class ConsentManagerTest {
     @Test
     public void testGetKnownAppsWithConsent()
             throws IOException, PackageManager.NameNotFoundException {
-        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
         mConsentManager.enable(mPackageManagerMock);
         assertTrue(mConsentManager.getConsent(mPackageManagerMock).isGiven());
         doReturn(AppConsentDaoFixture.APP10_UID)
@@ -369,7 +343,6 @@ public class ConsentManagerTest {
     @Test
     public void testGetKnownAppsWithConsentAfterConsentForOneOfThemWasRevoked()
             throws IOException, PackageManager.NameNotFoundException, InterruptedException {
-        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
         doNothing().when(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any());
 
         mConsentManager.enable(mPackageManagerMock);
@@ -406,7 +379,6 @@ public class ConsentManagerTest {
     @Test
     public void testGetKnownAppsWithConsentAfterConsentForOneOfThemWasRevokedAndRestored()
             throws IOException, PackageManager.NameNotFoundException, InterruptedException {
-        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
         doNothing().when(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any());
 
         mConsentManager.enable(mPackageManagerMock);
@@ -456,7 +428,6 @@ public class ConsentManagerTest {
         Topic topic1 = Topic.create(1, taxonomyVersion, modelVersion);
         Topic topic2 = Topic.create(2, taxonomyVersion, modelVersion);
         ImmutableList<Topic> expectedKnownTopicsWithConsent = ImmutableList.of(topic1, topic2);
-        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
         doReturn(expectedKnownTopicsWithConsent).when(mTopicsWorker).getKnownTopicsWithConsent();
 
         ImmutableList<Topic> knownTopicsWithConsent = mConsentManager.getKnownTopicsWithConsent();
@@ -472,7 +443,6 @@ public class ConsentManagerTest {
         Topic topic1 = Topic.create(1, taxonomyVersion, modelVersion);
         Topic topic2 = Topic.create(2, taxonomyVersion, modelVersion);
         ImmutableList<Topic> expectedTopicsWithRevokedConsent = ImmutableList.of(topic1, topic2);
-        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
         doReturn(expectedTopicsWithRevokedConsent)
                 .when(mTopicsWorker)
                 .getTopicsWithRevokedConsent();
@@ -487,7 +457,6 @@ public class ConsentManagerTest {
     @Test
     public void testResetAllAppConsentAndAppData()
             throws IOException, PackageManager.NameNotFoundException {
-        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
         doNothing().when(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
 
         // Prepopulate with consent data for some apps
@@ -527,7 +496,6 @@ public class ConsentManagerTest {
     @Test
     public void testResetAllowedAppConsentAndAppData()
             throws IOException, PackageManager.NameNotFoundException {
-        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
         doNothing().when(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
 
         // Prepopulate with consent data for some apps
@@ -577,7 +545,6 @@ public class ConsentManagerTest {
 
     @Test
     public void testNotificationDisplayedRecorded() {
-        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
         Boolean wasNotificationDisplayed =
                 mConsentManager.wasNotificationDisplayed(mPackageManagerMock);
 
@@ -605,7 +572,8 @@ public class ConsentManagerTest {
                         mAppConsentDao,
                         mMeasurementImpl,
                         mAdServicesLoggerImpl,
-                        mCustomAudienceDaoMock);
+                        mCustomAudienceDaoMock,
+                        mMockFlags);
         doNothing().when(mBlockedTopicsManager).blockTopic(any());
         doNothing().when(mBlockedTopicsManager).unblockTopic(any());
         doNothing().when(mCacheManager).clearAllTopicsData(any());
@@ -621,15 +589,15 @@ public class ConsentManagerTest {
 
     @Test
     public void testLoggingSettingsUsageReportedOptInSelected() throws IOException {
-        when(mPackageManagerMock.hasSystemFeature(EEA_DEVICE)).thenReturn(true);
         mConsentManager.init(mPackageManagerMock);
         mConsentManager.enable(mPackageManagerMock);
 
-        UIStats expectedUIStats = new UIStats.Builder()
-                .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
-                .setRegion(AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU)
-                .setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_IN_SELECTED)
-                .build();
+        UIStats expectedUIStats =
+                new UIStats.Builder()
+                        .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
+                        .setRegion(AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW)
+                        .setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_IN_SELECTED)
+                        .build();
 
         verify(mAdServicesLoggerImpl, times(1)).logUIStats(any());
         verify(mAdServicesLoggerImpl, times(1)).logUIStats(expectedUIStats);

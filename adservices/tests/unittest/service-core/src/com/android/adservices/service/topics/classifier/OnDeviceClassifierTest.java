@@ -55,6 +55,7 @@ import java.util.stream.Collectors;
 
 /** Topic Classifier Test {@link OnDeviceClassifier}. */
 public class OnDeviceClassifierTest {
+    // (b/244313803): Refactor tests to remove DeviceConfig and use Flags.
     @Rule
     public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
             new TestableDeviceConfig.TestableDeviceConfigRule();
@@ -88,17 +89,6 @@ public class OnDeviceClassifierTest {
     }
 
     @Test
-    public void testGetInstance() {
-        OnDeviceClassifier firstInstance = OnDeviceClassifier.getInstance(sContext);
-        OnDeviceClassifier secondInstance = OnDeviceClassifier.getInstance(sContext);
-
-        assertThat(firstInstance).isNotNull();
-        assertThat(secondInstance).isNotNull();
-        // Verify singleton behaviour.
-        assertThat(firstInstance).isEqualTo(secondInstance);
-    }
-
-    @Test
     public void testClassify_packageManagerError_returnsDefaultClassifications()
             throws IOException {
         String appPackage1 = "com.example.adservices.samples.topics.sampleapp1";
@@ -116,6 +106,44 @@ public class OnDeviceClassifierTest {
         // Check all the returned labels for default empty string descriptions.
         assertThat(classifications.get(appPackage1))
                 .isEqualTo(createTopics(Arrays.asList(10230, 10253, 10227)));
+    }
+
+    @Test
+    public void testClassify_verifyClassifierDescriptionFlags() {
+        // Check getClassification for sample descriptions.
+        String appPackage1 = "com.example.adservices.samples.topics.sampleapp1";
+        ImmutableMap<String, AppInfo> appInfoMap =
+                ImmutableMap.<String, AppInfo>builder()
+                        .put(appPackage1, new AppInfo("appName1", "Sample app description."))
+                        .build();
+        ImmutableSet<String> appPackages = ImmutableSet.of(appPackage1);
+        when(mPackageManagerUtil.getAppInformation(eq(appPackages))).thenReturn(appInfoMap);
+
+        ImmutableMap<String, List<Topic>> classifications =
+                mOnDeviceClassifier.classify(appPackages);
+
+        verify(mPackageManagerUtil).getAppInformation(eq(appPackages));
+        // One value for input package name.
+        assertThat(classifications).hasSize(1);
+        // Verify size of the labels returned.
+        assertThat(classifications.get(appPackage1)).hasSize(2);
+
+        // Check if the first category matches in the top CLASSIFIER_NUMBER_OF_TOP_LABELS.
+        // Scores can differ a little on devices. Using this technique to reduce flakiness.
+        // Expected top 10: 10253, 10230, 10284, 10237, 10227, 10257, 10165, 10028, 10330, 10047
+        assertThat(classifications.get(appPackage1))
+                .containsAtLeastElementsIn(createTopics(Arrays.asList(10253)));
+
+        // Set max classifier description length to 0. This should make description an empty string.
+        setClassifierDescriptionLength(0);
+        when(mPackageManagerUtil.getAppInformation(eq(appPackages))).thenReturn(appInfoMap);
+
+        // Run classification again for the same package.
+        classifications = mOnDeviceClassifier.classify(appPackages);
+
+        // Verify values are the same values as returned for an empty string.
+        assertThat(classifications.get(appPackage1))
+                .containsAtLeastElementsIn(createTopics(Arrays.asList(10230, 10253, 10227)));
     }
 
     @Test
@@ -368,6 +396,14 @@ public class OnDeviceClassifierTest {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 "classifier_threshold",
                 Float.toString(overrideValue),
+                /* makeDefault */ false);
+    }
+
+    private void setClassifierDescriptionLength(int overrideValue) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "classifier_description_max_length",
+                Integer.toString(overrideValue),
                 /* makeDefault */ false);
     }
 }

@@ -18,6 +18,8 @@ package com.android.adservices.service;
 
 import static com.android.adservices.service.Flags.ADID_KILL_SWITCH;
 import static com.android.adservices.service.Flags.APPSETID_KILL_SWITCH;
+import static com.android.adservices.service.Flags.CLASSIFIER_DESCRIPTION_MAX_LENGTH;
+import static com.android.adservices.service.Flags.CLASSIFIER_DESCRIPTION_MAX_WORDS;
 import static com.android.adservices.service.Flags.CLASSIFIER_NUMBER_OF_TOP_LABELS;
 import static com.android.adservices.service.Flags.CLASSIFIER_THRESHOLD;
 import static com.android.adservices.service.Flags.DEFAULT_CLASSIFIER_TYPE;
@@ -79,6 +81,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_API_REGISTER_TRIG
 import static com.android.adservices.service.Flags.MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_API_STATUS_KILL_SWITCH;
+import static com.android.adservices.service.Flags.MEASUREMENT_DB_SIZE_LIMIT;
 import static com.android.adservices.service.Flags.MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED;
@@ -96,7 +99,8 @@ import static com.android.adservices.service.Flags.MEASUREMENT_RECEIVER_DELETE_P
 import static com.android.adservices.service.Flags.MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS;
 import static com.android.adservices.service.Flags.NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY;
-import static com.android.adservices.service.Flags.PPAPI_APP_ALLOW_LIST;
+import static com.android.adservices.service.Flags.PPAPI_APP_SIGNATURE_ALLOW_LIST;
+import static com.android.adservices.service.Flags.PPAPI_APP_SIGNATURE_BYPASS_LIST;
 import static com.android.adservices.service.Flags.PRECOMPUTED_CLASSIFIER;
 import static com.android.adservices.service.Flags.SDK_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
@@ -108,6 +112,8 @@ import static com.android.adservices.service.Flags.TOPICS_NUMBER_OF_TOP_TOPICS;
 import static com.android.adservices.service.Flags.TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
 import static com.android.adservices.service.PhFlags.KEY_ADID_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_APPSETID_KILL_SWITCH;
+import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_DESCRIPTION_MAX_LENGTH;
+import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_DESCRIPTION_MAX_WORDS;
 import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS;
 import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_THRESHOLD;
 import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_TYPE;
@@ -165,6 +171,7 @@ import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_API_REGISTE
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_API_STATUS_KILL_SWITCH;
+import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_DB_SIZE_LIMIT;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED;
@@ -182,7 +189,8 @@ import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_RECEIVER_DE
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS;
 import static com.android.adservices.service.PhFlags.KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY;
-import static com.android.adservices.service.PhFlags.KEY_PPAPI_APP_ALLOW_LIST;
+import static com.android.adservices.service.PhFlags.KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST;
+import static com.android.adservices.service.PhFlags.KEY_PPAPI_APP_SIGNATURE_BYPASS_LIST;
 import static com.android.adservices.service.PhFlags.KEY_SDK_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
@@ -448,6 +456,40 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getClassifierThreshold()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetClassifierDescriptionMaxWords() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getClassifierDescriptionMaxWords())
+                .isEqualTo(CLASSIFIER_DESCRIPTION_MAX_WORDS);
+
+        int phOverridingValue = 150;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_CLASSIFIER_DESCRIPTION_MAX_WORDS,
+                Integer.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getClassifierDescriptionMaxWords()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetClassifierDescriptionMaxLength() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getClassifierDescriptionMaxLength())
+                .isEqualTo(CLASSIFIER_DESCRIPTION_MAX_LENGTH);
+
+        int phOverridingValue = 999;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_CLASSIFIER_DESCRIPTION_MAX_LENGTH,
+                Integer.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getClassifierDescriptionMaxLength()).isEqualTo(phOverridingValue);
     }
 
     @Test
@@ -771,6 +813,27 @@ public class PhFlagsTest {
         Flags flags = FlagsFactory.getFlagsForTest();
         assertThat(flags.getMeasurementAggregateFallbackReportingJobPeriodMs())
                 .isEqualTo(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS);
+    }
+
+    @Test
+    public void testGetMeasurementDbSizeLimit() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getMeasurementDbSizeLimit())
+                .isEqualTo(MEASUREMENT_DB_SIZE_LIMIT);
+
+        final long phOverridingValue = 1024 * 1024 * 5;
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_DB_SIZE_LIMIT,
+                Long.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getMeasurementDbSizeLimit()).isEqualTo(phOverridingValue);
+
+        Flags flags = FlagsFactory.getFlagsForTest();
+        assertThat(flags.getMeasurementDbSizeLimit()).isEqualTo(MEASUREMENT_DB_SIZE_LIMIT);
     }
 
     @Test
@@ -2395,20 +2458,39 @@ public class PhFlagsTest {
     }
 
     @Test
-    public void testGetPpapiAppAllowList() {
+    public void testGetPpapiAppSignatureBypassList() {
         // Without any overriding, the value is the hard coded constant.
-        assertThat(FlagsFactory.getFlags().getPpapiAppAllowList()).isEqualTo(PPAPI_APP_ALLOW_LIST);
+        assertThat(FlagsFactory.getFlags().getPpapiAppSignatureBypassList())
+                .isEqualTo(PPAPI_APP_SIGNATURE_BYPASS_LIST);
 
         // Now overriding with the value from PH.
         final String phOverridingValue = "SomePackageName,AnotherPackageName";
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_PPAPI_APP_ALLOW_LIST,
+                KEY_PPAPI_APP_SIGNATURE_BYPASS_LIST,
                 phOverridingValue,
                 /* makeDefault */ false);
 
         Flags phFlags = FlagsFactory.getFlags();
-        assertThat(phFlags.getPpapiAppAllowList()).isEqualTo(phOverridingValue);
+        assertThat(phFlags.getPpapiAppSignatureBypassList()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetPpapiAppSignatureAllowList() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getPpapiAppSignatureAllowList())
+                .isEqualTo(PPAPI_APP_SIGNATURE_ALLOW_LIST);
+
+        // Now overriding with the value from PH.
+        final String phOverridingValue = "SomePackageName,AnotherPackageName";
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST,
+                phOverridingValue,
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getPpapiAppSignatureAllowList()).isEqualTo(phOverridingValue);
     }
 
     @Test

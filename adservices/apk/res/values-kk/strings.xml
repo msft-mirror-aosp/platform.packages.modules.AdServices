@@ -45,8 +45,7 @@
     <string name="notificationUI_container1_body_text_eu" msgid="1700290522706948241">"Privacy Sandbox-тағы жаңа құпиялылық функциялары сізге қолданбалардың сәйкес жарнамаларды көрсетуіне мүмкіндік береді. Алайда басқа әзірлеушілердің веб-сайттары мен қолданбаларында жасаған әрекеттеріңіз туралы деректер алу мүмкіндігін шектейді."</string>
     <string name="notificationUI_container1_control_text_eu" msgid="3158258148321255153">"Бұл қалай жұмыс істейді?"</string>
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Қатысу жолы"</string>
-    <!-- no translation found for notificationUI_container2_body_text_eu (5763735880112009239) -->
-    <skip />
+    <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Бета нұсқасын қосқан кезде, қолданбалар жарнама көрсетудің осындай жаңа әрі жеке жолдарын сынай алады. Бета нұсқасын кез келген уақытта құпиялылық параметрлерінен өшіруге болады."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Жоқ, рақмет"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"Иә, қосыламын"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Қатысқаныңызға рақмет!"</string>
@@ -56,8 +55,7 @@
     <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"Құпиялылық параметрлері"</string>
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"Түсінікті"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"Бета нұсқасын пайдаланатын қатысушысыз"</string>
-    <!-- no translation found for notificationUI_container2_body_text (758560159693325060) -->
-    <skip />
+    <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Құрылғыңызда Privacy Sandbox қосулы. Енді қолданбалар жарнама көрсетудің осы жаңа әрі жеке жолдарын сынап көре алады. Бета нұсқасын кез келген уақытта құпиялылық параметрлерінен өшіруге болады."</string>
     <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"Құпиялылық параметрлерін басқару"</string>
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Түсінікті"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Android-тың Privacy Sandbox технологиялар жинағы қолданбалар сізге ұнайды деген жарнамаларды көрсету үшін пайдалана алатын жаңа функцияларды ұсынады. Бұл технологиялар құрылғы идентификаторларын пайдаланбайды.\n\nAndroid пен қолданбалар сізді қызықтыруы мүмкін жарнама түрлерін бағалап, қызығушылықтарды құрылғыңызда уақытша сақтай алады. Соның нәтижесінде қолданбалар басқа әзірлеушілердің веб-сайттары мен қолданбаларында жасаған әрекеттеріңізді бақыламай, сізге ұнауы мүмкін жарнамаларды көрсете алады."</string>

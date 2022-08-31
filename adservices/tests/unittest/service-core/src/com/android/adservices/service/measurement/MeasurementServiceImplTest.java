@@ -152,7 +152,7 @@ public final class MeasurementServiceImplTest {
         when(mConsentManager.getConsent(any(PackageManager.class)))
                 .thenReturn(AdServicesApiConsent.GIVEN);
         when(mMockFlags.getWebContextClientAppAllowList()).thenReturn("*");
-        when(mMockThrottler.tryAcquire(any(), any())).thenReturn(true);
+        when(mMockThrottler.tryAcquire(any(), any())).thenReturn(true).thenReturn(false);
         when(mMockFlags.getWebContextClientAppAllowList()).thenReturn(ALLOW_ALL_PACKAGES);
         when(mMockFlags.getMeasurementApiRegisterSourceKillSwitch()).thenReturn(false);
         when(mMockFlags.getMeasurementApiRegisterTriggerKillSwitch()).thenReturn(false);
@@ -160,7 +160,7 @@ public final class MeasurementServiceImplTest {
         when(mMockFlags.getMeasurementApiRegisterWebTriggerKillSwitch()).thenReturn(false);
         when(mMockFlags.getMeasurementApiDeleteRegistrationsKillSwitch()).thenReturn(false);
         when(mMockFlags.getMeasurementApiStatusKillSwitch()).thenReturn(false);
-        when(mMockFlags.getPpapiAppAllowList()).thenReturn("*");
+        when(mMockFlags.getPpapiAppSignatureBypassList()).thenReturn("*");
         mCallerMetadata =
                 new CallerMetadata.Builder()
                         .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
@@ -361,14 +361,13 @@ public final class MeasurementServiceImplTest {
                         }
                     };
 
-            final Throttler throttler = Throttler.getInstance(1);
             new MeasurementServiceImpl(
                             mMockMeasurementImpl,
                             mMockContext,
                             mClock,
                             mConsentManager,
                             mEnrollmentDao,
-                            throttler,
+                            mMockThrottler,
                             mMockFlags,
                             mMockAdServicesLogger)
                     .register(getDefaultRegistrationSourceRequest(), mCallerMetadata, callback);
@@ -378,7 +377,7 @@ public final class MeasurementServiceImplTest {
                             mClock,
                             mConsentManager,
                             mEnrollmentDao,
-                            throttler,
+                            mMockThrottler,
                             mMockFlags,
                             mMockAdServicesLogger)
                     .register(getDefaultRegistrationSourceRequest(), mCallerMetadata, callback);
@@ -417,14 +416,13 @@ public final class MeasurementServiceImplTest {
                         }
                     };
 
-            final Throttler throttler = Throttler.getInstance(1);
             new MeasurementServiceImpl(
                             mMockMeasurementImpl,
                             mMockContext,
                             mClock,
                             mConsentManager,
                             mEnrollmentDao,
-                            throttler,
+                            mMockThrottler,
                             mMockFlags,
                             mMockAdServicesLogger)
                     .register(getDefaultRegistrationTriggerRequest(), mCallerMetadata, callback);
@@ -434,7 +432,7 @@ public final class MeasurementServiceImplTest {
                             mClock,
                             mConsentManager,
                             mEnrollmentDao,
-                            throttler,
+                            mMockThrottler,
                             mMockFlags,
                             mMockAdServicesLogger)
                     .register(getDefaultRegistrationTriggerRequest(), mCallerMetadata, callback);
@@ -846,14 +844,13 @@ public final class MeasurementServiceImplTest {
                         }
                     };
 
-            final Throttler throttler = Throttler.getInstance(1);
             new MeasurementServiceImpl(
                             mMockMeasurementImpl,
                             mMockContext,
                             mClock,
                             mConsentManager,
                             mEnrollmentDao,
-                            throttler,
+                            mMockThrottler,
                             mMockFlags,
                             mMockAdServicesLogger)
                     .deleteRegistrations(getDefaultDeletionRequest(), mCallerMetadata, callback);
@@ -863,7 +860,7 @@ public final class MeasurementServiceImplTest {
                             mClock,
                             mConsentManager,
                             mEnrollmentDao,
-                            throttler,
+                            mMockThrottler,
                             mMockFlags,
                             mMockAdServicesLogger)
                     .deleteRegistrations(getDefaultDeletionRequest(), mCallerMetadata, callback);
@@ -918,7 +915,7 @@ public final class MeasurementServiceImplTest {
             ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any()));
             MeasurementImpl measurementImpl =
                     new MeasurementImpl(mMockContext, null, null, null, null, null);
-            when(mMockFlags.getPpapiAppAllowList()).thenReturn("*");
+            when(mMockFlags.getPpapiAppSignatureBypassList()).thenReturn("*");
             CountDownLatch countDownLatch = new CountDownLatch(1);
             final AtomicInteger resultWrapper = new AtomicInteger();
 
@@ -1249,14 +1246,13 @@ public final class MeasurementServiceImplTest {
                         }
                     };
 
-            final Throttler throttler = Throttler.getInstance(1);
             new MeasurementServiceImpl(
                             mMockMeasurementImpl,
                             mMockContext,
                             mClock,
                             mConsentManager,
                             mEnrollmentDao,
-                            throttler,
+                            mMockThrottler,
                             mMockFlags,
                             mMockAdServicesLogger)
                     .registerWebSource(
@@ -1267,7 +1263,7 @@ public final class MeasurementServiceImplTest {
                             mClock,
                             mConsentManager,
                             mEnrollmentDao,
-                            throttler,
+                            mMockThrottler,
                             mMockFlags,
                             mMockAdServicesLogger)
                     .registerWebSource(
@@ -1503,14 +1499,13 @@ public final class MeasurementServiceImplTest {
                         }
                     };
 
-            final Throttler throttler = Throttler.getInstance(1);
             new MeasurementServiceImpl(
                             mMockMeasurementImpl,
                             mMockContext,
                             mClock,
                             mConsentManager,
                             mEnrollmentDao,
-                            throttler,
+                            mMockThrottler,
                             mMockFlags,
                             mMockAdServicesLogger)
                     .registerWebTrigger(
@@ -1521,7 +1516,7 @@ public final class MeasurementServiceImplTest {
                             mClock,
                             mConsentManager,
                             mEnrollmentDao,
-                            throttler,
+                            mMockThrottler,
                             mMockFlags,
                             mMockAdServicesLogger)
                     .registerWebTrigger(
@@ -2070,7 +2065,7 @@ public final class MeasurementServiceImplTest {
         final String value = enabledAll ? "*" : "";
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                "ppapi_app_allow_list",
+                "ppapi_app_signature_bypass_list",
                 value,
                 /* makeDefault */ false);
     }

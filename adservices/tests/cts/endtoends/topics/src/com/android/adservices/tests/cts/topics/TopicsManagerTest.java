@@ -28,21 +28,22 @@ import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
 
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.runner.AndroidJUnit4;
 
 import com.android.adservices.LogUtil;
 import com.android.compatibility.common.util.ShellUtils;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-@RunWith(AndroidJUnit4.class)
+@RunWith(JUnit4.class)
 public class TopicsManagerTest {
     // The JobId of the Epoch Computation.
     private static final int EPOCH_JOB_ID = 2;
@@ -69,16 +70,31 @@ public class TopicsManagerTest {
         // We need to skip 3 epochs so that if there is any usage from other test runs, it will
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
-    }
 
-    @Test
-    public void testTopicsManager() throws Exception {
         overrideDisableTopicsEnrollmentCheck("1");
         overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
 
         // We need to turn off random topic so that we can verify the returned topic.
         overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
 
+        // We need to turn the Consent Manager into debug mode
+        overrideConsentManagerDebugMode();
+
+        // Turn off MDD to avoid model mismatching
+        switchOnAndOffMDD(true);
+    }
+
+    @After
+    public void teardown() {
+        // Reset back the original values.
+        overrideDisableTopicsEnrollmentCheck("0");
+        overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
+        overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+        switchOnAndOffMDD(false);
+    }
+
+    @Test
+    public void testTopicsManager() throws Exception {
         // The Test App has 2 SDKs: sdk1 calls the Topics API and sdk2 does not.
         // Sdk1 calls the Topics API.
         AdvertisingTopicsClient advertisingTopicsClient1 =
@@ -128,16 +144,17 @@ public class TopicsManagerTest {
 
         GetTopicsResponse sdk2Result2 = advertisingTopicsClient2.getTopics().get();
         assertThat(sdk2Result2.getTopics()).isEmpty();
+    }
 
-        // Reset back the original values.
-        overrideDisableTopicsEnrollmentCheck("0");
-        overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
-        overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+    // Switch on/off for MDD service. Default value is false, which means MDD is enabled.
+    private void switchOnAndOffMDD(boolean isSwitchedOff) {
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.mdd_background_task_kill_switch " + isSwitchedOff);
     }
 
     // Override the flag to disable Topics enrollment check.
     private void overrideDisableTopicsEnrollmentCheck(String val) {
-        // Setting it to 1 here disables the Topics enrollment check.
+        // Setting it to 1 here disables the Topics' enrollment check.
         ShellUtils.runShellCommand(
                 "setprop debug.adservices.disable_topics_enrollment_check " + val);
     }
@@ -153,6 +170,11 @@ public class TopicsManagerTest {
         ShellUtils.runShellCommand(
                 "setprop debug.adservices.topics_percentage_for_random_topics "
                         + overridePercentage);
+    }
+
+    // Override the Consent Manager behaviour - Consent Given
+    private void overrideConsentManagerDebugMode() {
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
     }
 
     /** Forces JobScheduler to run the Epoch Computation job */

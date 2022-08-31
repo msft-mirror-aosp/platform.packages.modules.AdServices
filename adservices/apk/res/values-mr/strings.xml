@@ -45,8 +45,7 @@
     <string name="notificationUI_container1_body_text_eu" msgid="1700290522706948241">"प्रायव्हसी सँडबॉक्स मधील नवीन गोपनीयता वैशिष्ट्यांमुळे ॲप्स तुम्हाला सुसंगत जाहिराती दाखवू शकतात, पण इतर डेव्हलपरच्या वेबसाइट आणि ॲप्सवरील तुमच्या अ‍ॅक्टिव्हिटीबद्दल ती ॲप्स काय जाणून घेऊ शकतात ते प्रतिबंधित करतात."</string>
     <string name="notificationUI_container1_control_text_eu" msgid="3158258148321255153">"हे कसे काम करते"</string>
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"सहभागी कसे व्हावे"</string>
-    <!-- no translation found for notificationUI_container2_body_text_eu (5763735880112009239) -->
-    <skip />
+    <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"बीटा सुरू केल्याने ॲप्सना तुम्हाला जाहिराती दाखवण्यासाठी या नवीन अधिक खाजगी मार्गांची चाचणी घेण्याची अनुमती मिळते. तुम्ही तुमच्या गोपनीयता सेटिंग्जमध्ये बीटा कधीही बंद करू शकता."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"नाही, नको"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"होय, मी सामील होईन"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"सहभागी झाल्याबद्दल धन्यवाद"</string>
@@ -56,8 +55,7 @@
     <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"गोपनीयता सेटिंग्ज"</string>
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"समजले"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"तुम्ही बीटाचा भाग आहात"</string>
-    <!-- no translation found for notificationUI_container2_body_text (758560159693325060) -->
-    <skip />
+    <string name="notificationUI_container2_body_text" msgid="758560159693325060">"तुमच्या डिव्हाइससाठी प्रायव्हसी सॅंडबाॅक्स सुरू केला आहे आणि अ‍ॅप्स तुम्हाला जाहिराती दाखवण्यासाठी या नवीन आणखी खाजगी मार्गांची चाचणी घेऊ शकतात. तुम्ही तुमच्या गोपनीयता सेटिंग्जमध्ये बीटा कधीही बंद करू शकता."</string>
     <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"गोपनीयता सेटिंग्ज व्यवस्थापित करा"</string>
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"समजले"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"तुम्हाला कदाचित आवडतील अशा जाहिराती दाखवण्यासाठी अ‍ॅप्सना वापरता येतील अशी नवीन वैशिष्ट्ये Android चा प्रायव्हसी सॅंडबाॅक्स पुरवतो. ही तंत्रज्ञाने डिव्हाइस आयडेंटिफायर वापरत नाहीत.\n\nतुम्हाला कोणत्या प्रकारच्या जाहिरातींमध्ये स्वारस्य असू शकते याच अंदाज Android आणि तुमची अ‍ॅप्स लावू शकतात व तुमच्या डिव्हाइसवर ती स्वारस्ये तात्पुरती सेव्ह करू शकतात. हे अ‍ॅप्सना इतर डेव्हलपरच्या सर्व वेबसाइटवर आणि अ‍ॅप्सवर तुमची अ‍ॅक्टिव्हिटी ट्रॅक न करता तुम्हाला आवडू शकतील अशा जाहिराती दाखवण्याची अनुमती देते."</string>

@@ -97,17 +97,6 @@ public class PrecomputedClassifierTest {
     }
 
     @Test
-    public void testGetInstance() {
-        PrecomputedClassifier firstInstance = PrecomputedClassifier.getInstance(sContext);
-        PrecomputedClassifier secondInstance = PrecomputedClassifier.getInstance(sContext);
-
-        assertThat(firstInstance).isNotNull();
-        assertThat(secondInstance).isNotNull();
-        // Verify singleton behaviour.
-        assertThat(firstInstance).isEqualTo(secondInstance);
-    }
-
-    @Test
     public void testClassify_existingApp() {
         // Using sample App. This app has 5 classification topic.
         List<Topic> expectedSampleAppTopics =

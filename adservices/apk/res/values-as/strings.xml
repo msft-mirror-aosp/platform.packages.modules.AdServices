@@ -45,8 +45,7 @@
     <string name="notificationUI_container1_body_text_eu" msgid="1700290522706948241">"প্ৰাইভেচি ছেণ্ডবক্সৰ নতুন সুবিধাসমূহে এপক আপোনাক প্ৰাসংগিক বিজ্ঞাপন দেখুৱাবলৈ দিয়ে, কিন্তু সেই এপে আপুনি ৱেবছাইট আৰু অন্য বিকাশকৰ্তাৰ এপত কৰা কাৰ্যকলাপ জনাটো প্ৰতিবন্ধিত কৰে।"</string>
     <string name="notificationUI_container1_control_text_eu" msgid="3158258148321255153">"ই কিদৰে কাম কৰে"</string>
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"কেনেকৈ অংশগ্ৰহণ কৰিব লাগে"</string>
-    <!-- no translation found for notificationUI_container2_body_text_eu (5763735880112009239) -->
-    <skip />
+    <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"বিটা অন কৰাটোৱে এপক আপোনাক বিজ্ঞাপন দেখুৱাবলৈ এই নতুন অধিক গোপনীয় উপায়সমূহ পৰীক্ষা কৰি চাবলৈ অনুমতি দিয়ে। আপুনি যিকোনো সময়তে নিজৰ গোপনীয়তাৰ ছেটিঙত বিটা অফ কৰিব পাৰে।"</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"নালাগে, ধন্যবাদ"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"হয়, মই যোগদান কৰিম"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"অংশগ্ৰহণ কৰাৰ বাবে ধন্যবাদ"</string>
@@ -56,8 +55,7 @@
     <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"গোপনীয়তাৰ ছেটিং"</string>
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"বুজি পালোঁ"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"আপুনি বিটাটোৰ অংশ"</string>
-    <!-- no translation found for notificationUI_container2_body_text (758560159693325060) -->
-    <skip />
+    <string name="notificationUI_container2_body_text" msgid="758560159693325060">"আপোনাৰ ডিভাইচৰ বাবে প্ৰাইভেচি ছেণ্ডবক্স অন আছে আৰু এপে আপোনাক বিজ্ঞাপন দেখুৱাবলৈ এই নতুন অধিক গোপনীয় উপায়সমূহ পৰীক্ষা কৰি চাব পাৰে। আপুনি যিকোনো সময়তে নিজৰ গোপনীয়তাৰ ছেটিঙত বিটা অফ কৰিব পাৰে।"</string>
     <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"গোপনীয়তাৰ ছেটিং পৰিচালনা কৰক"</string>
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"বুজি পালোঁ"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Androidৰ প্ৰাইভেচি ছেণ্ডবক্সে নতুন সুবিধাসমূহ দিয়ে, যিসমূহ সুবিধা এপে আপোনাক আপুনি পচন্দ কৰিব পৰা ধৰণৰ বিজ্ঞাপন দেখুৱাবলৈ ব্যৱহাৰ কৰিব পাৰে। এই প্ৰযুক্তিসমূহে ডিভাইচ চিনাক্তকাৰী ব্যৱহাৰ নকৰে।\n\nAndroid আৰু আপোনাৰ এপে আপুনি আগ্ৰহী হ’ব পৰা ধৰণৰ বিজ্ঞাপন অনুমান কৰিব পাৰে আৰু আপোনাৰ ডিভাইচত অস্থায়ীভাৱে আগ্ৰহসমূহ ছেভ কৰিব পাৰে। এইটোৱে সমগ্ৰ ৱেবছাইট আৰু অন্য বিকাশকৰ্তাৰ এপত আপোনাৰ কাৰ্যকলাপ ট্ৰেক নকৰাকৈয়ে এপক আপুনি পচন্দ কৰিব পৰা ধৰণৰ বিজ্ঞাপন দেখুৱাবলৈ অনুমতি দিয়ে।"</string>

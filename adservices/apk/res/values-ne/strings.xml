@@ -45,8 +45,7 @@
     <string name="notificationUI_container1_body_text_eu" msgid="1700290522706948241">"प्राइभेसी स्यान्डबक्समा भएका गोपनीयतासम्बन्धी नयाँ सुविधाहरूले एपहरूलाई तपाईंलाई सान्दर्भिक विज्ञापनहरू देखाउन दिन्छन् तर ती एपलाई अन्य विकासकर्ताका वेबसाइट तथा एपहरूमा तपाईंले गर्ने क्रियाकलापका बारेमा थाहा पाउन भने दिँदैनन्।"</string>
     <string name="notificationUI_container1_control_text_eu" msgid="3158258148321255153">"यसले कसरी काम गर्छ"</string>
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"सहभागी हुन के गर्नु पर्छ"</string>
-    <!-- no translation found for notificationUI_container2_body_text_eu (5763735880112009239) -->
-    <skip />
+    <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"तपाईंले यो बिटा सुविधा अन गर्नुभयो भने एपहरू तपाईंलाई विज्ञापन देखाउने यी नयाँ अनि अझ गोप्य तरिकाको परीक्षण गर्न सक्छन्। तपाईं जुनसुकै बेला गोपनीयतासम्बन्धी सेटिङमा गई यो बिटा सुविधा अफ गर्न सक्नुहुन्छ।"</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"पर्दैन"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"अँ, म सामेल हुन चाहन्छु"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"सामेल हुनुभएकोमा धन्यवाद"</string>
@@ -56,8 +55,7 @@
     <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"गोपनीयतासम्बन्धी सेटिङ"</string>
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"बुझेँ"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"तपाईं यस बिटा सुविधाको सदस्य हुनुहुन्छ"</string>
-    <!-- no translation found for notificationUI_container2_body_text (758560159693325060) -->
-    <skip />
+    <string name="notificationUI_container2_body_text" msgid="758560159693325060">"तपाईंको डिभाइसमा प्राइभेसी स्यान्डबक्स अन गरिएको छ र एपहरू तपाईंलाई विज्ञापन देखाउने यी नयाँ अनि अझ गोप्य तरिकाको परीक्षण गर्न सक्छन्। तपाईं जुनसुकै बेला गोपनीयतासम्बन्धी सेटिङमा गई यो बिटा सुविधा अफ गर्न सक्नुहुन्छ।"</string>
     <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"गोपनीयतासम्बन्धी सेटिङ व्यवस्थापन गर्नुहोस्"</string>
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"बुझेँ"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Android को प्राइभेसी स्यान्डबक्सले एपहरूले तपाईंलाई मन पर्न सक्ने विज्ञापनहरू देखाउनका निम्ति प्रयोग गर्न सक्ने नयाँ सुविधाहरू उपलब्ध गराउँछ। यी प्रविधिले डिभाइस आइडेन्टिफायर प्रयोग गर्दैनन्।\n\nAndroid तथा तपाईंका एपहरूले तपाईंको रुचि हुन सक्ने विज्ञापनहरूका बारेमा अनुमान लगाउन र ती रुचिहरू अस्थायी रूपमा तपाईंको डिभाइसमा सेभ गर्न सक्छन्। यसले गर्दा एपहरूले अन्य विकासकर्ताका वेबसाइट तथा एपहरूमा तपाईंले गर्ने क्रियाकलाप ट्र्याक नगरिकनै तपाईंलाई मन पर्न सक्ने विज्ञापनहरू देखाउन सक्छन्।"</string>

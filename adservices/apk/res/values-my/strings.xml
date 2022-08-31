@@ -45,8 +45,7 @@
     <string name="notificationUI_container1_body_text_eu" msgid="1700290522706948241">"Privacy Sandbox ရှိ ကိုယ်ရေးအချက်အလက်လုံခြုံမှု ဝန်ဆောင်မှုသစ်များသည် သင်နှင့်သက်ဆိုင်သည့် ကြော်ငြာများပြခွင့်အား အက်ပ်များကို ပေးသော်လည်း ဝဘ်ဆိုက်နှင့် အခြားဆော့ဖ်ဝဲရေးသူများ၏ အက်ပ်များမှ သင့်လုပ်ဆောင်ချက်များအကြောင်း သိရှိနိုင်မှုကို တားမြစ်ပေးသည်။"</string>
     <string name="notificationUI_container1_control_text_eu" msgid="3158258148321255153">"အလုပ်လုပ်ပုံ"</string>
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"ပါဝင်ပုံ"</string>
-    <!-- no translation found for notificationUI_container2_body_text_eu (5763735880112009239) -->
-    <skip />
+    <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"စမ်းသပ်အစီအစဉ် ဖွင့်ခြင်းဖြင့် ကြော်ငြာပြရန်အတွက် ကိုယ်ရေးအချက်အလက် ပိုမိုလုံခြုံသောနည်းလမ်းသစ်များအား စမ်းသပ်ရန် အက်ပ်များကို ခွင့်ပြုရာရောက်သည်။ စမ်းသပ်အစီအစဉ်ကို ကိုယ်ရေးအချက်အလက်လုံခြုံမှု ဆက်တင်များတွင် အချိန်မရွေး ပိတ်နိုင်သည်။"</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"မလိုပါ"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"ပါဝင်ရန်"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"ပါဝင်ပေး၍ ကျေးဇူးတင်ပါသည်"</string>
@@ -56,8 +55,7 @@
     <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"ကိုယ်ရေးအချက်အလက်လုံခြုံမှု ဆက်တင်များ"</string>
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"ရပြီ"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"စမ်းသပ်အစီအစဉ်တွင် သင်ပါဝင်သည်"</string>
-    <!-- no translation found for notificationUI_container2_body_text (758560159693325060) -->
-    <skip />
+    <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Privacy Sandbox ကို သင့်စက်အတွက်ဖွင့်ထားပြီး ကြော်ငြာပြရန် ကိုယ်ရေးအချက်အလက် ပိုမိုလုံခြုံသောနည်းလမ်းသစ်များကို အက်ပ်များက စမ်းသပ်နိုင်သည်။ စမ်းသပ်အစီအစဉ်ကို ကိုယ်ရေးအချက်အလက်လုံခြုံမှု ဆက်တင်များတွင် အချိန်မရွေး ပိတ်နိုင်သည်။"</string>
     <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"ကိုယ်ရေးအချက်အလက်လုံခြုံမှု ဆက်တင်များ စီမံရန်"</string>
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"ရပြီ"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Android ၏ Privacy Sandbox သည် သင်နှစ်သက်နိုင်မည့် ကြော်ငြာများပြရန် အက်ပ်များအသုံးပြုနိုင်သော ဝန်ဆောင်မှုသစ်များကို ပံ့ပိုးသည်။ ဤနည်းပညာများသည် စက်ပစ္စည်း သတ်မှတ်မှုစနစ်များကို အသုံးမပြုပါ။\n\nAndroid နှင့် သင့်အက်ပ်များက သင်နှစ်သက်နိုင်မည့် ကြော်ငြာအမျိုးအစားများကို ခန့်မှန်းနိုင်ပြီး သင့်စက်တွင် စိတ်ဝင်စားမှုများကို ယာယီသိမ်းနိုင်သည်။ ၎င်းက သင့်လုပ်ဆောင်ချက်များအား ဝဘ်ဆိုက်နှင့် အခြားဆော့ဖ်ဝဲရေးသူများ၏ အက်ပ်များတွင် ခြေရာခံစရာမလိုဘဲ သင်နှစ်သက်နိုင်မည့် ကြော်ငြာများအား အက်ပ်များကို ပြခွင့်ပေးသည်။"</string>

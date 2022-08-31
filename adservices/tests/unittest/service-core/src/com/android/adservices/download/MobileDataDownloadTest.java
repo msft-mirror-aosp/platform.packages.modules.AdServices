@@ -16,7 +16,10 @@
 
 package com.android.adservices.download;
 
+
 import static com.google.common.truth.Truth.assertThat;
+
+import static org.mockito.Mockito.doReturn;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -25,20 +28,29 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.dx.mockito.inline.extended.StaticMockitoSession;
 
 import com.google.android.libraries.mobiledatadownload.AddFileGroupRequest;
 import com.google.android.libraries.mobiledatadownload.DownloadFileGroupRequest;
+import com.google.android.libraries.mobiledatadownload.Logger;
 import com.google.android.libraries.mobiledatadownload.MobileDataDownload;
 import com.google.android.libraries.mobiledatadownload.TaskScheduler;
+import com.google.common.base.Optional;
 import com.google.mobiledatadownload.ClientConfigProto.ClientFileGroup;
 import com.google.mobiledatadownload.DownloadConfigProto.DataFile;
 import com.google.mobiledatadownload.DownloadConfigProto.DataFileGroup;
 import com.google.mobiledatadownload.DownloadConfigProto.DownloadConditions;
 import com.google.mobiledatadownload.DownloadConfigProto.DownloadConditions.DeviceNetworkPolicy;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -61,6 +73,29 @@ public class MobileDataDownloadTest {
     private static final String FILE_CHECKSUM_2 = "a1cba9d87b1440f41ce9e7da38c43e1f6bd7d5df";
     private static final String FILE_URL_2 = "https://www.gstatic.com/suggest-dev/odws1_empty.jar";
     private static final int FILE_SIZE_2 = 554;
+
+    private StaticMockitoSession mStaticMockSession = null;
+    @Mock Flags mMockFlags;
+    @Mock MddLogger mMockMddLogger;
+
+    @Before
+    public void setup() {
+        MockitoAnnotations.initMocks(this);
+
+        // Start a mockitoSession to mock static method.
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(MddLogger.class)
+                        .spyStatic(FlagsFactory.class)
+                        .startMocking();
+    }
+
+    @After
+    public void teardown() {
+        if (mStaticMockSession != null) {
+            mStaticMockSession.finishMocking();
+        }
+    }
 
     @Test
     public void testCreateMddManagerSuccessfully() throws ExecutionException, InterruptedException {
@@ -150,5 +185,25 @@ public class MobileDataDownloadTest {
         }
 
         return dataFileGroupBuilder.build();
+    }
+
+    @Test
+    public void testMddLoggerKillSwitchIsOn() {
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlagsForTest);
+        // Killswitch is on. MddLogger should be disabled.
+        doReturn(true).when(mMockFlags).getMddLoggerKillSwitch();
+        Optional<Logger> mddLogger =
+                MobileDataDownloadFactory.getMddLogger(FlagsFactory.getFlagsForTest());
+        assertThat(mddLogger).isAbsent();
+    }
+
+    @Test
+    public void testMddLoggerKillSwitchIsOff() {
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlagsForTest);
+        // Killswitch is off. MddLogger should be enabled.
+        doReturn(false).when(mMockFlags).getMddLoggerKillSwitch();
+        Optional<Logger> mddLogger =
+                MobileDataDownloadFactory.getMddLogger(FlagsFactory.getFlagsForTest());
+        assertThat(mddLogger).isPresent();
     }
 }

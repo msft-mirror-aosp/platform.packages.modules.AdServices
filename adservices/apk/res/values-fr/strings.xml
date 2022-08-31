@@ -45,8 +45,7 @@
     <string name="notificationUI_container1_body_text_eu" msgid="1700290522706948241">"Les nouvelles fonctionnalités de confidentialité dans Privacy Sandbox permettent aux applis de vous montrer des annonces pertinentes, tout en limitant l\'accès de ces applis à vos données d\'activité sur les sites Web et dans les applis d\'autres développeurs."</string>
     <string name="notificationUI_container1_control_text_eu" msgid="3158258148321255153">"Comment ça marche"</string>
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Modalités de participation"</string>
-    <!-- no translation found for notificationUI_container2_body_text_eu (5763735880112009239) -->
-    <skip />
+    <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Si vous activez la version bêta, les applis pourront tester de nouvelles méthodes plus respectueuses de la confidentialité pour vous proposer des annonces. Vous pouvez désactiver la version bêta à tout moment dans vos paramètres de confidentialité."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Non, merci"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"Oui, je participe"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Merci de votre participation"</string>
@@ -56,8 +55,7 @@
     <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"Paramètres de confidentialité"</string>
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"OK"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"Vous testez la version bêta"</string>
-    <!-- no translation found for notificationUI_container2_body_text (758560159693325060) -->
-    <skip />
+    <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Privacy Sandbox est activé pour votre appareil. Les applis peuvent tester de nouvelles méthodes plus respectueuses de la confidentialité pour vous proposer des annonces. Vous pouvez désactiver la version bêta à tout moment dans vos paramètres de confidentialité."</string>
     <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"Gérer les paramètres de confidentialité"</string>
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"OK"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Privacy Sandbox d\'Android offre de nouvelles fonctionnalités permettant aux applis de vous présenter des annonces susceptibles de vous plaire. Ces technologies n\'utilisent aucun identifiant d\'appareil.\n\nAndroid et vos applis peuvent déterminer les types d\'annonces susceptibles de vous intéresser et enregistrer provisoirement vos centres d\'intérêt sur votre appareil. Les applis peuvent ainsi vous présenter des annonces susceptibles de vous plaire, sans surveiller vos activités sur les sites Web et les applis d\'autres développeurs."</string>

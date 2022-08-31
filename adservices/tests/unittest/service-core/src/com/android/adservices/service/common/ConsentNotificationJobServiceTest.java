@@ -40,7 +40,6 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.topics.classifier.ModelManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
@@ -71,7 +70,6 @@ public class ConsentNotificationJobServiceTest {
     @Mock PersistableBundle mPersistableBundle;
     @Mock Flags mFlags;
     private MockitoSession mStaticMockSession = null;
-    @Mock private ModelManager mModelManager;
 
     /** Initialize static spies. */
     @Before
@@ -85,7 +83,6 @@ public class ConsentNotificationJobServiceTest {
                         .spyStatic(ConsentManager.class)
                         .spyStatic(AdServicesSyncUtil.class)
                         .spyStatic(ConsentNotificationJobService.class)
-                        .spyStatic(ModelManager.class)
                         .strictness(Strictness.WARN)
                         .initMocks(this)
                         .startMocking();
@@ -102,7 +99,6 @@ public class ConsentNotificationJobServiceTest {
     /** Test successful onStart method execution when notification was not yet displayed. */
     @Test
     public void testOnStartJobAsyncUtilExecute() throws InterruptedException {
-        doReturn(mModelManager).when(() -> ModelManager.getInstance(any(Context.class)));
         mConsentManager = spy(ConsentManager.getInstance(CONTEXT));
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
