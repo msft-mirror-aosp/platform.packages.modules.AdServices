@@ -78,6 +78,9 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
                     case "stop":
                         result = runStop();
                         break;
+                    case "set-state":
+                        result = runSetState();
+                        break;
                     default:
                         result = handleDefaultCommands(cmd);
                 }
@@ -201,6 +204,25 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
         return 0;
     }
 
+    private int runSetState() {
+        String opt;
+        if ((opt = getNextOption()) != null) {
+            switch (opt) {
+                case "--enabled":
+                    mService.forceEnableSandbox();
+                    break;
+                case "--reset":
+                    mService.clearSdkSandboxState();
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unknown argument: " + opt);
+            }
+        } else {
+            throw new IllegalArgumentException("No argument supplied to `sdk_sandbox set-state`");
+        }
+        return 0;
+    }
+
     @Override
     public void onHelp() {
         final PrintWriter pw = getOutPrintWriter();
@@ -217,5 +239,11 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
         pw.println("        Stop the SDK sandbox for the app <PACKAGE>. Options are:");
         pw.println("        --user <USER_ID> | current: Specify user for app; uses current user");
         pw.println("            if not specified");
+        pw.println();
+        pw.println("    set-state [--enabled | --reset]");
+        pw.println("        Sets the SDK sandbox state for testing purposes. Options are:");
+        pw.println("        --enabled: Sets the state to enabled");
+        pw.println("        --reset: Resets the state. It will be calculated the next time an");
+        pw.println("                 SDK is loaded");
     }
 }
