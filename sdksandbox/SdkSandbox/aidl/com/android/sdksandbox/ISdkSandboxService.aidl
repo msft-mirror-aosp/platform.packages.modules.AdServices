@@ -20,11 +20,12 @@ import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.content.pm.ApplicationInfo;
 import android.os.Bundle;
 import android.os.IBinder;
-import com.android.sdksandbox.SandboxLatencyInfo;
 
 import com.android.sdksandbox.ILoadSdkInSandboxCallback;
 import com.android.sdksandbox.ISdkSandboxDisabledCallback;
 import android.app.sdksandbox.ISdkToServiceCallback;
+import com.android.sdksandbox.IUnloadSdkCallback;
+import com.android.sdksandbox.SandboxLatencyInfo;
 
 /** @hide */
 oneway interface ISdkSandboxService {
@@ -36,6 +37,6 @@ oneway interface ISdkSandboxService {
                   in Bundle params, in ILoadSdkInSandboxCallback callback,
                   in SandboxLatencyInfo sandboxLatencyInfo,
                   in ISdkToServiceCallback sdkToService);
-    void unloadSdk(IBinder sdkToken);
+    void unloadSdk(IBinder sdkToken, in IUnloadSdkCallback callback, in SandboxLatencyInfo sandboxLatencyInfo);
     void syncDataFromClient(in SharedPreferencesUpdate update);
 }
