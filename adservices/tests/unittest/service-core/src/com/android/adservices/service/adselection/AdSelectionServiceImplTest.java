@@ -120,6 +120,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -3259,7 +3260,7 @@ public class AdSelectionServiceImplTest {
                 + "         end = new Date().getTime();\n"
                 + "      }\n"
                 + "    }\n"
-                + String.format("    wait(\"%d\");\n", waitTime);
+                + String.format(Locale.ENGLISH, "    wait(\"%d\");\n", waitTime);
     }
 
     public static class ReportImpressionTestCallback extends ReportImpressionCallback.Stub {
