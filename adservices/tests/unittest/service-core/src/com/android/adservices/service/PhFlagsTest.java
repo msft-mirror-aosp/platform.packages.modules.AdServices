@@ -97,7 +97,8 @@ import static com.android.adservices.service.Flags.MEASUREMENT_RECEIVER_DELETE_P
 import static com.android.adservices.service.Flags.MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS;
 import static com.android.adservices.service.Flags.NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY;
-import static com.android.adservices.service.Flags.PPAPI_APP_ALLOW_LIST;
+import static com.android.adservices.service.Flags.PPAPI_APP_SIGNATURE_ALLOW_LIST;
+import static com.android.adservices.service.Flags.PPAPI_APP_SIGNATURE_BYPASS_LIST;
 import static com.android.adservices.service.Flags.PRECOMPUTED_CLASSIFIER;
 import static com.android.adservices.service.Flags.SDK_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
@@ -184,7 +185,8 @@ import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_RECEIVER_DE
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS;
 import static com.android.adservices.service.PhFlags.KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY;
-import static com.android.adservices.service.PhFlags.KEY_PPAPI_APP_ALLOW_LIST;
+import static com.android.adservices.service.PhFlags.KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST;
+import static com.android.adservices.service.PhFlags.KEY_PPAPI_APP_SIGNATURE_BYPASS_LIST;
 import static com.android.adservices.service.PhFlags.KEY_SDK_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
@@ -2418,20 +2420,39 @@ public class PhFlagsTest {
     }
 
     @Test
-    public void testGetPpapiAppAllowList() {
+    public void testGetPpapiAppSignatureBypassList() {
         // Without any overriding, the value is the hard coded constant.
-        assertThat(FlagsFactory.getFlags().getPpapiAppAllowList()).isEqualTo(PPAPI_APP_ALLOW_LIST);
+        assertThat(FlagsFactory.getFlags().getPpapiAppSignatureBypassList())
+                .isEqualTo(PPAPI_APP_SIGNATURE_BYPASS_LIST);
 
         // Now overriding with the value from PH.
         final String phOverridingValue = "SomePackageName,AnotherPackageName";
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_PPAPI_APP_ALLOW_LIST,
+                KEY_PPAPI_APP_SIGNATURE_BYPASS_LIST,
                 phOverridingValue,
                 /* makeDefault */ false);
 
         Flags phFlags = FlagsFactory.getFlags();
-        assertThat(phFlags.getPpapiAppAllowList()).isEqualTo(phOverridingValue);
+        assertThat(phFlags.getPpapiAppSignatureBypassList()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetPpapiAppSignatureAllowList() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getPpapiAppSignatureAllowList())
+                .isEqualTo(PPAPI_APP_SIGNATURE_ALLOW_LIST);
+
+        // Now overriding with the value from PH.
+        final String phOverridingValue = "SomePackageName,AnotherPackageName";
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST,
+                phOverridingValue,
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getPpapiAppSignatureAllowList()).isEqualTo(phOverridingValue);
     }
 
     @Test

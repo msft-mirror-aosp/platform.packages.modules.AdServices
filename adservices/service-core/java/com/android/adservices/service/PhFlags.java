@@ -205,7 +205,8 @@ public final class PhFlags implements Flags {
             "fledge_custom_audience_service_kill_switch";
 
     // App/SDK AllowList/DenyList keys
-    static final String KEY_PPAPI_APP_ALLOW_LIST = "ppapi_app_allow_list";
+    static final String KEY_PPAPI_APP_SIGNATURE_BYPASS_LIST = "ppapi_app_signature_bypass_list";
+    static final String KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST = "ppapi_app_signature_allow_list";
 
     // Rate Limit keys
     static final String KEY_SDK_REQUEST_PERMITS_PER_SECOND = "sdk_request_permits_per_second";
@@ -1162,14 +1163,23 @@ public final class PhFlags implements Flags {
                                 /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH));
     }
 
-    // TOPICS AllowLists
+    // PPAPI Signature check Bypass List
     @Override
-    public String getPpapiAppAllowList() {
+    public String getPpapiAppSignatureBypassList() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getString(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_PPAPI_APP_ALLOW_LIST,
-                /* defaultValue */ PPAPI_APP_ALLOW_LIST);
+                /* flagName */ KEY_PPAPI_APP_SIGNATURE_BYPASS_LIST,
+                /* defaultValue */ PPAPI_APP_SIGNATURE_BYPASS_LIST);
+    }
+
+    // PPAPI Signature allow-list.
+    @Override
+    public String getPpapiAppSignatureAllowList() {
+        return DeviceConfig.getString(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST,
+                /* defaultValue */ PPAPI_APP_SIGNATURE_ALLOW_LIST);
     }
 
     // Rate Limit Flags.
@@ -1386,7 +1396,16 @@ public final class PhFlags implements Flags {
         writer.println("\t" + KEY_MDD_LOGGER_KILL_SWITCH + " = " + getMddLoggerKillSwitch());
 
         writer.println("==== AdServices PH Flags Dump AllowList ====");
-        writer.println("\t" + KEY_PPAPI_APP_ALLOW_LIST + " = " + getPpapiAppAllowList());
+        writer.println(
+                "\t"
+                        + KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST
+                        + " = "
+                        + getPpapiAppSignatureAllowList());
+        writer.println(
+                "\t"
+                        + KEY_PPAPI_APP_SIGNATURE_BYPASS_LIST
+                        + " = "
+                        + getPpapiAppSignatureBypassList());
 
         writer.println("==== AdServices PH Flags Dump MDD related flags: ====");
         writer.println(
