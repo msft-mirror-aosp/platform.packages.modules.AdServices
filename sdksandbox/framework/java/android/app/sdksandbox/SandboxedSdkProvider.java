@@ -23,8 +23,6 @@ import android.os.Bundle;
 import android.view.SurfaceControlViewHost.SurfacePackage;
 import android.view.View;
 
-import java.util.Objects;
-
 /**
  * Encapsulates API which SDK sandbox can use to interact with SDKs loaded into it.
  *
@@ -62,46 +60,6 @@ public abstract class SandboxedSdkProvider {
     @Nullable
     public final Context getContext() {
         return mContext;
-    }
-
-    /**
-     * Set the {@link SdkSandboxController} for this provider.
-     *
-     * <p>This is called before {@link SandboxedSdkProvider#onLoadSdk} is invoked. No operations
-     * requiring a {@link SdkSandboxController} should be performed before then, as {@link
-     * SandboxedSdkProvider#getSdkSandboxController()} will return {@code null} until this method
-     * has been called.
-     *
-     * <p>This may be only used for testing purposes.
-     *
-     * <p>Clients can only call it on a "mock" provider they create for testing, and for all other
-     * instances a controller is already attached
-     *
-     * @param sdkSandboxController The controller to query sandbox Apis for this provider.
-     * @throws IllegalStateException if a controller has already been set
-     */
-    public final void attachSdkSandboxController(
-            @NonNull SdkSandboxController sdkSandboxController) {
-        Objects.requireNonNull(sdkSandboxController, "sdkToServiceCallback should not be null.");
-        if (mSdkSandboxController != null) {
-            throw new IllegalStateException("SdkSandboxController already set");
-        }
-        mSdkSandboxController = sdkSandboxController;
-    }
-
-    /**
-     * Fetches the controller attached to the {@link SandboxedSdkProvider}.
-     *
-     * <p>The controller is attached to the provider using {@link
-     * SandboxedSdkProvider#attachSdkSandboxController(SdkSandboxController)} by the platform when
-     * the sdk is loaded.
-     *
-     * @return sdkSandboxController The controller to query sandbox Apis for this provider or {@code
-     *     null} if the controller was not attached.
-     */
-    @Nullable
-    public final SdkSandboxController getSdkSandboxController() {
-        return mSdkSandboxController;
     }
 
     /**
