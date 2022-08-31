@@ -32,13 +32,13 @@ public class MddFlags implements Flags {
      * Keys for ALL MDD flags stored in DeviceConfig.
      */
     static final String KEY_MDD_MAINTENANCE_GCM_TASK_PERIOD_SECONDS =
-            "mdd_maintenance_gcm_task_period_secondS";
+            "mdd_maintenance_gcm_task_period_seconds";
     static final String KEY_MDD_CHARGING_GCM_TASK_PERIOD_SECONDS =
-            "mdd_charging_gcm_task_period_secondS";
+            "mdd_charging_gcm_task_period_seconds";
     static final String KEY_MDD_CELLULAR_CHARGING_GCM_TASK_PERIOD_SECONDS =
-            "mdd_cellular_charging_gcm_task_period_secondS";
+            "mdd_cellular_charging_gcm_task_period_seconds";
     static final String KEY_MDD_WIFI_CHARGING_GCM_TASK_PERIOD_SECONDS =
-            "mdd_wifi_charging_gcm_task_period_secondS";
+            "mdd_wifi_charging_gcm_task_period_seconds";
     static final String KEY_MDD_DEFAULT_SAMPLE_INTERVAL = "mdd_default_sample_interval";
     static final String KEY_MDD_DOWNLOAD_EVENTS_SAMPLE_INTERVAL =
             "mdd_download_events_sample_interval";
