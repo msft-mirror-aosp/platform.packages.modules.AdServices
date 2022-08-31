@@ -32,6 +32,9 @@ import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallback;
 import android.app.sdksandbox.testutils.FakeSdkSandboxLifecycleCallback;
 import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PermissionInfo;
 import android.os.Binder;
 import android.os.Bundle;
 
@@ -39,6 +42,8 @@ import androidx.lifecycle.Lifecycle;
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.platform.app.InstrumentationRegistry;
+
+import com.google.common.truth.Expect;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -54,7 +59,11 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class SdkSandboxManagerTest {
 
-    @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(TestActivity.class);
+    @Rule
+    public final ActivityScenarioRule<TestActivity> mRule =
+            new ActivityScenarioRule<>(TestActivity.class);
+
+    @Rule public final Expect mExpect = Expect.create();
 
     private ActivityScenario<TestActivity> mScenario;
 
@@ -405,5 +414,23 @@ public class SdkSandboxManagerTest {
                                         sdkName, new Bundle(), Runnable::run, callback));
         assertThat(thrown).hasMessageThat().contains("does not run in the foreground");
     }
-}
 
+    /** Checks that {@code SdkSandbox.apk} only requests normal permissions in its manifest. */
+    // TODO: This should probably be a separate test module
+    @Test
+    public void testSdkSandboxPermissions() throws Exception {
+        final PackageManager pm =
+                InstrumentationRegistry.getInstrumentation().getContext().getPackageManager();
+        final PackageInfo sdkSandboxPackage =
+                pm.getPackageInfo(
+                        pm.getSdkSandboxPackageName(),
+                        PackageManager.PackageInfoFlags.of(PackageManager.GET_PERMISSIONS));
+        for (int i = 0; i < sdkSandboxPackage.requestedPermissions.length; i++) {
+            final String permissionName = sdkSandboxPackage.requestedPermissions[i];
+            final PermissionInfo permissionInfo = pm.getPermissionInfo(permissionName, 0);
+            mExpect.withMessage("SdkSandbox.apk requests non-normal permission " + permissionName)
+                    .that(permissionInfo.getProtection())
+                    .isEqualTo(PermissionInfo.PROTECTION_NORMAL);
+        }
+    }
+}
