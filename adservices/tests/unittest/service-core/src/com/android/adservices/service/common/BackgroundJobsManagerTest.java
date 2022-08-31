@@ -41,6 +41,7 @@ import static org.mockito.Mockito.verify;
 import android.app.job.JobScheduler;
 import android.content.Context;
 
+import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
@@ -148,6 +149,7 @@ public class BackgroundJobsManagerTest {
                         .spyStatic(DeleteExpiredJobService.class)
                         .spyStatic(FlagsFactory.class)
                         .spyStatic(MaintenanceJobService.class)
+                        .spyStatic(MddJobService.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
 
@@ -175,6 +177,8 @@ public class BackgroundJobsManagerTest {
                     .when(() -> DeleteExpiredJobService.scheduleIfNeeded(any(), anyBoolean()));
             ExtendedMockito.doReturn(true)
                     .when(() -> MaintenanceJobService.scheduleIfNeeded(any(), anyBoolean()));
+            ExtendedMockito.doReturn(true)
+                    .when(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
 
             // Execute
             execute.run();
@@ -210,5 +214,7 @@ public class BackgroundJobsManagerTest {
         ExtendedMockito.verify(
                 () -> MaintenanceJobService.scheduleIfNeeded(any(), eq(false)),
                 times(numberOfTimes));
+        ExtendedMockito.verify(
+                () -> MddJobService.scheduleIfNeeded(any(), eq(false)), times(numberOfTimes));
     }
 }
