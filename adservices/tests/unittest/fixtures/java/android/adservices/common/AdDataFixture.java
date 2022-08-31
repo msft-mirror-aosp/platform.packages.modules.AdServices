@@ -18,13 +18,17 @@ package android.adservices.common;
 
 import android.net.Uri;
 
+import com.android.adservices.common.JsonFixture;
+
 import com.google.common.collect.ImmutableList;
+
+import org.json.JSONException;
 
 import java.util.List;
 
 /** Utility class supporting ad services API unit tests */
 public class AdDataFixture {
-    private static final String VALID_METADATA = "{'example': 'metadata', 'valid': true}";
+    private static final String VALID_METADATA = "{\"example\": \"metadata\", \"valid\": true}";
     private static final String INVALID_METADATA = "not.{real!metadata} = 1";
 
     public static Uri getValidRenderUrlByBuyer(AdTechIdentifier buyer, int sequence) {
@@ -60,9 +64,16 @@ public class AdDataFixture {
     }
 
     public static AdData getValidAdDataByBuyer(AdTechIdentifier buyer, int sequenceNumber) {
+        String metadata;
+        try {
+            metadata = JsonFixture.formatAsOrgJsonJSONObjectString(VALID_METADATA);
+        } catch (JSONException exception) {
+            throw new IllegalStateException("Error parsing valid metadata!", exception);
+        }
+
         return new AdData.Builder()
                 .setRenderUri(getValidRenderUrlByBuyer(buyer, sequenceNumber))
-                .setMetadata(VALID_METADATA)
+                .setMetadata(metadata)
                 .build();
     }
 }
