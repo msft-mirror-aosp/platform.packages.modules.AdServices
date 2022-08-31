@@ -988,23 +988,12 @@ public interface Flags extends Dumpable {
                     + "android.adservices.cts,"
                     + "android.adservices.debuggablects,"
                     + "com.android.tests.sandbox.fledge,"
-                    + "com.android.tests.sandbox.topics,"
                     + "com.android.adservices.endtoendtest,"
-                    + "com.android.adservices.tests.cts.topics.testapp1," // CTS test sample app
-                    + "com.android.adservices.tests.permissions.appoptout,"
-                    + "com.android.adservices.tests.permissions.noperm,"
-                    + "com.android.adservices.tests.permissions.valid,"
                     + "com.example.adservices.samples.fledge.sampleapp,"
                     + "com.example.adservices.samples.fledge.sampleapp1,"
                     + "com.example.adservices.samples.fledge.sampleapp2,"
                     + "com.example.adservices.samples.fledge.sampleapp3,"
                     + "com.example.adservices.samples.fledge.sampleapp4,"
-                    + "com.example.adservices.samples.topics.sampleapp1,"
-                    + "com.example.adservices.samples.topics.sampleapp2,"
-                    + "com.example.adservices.samples.topics.sampleapp3,"
-                    + "com.example.adservices.samples.topics.sampleapp4,"
-                    + "com.example.adservices.samples.topics.sampleapp5,"
-                    + "com.example.adservices.samples.topics.sampleapp6,"
                     + "com.android.adservices.servicecoretest";
 
     /**
@@ -1026,7 +1015,13 @@ public interface Flags extends Dumpable {
      */
     String PPAPI_APP_SIGNATURE_ALLOW_LIST =
             // com.android.adservices.tests.cts.endtoendtest
-            "a40da80a59d170caa950cf15c18c454d47a39b26989d8b640ecd745ba71bf5dc,";
+            // com.android.tests.sandbox.topics
+            "a40da80a59d170caa950cf15c18c454d47a39b26989d8b640ecd745ba71bf5dc,"
+                    // Topics Sample Apps
+                    // For example, com.example.adservices.samples.topics.sampleapp1
+                    + "301aa3cb081134501c45f1422abc66c24224fd5ded5fdc8f17e697176fd866aa,"
+                    // com.android.adservices.tests.cts.topics.testapp1
+                    + "c8a2e9bccf597c2fb6dc66bee293fc13f2fc47ec77bc6b2b0d52c11f51192ab8";
 
     /** Only App signatures belonging to this Allow List can use PP APIs. */
     default String getPpapiAppSignatureAllowList() {
