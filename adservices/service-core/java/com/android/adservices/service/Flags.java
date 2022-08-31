@@ -1136,7 +1136,7 @@ public interface Flags extends Dumpable {
     }
 
     boolean ENFORCE_ISOLATE_MAX_HEAP_SIZE = true;
-    long ISOLATE_MAX_HEAP_SIZE_BYTES = 2 * 1024 * 1024L; // 2 MB
+    long ISOLATE_MAX_HEAP_SIZE_BYTES = 10 * 1024 * 1024L; // 10 MB
 
     /**
      * @return true if we enforce to check that JavaScriptIsolate supports limiting the max heap
