@@ -49,6 +49,10 @@
       "name": "CtsSandboxedTopicsManagerTests[com.google.android.adservices.apex]"
     },
     {
+      // Install com.google.android.adservices.apex and run CtsSandboxedMeasurementManagerTests.
+      "name": "CtsSandboxedMeasurementManagerTests[com.google.android.adservices.apex]"
+    },
+    {
       // Install com.google.android.adservices.apex and run SandboxedFledgeManagerTests.
       "name": "CtsSandboxedFledgeManagerTests[com.google.android.adservices.apex]"
     },
