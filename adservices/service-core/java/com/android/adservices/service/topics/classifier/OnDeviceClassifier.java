@@ -17,7 +17,6 @@
 package com.android.adservices.service.topics.classifier;
 
 import android.annotation.NonNull;
-import android.content.Context;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.topics.Topic;
@@ -68,7 +67,7 @@ public class OnDeviceClassifier implements Classifier {
     private boolean mLoaded;
     private ImmutableMap<String, AppInfo> mAppInfoMap;
 
-    public OnDeviceClassifier(
+    OnDeviceClassifier(
             @NonNull Preprocessor preprocessor,
             @NonNull PackageManagerUtil packageManagerUtil1,
             @NonNull Random random,
@@ -79,22 +78,6 @@ public class OnDeviceClassifier implements Classifier {
         mLoaded = false;
         mAppInfoMap = ImmutableMap.of();
         mModelManager = modelManager;
-    }
-
-    /** Returns the singleton instance of the {@link OnDeviceClassifier} given a context. */
-    @NonNull
-    public static OnDeviceClassifier getInstance(@NonNull Context context) {
-        synchronized (OnDeviceClassifier.class) {
-            if (sSingleton == null) {
-                sSingleton =
-                        new OnDeviceClassifier(
-                                new Preprocessor(context),
-                                new PackageManagerUtil(context),
-                                new Random(),
-                                ModelManager.getInstance(context));
-            }
-        }
-        return sSingleton;
     }
 
     @Override
