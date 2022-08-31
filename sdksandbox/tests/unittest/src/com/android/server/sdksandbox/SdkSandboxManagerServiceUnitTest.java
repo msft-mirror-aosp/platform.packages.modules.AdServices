@@ -58,6 +58,7 @@ import android.os.ParcelFileDescriptor;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.ServiceManager;
+import android.provider.DeviceConfig;
 import android.util.ArrayMap;
 
 import androidx.annotation.Nullable;
@@ -88,6 +89,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -111,6 +113,7 @@ public class SdkSandboxManagerServiceUnitTest {
     private static final String SDK_PROVIDER_RESOURCES_PACKAGE =
             "com.android.codeproviderresources_1";
     private static final String TEST_PACKAGE = "com.android.server.sdksandbox.tests";
+    private static final String PROPERTY_DISABLE_SANDBOX = "disable_sdk_sandbox";
     private static final long TIME_APP_CALLED_SYSTEM_SERVER = 1;
     private static final long TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP = 3;
     private static final long START_TIME_TO_LOAD_SANDBOX = 5;
@@ -147,9 +150,14 @@ public class SdkSandboxManagerServiceUnitTest {
 
         Mockito.when(mSpyContext.getSystemService(ActivityManager.class)).thenReturn(mAmSpy);
 
-        // Required to access <sdk-library> information.
-        InstrumentationRegistry.getInstrumentation().getUiAutomation().adoptShellPermissionIdentity(
-                Manifest.permission.ACCESS_SHARED_LIBRARIES, Manifest.permission.INSTALL_PACKAGES);
+        // Required to access <sdk-library> information and DeviceConfig.
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(
+                        Manifest.permission.ACCESS_SHARED_LIBRARIES,
+                                Manifest.permission.INSTALL_PACKAGES,
+                        Manifest.permission.READ_DEVICE_CONFIG,
+                                Manifest.permission.WRITE_DEVICE_CONFIG);
         mSdkSandboxService = Mockito.spy(FakeSdkSandboxService.class);
         mProvider = new FakeSdkSandboxProvider(mSdkSandboxService);
 
@@ -1701,6 +1709,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Test
     public void testIsDisabled() {
+        mService.clearSdkSandboxState();
         mSdkSandboxService.setIsDisabledResponse(false);
         assertThat(mService.isSdkSandboxDisabled(mSdkSandboxService)).isFalse();
 
@@ -1723,6 +1732,43 @@ public class SdkSandboxManagerServiceUnitTest {
         callback = new SdkSandboxManagerService.SdkSandboxDisabledCallback();
         callback.onResult(true);
         assertThat(callback.getIsDisabled()).isTrue();
+    }
+
+    @Test
+    public void testSdkSandboxSettings() {
+        SdkSandboxManagerService.SdkSandboxSettingsListener listener =
+                mService.getSdkSandboxSettingsListener();
+        assertThat(listener.isKillSwitchEnabled()).isFalse();
+        listener.onPropertiesChanged(
+                new DeviceConfig.Properties(
+                        DeviceConfig.NAMESPACE_SDK_SANDBOX,
+                        Map.of(PROPERTY_DISABLE_SANDBOX, "true")));
+        assertThat(listener.isKillSwitchEnabled()).isTrue();
+        listener.onPropertiesChanged(
+                new DeviceConfig.Properties(
+                        DeviceConfig.NAMESPACE_SDK_SANDBOX,
+                        Map.of(PROPERTY_DISABLE_SANDBOX, "false")));
+        assertThat(listener.isKillSwitchEnabled()).isTrue();
+    }
+
+    @Test
+    public void testKillswitchStopsSandbox() throws Exception {
+        disableKillUid();
+        SdkSandboxManagerService.SdkSandboxSettingsListener listener =
+                mService.getSdkSandboxSettingsListener();
+        listener.onPropertiesChanged(
+                new DeviceConfig.Properties(
+                        DeviceConfig.NAMESPACE_SDK_SANDBOX,
+                        Map.of(PROPERTY_DISABLE_SANDBOX, "false")));
+        mService.getSdkSandboxSettingsListener().reset();
+        loadSdk();
+        listener.onPropertiesChanged(
+                new DeviceConfig.Properties(
+                        DeviceConfig.NAMESPACE_SDK_SANDBOX,
+                        Map.of(PROPERTY_DISABLE_SANDBOX, "true")));
+        int callingUid = Binder.getCallingUid();
+        final CallingInfo callingInfo = new CallingInfo(callingUid, TEST_PACKAGE);
+        assertThat(mProvider.getBoundServiceForApp(callingInfo)).isEqualTo(null);
     }
 
     @Test
@@ -1885,7 +1931,8 @@ public class SdkSandboxManagerServiceUnitTest {
         public void isDisabled(ISdkSandboxDisabledCallback callback) {
             try {
                 callback.onResult(mIsDisabledResponse);
-            } catch (RemoteException ignored) {
+            } catch (RemoteException e) {
+                e.rethrowAsRuntimeException();
             }
         }
 

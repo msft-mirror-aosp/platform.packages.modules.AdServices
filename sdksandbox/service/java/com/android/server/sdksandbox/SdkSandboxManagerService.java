@@ -61,6 +61,7 @@ import android.os.Process;
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 import android.os.UserHandle;
+import android.provider.DeviceConfig;
 import android.text.TextUtils;
 import android.util.ArrayMap;
 import android.util.ArraySet;
@@ -86,7 +87,9 @@ import com.android.server.pm.PackageManagerLocal;
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -156,6 +159,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     @GuardedBy("mLock")
     private boolean mCheckedVisibilityPatch = false;
 
+    private SdkSandboxSettingsListener mSdkSandboxSettingsListener;
+
+    private static final String PROPERTY_DISABLE_SDK_SANDBOX = "disable_sdk_sandbox";
+
     static class Injector {
         long getCurrentTime() {
             return System.currentTimeMillis();
@@ -192,6 +199,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         registerBroadcastReceivers();
 
         mAdServicesPackageName = resolveAdServicesPackage();
+        mSdkSandboxSettingsListener = new SdkSandboxSettingsListener(mContext);
+        mSdkSandboxSettingsListener.registerObserver();
     }
 
     private void registerBroadcastReceivers() {
@@ -610,10 +619,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         // TODO(b/211575098): Use IndentingPrintWriter for better formatting
         synchronized (mLock) {
-            writer.println("Checked visibility patch exists: " + mCheckedVisibilityPatch);
+            writer.println("Checked Webview visibility patch exists: " + mCheckedVisibilityPatch);
             if (mCheckedVisibilityPatch) {
-                writer.println("Build contains visibility patch: " + mHasVisibilityPatch);
+                writer.println("Build contains Webview visibility patch: " + mHasVisibilityPatch);
             }
+            writer.print(
+                    "Killswitch enabled: " + mSdkSandboxSettingsListener.isKillSwitchEnabled());
             writer.println("mAppAndRemoteSdkLinks size: " + mAppAndRemoteSdkLinks.size());
         }
 
@@ -926,27 +937,106 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     boolean isSdkSandboxDisabled(ISdkSandboxService boundService) {
 
         synchronized (mLock) {
-            if (mCheckedVisibilityPatch) {
-                return !mHasVisibilityPatch;
+            if (!mCheckedVisibilityPatch) {
+                SdkSandboxDisabledCallback callback = new SdkSandboxDisabledCallback();
+                try {
+                    boundService.isDisabled(callback);
+                    boolean isDisabled = callback.getIsDisabled();
+                    mCheckedVisibilityPatch = true;
+                    mHasVisibilityPatch = !isDisabled;
+                } catch (Exception e) {
+                    Log.w(TAG, "Could not verify SDK sandbox state", e);
+                    return true;
+                }
             }
-            SdkSandboxDisabledCallback callback = new SdkSandboxDisabledCallback();
-            try {
-                boundService.isDisabled(callback);
-                boolean isDisabled = callback.getIsDisabled();
-                mCheckedVisibilityPatch = true;
-                mHasVisibilityPatch = !isDisabled;
-                return isDisabled;
-            } catch (Exception e) {
-                Log.w(TAG, "Could not verify SDK sandbox state", e);
-                return true;
-            }
+            return !mHasVisibilityPatch || getSdkSandboxSettingsListener().isKillSwitchEnabled();
         }
     }
 
+    /**
+     * Clears the SDK sandbox state. This will result in the state being checked again the next time
+     * an SDK is loaded.
+     */
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
     void clearSdkSandboxState() {
         synchronized (mLock) {
             mCheckedVisibilityPatch = false;
+            getSdkSandboxSettingsListener().reset();
+        }
+    }
+
+    /**
+     * Enables the sandbox for testing purposes. Note that the sandbox can still be disabled by
+     * setting the killswitch.
+     */
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    void forceEnableSandbox() {
+        synchronized (mLock) {
+            mCheckedVisibilityPatch = true;
+            mHasVisibilityPatch = true;
+            getSdkSandboxSettingsListener().reset();
+        }
+    }
+
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    SdkSandboxSettingsListener getSdkSandboxSettingsListener() {
+        synchronized (mLock) {
+            return mSdkSandboxSettingsListener;
+        }
+    }
+
+    class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedListener {
+
+        private final Context mContext;
+        private final Object mLock = new Object();
+
+        @GuardedBy("mLock")
+        private boolean mIsKillSwitchEnabled = false;
+
+        // This is required so that the sandbox is not re-enabled in the same boot.
+        @GuardedBy("mLock")
+        private boolean mKillSwitchBecameEnabled = false;
+
+        SdkSandboxSettingsListener(Context context) {
+            mContext = context;
+        }
+
+        private void registerObserver() {
+            DeviceConfig.addOnPropertiesChangedListener(
+                    DeviceConfig.NAMESPACE_SDK_SANDBOX, mContext.getMainExecutor(), this);
+        }
+
+        @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+        boolean isKillSwitchEnabled() {
+            synchronized (mLock) {
+                return mIsKillSwitchEnabled;
+            }
+        }
+
+        @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+        void reset() {
+            synchronized (mLock) {
+                DeviceConfig.setProperty(
+                        DeviceConfig.NAMESPACE_SDK_SANDBOX,
+                        PROPERTY_DISABLE_SDK_SANDBOX,
+                        "false",
+                        false);
+                mKillSwitchBecameEnabled = false;
+            }
+        }
+
+        @Override
+        public void onPropertiesChanged(@NonNull DeviceConfig.Properties properties) {
+            synchronized (mLock) {
+                if (!mIsKillSwitchEnabled && !mKillSwitchBecameEnabled) {
+                    mIsKillSwitchEnabled =
+                            properties.getBoolean(PROPERTY_DISABLE_SDK_SANDBOX, false);
+                    if (mIsKillSwitchEnabled) {
+                        mKillSwitchBecameEnabled = true;
+                        stopAllSandboxesLocked();
+                    }
+                }
+            }
         }
     }
 
@@ -974,6 +1064,17 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 Log.w(TAG, "Interrupted while waiting for SDK sandbox state", e);
                 return true;
             }
+        }
+    }
+
+    /** Stops all running sandboxes in the case that the killswitch is triggered. */
+    @GuardedBy("mLock")
+    private void stopAllSandboxesLocked() {
+        Iterator<Map.Entry<IBinder, AppAndRemoteSdkLink>> it =
+                mAppAndRemoteSdkLinks.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<IBinder, AppAndRemoteSdkLink> entry = it.next();
+            stopSdkSandboxService(entry.getValue().mCallingInfo, "SDK sandbox killswitch enabled");
         }
     }
 
