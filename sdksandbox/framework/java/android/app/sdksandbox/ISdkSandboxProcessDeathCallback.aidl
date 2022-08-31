@@ -17,6 +17,6 @@
 package android.app.sdksandbox;
 
 /** @hide */
-oneway interface ISdkSandboxLifecycleCallback {
+oneway interface ISdkSandboxProcessDeathCallback {
     void onSdkSandboxDied();
 }

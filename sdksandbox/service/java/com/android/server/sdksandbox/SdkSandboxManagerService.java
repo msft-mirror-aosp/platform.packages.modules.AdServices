@@ -30,8 +30,8 @@ import android.annotation.RequiresPermission;
 import android.app.ActivityManager;
 import android.app.sdksandbox.ILoadSdkCallback;
 import android.app.sdksandbox.IRequestSurfacePackageCallback;
-import android.app.sdksandbox.ISdkSandboxLifecycleCallback;
 import android.app.sdksandbox.ISdkSandboxManager;
+import android.app.sdksandbox.ISdkSandboxProcessDeathCallback;
 import android.app.sdksandbox.ISdkToServiceCallback;
 import android.app.sdksandbox.ISharedPreferencesSyncCallback;
 import android.app.sdksandbox.LoadSdkException;
@@ -127,7 +127,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private final Set<CallingInfo> mRunningInstrumentations = new ArraySet<>();
 
     @GuardedBy("mLock")
-    private final ArrayMap<CallingInfo, RemoteCallbackList<ISdkSandboxLifecycleCallback>>
+    private final ArrayMap<CallingInfo, RemoteCallbackList<ISdkSandboxProcessDeathCallback>>
             mSandboxLifecycleCallbacks = new ArrayMap<>();
 
     // Keeps track of all callbacks created by the app that have not yet been invoked, to call back
@@ -248,8 +248,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     @Override
-    public void addSdkSandboxLifecycleCallback(
-            String callingPackageName, ISdkSandboxLifecycleCallback callback) {
+    public void addSdkSandboxProcessDeathCallback(
+            String callingPackageName, ISdkSandboxProcessDeathCallback callback) {
         final int callingUid = Binder.getCallingUid();
         final CallingInfo callingInfo = new CallingInfo(callingUid, callingPackageName);
         enforceCallingPackageBelongsToUid(callingInfo);
@@ -258,7 +258,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             if (mSandboxLifecycleCallbacks.containsKey(callingInfo)) {
                 mSandboxLifecycleCallbacks.get(callingInfo).register(callback);
             } else {
-                RemoteCallbackList<ISdkSandboxLifecycleCallback> sandboxLifecycleCallbacks =
+                RemoteCallbackList<ISdkSandboxProcessDeathCallback> sandboxLifecycleCallbacks =
                         new RemoteCallbackList<>();
                 sandboxLifecycleCallbacks.register(callback);
                 mSandboxLifecycleCallbacks.put(callingInfo, sandboxLifecycleCallbacks);
@@ -267,14 +267,14 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     @Override
-    public void removeSdkSandboxLifecycleCallback(
-            String callingPackageName, ISdkSandboxLifecycleCallback callback) {
+    public void removeSdkSandboxProcessDeathCallback(
+            String callingPackageName, ISdkSandboxProcessDeathCallback callback) {
         final int callingUid = Binder.getCallingUid();
         final CallingInfo callingInfo = new CallingInfo(callingUid, callingPackageName);
         enforceCallingPackageBelongsToUid(callingInfo);
 
         synchronized (mLock) {
-            RemoteCallbackList<ISdkSandboxLifecycleCallback> sandboxLifecycleCallbacks =
+            RemoteCallbackList<ISdkSandboxProcessDeathCallback> sandboxLifecycleCallbacks =
                     mSandboxLifecycleCallbacks.get(callingInfo);
             if (sandboxLifecycleCallbacks != null) {
                 sandboxLifecycleCallbacks.unregister(callback);
@@ -864,7 +864,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     private void handleSandboxLifecycleCallbacks(CallingInfo callingInfo) {
-        RemoteCallbackList<ISdkSandboxLifecycleCallback> sandboxLifecycleCallbacks;
+        RemoteCallbackList<ISdkSandboxProcessDeathCallback> sandboxLifecycleCallbacks;
         synchronized (mLock) {
             sandboxLifecycleCallbacks = mSandboxLifecycleCallbacks.get(callingInfo);
 
