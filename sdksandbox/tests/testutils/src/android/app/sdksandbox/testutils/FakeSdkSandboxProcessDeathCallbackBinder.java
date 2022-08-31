@@ -16,22 +16,22 @@
 
 package android.app.sdksandbox.testutils;
 
-import android.app.sdksandbox.ISdkSandboxLifecycleCallback;
+import android.app.sdksandbox.ISdkSandboxProcessDeathCallback;
 import android.os.RemoteException;
 
-public class FakeSdkSandboxLifecycleCallbackBinder extends ISdkSandboxLifecycleCallback.Stub {
-    private final FakeSdkSandboxLifecycleCallback mFakeSdkSandboxLifecycleCallback;
+public class FakeSdkSandboxProcessDeathCallbackBinder extends ISdkSandboxProcessDeathCallback.Stub {
+    private final FakeSdkSandboxProcessDeathCallback mFakeSdkSandboxProcessDeathCallback;
 
-    public FakeSdkSandboxLifecycleCallbackBinder() {
-        mFakeSdkSandboxLifecycleCallback = new FakeSdkSandboxLifecycleCallback();
+    public FakeSdkSandboxProcessDeathCallbackBinder() {
+        mFakeSdkSandboxProcessDeathCallback = new FakeSdkSandboxProcessDeathCallback();
     }
 
     @Override
     public void onSdkSandboxDied() throws RemoteException {
-        mFakeSdkSandboxLifecycleCallback.onSdkSandboxDied();
+        mFakeSdkSandboxProcessDeathCallback.onSdkSandboxDied();
     }
 
     public boolean isSdkSandboxDeathDetected() throws InterruptedException {
-        return mFakeSdkSandboxLifecycleCallback.isSdkSandboxDeathDetected();
+        return mFakeSdkSandboxProcessDeathCallback.isSdkSandboxDeathDetected();
     }
 }
