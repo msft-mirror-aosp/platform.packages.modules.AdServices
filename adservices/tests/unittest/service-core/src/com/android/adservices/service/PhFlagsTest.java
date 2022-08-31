@@ -18,6 +18,8 @@ package com.android.adservices.service;
 
 import static com.android.adservices.service.Flags.ADID_KILL_SWITCH;
 import static com.android.adservices.service.Flags.APPSETID_KILL_SWITCH;
+import static com.android.adservices.service.Flags.CLASSIFIER_DESCRIPTION_MAX_LENGTH;
+import static com.android.adservices.service.Flags.CLASSIFIER_DESCRIPTION_MAX_WORDS;
 import static com.android.adservices.service.Flags.CLASSIFIER_NUMBER_OF_TOP_LABELS;
 import static com.android.adservices.service.Flags.CLASSIFIER_THRESHOLD;
 import static com.android.adservices.service.Flags.DEFAULT_CLASSIFIER_TYPE;
@@ -110,6 +112,8 @@ import static com.android.adservices.service.Flags.TOPICS_NUMBER_OF_TOP_TOPICS;
 import static com.android.adservices.service.Flags.TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
 import static com.android.adservices.service.PhFlags.KEY_ADID_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_APPSETID_KILL_SWITCH;
+import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_DESCRIPTION_MAX_LENGTH;
+import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_DESCRIPTION_MAX_WORDS;
 import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS;
 import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_THRESHOLD;
 import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_TYPE;
@@ -452,6 +456,40 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getClassifierThreshold()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetClassifierDescriptionMaxWords() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getClassifierDescriptionMaxWords())
+                .isEqualTo(CLASSIFIER_DESCRIPTION_MAX_WORDS);
+
+        int phOverridingValue = 150;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_CLASSIFIER_DESCRIPTION_MAX_WORDS,
+                Integer.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getClassifierDescriptionMaxWords()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetClassifierDescriptionMaxLength() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getClassifierDescriptionMaxLength())
+                .isEqualTo(CLASSIFIER_DESCRIPTION_MAX_LENGTH);
+
+        int phOverridingValue = 999;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_CLASSIFIER_DESCRIPTION_MAX_LENGTH,
+                Integer.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getClassifierDescriptionMaxLength()).isEqualTo(phOverridingValue);
     }
 
     @Test
