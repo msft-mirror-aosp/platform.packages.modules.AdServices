@@ -66,6 +66,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.sdksandbox.ILoadSdkInSandboxCallback;
 import com.android.sdksandbox.IRequestSurfacePackageFromSdkCallback;
+import com.android.sdksandbox.ISdkSandboxDisabledCallback;
 import com.android.sdksandbox.ISdkSandboxManagerToSdkSandboxCallback;
 import com.android.sdksandbox.ISdkSandboxService;
 import com.android.sdksandbox.SandboxLatencyInfo;
@@ -1698,6 +1699,32 @@ public class SdkSandboxManagerServiceUnitTest {
                                         .SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_APP));
     }
 
+    @Test
+    public void testIsDisabled() {
+        mSdkSandboxService.setIsDisabledResponse(false);
+        assertThat(mService.isSdkSandboxDisabled(mSdkSandboxService)).isFalse();
+
+        mService.clearSdkSandboxState();
+        mSdkSandboxService.setIsDisabledResponse(true);
+        assertThat(mService.isSdkSandboxDisabled(mSdkSandboxService)).isTrue();
+    }
+
+    @Test
+    public void testSdkSandboxDisabledCallback() {
+        SdkSandboxManagerService.SdkSandboxDisabledCallback callback =
+                new SdkSandboxManagerService.SdkSandboxDisabledCallback();
+        // In this case the callback has not been called, so a timeout will occur and sandbox
+        // will be disabled.
+        assertThat(callback.getIsDisabled()).isTrue();
+
+        callback.onResult(false);
+        assertThat(callback.getIsDisabled()).isFalse();
+
+        callback = new SdkSandboxManagerService.SdkSandboxDisabledCallback();
+        callback.onResult(true);
+        assertThat(callback.getIsDisabled()).isTrue();
+    }
+
     private SandboxLatencyInfo getFakedSandboxLatencies() {
         final SandboxLatencyInfo sandboxLatencyInfo =
                 new SandboxLatencyInfo(TIME_SYSTEM_SERVER_CALLED_SANDBOX);
@@ -1786,7 +1813,7 @@ public class SdkSandboxManagerServiceUnitTest {
         private ISdkToServiceCallback mSdkToServiceCallback;
 
         private boolean mSurfacePackageRequested = false;
-        boolean mDataReceived = false;
+        boolean mIsDisabledResponse = false;
 
         private SharedPreferencesUpdate mLastSyncUpdate = null;
 
@@ -1817,6 +1844,14 @@ public class SdkSandboxManagerServiceUnitTest {
         @Override
         public void syncDataFromClient(SharedPreferencesUpdate update) {
             mLastSyncUpdate = update;
+        }
+
+        @Override
+        public void isDisabled(ISdkSandboxDisabledCallback callback) {
+            try {
+                callback.onResult(mIsDisabledResponse);
+            } catch (RemoteException ignored) {
+            }
         }
 
         @Nullable
@@ -1881,6 +1916,10 @@ public class SdkSandboxManagerServiceUnitTest {
                 int errorCode, String errorMsg, FakeRequestSurfacePackageCallbackBinder callback)
                 throws RemoteException {
             callback.onSurfacePackageError(errorCode, errorMsg, System.currentTimeMillis());
+        }
+
+        void setIsDisabledResponse(boolean response) {
+            mIsDisabledResponse = response;
         }
 
         private class FakeManagerToSdkCallback extends ISdkSandboxManagerToSdkSandboxCallback.Stub {
