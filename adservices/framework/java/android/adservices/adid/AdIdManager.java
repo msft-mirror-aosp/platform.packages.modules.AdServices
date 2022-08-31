@@ -53,8 +53,8 @@ public class AdIdManager {
     // When an app calls the AdId API directly, it sets the SDK name to empty string.
     static final String EMPTY_SDK = "";
 
-    private final Context mContext;
-    private final ServiceBinder<IAdIdService> mServiceBinder;
+    private Context mContext;
+    private ServiceBinder<IAdIdService> mServiceBinder;
 
     /**
      * Create AdIdManager
@@ -62,12 +62,29 @@ public class AdIdManager {
      * @hide
      */
     public AdIdManager(Context context) {
+        // In case the AdIdManager is initiated from inside a sdk_sandbox process the fields
+        // will be immediately rewritten by the initialize method below.
+        initialize(context);
+    }
+
+    /**
+     * Initializes {@link AdIdManager} with the given {@code context}.
+     *
+     * <p>This method is called by the {@link SandboxedSdkContext} to propagate the correct context.
+     * For more information check the javadoc on the {@link
+     * android.app.sdksandbox.SdkSandboxSystemServiceRegistry}.
+     *
+     * @hide
+     * @see android.app.sdksandbox.SdkSandboxSystemServiceRegistry
+     */
+    public AdIdManager initialize(Context context) {
         mContext = context;
         mServiceBinder =
                 ServiceBinder.getServiceBinder(
                         context,
                         AdServicesCommon.ACTION_ADID_SERVICE,
                         IAdIdService.Stub::asInterface);
+        return this;
     }
 
     @NonNull
