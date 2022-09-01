@@ -151,28 +151,14 @@ public class AppUpdateTest {
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
 
-        overrideDisableTopicsEnrollmentCheck("1");
-        overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
-
-        // We need to turn off random topic so that we can verify the returned topic.
-        overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
-
-        // We need to turn the Consent Manager into debug mode
-        overrideConsentManagerDebugMode();
-
-        // Turn off MDD to avoid model mismatching
-        switchOnAndOffMDD(true);
+        overridingBeforeTest();
 
         registerTopicResponseReceiver();
     }
 
     @After
     public void tearDown() {
-        // Reset back the original values.
-        overrideDisableTopicsEnrollmentCheck("0");
-        overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
-        overridePercentageForRandomTopic(DEFAULT_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
-        switchOnAndOffMDD(false);
+        overridingAfterTest();
     }
 
     @Test
@@ -291,8 +277,33 @@ public class AppUpdateTest {
         sContext.registerReceiver(mTopicsResponseReceiver, topicResponseIntentFilter);
     }
 
+    private void overridingBeforeTest() {
+        overridingAdservicesLoggingLevel("VERBOSE");
+
+        overrideDisableTopicsEnrollmentCheck("1");
+        overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
+
+        // We need to turn off random topic so that we can verify the returned topic.
+        overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+
+        // We need to turn the Consent Manager into debug mode
+        overrideConsentManagerDebugMode();
+
+        // Turn off MDD to avoid model mismatching
+        disableMddBackgroundTasks(true);
+    }
+
+    // Reset back the original values.
+    private void overridingAfterTest() {
+        overrideDisableTopicsEnrollmentCheck("0");
+        overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
+        overridePercentageForRandomTopic(DEFAULT_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+        disableMddBackgroundTasks(false);
+        overridingAdservicesLoggingLevel("INFO");
+    }
+
     // Switch on/off for MDD service. Default value is false, which means MDD is enabled.
-    private void switchOnAndOffMDD(boolean isSwitchedOff) {
+    private void disableMddBackgroundTasks(boolean isSwitchedOff) {
         ShellUtils.runShellCommand(
                 "setprop debug.adservices.mdd_background_task_kill_switch " + isSwitchedOff);
     }
@@ -347,6 +358,10 @@ public class AppUpdateTest {
                         + ADSERVICES_PACKAGE_NAME
                         + " "
                         + MAINTENANCE_JOB_ID);
+    }
+
+    private void overridingAdservicesLoggingLevel(String loggingLevel) {
+        ShellUtils.runShellCommand("setprop log.tag.adservices %s", loggingLevel);
     }
 
     // Used to get the package name. Copied over from com.android.adservices.AndroidServiceBinder
