@@ -22,6 +22,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_
 import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS;
@@ -106,7 +107,6 @@ public class TopicsServiceImplTest {
     private static final String ALLOWED_SDK_ID = "1234567";
     // This is not allowed per the ad_services_config.xml manifest config.
     private static final String DISALLOWED_SDK_ID = "123";
-    private static final String TOPICS_API_ALLOW_LIST = "com.android.adservices.servicecoretest";
     private static final int SANDBOX_UID = 25000;
     private static final String HEX_STRING =
             "0000000000000000000000000000000000000000000000000000000000000000";
@@ -172,9 +172,8 @@ public class TopicsServiceImplTest {
         when(mMockSdkContext.getPackageManager()).thenReturn(mPackageManager);
         when(mPackageManager.getPackageUid(TEST_APP_PACKAGE_NAME, 0)).thenReturn(Process.myUid());
 
-        // Put this test app into bypass list to bypass Allow-list check.
-        when(mMockFlags.getPpapiAppSignatureBypassList()).thenReturn(TOPICS_API_ALLOW_LIST);
-        when(mMockFlags.getPpapiAppSignatureAllowList()).thenReturn("");
+        // Allow all for signature allow list check
+        when(mMockFlags.getPpapiAppSignatureAllowList()).thenReturn(AllowLists.ALLOW_ALL);
 
         // Initialize enrollment data.
         EnrollmentData fakeEnrollmentData =
@@ -219,8 +218,6 @@ public class TopicsServiceImplTest {
         ExtendedMockito.doReturn(BYTE_ARRAY)
                 .when(() -> AllowLists.getAppSignatureHash(mContext, TEST_APP_PACKAGE_NAME));
         when(mMockFlags.getPpapiAppSignatureAllowList()).thenReturn(HEX_STRING);
-        // remove test app from bypass list
-        when(mMockFlags.getPpapiAppSignatureBypassList()).thenReturn("");
 
         runGetTopics(mTopicsServiceImpl);
     }
@@ -230,7 +227,6 @@ public class TopicsServiceImplTest {
         when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         // Empty allow list and bypass list.
         when(mMockFlags.getPpapiAppSignatureAllowList()).thenReturn("");
-        when(mMockFlags.getPpapiAppSignatureBypassList()).thenReturn("");
         invokeGetTopicsAndVerifyError(mContext, STATUS_CALLER_NOT_ALLOWED);
     }
 
@@ -743,7 +739,7 @@ public class TopicsServiceImplTest {
 
                     @Override
                     public void onFailure(int resultCode) {
-                        assertThat(resultCode).isEqualTo(STATUS_CALLER_NOT_ALLOWED);
+                        assertThat(resultCode).isEqualTo(STATUS_UNAUTHORIZED);
                         mGetTopicsCallbackLatch.countDown();
                     }
 

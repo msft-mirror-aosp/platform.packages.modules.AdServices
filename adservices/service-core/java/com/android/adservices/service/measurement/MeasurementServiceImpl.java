@@ -163,7 +163,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                             List.of(
                                     new KillSwitchAccessResolver(() -> isRegisterDisabled(request)),
                                     new AppPackageAccessResolver(
-                                            mFlags.getPpapiAppSignatureBypassList(),
+                                            mFlags.getPpapiAppAllowList(),
                                             request.getPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
@@ -211,7 +211,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                     new KillSwitchAccessResolver(
                                             mFlags::getMeasurementApiRegisterWebSourceKillSwitch),
                                     new AppPackageAccessResolver(
-                                            mFlags.getPpapiAppSignatureBypassList(),
+                                            mFlags.getPpapiAppAllowList(),
                                             request.getPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
@@ -265,7 +265,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                     new KillSwitchAccessResolver(
                                             mFlags::getMeasurementApiRegisterWebTriggerKillSwitch),
                                     new AppPackageAccessResolver(
-                                            mFlags.getPpapiAppSignatureBypassList(),
+                                            mFlags.getPpapiAppAllowList(),
                                             request.getPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
@@ -315,7 +315,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                             List.of(
                                     new KillSwitchAccessResolver(killSwitchSupplier),
                                     new AppPackageAccessResolver(
-                                            mFlags.getPpapiAppSignatureBypassList(),
+                                            mFlags.getPpapiAppAllowList(),
                                             request.getPackageName()),
                                     new AppPackageAccessResolver(
                                             mFlags.getWebContextClientAppAllowList(),
@@ -349,7 +349,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                         new KillSwitchAccessResolver(
                                                 mFlags::getMeasurementApiStatusKillSwitch),
                                         new AppPackageAccessResolver(
-                                                mFlags.getPpapiAppSignatureBypassList(),
+                                                mFlags.getPpapiAppAllowList(),
                                                 statusParam.getAppPackageName()));
 
                         final Optional<IAccessResolver> optionalResolver =
