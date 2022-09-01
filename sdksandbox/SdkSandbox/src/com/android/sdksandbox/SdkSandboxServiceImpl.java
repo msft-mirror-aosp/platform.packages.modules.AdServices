@@ -442,11 +442,11 @@ public class SdkSandboxServiceImpl extends Service {
                 @NonNull IBinder sdkToken,
                 @NonNull IUnloadSdkCallback callback,
                 @NonNull SandboxLatencyInfo sandboxLatencyInfo) {
+            Objects.requireNonNull(sandboxLatencyInfo, "sandboxLatencyInfo should not be null");
             sandboxLatencyInfo.setTimeSandboxReceivedCallFromSystemServer(
                     mInjector.getCurrentTime());
             Objects.requireNonNull(sdkToken, "sdkToken should not be null");
             Objects.requireNonNull(callback, "callback should not be null");
-            Objects.requireNonNull(sandboxLatencyInfo, "sandboxLatencyInfo should not be null");
             SdkSandboxServiceImpl.this.unloadSdk(sdkToken, callback, sandboxLatencyInfo);
         }
 
