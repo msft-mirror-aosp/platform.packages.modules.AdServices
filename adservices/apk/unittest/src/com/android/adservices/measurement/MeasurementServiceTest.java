@@ -19,6 +19,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -35,6 +36,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.enrollment.EnrollmentData;
@@ -63,6 +65,7 @@ public class MeasurementServiceTest {
     @Mock Flags mMockFlags;
     @Mock MeasurementImpl mMockMeasurementImpl;
     @Mock EnrollmentDao mMockEnrollmentDao;
+    @Mock AppImportanceFilter mMockAppImportanceFilter;
 
     private static final EnrollmentData ENROLLMENT =
             new EnrollmentData.Builder()
@@ -152,6 +155,7 @@ public class MeasurementServiceTest {
                 ExtendedMockito.mockitoSession()
                         .spyStatic(AggregateReportingJobService.class)
                         .spyStatic(AggregateFallbackReportingJobService.class)
+                        .spyStatic(AppImportanceFilter.class)
                         .spyStatic(AttributionJobService.class)
                         .spyStatic(ConsentManager.class)
                         .spyStatic(EnrollmentDao.class)
@@ -182,6 +186,9 @@ public class MeasurementServiceTest {
 
             ExtendedMockito.doReturn(mMockMeasurementImpl)
                     .when(() -> MeasurementImpl.getInstance(any()));
+
+            ExtendedMockito.doReturn(mMockAppImportanceFilter)
+                    .when(() -> AppImportanceFilter.create(any(), anyInt(), any()));
 
             ExtendedMockito.doNothing()
                     .when(() -> AggregateReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
