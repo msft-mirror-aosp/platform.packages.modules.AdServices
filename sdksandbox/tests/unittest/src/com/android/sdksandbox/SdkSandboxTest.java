@@ -490,6 +490,58 @@ public class SdkSandboxTest {
     }
 
     @Test
+    public void testLatencyMetrics_unloadSdk_success() throws Exception {
+        final CountDownLatch latch = new CountDownLatch(1);
+        final UnloadSdkCallbackImpl mUnloadSdkCallback = new UnloadSdkCallbackImpl(latch);
+        SANDBOX_LATENCY_INFO.setTimeSandboxReceivedCallFromSystemServer(
+                TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER);
+
+        Mockito.when(mInjector.getCurrentTime())
+                .thenReturn(
+                        // loadSdk mocks
+                        TIME_SANDBOX_CALLED_SDK,
+                        TIME_SDK_CALL_COMPLETED,
+                        TIME_SANDBOX_CALLED_SYSTEM_SERVER,
+                        // unloadSdk mocks
+                        TIME_SANDBOX_CALLED_SDK,
+                        TIME_SDK_CALL_COMPLETED,
+                        TIME_SANDBOX_CALLED_SYSTEM_SERVER);
+
+        IBinder sdkToken = new Binder();
+
+        mService.loadSdk(
+                CLIENT_PACKAGE_NAME,
+                sdkToken,
+                mApplicationInfo,
+                SDK_NAME,
+                SDK_PROVIDER_CLASS,
+                null,
+                null,
+                new Bundle(),
+                new RemoteCode(latch),
+                SANDBOX_LATENCY_INFO,
+                new StubSdkToServiceLink());
+
+        mService.unloadSdk(sdkToken, mUnloadSdkCallback, SANDBOX_LATENCY_INFO);
+
+        final SandboxLatencyInfo sandboxLatencyInfo = mUnloadSdkCallback.mSandboxLatencyInfo;
+
+        assertThat(sandboxLatencyInfo.getSdkLatency())
+                .isEqualTo((int) (TIME_SDK_CALL_COMPLETED - TIME_SANDBOX_CALLED_SDK));
+
+        assertThat(sandboxLatencyInfo.getSandboxLatency())
+                .isEqualTo(
+                        (int)
+                                (TIME_SANDBOX_CALLED_SYSTEM_SERVER
+                                        - TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER
+                                        - (TIME_SDK_CALL_COMPLETED - TIME_SANDBOX_CALLED_SDK)));
+        assertThat(sandboxLatencyInfo.getTimeSandboxCalledSystemServer())
+                .isEqualTo(TIME_SANDBOX_CALLED_SYSTEM_SERVER);
+        assertThat(sandboxLatencyInfo.getTimeSandboxCalledSystemServer())
+                .isEqualTo(TIME_SANDBOX_CALLED_SYSTEM_SERVER);
+    }
+
+    @Test
     public void testLatencyMetrics_requestSurfacePackage_success() throws Exception {
         final CountDownLatch latch = new CountDownLatch(1);
         final RemoteCode mRemoteCode = new RemoteCode(latch);
@@ -585,6 +637,21 @@ public class SdkSandboxTest {
                 LoadSdkException exception, SandboxLatencyInfo sandboxLatencyInfo) {
             mErrorCode = exception.getLoadSdkErrorCode();
             mSuccessful = false;
+            mLatch.countDown();
+        }
+    }
+
+    private static class UnloadSdkCallbackImpl extends IUnloadSdkCallback.Stub {
+        private CountDownLatch mLatch;
+        private SandboxLatencyInfo mSandboxLatencyInfo;
+
+        UnloadSdkCallbackImpl(CountDownLatch latch) {
+            mLatch = latch;
+        }
+
+        @Override
+        public void onUnloadSdk(SandboxLatencyInfo sandboxLatencyInfo) {
+            mSandboxLatencyInfo = sandboxLatencyInfo;
             mLatch.countDown();
         }
     }
