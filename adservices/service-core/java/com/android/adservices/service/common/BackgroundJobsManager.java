@@ -23,6 +23,12 @@ import android.content.Context;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
+import com.android.adservices.service.measurement.DeleteExpiredJobService;
+import com.android.adservices.service.measurement.attribution.AttributionJobService;
+import com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService;
+import com.android.adservices.service.measurement.reporting.AggregateReportingJobService;
+import com.android.adservices.service.measurement.reporting.EventFallbackReportingJobService;
+import com.android.adservices.service.measurement.reporting.EventReportingJobService;
 import com.android.adservices.service.topics.EpochJobService;
 
 import java.util.Objects;
@@ -38,6 +44,15 @@ public class BackgroundJobsManager {
         if (!FlagsFactory.getFlags().getTopicsKillSwitch()) {
             EpochJobService.scheduleIfNeeded(context, false);
             MaintenanceJobService.scheduleIfNeeded(context, false);
+        }
+
+        if (!FlagsFactory.getFlags().getMeasurementKillSwitch()) {
+            AggregateReportingJobService.scheduleIfNeeded(context, false);
+            AggregateFallbackReportingJobService.scheduleIfNeeded(context, false);
+            AttributionJobService.scheduleIfNeeded(context, false);
+            EventReportingJobService.scheduleIfNeeded(context, false);
+            EventFallbackReportingJobService.scheduleIfNeeded(context, false);
+            DeleteExpiredJobService.scheduleIfNeeded(context, false);
         }
     }
 
