@@ -257,6 +257,10 @@ public final class PhFlags implements Flags {
     // App/SDK AllowList/DenyList keys that have access to the web registration APIs
     static final String KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST = "web_context_client_allow_list";
 
+    // Max response payload size allowed per source/trigger registration
+    static final String KEY_MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES =
+            "max_response_based_registration_size_bytes";
+
     // Maximum possible percentage for percentage variables
     static final int MAX_PERCENTAGE = 100;
 
@@ -1467,6 +1471,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public long getMaxResponseBasedRegistrationPayloadSizeBytes() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES,
+                /* defaultValue */ MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES);
+    }
+
+    @Override
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
         writer.println("==== AdServices PH Flags Dump Enrollment ====");
         writer.println(
@@ -1644,6 +1656,16 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER
                         + " = "
                         + getEnforceForegroundStatusForMeasurementRegisterWebTrigger());
+        writer.println(
+                "\t"
+                        + KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST
+                        + " = "
+                        + getWebContextClientAppAllowList());
+        writer.println(
+                "\t"
+                        + KEY_MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES
+                        + " = "
+                        + getMaxResponseBasedRegistrationPayloadSizeBytes());
 
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(
