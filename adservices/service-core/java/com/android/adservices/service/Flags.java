@@ -992,6 +992,10 @@ public interface Flags extends Dumpable {
                     + "com.android.adservices.tests.permissions.appoptout,"
                     + "com.android.adservices.tests.permissions.valid,"
                     + "com.android.tests.sandbox.fledge,"
+                    + "com.android.adservices.tests.adid,"
+                    + "com.android.adservices.tests.appsetid,"
+                    + "com.example.adservices.samples.adid.app,"
+                    + "com.example.adservices.samples.appsetid.app,"
                     + "com.example.adservices.samples.fledge.sampleapp,"
                     + "com.example.adservices.samples.fledge.sampleapp1,"
                     + "com.example.adservices.samples.fledge.sampleapp2,"
@@ -1079,6 +1083,7 @@ public interface Flags extends Dumpable {
         return DISABLE_MEASUREMENT_ENROLLMENT_CHECK;
     }
 
+    boolean ENFORCE_FOREGROUND_STATUS_ADID = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES = true;
@@ -1175,6 +1180,11 @@ public interface Flags extends Dumpable {
     /** @return true if Topics API should require that the calling API is running in foreground. */
     default boolean getEnforceForegroundStatusForTopics() {
         return ENFORCE_FOREGROUND_STATUS_TOPICS;
+    }
+
+    /** @return true if AdId API should require that the calling API is running in foreground. */
+    default boolean getEnforceForegroundStatusForAdId() {
+        return ENFORCE_FOREGROUND_STATUS_ADID;
     }
 
     int FOREGROUND_STATUS_LEVEL = IMPORTANCE_FOREGROUND_SERVICE;
