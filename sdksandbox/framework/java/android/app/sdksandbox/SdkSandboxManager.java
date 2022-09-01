@@ -101,6 +101,14 @@ public final class SdkSandboxManager {
      */
     public static final int LOAD_SDK_SDK_DEFINED_ERROR = 102;
 
+    /**
+     * SDK sandbox is disabled.
+     *
+     * <p>This indicates that the SDK sandbox is disabled. Any subsequent attempts to load SDKs in
+     * this boot will also fail.
+     */
+    public static final int LOAD_SDK_SDK_SANDBOX_DISABLED = 103;
+
     /** Internal error while loading SDK.
      *
      * <p>This indicates a generic internal error happened while applying the call from
@@ -116,6 +124,7 @@ public final class SdkSandboxManager {
                 LOAD_SDK_NOT_FOUND,
                 LOAD_SDK_ALREADY_LOADED,
                 LOAD_SDK_SDK_DEFINED_ERROR,
+                LOAD_SDK_SDK_SANDBOX_DISABLED,
                 LOAD_SDK_INTERNAL_ERROR,
                 SDK_SANDBOX_PROCESS_NOT_AVAILABLE
             })

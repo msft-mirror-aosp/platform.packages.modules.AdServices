@@ -1784,6 +1784,26 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
+    public void testLoadSdkFailsWhenSandboxDisabled() {
+        disableNetworkPermissionChecks();
+        disableForegroundCheck();
+        SdkSandboxManagerService.SdkSandboxSettingsListener listener =
+                mService.getSdkSandboxSettingsListener();
+        listener.reset();
+        listener.onPropertiesChanged(
+                new DeviceConfig.Properties(
+                        DeviceConfig.NAMESPACE_SDK_SANDBOX,
+                        Map.of(PROPERTY_DISABLE_SANDBOX, "true")));
+        FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
+        mService.loadSdk(
+                TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
+        assertThat(callback.isLoadSdkSuccessful()).isFalse();
+        assertThat(callback.getLoadSdkErrorCode())
+                .isEqualTo(SdkSandboxManager.LOAD_SDK_SDK_SANDBOX_DISABLED);
+        assertThat(callback.getLoadSdkErrorMsg()).isEqualTo("SDK sandbox is disabled");
+    }
+
+    @Test
     public void
             testLatencyMetrics_systemServerAppToSandbox_RequestSurfacePackage_sandboxNotLoaded() {
         disableForegroundCheck();
