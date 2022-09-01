@@ -15,6 +15,12 @@
  */
 package com.android.adservices.service.measurement.registration;
 
+import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATABLE_TRIGGER_DATA;
+import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
+import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_EVENT_TRIGGER_DATA;
+import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_FILTERS;
+import static com.android.adservices.service.measurement.SystemHealthParams.MAX_VALUES_PER_ATTRIBUTION_FILTER;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -58,6 +64,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -73,6 +81,9 @@ public final class TriggerFetcherTest {
     private static final String TOP_ORIGIN = "https://baz.com";
     private static final long TRIGGER_DATA = 7;
     private static final long PRIORITY = 1;
+    private static final String LONG_FILTER_STRING = "12345678901234567890123456";
+    private static final String LONG_AGGREGATE_KEY_ID = "12345678901234567890123456";
+    private static final String LONG_AGGREGATE_KEY_PIECE = "0x123456789012345678901234567890123";
     private static final long DEDUP_KEY = 100;
     private static final Long DEBUG_KEY = 34787843L;
 
@@ -154,6 +165,27 @@ public final class TriggerFetcherTest {
         assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
         assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.get(0).getEventTriggers());
         verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testTriggerRequest_eventTriggerData_tooManyEntries() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        StringBuilder tooManyEntries = new StringBuilder("[");
+        for (int i = 0; i < MAX_ATTRIBUTION_EVENT_TRIGGER_DATA + 1; i++) {
+            tooManyEntries.append("{\"trigger_data\": \"2\",\"priority\": \"101\"}");
+        }
+        tooManyEntries.append("]");
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{" + "'event_trigger_data':" + tooManyEntries + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
     }
 
     @Test
@@ -268,7 +300,8 @@ public final class TriggerFetcherTest {
                                 List.of("{" + "'event_trigger_data':" + EVENT_TRIGGERS_1 + "}")));
         Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
         assertFalse(fetch.isPresent());
-        verify(mUrlConnection).setRequestMethod("POST");
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
     }
 
     @Test
@@ -337,6 +370,7 @@ public final class TriggerFetcherTest {
         Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
     }
 
     @Test
@@ -372,14 +406,39 @@ public final class TriggerFetcherTest {
     }
 
     @Test
-    public void testBasicTriggerRequestWithAggregateTriggerData_rejectsTooManyDataKeys()
-            throws Exception {
-        StringBuilder tooManyKeys = new StringBuilder("[");
-        for (int i = 0; i < 51; i++) {
-            tooManyKeys.append(String.format(
+    public void testTriggerRequestWithAggregateTriggerData_invalidJson() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        String aggregatable_trigger_data =
+                "[{\"key_piece\":\"0x400\",\"source_keys\":\"campaignCounts\"],"
+                        + "\"filters\":"
+                        + "{\"conversion_subdomain\":[\"electronics.megastore\"]},"
+                        + "\"not_filters\":{\"product\":[\"1\"]}},"
+                        + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "'aggregatable_trigger_data': "
+                                                + aggregatable_trigger_data
+                                                + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequestWithAggregateTriggerData_tooManyEntries() throws Exception {
+        StringBuilder tooManyEntries = new StringBuilder("[");
+        for (int i = 0; i < MAX_AGGREGATABLE_TRIGGER_DATA + 1; i++) {
+            tooManyEntries.append(String.format(
                     "{\"key_piece\": \"0x15%1$s\",\"source_keys\":[\"campaign-%1$s\"]}", i));
         }
-        tooManyKeys.append("]");
+        tooManyEntries.append("]");
         RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
@@ -390,15 +449,397 @@ public final class TriggerFetcherTest {
                                 List.of(
                                         "{"
                                                 + "'aggregatable_trigger_data': "
-                                                + tooManyKeys
+                                                + tooManyEntries
                                                 + "}")));
         Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
         assertFalse(fetch.isPresent());
-        verify(mUrlConnection).setRequestMethod("POST");
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
     }
 
     @Test
-    public void testBasicTriggerRequestWithAggregateValues() throws Exception {
+    public void testTriggerRequestWithAggregateTriggerData_invalidKeyPiece_missingPrefix()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        String aggregatable_trigger_data =
+                "[{\"key_piece\":\"0400\",\"source_keys\":[\"campaignCounts\"],"
+                        + "\"filters\":"
+                        + "{\"conversion_subdomain\":[\"electronics.megastore\"]},"
+                        + "\"not_filters\":{\"product\":[\"1\"]}},"
+                        + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "'aggregatable_trigger_data': "
+                                                + aggregatable_trigger_data
+                                                + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequestWithAggregateTriggerData_invalidKeyPiece_tooLong()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        String aggregatable_trigger_data =
+                "[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\"],"
+                        + "\"filters\":"
+                        + "{\"conversion_subdomain\":[\"electronics.megastore\"]},"
+                        + "\"not_filters\":{\"product\":[\"1\"]}},"
+                        + "{\"key_piece\":\"" + LONG_AGGREGATE_KEY_PIECE
+                        + "\",\"source_keys\":[\"geoValue\"]}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "'aggregatable_trigger_data': "
+                                                + aggregatable_trigger_data
+                                                + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequestWithAggregateTriggerData_sourceKeys_notAnArray()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        String aggregatable_trigger_data =
+                "[{\"key_piece\":\"0x400\",\"source_keys\":{\"campaignCounts\": true},"
+                        + "\"filters\":"
+                        + "{\"conversion_subdomain\":[\"electronics.megastore\"]},"
+                        + "\"not_filters\":{\"product\":[\"1\"]}},"
+                        + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "'aggregatable_trigger_data': "
+                                                + aggregatable_trigger_data
+                                                + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequestWithAggregateTriggerData_sourceKeys_tooManyKeys()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        StringBuilder tooManyKeys = new StringBuilder("[");
+        tooManyKeys.append(IntStream.range(0, MAX_AGGREGATE_KEYS_PER_REGISTRATION + 1)
+                .mapToObj(i -> "aggregate-key-" + i)
+                .collect(Collectors.joining(",")));
+        tooManyKeys.append("]");
+        String aggregatable_trigger_data =
+                "[{\"key_piece\":\"0x400\",\"source_keys\": " + tooManyKeys + ","
+                        + "\"filters\":"
+                        + "{\"conversion_subdomain\":[\"electronics.megastore\"]},"
+                        + "\"not_filters\":{\"product\":[\"1\"]}},"
+                        + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "'aggregatable_trigger_data': "
+                                                + aggregatable_trigger_data
+                                                + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequestWithAggregateTriggerData_sourceKeys_invalidKeyId()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        String aggregatable_trigger_data =
+                "[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\", \""
+                        + LONG_AGGREGATE_KEY_ID + "\"],"
+                        + "\"filters\":"
+                        + "{\"conversion_subdomain\":[\"electronics.megastore\"]},"
+                        + "\"not_filters\":{\"product\":[\"1\"]}},"
+                        + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "'aggregatable_trigger_data': "
+                                                + aggregatable_trigger_data
+                                                + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequestWithAggregateTriggerData_filters_tooManyFilters()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        StringBuilder filters = new StringBuilder("{");
+        filters.append(IntStream.range(0, MAX_ATTRIBUTION_FILTERS + 1)
+                .mapToObj(i -> "\"filter-string-" + i + "\": [\"filter-value\"]")
+                .collect(Collectors.joining(",")));
+        filters.append("}");
+        String aggregatable_trigger_data =
+                "[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\"],"
+                        + "\"filters\": " + filters + ","
+                        + "\"not_filters\":{\"product\":[\"1\"]}},"
+                        + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "'aggregatable_trigger_data': "
+                                                + aggregatable_trigger_data
+                                                + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequestWithAggregateTriggerData_filters_keyTooLong() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        String filters =
+                "{\"product\":[\"1234\",\"2345\"], \"" + LONG_FILTER_STRING + "\":[\"id\"]}";
+        String aggregatable_trigger_data =
+                "[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\"],"
+                        + "\"filters\": " + filters + ","
+                        + "\"not_filters\":{\"product\":[\"1\"]}},"
+                        + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "'aggregatable_trigger_data': "
+                                                + aggregatable_trigger_data
+                                                + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequestWithAggregateTriggerData_filters_tooManyValues()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        StringBuilder filters = new StringBuilder("{"
+                + "\"filter-string-1\": [\"filter-value-1\"],"
+                + "\"filter-string-2\": [");
+        filters.append(IntStream.range(0, MAX_VALUES_PER_ATTRIBUTION_FILTER + 1)
+                .mapToObj(i -> "\"filter-value-" + i + "\"")
+                .collect(Collectors.joining(",")));
+        filters.append("]}");
+        String aggregatable_trigger_data =
+                "[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\"],"
+                        + "\"filters\": " + filters + ","
+                        + "\"not_filters\":{\"product\":[\"1\"]}},"
+                        + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "'aggregatable_trigger_data': "
+                                                + aggregatable_trigger_data
+                                                + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequestWithAggregateTriggerData_filters_valueTooLong()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        String filters =
+                "{\"product\":[\"1234\",\"" + LONG_FILTER_STRING + "\"], \"ctid\":[\"id\"]}";
+        String aggregatable_trigger_data =
+                "[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\"],"
+                        + "\"filters\": " + filters + ","
+                        + "\"not_filters\":{\"product\":[\"1\"]}},"
+                        + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "'aggregatable_trigger_data': "
+                                                + aggregatable_trigger_data
+                                                + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequestWithAggregateTriggerData_notFilters_tooManyFilters()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        StringBuilder filters = new StringBuilder("{");
+        filters.append(IntStream.range(0, MAX_ATTRIBUTION_FILTERS + 1)
+                .mapToObj(i -> "\"filter-string-" + i + "\": [\"filter-value\"]")
+                .collect(Collectors.joining(",")));
+        filters.append("}");
+        String aggregatable_trigger_data =
+                "[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\"],"
+                        + "\"not_filters\": " + filters + ","
+                        + "\"filters\":{\"product\":[\"1\"]}},"
+                        + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "'aggregatable_trigger_data': "
+                                                + aggregatable_trigger_data
+                                                + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequestWithAggregateTriggerData_notFilters_keyTooLong()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        String filters =
+                "{\"product\":[\"1234\",\"2345\"], \"" + LONG_FILTER_STRING + "\":[\"id\"]}";
+        String aggregatable_trigger_data =
+                "[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\"],"
+                        + "\"not_filters\": " + filters + ","
+                        + "\"filters\":{\"product\":[\"1\"]}},"
+                        + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "'aggregatable_trigger_data': "
+                                                + aggregatable_trigger_data
+                                                + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequestWithAggregateTriggerData_notFilters_tooManyValues()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        StringBuilder filters = new StringBuilder("{"
+                + "\"filter-string-1\": [\"filter-value-1\"],"
+                + "\"filter-string-2\": [");
+        filters.append(IntStream.range(0, MAX_VALUES_PER_ATTRIBUTION_FILTER + 1)
+                .mapToObj(i -> "\"filter-value-" + i + "\"")
+                .collect(Collectors.joining(",")));
+        filters.append("]}");
+        String aggregatable_trigger_data =
+                "[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\"],"
+                        + "\"not_filters\": " + filters + ","
+                        + "\"filters\":{\"product\":[\"1\"]}},"
+                        + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "'aggregatable_trigger_data': "
+                                                + aggregatable_trigger_data
+                                                + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequestWithAggregateTriggerData_notFilters_valueTooLong()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        String filters =
+                "{\"product\":[\"1234\",\"" + LONG_FILTER_STRING + "\"], \"ctid\":[\"id\"]}";
+        String aggregatable_trigger_data =
+                "[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\"],"
+                        + "\"not_filters\": " + filters + ","
+                        + "\"filters\":{\"product\":[\"1\"]}},"
+                        + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "'aggregatable_trigger_data': "
+                                                + aggregatable_trigger_data
+                                                + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testBasicTriggerRequestWithAggregatableValues() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
         String aggregatable_values = "{\"campaignCounts\":32768,\"geoValue\":1644}";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
@@ -424,14 +865,33 @@ public final class TriggerFetcherTest {
     }
 
     @Test
-    public void testBasicTriggerRequestWithAggregateTriggerData_rejectsTooManyValueKeys()
-            throws Exception {
+    public void testTriggerRequestWithAggregatableValues_invalidJson() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        String aggregatable_values = "{\"campaignCounts\":32768\"geoValue\":1644}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "'aggregatable_values': "
+                                                + aggregatable_values
+                                                + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequestWithAggregatableValues_tooManyKeys() throws Exception {
         StringBuilder tooManyKeys = new StringBuilder("{");
-        int i = 0;
-        for (; i < 50; i++) {
-            tooManyKeys.append(String.format("\"key-%s\": 12345,", i));
-        }
-        tooManyKeys.append(String.format("\"key-%s\": 12345}", i));
+        tooManyKeys.append(IntStream.range(0, MAX_AGGREGATE_KEYS_PER_REGISTRATION + 1)
+                .mapToObj(i -> String.format("\"key-%s\": 12345,", i))
+                .collect(Collectors.joining(",")));
+        tooManyKeys.append("}");
         RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
@@ -442,7 +902,30 @@ public final class TriggerFetcherTest {
                                 List.of("{" + "'aggregatable_values': " + tooManyKeys + "}")));
         Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
         assertFalse(fetch.isPresent());
-        verify(mUrlConnection).setRequestMethod("POST");
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequestWithAggregatableValues_invalidKeyId() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        String aggregatable_values = "{\"campaignCounts\":32768, \"" + LONG_AGGREGATE_KEY_ID
+                + "\":1644}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "'aggregatable_values': "
+                                                + aggregatable_values
+                                                + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
     }
 
     @Test
@@ -616,7 +1099,7 @@ public final class TriggerFetcherTest {
         List<TriggerRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals(expectedResult, result.get(0));
-        verify(mUrlConnection).setRequestMethod("POST");
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
     }
 

@@ -15,7 +15,9 @@
  */
 package com.android.adservices.service.measurement.registration;
 
-import static com.android.adservices.service.measurement.PrivacyParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
+import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATABLE_TRIGGER_DATA;
+import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
+import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_EVENT_TRIGGER_DATA;
 
 import android.adservices.measurement.RegistrationRequest;
 import android.adservices.measurement.WebTriggerParams;
@@ -41,6 +43,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -89,6 +92,10 @@ public class TriggerFetcher {
         try {
             JSONObject json = new JSONObject(field.get(0));
             if (!json.isNull(TriggerHeaderContract.EVENT_TRIGGER_DATA)) {
+                if (!isValidEventTriggerData(
+                        json.getJSONArray(TriggerHeaderContract.EVENT_TRIGGER_DATA))) {
+                    return false;
+                }
                 result.setEventTriggers(json.getString(TriggerHeaderContract.EVENT_TRIGGER_DATA));
             }
             if (!json.isNull(TriggerHeaderContract.AGGREGATABLE_TRIGGER_DATA)) {
@@ -174,8 +181,8 @@ public class TriggerFetcher {
             int responseCode = urlConnection.getResponseCode();
             LogUtil.d("Response code = " + responseCode);
 
-            if (!ResponseBasedFetcher.isRedirect(responseCode)
-                    && !ResponseBasedFetcher.isSuccess(responseCode)) {
+            if (!FetcherUtil.isRedirect(responseCode)
+                    && !FetcherUtil.isSuccess(responseCode)) {
                 return;
             }
 
@@ -193,7 +200,7 @@ public class TriggerFetcher {
             }
 
             if (shouldProcessRedirects) {
-                List<Uri> redirects = ResponseBasedFetcher.parseRedirects(headers);
+                List<Uri> redirects = FetcherUtil.parseRedirects(headers);
                 for (Uri redirect : redirects) {
                     fetchTrigger(
                             topOrigin,
@@ -279,21 +286,65 @@ public class TriggerFetcher {
                 mIoExecutor);
     }
 
-    private boolean isValidAggregateTriggerData(JSONArray aggregateTriggerData) {
-        if (aggregateTriggerData.length() > MAX_AGGREGATE_KEYS_PER_REGISTRATION) {
-            LogUtil.d(
-                    "Aggregate trigger data has more keys than permitted. %s",
-                    aggregateTriggerData.length());
+    private boolean isValidEventTriggerData(JSONArray eventTriggerDataArr) {
+        return eventTriggerDataArr.length() <= MAX_ATTRIBUTION_EVENT_TRIGGER_DATA;
+    }
+
+    private boolean isValidAggregateTriggerData(JSONArray aggregateTriggerDataArr)
+            throws JSONException {
+        if (aggregateTriggerDataArr.length() > MAX_AGGREGATABLE_TRIGGER_DATA) {
+            LogUtil.d("Aggregate trigger data list has more entries than permitted. %s",
+                    aggregateTriggerDataArr.length());
             return false;
+        }
+        for (int i = 0; i < aggregateTriggerDataArr.length(); i++) {
+            JSONObject aggregateTriggerData = aggregateTriggerDataArr.getJSONObject(i);
+            String keyPiece = aggregateTriggerData.optString("key_piece");
+            if (!FetcherUtil.isValidAggregateKeyPiece(keyPiece)) {
+                LogUtil.d("Aggregate trigger data key-piece is invalid. %s", keyPiece);
+                return false;
+            }
+            JSONArray sourceKeys = aggregateTriggerData.optJSONArray("source_keys");
+            if (sourceKeys == null || sourceKeys.length() > MAX_AGGREGATE_KEYS_PER_REGISTRATION) {
+                LogUtil.d("Aggregate trigger data source-keys list failed to parse or has more"
+                        + " entries than permitted.");
+                return false;
+            }
+            for (int j = 0; j < sourceKeys.length(); j++) {
+                String key = sourceKeys.optString(j);
+                if (!FetcherUtil.isValidAggregateKeyId(key)) {
+                    LogUtil.d("Aggregate trigger data source-key is invalid. %s", key);
+                    return false;
+                }
+            }
+            if (!aggregateTriggerData.isNull("filters") && !FetcherUtil.areValidAttributionFilters(
+                    aggregateTriggerData.optJSONObject("filters"))) {
+                LogUtil.d("Aggregate trigger data filters are invalid.");
+                return false;
+            }
+            if (!aggregateTriggerData.isNull("not_filters")
+                    && !FetcherUtil.areValidAttributionFilters(
+                            aggregateTriggerData.optJSONObject("not_filters"))) {
+                LogUtil.d("Aggregate trigger data not-filters are invalid.");
+                return false;
+            }
         }
         return true;
     }
 
     private boolean isValidAggregateValues(JSONObject aggregateValues) {
         if (aggregateValues.length() > MAX_AGGREGATE_KEYS_PER_REGISTRATION) {
-            LogUtil.d(
-                    "Aggregate values have more keys than permitted. %s", aggregateValues.length());
+            LogUtil.d("Aggregate values have more keys than permitted. %s",
+                    aggregateValues.length());
             return false;
+        }
+        Iterator<String> ids = aggregateValues.keys();
+        while (ids.hasNext()) {
+            String id = ids.next();
+            if (!FetcherUtil.isValidAggregateKeyId(id)) {
+                LogUtil.d("Aggregate values key ID is invalid. %s", id);
+                return false;
+            }
         }
         return true;
     }
