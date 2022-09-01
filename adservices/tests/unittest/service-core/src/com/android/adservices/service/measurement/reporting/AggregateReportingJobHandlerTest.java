@@ -71,6 +71,10 @@ public class AggregateReportingJobHandlerTest {
 
     private static final String CLEARTEXT_PAYLOAD =
             "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1,\"value\":2}]}";
+
+    private static final Long SOURCE_DEBUG_KEY = 237865L;
+    private static final Long TRIGGER_DEBUG_KEY = 928762L;
+
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     DatastoreManager mDatastoreManager;
 
@@ -124,6 +128,120 @@ public class AggregateReportingJobHandlerTest {
                         .setId("aggregateReportId")
                         .setStatus(AggregateReport.Status.PENDING)
                         .setEnrollmentId(ENROLLMENT_ID)
+                        .setSourceDebugKey(SOURCE_DEBUG_KEY)
+                        .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                        .build();
+        JSONObject aggregateReportBody =
+                new AggregateReportBody.Builder()
+                        .setReportId(aggregateReport.getId())
+                        .setDebugCleartextPayload(CLEARTEXT_PAYLOAD)
+                        .build()
+                        .toJson(AggregateCryptoFixture.getKey());
+
+        when(mMeasurementDao.getAggregateReport(aggregateReport.getId()))
+                .thenReturn(aggregateReport);
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyAggregateReportingJobHandler)
+                .makeHttpPostRequest(Mockito.any(), Mockito.any());
+        doReturn(aggregateReportBody)
+                .when(mSpyAggregateReportingJobHandler)
+                .createReportJsonPayload(Mockito.any(), Mockito.any(), Mockito.any());
+
+        doNothing().when(mMeasurementDao).markAggregateReportDelivered(aggregateReport.getId());
+        Assert.assertEquals(
+                AdServicesStatusUtils.STATUS_SUCCESS,
+                mSpyAggregateReportingJobHandler.performReport(
+                        aggregateReport.getId(), AggregateCryptoFixture.getKey()));
+
+        verify(mMeasurementDao, times(1)).markAggregateReportDelivered(any());
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+    }
+
+    @Test
+    public void testSendReportForPendingReportSuccessSingleTriggerDebugKey()
+            throws DatastoreException, IOException, JSONException {
+        AggregateReport aggregateReport =
+                new AggregateReport.Builder()
+                        .setId("aggregateReportId")
+                        .setStatus(AggregateReport.Status.PENDING)
+                        .setEnrollmentId(ENROLLMENT_ID)
+                        .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                        .build();
+        JSONObject aggregateReportBody =
+                new AggregateReportBody.Builder()
+                        .setReportId(aggregateReport.getId())
+                        .setDebugCleartextPayload(CLEARTEXT_PAYLOAD)
+                        .build()
+                        .toJson(AggregateCryptoFixture.getKey());
+
+        when(mMeasurementDao.getAggregateReport(aggregateReport.getId()))
+                .thenReturn(aggregateReport);
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyAggregateReportingJobHandler)
+                .makeHttpPostRequest(Mockito.any(), Mockito.any());
+        doReturn(aggregateReportBody)
+                .when(mSpyAggregateReportingJobHandler)
+                .createReportJsonPayload(Mockito.any(), Mockito.any(), Mockito.any());
+
+        doNothing().when(mMeasurementDao).markAggregateReportDelivered(aggregateReport.getId());
+        Assert.assertEquals(
+                AdServicesStatusUtils.STATUS_SUCCESS,
+                mSpyAggregateReportingJobHandler.performReport(
+                        aggregateReport.getId(), AggregateCryptoFixture.getKey()));
+
+        verify(mMeasurementDao, times(1)).markAggregateReportDelivered(any());
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+    }
+
+    @Test
+    public void testSendReportForPendingReportSuccessSingleSourceDebugKey()
+            throws DatastoreException, IOException, JSONException {
+        AggregateReport aggregateReport =
+                new AggregateReport.Builder()
+                        .setId("aggregateReportId")
+                        .setStatus(AggregateReport.Status.PENDING)
+                        .setEnrollmentId(ENROLLMENT_ID)
+                        .setSourceDebugKey(SOURCE_DEBUG_KEY)
+                        .build();
+        JSONObject aggregateReportBody =
+                new AggregateReportBody.Builder()
+                        .setReportId(aggregateReport.getId())
+                        .setDebugCleartextPayload(CLEARTEXT_PAYLOAD)
+                        .build()
+                        .toJson(AggregateCryptoFixture.getKey());
+
+        when(mMeasurementDao.getAggregateReport(aggregateReport.getId()))
+                .thenReturn(aggregateReport);
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyAggregateReportingJobHandler)
+                .makeHttpPostRequest(Mockito.any(), Mockito.any());
+        doReturn(aggregateReportBody)
+                .when(mSpyAggregateReportingJobHandler)
+                .createReportJsonPayload(Mockito.any(), Mockito.any(), Mockito.any());
+
+        doNothing().when(mMeasurementDao).markAggregateReportDelivered(aggregateReport.getId());
+        Assert.assertEquals(
+                AdServicesStatusUtils.STATUS_SUCCESS,
+                mSpyAggregateReportingJobHandler.performReport(
+                        aggregateReport.getId(), AggregateCryptoFixture.getKey()));
+
+        verify(mMeasurementDao, times(1)).markAggregateReportDelivered(any());
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+    }
+
+    @Test
+    public void testSendReportForPendingReportSuccessNullDebugKeys()
+            throws DatastoreException, IOException, JSONException {
+        AggregateReport aggregateReport =
+                new AggregateReport.Builder()
+                        .setId("aggregateReportId")
+                        .setStatus(AggregateReport.Status.PENDING)
+                        .setEnrollmentId(ENROLLMENT_ID)
+                        .setSourceDebugKey(null)
+                        .setTriggerDebugKey(null)
                         .build();
         JSONObject aggregateReportBody =
                 new AggregateReportBody.Builder()
