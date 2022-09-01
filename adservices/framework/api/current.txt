@@ -177,9 +177,9 @@ package android.adservices.customaudience {
     method public int describeContents();
     method @Nullable public java.time.Instant getActivationTime();
     method @NonNull public java.util.List<android.adservices.common.AdData> getAds();
-    method @NonNull public android.net.Uri getBiddingLogicUrl();
+    method @NonNull public android.net.Uri getBiddingLogicUri();
     method @NonNull public android.adservices.common.AdTechIdentifier getBuyer();
-    method @NonNull public android.net.Uri getDailyUpdateUrl();
+    method @NonNull public android.net.Uri getDailyUpdateUri();
     method @Nullable public java.time.Instant getExpirationTime();
     method @NonNull public String getName();
     method @Nullable public android.adservices.customaudience.TrustedBiddingData getTrustedBiddingData();
@@ -193,9 +193,9 @@ package android.adservices.customaudience {
     method @NonNull public android.adservices.customaudience.CustomAudience build();
     method @NonNull public android.adservices.customaudience.CustomAudience.Builder setActivationTime(@Nullable java.time.Instant);
     method @NonNull public android.adservices.customaudience.CustomAudience.Builder setAds(@Nullable java.util.List<android.adservices.common.AdData>);
-    method @NonNull public android.adservices.customaudience.CustomAudience.Builder setBiddingLogicUrl(@NonNull android.net.Uri);
+    method @NonNull public android.adservices.customaudience.CustomAudience.Builder setBiddingLogicUri(@NonNull android.net.Uri);
     method @NonNull public android.adservices.customaudience.CustomAudience.Builder setBuyer(@NonNull android.adservices.common.AdTechIdentifier);
-    method @NonNull public android.adservices.customaudience.CustomAudience.Builder setDailyUpdateUrl(@NonNull android.net.Uri);
+    method @NonNull public android.adservices.customaudience.CustomAudience.Builder setDailyUpdateUri(@NonNull android.net.Uri);
     method @NonNull public android.adservices.customaudience.CustomAudience.Builder setExpirationTime(@Nullable java.time.Instant);
     method @NonNull public android.adservices.customaudience.CustomAudience.Builder setName(@NonNull String);
     method @NonNull public android.adservices.customaudience.CustomAudience.Builder setTrustedBiddingData(@Nullable android.adservices.customaudience.TrustedBiddingData);
@@ -252,7 +252,7 @@ package android.adservices.customaudience {
   public final class TrustedBiddingData implements android.os.Parcelable {
     method public int describeContents();
     method @NonNull public java.util.List<java.lang.String> getTrustedBiddingKeys();
-    method @NonNull public android.net.Uri getTrustedBiddingUrl();
+    method @NonNull public android.net.Uri getTrustedBiddingUri();
     method public void writeToParcel(@NonNull android.os.Parcel, int);
     field @NonNull public static final android.os.Parcelable.Creator<android.adservices.customaudience.TrustedBiddingData> CREATOR;
   }
@@ -261,7 +261,7 @@ package android.adservices.customaudience {
     ctor public TrustedBiddingData.Builder();
     method @NonNull public android.adservices.customaudience.TrustedBiddingData build();
     method @NonNull public android.adservices.customaudience.TrustedBiddingData.Builder setTrustedBiddingKeys(@NonNull java.util.List<java.lang.String>);
-    method @NonNull public android.adservices.customaudience.TrustedBiddingData.Builder setTrustedBiddingUrl(@NonNull android.net.Uri);
+    method @NonNull public android.adservices.customaudience.TrustedBiddingData.Builder setTrustedBiddingUri(@NonNull android.net.Uri);
   }
 
 }
