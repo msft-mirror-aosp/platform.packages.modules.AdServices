@@ -129,7 +129,7 @@ public class CustomAudienceImpl {
 
         LogUtil.v("Inserting CA in the DB");
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dbCustomAudience, customAudience.getDailyUpdateUrl());
+                dbCustomAudience, customAudience.getDailyUpdateUri());
     }
 
     /** Delete a custom audience with given key. No-op if not exist. */

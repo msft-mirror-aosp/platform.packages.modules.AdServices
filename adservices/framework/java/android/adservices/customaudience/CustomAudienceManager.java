@@ -120,7 +120,7 @@ public class CustomAudienceManager {
      *
      * <ol>
      *   <li>the storage limit has been exceeded by the calling application and/or
-     *   <li>any URL parameters in the {@link CustomAudience} given are not authenticated with the
+     *   <li>any URI parameters in the {@link CustomAudience} given are not authenticated with the
      *       {@link CustomAudience} buyer.
      * </ol>
      *
