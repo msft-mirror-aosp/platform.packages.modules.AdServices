@@ -30,8 +30,11 @@ import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallback;
-import android.app.sdksandbox.testutils.FakeSdkSandboxLifecycleCallback;
+import android.app.sdksandbox.testutils.FakeSdkSandboxProcessDeathCallback;
 import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PermissionInfo;
 import android.os.Binder;
 import android.os.Bundle;
 
@@ -39,6 +42,8 @@ import androidx.lifecycle.Lifecycle;
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.platform.app.InstrumentationRegistry;
+
+import com.google.common.truth.Expect;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -54,7 +59,11 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class SdkSandboxManagerTest {
 
-    @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(TestActivity.class);
+    @Rule
+    public final ActivityScenarioRule<TestActivity> mRule =
+            new ActivityScenarioRule<>(TestActivity.class);
+
+    @Rule public final Expect mExpect = Expect.create();
 
     private ActivityScenario<TestActivity> mScenario;
 
@@ -194,8 +203,8 @@ public class SdkSandboxManagerTest {
 
         // Killing the sandbox and loading the same SDKs again multiple times should work
         for (int i = 0; i < 3; ++i) {
-            FakeSdkSandboxLifecycleCallback callback = new FakeSdkSandboxLifecycleCallback();
-            mSdkSandboxManager.addSdkSandboxLifecycleCallback(Runnable::run, callback);
+            FakeSdkSandboxProcessDeathCallback callback = new FakeSdkSandboxProcessDeathCallback();
+            mSdkSandboxManager.addSdkSandboxProcessDeathCallback(Runnable::run, callback);
 
             // The same SDKs should be able to be loaded again after sandbox death
             loadMultipleSdks();
@@ -206,13 +215,14 @@ public class SdkSandboxManagerTest {
     }
 
     @Test
-    public void testAddSdkSandboxLifecycleCallback_BeforeStartingSandbox() throws Exception {
+    public void testAddSdkSandboxProcessDeathCallback_BeforeStartingSandbox() throws Exception {
         // Kill the sandbox if it already exists from previous tests
         killSandboxIfExists();
 
         // Add a sandbox lifecycle callback before starting the sandbox
-        FakeSdkSandboxLifecycleCallback lifecycleCallback = new FakeSdkSandboxLifecycleCallback();
-        mSdkSandboxManager.addSdkSandboxLifecycleCallback(Runnable::run, lifecycleCallback);
+        FakeSdkSandboxProcessDeathCallback lifecycleCallback =
+                new FakeSdkSandboxProcessDeathCallback();
+        mSdkSandboxManager.addSdkSandboxProcessDeathCallback(Runnable::run, lifecycleCallback);
 
         // Bring up the sandbox
         final String sdkName = "com.android.loadSdkSuccessfullySdkProvider";
@@ -225,7 +235,7 @@ public class SdkSandboxManagerTest {
     }
 
     @Test
-    public void testAddSdkSandboxLifecycleCallback_AfterStartingSandbox() throws Exception {
+    public void testAddSdkSandboxProcessDeathCallback_AfterStartingSandbox() throws Exception {
         // Bring up the sandbox
         final String sdkName = "com.android.loadSdkSuccessfullySdkProvider";
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
@@ -233,21 +243,23 @@ public class SdkSandboxManagerTest {
         assertThat(callback.isLoadSdkSuccessful(/*ignoreSdkAlreadyLoadedError=*/ true)).isTrue();
 
         // Add a sandbox lifecycle callback before starting the sandbox
-        FakeSdkSandboxLifecycleCallback lifecycleCallback = new FakeSdkSandboxLifecycleCallback();
-        mSdkSandboxManager.addSdkSandboxLifecycleCallback(Runnable::run, lifecycleCallback);
+        FakeSdkSandboxProcessDeathCallback lifecycleCallback =
+                new FakeSdkSandboxProcessDeathCallback();
+        mSdkSandboxManager.addSdkSandboxProcessDeathCallback(Runnable::run, lifecycleCallback);
 
         killSandbox();
         assertThat(lifecycleCallback.isSdkSandboxDeathDetected()).isTrue();
     }
 
     @Test
-    public void testRegisterMultipleSdkSandboxLifecycleCallbacks() throws Exception {
+    public void testRegisterMultipleSdkSandboxProcessDeathCallbacks() throws Exception {
         // Kill the sandbox if it already exists from previous tests
         killSandboxIfExists();
 
         // Add a sandbox lifecycle callback before starting the sandbox
-        FakeSdkSandboxLifecycleCallback lifecycleCallback1 = new FakeSdkSandboxLifecycleCallback();
-        mSdkSandboxManager.addSdkSandboxLifecycleCallback(Runnable::run, lifecycleCallback1);
+        FakeSdkSandboxProcessDeathCallback lifecycleCallback1 =
+                new FakeSdkSandboxProcessDeathCallback();
+        mSdkSandboxManager.addSdkSandboxProcessDeathCallback(Runnable::run, lifecycleCallback1);
 
         // Bring up the sandbox
         final String sdkName = "com.android.loadSdkSuccessfullySdkProvider";
@@ -256,8 +268,9 @@ public class SdkSandboxManagerTest {
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
 
         // Add another sandbox lifecycle callback after starting it
-        FakeSdkSandboxLifecycleCallback lifecycleCallback2 = new FakeSdkSandboxLifecycleCallback();
-        mSdkSandboxManager.addSdkSandboxLifecycleCallback(Runnable::run, lifecycleCallback2);
+        FakeSdkSandboxProcessDeathCallback lifecycleCallback2 =
+                new FakeSdkSandboxProcessDeathCallback();
+        mSdkSandboxManager.addSdkSandboxProcessDeathCallback(Runnable::run, lifecycleCallback2);
 
         killSandbox();
         assertThat(lifecycleCallback1.isSdkSandboxDeathDetected()).isTrue();
@@ -265,7 +278,7 @@ public class SdkSandboxManagerTest {
     }
 
     @Test
-    public void testRemoveSdkSandboxLifecycleCallback() throws Exception {
+    public void testRemoveSdkSandboxProcessDeathCallback() throws Exception {
         // Bring up the sandbox
         final String sdkName = "com.android.loadSdkSuccessfullySdkProvider";
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
@@ -273,13 +286,15 @@ public class SdkSandboxManagerTest {
         assertThat(callback.isLoadSdkSuccessful(/*ignoreSdkAlreadyLoadedError=*/ true)).isTrue();
 
         // Add and remove a sandbox lifecycle callback
-        FakeSdkSandboxLifecycleCallback lifecycleCallback1 = new FakeSdkSandboxLifecycleCallback();
-        mSdkSandboxManager.addSdkSandboxLifecycleCallback(Runnable::run, lifecycleCallback1);
-        mSdkSandboxManager.removeSdkSandboxLifecycleCallback(lifecycleCallback1);
+        FakeSdkSandboxProcessDeathCallback lifecycleCallback1 =
+                new FakeSdkSandboxProcessDeathCallback();
+        mSdkSandboxManager.addSdkSandboxProcessDeathCallback(Runnable::run, lifecycleCallback1);
+        mSdkSandboxManager.removeSdkSandboxProcessDeathCallback(lifecycleCallback1);
 
         // Add a lifecycle callback but don't remove it
-        FakeSdkSandboxLifecycleCallback lifecycleCallback2 = new FakeSdkSandboxLifecycleCallback();
-        mSdkSandboxManager.addSdkSandboxLifecycleCallback(Runnable::run, lifecycleCallback2);
+        FakeSdkSandboxProcessDeathCallback lifecycleCallback2 =
+                new FakeSdkSandboxProcessDeathCallback();
+        mSdkSandboxManager.addSdkSandboxProcessDeathCallback(Runnable::run, lifecycleCallback2);
 
         killSandbox();
         assertThat(lifecycleCallback1.isSdkSandboxDeathDetected()).isFalse();
@@ -375,8 +390,8 @@ public class SdkSandboxManagerTest {
 
     // Returns true if the sandbox was already likely existing, false otherwise.
     private boolean killSandboxIfExists() throws Exception {
-        FakeSdkSandboxLifecycleCallback callback = new FakeSdkSandboxLifecycleCallback();
-        mSdkSandboxManager.addSdkSandboxLifecycleCallback(Runnable::run, callback);
+        FakeSdkSandboxProcessDeathCallback callback = new FakeSdkSandboxProcessDeathCallback();
+        mSdkSandboxManager.addSdkSandboxProcessDeathCallback(Runnable::run, callback);
         killSandbox();
 
         return callback.isSdkSandboxDeathDetected();
@@ -405,5 +420,23 @@ public class SdkSandboxManagerTest {
                                         sdkName, new Bundle(), Runnable::run, callback));
         assertThat(thrown).hasMessageThat().contains("does not run in the foreground");
     }
-}
 
+    /** Checks that {@code SdkSandbox.apk} only requests normal permissions in its manifest. */
+    // TODO: This should probably be a separate test module
+    @Test
+    public void testSdkSandboxPermissions() throws Exception {
+        final PackageManager pm =
+                InstrumentationRegistry.getInstrumentation().getContext().getPackageManager();
+        final PackageInfo sdkSandboxPackage =
+                pm.getPackageInfo(
+                        pm.getSdkSandboxPackageName(),
+                        PackageManager.PackageInfoFlags.of(PackageManager.GET_PERMISSIONS));
+        for (int i = 0; i < sdkSandboxPackage.requestedPermissions.length; i++) {
+            final String permissionName = sdkSandboxPackage.requestedPermissions[i];
+            final PermissionInfo permissionInfo = pm.getPermissionInfo(permissionName, 0);
+            mExpect.withMessage("SdkSandbox.apk requests non-normal permission " + permissionName)
+                    .that(permissionInfo.getProtection())
+                    .isEqualTo(PermissionInfo.PROTECTION_NORMAL);
+        }
+    }
+}

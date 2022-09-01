@@ -46,6 +46,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -403,19 +404,26 @@ class MeasurementDao implements IMeasurementDao {
     public List<String> getPendingEventReportIdsForGivenApp(Uri appName)
             throws DatastoreException {
         List<String> eventReports = new ArrayList<>();
-        try (Cursor cursor = mSQLTransaction.getDatabase().rawQuery(
-                String.format("SELECT e.%1$s FROM %2$s e "
-                                + "INNER JOIN %3$s s ON (e.%4$s = s.%5$s) "
-                                + "WHERE e.%6$s = ? AND s.%7$s = ?",
-                        MeasurementTables.EventReportContract.ID,
-                        MeasurementTables.EventReportContract.TABLE,
-                        MeasurementTables.SourceContract.TABLE,
-                        MeasurementTables.EventReportContract.SOURCE_ID,
-                        MeasurementTables.SourceContract.EVENT_ID,
-                        MeasurementTables.EventReportContract.STATUS,
-                        MeasurementTables.SourceContract.REGISTRANT),
-                new String[]{String.valueOf(EventReport.Status.PENDING),
-                        String.valueOf(appName)})) {
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .rawQuery(
+                                String.format(
+                                        Locale.ENGLISH,
+                                        "SELECT e.%1$s FROM %2$s e "
+                                                + "INNER JOIN %3$s s ON (e.%4$s = s.%5$s) "
+                                                + "WHERE e.%6$s = ? AND s.%7$s = ?",
+                                        MeasurementTables.EventReportContract.ID,
+                                        MeasurementTables.EventReportContract.TABLE,
+                                        MeasurementTables.SourceContract.TABLE,
+                                        MeasurementTables.EventReportContract.SOURCE_ID,
+                                        MeasurementTables.SourceContract.EVENT_ID,
+                                        MeasurementTables.EventReportContract.STATUS,
+                                        MeasurementTables.SourceContract.REGISTRANT),
+                                new String[] {
+                                    String.valueOf(EventReport.Status.PENDING),
+                                    String.valueOf(appName)
+                                })) {
             while (cursor.moveToNext()) {
                 eventReports.add(cursor.getString(cursor.getColumnIndex(
                         MeasurementTables.EventReportContract.ID)));
@@ -514,11 +522,14 @@ class MeasurementDao implements IMeasurementDao {
                 extractBaseUri(trigger.getAttributionDestination(), trigger.getDestinationType());
 
         if (!publisherBaseUri.isPresent() || !destinationBaseUri.isPresent()) {
-            throw new IllegalArgumentException(String.format(
-                    "getAttributionsPerRateLimitWindow: getSourceAndDestinationTopPrivateDomains "
-                    + "failed. Publisher: %s; Attribution destination: %s",
-                    source.getPublisher().toString(),
-                    trigger.getAttributionDestination().toString()));
+            throw new IllegalArgumentException(
+                    String.format(
+                            Locale.ENGLISH,
+                            "getAttributionsPerRateLimitWindow:"
+                                    + " getSourceAndDestinationTopPrivateDomains failed. Publisher:"
+                                    + " %s; Attribution destination: %s",
+                            source.getPublisher().toString(),
+                            trigger.getAttributionDestination().toString()));
         }
 
         String publisherTopPrivateDomain = publisherBaseUri.get().toString();
@@ -568,24 +579,28 @@ class MeasurementDao implements IMeasurementDao {
     public Integer countDistinctEnrollmentsPerPublisherXDestinationInAttribution(Uri sourceSite,
             Uri destinationSite, String excludedEnrollmentId, long windowStartTime,
             long windowEndTime) throws DatastoreException {
-        String query = String.format(
-                "SELECT COUNT(DISTINCT %1$s) FROM %2$s "
-                + "WHERE %3$s = ? AND %4$s = ? AND %1s != ? "
-                + "AND %5$s < ? AND %5$s >= ?",
-                MeasurementTables.AttributionContract.ENROLLMENT_ID,
-                MeasurementTables.AttributionContract.TABLE,
-                MeasurementTables.AttributionContract.SOURCE_SITE,
-                MeasurementTables.AttributionContract.DESTINATION_SITE,
-                MeasurementTables.AttributionContract.TRIGGER_TIME);
-        return Integer.valueOf((int) DatabaseUtils.longForQuery(
-                mSQLTransaction.getDatabase(),
-                query,
-                new String[] {
-                        sourceSite.toString(),
-                        destinationSite.toString(),
-                        excludedEnrollmentId,
-                        String.valueOf(windowEndTime),
-                        String.valueOf(windowStartTime) }));
+        String query =
+                String.format(
+                        Locale.ENGLISH,
+                        "SELECT COUNT(DISTINCT %1$s) FROM %2$s "
+                                + "WHERE %3$s = ? AND %4$s = ? AND %1s != ? "
+                                + "AND %5$s < ? AND %5$s >= ?",
+                        MeasurementTables.AttributionContract.ENROLLMENT_ID,
+                        MeasurementTables.AttributionContract.TABLE,
+                        MeasurementTables.AttributionContract.SOURCE_SITE,
+                        MeasurementTables.AttributionContract.DESTINATION_SITE,
+                        MeasurementTables.AttributionContract.TRIGGER_TIME);
+        return (int)
+                DatabaseUtils.longForQuery(
+                        mSQLTransaction.getDatabase(),
+                        query,
+                        new String[] {
+                            sourceSite.toString(),
+                            destinationSite.toString(),
+                            excludedEnrollmentId,
+                            String.valueOf(windowEndTime),
+                            String.valueOf(windowStartTime)
+                        });
     }
 
     @Override
@@ -596,16 +611,18 @@ class MeasurementDao implements IMeasurementDao {
         String destinationColumn = destinationType == EventSurfaceType.APP
                 ? MeasurementTables.SourceContract.APP_DESTINATION
                 : MeasurementTables.SourceContract.WEB_DESTINATION;
-        String query = String.format(
-                "SELECT COUNT(DISTINCT %1$s) FROM %2$s "
-                + "WHERE %3$s AND %4$s = ? AND %5$s = ? AND %1$s != ? "
-                + "AND %6$s < ? AND %6$s >= ?",
-                destinationColumn,
-                MeasurementTables.SourceContract.TABLE,
-                getPublisherWhereStatement(publisher, publisherType),
-                MeasurementTables.SourceContract.ENROLLMENT_ID,
-                MeasurementTables.SourceContract.STATUS,
-                MeasurementTables.SourceContract.EVENT_TIME);
+        String query =
+                String.format(
+                        Locale.ENGLISH,
+                        "SELECT COUNT(DISTINCT %1$s) FROM %2$s "
+                                + "WHERE %3$s AND %4$s = ? AND %5$s = ? AND %1$s != ? "
+                                + "AND %6$s < ? AND %6$s >= ?",
+                        destinationColumn,
+                        MeasurementTables.SourceContract.TABLE,
+                        getPublisherWhereStatement(publisher, publisherType),
+                        MeasurementTables.SourceContract.ENROLLMENT_ID,
+                        MeasurementTables.SourceContract.STATUS,
+                        MeasurementTables.SourceContract.EVENT_TIME);
         return (int) DatabaseUtils.longForQuery(
                 mSQLTransaction.getDatabase(),
                 query,
@@ -621,25 +638,29 @@ class MeasurementDao implements IMeasurementDao {
     public Integer countDistinctEnrollmentsPerPublisherXDestinationInSource(Uri publisher,
             @EventSurfaceType int publisherType, Uri destination, String excludedEnrollmentId,
             long windowStartTime, long windowEndTime) throws DatastoreException {
-        String query = String.format(
-                "SELECT COUNT(DISTINCT %1$s) FROM %2$s "
-                + "WHERE %3$s AND (%4$s = ? OR %5$s = ?) AND %1s != ? "
-                + "AND %6$s < ? AND %6$s >= ?",
-                MeasurementTables.SourceContract.ENROLLMENT_ID,
-                MeasurementTables.SourceContract.TABLE,
-                getPublisherWhereStatement(publisher, publisherType),
-                MeasurementTables.SourceContract.APP_DESTINATION,
-                MeasurementTables.SourceContract.WEB_DESTINATION,
-                MeasurementTables.SourceContract.EVENT_TIME);
-        return Integer.valueOf((int) DatabaseUtils.longForQuery(
-                mSQLTransaction.getDatabase(),
-                query,
-                new String[] {
-                        destination.toString(),
-                        destination.toString(),
-                        excludedEnrollmentId,
-                        String.valueOf(windowEndTime),
-                        String.valueOf(windowStartTime) }));
+        String query =
+                String.format(
+                        Locale.ENGLISH,
+                        "SELECT COUNT(DISTINCT %1$s) FROM %2$s "
+                                + "WHERE %3$s AND (%4$s = ? OR %5$s = ?) AND %1s != ? "
+                                + "AND %6$s < ? AND %6$s >= ?",
+                        MeasurementTables.SourceContract.ENROLLMENT_ID,
+                        MeasurementTables.SourceContract.TABLE,
+                        getPublisherWhereStatement(publisher, publisherType),
+                        MeasurementTables.SourceContract.APP_DESTINATION,
+                        MeasurementTables.SourceContract.WEB_DESTINATION,
+                        MeasurementTables.SourceContract.EVENT_TIME);
+        return (int)
+                DatabaseUtils.longForQuery(
+                        mSQLTransaction.getDatabase(),
+                        query,
+                        new String[] {
+                            destination.toString(),
+                            destination.toString(),
+                            excludedEnrollmentId,
+                            String.valueOf(windowEndTime),
+                            String.valueOf(windowStartTime)
+                        });
     }
 
     @Override
@@ -652,6 +673,7 @@ class MeasurementDao implements IMeasurementDao {
         db.delete(
                 MeasurementTables.EventReportContract.TABLE,
                 String.format(
+                        Locale.ENGLISH,
                         "%1$s IN ("
                                 + "SELECT e.%1$s FROM %2$s e"
                                 + " INNER JOIN %3$s s"
@@ -738,9 +760,9 @@ class MeasurementDao implements IMeasurementDao {
         Objects.requireNonNull(domains);
         Objects.requireNonNull(start);
         Objects.requireNonNull(end);
+        validateRange(start, end);
         Instant cappedStart = capDeletionRange(start);
         Instant cappedEnd = capDeletionRange(end);
-        validateRange(cappedStart, cappedEnd);
         // Handle no-op case
         // Preserving everything => Do Nothing
         if (domains.isEmpty()
@@ -883,7 +905,8 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     private static Function<String, String> getRegistrantMatcher(Uri registrant) {
-        return (String columnName) -> columnName + " = '" + registrant + "'";
+        return (String columnName) ->
+                columnName + " = " + DatabaseUtils.sqlEscapeString(registrant.toString());
     }
 
     private static Function<String, String> getTimeMatcher(Instant start, Instant end) {
@@ -934,7 +957,7 @@ class MeasurementDao implements IMeasurementDao {
                 }
                 whereBuilder.append(
                         origins.stream()
-                                .map((o) -> "'" + o + "'")
+                                .map((o) -> DatabaseUtils.sqlEscapeString(o.toString()))
                                 .collect(Collectors.joining(", ")));
                 whereBuilder.append(")");
             }
@@ -973,17 +996,15 @@ class MeasurementDao implements IMeasurementDao {
                                                 ("("
                                                         + columnName
                                                         + operator
-                                                        + "'"
-                                                        + uri.getScheme()
-                                                        + "://%."
-                                                        + uri.getAuthority()
-                                                        + "'"
+                                                        + DatabaseUtils.sqlEscapeString(
+                                                                uri.getScheme()
+                                                                        + "://%."
+                                                                        + uri.getAuthority())
                                                         + concatOperator
                                                         + columnName
                                                         + equalityOperator
-                                                        + "'"
-                                                        + uri
-                                                        + "'"
+                                                        + DatabaseUtils.sqlEscapeString(
+                                                                uri.toString())
                                                         + ")"))
                                 .collect(Collectors.joining(concatOperator)));
                 whereBuilder.append(" ) ");
@@ -1041,8 +1062,9 @@ class MeasurementDao implements IMeasurementDao {
                 sqb.buildQuery(
                         new String[] {MeasurementTables.SourceContract.ID},
                         String.format(
+                                Locale.ENGLISH,
                                 MeasurementTables.SourceContract.APP_DESTINATION
-                                        + " = \"%s\" AND "
+                                        + " = %1$s AND "
                                         + MeasurementTables.SourceContract.EVENT_TIME
                                         + " <= %2$d AND "
                                         + MeasurementTables.SourceContract.EXPIRY_TIME
@@ -1052,7 +1074,7 @@ class MeasurementDao implements IMeasurementDao {
                                         + MeasurementTables.SourceContract
                                                 .INSTALL_ATTRIBUTION_WINDOW
                                         + " >= %2$d",
-                                uri.toString(),
+                                DatabaseUtils.sqlEscapeString(uri.toString()),
                                 eventTimestamp),
                         /* groupBy= */ null,
                         /* having= */ null,
@@ -1232,13 +1254,19 @@ class MeasurementDao implements IMeasurementDao {
     private static String getPublisherWhereStatement(Uri publisher,
             @EventSurfaceType int publisherType) {
         if (publisherType == EventSurfaceType.APP) {
-            return String.format("%s = '%s'", MeasurementTables.SourceContract.PUBLISHER,
-                    publisher.toString());
-        } else {
-            return String.format("(%1$s = '%2$s://%3$s' OR %1$s LIKE '%2$s://%%.%3$s')",
+            return String.format(
+                    Locale.ENGLISH,
+                    "%s = %s",
                     MeasurementTables.SourceContract.PUBLISHER,
-                    publisher.getScheme(),
-                    publisher.getEncodedAuthority());
+                    DatabaseUtils.sqlEscapeString(publisher.toString()));
+        } else {
+            return String.format(
+                    Locale.ENGLISH,
+                    "(%1$s = %2$s OR %1$s LIKE %3$s)",
+                    MeasurementTables.SourceContract.PUBLISHER,
+                    DatabaseUtils.sqlEscapeString(publisher.toString()),
+                    DatabaseUtils.sqlEscapeString(
+                            publisher.getScheme() + "://%." + publisher.getEncodedAuthority()));
         }
     }
 
