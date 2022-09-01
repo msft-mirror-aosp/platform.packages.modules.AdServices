@@ -79,8 +79,7 @@ public class FledgeCtsTest extends ForegroundCtsTest {
                             + "\t\"render_url_2\": \"signals_for_2\"\n"
                             + "}");
 
-    private static final AdTechIdentifier SELLER =
-            AdTechIdentifier.fromString("developer.android.com");
+    private static final AdTechIdentifier SELLER = AdTechIdentifier.fromString("test.com");
     private static final String SELLER_REPORTING_PATH = "/reporting/seller";
     private static final String BUYER_REPORTING_PATH = "/reporting/buyer";
 

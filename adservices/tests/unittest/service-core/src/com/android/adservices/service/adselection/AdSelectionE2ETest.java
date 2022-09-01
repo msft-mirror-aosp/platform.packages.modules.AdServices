@@ -1229,6 +1229,11 @@ public class AdSelectionE2ETest {
                     }
 
                     @Override
+                    public boolean getDisableFledgeEnrollmentCheck() {
+                        return true;
+                    }
+
+                    @Override
                     public float getSdkRequestPermitsPerSecond() {
                         // Unlimited rate for unit tests to avoid flake in tests due to rate
                         // limiting
@@ -1342,6 +1347,11 @@ public class AdSelectionE2ETest {
                     @Override
                     public boolean getEnforceIsolateMaxHeapSize() {
                         return false;
+                    }
+
+                    @Override
+                    public boolean getDisableFledgeEnrollmentCheck() {
+                        return true;
                     }
 
                     @Override
@@ -1958,6 +1968,11 @@ public class AdSelectionE2ETest {
                 return true;
             }
 
+            @Override
+            public boolean getDisableFledgeEnrollmentCheck() {
+                return true;
+            }
+
             // Testing the default throttling limit
             @Override
             public float getSdkRequestPermitsPerSecond() {
@@ -2319,6 +2334,11 @@ public class AdSelectionE2ETest {
 
         @Override
         public boolean getEnforceForegroundStatusForFledgeOverrides() {
+            return true;
+        }
+
+        @Override
+        public boolean getDisableFledgeEnrollmentCheck() {
             return true;
         }
 

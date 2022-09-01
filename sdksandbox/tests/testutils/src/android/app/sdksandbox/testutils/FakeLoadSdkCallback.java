@@ -23,6 +23,8 @@ import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.os.OutcomeReceiver;
 
+import com.google.common.base.Preconditions;
+
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -33,6 +35,16 @@ public class FakeLoadSdkCallback implements OutcomeReceiver<SandboxedSdk, LoadSd
 
     private SandboxedSdk mSandboxedSdk;
     private LoadSdkException mLoadSdkException = null;
+    private final int mWaitTimeSec;
+
+    public FakeLoadSdkCallback() {
+        mWaitTimeSec = 5;
+    }
+
+    public FakeLoadSdkCallback(int waitTimeSec) {
+        Preconditions.checkArgument(waitTimeSec > 0, "Callback should use a positive wait time");
+        mWaitTimeSec = waitTimeSec;
+    }
 
     @Override
     public void onResult(SandboxedSdk sandboxedSdk) {
@@ -88,10 +100,9 @@ public class FakeLoadSdkCallback implements OutcomeReceiver<SandboxedSdk, LoadSd
     private void waitForLatch(CountDownLatch latch) {
         try {
             // Wait for callback to be called
-            final int waitTime = 5;
-            if (!latch.await(waitTime, TimeUnit.SECONDS)) {
+            if (!latch.await(mWaitTimeSec, TimeUnit.SECONDS)) {
                 throw new IllegalStateException(
-                        "Callback not called within " + waitTime + " seconds");
+                        "Callback not called within " + mWaitTimeSec + " seconds");
             }
         } catch (InterruptedException e) {
             throw new IllegalStateException(

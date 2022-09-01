@@ -72,6 +72,7 @@ public class AppManifestConfigHelper {
             AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(in);
             return appManifestConfig.isAllowedAttributionAccess(enrollmentId);
         } catch (PackageManager.NameNotFoundException e) {
+            LogUtil.v("Name not found while looking for manifest for app \"%s\"", appPackageName);
             LogUtil.e(e, "App manifest parse failed: NameNotFound.");
         } catch (XmlParseException | XmlPullParserException | IOException e) {
             LogUtil.e(e, "App manifest parse failed.");

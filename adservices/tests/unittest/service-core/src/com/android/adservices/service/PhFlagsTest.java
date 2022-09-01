@@ -2783,7 +2783,7 @@ public class PhFlagsTest {
         assertThat(FlagsFactory.getFlags().isDisableTopicsEnrollmentCheck())
                 .isEqualTo(DISABLE_TOPICS_ENROLLMENT_CHECK);
 
-        final boolean phOverridingValue = true;
+        final boolean phOverridingValue = !DISABLE_TOPICS_ENROLLMENT_CHECK;
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_DISABLE_TOPICS_ENROLLMENT_CHECK,
@@ -2817,7 +2817,7 @@ public class PhFlagsTest {
         assertThat(FlagsFactory.getFlags().isDisableMeasurementEnrollmentCheck())
                 .isEqualTo(DISABLE_MEASUREMENT_ENROLLMENT_CHECK);
 
-        final boolean phOverridingValue = true;
+        final boolean phOverridingValue = !DISABLE_MEASUREMENT_ENROLLMENT_CHECK;
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_DISABLE_MEASUREMENT_ENROLLMENT_CHECK,
@@ -2825,7 +2825,7 @@ public class PhFlagsTest {
                 /* makeDefault */ false);
 
         Flags phFlags = FlagsFactory.getFlags();
-        assertThat(phFlags.getDisableFledgeEnrollmentCheck()).isEqualTo(phOverridingValue);
+        assertThat(phFlags.isDisableMeasurementEnrollmentCheck()).isEqualTo(phOverridingValue);
     }
 
     @Test
