@@ -22,6 +22,7 @@ import com.android.adservices.data.topics.Topic;
 
 import com.google.common.collect.ImmutableList;
 
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 /**
@@ -36,7 +37,7 @@ public class TopicsMapper {
     public static int getResourceIdByTopic(Topic topic, Context context) {
         return context.getResources()
                 .getIdentifier(
-                        String.format("topic%d", topic.getTopic()),
+                        String.format(Locale.ENGLISH, "topic%d", topic.getTopic()),
                         "string",
                         context.getPackageName());
     }
