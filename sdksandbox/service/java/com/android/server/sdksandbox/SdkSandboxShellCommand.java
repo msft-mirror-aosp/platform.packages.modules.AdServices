@@ -142,12 +142,14 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
 
         private final CountDownLatch mLatch = new CountDownLatch(1);
         private boolean mSuccess = false;
+        private ISdkSandboxService mService;
         public static final int SANDBOX_BIND_TIMEOUT_S = 5;
 
         @Override
         public void onBindingSuccessful(ISdkSandboxService service) {
-            mLatch.countDown();
             mSuccess = true;
+            mService = service;
+            mLatch.countDown();
         }
 
         @Override
@@ -175,6 +177,10 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
                 return false;
             }
         }
+
+        private ISdkSandboxService getService() {
+            return mService;
+        }
     }
 
     private int runStart() {
@@ -189,8 +195,20 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
                 new LatchSandboxServiceConnectionCallback();
 
         mService.startSdkSandbox(mCallingInfo, callback);
-
-        return callback.isSuccessful() ? 0 : -1;
+        if (callback.isSuccessful()) {
+            ISdkSandboxService service = callback.getService();
+            if (mService.isSdkSandboxDisabled(service)) {
+                getErrPrintWriter().println("Error: SDK sandbox is disabled.");
+                mService.stopSdkSandboxService(
+                        mCallingInfo,
+                        "Shell command `sdk_sandbox start` failed due to sandbox disabled.");
+                return -1;
+            }
+            return 0;
+        }
+        getErrPrintWriter()
+                .println("Error: Could not start SDK sandbox for " + mCallingInfo.getPackageName());
+        return -1;
     }
 
     private int runStop() {
