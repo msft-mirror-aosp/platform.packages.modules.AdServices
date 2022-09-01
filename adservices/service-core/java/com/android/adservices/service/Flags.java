@@ -131,6 +131,22 @@ public interface Flags extends Dumpable {
         return CLASSIFIER_THRESHOLD;
     }
 
+    /** Number of max words allowed in the description for topics classifier. */
+    int CLASSIFIER_DESCRIPTION_MAX_WORDS = 500;
+
+    /** Returns the number of max words allowed in the description for topics classifier. */
+    default int getClassifierDescriptionMaxWords() {
+        return CLASSIFIER_DESCRIPTION_MAX_WORDS;
+    }
+
+    /** Number of max characters allowed in the description for topics classifier. */
+    int CLASSIFIER_DESCRIPTION_MAX_LENGTH = 2500;
+
+    /** Returns the number of max characters allowed in the description for topics classifier. */
+    default int getClassifierDescriptionMaxLength() {
+        return CLASSIFIER_DESCRIPTION_MAX_LENGTH;
+    }
+
     /* The default period for the Maintenance job. */
     long MAINTENANCE_JOB_PERIOD_MS = 86_400_000; // 1 day.
 
@@ -921,6 +937,17 @@ public interface Flags extends Dumpable {
         return getGlobalKillSwitch() || MDD_BACKGROUND_TASK_KILL_SWITCH;
     }
 
+    /**
+     * MDD Logger Kill Switch. The default value is false which means the MDD Logger is enabled.
+     * This flag is used for emergency turning off the MDD Logger.
+     */
+    boolean MDD_LOGGER_KILL_SWITCH = false;
+
+    /** @return value of MDD Logger Kill Switch */
+    default boolean getMddLoggerKillSwitch() {
+        return getGlobalKillSwitch() || MDD_LOGGER_KILL_SWITCH;
+    }
+
     // FLEDGE Kill switches
 
     /**
@@ -948,14 +975,14 @@ public interface Flags extends Dumpable {
         return getGlobalKillSwitch() || FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
     }
 
+    // TODO(b/243048002): Change Signature Allow List from using packageName to signature
     /*
-     * The allow-list for PP APIs. This list has the list of app package names that we allow
-     * using PP APIs.
-     * App Package Name that does not belong to this allow-list will not be able to use PP APIs.
-     * If this list has special value "*", then all package names are allowed.
-     * There must be not any empty space between comma.
+     * The bypass list for ppapi app signature allow list. The app with package names on this list
+     * won't be checked for signature.
+     *
+     * Note this list should only contain apps for test purpose
      */
-    String PPAPI_APP_ALLOW_LIST =
+    String PPAPI_APP_SIGNATURE_BYPASS_LIST =
             "android.platform.test.scenario,"
                     + "android.adservices.crystalball,"
                     + "android.adservices.cts,"
@@ -963,7 +990,6 @@ public interface Flags extends Dumpable {
                     + "com.android.tests.sandbox.fledge,"
                     + "com.android.tests.sandbox.topics,"
                     + "com.android.adservices.endtoendtest,"
-                    + "com.android.adservices.tests.cts.endtoendtest,"
                     + "com.android.adservices.tests.cts.topics.testapp1," // CTS test sample app
                     + "com.android.adservices.tests.permissions.appoptout,"
                     + "com.android.adservices.tests.permissions.noperm,"
@@ -982,20 +1008,38 @@ public interface Flags extends Dumpable {
                     + "com.android.adservices.servicecoretest";
 
     /**
+     * Returns bypass List for PPAPI app signature check. Apps with package name on this list will
+     * bypass the signature check
+     */
+    default String getPpapiAppSignatureBypassList() {
+        return PPAPI_APP_SIGNATURE_BYPASS_LIST;
+    }
+
+    /*
+     * The allow-list for PP APIs. This list has the list of app signatures that we allow
+     * using PP APIs. App Package signatures that do not belong to this allow-list will not be
+     * able to use PP APIs, unless the package name of this app is in the bypass list.
+     *
+     * If this list has special value "*", then all package signatures are allowed.
+     *
+     * There must be not any empty space between comma.
+     */
+    String PPAPI_APP_SIGNATURE_ALLOW_LIST =
+            // com.android.adservices.tests.cts.endtoendtest
+            "a40da80a59d170caa950cf15c18c454d47a39b26989d8b640ecd745ba71bf5dc,";
+
+    /** Only App signatures belonging to this Allow List can use PP APIs. */
+    default String getPpapiAppSignatureAllowList() {
+        return PPAPI_APP_SIGNATURE_ALLOW_LIST;
+    }
+
+    /**
      * The client app packages that are allowed to invoke web context APIs, i.e. {@link
      * android.adservices.measurement.MeasurementManager#registerWebSource} and {@link
      * android.adservices.measurement.MeasurementManager#deleteRegistrations}. App packages that do
      * not belong to the list will be responded back with an error response.
      */
     String WEB_CONTEXT_CLIENT_ALLOW_LIST = "";
-
-    /**
-     * Returns the The Allow List for PP APIs. Only App Package Name belongs to this Allow List can
-     * use PP APIs.
-     */
-    default String getPpapiAppAllowList() {
-        return PPAPI_APP_ALLOW_LIST;
-    }
 
     // Rate Limit Flags.
 
@@ -1092,7 +1136,7 @@ public interface Flags extends Dumpable {
     }
 
     boolean ENFORCE_ISOLATE_MAX_HEAP_SIZE = true;
-    long ISOLATE_MAX_HEAP_SIZE_BYTES = 2 * 1024 * 1024L; // 2 MB
+    long ISOLATE_MAX_HEAP_SIZE_BYTES = 10 * 1024 * 1024L; // 10 MB
 
     /**
      * @return true if we enforce to check that JavaScriptIsolate supports limiting the max heap

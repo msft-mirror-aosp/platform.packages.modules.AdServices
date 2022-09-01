@@ -17,9 +17,19 @@
 package com.android.adservices.service.common;
 
 import android.annotation.NonNull;
+import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.Signature;
+import android.content.pm.SigningInfo;
 
+import androidx.annotation.Nullable;
+
+import com.android.adservices.LogUtil;
 import com.android.internal.annotations.VisibleForTesting;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 /** Utility class to handle AllowList for Apps and SDKs. */
@@ -27,6 +37,7 @@ public class AllowLists {
     @VisibleForTesting static final String ALLOW_ALL = "*";
 
     private static final String SPLITTER = ",";
+    private static final String HASH_ALGORITHM = "SHA-256";
 
     /**
      * A utility to check if an app package exists in the provided allow-list. The allow-list to
@@ -44,5 +55,126 @@ public class AllowLists {
         // TODO(b/237686242): Cache the AllowList so that we don't need to read from Flags and split
         // on every API call.
         return Arrays.asList(allowList.split(SPLITTER)).contains(appPackageName);
+    }
+
+    // TODO(b/243048002): Change Signature Allow List from using packageName to signature
+    /**
+     * A utility to check if all app signatures exist in the provided allow-list. The allow-list to
+     * search is split by {@link #SPLITTER} without any white spaces.
+     *
+     * <p>If the package name of an app is in the bypass list, the app will be regarded as allowed.
+     *
+     * @param context the Context
+     * @param signatureAllowList the list of signatures that is allowed.
+     * @param bypassList the list of package names that will bypass this check
+     * @param appPackageName the package name of an app
+     * @return true if this app is allowed. Otherwise, it returns false.
+     */
+    public static boolean areSignaturesAllowListed(
+            @NonNull Context context,
+            @NonNull String signatureAllowList,
+            @NonNull String bypassList,
+            @NonNull String appPackageName) {
+        if (ALLOW_ALL.equals(signatureAllowList)
+                || isPackageAllowListed(bypassList, appPackageName)) {
+            return true;
+        }
+
+        byte[] appSignatureHash = getAppSignatureHash(context, appPackageName);
+
+        // App must have signatures queried from Package Manager in order to use PPAPI. Otherwise,
+        // it is not allowed.
+        if (appSignatureHash == null) {
+            return false;
+        }
+
+        String hexSignature = toHexString(appSignatureHash);
+
+        LogUtil.v("App %s has signature(s) as %s", appPackageName, hexSignature);
+
+        // TODO(b/237686242): Cache the AllowList so that we don't need to read from Flags and split
+        // on every API call.
+        return Arrays.asList(signatureAllowList.split(SPLITTER)).contains(hexSignature);
+    }
+
+    /**
+     * Get Hash for the signature of an app. Most of the methods invoked are from {@link
+     * PackageManager}.
+     *
+     * @param context the Context
+     * @param packageName package name of the app
+     * @return the hash in byte array format to represent the signature of an app. Returns {@code
+     *     null} if app cannot be fetched from package manager or there is no {@link
+     *     PackageInfo}/{@link SigningInfo} associated with this app.
+     */
+    @VisibleForTesting
+    @Nullable
+    public static byte[] getAppSignatureHash(
+            @NonNull Context context, @NonNull String packageName) {
+        PackageInfo packageInfo;
+        try {
+            packageInfo =
+                    context.getPackageManager()
+                            .getPackageInfo(packageName, PackageManager.GET_SIGNING_CERTIFICATES);
+        } catch (PackageManager.NameNotFoundException e) {
+            LogUtil.e("Package %s is not found in Package Manager!", packageName);
+            return null;
+        }
+        if (packageInfo == null) {
+            LogUtil.w("There is not package info for package %s", packageName);
+            return null;
+        }
+
+        SigningInfo signingInfo = packageInfo.signingInfo;
+        if (signingInfo == null) {
+            LogUtil.w(
+                    "There is no signing info for package %s. Please check the signature!",
+                    packageName);
+            return null;
+        }
+
+        Signature[] signatures = signingInfo.getSigningCertificateHistory();
+        if (signatures == null || signatures.length == 0) {
+            LogUtil.w(
+                    "There is no signature fetched from signing info for package %s.", packageName);
+            return null;
+        }
+
+        byte[] signatureHash = null;
+        // Current signature is at the last index of the history.
+        // This AllowList mechanism is actually not design for authentication. We only use it for
+        // system health and decide who can participate in our beta release. In this case, it's fine
+        // to just use whatever the current signing key is for all the apps that can participate
+        // in the beta 1 without needing to worry about subsequent rotations.
+        Signature currentSignature = signatures[signatures.length - 1];
+        try {
+            MessageDigest digest = MessageDigest.getInstance(HASH_ALGORITHM);
+            signatureHash = digest.digest(currentSignature.toByteArray());
+        } catch (NoSuchAlgorithmException e) {
+            LogUtil.e("SHA not available: " + e.getMessage());
+        }
+
+        return signatureHash;
+    }
+
+    /**
+     * Convert byte array to a hex string.
+     *
+     * <p>Mostly copied from frameworks/base/core/java/android/content/pm/Signature.java
+     *
+     * @param bytes the byte array
+     * @return the hex string format of the byte array
+     */
+    @VisibleForTesting
+    protected static String toHexString(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte v : bytes) {
+            int d = (v >> 4) & 0xf;
+            sb.append((char) (d >= 10 ? ('a' + d - 10) : ('0' + d)));
+            d = v & 0xf;
+            sb.append((char) (d >= 10 ? ('a' + d - 10) : ('0' + d)));
+        }
+
+        return sb.toString();
     }
 }

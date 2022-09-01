@@ -60,6 +60,7 @@ import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.common.AppManifestConfigHelper;
@@ -107,6 +108,9 @@ public class TopicsServiceImplTest {
     private static final String DISALLOWED_SDK_ID = "123";
     private static final String TOPICS_API_ALLOW_LIST = "com.android.adservices.servicecoretest";
     private static final int SANDBOX_UID = 25000;
+    private static final String HEX_STRING =
+            "0000000000000000000000000000000000000000000000000000000000000000";
+    private static final byte[] BYTE_ARRAY = new byte[32];
 
     private final Context mContext = ApplicationProvider.getApplicationContext();
     private final AdServicesLogger mAdServicesLogger =
@@ -119,6 +123,7 @@ public class TopicsServiceImplTest {
     private TopicsDao mTopicsDao;
     private GetTopicsParam mRequest;
     private MockitoSession mStaticMockitoSession;
+    private TopicsServiceImpl mTopicsServiceImpl;
 
     @Mock private EpochManager mMockEpochManager;
     @Mock private ConsentManager mConsentManager;
@@ -129,7 +134,6 @@ public class TopicsServiceImplTest {
     @Mock private Context mMockAppContext;
     @Mock private Throttler mMockThrottler;
     @Mock private EnrollmentDao mEnrollmentDao;
-    @Mock private TopicsServiceImpl mTopicsServiceImpl;
     @Mock private AppImportanceFilter mMockAppImportanceFilter;
 
     @Before
@@ -168,7 +172,9 @@ public class TopicsServiceImplTest {
         when(mMockSdkContext.getPackageManager()).thenReturn(mPackageManager);
         when(mPackageManager.getPackageUid(TEST_APP_PACKAGE_NAME, 0)).thenReturn(Process.myUid());
 
-        when(mMockFlags.getPpapiAppAllowList()).thenReturn(TOPICS_API_ALLOW_LIST);
+        // Put this test app into bypass list to bypass Allow-list check.
+        when(mMockFlags.getPpapiAppSignatureBypassList()).thenReturn(TOPICS_API_ALLOW_LIST);
+        when(mMockFlags.getPpapiAppSignatureAllowList()).thenReturn("");
 
         // Initialize enrollment data.
         EnrollmentData fakeEnrollmentData =
@@ -185,7 +191,10 @@ public class TopicsServiceImplTest {
 
         // Initialize mock static.
         mStaticMockitoSession =
-                ExtendedMockito.mockitoSession().mockStatic(Binder.class).startMocking();
+                ExtendedMockito.mockitoSession()
+                        .mockStatic(Binder.class)
+                        .spyStatic(AllowLists.class)
+                        .startMocking();
     }
 
     @After
@@ -202,10 +211,26 @@ public class TopicsServiceImplTest {
     }
 
     @Test
-    public void checkAllowList_emptyList() throws InterruptedException {
+    public void checkSignatureAllowList_successAllowList() throws Exception {
         when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
-        // Empty allow list, don't allow any app.
-        when(mMockFlags.getPpapiAppAllowList()).thenReturn("");
+        mTopicsServiceImpl = createTestTopicsServiceImplInstance();
+
+        // Add test app into allow list
+        ExtendedMockito.doReturn(BYTE_ARRAY)
+                .when(() -> AllowLists.getAppSignatureHash(mContext, TEST_APP_PACKAGE_NAME));
+        when(mMockFlags.getPpapiAppSignatureAllowList()).thenReturn(HEX_STRING);
+        // remove test app from bypass list
+        when(mMockFlags.getPpapiAppSignatureBypassList()).thenReturn("");
+
+        runGetTopics(mTopicsServiceImpl);
+    }
+
+    @Test
+    public void checkSignatureAllowList_emptyAllowList() throws InterruptedException {
+        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        // Empty allow list and bypass list.
+        when(mMockFlags.getPpapiAppSignatureAllowList()).thenReturn("");
+        when(mMockFlags.getPpapiAppSignatureBypassList()).thenReturn("");
         invokeGetTopicsAndVerifyError(mContext, STATUS_CALLER_NOT_ALLOWED);
     }
 
@@ -403,7 +428,7 @@ public class TopicsServiceImplTest {
         runGetTopics(createTestTopicsServiceImplInstance());
     }
 
-    @Test
+    //    @Test
     public void getTopicsSdk() throws Exception {
         Mockito.lenient().when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         PackageManager.Property property =
