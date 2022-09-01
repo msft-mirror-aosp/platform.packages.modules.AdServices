@@ -257,7 +257,9 @@ public final class SdkSandboxManager {
                     new SdkSandboxProcessDeathCallbackProxy(callbackExecutor, callback);
             try {
                 mService.addSdkSandboxProcessDeathCallback(
-                        mContext.getPackageName(), callbackProxy);
+                        mContext.getPackageName(),
+                        /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                        callbackProxy);
             } catch (RemoteException e) {
                 throw e.rethrowFromSystemServer();
             }
@@ -283,7 +285,9 @@ public final class SdkSandboxManager {
                 if (callbackProxy.callback == callback) {
                     try {
                         mService.removeSdkSandboxProcessDeathCallback(
-                                mContext.getPackageName(), callbackProxy);
+                                mContext.getPackageName(),
+                                /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                                callbackProxy);
                     } catch (RemoteException e) {
                         throw e.rethrowFromSystemServer();
                     }
