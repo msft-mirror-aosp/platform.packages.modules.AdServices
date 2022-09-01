@@ -214,7 +214,7 @@ public final class PhFlags implements Flags {
     static final String KEY_SDK_REQUEST_PERMITS_PER_SECOND = "sdk_request_permits_per_second";
 
     // Adservices enable status keys.
-    static final String KEY_ADSERVICES_ENABLE_STATUS = "adservice_enable_status";
+    static final String KEY_ADSERVICES_ENABLED = "adservice_enabled";
 
     // Disable enrollment check
     static final String KEY_DISABLE_TOPICS_ENROLLMENT_CHECK = "disable_topics_enrollment_check";
@@ -1231,12 +1231,12 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getAdservicesEnableStatus() {
+    public boolean getAdServicesEnabled() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getBoolean(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_ADSERVICES_ENABLE_STATUS,
-                /* defaultValue */ ADSERVICES_ENABLE_STATUS);
+                /* flagName */ KEY_ADSERVICES_ENABLED,
+                /* defaultValue */ ADSERVICES_ENABLED);
     }
 
     @Override
@@ -1717,7 +1717,7 @@ public final class PhFlags implements Flags {
                 "\t" + KEY_ISOLATE_MAX_HEAP_SIZE_BYTES + " = " + getIsolateMaxHeapSizeBytes());
 
         writer.println("==== AdServices PH Flags Dump STATUS ====");
-        writer.println("\t" + KEY_ADSERVICES_ENABLE_STATUS + " = " + getAdservicesEnableStatus());
+        writer.println("\t" + KEY_ADSERVICES_ENABLED + " = " + getAdServicesEnabled());
         writer.println(
                 "\t"
                         + KEY_FOREGROUND_STATUS_LEVEL
