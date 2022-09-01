@@ -84,7 +84,7 @@ public class AdServicesCommonManagerTest {
     // Override the Adservice enable status in the test.
     private void overrideAdserviceEnableStatus(boolean overrideStatus) {
         ShellUtils.runShellCommand(
-                "device_config put adservices adservice_enable_status " + overrideStatus);
+                "device_config put adservices adservice_enabled " + overrideStatus);
     }
 
     private ListenableFuture<Boolean> getAdservicesStatus() {
