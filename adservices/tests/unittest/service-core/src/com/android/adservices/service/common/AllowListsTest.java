@@ -113,27 +113,21 @@ public class AllowListsTest {
 
     @Test
     public void testSignatureAllowList_allowAll() {
-        assertThat(
-                        AllowLists.areSignaturesAllowListed(
-                                mContext, ALLOW_ALL, EMPTY_LIST, SOME_PACKAGE_NAME))
+        assertThat(AllowLists.isSignatureAllowListed(mContext, ALLOW_ALL, SOME_PACKAGE_NAME))
                 .isTrue();
     }
 
     @Test
     public void testSignatureAllowList_noSignature() {
         mockSignature(null);
-        assertThat(
-                        AllowLists.areSignaturesAllowListed(
-                                mContext, EMPTY_LIST, EMPTY_LIST, SOME_PACKAGE_NAME))
+        assertThat(AllowLists.isSignatureAllowListed(mContext, EMPTY_LIST, SOME_PACKAGE_NAME))
                 .isFalse();
     }
 
     @Test
     public void testSignatureAllowList_emptySignatureAllowList() {
         mockSignature(sSignature1);
-        assertThat(
-                        AllowLists.areSignaturesAllowListed(
-                                mContext, EMPTY_LIST, EMPTY_LIST, SOME_PACKAGE_NAME))
+        assertThat(AllowLists.isSignatureAllowListed(mContext, EMPTY_LIST, SOME_PACKAGE_NAME))
                 .isFalse();
     }
 
@@ -142,18 +136,18 @@ public class AllowListsTest {
         String signatureAllowList = sHexString1 + "," + sHexString2;
         mockSignature(sSignature1);
         assertThat(
-                        AllowLists.areSignaturesAllowListed(
-                                mContext, signatureAllowList, EMPTY_LIST, SOME_PACKAGE_NAME))
+                        AllowLists.isSignatureAllowListed(
+                                mContext, signatureAllowList, SOME_PACKAGE_NAME))
                 .isTrue();
         mockSignature(sSignature2);
         assertThat(
-                        AllowLists.areSignaturesAllowListed(
-                                mContext, signatureAllowList, EMPTY_LIST, SOME_PACKAGE_NAME))
+                        AllowLists.isSignatureAllowListed(
+                                mContext, signatureAllowList, SOME_PACKAGE_NAME))
                 .isTrue();
         mockSignature(sSignature3);
         assertThat(
-                        AllowLists.areSignaturesAllowListed(
-                                mContext, signatureAllowList, EMPTY_LIST, SOME_PACKAGE_NAME))
+                        AllowLists.isSignatureAllowListed(
+                                mContext, signatureAllowList, SOME_PACKAGE_NAME))
                 .isFalse();
     }
 
@@ -162,35 +156,13 @@ public class AllowListsTest {
         String signatureAllowList = sHexString1 + ", " + sHexString2;
         mockSignature(sSignature1);
         assertThat(
-                        AllowLists.areSignaturesAllowListed(
-                                mContext, signatureAllowList, EMPTY_LIST, SOME_PACKAGE_NAME))
+                        AllowLists.isSignatureAllowListed(
+                                mContext, signatureAllowList, SOME_PACKAGE_NAME))
                 .isTrue();
         mockSignature(sSignature2);
         assertThat(
-                        AllowLists.areSignaturesAllowListed(
-                                mContext, signatureAllowList, EMPTY_LIST, SOME_PACKAGE_NAME))
-                .isFalse();
-    }
-
-    @Test
-    public void testSignatureAllowList_bypassList() {
-        assertThat(
-                        AllowLists.areSignaturesAllowListed(
-                                mContext, EMPTY_LIST, SOME_PACKAGE_NAME, SOME_PACKAGE_NAME))
-                .isTrue();
-    }
-
-    @Test
-    public void testSignatureAllowList_bypassListHasSpace() {
-        String bypassList = SOME_PACKAGE_NAME + ", " + "AnotherPackageName";
-        assertThat(
-                        AllowLists.areSignaturesAllowListed(
-                                mContext, EMPTY_LIST, bypassList, SOME_PACKAGE_NAME))
-                .isTrue();
-        mockSignature(sSignature2);
-        assertThat(
-                        AllowLists.areSignaturesAllowListed(
-                                mContext, EMPTY_LIST, bypassList, "AnotherPackageName"))
+                        AllowLists.isSignatureAllowListed(
+                                mContext, signatureAllowList, SOME_PACKAGE_NAME))
                 .isFalse();
     }
 
@@ -211,20 +183,19 @@ public class AllowListsTest {
                 "318b8f30815253bcae6eef8ff3dbd52effd2cdc1f68ef6adbf4bd4dbe7646cb0";
         // If allow list has only signature1, the app is not allowed as signature1 is not latest
         assertThat(
-                        AllowLists.areSignaturesAllowListed(
-                                mMockContext, hashedHexString1, EMPTY_LIST, SOME_PACKAGE_NAME))
+                        AllowLists.isSignatureAllowListed(
+                                mMockContext, hashedHexString1, SOME_PACKAGE_NAME))
                 .isFalse();
 
         // The app is allowed if signature2 is correctly contained in the allow-list.
         assertThat(
-                        AllowLists.areSignaturesAllowListed(
-                                mMockContext, hashedHexString2, EMPTY_LIST, SOME_PACKAGE_NAME))
+                        AllowLists.isSignatureAllowListed(
+                                mMockContext, hashedHexString2, SOME_PACKAGE_NAME))
                 .isTrue();
         assertThat(
-                        AllowLists.areSignaturesAllowListed(
+                        AllowLists.isSignatureAllowListed(
                                 mMockContext,
                                 hashedHexString1 + "," + hashedHexString2,
-                                EMPTY_LIST,
                                 SOME_PACKAGE_NAME))
                 .isTrue();
     }
@@ -242,6 +213,7 @@ public class AllowListsTest {
                 .when(mMockSigningInfo)
                 .getSigningCertificateHistory();
 
+        // Got this Hashes by adding temporary logging to print and running this test
         byte[] expectedByteHashes1 =
                 new byte[] {
                     -23, -1, 14, 110, 109, -23, 93, -91, 111, -16, -97, 78, 62, 15, 72, 29, 103, 88,
@@ -261,6 +233,7 @@ public class AllowListsTest {
                 .when(mMockSigningInfo)
                 .getSigningCertificateHistory();
 
+        // Got this hashes by adding temporary logging to print the hash and running this test
         byte[] expectedByteHashes2 =
                 new byte[] {
                     49, -117, -113, 48, -127, 82, 83, -68, -82, 110, -17, -113, -13, -37, -43, 46,

@@ -274,7 +274,7 @@ public class MeasurementManagerCtsTest {
     private void allowAllPackageNamesAccessMeasurementApis() {
         final String packageName = "*";
         ShellUtils.runShellCommand(
-                "device_config put adservices ppapi_app_signature_bypass_list " + packageName);
+                "device_config put adservices ppapi_app_allow_list " + packageName);
         ShellUtils.runShellCommand(
                 "device_config put adservices web_context_client_allow_list " + packageName);
     }
@@ -291,8 +291,7 @@ public class MeasurementManagerCtsTest {
     }
 
     private void resetAllowSandboxPackageNameAccessMeasurementApis() {
-        ShellUtils.runShellCommand(
-                "device_config put adservices ppapi_app_signature_bypass_list null");
+        ShellUtils.runShellCommand("device_config put adservices ppapi_app_allow_list null");
         ShellUtils.runShellCommand(
                 "device_config put adservices web_context_client_allow_list null");
     }
