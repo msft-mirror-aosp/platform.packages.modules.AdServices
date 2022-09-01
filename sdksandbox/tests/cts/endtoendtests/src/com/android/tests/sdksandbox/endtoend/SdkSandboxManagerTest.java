@@ -26,6 +26,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 
+import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
@@ -58,6 +59,8 @@ import org.junit.runners.JUnit4;
  */
 @RunWith(JUnit4.class)
 public class SdkSandboxManagerTest {
+
+    private static final String NON_EXISTENT_SDK = "com.android.not_exist";
 
     @Rule
     public final ActivityScenarioRule<TestActivity> mRule =
@@ -104,13 +107,22 @@ public class SdkSandboxManagerTest {
 
     @Test
     public void loadNotExistSdkShouldFail() {
-        final String sdkName = "com.android.not_exist";
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
 
-        mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
+        mSdkSandboxManager.loadSdk(NON_EXISTENT_SDK, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isFalse();
         assertThat(callback.getLoadSdkErrorCode())
                 .isEqualTo(SdkSandboxManager.LOAD_SDK_NOT_FOUND);
+    }
+
+    @Test
+    public void loadNotExistSdkShouldFail_checkLoadSdkException() {
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+
+        mSdkSandboxManager.loadSdk(NON_EXISTENT_SDK, new Bundle(), Runnable::run, callback);
+        LoadSdkException loadSdkException = callback.getLoadSdkException();
+        assertThat(loadSdkException.getExtraInformation()).isNotNull();
+        assertThat(loadSdkException.getExtraInformation().isEmpty()).isTrue();
     }
 
     @Test
