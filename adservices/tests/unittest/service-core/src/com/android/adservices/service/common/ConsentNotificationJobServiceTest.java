@@ -52,6 +52,7 @@ import org.mockito.Spy;
 import org.mockito.quality.Strictness;
 
 import java.util.Calendar;
+import java.util.TimeZone;
 import java.util.concurrent.CountDownLatch;
 
 /** Unit test for {@link com.android.adservices.ui.notifications.ConsentNotificationJobService}. */
@@ -144,7 +145,7 @@ public class ConsentNotificationJobServiceTest {
      */
     @Test
     public void testDelaysWhenCalledBeforeIntervalBegins() {
-        Calendar calendar = Calendar.getInstance();
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("Etc/UTC"));
         calendar.setTimeInMillis(0);
 
         doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
@@ -164,7 +165,7 @@ public class ConsentNotificationJobServiceTest {
     @Test
     public void testDelaysWhenCalledWithinTheInterval() {
         long expectedDelay = /* 100 seconds */ 100000;
-        Calendar calendar = Calendar.getInstance();
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("Etc/UTC"));
         calendar.setTimeInMillis(
                 FlagsFactory.getFlagsForTest().getConsentNotificationIntervalBeginMs()
                         + expectedDelay);
@@ -190,7 +191,7 @@ public class ConsentNotificationJobServiceTest {
     @Test
     public void testDelaysWhenCalledAfterTheInterval() {
         long delay = /* 100 seconds */ 100000;
-        Calendar calendar = Calendar.getInstance();
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("Etc/UTC"));
         calendar.setTimeInMillis(
                 FlagsFactory.getFlagsForTest().getConsentNotificationIntervalEndMs() + delay);
 
