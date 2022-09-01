@@ -66,7 +66,7 @@ public class FledgeAllowListsFilterTest {
     public void testIsAllowed() {
         ExtendedMockito.when(
                         AllowLists.isPackageAllowListed(
-                                CommonFixture.FLAGS_FOR_TEST.getPpapiAppSignatureBypassList(),
+                                CommonFixture.FLAGS_FOR_TEST.getPpapiAppAllowList(),
                                 CommonFixture.TEST_PACKAGE_NAME))
                 .thenReturn(true);
         mFledgeAllowListsFilter.assertAppCanUsePpapi(
@@ -79,7 +79,7 @@ public class FledgeAllowListsFilterTest {
     public void testNotAllowed() {
         ExtendedMockito.when(
                         AllowLists.isPackageAllowListed(
-                                CommonFixture.FLAGS_FOR_TEST.getPpapiAppSignatureBypassList(),
+                                CommonFixture.FLAGS_FOR_TEST.getPpapiAppAllowList(),
                                 CommonFixture.TEST_PACKAGE_NAME))
                 .thenReturn(false);
         SecurityException exception =
