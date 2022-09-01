@@ -23,10 +23,12 @@ import android.os.IBinder;
 import com.android.sdksandbox.SandboxLatencyInfo;
 
 import com.android.sdksandbox.ILoadSdkInSandboxCallback;
+import com.android.sdksandbox.ISdkSandboxDisabledCallback;
 import android.app.sdksandbox.ISdkToServiceCallback;
 
 /** @hide */
 oneway interface ISdkSandboxService {
+    void isDisabled(in ISdkSandboxDisabledCallback callback);
     // TODO(b/228045863): Wrap parameters in a parcelable
     void loadSdk(in String callingPackageName, IBinder sdkToken, in ApplicationInfo info,
                   in String sdkName, in String sdkProviderClassName,

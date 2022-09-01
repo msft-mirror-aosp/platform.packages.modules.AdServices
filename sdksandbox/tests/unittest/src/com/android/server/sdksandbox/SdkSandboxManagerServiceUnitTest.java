@@ -40,7 +40,7 @@ import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallbackBinder;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallbackBinder;
-import android.app.sdksandbox.testutils.FakeSdkSandboxLifecycleCallbackBinder;
+import android.app.sdksandbox.testutils.FakeSdkSandboxProcessDeathCallbackBinder;
 import android.app.sdksandbox.testutils.FakeSharedPreferencesSyncCallback;
 import android.content.ComponentName;
 import android.content.Context;
@@ -66,6 +66,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.sdksandbox.ILoadSdkInSandboxCallback;
 import com.android.sdksandbox.IRequestSurfacePackageFromSdkCallback;
+import com.android.sdksandbox.ISdkSandboxDisabledCallback;
 import com.android.sdksandbox.ISdkSandboxManagerToSdkSandboxCallback;
 import com.android.sdksandbox.ISdkSandboxService;
 import com.android.sdksandbox.SandboxLatencyInfo;
@@ -573,11 +574,11 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
-    public void testAddSdkSandboxLifecycleCallback_BeforeStartingSandbox() throws Exception {
+    public void testAddSdkSandboxProcessDeathCallback_BeforeStartingSandbox() throws Exception {
         // Register for sandbox death event
-        FakeSdkSandboxLifecycleCallbackBinder lifecycleCallback =
-                new FakeSdkSandboxLifecycleCallbackBinder();
-        mService.addSdkSandboxLifecycleCallback(TEST_PACKAGE, lifecycleCallback);
+        FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback =
+                new FakeSdkSandboxProcessDeathCallbackBinder();
+        mService.addSdkSandboxProcessDeathCallback(TEST_PACKAGE, lifecycleCallback);
 
         // Load SDK and start the sandbox
         loadSdk();
@@ -595,14 +596,14 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
-    public void testAddSdkSandboxLifecycleCallback_AfterStartingSandbox() throws Exception {
+    public void testAddSdkSandboxProcessDeathCallback_AfterStartingSandbox() throws Exception {
         // Load SDK and start the sandbox
         loadSdk();
 
         // Register for sandbox death event
-        FakeSdkSandboxLifecycleCallbackBinder lifecycleCallback =
-                new FakeSdkSandboxLifecycleCallbackBinder();
-        mService.addSdkSandboxLifecycleCallback(TEST_PACKAGE, lifecycleCallback);
+        FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback =
+                new FakeSdkSandboxProcessDeathCallbackBinder();
+        mService.addSdkSandboxProcessDeathCallback(TEST_PACKAGE, lifecycleCallback);
 
         // Kill the sandbox
         ArgumentCaptor<IBinder.DeathRecipient> deathRecipientCaptor =
@@ -617,19 +618,19 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
-    public void testMultipleAddSdkSandboxLifecycleCallbacks() throws Exception {
+    public void testMultipleAddSdkSandboxProcessDeathCallbacks() throws Exception {
         // Load SDK and start the sandbox
         loadSdk();
 
         // Register for sandbox death event
-        FakeSdkSandboxLifecycleCallbackBinder lifecycleCallback1 =
-                new FakeSdkSandboxLifecycleCallbackBinder();
-        mService.addSdkSandboxLifecycleCallback(TEST_PACKAGE, lifecycleCallback1);
+        FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback1 =
+                new FakeSdkSandboxProcessDeathCallbackBinder();
+        mService.addSdkSandboxProcessDeathCallback(TEST_PACKAGE, lifecycleCallback1);
 
         // Register for sandbox death event again
-        FakeSdkSandboxLifecycleCallbackBinder lifecycleCallback2 =
-                new FakeSdkSandboxLifecycleCallbackBinder();
-        mService.addSdkSandboxLifecycleCallback(TEST_PACKAGE, lifecycleCallback2);
+        FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback2 =
+                new FakeSdkSandboxProcessDeathCallbackBinder();
+        mService.addSdkSandboxProcessDeathCallback(TEST_PACKAGE, lifecycleCallback2);
 
         // Kill the sandbox
         ArgumentCaptor<IBinder.DeathRecipient> deathRecipientCaptor =
@@ -645,22 +646,22 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
-    public void testRemoveSdkSandboxLifecycleCallback() throws Exception {
+    public void testRemoveSdkSandboxProcessDeathCallback() throws Exception {
         // Load SDK and start the sandbox
         loadSdk();
 
         // Register for sandbox death event
-        FakeSdkSandboxLifecycleCallbackBinder lifecycleCallback1 =
-                new FakeSdkSandboxLifecycleCallbackBinder();
-        mService.addSdkSandboxLifecycleCallback(TEST_PACKAGE, lifecycleCallback1);
+        FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback1 =
+                new FakeSdkSandboxProcessDeathCallbackBinder();
+        mService.addSdkSandboxProcessDeathCallback(TEST_PACKAGE, lifecycleCallback1);
 
         // Register for sandbox death event again
-        FakeSdkSandboxLifecycleCallbackBinder lifecycleCallback2 =
-                new FakeSdkSandboxLifecycleCallbackBinder();
-        mService.addSdkSandboxLifecycleCallback(TEST_PACKAGE, lifecycleCallback2);
+        FakeSdkSandboxProcessDeathCallbackBinder lifecycleCallback2 =
+                new FakeSdkSandboxProcessDeathCallbackBinder();
+        mService.addSdkSandboxProcessDeathCallback(TEST_PACKAGE, lifecycleCallback2);
 
         // Unregister one of the lifecycle callbacks
-        mService.removeSdkSandboxLifecycleCallback(TEST_PACKAGE, lifecycleCallback1);
+        mService.removeSdkSandboxProcessDeathCallback(TEST_PACKAGE, lifecycleCallback1);
 
         // Kill the sandbox
         ArgumentCaptor<IBinder.DeathRecipient> deathRecipientCaptor =
@@ -1698,6 +1699,67 @@ public class SdkSandboxManagerServiceUnitTest {
                                         .SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_APP));
     }
 
+    @Test
+    public void testIsDisabled() {
+        mSdkSandboxService.setIsDisabledResponse(false);
+        assertThat(mService.isSdkSandboxDisabled(mSdkSandboxService)).isFalse();
+
+        mService.clearSdkSandboxState();
+        mSdkSandboxService.setIsDisabledResponse(true);
+        assertThat(mService.isSdkSandboxDisabled(mSdkSandboxService)).isTrue();
+    }
+
+    @Test
+    public void testSdkSandboxDisabledCallback() {
+        SdkSandboxManagerService.SdkSandboxDisabledCallback callback =
+                new SdkSandboxManagerService.SdkSandboxDisabledCallback();
+        // In this case the callback has not been called, so a timeout will occur and sandbox
+        // will be disabled.
+        assertThat(callback.getIsDisabled()).isTrue();
+
+        callback.onResult(false);
+        assertThat(callback.getIsDisabled()).isFalse();
+
+        callback = new SdkSandboxManagerService.SdkSandboxDisabledCallback();
+        callback.onResult(true);
+        assertThat(callback.getIsDisabled()).isTrue();
+    }
+
+    @Test
+    public void
+            testLatencyMetrics_systemServerAppToSandbox_RequestSurfacePackage_sandboxNotLoaded() {
+        disableForegroundCheck();
+
+        Mockito.when(mInjector.getCurrentTime())
+                .thenReturn(TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP, TIME_FAILURE_HANDLED);
+
+        FakeRequestSurfacePackageCallbackBinder surfacePackageCallback =
+                new FakeRequestSurfacePackageCallbackBinder();
+        mService.requestSurfacePackage(
+                TEST_PACKAGE,
+                SDK_NAME,
+                new Binder(),
+                0,
+                500,
+                500,
+                TIME_APP_CALLED_SYSTEM_SERVER,
+                new Bundle(),
+                surfacePackageCallback);
+
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                                SdkSandboxStatsLog
+                                        .SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE,
+                                (int)
+                                        (TIME_FAILURE_HANDLED
+                                                - TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP),
+                                /*success=*/ false,
+                                SdkSandboxStatsLog
+                                        .SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX));
+    }
+
     private SandboxLatencyInfo getFakedSandboxLatencies() {
         final SandboxLatencyInfo sandboxLatencyInfo =
                 new SandboxLatencyInfo(TIME_SYSTEM_SERVER_CALLED_SANDBOX);
@@ -1786,7 +1848,7 @@ public class SdkSandboxManagerServiceUnitTest {
         private ISdkToServiceCallback mSdkToServiceCallback;
 
         private boolean mSurfacePackageRequested = false;
-        boolean mDataReceived = false;
+        boolean mIsDisabledResponse = false;
 
         private SharedPreferencesUpdate mLastSyncUpdate = null;
 
@@ -1817,6 +1879,14 @@ public class SdkSandboxManagerServiceUnitTest {
         @Override
         public void syncDataFromClient(SharedPreferencesUpdate update) {
             mLastSyncUpdate = update;
+        }
+
+        @Override
+        public void isDisabled(ISdkSandboxDisabledCallback callback) {
+            try {
+                callback.onResult(mIsDisabledResponse);
+            } catch (RemoteException ignored) {
+            }
         }
 
         @Nullable
@@ -1881,6 +1951,10 @@ public class SdkSandboxManagerServiceUnitTest {
                 int errorCode, String errorMsg, FakeRequestSurfacePackageCallbackBinder callback)
                 throws RemoteException {
             callback.onSurfacePackageError(errorCode, errorMsg, System.currentTimeMillis());
+        }
+
+        void setIsDisabledResponse(boolean response) {
+            mIsDisabledResponse = response;
         }
 
         private class FakeManagerToSdkCallback extends ISdkSandboxManagerToSdkSandboxCallback.Stub {

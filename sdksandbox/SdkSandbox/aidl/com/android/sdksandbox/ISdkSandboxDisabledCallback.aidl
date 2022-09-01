@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package android.app.sdksandbox;
+package com.android.sdksandbox;
 
 /** @hide */
-oneway interface ISdkSandboxLifecycleCallback {
-    void onSdkSandboxDied();
+oneway interface ISdkSandboxDisabledCallback {
+    void onResult(boolean isDisabled);
 }

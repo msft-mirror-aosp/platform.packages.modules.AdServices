@@ -108,6 +108,36 @@ public class MobileDataDownloadFactory {
         }
     }
 
+    /** Returns a MobileDataDownload instance for testing. */
+    @VisibleForTesting
+    @NonNull
+    static MobileDataDownload getMddForTesting(@NonNull Context context, @NonNull Flags flags) {
+        context = context.getApplicationContext();
+        SynchronousFileStorage fileStorage = getFileStorage(context);
+        FileDownloader fileDownloader = getFileDownloader(context, flags, fileStorage);
+        NetworkUsageMonitor networkUsageMonitor =
+                new NetworkUsageMonitor(context, System::currentTimeMillis);
+
+        return MobileDataDownloadBuilder.newBuilder()
+                .setContext(context)
+                .setControlExecutor(getControlExecutor())
+                .setTaskScheduler(Optional.of(new MddTaskScheduler(context)))
+                .setNetworkUsageMonitor(networkUsageMonitor)
+                .setFileStorage(fileStorage)
+                .setFileDownloaderSupplier(() -> fileDownloader)
+                .addFileGroupPopulator(
+                        getTopicsManifestPopulator(context, flags, fileStorage, fileDownloader))
+                .addFileGroupPopulator(
+                        getMeasurementManifestPopulator(
+                                context, flags, fileStorage, fileDownloader))
+                .setLoggerOptional(getMddLogger(flags))
+                // Use default MDD flags so that it does not need to access DeviceConfig
+                // which is inaccessible from Unit Tests.
+                .setFlagsOptional(
+                        Optional.of(new com.google.android.libraries.mobiledatadownload.Flags() {}))
+                .build();
+    }
+
     // Connectivity constraints will be checked by JobScheduler/WorkManager instead.
     private static class NoOpConnectivityHandler implements ConnectivityHandler {
         @Override
