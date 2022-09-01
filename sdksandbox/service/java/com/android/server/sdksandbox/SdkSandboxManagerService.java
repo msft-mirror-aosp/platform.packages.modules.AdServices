@@ -17,6 +17,7 @@
 package com.android.server.sdksandbox;
 
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND;
+import static android.app.sdksandbox.SdkSandboxManager.LOAD_SDK_SDK_SANDBOX_DISABLED;
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE;
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_SERVICE;
 
@@ -112,6 +113,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             "com.android.app.sdksandbox.permission.STOP_SDK_SANDBOX";
 
     private static final String SANDBOX_NOT_AVAILABLE_MSG = "Sandbox is unavailable";
+    private static final String SANDBOX_DISABLED_MSG = "SDK sandbox is disabled";
 
     private final Context mContext;
     private final SdkTokenManager mSdkTokenManager = new SdkTokenManager();
@@ -947,7 +949,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
     boolean isSdkSandboxDisabled(ISdkSandboxService boundService) {
-
         synchronized (mLock) {
             if (!mCheckedVisibilityPatch) {
                 SdkSandboxDisabledCallback callback = new SdkSandboxDisabledCallback();
@@ -1045,7 +1046,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                             properties.getBoolean(PROPERTY_DISABLE_SDK_SANDBOX, false);
                     if (mIsKillSwitchEnabled) {
                         mKillSwitchBecameEnabled = true;
-                        stopAllSandboxesLocked();
+                        synchronized (SdkSandboxManagerService.this.mLock) {
+                            stopAllSandboxesLocked();
+                        }
                     }
                 }
             }
@@ -1132,6 +1135,15 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             ISdkSandboxService service,
             SdkToServiceLink sdkToServiceLink) {
 
+        if (isSdkSandboxDisabled(service)) {
+            link.handleLoadSdkException(
+                    new LoadSdkException(LOAD_SDK_SDK_SANDBOX_DISABLED, SANDBOX_DISABLED_MSG),
+                    false,
+                    -1,
+                    SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__METHOD_UNSPECIFIED,
+                    false);
+            return;
+        }
         // Gather sdk storage information
         SdkDataDirInfo sdkDataInfo =
                 mSdkSandboxStorageManager.getSdkDataDirInfo(
