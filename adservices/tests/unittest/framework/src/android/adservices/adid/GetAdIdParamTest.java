@@ -17,7 +17,10 @@ package android.adservices.adid;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
+
+import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
 
@@ -39,6 +42,17 @@ public final class GetAdIdParamTest {
 
         assertThat(request.getSdkPackageName()).isEqualTo(SOME_SDK_PACKAGE_NAME);
         assertThat(request.getAppPackageName()).isEqualTo(SOME_PACKAGE_NAME);
+
+        // no file descriptor masharlling.
+        assertThat(request.describeContents()).isEqualTo(0);
+
+        Parcel parcel = Parcel.obtain();
+        request.writeToParcel(parcel, 0);
+        parcel.setDataPosition(0);
+
+        GetAdIdParam createdRequest = GetAdIdParam.CREATOR.createFromParcel(parcel);
+        assertEquals(false, createdRequest == request);
+        assertEquals(GetAdIdParam.CREATOR.newArray(1).length, 1);
     }
 
     @Test
