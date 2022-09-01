@@ -975,14 +975,14 @@ public interface Flags extends Dumpable {
         return getGlobalKillSwitch() || FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
     }
 
-    // TODO(b/243048002): Change Signature Allow List from using packageName to signature
     /*
-     * The bypass list for ppapi app signature allow list. The app with package names on this list
-     * won't be checked for signature.
-     *
-     * Note this list should only contain apps for test purpose
+     * The allow-list for PP APIs. This list has the list of app package names that we allow
+     * using PP APIs.
+     * App Package Name that does not belong to this allow-list will not be able to use PP APIs.
+     * If this list has special value "*", then all package names are allowed.
+     * There must be not any empty space between comma.
      */
-    String PPAPI_APP_SIGNATURE_BYPASS_LIST =
+    String PPAPI_APP_ALLOW_LIST =
             "android.platform.test.scenario,"
                     + "android.adservices.crystalball,"
                     + "android.adservices.cts,"
@@ -1000,8 +1000,8 @@ public interface Flags extends Dumpable {
      * Returns bypass List for PPAPI app signature check. Apps with package name on this list will
      * bypass the signature check
      */
-    default String getPpapiAppSignatureBypassList() {
-        return PPAPI_APP_SIGNATURE_BYPASS_LIST;
+    default String getPpapiAppAllowList() {
+        return PPAPI_APP_ALLOW_LIST;
     }
 
     /*

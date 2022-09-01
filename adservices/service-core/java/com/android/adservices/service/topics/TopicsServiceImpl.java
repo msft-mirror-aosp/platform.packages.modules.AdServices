@@ -245,10 +245,9 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
         // This needs to access PhFlag which requires READ_DEVICE_CONFIG which
         // is not granted for binder thread. So we have to check it with one
         // of non-binder thread of the PPAPI.
-        if (!AllowLists.areSignaturesAllowListed(
+        if (!AllowLists.isSignatureAllowListed(
                 mContext,
                 mFlags.getPpapiAppSignatureAllowList(),
-                mFlags.getPpapiAppSignatureBypassList(),
                 topicsParam.getAppPackageName())) {
             invokeCallbackWithStatus(
                     callback,
