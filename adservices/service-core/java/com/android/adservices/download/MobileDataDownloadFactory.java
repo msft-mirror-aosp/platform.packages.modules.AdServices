@@ -100,7 +100,7 @@ public class MobileDataDownloadFactory {
                                         getMeasurementManifestPopulator(
                                                 context, flags, fileStorage, fileDownloader))
                                 .setLoggerOptional(getMddLogger(flags))
-                                .setFlagsOptional(Optional.of(new MddFlags()))
+                                .setFlagsOptional(Optional.of(MddFlags.getInstance()))
                                 .build();
             }
 
