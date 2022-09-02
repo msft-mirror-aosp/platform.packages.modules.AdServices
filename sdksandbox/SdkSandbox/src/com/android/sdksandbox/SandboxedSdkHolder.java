@@ -83,9 +83,6 @@ class SandboxedSdkHolder {
             Class<?> clz = Class.forName(sdkProviderClassName, true, loader);
             mSdk = (SandboxedSdkProvider) clz.getConstructor().newInstance();
             mSdk.attachContext(sandboxedSdkContext);
-            mSdk.attachSdkSandboxController(
-                    new SdkSandboxControllerImpl(
-                            sandboxedSdkContext.getClientPackageName(), sdkToServiceCallback));
         } catch (ClassNotFoundException e) {
             sandboxLatencyInfo.setSandboxStatus(
                     SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SANDBOX);
