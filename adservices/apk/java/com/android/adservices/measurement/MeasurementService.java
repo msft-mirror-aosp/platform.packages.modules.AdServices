@@ -58,16 +58,10 @@ public class MeasurementService extends Service {
                             EnrollmentDao.getInstance(this),
                             flags);
         }
-        schedulePeriodicJobs();
-    }
 
-    private void schedulePeriodicJobs() {
-        AggregateReportingJobService.scheduleIfNeeded(this, false);
-        AggregateFallbackReportingJobService.scheduleIfNeeded(this, false);
-        AttributionJobService.scheduleIfNeeded(this, false);
-        EventReportingJobService.scheduleIfNeeded(this, false);
-        EventFallbackReportingJobService.scheduleIfNeeded(this, false);
-        DeleteExpiredJobService.scheduleIfNeeded(this, false);
+        if (hasUserConsent()) {
+            schedulePeriodicJobsIfNeeded();
+        }
     }
 
     @Override
@@ -78,5 +72,18 @@ public class MeasurementService extends Service {
             return null;
         }
         return Objects.requireNonNull(mMeasurementService);
+    }
+
+    private boolean hasUserConsent() {
+        return ConsentManager.getInstance(this).getConsent(this.getPackageManager()).isGiven();
+    }
+
+    private void schedulePeriodicJobsIfNeeded() {
+        AggregateReportingJobService.scheduleIfNeeded(this, false);
+        AggregateFallbackReportingJobService.scheduleIfNeeded(this, false);
+        AttributionJobService.scheduleIfNeeded(this, false);
+        EventReportingJobService.scheduleIfNeeded(this, false);
+        EventFallbackReportingJobService.scheduleIfNeeded(this, false);
+        DeleteExpiredJobService.scheduleIfNeeded(this, false);
     }
 }
