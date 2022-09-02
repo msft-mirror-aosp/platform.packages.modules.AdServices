@@ -15,6 +15,8 @@
  */
 package com.android.adservices.service.topics;
 
+
+import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
@@ -41,14 +43,18 @@ import android.text.TextUtils;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AllowLists;
+import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.common.PermissionHelper;
 import com.android.adservices.service.common.SdkRuntimeUtil;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.ApiCallStats;
@@ -70,6 +76,8 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
     private final Clock mClock;
     private final Flags mFlags;
     private final Throttler mThrottler;
+    private final EnrollmentDao mEnrollmentDao;
+    private final AppImportanceFilter mAppImportanceFilter;
 
     public TopicsServiceImpl(
             Context context,
@@ -78,7 +86,9 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
             AdServicesLogger adServicesLogger,
             Clock clock,
             Flags flags,
-            Throttler throttler) {
+            Throttler throttler,
+            EnrollmentDao enrollmentDao,
+            AppImportanceFilter appImportanceFilter) {
         mContext = context;
         mTopicsWorker = topicsWorker;
         mConsentManager = consentManager;
@@ -86,6 +96,8 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
         mClock = clock;
         mFlags = flags;
         mThrottler = throttler;
+        mEnrollmentDao = enrollmentDao;
+        mAppImportanceFilter = appImportanceFilter;
     }
 
     @Override
@@ -102,19 +114,17 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
         final String sdkName = topicsParam.getSdkName();
         final String sdkPackageName = topicsParam.getSdkPackageName();
 
-        // We need to save the Calling Uid before offloading to the background executor. Otherwise
+        // We need to save the Calling Uid before offloading to the background executor. Otherwise,
         // the Binder.getCallingUid will return the PPAPI process Uid. This also needs to be final
         // since it's used in the lambda.
-        final int callingUid = Binder.getCallingUid();
+        final int callingUid = Binder.getCallingUidOrThrow();
 
         // Check the permission in the same thread since we're looking for caller's permissions.
         // Note: The permission check uses sdk package name since PackageManager checks if the
         // permission is declared in the manifest of that package name.
-        boolean permitted =
+        boolean hasTopicsPermission =
                 PermissionHelper.hasTopicsPermission(
-                                mContext, Process.isSdkSandboxUid(callingUid), sdkPackageName)
-                        && AppManifestConfigHelper.isAllowedTopicsAccess(
-                                mContext, packageName, sdkName);
+                        mContext, Process.isSdkSandboxUid(callingUid), sdkPackageName);
 
         sBackgroundExecutor.execute(
                 () -> {
@@ -122,7 +132,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
 
                     try {
                         if (!canCallerInvokeTopicsService(
-                                permitted, topicsParam, callingUid, callback)) {
+                                hasTopicsPermission, topicsParam, callingUid, callback)) {
                             return;
                         }
 
@@ -158,7 +168,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
     // Return true if we should throttle (don't allow the API call).
     private boolean isThrottled(GetTopicsParam topicsParam, IGetTopicsCallback callback) {
         // There are 2 cases for throttling:
-        // Case 1: the App calls Topics API directly, not via a SDK. In this case,
+        // Case 1: the App calls Topics API directly, not via an SDK. In this case,
         // the SdkName == Empty
         // Case 2: the SDK calls Topics API.
         boolean throttled =
@@ -181,6 +191,20 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
         return false;
     }
 
+    // Enforce whether caller is from foreground.
+    private void enforceForeground(int callingUid, @NonNull String sdkName) {
+        // If caller calls Topics API from Sandbox, regard it as foreground.
+        // Also enable a flag to force switch on/off this enforcing.
+        if (Process.isSdkSandboxUid(callingUid) || !mFlags.getEnforceForegroundStatusForTopics()) {
+            return;
+        }
+
+        // Call utility method in AppImportanceFilter to enforce foreground status
+        //  Throw WrongCallingApplicationStateException  if the assertion fails.
+        mAppImportanceFilter.assertCallerIsInForeground(
+                callingUid, AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS, sdkName);
+    }
+
     /**
      * Check whether caller can invoke the Topics API. The caller is not allowed to do it when one
      * of the following occurs:
@@ -201,6 +225,15 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
             GetTopicsParam topicsParam,
             int callingUid,
             IGetTopicsCallback callback) {
+        // Enforce caller calls Topics API from foreground
+        try {
+            enforceForeground(callingUid, topicsParam.getSdkName());
+        } catch (WrongCallingApplicationStateException backgroundCaller) {
+            invokeCallbackWithStatus(
+                    callback, STATUS_BACKGROUND_CALLER, backgroundCaller.getMessage());
+            return false;
+        }
+
         if (!sufficientPermission) {
             invokeCallbackWithStatus(
                     callback,
@@ -212,12 +245,14 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
         // This needs to access PhFlag which requires READ_DEVICE_CONFIG which
         // is not granted for binder thread. So we have to check it with one
         // of non-binder thread of the PPAPI.
-        boolean appCanUsePpapi = AllowLists.appCanUsePpapi(mFlags, topicsParam.getAppPackageName());
-        if (!appCanUsePpapi) {
+        if (!AllowLists.isSignatureAllowListed(
+                mContext,
+                mFlags.getPpapiAppSignatureAllowList(),
+                topicsParam.getAppPackageName())) {
             invokeCallbackWithStatus(
                     callback,
                     STATUS_CALLER_NOT_ALLOWED,
-                    "Unauthorized caller. Caller is not allowed.");
+                    "Unauthorized caller. Signatures for calling package not allowed.");
             return false;
         }
 
@@ -234,6 +269,26 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
             invokeCallbackWithStatus(
                     callback, STATUS_USER_CONSENT_REVOKED, "User consent revoked.");
             return false;
+        }
+
+        // The app developer declares which SDKs they would like to allow Topics
+        // access to use the enrollment ID. Get the enrollment ID for this SDK and
+        // check that against the app's manifest.
+        if (!mFlags.isDisableTopicsEnrollmentCheck() && !topicsParam.getSdkName().isEmpty()) {
+            EnrollmentData enrollmentData =
+                    mEnrollmentDao.getEnrollmentDataFromSdkName(topicsParam.getSdkName());
+            boolean permitted =
+                    (enrollmentData != null && enrollmentData.getEnrollmentId() != null)
+                            && AppManifestConfigHelper.isAllowedTopicsAccess(
+                                    mContext,
+                                    Process.isSdkSandboxUid(callingUid),
+                                    topicsParam.getAppPackageName(),
+                                    enrollmentData.getEnrollmentId());
+            if (!permitted) {
+                invokeCallbackWithStatus(
+                        callback, STATUS_CALLER_NOT_ALLOWED, "Caller is not authorized.");
+                return false;
+            }
         }
 
         return true;
@@ -270,17 +325,14 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
 
     /** Init the Topics Service. */
     public void init() {
-        sBackgroundExecutor.execute(
-                () -> {
-                    // This is to prevent cold-start latency on getTopics API.
-                    // Load cache when the service is created.
-                    // The recommended pattern is:
-                    // 1) In app startup, wake up the TopicsService.
-                    // 2) The TopicsService will load the Topics Cache from DB into memory.
-                    // 3) Later, when the app calls Topics API, the returned Topics will be served
-                    // from
-                    // Cache in memory.
-                    mTopicsWorker.loadCache();
-                });
+        // This is to prevent cold-start latency on getTopics API.
+        // Load cache when the service is created.
+        // The recommended pattern is:
+        // 1) In app startup, wake up the TopicsService.
+        // 2) The TopicsService will load the Topics Cache from DB into memory.
+        // 3) Later, when the app calls Topics API, the returned Topics will be served
+        // from
+        // Cache in memory.
+        sBackgroundExecutor.execute(mTopicsWorker::loadCache);
     }
 }

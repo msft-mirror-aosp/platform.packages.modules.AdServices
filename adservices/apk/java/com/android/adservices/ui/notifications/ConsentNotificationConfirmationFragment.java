@@ -59,6 +59,8 @@ public class ConsentNotificationConfirmationFragment extends Fragment {
                 view -> {
                     // go to settings activity
                     Intent intent = new Intent(requireActivity(), AdServicesSettingsActivity.class);
+                    intent.addFlags(
+                            Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(intent);
                 });
 

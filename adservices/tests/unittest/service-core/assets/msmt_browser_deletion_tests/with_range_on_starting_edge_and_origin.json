@@ -8,7 +8,7 @@
         "sourceType": "navigation",
         "publisher": "android-app://com.site.deleteCandidate",
         "appDestination": "android-app://com.site2",
-        "adTechDomain": "https://ad-tech.example.com",
+        "enrollmentId": "enrollment-id",
         "eventTime": 1648665733600,
         "expiryTime": 1648665733611,
         "priority": 100,
@@ -21,7 +21,7 @@
         "sourceType": "navigation",
         "publisher": "android-app://com.site.deleteCandidate",
         "appDestination": "android-app://com.site2",
-        "adTechDomain": "https://ad-tech.example.com",
+        "enrollmentId": "enrollment-id",
         "eventTime": 1648665733605,
         "expiryTime": 1648665733615,
         "priority": 100,
@@ -34,7 +34,7 @@
         "sourceType": "navigation",
         "publisher": "android-app://com.site3.siteNotMatch",
         "appDestination": "android-app://com.site2",
-        "adTechDomain": "https://ad-tech.example.com",
+        "enrollmentId": "enrollment-id",
         "eventTime": 1648665733600,
         "expiryTime": 1648665733611,
         "priority": 100,
@@ -46,7 +46,7 @@
       {
         "id": "T1",
         "attributionDestination": "android-app://com.site.deleteCandidate",
-        "adTechDomain": "https://ad-tech.example.com",
+        "enrollmentId": "enrollment-id",
         "priority": 101,
         "status": 0,
         "triggerData": 2,
@@ -65,7 +65,7 @@
       {
         "id": "T2",
         "attributionDestination": "android-app://com.site.deleteCandidate",
-        "adTechDomain": "https://ad-tech.example.com",
+        "enrollmentId": "enrollment-id",
         "priority": 101,
         "status": 0,
         "triggerData": 2,
@@ -84,7 +84,7 @@
       {
         "id": "T3",
         "attributionDestination": "android-app://com.site.doNotDeleteButInRange",
-        "adTechDomain": "https://ad-tech.example.com",
+        "enrollmentId": "enrollment-id",
         "priority": 101,
         "status": 0,
         "triggerData": 2,
@@ -106,7 +106,7 @@
         "id": "E1",
         "sourceId": 1,
         "attributionDestination": "android-app://com.site.deleteCandidate",
-        "adTechDomain": "https://ad-tech.example.com",
+        "enrollmentId": "enrollment-id",
         "triggerData": 2,
         "triggerTime": 1648665733600,
         "status": 0,
@@ -118,7 +118,7 @@
         "id": "E2",
         "sourceId": 1,
         "attributionDestination": "android-app://com.site.notInRangeButDeleteDueToSourceId1",
-        "adTechDomain": "https://ad-tech.example.com",
+        "enrollmentId": "enrollment-id",
         "triggerData": 2,
         "triggerTime": 1648665733605,
         "status": 0,
@@ -130,7 +130,7 @@
         "id": "E3",
         "sourceId": 2,
         "attributionDestination": "android-app://com.site.doNotDelete",
-        "adTechDomain": "https://ad-tech.example.com",
+        "enrollmentId": "enrollment-id",
         "triggerData": 2,
         "triggerTime": 1648665733605,
         "status": 0,
@@ -142,7 +142,7 @@
         "id": "E4",
         "sourceId": 2,
         "attributionDestination": "android-app://com.site.deleteCandidate",
-        "adTechDomain": "https://ad-tech.example.com",
+        "enrollmentId": "enrollment-id",
         "triggerData": 2,
         "triggerTime": 1648665733600,
         "status": 0,
@@ -154,7 +154,7 @@
         "id": "E5",
         "sourceId": 2,
         "attributionDestination": "android-app://com.site.deleteCandidate",
-        "adTechDomain": "https://ad-tech.example.com",
+        "enrollmentId": "enrollment-id",
         "triggerData": 2,
         "triggerTime": 1648665733605,
         "status": 0,
@@ -163,14 +163,14 @@
         "sourceType": "navigation"
       }
     ],
-    "attribution_rate_limits": [
+    "attributions": [
       {
         "id": "A1",
         "sourceSite": "android-app://com.site.deleteCandidate",
         "sourceOrigin": "android-app://com.site.deleteCandidate",
         "destinationSite": "android-app://com.site2",
         "destinationOrigin": "android-app://com.site2",
-        "adTechDomain": "https://ad-tech.example.com",
+        "enrollmentId": "enrollment-id",
         "triggerTime": 1648665733600,
         "registrant": "android-app://com.registrant.deleteCandidate"
       },
@@ -180,7 +180,7 @@
         "sourceOrigin": "android-app://com.site.deleteCandidate",
         "destinationSite": "android-app://com.site2",
         "destinationOrigin": "android-app://com.site2",
-        "adTechDomain": "https://ad-tech.example.com",
+        "enrollmentId": "enrollment-id",
         "triggerTime": 1648665733605,
         "registrant": "android-app://com.registrant.deleteCandidate"
       },
@@ -190,7 +190,7 @@
         "sourceOrigin": "android-app://com.site3",
         "destinationSite": "android-app://com.site2",
         "destinationOrigin": "android-app://com.site2",
-        "adTechDomain": "https://ad-tech.example.com",
+        "enrollmentId": "enrollment-id",
         "triggerTime": 1648665733600,
         "registrant": "android-app://com.registrant.deleteCandidate"
       }
@@ -204,7 +204,7 @@
         "sourceType": "navigation",
         "publisher": "android-app://com.site.deleteCandidate",
         "appDestination": "android-app://com.site2",
-        "adTechDomain": "https://ad-tech.example.com",
+        "enrollmentId": "enrollment-id",
         "eventTime": 1648665733605,
         "expiryTime": 1648665733615,
         "priority": 100,
@@ -217,7 +217,7 @@
         "sourceType": "navigation",
         "publisher": "android-app://com.site3.siteNotMatch",
         "appDestination": "android-app://com.site2",
-        "adTechDomain": "https://ad-tech.example.com",
+        "enrollmentId": "enrollment-id",
         "eventTime": 1648665733600,
         "expiryTime": 1648665733611,
         "priority": 100,
@@ -229,7 +229,7 @@
       {
         "id": "T2",
         "attributionDestination": "android-app://com.site.deleteCandidate",
-        "adTechDomain": "https://ad-tech.example.com",
+        "enrollmentId": "enrollment-id",
         "priority": 101,
         "status": 0,
         "triggerData": 2,
@@ -248,7 +248,7 @@
       {
         "id": "T3",
         "attributionDestination": "android-app://com.site.doNotDeleteButInRange",
-        "adTechDomain": "https://ad-tech.example.com",
+        "enrollmentId": "enrollment-id",
         "priority": 101,
         "status": 0,
         "triggerData": 2,
@@ -270,7 +270,7 @@
         "id": "E3",
         "sourceId": 2,
         "attributionDestination": "android-app://com.site.doNotDelete",
-        "adTechDomain": "https://ad-tech.example.com",
+        "enrollmentId": "enrollment-id",
         "triggerData": 2,
         "triggerTime": 1648665733605,
         "status": 0,
@@ -282,7 +282,7 @@
         "id": "E5",
         "sourceId": 2,
         "attributionDestination": "android-app://com.site.deleteCandidate",
-        "adTechDomain": "https://ad-tech.example.com",
+        "enrollmentId": "enrollment-id",
         "triggerData": 2,
         "triggerTime": 1648665733605,
         "status": 0,
@@ -291,14 +291,14 @@
         "sourceType": "navigation"
       }
     ],
-    "attribution_rate_limits": [
+    "attributions": [
       {
         "id": "A2",
         "sourceSite": "android-app://com.site.deleteCandidate",
         "sourceOrigin": "android-app://com.site.deleteCandidate",
         "destinationSite": "android-app://com.site2",
         "destinationOrigin": "android-app://com.site2",
-        "adTechDomain": "https://ad-tech.example.com",
+        "enrollmentId": "enrollment-id",
         "triggerTime": 1648665733605,
         "registrant": "android-app://com.registrant.deleteCandidate"
       },
@@ -308,7 +308,7 @@
         "sourceOrigin": "android-app://com.site3",
         "destinationSite": "android-app://com.site2",
         "destinationOrigin": "android-app://com.site2",
-        "adTechDomain": "https://ad-tech.example.com",
+        "enrollmentId": "enrollment-id",
         "triggerTime": 1648665733600,
         "registrant": "android-app://com.registrant.deleteCandidate"
       }

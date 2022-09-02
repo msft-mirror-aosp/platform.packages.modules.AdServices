@@ -15,15 +15,20 @@
  */
 package com.android.adservices.topics;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
+
 import android.app.Service;
 import android.content.Intent;
 import android.os.Build;
 import android.os.IBinder;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.download.MddJobService;
+import com.android.adservices.download.MobileDataDownloadFactory;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
+import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -53,6 +58,12 @@ public class TopicsService extends Service {
             return;
         }
 
+        AppImportanceFilter appImportanceFilter =
+                AppImportanceFilter.create(
+                        this,
+                        AD_SERVICES_API_CALLED__API_CLASS__TARGETING,
+                        () -> FlagsFactory.getFlags().getForegroundStatuslLevelForValidation());
+
         if (mTopicsService == null) {
             mTopicsService =
                     new TopicsServiceImpl(
@@ -63,7 +74,9 @@ public class TopicsService extends Service {
                             Clock.SYSTEM_CLOCK,
                             FlagsFactory.getFlags(),
                             Throttler.getInstance(
-                                    FlagsFactory.getFlags().getSdkRequestPermitsPerSecond()));
+                                    FlagsFactory.getFlags().getSdkRequestPermitsPerSecond()),
+                            EnrollmentDao.getInstance(this),
+                            appImportanceFilter);
             mTopicsService.init();
         }
 
@@ -71,8 +84,8 @@ public class TopicsService extends Service {
     }
 
     private void schedulePeriodicJobs() {
-        MaintenanceJobService.schedule(this);
-        EpochJobService.schedule(this);
+        MaintenanceJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
+        EpochJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
 
         // TODO(b/238674236): Schedule this after the boot complete.
         MddJobService.schedule(this);
@@ -96,6 +109,7 @@ public class TopicsService extends Service {
             writer.println("Build is Debuggable, dumping information for TopicsService");
             EpochManager.getInstance(this).dump(writer, args);
             CacheManager.getInstance(this).dump(writer, args);
+            MobileDataDownloadFactory.dump(this, writer);
         } else {
             writer.println("Build is not Debuggable");
         }

@@ -18,7 +18,11 @@ package android.adservices.exceptions;
 
 import android.annotation.NonNull;
 
-/** Exception thrown by Measurement API. */
+/**
+ * Exception thrown by Measurement API.
+ *
+ * @hide
+ */
 public class MeasurementException extends AdServicesException {
     /** Initializes an {@link MeasurementException} with no message. */
     public MeasurementException() {

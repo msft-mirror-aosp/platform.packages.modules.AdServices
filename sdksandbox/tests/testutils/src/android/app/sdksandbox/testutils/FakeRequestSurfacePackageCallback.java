@@ -19,14 +19,14 @@ package android.app.sdksandbox.testutils;
 import static com.google.common.truth.Truth.assertThat;
 
 import android.app.sdksandbox.RequestSurfacePackageException;
-import android.app.sdksandbox.RequestSurfacePackageResponse;
+import android.os.Bundle;
 import android.os.OutcomeReceiver;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 public class FakeRequestSurfacePackageCallback
-        implements OutcomeReceiver<RequestSurfacePackageResponse, RequestSurfacePackageException> {
+        implements OutcomeReceiver<Bundle, RequestSurfacePackageException> {
     private CountDownLatch mSurfacePackageLatch = new CountDownLatch(1);
 
     private boolean mSurfacePackageSuccess;
@@ -43,7 +43,7 @@ public class FakeRequestSurfacePackageCallback
     }
 
     @Override
-    public void onResult(RequestSurfacePackageResponse response) {
+    public void onResult(Bundle response) {
         mSurfacePackageSuccess = true;
         mSurfacePackageLatch.countDown();
     }

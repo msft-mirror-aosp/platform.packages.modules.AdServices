@@ -121,11 +121,10 @@ public final class AdTechIdentifier implements Parcelable {
     /**
      * Construct an instance of this class from a String.
      *
-     * @param source A valid eTLD+1 domain of an ad buyer or seller or null.
+     * @param source A valid eTLD+1 domain of an ad buyer or seller.
      * @param validate Construction-time validation is run on the string if and only if this is
      *     true.
-     * @return An {@link AdTechIdentifier} class wrapping the given domain or null if the input was
-     *     null.
+     * @return An {@link AdTechIdentifier} class wrapping the given domain.
      * @hide
      */
     @NonNull

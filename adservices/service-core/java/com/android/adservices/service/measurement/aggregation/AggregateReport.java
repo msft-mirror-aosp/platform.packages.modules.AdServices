@@ -37,7 +37,7 @@ public class AggregateReport {
     private Uri mAttributionDestination;
     private long mSourceRegistrationTime;
     private long mScheduledReportTime;   // triggerTime + random([10min, 1hour])
-    private Uri mReportingOrigin;
+    private String mEnrollmentId;
     private String mDebugCleartextPayload;
     private AggregateAttributionData mAggregateAttributionData;
     private @Status int mStatus;
@@ -59,7 +59,7 @@ public class AggregateReport {
         mAttributionDestination = null;
         mSourceRegistrationTime = 0L;
         mScheduledReportTime = 0L;
-        mReportingOrigin = null;
+        mEnrollmentId = null;
         mDebugCleartextPayload = null;
         mAggregateAttributionData = null;
         mStatus = AggregateReport.Status.PENDING;
@@ -75,7 +75,7 @@ public class AggregateReport {
                 && Objects.equals(mAttributionDestination, aggregateReport.mAttributionDestination)
                 && mSourceRegistrationTime == aggregateReport.mSourceRegistrationTime
                 && mScheduledReportTime == aggregateReport.mScheduledReportTime
-                && Objects.equals(mReportingOrigin, aggregateReport.mReportingOrigin)
+                && Objects.equals(mEnrollmentId, aggregateReport.mEnrollmentId)
                 && Objects.equals(mDebugCleartextPayload, aggregateReport.mDebugCleartextPayload)
                 && Objects.equals(mAggregateAttributionData,
                         aggregateReport.mAggregateAttributionData)
@@ -86,7 +86,7 @@ public class AggregateReport {
     @Override
     public int hashCode() {
         return Objects.hash(mId, mPublisher, mAttributionDestination, mSourceRegistrationTime,
-                mScheduledReportTime, mReportingOrigin, mDebugCleartextPayload,
+                mScheduledReportTime, mEnrollmentId, mDebugCleartextPayload,
                 mAggregateAttributionData, mStatus);
     }
 
@@ -126,10 +126,10 @@ public class AggregateReport {
     }
 
     /**
-     * Uri for report_to of source.
+     * Ad-tech enrollment ID.
      */
-    public Uri getReportingOrigin() {
-        return mReportingOrigin;
+    public String getEnrollmentId() {
+        return mEnrollmentId;
     }
 
     /**
@@ -238,10 +238,10 @@ public class AggregateReport {
         }
 
         /**
-         * See {@link AggregateReport#getReportingOrigin()}.
+         * See {@link AggregateReport#getEnrollmentId()}.
          */
-        public Builder setReportingOrigin(Uri reportingOrigin) {
-            mAttributionReport.mReportingOrigin = reportingOrigin;
+        public Builder setEnrollmentId(String enrollmentId) {
+            mAttributionReport.mEnrollmentId = enrollmentId;
             return this;
         }
 

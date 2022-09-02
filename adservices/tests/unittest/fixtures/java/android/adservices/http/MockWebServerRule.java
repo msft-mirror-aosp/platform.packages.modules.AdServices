@@ -39,6 +39,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
@@ -149,7 +150,8 @@ public class MockWebServerRule implements TestRule {
      * @return the base address the mock web server will be listening to when started.
      */
     public String getServerBaseAddress() {
-        return String.format("%s://localhost:%d", useHttps() ? "https" : "http", mPort);
+        return String.format(
+                Locale.ENGLISH, "%s://localhost:%d", useHttps() ? "https" : "http", mPort);
     }
 
     /**
@@ -162,7 +164,11 @@ public class MockWebServerRule implements TestRule {
     public Uri uriForPath(String path) {
         return Uri.parse(
                 String.format(
-                        "%s%s%s", getServerBaseAddress(), path.startsWith("/") ? "" : "/", path));
+                        Locale.ENGLISH,
+                        "%s%s%s",
+                        getServerBaseAddress(),
+                        path.startsWith("/") ? "" : "/",
+                        path));
     }
 
     private void reserveServerListeningPort() throws IOException {
@@ -218,14 +224,18 @@ public class MockWebServerRule implements TestRule {
 
         assertFalse(
                 String.format(
-                        "Expected requests cannot be empty, actual requests <%s>", actualRequests),
+                        Locale.ENGLISH,
+                        "Expected requests cannot be empty, actual requests <%s>",
+                        actualRequests),
                 expectedRequestCount != 0 && expectedRequests.isEmpty());
 
         for (String request : expectedRequests) {
             Assert.assertTrue(
                     String.format(
+                            Locale.ENGLISH,
                             "Actual requests <%s> do not contain request <%s>",
-                            actualRequests, request),
+                            actualRequests,
+                            request),
                     wasPathRequested(actualRequests, request, requestMatcher));
         }
     }

@@ -16,14 +16,12 @@
 
 package com.android.adservices.service.adselection;
 
-import static com.android.adservices.service.js.JSScriptArgument.arrayArg;
 import static com.android.adservices.service.js.JSScriptArgument.jsonArg;
 import static com.android.adservices.service.js.JSScriptArgument.recordArg;
 import static com.android.adservices.service.js.JSScriptArgument.stringArg;
 import static com.android.adservices.service.js.JSScriptArgument.stringArrayArg;
 
 import android.adservices.adselection.AdSelectionConfig;
-import android.adservices.adselection.AdWithBid;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 
@@ -49,7 +47,6 @@ public class AdSelectionConfigArgument {
     public static final String AUCTION_SIGNALS_FIELD_NAME = "auction_signals";
     public static final String SELLER_SIGNALS_FIELD_NAME = "seller_signals";
     public static final String PER_BUYER_SIGNALS_FIELD_NAME = "per_buyer_signals";
-    public static final String CONTEXTUAL_ADS_FIELD_NAME = "contextual_ads";
 
     // No instance of this class is supposed to be created
     private AdSelectionConfigArgument() {}
@@ -67,12 +64,6 @@ public class AdSelectionConfigArgument {
             perBuyerSignalsArg.add(
                     jsonArg(buyerSignal.getKey().toString(), buyerSignal.getValue().toString()));
         }
-
-        final ImmutableList.Builder<JSScriptArgument> contextualAdsArgsBuilder =
-                new ImmutableList.Builder<>();
-        for (AdWithBid adWithBid : adSelectionConfig.getContextualAds()) {
-            contextualAdsArgsBuilder.add(AdWithBidArgument.asScriptArgument("ignored", adWithBid));
-        }
         return recordArg(
                 name,
                 stringArg(SELLER_FIELD_NAME, adSelectionConfig.getSeller().toString()),
@@ -89,7 +80,6 @@ public class AdSelectionConfigArgument {
                         adSelectionConfig.getAdSelectionSignals().toString()),
                 jsonArg(SELLER_SIGNALS_FIELD_NAME, adSelectionConfig.getSellerSignals().toString()),
                 recordArg(PER_BUYER_SIGNALS_FIELD_NAME, perBuyerSignalsArg.build()),
-                arrayArg(CONTEXTUAL_ADS_FIELD_NAME, contextualAdsArgsBuilder.build()),
                 stringArg(
                         TRUSTED_SCORING_SIGNAL_URI_FIELD_NAME,
                         adSelectionConfig.getTrustedScoringSignalsUri().toString()));

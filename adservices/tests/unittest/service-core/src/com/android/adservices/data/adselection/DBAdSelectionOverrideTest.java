@@ -97,4 +97,19 @@ public class DBAdSelectionOverrideTest {
                             .build();
                 });
     }
+
+    @Test
+    public void testDBAdSelectionOverrideCreate() {
+        DBAdSelectionOverride dbAdSelectionOverride =
+                DBAdSelectionOverride.create(
+                        AD_SELECTION_CONFIG_ID,
+                        APP_PACKAGE_NAME,
+                        DECISION_LOGIC_JS,
+                        TRUSTED_SCORING_SIGNALS);
+
+        assertEquals(AD_SELECTION_CONFIG_ID, dbAdSelectionOverride.getAdSelectionConfigId());
+        assertEquals(APP_PACKAGE_NAME, dbAdSelectionOverride.getAppPackageName());
+        assertEquals(DECISION_LOGIC_JS, dbAdSelectionOverride.getDecisionLogicJS());
+        assertEquals(TRUSTED_SCORING_SIGNALS, dbAdSelectionOverride.getTrustedScoringSignals());
+    }
 }

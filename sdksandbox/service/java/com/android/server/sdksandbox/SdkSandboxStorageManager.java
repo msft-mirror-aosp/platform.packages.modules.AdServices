@@ -121,10 +121,20 @@ class SdkSandboxStorageManager {
     SdkDataDirInfo getSdkDataDirInfo(CallingInfo callingInfo, String sdkName) {
         final int uid = callingInfo.getUid();
         final String packageName = callingInfo.getPackageName();
-        final String cePackagePath = getSdkDataPackageDirectory(/*volumeUuid=*/null,
-                getUserId(uid), packageName, /*isCeData=*/true);
-        final String dePackagePath = getSdkDataPackageDirectory(/*volumeUuid=*/null,
-                getUserId(uid), packageName, /*isCeData=*/false);
+        String volumeUuid = null;
+        try {
+            volumeUuid = getVolumeUuidForPackage(getUserId(uid), packageName);
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to find package " + packageName + " error: " + e.getMessage());
+            // TODO(b/238164644): SdkSandboxManagerService should fail loadSdk
+            return new SdkDataDirInfo(null, null);
+        }
+        final String cePackagePath =
+                getSdkDataPackageDirectory(
+                        volumeUuid, getUserId(uid), packageName, /*isCeData=*/ true);
+        final String dePackagePath =
+                getSdkDataPackageDirectory(
+                        volumeUuid, getUserId(uid), packageName, /*isCeData=*/ false);
         // TODO(b/232924025): We should have these information cached, instead of rescanning dirs.
         synchronized (mLock) {
             final String sdkCeSubDirName = getSubDirs(cePackagePath).getOrDefault(sdkName, null);
@@ -261,15 +271,15 @@ class SdkSandboxStorageManager {
     /**
      * For the given {@code userId}, ensure that sdk data package directories are still valid.
      *
-     * The primary concern of this method is to remove invalid data directories. Missing valid
+     * <p>The primary concern of this method is to remove invalid data directories. Missing valid
      * directories will get created when the app loads sdk for the first time.
      */
     @GuardedBy("mLock")
     private void reconcileSdkDataPackageDirs(int userId) {
         Log.i(TAG, "Reconciling sdk data package directories for " + userId);
         PackageInfoHolder pmInfoHolder = new PackageInfoHolder(mContext, userId);
-        reconcileSdkDataPackageDirs(userId, /*isCeData=*/true, pmInfoHolder);
-        reconcileSdkDataPackageDirs(userId, /*isCeData=*/false, pmInfoHolder);
+        reconcileSdkDataPackageDirs(userId, /*isCeData=*/ true, pmInfoHolder);
+        reconcileSdkDataPackageDirs(userId, /*isCeData=*/ false, pmInfoHolder);
     }
 
     @GuardedBy("mLock")

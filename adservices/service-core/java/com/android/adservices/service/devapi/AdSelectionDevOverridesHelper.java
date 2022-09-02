@@ -72,14 +72,6 @@ public class AdSelectionDevOverridesHelper {
         adSelectionConfig.getCustomAudienceBuyers().stream()
                 .map(AdTechIdentifier::toString)
                 .forEach(hasher::putUnencodedChars);
-        adSelectionConfig.getContextualAds().stream()
-                .forEach(
-                        adWithBid -> {
-                            hasher.putUnencodedChars(
-                                            adWithBid.getAdData().getRenderUri().toString())
-                                    .putUnencodedChars(adWithBid.getAdData().getMetadata())
-                                    .putDouble(adWithBid.getBid());
-                        });
         adSelectionConfig.getPerBuyerSignals().entrySet().stream()
                 .forEach(
                         buyerAndSignals -> {

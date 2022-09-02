@@ -73,6 +73,10 @@ public final class DBAdSelection {
     @NonNull
     private final Instant mCreationTimestamp;
 
+    @ColumnInfo(name = "caller_package_name")
+    @NonNull
+    private final String mCallerPackageName;
+
     public DBAdSelection(
             long adSelectionId,
             @Nullable CustomAudienceSignals customAudienceSignals,
@@ -80,7 +84,8 @@ public final class DBAdSelection {
             @Nullable Uri biddingLogicUri,
             @NonNull Uri winningAdRenderUri,
             double winningAdBid,
-            @NonNull Instant creationTimestamp) {
+            @NonNull Instant creationTimestamp,
+            @NonNull String callerPackageName) {
         this.mAdSelectionId = adSelectionId;
         this.mCustomAudienceSignals = customAudienceSignals;
         this.mContextualSignals = contextualSignals;
@@ -88,6 +93,7 @@ public final class DBAdSelection {
         this.mWinningAdRenderUri = winningAdRenderUri;
         this.mWinningAdBid = winningAdBid;
         this.mCreationTimestamp = creationTimestamp;
+        this.mCallerPackageName = callerPackageName;
     }
 
     @Override
@@ -101,7 +107,8 @@ public final class DBAdSelection {
                     && Objects.equals(mBiddingLogicUri, adSelection.mBiddingLogicUri)
                     && Objects.equals(mWinningAdRenderUri, adSelection.mWinningAdRenderUri)
                     && mWinningAdBid == adSelection.mWinningAdBid
-                    && Objects.equals(mCreationTimestamp, adSelection.mCreationTimestamp);
+                    && Objects.equals(mCreationTimestamp, adSelection.mCreationTimestamp)
+                    && mCallerPackageName.equals(adSelection.mCallerPackageName);
         }
         return false;
     }
@@ -115,7 +122,8 @@ public final class DBAdSelection {
                 mBiddingLogicUri,
                 mWinningAdRenderUri,
                 mWinningAdBid,
-                mCreationTimestamp);
+                mCreationTimestamp,
+                mCallerPackageName);
     }
 
     /**
@@ -171,6 +179,12 @@ public final class DBAdSelection {
         return mCreationTimestamp;
     }
 
+    /** @return the caller's package name for this ad selection. */
+    @NonNull
+    public String getCallerPackageName() {
+        return mCallerPackageName;
+    }
+
     /** Builder for {@link DBAdSelection} object. */
     public static final class Builder {
         private long mAdSelectionId = UNSET;
@@ -180,6 +194,7 @@ public final class DBAdSelection {
         private Uri mWinningAdRenderUri;
         private double mWinningAdBid;
         private Instant mCreationTimestamp;
+        private String mCallerPackageName;
 
         public Builder() {}
 
@@ -242,6 +257,14 @@ public final class DBAdSelection {
             return this;
         }
 
+        /** Sets the app package name of the calling sdk in this ad selection. */
+        @NonNull
+        public DBAdSelection.Builder setCallerPackageName(@NonNull String callerPackageName) {
+            Objects.requireNonNull(callerPackageName);
+            this.mCallerPackageName = callerPackageName;
+            return this;
+        }
+
         /**
          * Builds an {@link DBAdSelection} instance.
          *
@@ -262,6 +285,7 @@ public final class DBAdSelection {
             Objects.requireNonNull(mContextualSignals);
             Objects.requireNonNull(mWinningAdRenderUri);
             Objects.requireNonNull(mCreationTimestamp);
+            Objects.requireNonNull(mCallerPackageName);
 
             return new DBAdSelection(
                     mAdSelectionId,
@@ -270,7 +294,8 @@ public final class DBAdSelection {
                     mBiddingLogicUri,
                     mWinningAdRenderUri,
                     mWinningAdBid,
-                    mCreationTimestamp);
+                    mCreationTimestamp,
+                    mCallerPackageName);
         }
     }
 }

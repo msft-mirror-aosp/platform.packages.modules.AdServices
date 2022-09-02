@@ -18,6 +18,7 @@ package {
 
 android_app {
     name: "CtsSampleTopicsApp1",
+    certificate: "platform",
     defaults: ["platform_app_defaults"],
     srcs: [
        "java/**/*.java",

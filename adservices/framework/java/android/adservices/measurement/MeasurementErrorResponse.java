@@ -16,21 +16,15 @@
 
 package android.adservices.measurement;
 
-import static com.android.adservices.ResultCode.RESULT_INTERNAL_ERROR;
-import static com.android.adservices.ResultCode.RESULT_INVALID_ARGUMENT;
-import static com.android.adservices.ResultCode.RESULT_IO_ERROR;
-import static com.android.adservices.ResultCode.RESULT_OK;
-import static com.android.adservices.ResultCode.RESULT_UNAUTHORIZED_CALL;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
-import android.adservices.exceptions.AdServicesException;
-import android.adservices.exceptions.MeasurementException;
-import android.adservices.measurement.MeasurementManager.ResultCode;
+import android.adservices.common.AdServicesResponse;
+import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import java.io.IOException;
 import java.util.Objects;
 
 /**
@@ -38,22 +32,7 @@ import java.util.Objects;
  *
  * @hide
  */
-public final class MeasurementErrorResponse implements Parcelable {
-    @ResultCode private final int mResultCode;
-    @Nullable private final String mErrorMessage;
-
-    private MeasurementErrorResponse(@NonNull Builder builder) {
-        mResultCode = builder.mResultCode;
-        mErrorMessage = builder.mErrorMessage;
-    }
-
-    private MeasurementErrorResponse(@NonNull Parcel in) {
-        Objects.requireNonNull(in);
-
-        mResultCode = in.readInt();
-        mErrorMessage = in.readString();
-    }
-
+public final class MeasurementErrorResponse extends AdServicesResponse {
     @NonNull
     public static final Creator<MeasurementErrorResponse> CREATOR =
             new Parcelable.Creator<MeasurementErrorResponse>() {
@@ -69,6 +48,14 @@ public final class MeasurementErrorResponse implements Parcelable {
                 }
             };
 
+    protected MeasurementErrorResponse(@NonNull Builder builder) {
+        super(builder.mStatusCode, builder.mErrorMessage);
+    }
+
+    protected MeasurementErrorResponse(@NonNull Parcel in) {
+        super(in);
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -79,47 +66,8 @@ public final class MeasurementErrorResponse implements Parcelable {
     public void writeToParcel(@NonNull Parcel dest, int flags) {
         Objects.requireNonNull(dest);
 
-        dest.writeInt(mResultCode);
+        dest.writeInt(mStatusCode);
         dest.writeString(mErrorMessage);
-    }
-
-    /**
-     * Returns one of the {@code STATUS} constants defined in {@link MeasurementManager.ResultCode}.
-     */
-    public int getStatusCode() {
-        return mResultCode;
-    }
-
-    /** Returns the error message associated with this response. */
-    @Nullable
-    public String getErrorMessage() {
-        return mErrorMessage;
-    }
-
-    /** Converts the response to an exception to be used in the callback. */
-    @NonNull
-    public AdServicesException asException() {
-
-        Exception innerException;
-        switch (mResultCode) {
-            case RESULT_INVALID_ARGUMENT:
-                innerException = new IllegalArgumentException();
-                break;
-            case RESULT_INTERNAL_ERROR:
-                innerException = new IllegalStateException();
-                break;
-            case RESULT_IO_ERROR:
-                innerException = new IOException();
-                break;
-            case RESULT_UNAUTHORIZED_CALL:
-                innerException = new SecurityException(mErrorMessage);
-                break;
-            case RESULT_OK: // Intentional fallthrough
-            default:
-                innerException = new Exception();
-                break;
-        }
-        return new MeasurementException(mErrorMessage, innerException);
     }
 
     /**
@@ -128,15 +76,16 @@ public final class MeasurementErrorResponse implements Parcelable {
      * @hide
      */
     public static final class Builder {
-        @ResultCode private int mResultCode = RESULT_OK;
+        @AdServicesStatusUtils.StatusCode private int mStatusCode = STATUS_SUCCESS;
         @Nullable private String mErrorMessage;
 
         public Builder() {}
 
         /** Set the Status Code. */
         @NonNull
-        public MeasurementErrorResponse.Builder setResultCode(@ResultCode int resultCode) {
-            mResultCode = resultCode;
+        public MeasurementErrorResponse.Builder setStatusCode(
+                @AdServicesStatusUtils.StatusCode int statusCode) {
+            mStatusCode = statusCode;
             return this;
         }
 

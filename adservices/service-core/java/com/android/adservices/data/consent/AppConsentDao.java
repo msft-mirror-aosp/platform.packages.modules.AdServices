@@ -190,6 +190,17 @@ public class AppConsentDao {
     }
 
     /**
+     * Clears the consent datastore of all known apps with consent. Apps with revoked consent are
+     * not removed.
+     *
+     * @throws IOException if the operation fails
+     */
+    public void clearKnownAppsWithConsent() throws IOException {
+        initializeDatastoreIfNeeded();
+        mDatastore.clearAllFalse();
+    }
+
+    /**
      * Removes the consent setting for an application (if it exists in the datastore).
      *
      * @throws IllegalArgumentException if the package name or package UID is invalid

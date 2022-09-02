@@ -17,6 +17,7 @@
 package android.adservices.adselection;
 
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.net.Uri;
 
 
@@ -25,10 +26,9 @@ import com.android.internal.util.Preconditions;
 import java.util.Objects;
 
 /**
- * This class represents a field in the {@code OutcomeReceiver}, which is an input to the
- * {@link AdSelectionManager#runAdSelection} in the {@link AdSelectionManager}.
- * This field is populated in the case of a successful {@link AdSelectionManager#runAdSelection}
- * call.
+ * This class represents a field in the {@code OutcomeReceiver}, which is an input to the {@link
+ * AdSelectionManager#selectAds} in the {@link AdSelectionManager}. This field is populated in the
+ * case of a successful {@link AdSelectionManager#selectAds} call.
  */
 public class AdSelectionOutcome {
     private static final int UNSET = 0;
@@ -75,8 +75,7 @@ public class AdSelectionOutcome {
      */
     public static final class Builder {
         private long mAdSelectionId = UNSET;
-        @NonNull private Uri mRenderUri;
-        ;
+        @Nullable private Uri mRenderUri;
 
         public Builder() {}
 
