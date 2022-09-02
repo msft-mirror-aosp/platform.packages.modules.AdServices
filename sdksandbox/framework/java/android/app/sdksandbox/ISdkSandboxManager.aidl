@@ -34,8 +34,8 @@ interface ISdkSandboxManager {
     const String REQUEST_SURFACE_PACKAGE = "REQUEST_SURFACE_PACKAGE";
     const String LOAD_SDK = "LOAD_SDK";
 
-    void addSdkSandboxProcessDeathCallback(in String callingPackageName, in ISdkSandboxProcessDeathCallback callback);
-    void removeSdkSandboxProcessDeathCallback(in String callingPackageName, in ISdkSandboxProcessDeathCallback callback);
+    void addSdkSandboxProcessDeathCallback(in String callingPackageName, long timeAppCalledSystemServer, in ISdkSandboxProcessDeathCallback callback);
+    void removeSdkSandboxProcessDeathCallback(in String callingPackageName, long timeAppCalledSystemServer, in ISdkSandboxProcessDeathCallback callback);
     void loadSdk(in String callingPackageName, in String sdkName, long timeAppCalledSystemServer, in Bundle params, in ILoadSdkCallback callback);
     void unloadSdk(in String callingPackageName, in String sdkName, long timeAppCalledSystemServer);
     // TODO(b/242031240): wrap the many input params in one parcelable object
