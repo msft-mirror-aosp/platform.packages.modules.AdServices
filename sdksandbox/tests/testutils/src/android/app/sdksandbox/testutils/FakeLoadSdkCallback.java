@@ -31,9 +31,8 @@ public class FakeLoadSdkCallback implements OutcomeReceiver<SandboxedSdk, LoadSd
 
     private boolean mLoadSdkSuccess;
 
-    private int mErrorCode;
-    private String mErrorMsg;
     private SandboxedSdk mSandboxedSdk;
+    private LoadSdkException mLoadSdkException = null;
 
     @Override
     public void onResult(SandboxedSdk sandboxedSdk) {
@@ -45,8 +44,7 @@ public class FakeLoadSdkCallback implements OutcomeReceiver<SandboxedSdk, LoadSd
     @Override
     public void onError(LoadSdkException exception) {
         mLoadSdkSuccess = false;
-        mErrorCode = exception.getLoadSdkErrorCode();
-        mErrorMsg = exception.getMessage();
+        mLoadSdkException = exception;
         mLoadSdkLatch.countDown();
     }
 
@@ -57,7 +55,9 @@ public class FakeLoadSdkCallback implements OutcomeReceiver<SandboxedSdk, LoadSd
     public boolean isLoadSdkSuccessful(boolean ignoreSdkAlreadyLoadedError) {
         waitForLatch(mLoadSdkLatch);
         if (ignoreSdkAlreadyLoadedError
-                && mErrorCode == SdkSandboxManager.LOAD_SDK_ALREADY_LOADED) {
+                && ((mLoadSdkException == null)
+                        || (mLoadSdkException.getLoadSdkErrorCode()
+                                == SdkSandboxManager.LOAD_SDK_ALREADY_LOADED))) {
             mLoadSdkSuccess = true;
         }
         return mLoadSdkSuccess;
@@ -66,17 +66,23 @@ public class FakeLoadSdkCallback implements OutcomeReceiver<SandboxedSdk, LoadSd
     public int getLoadSdkErrorCode() {
         waitForLatch(mLoadSdkLatch);
         assertThat(mLoadSdkSuccess).isFalse();
-        return mErrorCode;
+        return mLoadSdkException.getLoadSdkErrorCode();
     }
 
     public String getLoadSdkErrorMsg() {
         waitForLatch(mLoadSdkLatch);
-        return mErrorMsg;
+        assertThat(mLoadSdkSuccess).isFalse();
+        return mLoadSdkException.getMessage();
     }
 
     public SandboxedSdk getSandboxedSdk() {
         waitForLatch(mLoadSdkLatch);
         return mSandboxedSdk;
+    }
+
+    public LoadSdkException getLoadSdkException() {
+        waitForLatch(mLoadSdkLatch);
+        return mLoadSdkException;
     }
 
     private void waitForLatch(CountDownLatch latch) {
