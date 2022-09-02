@@ -51,14 +51,14 @@ public class FledgeRoomConverters {
     /** Deserialize {@link Uri} from String. */
     @TypeConverter
     @Nullable
-    public static Uri deserializeUrl(@Nullable String uri) {
+    public static Uri deserializeUri(@Nullable String uri) {
         return Optional.ofNullable(uri).map(Uri::parse).orElse(null);
     }
 
     /** Serialize {@link Uri} to String. */
     @TypeConverter
     @Nullable
-    public static String serializeUrl(@Nullable Uri uri) {
+    public static String serializeUri(@Nullable Uri uri) {
         return Optional.ofNullable(uri).map(Uri::toString).orElse(null);
     }
 

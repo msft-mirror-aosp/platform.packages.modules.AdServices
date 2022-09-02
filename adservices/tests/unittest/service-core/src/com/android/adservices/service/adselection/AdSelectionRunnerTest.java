@@ -507,7 +507,7 @@ public class AdSelectionRunnerTest {
                         .setBiddingLogicUri(
                                 mAdScoringOutcomeForBuyer2
                                         .getCustomAudienceBiddingInfo()
-                                        .getBiddingLogicUrl())
+                                        .getBiddingLogicUri())
                         .setContextualSignals("{}")
                         .setCallerPackageName(MY_APP_PACKAGE_NAME)
                         .build();
@@ -817,7 +817,7 @@ public class AdSelectionRunnerTest {
                         .setBiddingLogicUri(
                                 mAdScoringOutcomeForBuyer1
                                         .getCustomAudienceBiddingInfo()
-                                        .getBiddingLogicUrl())
+                                        .getBiddingLogicUri())
                         .setContextualSignals("{}")
                         .setCallerPackageName(MY_APP_PACKAGE_NAME)
                         .build();
@@ -1295,7 +1295,7 @@ public class AdSelectionRunnerTest {
                         .setBiddingLogicUri(
                                 mAdScoringOutcomeForBuyer1
                                         .getCustomAudienceBiddingInfo()
-                                        .getBiddingLogicUrl())
+                                        .getBiddingLogicUri())
                         .setContextualSignals("{}")
                         .setCallerPackageName(MY_APP_PACKAGE_NAME)
                         .build();

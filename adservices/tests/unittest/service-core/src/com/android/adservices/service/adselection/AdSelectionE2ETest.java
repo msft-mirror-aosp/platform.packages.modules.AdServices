@@ -2210,12 +2210,12 @@ public class AdSelectionE2ETest {
                 .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                 .setTrustedBiddingData(
                         new DBTrustedBiddingData.Builder()
-                                .setUrl(
+                                .setUri(
                                         mMockWebServerRule.uriForPath(
                                                 BUYER_TRUSTED_SIGNAL_URI_PATH))
                                 .setKeys(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_KEYS)
                                 .build())
-                .setBiddingLogicUrl(biddingUri)
+                .setBiddingLogicUri(biddingUri)
                 .setAds(ads)
                 .build();
     }
