@@ -17,8 +17,10 @@
 package com.android.adservices.service.customaudience;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
@@ -26,6 +28,7 @@ import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
 import com.android.adservices.common.DBAdDataFixture;
+import com.android.adservices.common.JsonFixture;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
@@ -44,13 +47,15 @@ public class CustomAudienceUpdatableDataReaderTest {
             DBTrustedBiddingDataFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1).build();
     private static final List<DBAdData> VALID_DB_AD_DATA_LIST =
             DBAdDataFixture.getValidDbAdDataListByBuyer(CommonFixture.VALID_BUYER_1);
+    private static final List<DBAdData> INVALID_DB_AD_DATA_LIST =
+            DBAdDataFixture.getInvalidDbAdDataListByBuyer(CommonFixture.VALID_BUYER_1);
 
     private final Flags mFlags = FlagsFactory.getFlagsForTest();
 
     @Test
     public void testGetUserBiddingSignalsFromFullJsonObjectSuccess() throws JSONException {
         String validUserBiddingSignalsAsJsonObjectString =
-                CustomAudienceUpdatableDataFixture.formatAsOrgJsonJSONObjectString(
+                JsonFixture.formatAsOrgJsonJSONObjectString(
                         CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString());
 
         JSONObject responseObject =
@@ -75,7 +80,7 @@ public class CustomAudienceUpdatableDataReaderTest {
     public void testGetUserBiddingSignalsFromFullJsonObjectWithHarmlessJunkSuccess()
             throws JSONException {
         String validUserBiddingSignalsAsJsonObjectString =
-                CustomAudienceUpdatableDataFixture.formatAsOrgJsonJSONObjectString(
+                JsonFixture.formatAsOrgJsonJSONObjectString(
                         CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString());
 
         JSONObject responseObject =
@@ -145,9 +150,24 @@ public class CustomAudienceUpdatableDataReaderTest {
     }
 
     @Test
+    public void testGetUserBiddingSignalsFromJsonObjectDeeperMismatchedSchema()
+            throws JSONException {
+        CustomAudienceUpdatableDataReader reader =
+                new CustomAudienceUpdatableDataReader(
+                        CustomAudienceUpdatableDataFixture.getDeeperMalformedJsonObject(),
+                        RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER_1,
+                        mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
+                        mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
+                        mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
+                        mFlags.getFledgeCustomAudienceMaxNumAds());
+        assertThrows(JSONException.class, reader::getUserBiddingSignalsFromJsonObject);
+    }
+
+    @Test
     public void testGetUserBiddingSignalsFromJsonObjectInvalidSize() throws JSONException {
         String validUserBiddingSignalsAsJsonObjectString =
-                CustomAudienceUpdatableDataFixture.formatAsOrgJsonJSONObjectString(
+                JsonFixture.formatAsOrgJsonJSONObjectString(
                         CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString());
 
         JSONObject responseObject =
@@ -249,6 +269,21 @@ public class CustomAudienceUpdatableDataReaderTest {
         CustomAudienceUpdatableDataReader reader =
                 new CustomAudienceUpdatableDataReader(
                         CustomAudienceUpdatableDataFixture.getMalformedNullJsonObject(),
+                        RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER_1,
+                        mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
+                        mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
+                        mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
+                        mFlags.getFledgeCustomAudienceMaxNumAds());
+        assertThrows(JSONException.class, reader::getTrustedBiddingDataFromJsonObject);
+    }
+
+    @Test
+    public void testGetTrustedBiddingDataFromJsonObjectDeeperMismatchedSchema()
+            throws JSONException {
+        CustomAudienceUpdatableDataReader reader =
+                new CustomAudienceUpdatableDataReader(
+                        CustomAudienceUpdatableDataFixture.getDeeperMalformedJsonObject(),
                         RESPONSE_IDENTIFIER,
                         CommonFixture.VALID_BUYER_1,
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
@@ -385,6 +420,41 @@ public class CustomAudienceUpdatableDataReaderTest {
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxNumAds());
         assertThrows(JSONException.class, reader::getAdsFromJsonObject);
+    }
+
+    @Test
+    public void testGetAdsFromJsonObjectDeeperMismatchedSchema() throws JSONException {
+        CustomAudienceUpdatableDataReader reader =
+                new CustomAudienceUpdatableDataReader(
+                        CustomAudienceUpdatableDataFixture.getDeeperMalformedJsonObject(),
+                        RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER_1,
+                        mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
+                        mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
+                        mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
+                        mFlags.getFledgeCustomAudienceMaxNumAds());
+
+        List<DBAdData> extractedAds = reader.getAdsFromJsonObject();
+        assertNotNull(extractedAds);
+        assertTrue(extractedAds.isEmpty());
+    }
+
+    @Test
+    public void testGetAdsFromJsonObjectWithInvalidAdsMetadata() throws JSONException {
+        CustomAudienceUpdatableDataReader reader =
+                new CustomAudienceUpdatableDataReader(
+                        CustomAudienceUpdatableDataFixture.addToJsonObject(
+                                null, INVALID_DB_AD_DATA_LIST, false),
+                        RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER_1,
+                        mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
+                        mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
+                        mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
+                        mFlags.getFledgeCustomAudienceMaxNumAds());
+
+        List<DBAdData> extractedAds = reader.getAdsFromJsonObject();
+        assertNotNull(extractedAds);
+        assertTrue(extractedAds.isEmpty());
     }
 
     @Test
