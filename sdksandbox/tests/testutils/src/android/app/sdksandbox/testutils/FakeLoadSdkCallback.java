@@ -38,8 +38,8 @@ public class FakeLoadSdkCallback implements OutcomeReceiver<SandboxedSdk, LoadSd
     @Override
     public void onResult(SandboxedSdk sandboxedSdk) {
         mLoadSdkSuccess = true;
-        mLoadSdkLatch.countDown();
         mSandboxedSdk = sandboxedSdk;
+        mLoadSdkLatch.countDown();
     }
 
     @Override
