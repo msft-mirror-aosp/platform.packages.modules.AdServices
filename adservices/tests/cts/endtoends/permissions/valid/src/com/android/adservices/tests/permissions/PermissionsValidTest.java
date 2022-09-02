@@ -97,8 +97,8 @@ public class PermissionsValidTest {
                     new CustomAudience.Builder()
                             .setBuyer(AdTechIdentifier.fromString("test.com"))
                             .setName("exampleCustomAudience")
-                            .setDailyUpdateUrl(Uri.parse("https://test.com/daily-update"))
-                            .setBiddingLogicUrl(Uri.parse("https://test.com/bidding-logic"))
+                            .setDailyUpdateUri(Uri.parse("https://test.com/daily-update"))
+                            .setBiddingLogicUri(Uri.parse("https://test.com/bidding-logic"))
                             .build();
 
             customAudienceClient.joinCustomAudience(customAudience).get();

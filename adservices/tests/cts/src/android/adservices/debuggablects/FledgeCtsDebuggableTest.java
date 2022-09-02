@@ -1184,11 +1184,11 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .setName(buyer + CustomAudienceFixture.VALID_NAME)
                 .setActivationTime(activationTime)
                 .setExpirationTime(expirationTime)
-                .setDailyUpdateUrl(CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyer))
+                .setDailyUpdateUri(CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyer))
                 .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                 .setTrustedBiddingData(
                         TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(buyer))
-                .setBiddingLogicUrl(CommonFixture.getUri(buyer, BUYER_BIDDING_LOGIC_URI_PATH))
+                .setBiddingLogicUri(CommonFixture.getUri(buyer, BUYER_BIDDING_LOGIC_URI_PATH))
                 .setAds(ads)
                 .build();
     }
