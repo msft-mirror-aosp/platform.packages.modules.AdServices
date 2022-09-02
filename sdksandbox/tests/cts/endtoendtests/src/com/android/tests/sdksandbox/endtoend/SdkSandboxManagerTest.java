@@ -343,6 +343,8 @@ public class SdkSandboxManagerTest {
         assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isFalse();
         assertThat(surfacePackageCallback.getSurfacePackageErrorCode())
                 .isEqualTo(SdkSandboxManager.REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR);
+        assertThat(surfacePackageCallback.getExtraErrorInformation()).isNotNull();
+        assertThat(surfacePackageCallback.getExtraErrorInformation().isEmpty()).isTrue();
     }
 
     @Test
