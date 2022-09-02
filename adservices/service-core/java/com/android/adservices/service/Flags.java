@@ -1117,6 +1117,61 @@ public interface Flags extends Dumpable {
         return ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE;
     }
 
+    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS = true;
+    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCE = true;
+    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_TRIGGER = true;
+    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_SOURCE = true;
+    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER = true;
+    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS = true;
+
+    /**
+     * @return true if Measurement Delete Registrations API should require that the calling API is
+     *     running in foreground.
+     */
+    default boolean getEnforceForegroundStatusForMeasurementDeleteRegistrations() {
+        return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS;
+    }
+
+    /**
+     * @return true if Measurement Register Source API should require that the calling API is
+     *     running in foreground.
+     */
+    default boolean getEnforceForegroundStatusForMeasurementRegisterSource() {
+        return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCE;
+    }
+
+    /**
+     * @return true if Measurement Register Trigger API should require that the calling API is
+     *     running in foreground.
+     */
+    default boolean getEnforceForegroundStatusForMeasurementRegisterTrigger() {
+        return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_TRIGGER;
+    }
+
+    /**
+     * @return true if Measurement Register Web Source API should require that the calling API is
+     *     running in foreground.
+     */
+    default boolean getEnforceForegroundStatusForMeasurementRegisterWebSource() {
+        return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_SOURCE;
+    }
+
+    /**
+     * @return true if Measurement Register Web Trigger API should require that the calling API is
+     *     running in foreground.
+     */
+    default boolean getEnforceForegroundStatusForMeasurementRegisterWebTrigger() {
+        return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER;
+    }
+
+    /**
+     * @return true if Measurement Get Status API should require that the calling API is running in
+     *     foreground.
+     */
+    default boolean getEnforceForegroundStatusForMeasurementStatus() {
+        return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS;
+    }
+
     /** @return true if Topics API should require that the calling API is running in foreground. */
     default boolean getEnforceForegroundStatusForTopics() {
         return ENFORCE_FOREGROUND_STATUS_TOPICS;
