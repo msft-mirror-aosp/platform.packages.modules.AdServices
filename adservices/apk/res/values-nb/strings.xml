@@ -22,10 +22,8 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="1644434244130657749">"Gir en app tilgang til AdServices Attribution-API-er."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="2766614780488510189">"bruke AdServices Custom Audience API"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"Gir en app tilgang til AdServices Custom Audience API."</string>
-    <!-- no translation found for permlab_accessAdServicesAdId (2754825914769538156) -->
-    <skip />
-    <!-- no translation found for permdesc_accessAdServicesAdId (7717770480967762044) -->
-    <skip />
+    <string name="permlab_accessAdServicesAdId" msgid="2754825914769538156">"Tilgang til AdId API"</string>
+    <string name="permdesc_accessAdServicesAdId" msgid="7717770480967762044">"Gir en app tilgang til AdId API."</string>
     <string name="permlab_accessAdServicesConsent" msgid="3203633397142568707">"få tilgang til AdServices Consent API"</string>
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Gir en app tilgang til AdServices Consent API."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"bruke Ad ID API"</string>
@@ -34,72 +32,63 @@
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Gir en app tilgang til App Set ID API."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"få tilgang til Consent Service API"</string>
     <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"Gir en app tilgang til Consent Service API."</string>
+    <string name="permlab_modifyAdServicesState" msgid="3594653261299518914">"Tilgang til API-en for modifisering av aktiveringstilstand for AdService"</string>
+    <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Gi en app tilgang til API-en for modifisering av aktiveringstilstand for AdService."</string>
+    <string name="permlab_accessAdServicesState" msgid="482058883975394398">"Tilgang til API-en for aktiveringstilstand for AdService"</string>
+    <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Gi en app tilgang til API-en for aktiveringstilstand for AdService."</string>
     <string name="app_label" msgid="5985320129629013968">"Android-system"</string>
-    <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"Betaversjon av Privacy Sandbox"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"Betaversjon av Privacy Sandbox"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"Slå betaversjonen av Privacy Sandbox av/på"</string>
-    <string name="settingsUI_main_view_title" msgid="255982490790282252">"Android-betaversjonen av annonsepersonvern"</string>
-    <string name="settingsUI_main_view_subtitle" msgid="3380585883687237827">"Test det nye Privacy Sandbox-systemet som begrenser sporing mellom apper"</string>
-    <string name="settingsUI_main_view_info_text1" msgid="8353580266621706164">"Slik fungerer Privacy Sandbox"</string>
-    <string name="settingsUI_main_view_info_text2" msgid="5144888171043725329">"Privacy Sandbox samler inn data for å vise deg annonser du kan være interessert i, men dataene deles uten å identifisere deg eller enheten din"</string>
-    <string name="settingsUI_main_view_info_text3" msgid="9106658161862318732">"Hva slags data lagres i Privacy Sandbox?"</string>
-    <string name="settingsUI_main_view_info_text4" msgid="5819359066240454954">"•  Generelle interesser"</string>
-    <string name="settingsUI_main_view_info_text5" msgid="6064832868440367397">"Android genererer disse dataene basert på appene du bruker. og legger dem til i Privacy Sandbox. Du kan for eksempel være interessert i sport. \n\nDu kan se listen over interessene dine i personverninnstillingene, og du kan blokkere ting du ikke liker."</string>
-    <string name="settingsUI_main_view_info_text6" msgid="3406976290919982143">"•  Spesifikke interesser"</string>
-    <string name="settingsUI_main_view_info_text7" msgid="210269084665708892">"Appene dine genererer disse dataene basert på hvordan du bruker dem, og legger dem til i Privacy Sandbox. Eksempel: En app du bruker for å kjøpe løpesko, kan legge til etiketten sport_running.\n\nI personverninnstillingene kan du se listen over apper som gjør dette, og du kan blokkere apper fra legge til data i Privacy Sandbox."</string>
-    <string name="settingsUI_topics_view_title" msgid="7437641813424176118">"Administrer interesser"</string>
-    <string name="settingsUI_topics_view_subtitle" msgid="5347912133908026725">"Privacy Sandbox for Android begrenser sporing mellom apper samtidig som apper kan vise seg annonser du kan være interessert i. Android deler disse dataene med annonsører uten å identifisere deg eller enheten din.\n\nBasert på appene du bruker, genererer og oppdaterer Android denne listen over de generelle annonseinteressene dine. Hvis du blokkerer en interesse, blir den ikke lagt til på listen igjen, med mindre du opphever blokkeringen. Du kan fortsatt se noen relaterte annonser."</string>
-    <string name="settingsUI_topics_view_info_text1" msgid="6729245512525985403">"Annonser tilknyttet generelle interesser"</string>
-    <string name="settingsUI_topics_view_info_text2" msgid="8355913397424818046">"Android genererer disse interessene basert på appene du bruker.\n\nHvis du for eksempel har flere sportsapper på enheten din, kan Android legge til interessen «Sport» i Privacy Sandbox.\n\nDisse dataene blir senere delt med annonsører uten å identifisere deg eller enheten din."</string>
-    <string name="settingsUI_apps_key" msgid="5279102708260885695">"apps_preference"</string>
-    <string name="settingsUI_apps_title" msgid="2177966577556486280">"Appene dine som genererer spesifikk interesse"</string>
-    <string name="settingsUI_apps_summary" msgid="2382082513059909726">"Administrer appene dine som genererer spesifikk interesse"</string>
-    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Apper du har blokkert"</string>
-    <string name="settingsUI_apps_view_title" msgid="3615627092403761282">"Administrer apper"</string>
-    <string name="settingsUI_apps_view_subtitle" msgid="5257332567222983503">"Noen apper genererer data om de spesifikke annonseinteressene dine for Privacy Sandbox, basert på hvordan du bruker dem. Android oppdaterer denne listen over apper, slik at du kan se eller endre den.\n\nHvis du blokkerer en app, legger den ikke til flere spesifikke interesser. Den legges ikke til i denne listen igjen, med mindre du opphever blokkeringen av den. Interesser som allerede er generert av appen, blir slettet, men du kan fremdeles se noen relaterte annonser."</string>
-    <string name="settingsUI_apps_view_no_apps_text" msgid="1056905761942948495">"Ingen apper å vise akkurat nå"</string>
-    <string name="settingsUI_reset_apps_title" msgid="3308597019425923552">"Tilbakestill data generert av apper"</string>
-    <string name="settingsUI_apps_view_info_text1" msgid="503353133396835755">"Interesse for spesifikke annonser"</string>
-    <string name="settingsUI_apps_view_info_text2" msgid="6562781312486257254">"Noen apper du bruker, genererer data om de spesifikke interessene dine for annonsering og legger dem til i Privacy Sandbox.\n\nEn app du bruker for å kjøpe løpesko, kan for eksempel legge til etiketten sport_running.\n\nSenere deles data som samles inn i Privacy Sandbox, med annonsører uten å identifisere deg eller enheten din. Så du ser fremdeles annonser du muligens liker, men med økt personvern."</string>
-    <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="5700261138344146462">"Ingen blokkerte apper å vise akkurat nå"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Ingen interesser å vise akkurat nå"</string>
-    <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
-    <string name="settingsUI_topics_title" msgid="4024683469932819788">"De generelle interessene dine"</string>
-    <string name="settingsUI_topics_summary" msgid="3146101472984434355">"Administrer de generelle interessene dine"</string>
-    <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"Administrer de generelle interessene dine for annonser"</string>
+    <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Bli med i Android-betaversjonen for annonsepersonvern"</string>
+    <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android utforsker flere private måter apper kan vise deg annonser på"</string>
+    <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Finn ut mer"</string>
+    <string name="notificationUI_header_title_eu" msgid="4955298263079910371">"Android-betaversjonen for annonsepersonvern"</string>
+    <string name="notificationUI_container1_title_eu" msgid="8315199862119660570">"Hva er nytt?"</string>
+    <string name="notificationUI_container1_body_text_eu" msgid="1700290522706948241">"Med de nye personvernfunksjonene i Privacy Sandbox kan apper vise deg relevante annonser, men vi begrenser hva disse appene kan finne ut om aktivitetene dine på nettsteder og i apper fra andre utviklere."</string>
+    <string name="notificationUI_container1_control_text_eu" msgid="3158258148321255153">"Slik fungerer det"</string>
+    <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Slik deltar du"</string>
+    <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Hvis du slår på betaversjonen, kan apper teste disse nye, mer private måtene å vise deg annonser på. Du kan når som helst slå av betaversjonen i personverninnstillingene."</string>
+    <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Nei takk"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"Ja, jeg vil bli med"</string>
+    <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Takk for deltakelsen"</string>
+    <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Du er en del av Android-betaversjonen for annonsepersonvern. Privacy Sandbox er slått på for enheten din.\n\nDu kan finne ut mer eller slå av betaversjonen når som helst i personverninnstillingene."</string>
+    <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Du har valgt å ikke delta"</string>
+    <string name="notificationUI_confirmation_decline_subtitle" msgid="4194388733937808440">"Takk for svaret. Privacy Sandbox er slått av for enheten din.\n\nHvis du ombestemmer deg eller vil finne ut mer, kan du gå til personverninnstillingene."</string>
+    <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"Personverninnstillinger"</string>
+    <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"Greit"</string>
+    <string name="notificationUI_container2_title" msgid="3844342008598264655">"Du er en del av betaversjonen"</string>
+    <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Privacy Sandbox er på for enheten din, og apper kan teste disse nye, mer private måtene å vise deg annonser på. Du kan når som helst slå av betaversjonen i personverninnstillingene."</string>
+    <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"Administrer tilgangsinnstillinger"</string>
+    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Greit"</string>
+    <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Privacy Sandbox for Android leverer nye funksjoner som apper kan bruke for å vise deg annonser du kan være interessert i. Disse teknologiene bruker ikke enhetsidentifikatorer.\n\nAndroid og appene dine kan anslå hvilke typer annonser du kan være interessert i, og lagre interessene midlertidig på enheten din. Dette gjør at apper kan vise deg annonser du kan være interessert i, uten å spore aktiviteten din på nettsteder og i apper fra andre utviklere."</string>
+    <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"Personlig tilpasning av annonser med Privacy Sandbox"</string>
+    <string name="notificationUI_how_it_works_expanded_text3" msgid="603165966360369018">"•  Interesser anslått av Android"</string>
+    <string name="notificationUI_how_it_works_expanded_text4" msgid="3910573920883580609">"Android anslår med jevne mellomrom hovedinteressene dine basert på appene du bruker, for eksempel «sport» eller «reiseliv».\n\nSenere kan apper be Android om å bruke disse interessene for å vise deg mer relevante annonser.\n\nDu kan se listen over gjeldende interesser i personverninnstillingene og blokkere de du ikke liker."</string>
+    <string name="notificationUI_how_it_works_expanded_text5" msgid="7257714040472055781">"•  Interesser anslått av apper"</string>
+    <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"Apper kan anslå interessene dine og midlertidig lagre disse med Android. En app du bruker til å kjøpe løpesko, kan for eksempel anslå interessen din til «løpe maraton».\n\nSenere kan andre apper vise deg annonser knyttet til maraton, basert på denne interessen.\n\nI personverninnstillingene kan du administrere listen over apper som har lagret interesser."</string>
+    <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
+    <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Delta i Android-betaversjonen for annonsepersonvern"</string>
+    <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Privacy Sandbox"</string>
+    <string name="settingsUI_topics_title" msgid="5996189869721397937">"Interesser anslått av Android"</string>
+    <string name="settingsUI_apps_title" msgid="2772289096915264175">"Apper som anslår interesser"</string>
+    <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"Annonsemålinger"</string>
+    <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"Apper kan bruke Privacy Sandbox til å måle effektiviteten av annonsene sine. For å gjøre dette kan annonsører midlertidig lagre data med Android om samhandlingene dine med annonsene og appene deres. Datamengden de kan lagre, er begrenset og blir slettet regelmessig.\n\nDu kan slette disse dataene når som helst ved å slå av Privacy Sandbox."</string>
+    <string name="settingsUI_topics_view_subtitle" msgid="6608135144119617292">"Android anslår hovedinteressene dine med jevne mellomrom basert på appene du bruker. Apper kan be Android om å bruke disse interessene for å vise deg mer relevante annonser.\n\nHvis du blokkerer en interesse, blir den ikke lagt til i listen igjen, med mindre du opphever blokkeringen av den. Du kan fortsatt se noen relaterte annonser."</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Blokkér"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Opphev blokkeringen"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Interesser du har blokkert"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Tilbakestill alle interesser"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="5717377146633882375">"Ingen blokkerte interesser å vise akkurat nå"</string>
-    <string name="notificationUI_notification_content_eu" msgid="7419441022808120101">"Test nye funksjoner som begrenser sporing mellom apper"</string>
-    <string name="notificationUI_header_title_eu" msgid="6822288197367284058">"Bli med i betaversjonen av annonsepersonvern"</string>
-    <string name="notificationUI_container3_title_eu" msgid="3157854074121291065">"Hva kan du gjøre?"</string>
-    <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Nei takk"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="7294736040084958697">"Ja, jeg kan prøve det"</string>
-    <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Takk for deltakelsen"</string>
-    <string name="notificationUI_confirmation_accept_subtitle" msgid="722290263168711051">"Du er nå en del av Privacy Sandbox-betaprogrammet. \n\nDu kan når som helst finne ut mer eller forlate betaprogrammet, i personverninnstillingene."</string>
-    <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Du har valgt å ikke delta"</string>
-    <string name="notificationUI_confirmation_decline_subtitle" msgid="1869322730722065768">"Takk for svaret. Du er ikke lagt til i Privacy Sandbox-betaprogrammet.\n\nHvis du ombestemmer deg eller vil finne ut mer, kan du gå til personverninnstillingene."</string>
-    <string name="notificationUI_notification_content" msgid="2096372976024736172">"Du tester nye funksjoner som begrenser sporing mellom apper"</string>
-    <string name="notificationUI_header_title" msgid="857744302422337933">"Du hjelper Android med å begrense sporing mellom apper"</string>
-    <string name="notificationUI_header_subtitle" msgid="522289584167376388">"Android tester en ny funksjon som begrenser sporing mellom apper av annonsører"</string>
-    <string name="notificationUI_container1_title" msgid="3837529978480615552">"Hva er sporing mellom apper?"</string>
-    <string name="notificationUI_container1_body_text" msgid="2564452110982505130">"Nå kan data om appbruken enkelt knyttes til enheten din og deretter deles mellom apper for annonseringsformål."</string>
-    <string name="notificationUI_container2_title" msgid="4796199061758878885">"Dette gjør Android"</string>
-    <string name="notificationUI_container2_body_text" msgid="7717896223210525953">"Android tester en ny Privacy Sandbox som oppbevarer og deler annonseringsdata på en trygg måte – uten å identifisere deg eller enheten din. \n\nDette nye systemet bidrar til å forhindre at apper sender data direkte til andre apper, men tillater fremdeles at de viser deg annonser du kanskje liker."</string>
-    <string name="notificationUI_container2_control_text" msgid="3031227311095645064">"Slik fungerer det"</string>
-    <string name="notificationUI_container3_title" msgid="1283794406634157611">"Slik hjelper du"</string>
-    <string name="notificationUI_container3_body_text" msgid="2636703086913037594">"Selv om du muligens ikke merker endringer av annonsene du ser, hjelper du Android med å begrense sporing mellom apper over tid ved å delta i betaversjonen. Du kan når som helst forlate betaversjonen via personverninnstillingene."</string>
-    <string name="notificationUI_left_control_button_text" msgid="6459461402253858770">"Personverninnstillinger"</string>
-    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Greit"</string>
-    <string name="notificationUI_how_it_works_expanded_text1" msgid="1753701052925879129">"Slik fungerer Privacy Sandbox"</string>
-    <string name="notificationUI_how_it_works_expanded_text2" msgid="3117263986288195274">"Privacy Sandbox samler inn data for å vise deg annonser du kan være interessert i, men dataene deles uten å identifisere deg eller enheten din"</string>
-    <string name="notificationUI_how_it_works_expanded_text3" msgid="7270822532577167752">"Hva slags data lagres i Privacy Sandbox?"</string>
-    <string name="notificationUI_how_it_works_expanded_text4" msgid="5609475052636889205">"•  Generelle interesser"</string>
-    <string name="notificationUI_how_it_works_expanded_text5" msgid="6757375506547548599">"Android genererer disse dataene basert på appene du bruker. og legger dem til i Privacy Sandbox. En av de generelle interessene dine kan for eksempel være sport.\n\nDu kan se en liste over interessene dine i personverninnstillingene og blokkere de du ikke liker."</string>
-    <string name="notificationUI_how_it_works_expanded_text6" msgid="2863877874268072458">"•  Spesifikke interesser"</string>
-    <string name="notificationUI_how_it_works_expanded_text7" msgid="2140515900209351523">"Appene dine genererer disse dataene basert på hvordan du bruker dem, og legger dem til i Privacy Sandbox. En app du bruker for å kjøpe løpesko, kan for eksempel legge til etiketten sport_running.\n\nI personverninnstillingene kan du se listen over apper som gjør dette, og du kan blokkere apper fra legge til data i Privacy Sandbox."</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Ingen interesser å vise akkurat nå"</string>
+    <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
+    <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android-betaversjonen for annonsepersonvern har nye funksjoner som apper kan bruke for å vise deg annonser du kan være interessert i. Disse teknologiene bruker ikke enhetsidentifikatorer.\n\nAndroid kan anslå hvilke typer annonser du kan være interessert i, og lagre disse interessene midlertidig på enheten din. Dette gjør at apper kan vise deg relevante annonser uten å spore aktiviteten din på nettsteder og i apper fra andre utviklere."</string>
+    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
+    <skip />
+    <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Apper kan anslå interessene dine og midlertidig lagre disse med Android. Senere kan andre apper viser deg annonser basert på disse interessene.\n\nHvis du blokkerer en app, anslår den ikke flere interesser. Den legges ikke til i denne applisten igjen, med mindre du opphever blokkeringen av den. Interesser som allerede er anslått av appen, blir slettet, men du kan fremdeles se noen relaterte annonser."</string>
+    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Apper du har blokkert"</string>
+    <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Tilbakestill interesser anslått av apper"</string>
+    <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Ingen apper genererer interesser for deg akkurat nå"</string>
+    <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
+    <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android-betaversjonen for annonsepersonvern har nye funksjoner som apper kan bruke for å vise deg annonser du kan være interessert i. Disse teknologiene bruker ikke enhetsidentifikatorer.\n\nApper kan anslå hvilke typer annonser du kan være interessert i, og lagre disse interessene midlertidig på enheten din. Dette gjør at apper kan vise deg relevante annonser uten å spore aktiviteten din på nettsteder og i apper fra andre utviklere."</string>
+    <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Du har ingen blokkerte apper"</string>
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Du har ingen blokkerte interesser"</string>
     <string name="topic10001" msgid="1636806320891333775">"Kunst og underholdning"</string>
     <string name="topic10002" msgid="1226367977754287428">"Skuespill og teater"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime og manga"</string>

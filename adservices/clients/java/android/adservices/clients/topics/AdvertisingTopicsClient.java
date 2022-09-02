@@ -68,8 +68,12 @@ public class AdvertisingTopicsClient {
     public @NonNull ListenableFuture<GetTopicsResponse> getTopics() {
         return CallbackToFutureAdapter.getFuture(
                 completer -> {
+                    GetTopicsRequest request =
+                            mSdkName == null
+                                    ? GetTopicsRequest.create()
+                                    : GetTopicsRequest.createWithAdsSdkName(mSdkName);
                     mTopicsManager.getTopics(
-                            new GetTopicsRequest.Builder(mContext).setAdsSdkName(mSdkName).build(),
+                            request,
                             mExecutor,
                             new OutcomeReceiver<GetTopicsResponse, Exception>() {
                                 @Override

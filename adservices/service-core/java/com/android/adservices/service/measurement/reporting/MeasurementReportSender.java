@@ -51,7 +51,7 @@ public abstract class MeasurementReportSender {
     }
 
     /**
-     * Given a String reportingOrigin, returns the URL Object
+     * Given a Uri adTechDomain, returns the URL Object
      * of the URL to send the POST request to.
      */
     abstract URL createReportingFullUrl(Uri adTechDomain) throws MalformedURLException;

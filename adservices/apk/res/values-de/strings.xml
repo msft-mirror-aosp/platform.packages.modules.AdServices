@@ -22,10 +22,8 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="1644434244130657749">"Ermöglicht einer App den Zugriff auf AdServices Attribution APIs."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="2766614780488510189">"Zugriff auf die AdServices Custom Audience API"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"Ermöglicht einer App den Zugriff auf die AdServices Custom Audience API."</string>
-    <!-- no translation found for permlab_accessAdServicesAdId (2754825914769538156) -->
-    <skip />
-    <!-- no translation found for permdesc_accessAdServicesAdId (7717770480967762044) -->
-    <skip />
+    <string name="permlab_accessAdServicesAdId" msgid="2754825914769538156">"Zugriff auf die AdId API"</string>
+    <string name="permdesc_accessAdServicesAdId" msgid="7717770480967762044">"Ermöglicht einer App den Zugriff auf die AdId API."</string>
     <string name="permlab_accessAdServicesConsent" msgid="3203633397142568707">"Zugriff auf die AdServices Consent API"</string>
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Ermöglicht einer App den Zugriff auf die AdServices Consent API."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Zugriff auf die Ad ID API"</string>
@@ -34,72 +32,100 @@
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Ermöglicht einer App den Zugriff auf die App Set ID API."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Zugriff auf die Consent Service API"</string>
     <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"Ermöglicht einer App den Zugriff auf die Consent Service API."</string>
+    <string name="permlab_modifyAdServicesState" msgid="3594653261299518914">"Zugriff auf die Enablement State Modification API von Adservice"</string>
+    <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Ermöglicht einer App den Zugriff auf die Enablement State Modification API von Adservice."</string>
+    <string name="permlab_accessAdServicesState" msgid="482058883975394398">"Zugriff auf die Enablement State API von Adservice"</string>
+    <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Ermöglicht einer App den Zugriff auf die Enablement State API von Adservice."</string>
     <string name="app_label" msgid="5985320129629013968">"Android System"</string>
-    <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"Privacy Sandbox (Beta)"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"Privacy Sandbox (Beta)"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"Privacy Sandbox (Beta) ein-/ausschalten"</string>
-    <string name="settingsUI_main_view_title" msgid="255982490790282252">"Android-Datenschutz für Werbung (Beta)"</string>
-    <string name="settingsUI_main_view_subtitle" msgid="3380585883687237827">"Probiere das neue Privacy Sandbox-System mit eingeschränktem App-übergreifendem Tracking aus"</string>
-    <string name="settingsUI_main_view_info_text1" msgid="8353580266621706164">"So funktioniert die Privacy Sandbox"</string>
-    <string name="settingsUI_main_view_info_text2" msgid="5144888171043725329">"In der Privacy Sandbox werden Daten erhoben, um dir Werbung zu zeigen, die dir gefallen könnte. Sie werden jedoch geteilt, ohne dass es möglich ist, dich oder dein Gerät zu identifizieren."</string>
-    <string name="settingsUI_main_view_info_text3" msgid="9106658161862318732">"Art der Daten, die in der Privacy Sandbox gespeichert werden"</string>
-    <string name="settingsUI_main_view_info_text4" msgid="5819359066240454954">"• Allgemeine Interessen"</string>
-    <string name="settingsUI_main_view_info_text5" msgid="6064832868440367397">"Android generiert diese Daten anhand deiner verwendeten Apps und fügt sie der Privacy Sandbox hinzu. Zu deinen allgemeinen Interessen könnte z. B. „Sport“ gehören. \n\nIn den Datenschutzeinstellungen sind deine Interessen aufgeführt, die du jederzeit blockieren kannst."</string>
-    <string name="settingsUI_main_view_info_text6" msgid="3406976290919982143">"• Spezifische Interessen"</string>
-    <string name="settingsUI_main_view_info_text7" msgid="210269084665708892">"Deine Apps generieren diese Daten anhand der Art deiner Nutzung und fügen sie der Privacy Sandbox hinzu. So könnte z. B. eine App, mit der du Laufschuhe kaufen möchtest, das Label „sport_running“ hinzufügen.\n\nIn den Datenschutzeinstellungen sind diese Apps aufgeführt. Du kannst sie jederzeit blockieren, damit sie der Privacy Sandbox keine Daten mehr hinzufügen."</string>
-    <string name="settingsUI_topics_view_title" msgid="7437641813424176118">"Interessen verwalten"</string>
-    <string name="settingsUI_topics_view_subtitle" msgid="5347912133908026725">"Die Privacy Sandbox von Android schränkt App-übergreifendes Tracking ein, bietet jedoch Apps weiterhin die Möglichkeit, dir Anzeigen zu präsentieren, die für dich interessant sein könnten. Werbetreibende erhalten Zugriff auf diese Daten, können damit jedoch weder dich noch dein Gerät identifizieren.\n\nAndroid generiert und aktualisiert diese Liste mit deinen allgemeinen werbungsbezogenen Interessen anhand der Apps, die du verwendest. Wenn du ein Interesse blockierst, wird es nicht mehr der Liste hinzugefügt – es sei denn, du hebst die Blockierung auf. Unter Umständen siehst du einige zugehörige Werbeanzeigen jedoch weiterhin."</string>
-    <string name="settingsUI_topics_view_info_text1" msgid="6729245512525985403">"Allgemeine Anzeigeninteressen"</string>
-    <string name="settingsUI_topics_view_info_text2" msgid="8355913397424818046">"Android generiert diese Interessen anhand der von dir verwendeten Apps.\n\nWenn du auf deinem Gerät beispielsweise mehrere Sport-Apps installiert hast, nimmt Android unter Umständen „Sport“ als Interesse in die Privacy Sandbox auf.\n\nSpäter haben Werbetreibende Zugriff auf diese Daten, sie können damit jedoch weder dich noch dein Gerät identifizieren."</string>
-    <string name="settingsUI_apps_key" msgid="5279102708260885695">"apps_preference"</string>
-    <string name="settingsUI_apps_title" msgid="2177966577556486280">"Deine Apps, die besondere Interessen betreffen"</string>
-    <string name="settingsUI_apps_summary" msgid="2382082513059909726">"Deine Apps verwalten, die besondere Interessen betreffen"</string>
-    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Apps, die ich blockiert habe"</string>
-    <string name="settingsUI_apps_view_title" msgid="3615627092403761282">"Apps verwalten"</string>
-    <string name="settingsUI_apps_view_subtitle" msgid="5257332567222983503">"Je nachdem, wie du bestimmte Apps verwendest, erzeugen sie Daten zu deinen werbungsbezogenen Interessen für die Privacy Sandbox. Android aktualisiert diese App-Liste, sodass du sie aufrufen und bearbeiten kannst.\n\nWenn du eine App blockierst, werden durch sie keine spezifischen Interessen mehr hinzugefügt. Die App selbst wird dieser Liste nicht noch einmal hinzugefügt – es sei denn, du hebst die Blockierung auf. Interessen, die bereits durch die App hinzugefügt wurden, werden gelöscht. Unter Umständen siehst du einige zugehörige Werbeanzeigen jedoch weiterhin."</string>
-    <string name="settingsUI_apps_view_no_apps_text" msgid="1056905761942948495">"Momentan sind keine Apps vorhanden"</string>
-    <string name="settingsUI_reset_apps_title" msgid="3308597019425923552">"Von Apps generierte Daten zurücksetzen"</string>
-    <string name="settingsUI_apps_view_info_text1" msgid="503353133396835755">"Spezifische werbungsbezogene Interessen"</string>
-    <string name="settingsUI_apps_view_info_text2" msgid="6562781312486257254">"Einige Apps, die du verwendest, generieren Daten zu deinen spezifischen Interessen in Bezug auf Werbung und fügen sie der Privacy Sandbox hinzu.\n\nSo könnte z. B. eine App, mit der du Laufschuhe kaufst, das Label „sport_running“ hinzufügen.\n\nSpäter werden in der Privacy Sandbox erhobene Daten an Werbetreibende weitergegeben, allerdings ohne dass es möglich ist, dich oder dein Gerät zu identifizieren. So siehst du weiterhin Werbung, die dich interessieren könnte, aber mit besserem Datenschutz."</string>
-    <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="5700261138344146462">"Momentan sind keine blockierten Apps vorhanden"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Momentan sind keine Interessen vorhanden"</string>
-    <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
-    <string name="settingsUI_topics_title" msgid="4024683469932819788">"Deine allgemeinen Interessen"</string>
-    <string name="settingsUI_topics_summary" msgid="3146101472984434355">"Deine allgemeinen Interessen verwalten"</string>
-    <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"Allgemeine Interessen für Werbung verwalten"</string>
+    <!-- no translation found for notificationUI_notification_title_eu (6328781145332100489) -->
+    <skip />
+    <!-- no translation found for notificationUI_notification_content_eu (4119222762583017840) -->
+    <skip />
+    <!-- no translation found for notificationUI_notification_cta_eu (1294908454704864207) -->
+    <skip />
+    <!-- no translation found for notificationUI_header_title_eu (4955298263079910371) -->
+    <skip />
+    <!-- no translation found for notificationUI_container1_title_eu (8315199862119660570) -->
+    <skip />
+    <!-- no translation found for notificationUI_container1_body_text_eu (1700290522706948241) -->
+    <skip />
+    <!-- no translation found for notificationUI_container1_control_text_eu (3158258148321255153) -->
+    <skip />
+    <!-- no translation found for notificationUI_container2_title_eu (7198761373796187596) -->
+    <skip />
+    <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Wenn du die Betaversion aktivierst, können Apps diese neuen privateren Möglichkeiten zum Anzeigen von Werbung testen. Die Betaversion lässt sich jederzeit in deinen Datenschutzeinstellungen deaktivieren."</string>
+    <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Nein danke"</string>
+    <!-- no translation found for notificationUI_right_control_button_text_eu (6323638565116618581) -->
+    <skip />
+    <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Danke für deine Teilnahme"</string>
+    <!-- no translation found for notificationUI_confirmation_accept_subtitle (6980730715078085252) -->
+    <skip />
+    <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Du möchtest nicht teilnehmen"</string>
+    <!-- no translation found for notificationUI_confirmation_decline_subtitle (4194388733937808440) -->
+    <skip />
+    <!-- no translation found for notificationUI_confirmation_left_control_button_text (7459283556129950513) -->
+    <skip />
+    <!-- no translation found for notificationUI_confirmation_right_control_button_text (1390803936115621269) -->
+    <skip />
+    <!-- no translation found for notificationUI_container2_title (3844342008598264655) -->
+    <skip />
+    <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Die Privacy Sandbox ist für dein Gerät aktiviert und Apps können diese neuen privateren Möglichkeiten zum Anzeigen von Werbung testen. Die Betaversion lässt sich jederzeit in deinen Datenschutzeinstellungen deaktivieren."</string>
+    <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"Datenschutzeinstellungen verwalten"</string>
+    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Ok"</string>
+    <!-- no translation found for notificationUI_how_it_works_expanded_text1 (5567641119079971239) -->
+    <skip />
+    <!-- no translation found for notificationUI_how_it_works_expanded_text2 (6676443093692450581) -->
+    <skip />
+    <!-- no translation found for notificationUI_how_it_works_expanded_text3 (603165966360369018) -->
+    <skip />
+    <!-- no translation found for notificationUI_how_it_works_expanded_text4 (3910573920883580609) -->
+    <skip />
+    <!-- no translation found for notificationUI_how_it_works_expanded_text5 (7257714040472055781) -->
+    <skip />
+    <!-- no translation found for notificationUI_how_it_works_expanded_text6 (2949292580123453023) -->
+    <skip />
+    <!-- no translation found for settingsUI_main_view_title (1663691082473230496) -->
+    <skip />
+    <!-- no translation found for settingsUI_main_view_subtitle (2059496555507319371) -->
+    <skip />
+    <!-- no translation found for settingsUI_privacy_sandbox_beta_switch_title (5264782269528129670) -->
+    <skip />
+    <!-- no translation found for settingsUI_topics_title (5996189869721397937) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_title (2772289096915264175) -->
+    <skip />
+    <!-- no translation found for settingsUI_main_view_info_text8 (2262800588014737545) -->
+    <skip />
+    <!-- no translation found for settingsUI_main_view_info_text9 (5431131706102562540) -->
+    <skip />
+    <!-- no translation found for settingsUI_topics_view_subtitle (6608135144119617292) -->
+    <skip />
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Blockieren"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Blockierung aufheben"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Interessen, die ich blockiert habe"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Alle Interessen zurücksetzen"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="5717377146633882375">"Momentan sind keine blockierten Interessen vorhanden"</string>
-    <string name="notificationUI_notification_content_eu" msgid="7419441022808120101">"Teste neue Funktionen, durch die App-übergreifendes Tracking eingeschränkt wird"</string>
-    <string name="notificationUI_header_title_eu" msgid="6822288197367284058">"An „Datenschutz für Werbung (Beta)“ teilnehmen"</string>
-    <string name="notificationUI_container3_title_eu" msgid="3157854074121291065">"Was du tun kannst"</string>
-    <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Nein danke"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="7294736040084958697">"Ja, ich probiere es aus"</string>
-    <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Danke für deine Teilnahme"</string>
-    <string name="notificationUI_confirmation_accept_subtitle" msgid="722290263168711051">"Du nimmst jetzt am Privacy Sandbox-Betaprogramm teil. \n\nFalls du weitere Informationen benötigst oder das Betaprogramm verlassen möchtest, rufe deine Datenschutzeinstellungen auf."</string>
-    <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Du möchtest nicht teilnehmen"</string>
-    <string name="notificationUI_confirmation_decline_subtitle" msgid="1869322730722065768">"Vielen Dank für deine Antwort. Du nimmst nicht am Privacy Sandbox-Betaprogramm teil.\n\nFalls du es dir anders überlegst oder mehr erfahren möchtest, rufe deine Datenschutzeinstellungen auf."</string>
-    <string name="notificationUI_notification_content" msgid="2096372976024736172">"Du testest neue Funktionen, durch die App-übergreifendes Tracking eingeschränkt wird"</string>
-    <string name="notificationUI_header_title" msgid="857744302422337933">"Du hilfst Android, App-übergreifendes Tracking einzuschränken"</string>
-    <string name="notificationUI_header_subtitle" msgid="522289584167376388">"Android testet neue Funktionen, durch die das App-übergreifende Tracking durch Werbetreibende eingeschränkt wird"</string>
-    <string name="notificationUI_container1_title" msgid="3837529978480615552">"Was ist App-übergreifendes Tracking?"</string>
-    <string name="notificationUI_container1_body_text" msgid="2564452110982505130">"Daten über deine App-Nutzung können jetzt problemlos mit deinem Gerät verknüpft und dann App-übergreifend zu Werbezwecken geteilt werden."</string>
-    <string name="notificationUI_container2_title" msgid="4796199061758878885">"Was Android tut"</string>
-    <string name="notificationUI_container2_body_text" msgid="7717896223210525953">"Android testet eine neue Privacy Sandbox, mit der Werbedaten sicher gespeichert und geteilt werden, ohne dass es möglich ist, dich oder dein Gerät zu identifizieren. \n\nDurch dieses neue System können Apps dir Werbung zeigen, die dir gefallen könnte, ohne Daten direkt an andere Apps weiterzugeben."</string>
-    <string name="notificationUI_container2_control_text" msgid="3031227311095645064">"So funktionierts"</string>
-    <string name="notificationUI_container3_title" msgid="1283794406634157611">"So hilfst du uns"</string>
-    <string name="notificationUI_container3_body_text" msgid="2636703086913037594">"Auch wenn du vielleicht keine Veränderung bei der angezeigten Werbung bemerkst, hilfst du durch die Teilnahme am Betaprogramm, App-übergreifendes Tracking unter Android im Laufe der Zeit einzuschränken. Über deine Datenschutzeinstellungen kannst du das Betaprogramm jederzeit verlassen."</string>
-    <string name="notificationUI_left_control_button_text" msgid="6459461402253858770">"Datenschutzeinstellungen"</string>
-    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Ok"</string>
-    <string name="notificationUI_how_it_works_expanded_text1" msgid="1753701052925879129">"So funktioniert die Privacy Sandbox"</string>
-    <string name="notificationUI_how_it_works_expanded_text2" msgid="3117263986288195274">"In der Privacy Sandbox werden Daten erhoben, um dir Werbung zu zeigen, die dir gefallen könnte. Diese Daten werden weitergegeben, allerdings ohne dass es möglich ist, dich oder dein Gerät zu identifizieren."</string>
-    <string name="notificationUI_how_it_works_expanded_text3" msgid="7270822532577167752">"Welche Art von Daten wird in der Privacy Sandbox gespeichert?"</string>
-    <string name="notificationUI_how_it_works_expanded_text4" msgid="5609475052636889205">"• Allgemeine Interessen"</string>
-    <string name="notificationUI_how_it_works_expanded_text5" msgid="6757375506547548599">"Android generiert diese Daten anhand deiner verwendeten Apps und fügt sie der Privacy Sandbox hinzu. Zu deinen allgemeinen Interessen könnte z. B. „Sport“ gehören.\n\nDu kannst deine Interessen in den Datenschutzeinstellungen ansehen und blockieren, falls sie dir nicht gefallen."</string>
-    <string name="notificationUI_how_it_works_expanded_text6" msgid="2863877874268072458">"• Spezifische Interessen"</string>
-    <string name="notificationUI_how_it_works_expanded_text7" msgid="2140515900209351523">"Deine Apps generieren diese Daten anhand der Art deiner Nutzung und fügen sie der Privacy Sandbox hinzu. So könnte z. B. eine App, mit der du Laufschuhe kaufst, das Label „sport_running“ hinzufügen.\n\nIn den Datenschutzeinstellungen sind diese Apps aufgeführt. Du kannst jederzeit festlegen, dass eine bestimmte App der Sandbox keine Daten mehr hinzufügen kann."</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Momentan sind keine Interessen vorhanden"</string>
+    <!-- no translation found for settingsUI_topics_view_info_text1 (2477020249748216309) -->
+    <skip />
+    <!-- no translation found for settingsUI_topics_view_info_text2 (6223353589295876851) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_view_subtitle (8193343057416677400) -->
+    <skip />
+    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Apps, die ich blockiert habe"</string>
+    <!-- no translation found for settingsUI_reset_apps_title (6221704974528131179) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_view_no_apps_text (7460005016322426137) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_view_info_text1 (7835635425477842692) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_view_info_text2 (308547275474796552) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_view_no_blocked_apps_text (3953560911214151396) -->
+    <skip />
+    <!-- no translation found for settingsUI_topics_view_no_blocked_topics_text (6553014185055718781) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Kunst und Unterhaltung"</string>
     <string name="topic10002" msgid="1226367977754287428">"Schauspielkunst und Theater"</string>
     <string name="topic10003" msgid="6949890838957814881">"Manga und Anime"</string>

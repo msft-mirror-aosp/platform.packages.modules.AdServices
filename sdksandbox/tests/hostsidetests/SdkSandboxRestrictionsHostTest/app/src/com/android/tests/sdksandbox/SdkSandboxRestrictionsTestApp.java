@@ -16,6 +16,11 @@
 
 package com.android.tests.sdksandbox;
 
+import static android.app.sdksandbox.SdkSandboxManager.EXTRA_DISPLAY_ID;
+import static android.app.sdksandbox.SdkSandboxManager.EXTRA_HEIGHT_IN_PIXELS;
+import static android.app.sdksandbox.SdkSandboxManager.EXTRA_HOST_TOKEN;
+import static android.app.sdksandbox.SdkSandboxManager.EXTRA_WIDTH_IN_PIXELS;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import android.Manifest;
@@ -28,9 +33,11 @@ import android.os.Bundle;
 import android.provider.DeviceConfig;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -45,6 +52,10 @@ public class SdkSandboxRestrictionsTestApp {
 
     private static final String SDK_PACKAGE = "com.android.tests.sdkprovider.restrictionstest";
 
+    @Rule
+    public final ActivityScenarioRule mRule =
+            new ActivityScenarioRule<>(SdkSandboxEmptyActivity.class);
+
     @Before
     public void setup() {
         Context context = ApplicationProvider.getApplicationContext();
@@ -57,10 +68,14 @@ public class SdkSandboxRestrictionsTestApp {
 
     // Run a phase of the test inside the SDK loaded for this app
     private void runPhaseInsideSdk(String phaseName, FakeRequestSurfacePackageCallback callback) {
-        Bundle bundle = new Bundle();
-        bundle.putString(BUNDLE_KEY_PHASE_NAME, phaseName);
-        mSdkSandboxManager.requestSurfacePackage(
-                SDK_PACKAGE, 0, 500, 500, new Binder(), bundle, Runnable::run, callback);
+        Bundle params = new Bundle();
+        params.putString(BUNDLE_KEY_PHASE_NAME, phaseName);
+        params.putInt(EXTRA_WIDTH_IN_PIXELS, 500);
+        params.putInt(EXTRA_HEIGHT_IN_PIXELS, 500);
+        params.putInt(EXTRA_DISPLAY_ID, 0);
+        params.putBinder(EXTRA_HOST_TOKEN, new Binder());
+
+        mSdkSandboxManager.requestSurfacePackage(SDK_PACKAGE, params, Runnable::run, callback);
     }
 
     /**
@@ -70,6 +85,8 @@ public class SdkSandboxRestrictionsTestApp {
      */
     @Test
     public void testSdkSandboxBroadcastRestrictions() throws Exception {
+        mRule.getScenario();
+
         DeviceConfig.setProperty(DeviceConfig.NAMESPACE_SDK_SANDBOX,
                 ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, "true", false);
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();

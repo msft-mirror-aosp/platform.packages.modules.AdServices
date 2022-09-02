@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.measurement.access;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
+
+import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
 import android.content.Context;
 
@@ -35,6 +38,13 @@ public class UserConsentAccessResolver implements IAccessResolver {
     public boolean isAllowed(@NonNull Context context) {
         AdServicesApiConsent userConsent = mConsentManager.getConsent(context.getPackageManager());
         return userConsent.isGiven();
+    }
+
+    @NonNull
+    @Override
+    @AdServicesStatusUtils.StatusCode
+    public int getErrorStatusCode() {
+        return STATUS_USER_CONSENT_REVOKED;
     }
 
     @NonNull

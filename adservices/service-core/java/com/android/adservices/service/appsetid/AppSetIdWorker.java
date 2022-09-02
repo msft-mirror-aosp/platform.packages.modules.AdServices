@@ -17,6 +17,7 @@
 package com.android.adservices.service.appsetid;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import static com.android.adservices.AdServicesCommon.ACTION_APPSETID_PROVIDER_SERVICE;
 
@@ -48,6 +49,7 @@ import javax.annotation.concurrent.ThreadSafe;
 public class AppSetIdWorker {
     // Singleton instance of the AppSetIdWorker.
     private static volatile AppSetIdWorker sAppSetIdWorker;
+    private static final String APPSETID_DEFAULT = "00000000-0000-0000-0000-000000000000";
 
     private final Context mContext;
     private final ServiceBinder<IAppSetIdProviderService> mServiceBinder;
@@ -83,9 +85,6 @@ public class AppSetIdWorker {
     @NonNull
     private IAppSetIdProviderService getService() {
         IAppSetIdProviderService service = mServiceBinder.getService();
-        if (service == null) {
-            throw new IllegalStateException("Unable to find the service");
-        }
         return service;
     }
 
@@ -109,9 +108,27 @@ public class AppSetIdWorker {
         LogUtil.v("AppSetIdWorker.getAppSetId for %s, %d", packageName, appUid);
         final IAppSetIdProviderService service = getService();
 
+        // Unable to find appSetId provider service. Return default values.
+        if (service == null) {
+            GetAppSetIdResult result =
+                    new GetAppSetIdResult.Builder()
+                            .setStatusCode(STATUS_SUCCESS)
+                            .setErrorMessage("")
+                            .setAppSetId(APPSETID_DEFAULT)
+                            .setAppSetIdScope(0)
+                            .build();
+            try {
+                callback.onResult(result);
+            } catch (RemoteException e) {
+                LogUtil.e("RemoteException");
+            } finally {
+                return;
+            }
+        }
+
         try {
             // Call appSetId provider service method to retrieve the appsetid and lat.
-            service.getAppSetIdProvider(
+            service.getAppSetId(
                     appUid,
                     packageName,
                     new IGetAppSetIdProviderCallback.Stub() {

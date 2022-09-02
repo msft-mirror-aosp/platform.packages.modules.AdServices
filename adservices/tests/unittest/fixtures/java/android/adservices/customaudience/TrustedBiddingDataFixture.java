@@ -37,7 +37,7 @@ public class TrustedBiddingDataFixture {
     public static TrustedBiddingData getValidTrustedBiddingDataByBuyer(AdTechIdentifier buyer) {
         return new TrustedBiddingData.Builder()
                 .setTrustedBiddingKeys(VALID_TRUSTED_BIDDING_KEYS)
-                .setTrustedBiddingUrl(getValidTrustedBiddingUrlByBuyer(buyer))
+                .setTrustedBiddingUri(getValidTrustedBiddingUrlByBuyer(buyer))
                 .build();
     }
 }

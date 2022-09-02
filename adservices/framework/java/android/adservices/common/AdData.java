@@ -50,7 +50,7 @@ public final class AdData implements Parcelable {
     /**
      * Represents data specific to a single ad that is necessary for ad selection and rendering.
      *
-     * @param renderUri a URL pointing to the ad's rendering assets
+     * @param renderUri a URI pointing to the ad's rendering assets
      * @param metadata buyer ad metadata represented as a JSON string
      * @hide
      * @deprecated use Builder to build the obj instead of this constructor.
@@ -89,7 +89,7 @@ public final class AdData implements Parcelable {
         return 0;
     }
 
-    /** Gets the URL that points to the ad's rendering assets. The URL must use HTTPS. */
+    /** Gets the URI that points to the ad's rendering assets. The URI must use HTTPS. */
     @NonNull
     public Uri getRenderUri() {
         return mRenderUri;
@@ -143,7 +143,7 @@ public final class AdData implements Parcelable {
         }
 
         /**
-         * Sets the URL that points to the ad's rendering assets. The URL must use HTTPS.
+         * Sets the URI that points to the ad's rendering assets. The URI must use HTTPS.
          *
          * <p>See {@link #getRenderUri()} for detail.
          */
