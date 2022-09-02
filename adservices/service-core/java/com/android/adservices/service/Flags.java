@@ -987,14 +987,16 @@ public interface Flags extends Dumpable {
                     + "android.adservices.crystalball,"
                     + "android.adservices.cts,"
                     + "android.adservices.debuggablects,"
-                    + "com.android.tests.sandbox.fledge,"
                     + "com.android.adservices.endtoendtest,"
+                    + "com.android.adservices.servicecoretest,"
+                    + "com.android.adservices.tests.permissions.appoptout,"
+                    + "com.android.adservices.tests.permissions.valid,"
+                    + "com.android.tests.sandbox.fledge,"
                     + "com.example.adservices.samples.fledge.sampleapp,"
                     + "com.example.adservices.samples.fledge.sampleapp1,"
                     + "com.example.adservices.samples.fledge.sampleapp2,"
                     + "com.example.adservices.samples.fledge.sampleapp3,"
-                    + "com.example.adservices.samples.fledge.sampleapp4,"
-                    + "com.android.adservices.servicecoretest";
+                    + "com.example.adservices.samples.fledge.sampleapp4";
 
     /**
      * Returns bypass List for PPAPI app signature check. Apps with package name on this list will
@@ -1015,8 +1017,9 @@ public interface Flags extends Dumpable {
      */
     String PPAPI_APP_SIGNATURE_ALLOW_LIST =
             // com.android.adservices.tests.cts.endtoendtest
-            // com.android.tests.sandbox.topics
-            "a40da80a59d170caa950cf15c18c454d47a39b26989d8b640ecd745ba71bf5dc,"
+            "6cecc50e34ae31bfb5678986d6d6d3736c571ded2f2459527793e1f054eb0c9b,"
+                    // com.android.tests.sandbox.topics
+                    + "a40da80a59d170caa950cf15c18c454d47a39b26989d8b640ecd745ba71bf5dc,"
                     // Topics Sample Apps
                     // For example, com.example.adservices.samples.topics.sampleapp1
                     + "301aa3cb081134501c45f1422abc66c24224fd5ded5fdc8f17e697176fd866aa,"
