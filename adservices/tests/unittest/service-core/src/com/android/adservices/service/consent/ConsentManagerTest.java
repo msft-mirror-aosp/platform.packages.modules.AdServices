@@ -50,6 +50,7 @@ import com.android.adservices.data.consent.AppConsentDaoFixture;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
+import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -125,6 +126,7 @@ public class ConsentManagerTest {
                         .spyStatic(DeleteExpiredJobService.class)
                         .spyStatic(FlagsFactory.class)
                         .spyStatic(MaintenanceJobService.class)
+                        .spyStatic(MddJobService.class)
                         .strictness(Strictness.WARN)
                         .initMocks(this)
                         .startMocking();
@@ -148,6 +150,8 @@ public class ConsentManagerTest {
                 .when(() -> EpochJobService.scheduleIfNeeded(any(Context.class), eq(false)));
         ExtendedMockito.doReturn(true)
                 .when(() -> MaintenanceJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+        ExtendedMockito.doReturn(true)
+                .when(() -> MddJobService.scheduleIfNeeded(any(Context.class), eq(false)));
         ExtendedMockito.doNothing()
                 .when(() -> AggregateReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
         ExtendedMockito.doNothing()
@@ -159,6 +163,8 @@ public class ConsentManagerTest {
                 .when(() -> AttributionJobService.scheduleIfNeeded(any(), anyBoolean()));
         ExtendedMockito.doReturn(true)
                 .when(() -> EpochJobService.scheduleIfNeeded(any(), anyBoolean()));
+        ExtendedMockito.doReturn(true)
+                .when(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
         ExtendedMockito.doNothing()
                 .when(() -> EventReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
         ExtendedMockito.doNothing()
@@ -204,6 +210,7 @@ public class ConsentManagerTest {
                 () -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
         ExtendedMockito.verify(
                 () -> EpochJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+        ExtendedMockito.verify(() -> MddJobService.scheduleIfNeeded(any(Context.class), eq(false)));
         ExtendedMockito.verify(
                 () -> MaintenanceJobService.scheduleIfNeeded(any(Context.class), eq(false)));
         ExtendedMockito.verify(
@@ -241,7 +248,7 @@ public class ConsentManagerTest {
                 () -> MaintenanceJobService.scheduleIfNeeded(any(Context.class), eq(false)),
                 ExtendedMockito.never());
         ExtendedMockito.verify(
-                () -> MaintenanceJobService.scheduleIfNeeded(any(Context.class), eq(false)),
+                () -> MddJobService.scheduleIfNeeded(any(Context.class), eq(false)),
                 ExtendedMockito.never());
         ExtendedMockito.verify(
                 () -> AggregateReportingJobService.scheduleIfNeeded(any(Context.class), eq(false)),
