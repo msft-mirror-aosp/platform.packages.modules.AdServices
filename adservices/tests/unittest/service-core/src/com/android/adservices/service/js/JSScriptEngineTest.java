@@ -20,6 +20,7 @@ import static com.android.adservices.service.js.JSScriptArgument.arrayArg;
 import static com.android.adservices.service.js.JSScriptArgument.numericArg;
 import static com.android.adservices.service.js.JSScriptArgument.recordArg;
 import static com.android.adservices.service.js.JSScriptArgument.stringArg;
+import static com.android.adservices.service.js.JSScriptEngine.JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_ERROR_MSG;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -326,7 +327,9 @@ public class JSScriptEngineTest {
 
         assertThat(executionException.getCause())
                 .isInstanceOf(JSScriptEngineConnectionException.class);
-
+        assertThat(executionException)
+                .hasMessageThat()
+                .contains(JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_ERROR_MSG);
         verify(sMockProfiler).start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
     }
 
@@ -358,7 +361,9 @@ public class JSScriptEngineTest {
 
         assertThat(executionException.getCause())
                 .isInstanceOf(JSScriptEngineConnectionException.class);
-
+        assertThat(executionException)
+                .hasMessageThat()
+                .contains(JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_ERROR_MSG);
         verify(sMockProfiler).start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
         verify(mMockedSandbox)
                 .isFeatureSupported(JavaScriptSandbox.JS_FEATURE_ISOLATE_MAX_HEAP_SIZE);
@@ -386,7 +391,9 @@ public class JSScriptEngineTest {
                                         enforcedHeapIsolateSettings));
         assertThat(executionException.getCause())
                 .isInstanceOf(JSScriptEngineConnectionException.class);
-
+        assertThat(executionException)
+                .hasMessageThat()
+                .contains(JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_ERROR_MSG);
         verify(sMockProfiler).start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
     }
 
