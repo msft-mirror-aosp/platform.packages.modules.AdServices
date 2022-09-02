@@ -43,6 +43,8 @@ public final class AggregateReportFixture {
                 .setSourceRegistrationTime(ValidAggregateReportParams.SOURCE_REGISTRATION_TIME)
                 .setScheduledReportTime(ValidAggregateReportParams.TRIGGER_TIME + getRandomTime())
                 .setEnrollmentId(ValidAggregateReportParams.ENROLLMENT_ID)
+                .setSourceDebugKey(ValidAggregateReportParams.SOURCE_DEBUG_KEY)
+                .setTriggerDebugKey(ValidAggregateReportParams.TRIGGER_DEBUG_KEY)
                 .setDebugCleartextPayload(ValidAggregateReportParams.getDebugPayload())
                 .setStatus(EventReport.Status.PENDING)
                 .build();
@@ -54,6 +56,8 @@ public final class AggregateReportFixture {
                 Uri.parse("android-app://com.destination");
         public static final long SOURCE_REGISTRATION_TIME = 8640000000L;
         public static final long TRIGGER_TIME = 8640000000L;
+        public static final long SOURCE_DEBUG_KEY = 43254545L;
+        public static final long TRIGGER_DEBUG_KEY = 67878545L;
         public static final String ENROLLMENT_ID = "enrollment-id";
 
         public static final String getDebugPayload() {

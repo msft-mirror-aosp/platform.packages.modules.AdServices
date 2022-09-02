@@ -120,6 +120,8 @@ public final class MeasurementTables {
         String SOURCE_TYPE = "source_type";
         String ENROLLMENT_ID = "enrollment_id";
         String RANDOMIZED_TRIGGER_RATE = "randomized_trigger_rate";
+        String SOURCE_DEBUG_KEY = "source_debug_key";
+        String TRIGGER_DEBUG_KEY = "trigger_debug_key";
     }
 
     /** Contract for Attribution rate limit. */
@@ -147,6 +149,8 @@ public final class MeasurementTables {
         String DEBUG_CLEARTEXT_PAYLOAD = "debug_cleartext_payload";
         String STATUS = "status";
         String API_VERSION = "api_version";
+        String SOURCE_DEBUG_KEY = "source_debug_key";
+        String TRIGGER_DEBUG_KEY = "trigger_debug_key";
     }
 
     /** Contract for aggregate encryption key. */
@@ -158,7 +162,7 @@ public final class MeasurementTables {
         String EXPIRY = "expiry";
     }
 
-    public static final String CREATE_TABLE_ASYNC_REGISTRATION =
+    public static final String CREATE_TABLE_ASYNC_REGISTRATION_V1 =
             "CREATE TABLE "
                     + AsyncRegistrationContract.TABLE
                     + " ("
@@ -190,7 +194,7 @@ public final class MeasurementTables {
                     + " INTEGER "
                     + ")";
 
-    public static final String CREATE_TABLE_SOURCE =
+    public static final String CREATE_TABLE_SOURCE_V1 =
             "CREATE TABLE "
                     + SourceContract.TABLE
                     + " ("
@@ -240,7 +244,7 @@ public final class MeasurementTables {
                     + " INTEGER "
                     + ")";
 
-    public static final String CREATE_TABLE_TRIGGER =
+    public static final String CREATE_TABLE_TRIGGER_V1 =
             "CREATE TABLE "
                     + TriggerContract.TABLE
                     + " ("
@@ -270,7 +274,7 @@ public final class MeasurementTables {
                     + " INTEGER "
                     + ")";
 
-    public static final String CREATE_TABLE_EVENT_REPORT =
+    public static final String CREATE_TABLE_EVENT_REPORT_V1 =
             "CREATE TABLE "
                     + EventReportContract.TABLE
                     + " ("
@@ -300,7 +304,41 @@ public final class MeasurementTables {
                     + " DOUBLE "
                     + ")";
 
-    public static final String CREATE_TABLE_ATTRIBUTION =
+    public static final String CREATE_TABLE_EVENT_REPORT_V2 =
+            "CREATE TABLE "
+                    + EventReportContract.TABLE
+                    + " ("
+                    + EventReportContract.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + EventReportContract.SOURCE_ID
+                    + " INTEGER, "
+                    + EventReportContract.ENROLLMENT_ID
+                    + " TEXT, "
+                    + EventReportContract.ATTRIBUTION_DESTINATION
+                    + " TEXT, "
+                    + EventReportContract.REPORT_TIME
+                    + " INTEGER, "
+                    + EventReportContract.TRIGGER_DATA
+                    + " INTEGER, "
+                    + EventReportContract.TRIGGER_PRIORITY
+                    + " INTEGER, "
+                    + EventReportContract.TRIGGER_DEDUP_KEY
+                    + " INTEGER, "
+                    + EventReportContract.TRIGGER_TIME
+                    + " INTEGER, "
+                    + EventReportContract.STATUS
+                    + " INTEGER, "
+                    + EventReportContract.SOURCE_TYPE
+                    + " TEXT, "
+                    + EventReportContract.RANDOMIZED_TRIGGER_RATE
+                    + " DOUBLE, "
+                    + EventReportContract.SOURCE_DEBUG_KEY
+                    + " INTEGER, "
+                    + EventReportContract.TRIGGER_DEBUG_KEY
+                    + " INTEGER "
+                    + ")";
+
+    public static final String CREATE_TABLE_ATTRIBUTION_V1 =
             "CREATE TABLE "
                     + AttributionContract.TABLE
                     + " ("
@@ -322,7 +360,7 @@ public final class MeasurementTables {
                     + " TEXT "
                     + ")";
 
-    public static final String CREATE_TABLE_AGGREGATE_REPORT =
+    public static final String CREATE_TABLE_AGGREGATE_REPORT_V1 =
             "CREATE TABLE "
                     + AggregateReport.TABLE
                     + " ("
@@ -346,14 +384,46 @@ public final class MeasurementTables {
                     + " TEXT "
                     + ")";
 
-    public static final String CREATE_TABLE_AGGREGATE_ENCRYPTION_KEY =
+    public static final String CREATE_TABLE_AGGREGATE_REPORT_V2 =
+            "CREATE TABLE "
+                    + AggregateReport.TABLE
+                    + " ("
+                    + AggregateReport.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + AggregateReport.PUBLISHER
+                    + " TEXT, "
+                    + AggregateReport.ATTRIBUTION_DESTINATION
+                    + " TEXT, "
+                    + AggregateReport.SOURCE_REGISTRATION_TIME
+                    + " INTEGER, "
+                    + AggregateReport.SCHEDULED_REPORT_TIME
+                    + " INTEGER, "
+                    + AggregateReport.ENROLLMENT_ID
+                    + " TEXT, "
+                    + AggregateReport.DEBUG_CLEARTEXT_PAYLOAD
+                    + " TEXT, "
+                    + AggregateReport.STATUS
+                    + " INTEGER, "
+                    + AggregateReport.API_VERSION
+                    + " TEXT, "
+                    + AggregateReport.SOURCE_DEBUG_KEY
+                    + " INTEGER, "
+                    + AggregateReport.TRIGGER_DEBUG_KEY
+                    + " INTEGER "
+                    + ")";
+
+    public static final String CREATE_TABLE_AGGREGATE_ENCRYPTION_KEY_V1 =
             "CREATE TABLE "
                     + AggregateEncryptionKey.TABLE
                     + " ("
-                    + AggregateEncryptionKey.ID + " TEXT PRIMARY KEY NOT NULL, "
-                    + AggregateEncryptionKey.KEY_ID + " TEXT, "
-                    + AggregateEncryptionKey.PUBLIC_KEY + " TEXT, "
-                    + AggregateEncryptionKey.EXPIRY + " INTEGER "
+                    + AggregateEncryptionKey.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + AggregateEncryptionKey.KEY_ID
+                    + " TEXT, "
+                    + AggregateEncryptionKey.PUBLIC_KEY
+                    + " TEXT, "
+                    + AggregateEncryptionKey.EXPIRY
+                    + " INTEGER "
                     + ")";
 
     public static final String[] CREATE_INDEXES = {
@@ -444,13 +514,13 @@ public final class MeasurementTables {
     public static final List<String> CREATE_STATEMENTS =
             Collections.unmodifiableList(
                     Arrays.asList(
-                            CREATE_TABLE_SOURCE,
-                            CREATE_TABLE_TRIGGER,
-                            CREATE_TABLE_EVENT_REPORT,
-                            CREATE_TABLE_ATTRIBUTION,
-                            CREATE_TABLE_AGGREGATE_REPORT,
-                            CREATE_TABLE_AGGREGATE_ENCRYPTION_KEY,
-                            CREATE_TABLE_ASYNC_REGISTRATION));
+                            CREATE_TABLE_SOURCE_V1,
+                            CREATE_TABLE_TRIGGER_V1,
+                            CREATE_TABLE_EVENT_REPORT_V2,
+                            CREATE_TABLE_ATTRIBUTION_V1,
+                            CREATE_TABLE_AGGREGATE_REPORT_V2,
+                            CREATE_TABLE_AGGREGATE_ENCRYPTION_KEY_V1,
+                            CREATE_TABLE_ASYNC_REGISTRATION_V1));
 
     // Private constructor to prevent instantiation.
     private MeasurementTables() {

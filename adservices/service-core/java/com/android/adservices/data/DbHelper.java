@@ -27,6 +27,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentTables;
 import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.data.measurement.migration.IMeasurementDbMigrator;
+import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV2;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -39,9 +40,9 @@ import java.util.List;
  * Helper to manage the PP API database. Designed as a singleton to make sure that all PP API usages
  * get the same reference.
  */
-public final class DbHelper extends SQLiteOpenHelper {
+public class DbHelper extends SQLiteOpenHelper {
 
-    static final int LATEST_DATABASE_VERSION = 1;
+    static final int LATEST_DATABASE_VERSION = 2;
     private static final String DATABASE_NAME = "adservices.db";
 
     private static DbHelper sSingleton = null;
@@ -126,8 +127,6 @@ public final class DbHelper extends SQLiteOpenHelper {
     }
 
     private static List<IMeasurementDbMigrator> getOrderedDbMigrators() {
-        return ImmutableList.of(
-                // Include migration implementations in ascending order
-                );
+        return ImmutableList.of(new MeasurementDbMigratorV2());
     }
 }
