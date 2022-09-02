@@ -26,6 +26,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -54,7 +55,13 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
 import com.android.adservices.service.common.BackgroundJobsManager;
+import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.MeasurementImpl;
+import com.android.adservices.service.measurement.attribution.AttributionJobService;
+import com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService;
+import com.android.adservices.service.measurement.reporting.AggregateReportingJobService;
+import com.android.adservices.service.measurement.reporting.EventFallbackReportingJobService;
+import com.android.adservices.service.measurement.reporting.EventReportingJobService;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.UIStats;
 import com.android.adservices.service.topics.AppUpdateManager;
@@ -108,10 +115,16 @@ public class ConsentManagerTest {
 
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(EpochJobService.class)
-                        .spyStatic(MaintenanceJobService.class)
+                        .spyStatic(AggregateReportingJobService.class)
+                        .spyStatic(AggregateFallbackReportingJobService.class)
+                        .spyStatic(AttributionJobService.class)
                         .spyStatic(BackgroundJobsManager.class)
+                        .spyStatic(EpochJobService.class)
+                        .spyStatic(EventReportingJobService.class)
+                        .spyStatic(EventFallbackReportingJobService.class)
+                        .spyStatic(DeleteExpiredJobService.class)
+                        .spyStatic(FlagsFactory.class)
+                        .spyStatic(MaintenanceJobService.class)
                         .strictness(Strictness.WARN)
                         .initMocks(this)
                         .startMocking();
@@ -135,6 +148,25 @@ public class ConsentManagerTest {
                 .when(() -> EpochJobService.scheduleIfNeeded(any(Context.class), eq(false)));
         ExtendedMockito.doReturn(true)
                 .when(() -> MaintenanceJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+        ExtendedMockito.doNothing()
+                .when(() -> AggregateReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+        ExtendedMockito.doNothing()
+                .when(
+                        () ->
+                                AggregateFallbackReportingJobService.scheduleIfNeeded(
+                                        any(), anyBoolean()));
+        ExtendedMockito.doNothing()
+                .when(() -> AttributionJobService.scheduleIfNeeded(any(), anyBoolean()));
+        ExtendedMockito.doReturn(true)
+                .when(() -> EpochJobService.scheduleIfNeeded(any(), anyBoolean()));
+        ExtendedMockito.doNothing()
+                .when(() -> EventReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+        ExtendedMockito.doNothing()
+                .when(() -> EventFallbackReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+        ExtendedMockito.doNothing()
+                .when(() -> DeleteExpiredJobService.scheduleIfNeeded(any(), anyBoolean()));
+        ExtendedMockito.doReturn(true)
+                .when(() -> MaintenanceJobService.scheduleIfNeeded(any(), anyBoolean()));
     }
 
     @After
@@ -164,6 +196,7 @@ public class ConsentManagerTest {
     public void testJobsAreScheduledAfterEnablingKillSwitchOff() {
         doReturn(mPackageManagerMock).when(mContextSpy).getPackageManager();
         doReturn(false).when(mMockFlags).getTopicsKillSwitch();
+        doReturn(false).when(mMockFlags).getMeasurementKillSwitch();
 
         mConsentManager.enable(mContextSpy);
 
@@ -173,12 +206,29 @@ public class ConsentManagerTest {
                 () -> EpochJobService.scheduleIfNeeded(any(Context.class), eq(false)));
         ExtendedMockito.verify(
                 () -> MaintenanceJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+        ExtendedMockito.verify(
+                () -> AggregateReportingJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+        ExtendedMockito.verify(
+                () ->
+                        AggregateFallbackReportingJobService.scheduleIfNeeded(
+                                any(Context.class), eq(false)));
+        ExtendedMockito.verify(
+                () -> AttributionJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+        ExtendedMockito.verify(
+                () -> EventReportingJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+        ExtendedMockito.verify(
+                () ->
+                        EventFallbackReportingJobService.scheduleIfNeeded(
+                                any(Context.class), eq(false)));
+        ExtendedMockito.verify(
+                () -> DeleteExpiredJobService.scheduleIfNeeded(any(Context.class), eq(false)));
     }
 
     @Test
     public void testJobsAreNotScheduledAfterEnablingKillSwitchOn() {
         doReturn(mPackageManagerMock).when(mContextSpy).getPackageManager();
         doReturn(true).when(mMockFlags).getTopicsKillSwitch();
+        doReturn(true).when(mMockFlags).getMeasurementKillSwitch();
 
         mConsentManager.enable(mContextSpy);
 
@@ -189,6 +239,31 @@ public class ConsentManagerTest {
                 ExtendedMockito.never());
         ExtendedMockito.verify(
                 () -> MaintenanceJobService.scheduleIfNeeded(any(Context.class), eq(false)),
+                ExtendedMockito.never());
+        ExtendedMockito.verify(
+                () -> MaintenanceJobService.scheduleIfNeeded(any(Context.class), eq(false)),
+                ExtendedMockito.never());
+        ExtendedMockito.verify(
+                () -> AggregateReportingJobService.scheduleIfNeeded(any(Context.class), eq(false)),
+                ExtendedMockito.never());
+        ExtendedMockito.verify(
+                () ->
+                        AggregateFallbackReportingJobService.scheduleIfNeeded(
+                                any(Context.class), eq(false)),
+                ExtendedMockito.never());
+        ExtendedMockito.verify(
+                () -> AttributionJobService.scheduleIfNeeded(any(Context.class), eq(false)),
+                ExtendedMockito.never());
+        ExtendedMockito.verify(
+                () -> EventReportingJobService.scheduleIfNeeded(any(Context.class), eq(false)),
+                ExtendedMockito.never());
+        ExtendedMockito.verify(
+                () ->
+                        EventFallbackReportingJobService.scheduleIfNeeded(
+                                any(Context.class), eq(false)),
+                ExtendedMockito.never());
+        ExtendedMockito.verify(
+                () -> DeleteExpiredJobService.scheduleIfNeeded(any(Context.class), eq(false)),
                 ExtendedMockito.never());
     }
 
