@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.tests.sdksandbox.endtoend;
+package com.android.tests.sdksandbox.disablede2e;
 
 import android.Manifest;
 import android.app.sdksandbox.SdkSandboxManager;
