@@ -36,6 +36,33 @@ public class Throttler {
 
         // Key to throttle Topics API based on the Sdk Name.
         TOPICS_API_SDK_NAME,
+
+        // Key to throttle Measurement Register Source API
+        MEASUREMENT_API_REGISTER_SOURCE,
+
+        // Key to throttle Measurement Register Web Source API
+        MEASUREMENT_API_REGISTER_WEB_SOURCE,
+
+        // Key to throttle Measurement Register Trigger API
+        MEASUREMENT_API_REGISTER_TRIGGER,
+
+        // Key to throttle Measurement Register Web Trigger API
+        MEASUREMENT_API_REGISTER_WEB_TRIGGER,
+
+        // Key to throttle Measurement Deletion Registration API
+        MEASUREMENT_API_DELETION_REGISTRATION,
+
+        // Key to throttle Select Ads API
+        FLEDGE_API_SELECT_ADS,
+
+        // Key to throttle Join Custom Audience API
+        FLEDGE_API_JOIN_CUSTOM_AUDIENCE,
+
+        // Key to throttle Leave Custom Audience API
+        FLEDGE_API_LEAVE_CUSTOM_AUDIENCE,
+
+        // Key to throttle Report impressions API
+        FLEDGE_API_REPORT_IMPRESSIONS
     }
 
     private static volatile Throttler sSingleton;
@@ -48,7 +75,10 @@ public class Throttler {
     private final ConcurrentHashMap<Pair<ApiKey, String>, RateLimiter> mSdkRateLimitMap =
             new ConcurrentHashMap<>();
 
-    /** Returns the singleton instance of the Throttler. */
+    /**
+     * Returns the singleton instance of the Throttler. Note: Request for a new instance, even with
+     * changed rate limits, is ignored if the Throttler was already instantiated.
+     */
     @NonNull
     public static Throttler getInstance(double sdkRequestPermitsPerSecond) {
         synchronized (Throttler.class) {
@@ -62,6 +92,16 @@ public class Throttler {
     @VisibleForTesting
     Throttler(double sdkRequestPermitsPerSecond) {
         mSdkRequestPermitsPerSecond = sdkRequestPermitsPerSecond;
+    }
+
+    /**
+     * The throttler is a Singleton and does not allow changing the rate limits once initialised,
+     * therefore it is not feasible to test different throttling policies across tests without
+     * destroying the previous instance. Intended to be used in test cases only.
+     */
+    @VisibleForTesting
+    public static void destroyExistingThrottler() {
+        sSingleton = null;
     }
 
     /**

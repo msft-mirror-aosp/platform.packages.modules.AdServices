@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.topics.classifier;
 
+import static com.android.adservices.service.topics.classifier.Preprocessor.limitDescriptionSize;
 import static com.android.adservices.service.topics.classifier.Preprocessor.preprocessAppDescription;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -153,5 +154,84 @@ public final class PreprocessorTest {
     @Test
     public void testPreprocessing_forNullInput() {
         assertThrows(NullPointerException.class, () -> preprocessAppDescription(null));
+    }
+
+    @Test
+    public void testLimitDescriptionSize_numberOfWords() {
+        assertThat(
+                        limitDescriptionSize(
+                                "abc def gh i ", /*maxNumberOfWords*/
+                                10, /*maxNumberOfCharacters*/
+                                20))
+                .isEqualTo("abc def gh i");
+        assertThat(
+                        limitDescriptionSize(
+                                "abc def gh i ", /*maxNumberOfWords*/
+                                2, /*maxNumberOfCharacters*/
+                                20))
+                .isEqualTo("abc def");
+        assertThat(
+                        limitDescriptionSize(
+                                "abc def gh i ", /*maxNumberOfWords*/
+                                1, /*maxNumberOfCharacters*/
+                                20))
+                .isEqualTo("abc");
+        assertThat(
+                        limitDescriptionSize(
+                                "abc def gh i ", /*maxNumberOfWords*/
+                                0, /*maxNumberOfCharacters*/
+                                20))
+                .isEqualTo("");
+    }
+
+    @Test
+    public void testLimitDescriptionSize_maxLength() {
+        assertThat(
+                        limitDescriptionSize(
+                                "abc def gh i ", /*maxNumberOfWords*/
+                                10, /*maxNumberOfCharacters*/
+                                20))
+                .isEqualTo("abc def gh i");
+        assertThat(
+                        limitDescriptionSize(
+                                "abc def gh i ", /*maxNumberOfWords*/
+                                10, /*maxNumberOfCharacters*/
+                                13))
+                .isEqualTo("abc def gh i");
+        assertThat(
+                        limitDescriptionSize(
+                                "abc def gh i ", /*maxNumberOfWords*/
+                                10, /*maxNumberOfCharacters*/
+                                10))
+                .isEqualTo("abc def gh");
+        assertThat(
+                        limitDescriptionSize(
+                                "abc def gh i ", /*maxNumberOfWords*/
+                                10, /*maxNumberOfCharacters*/
+                                1))
+                .isEqualTo("a");
+        assertThat(
+                        limitDescriptionSize(
+                                "abc def gh i ", /*maxNumberOfWords*/
+                                10, /*maxNumberOfCharacters*/
+                                0))
+                .isEqualTo("");
+    }
+
+    @Test
+    public void testLimitDescriptionSize_emptyString() {
+        assertThat(limitDescriptionSize("", /*maxNumberOfWords*/ 10, /*maxNumberOfCharacters*/ 20))
+                .isEqualTo("");
+        assertThat(limitDescriptionSize(" ", /*maxNumberOfWords*/ 10, /*maxNumberOfCharacters*/ 20))
+                .isEqualTo("");
+    }
+
+    @Test
+    public void testLimitDescriptionSize_nullString() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        limitDescriptionSize(
+                                null, /*maxNumberOfWords*/ 10, /*maxNumberOfCharacters*/ 20));
     }
 }

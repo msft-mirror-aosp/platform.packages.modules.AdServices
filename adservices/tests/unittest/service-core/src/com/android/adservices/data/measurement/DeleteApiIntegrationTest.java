@@ -65,8 +65,8 @@ public class DeleteApiIntegrationTest extends AbstractDbIntegrationTest {
 
     public void runActionToTest() {
         final String registrantValue = (String) get("registrant");
-        final Long startValue = (Long) get("start");
-        final Long endValue = (Long) get("end");
+        Long startValue = (Long) get("start");
+        Long endValue = (Long) get("end");
         final List<Uri> originList = getUriList("origins");
         final List<Uri> domainList = getUriList("domains");
         Integer matchBehavior = (Integer) get("matchBehavior");
@@ -77,15 +77,25 @@ public class DeleteApiIntegrationTest extends AbstractDbIntegrationTest {
         if (deletionMode == null) {
             deletionMode = DeletionRequest.DELETION_MODE_ALL;
         }
+        Instant startValueInstant =
+                (startValue == null)
+                        ? Instant.ofEpochMilli(Long.MIN_VALUE)
+                        : Instant.ofEpochMilli(startValue);
+        Instant endValueInstant =
+                (endValue == null)
+                        ? Instant.ofEpochMilli(Long.MAX_VALUE)
+                        : Instant.ofEpochMilli(endValue);
+
         Integer finalMatchBehavior = matchBehavior;
         Integer finalDeletionMode = deletionMode;
+
         DatastoreManagerFactory.getDatastoreManager(sContext)
                 .runInTransaction(
                         (dao) -> {
                             dao.deleteMeasurementData(
                                     Uri.parse(registrantValue),
-                                    null == startValue ? null : Instant.ofEpochMilli(startValue),
-                                    null == endValue ? null : Instant.ofEpochMilli(endValue),
+                                    startValueInstant,
+                                    endValueInstant,
                                     originList,
                                     domainList,
                                     finalMatchBehavior,

@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID;
+
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
@@ -25,15 +27,18 @@ import android.content.Context;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.AdServicesConfig;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.SystemHealthParams;
+import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.concurrent.Executor;
 
 /**
- * Main service for scheduling aggregate reporting jobs.
- * The actial job execution logic is part of {@link AggregateReportingJobHandler}
+ * Main service for scheduling aggregate reporting jobs. The actual job execution logic is part of
+ * {@link AggregateReportingJobHandler}
  */
 public final class AggregateFallbackReportingJobService extends JobService {
 
@@ -46,8 +51,15 @@ public final class AggregateFallbackReportingJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
+        if (FlagsFactory.getFlags().getMeasurementJobAggregateFallbackReportingKillSwitch()) {
+            LogUtil.e("AggregateFallbackReportingJobService is disabled");
+            return skipAndCancelBackgroundJob(params);
+        }
+
+        LogUtil.d("AggregateFallbackReportingJobService.onStartJob");
         sBlockingExecutor.execute(() -> {
             boolean success = new AggregateReportingJobHandler(
+                    EnrollmentDao.getInstance(getApplicationContext()),
                     DatastoreManagerFactory.getDatastoreManager(
                             getApplicationContext()))
                     .performScheduledPendingReportsInWindow(
@@ -58,8 +70,7 @@ public final class AggregateFallbackReportingJobService extends JobService {
                                     .getMeasurementAggregateFallbackReportingJobPeriodMs());
             jobFinished(params, !success);
         });
-        LogUtil.d("AggregateFallbackReportingJobService.onStartJob");
-        return false;
+        return true;
     }
 
     @Override
@@ -68,12 +79,9 @@ public final class AggregateFallbackReportingJobService extends JobService {
         return false;
     }
 
-    /**
-     * Schedules {@link AggregateFallbackReportingJobService}
-     */
-    public static void schedule(Context context) {
-        final JobScheduler jobScheduler = context.getSystemService(
-                JobScheduler.class);
+    /** Schedules {@link AggregateFallbackReportingJobService} */
+    @VisibleForTesting
+    static void schedule(Context context, JobScheduler jobScheduler) {
         final JobInfo job = new JobInfo.Builder(
                 AdServicesConfig.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID,
                 new ComponentName(context, AggregateFallbackReportingJobService.class))
@@ -82,6 +90,47 @@ public final class AggregateFallbackReportingJobService extends JobService {
                 .setPeriodic(AdServicesConfig.getMeasurementAggregateFallbackReportingJobPeriodMs())
                 .build();
         jobScheduler.schedule(job);
-        LogUtil.d("Scheduling Aggregate Fallback Reporting job ...");
+    }
+
+    /**
+     * Schedule Aggregate Fallback Reporting Job if it is not already scheduled
+     *
+     * @param context the context
+     * @param forceSchedule flag to indicate whether to force rescheduling the job.
+     */
+    public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
+        if (FlagsFactory.getFlags().getMeasurementJobAggregateFallbackReportingKillSwitch()) {
+            LogUtil.d("AggregateFallbackReportingJobService is disabled, skip scheduling");
+            return;
+        }
+
+        final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
+        if (jobScheduler == null) {
+            LogUtil.e("JobScheduler not found");
+            return;
+        }
+
+        final JobInfo job =
+                jobScheduler.getPendingJob(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID);
+        // Schedule if it hasn't been scheduled already or force rescheduling
+        if (job == null || forceSchedule) {
+            schedule(context, jobScheduler);
+            LogUtil.d("Scheduled AggregateFallbackReportingJobService");
+        } else {
+            LogUtil.d(
+                    "AggregateFallbackReportingJobService already scheduled, skipping reschedule");
+        }
+    }
+
+    private boolean skipAndCancelBackgroundJob(final JobParameters params) {
+        final JobScheduler jobScheduler = this.getSystemService(JobScheduler.class);
+        if (jobScheduler != null) {
+            jobScheduler.cancel(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID);
+        }
+        // Tell the JobScheduler that the job has completed and does not need to be rescheduled.
+        jobFinished(params, false);
+
+        // Returning false means that this job has completed its work.
+        return false;
     }
 }

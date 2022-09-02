@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.util;
 
+import android.annotation.NonNull;
 import android.net.Uri;
 
 /**
@@ -23,12 +24,12 @@ import android.net.Uri;
  */
 public class BaseUriExtractor {
     /**
-     * Returns the base URI of the given URI.
-     * For example:
-     * "https://www.example.com/abc" -> "https://www.example.com"
-     * "android-app://com.example.sample" -> "android-app://com.example.sample"
-     * "https://www.example.com:8080/abc" -> "https://www.example.com:8080"
+     * Returns the base URI of the given URI. For example: "https://www.example.com/abc" ->
+     * "https://www.example.com" "android-app://com.example.sample" ->
+     * "android-app://com.example.sample" "https://www.example.com:8080/abc" ->
+     * "https://www.example.com:8080"
      */
+    @NonNull
     public static Uri getBaseUri(Uri uri) {
         if (!uri.isHierarchical() || !uri.isAbsolute()) {
             throw new IllegalArgumentException(

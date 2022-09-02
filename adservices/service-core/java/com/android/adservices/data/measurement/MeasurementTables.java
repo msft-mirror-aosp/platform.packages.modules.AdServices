@@ -39,7 +39,7 @@ public final class MeasurementTables {
         MeasurementTables.EventReportContract.TABLE,
         MeasurementTables.AggregateReport.TABLE,
         MeasurementTables.AggregateEncryptionKey.TABLE,
-        MeasurementTables.AttributionRateLimitContract.TABLE,
+        MeasurementTables.AttributionContract.TABLE,
         MeasurementTables.AsyncRegistrationContract.TABLE
     };
 
@@ -67,6 +67,7 @@ public final class MeasurementTables {
         String ID = "_id";
         String EVENT_ID = "event_id";
         String PUBLISHER = "publisher";
+        String PUBLISHER_TYPE = "publisher_type";
         String APP_DESTINATION = "app_destination";
         String WEB_DESTINATION = "web_destination";
         String DEDUP_KEYS = "dedup_keys";
@@ -75,7 +76,7 @@ public final class MeasurementTables {
         String PRIORITY = "priority";
         String STATUS = "status";
         String SOURCE_TYPE = "source_type";
-        String AD_TECH_DOMAIN = "ad_tech_domain";
+        String ENROLLMENT_ID = "enrollment_id";
         String REGISTRANT = "registrant";
         String ATTRIBUTION_MODE = "attribution_mode";
         String INSTALL_ATTRIBUTION_WINDOW = "install_attribution_window";
@@ -92,10 +93,11 @@ public final class MeasurementTables {
         String TABLE = MSMT_TABLE_PREFIX + "trigger";
         String ID = "_id";
         String ATTRIBUTION_DESTINATION = "attribution_destination";
+        String DESTINATION_TYPE = "destination_type";
         String TRIGGER_TIME = "trigger_time";
         String STATUS = "status";
         String REGISTRANT = "registrant";
-        String AD_TECH_DOMAIN = "ad_tech_domain";
+        String ENROLLMENT_ID = "enrollment_id";
         String EVENT_TRIGGERS = "event_triggers";
         String AGGREGATE_TRIGGER_DATA = "aggregate_trigger_data";
         String AGGREGATE_VALUES = "aggregate_values";
@@ -116,13 +118,13 @@ public final class MeasurementTables {
         String TRIGGER_TIME = "trigger_time";
         String STATUS = "status";
         String SOURCE_TYPE = "source_type";
-        String AD_TECH_DOMAIN = "ad_tech_domain";
+        String ENROLLMENT_ID = "enrollment_id";
         String RANDOMIZED_TRIGGER_RATE = "randomized_trigger_rate";
     }
 
     /** Contract for Attribution rate limit. */
-    public interface AttributionRateLimitContract {
-        String TABLE = MSMT_TABLE_PREFIX + "attribution_rate_limit";
+    public interface AttributionContract {
+        String TABLE = MSMT_TABLE_PREFIX + "attribution";
         String ID = "_id";
         String SOURCE_SITE = "source_site";
         String SOURCE_ORIGIN = "source_origin";
@@ -130,7 +132,7 @@ public final class MeasurementTables {
         String DESTINATION_ORIGIN = "destination_origin";
         String TRIGGER_TIME = "trigger_time";
         String REGISTRANT = "registrant";
-        String AD_TECH_DOMAIN = "ad_tech_domain";
+        String ENROLLMENT_ID = "enrollment_id";
     }
 
     /** Contract for Unencrypted aggregate payload. */
@@ -141,7 +143,7 @@ public final class MeasurementTables {
         String ATTRIBUTION_DESTINATION = "attribution_destination";
         String SOURCE_REGISTRATION_TIME = "source_registration_time";
         String SCHEDULED_REPORT_TIME = "scheduled_report_time";
-        String REPORTING_ORIGIN = "reporting_origin";
+        String ENROLLMENT_ID = "enrollment_id";
         String DEBUG_CLEARTEXT_PAYLOAD = "debug_cleartext_payload";
         String STATUS = "status";
         String API_VERSION = "api_version";
@@ -198,9 +200,11 @@ public final class MeasurementTables {
                     + " INTEGER, "
                     + SourceContract.PUBLISHER
                     + " TEXT, "
+                    + SourceContract.PUBLISHER_TYPE
+                    + " INTEGER, "
                     + SourceContract.APP_DESTINATION
                     + " TEXT, "
-                    + SourceContract.AD_TECH_DOMAIN
+                    + SourceContract.ENROLLMENT_ID
                     + " TEXT, "
                     + SourceContract.EVENT_TIME
                     + " INTEGER, "
@@ -244,7 +248,9 @@ public final class MeasurementTables {
                     + " TEXT PRIMARY KEY NOT NULL, "
                     + TriggerContract.ATTRIBUTION_DESTINATION
                     + " TEXT, "
-                    + TriggerContract.AD_TECH_DOMAIN
+                    + TriggerContract.DESTINATION_TYPE
+                    + " INTEGER, "
+                    + TriggerContract.ENROLLMENT_ID
                     + " TEXT, "
                     + TriggerContract.TRIGGER_TIME
                     + " INTEGER, "
@@ -272,7 +278,7 @@ public final class MeasurementTables {
                     + " TEXT PRIMARY KEY NOT NULL, "
                     + EventReportContract.SOURCE_ID
                     + " INTEGER, "
-                    + EventReportContract.AD_TECH_DOMAIN
+                    + EventReportContract.ENROLLMENT_ID
                     + " TEXT, "
                     + EventReportContract.ATTRIBUTION_DESTINATION
                     + " TEXT, "
@@ -294,25 +300,25 @@ public final class MeasurementTables {
                     + " DOUBLE "
                     + ")";
 
-    public static final String CREATE_TABLE_ATTRIBUTION_RATE_LIMIT =
+    public static final String CREATE_TABLE_ATTRIBUTION =
             "CREATE TABLE "
-                    + AttributionRateLimitContract.TABLE
+                    + AttributionContract.TABLE
                     + " ("
-                    + AttributionRateLimitContract.ID
+                    + AttributionContract.ID
                     + " TEXT PRIMARY KEY NOT NULL, "
-                    + AttributionRateLimitContract.SOURCE_SITE
+                    + AttributionContract.SOURCE_SITE
                     + " TEXT, "
-                    + AttributionRateLimitContract.SOURCE_ORIGIN
+                    + AttributionContract.SOURCE_ORIGIN
                     + " TEXT, "
-                    + AttributionRateLimitContract.DESTINATION_SITE
+                    + AttributionContract.DESTINATION_SITE
                     + " TEXT, "
-                    + AttributionRateLimitContract.DESTINATION_ORIGIN
+                    + AttributionContract.DESTINATION_ORIGIN
                     + " TEXT, "
-                    + AttributionRateLimitContract.AD_TECH_DOMAIN
+                    + AttributionContract.ENROLLMENT_ID
                     + " TEXT, "
-                    + AttributionRateLimitContract.TRIGGER_TIME
+                    + AttributionContract.TRIGGER_TIME
                     + " INTEGER, "
-                    + AttributionRateLimitContract.REGISTRANT
+                    + AttributionContract.REGISTRANT
                     + " TEXT "
                     + ")";
 
@@ -330,7 +336,7 @@ public final class MeasurementTables {
                     + " INTEGER, "
                     + AggregateReport.SCHEDULED_REPORT_TIME
                     + " INTEGER, "
-                    + AggregateReport.REPORTING_ORIGIN
+                    + AggregateReport.ENROLLMENT_ID
                     + " TEXT, "
                     + AggregateReport.DEBUG_CLEARTEXT_PAYLOAD
                     + " TEXT, "
@@ -354,30 +360,17 @@ public final class MeasurementTables {
         "CREATE INDEX "
                 + INDEX_PREFIX
                 + SourceContract.TABLE
-                + "_ad_atd_et "
+                + "_ad_ei_et "
                 + "ON "
                 + SourceContract.TABLE
                 + "( "
                 + SourceContract.APP_DESTINATION
                 + ", "
-                + SourceContract.AD_TECH_DOMAIN
+                + SourceContract.ENROLLMENT_ID
                 + ", "
                 + SourceContract.EXPIRY_TIME
                 + " DESC "
                 + ")",
-        "CREATE INDEX "
-                + INDEX_PREFIX
-                + TriggerContract.TABLE
-                + "_ad_atd_tt "
-                + "ON "
-                + TriggerContract.TABLE
-                + "( "
-                + TriggerContract.ATTRIBUTION_DESTINATION
-                + ", "
-                + TriggerContract.AD_TECH_DOMAIN
-                + ", "
-                + TriggerContract.TRIGGER_TIME
-                + " ASC)",
         "CREATE INDEX "
                 + INDEX_PREFIX
                 + SourceContract.TABLE
@@ -389,6 +382,36 @@ public final class MeasurementTables {
                 + ")",
         "CREATE INDEX "
                 + INDEX_PREFIX
+                + SourceContract.TABLE
+                + "_p_ad_wd_s_et "
+                + "ON "
+                + SourceContract.TABLE
+                + "("
+                + SourceContract.PUBLISHER
+                + ", "
+                + SourceContract.APP_DESTINATION
+                + ", "
+                + SourceContract.WEB_DESTINATION
+                + ", "
+                + SourceContract.STATUS
+                + ", "
+                + SourceContract.EVENT_TIME
+                + ")",
+        "CREATE INDEX "
+                + INDEX_PREFIX
+                + TriggerContract.TABLE
+                + "_ad_ei_tt "
+                + "ON "
+                + TriggerContract.TABLE
+                + "( "
+                + TriggerContract.ATTRIBUTION_DESTINATION
+                + ", "
+                + TriggerContract.ENROLLMENT_ID
+                + ", "
+                + TriggerContract.TRIGGER_TIME
+                + " ASC)",
+        "CREATE INDEX "
+                + INDEX_PREFIX
                 + TriggerContract.TABLE
                 + "_tt "
                 + "ON "
@@ -398,22 +421,22 @@ public final class MeasurementTables {
                 + ")",
         "CREATE INDEX "
                 + INDEX_PREFIX
-                + AttributionRateLimitContract.TABLE
-                + "_ss_so_ds_do_atd_tt"
+                + AttributionContract.TABLE
+                + "_ss_so_ds_do_ei_tt"
                 + " ON "
-                + AttributionRateLimitContract.TABLE
+                + AttributionContract.TABLE
                 + "("
-                + AttributionRateLimitContract.SOURCE_SITE
+                + AttributionContract.SOURCE_SITE
                 + ", "
-                + AttributionRateLimitContract.SOURCE_ORIGIN
+                + AttributionContract.SOURCE_ORIGIN
                 + ", "
-                + AttributionRateLimitContract.DESTINATION_SITE
+                + AttributionContract.DESTINATION_SITE
                 + ", "
-                + AttributionRateLimitContract.DESTINATION_ORIGIN
+                + AttributionContract.DESTINATION_ORIGIN
                 + ", "
-                + AttributionRateLimitContract.AD_TECH_DOMAIN
+                + AttributionContract.ENROLLMENT_ID
                 + ", "
-                + AttributionRateLimitContract.TRIGGER_TIME
+                + AttributionContract.TRIGGER_TIME
                 + ")"
     };
 
@@ -424,7 +447,7 @@ public final class MeasurementTables {
                             CREATE_TABLE_SOURCE,
                             CREATE_TABLE_TRIGGER,
                             CREATE_TABLE_EVENT_REPORT,
-                            CREATE_TABLE_ATTRIBUTION_RATE_LIMIT,
+                            CREATE_TABLE_ATTRIBUTION,
                             CREATE_TABLE_AGGREGATE_REPORT,
                             CREATE_TABLE_AGGREGATE_ENCRYPTION_KEY,
                             CREATE_TABLE_ASYNC_REGISTRATION));

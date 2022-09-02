@@ -23,6 +23,7 @@ import androidx.annotation.NonNull;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 
 import com.google.android.downloader.AndroidDownloaderLogger;
 import com.google.android.downloader.ConnectivityHandler;
@@ -45,6 +46,7 @@ import com.google.android.libraries.mobiledatadownload.monitor.NetworkUsageMonit
 import com.google.android.libraries.mobiledatadownload.populator.ManifestConfigFileParser;
 import com.google.android.libraries.mobiledatadownload.populator.ManifestFileGroupPopulator;
 import com.google.android.libraries.mobiledatadownload.populator.SharedPreferencesManifestFileMetadata;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
@@ -53,15 +55,19 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.mobiledatadownload.DownloadConfigProto.ManifestFileFlag;
 import com.google.protobuf.MessageLite;
 
+import java.io.PrintWriter;
 import java.util.concurrent.Executor;
 
 /** Mobile Data Download Factory. */
 public class MobileDataDownloadFactory {
     private static MobileDataDownload sSingletonMdd;
+    private static SynchronousFileStorage sSynchronousFileStorage;
 
     private static final String MDD_METADATA_SHARED_PREFERENCES = "mdd_metadata_store";
     private static final String TOPICS_MANIFEST_ID = "TopicsManifestId";
     private static final String MEASUREMENT_MANIFEST_ID = "MeasurementManifestId";
+
+    private static final int MAX_ADB_LOGCAT_SIZE = 4000;
 
     /** Returns a singleton of MobileDataDownload for the whole PPAPI app. */
     @NonNull
@@ -80,34 +86,56 @@ public class MobileDataDownloadFactory {
                         new NetworkUsageMonitor(context, System::currentTimeMillis);
 
                 sSingletonMdd =
-                        sSingletonMdd =
-                                MobileDataDownloadBuilder.newBuilder()
-                                        .setContext(context)
-                                        .setControlExecutor(getControlExecutor())
-                                        .setTaskScheduler(
-                                                Optional.of(new MddTaskScheduler(context)))
-                                        .setNetworkUsageMonitor(networkUsageMonitor)
-                                        .setFileStorage(fileStorage)
-                                        .setFileDownloaderSupplier(() -> fileDownloader)
-                                        .addFileGroupPopulator(
-                                                getTopicsManifestPopulator(
-                                                        context,
-                                                        flags,
-                                                        fileStorage,
-                                                        fileDownloader))
-                                        .addFileGroupPopulator(
-                                                getMeasurementManifestPopulator(
-                                                        context,
-                                                        flags,
-                                                        fileStorage,
-                                                        fileDownloader))
-                                        .setLoggerOptional(Optional.absent())
-                                        .setFlagsOptional(Optional.of(new MddFlags()))
-                                        .build();
+                        MobileDataDownloadBuilder.newBuilder()
+                                .setContext(context)
+                                .setControlExecutor(getControlExecutor())
+                                .setTaskScheduler(Optional.of(new MddTaskScheduler(context)))
+                                .setNetworkUsageMonitor(networkUsageMonitor)
+                                .setFileStorage(fileStorage)
+                                .setFileDownloaderSupplier(() -> fileDownloader)
+                                .addFileGroupPopulator(
+                                        getTopicsManifestPopulator(
+                                                context, flags, fileStorage, fileDownloader))
+                                .addFileGroupPopulator(
+                                        getMeasurementManifestPopulator(
+                                                context, flags, fileStorage, fileDownloader))
+                                .setLoggerOptional(getMddLogger(flags))
+                                .setFlagsOptional(Optional.of(new MddFlags()))
+                                .build();
             }
 
             return sSingletonMdd;
         }
+    }
+
+    /** Returns a MobileDataDownload instance for testing. */
+    @VisibleForTesting
+    @NonNull
+    static MobileDataDownload getMddForTesting(@NonNull Context context, @NonNull Flags flags) {
+        context = context.getApplicationContext();
+        SynchronousFileStorage fileStorage = getFileStorage(context);
+        FileDownloader fileDownloader = getFileDownloader(context, flags, fileStorage);
+        NetworkUsageMonitor networkUsageMonitor =
+                new NetworkUsageMonitor(context, System::currentTimeMillis);
+
+        return MobileDataDownloadBuilder.newBuilder()
+                .setContext(context)
+                .setControlExecutor(getControlExecutor())
+                .setTaskScheduler(Optional.of(new MddTaskScheduler(context)))
+                .setNetworkUsageMonitor(networkUsageMonitor)
+                .setFileStorage(fileStorage)
+                .setFileDownloaderSupplier(() -> fileDownloader)
+                .addFileGroupPopulator(
+                        getTopicsManifestPopulator(context, flags, fileStorage, fileDownloader))
+                .addFileGroupPopulator(
+                        getMeasurementManifestPopulator(
+                                context, flags, fileStorage, fileDownloader))
+                .setLoggerOptional(getMddLogger(flags))
+                // Use default MDD flags so that it does not need to access DeviceConfig
+                // which is inaccessible from Unit Tests.
+                .setFlagsOptional(
+                        Optional.of(new com.google.android.libraries.mobiledatadownload.Flags() {}))
+                .build();
     }
 
     // Connectivity constraints will be checked by JobScheduler/WorkManager instead.
@@ -118,14 +146,21 @@ public class MobileDataDownloadFactory {
         }
     }
 
+    /** Return a singleton of {@link SynchronousFileStorage}. */
     @NonNull
-    private static SynchronousFileStorage getFileStorage(@NonNull Context context) {
-        return new SynchronousFileStorage(
-                ImmutableList.of(
-                        /*backends*/ AndroidFileBackend.builder(context).build(),
-                        new JavaFileBackend()),
-                ImmutableList.of(/*transforms*/ ),
-                ImmutableList.of(/*monitors*/ ));
+    public static SynchronousFileStorage getFileStorage(@NonNull Context context) {
+        synchronized (MobileDataDownloadFactory.class) {
+            if (sSynchronousFileStorage == null) {
+                sSynchronousFileStorage =
+                        new SynchronousFileStorage(
+                                ImmutableList.of(
+                                        /*backends*/ AndroidFileBackend.builder(context).build(),
+                                        new JavaFileBackend()),
+                                ImmutableList.of(/*transforms*/ ),
+                                ImmutableList.of(/*monitors*/ ));
+            }
+            return sSynchronousFileStorage;
+        }
     }
 
     @NonNull
@@ -220,7 +255,7 @@ public class MobileDataDownloadFactory {
                                 AdServicesExecutors.getBackgroundExecutor()))
                 // TODO(b/239265537): Enable Dedup using Etag.
                 .setDedupDownloadWithEtag(false)
-                // TODO(b/236761740): user proper Logger.
+                // TODO(b/243829623): use proper Logger.
                 .setLogger(
                         new Logger() {
                             @Override
@@ -262,7 +297,7 @@ public class MobileDataDownloadFactory {
                                 AdServicesExecutors.getBackgroundExecutor()))
                 // TODO(b/239265537): Enable dedup using etag.
                 .setDedupDownloadWithEtag(false)
-                // TODO(b/236761740): user proper Logger.
+                // TODO(b/243829623): use proper Logger.
                 .setLogger(
                         new Logger() {
                             @Override
@@ -271,5 +306,27 @@ public class MobileDataDownloadFactory {
                             }
                         })
                 .build();
+    }
+
+    // Check killswitch is on or off. True means do not use MddLogger.
+    @NonNull
+    @VisibleForTesting
+    static Optional<Logger> getMddLogger(@NonNull Flags flags) {
+        return flags.getMddLoggerKillSwitch() ? Optional.absent() : Optional.of(new MddLogger());
+    }
+
+    /** Dump MDD Debug Info. */
+    public static void dump(Context context, @NonNull PrintWriter writer) {
+        String debugString =
+                MobileDataDownloadFactory.getMdd(context, FlagsFactory.getFlags())
+                        .getDebugInfoAsString();
+        writer.println("***====*** MDD Lib dump: ***====***");
+
+        for (int i = 0; i <= debugString.length() / MAX_ADB_LOGCAT_SIZE; i++) {
+            int start = i * MAX_ADB_LOGCAT_SIZE;
+            int end = (i + 1) * MAX_ADB_LOGCAT_SIZE;
+            end = Math.min(debugString.length(), end);
+            writer.println(debugString.substring(start, end));
+        }
     }
 }

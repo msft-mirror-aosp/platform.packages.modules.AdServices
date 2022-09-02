@@ -18,6 +18,7 @@ package com.android.adservices.ui.settings;
 import android.os.Bundle;
 import android.view.MenuItem;
 
+import androidx.core.view.WindowCompat;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.android.adservices.api.R;
@@ -64,6 +65,7 @@ public class AdServicesSettingsActivity extends CollapsingToolbarBaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         setContentView(R.layout.adservices_settings_main_activity);
         initActionDelegate();
     }

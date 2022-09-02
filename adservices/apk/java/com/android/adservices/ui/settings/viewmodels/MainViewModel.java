@@ -74,9 +74,9 @@ public class MainViewModel extends AndroidViewModel {
      */
     public void setConsent(Boolean newConsentValue) {
         if (newConsentValue) {
-            mConsentManager.enable(getApplication().getPackageManager());
+            mConsentManager.enable(getApplication());
         } else {
-            mConsentManager.disable(getApplication().getPackageManager());
+            mConsentManager.disable(getApplication());
         }
         mAdServicesConsent.postValue(getConsentFromConsentManager());
     }

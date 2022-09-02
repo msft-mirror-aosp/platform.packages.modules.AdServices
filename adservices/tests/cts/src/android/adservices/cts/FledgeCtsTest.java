@@ -20,11 +20,14 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
+import android.Manifest;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
+import android.adservices.clients.adselection.TestAdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
+import android.adservices.clients.customaudience.TestAdvertisingCustomAudienceClient;
 import android.adservices.common.AdData;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
@@ -33,14 +36,16 @@ import android.adservices.customaudience.AddCustomAudienceOverrideRequest;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.TrustedBiddingDataFixture;
-import android.content.Context;
 import android.net.Uri;
 import android.os.Process;
 
-import androidx.test.core.app.ApplicationProvider;
+import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.service.PhFlagsFixture;
+import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.compatibility.common.util.ShellUtils;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -58,8 +63,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class FledgeCtsTest {
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
+public class FledgeCtsTest extends ForegroundCtsTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private static final AdTechIdentifier BUYER_1 = AdSelectionConfigFixture.BUYER_1;
@@ -90,15 +94,25 @@ public class FledgeCtsTest {
                             Uri.parse("https://" + SELLER + "/" + TRUSTED_SCORING_SIGNALS_URI))
                     .build();
 
+    private static final int DELAY_TO_AVOID_THROTTLE_MS = 1001;
     private AdSelectionClient mAdSelectionClient;
+    private TestAdSelectionClient mTestAdSelectionClient;
     private AdvertisingCustomAudienceClient mCustomAudienceClient;
+    private TestAdvertisingCustomAudienceClient mTestCustomAudienceClient;
     private DevContext mDevContext;
     private boolean mIsDebugMode;
 
     @Before
     public void setup() {
+        assertForegroundActivityStarted();
+
         mAdSelectionClient =
                 new AdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+        mTestAdSelectionClient =
+                new TestAdSelectionClient.Builder()
                         .setContext(sContext)
                         .setExecutor(CALLBACK_EXECUTOR)
                         .build();
@@ -107,8 +121,28 @@ public class FledgeCtsTest {
                         .setContext(sContext)
                         .setExecutor(MoreExecutors.directExecutor())
                         .build();
+        mTestCustomAudienceClient =
+                new TestAdvertisingCustomAudienceClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(MoreExecutors.directExecutor())
+                        .build();
         mDevContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
         mIsDebugMode = mDevContext.getDevOptionsEnabled();
+
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+        // Enabling tests to run with WebView version < M105
+        PhFlagsFixture.overrideEnforceIsolateMaxHeapSize(false);
+        PhFlagsFixture.overrideIsolateMaxHeapSizeBytes(0);
+        PhFlagsFixture.overrideSdkRequestPermitsPerSecond(Integer.MAX_VALUE);
+        // We need to turn the Consent Manager into debug mode
+        overrideConsentManagerDebugMode();
+    }
+
+    // Override the Consent Manager behaviour - Consent Given
+    private void overrideConsentManagerDebugMode() {
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
     }
 
     @Test
@@ -145,19 +179,16 @@ public class FledgeCtsTest {
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
 
-        CustomAudience customAudience1 =
-                createCustomAudience(
-                        BUYER_1,
-                        bidsForBuyer1);
+        CustomAudience customAudience1 = createCustomAudience(BUYER_1, bidsForBuyer1);
 
-        CustomAudience customAudience2 =
-                createCustomAudience(
-                        BUYER_2,
-                        bidsForBuyer2);
+        CustomAudience customAudience2 = createCustomAudience(BUYER_2, bidsForBuyer2);
 
+        Throttler.destroyExistingThrottler();
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
+        Thread.sleep(DELAY_TO_AVOID_THROTTLE_MS);
         mCustomAudienceClient.joinCustomAudience(customAudience1).get(10, TimeUnit.SECONDS);
+        Thread.sleep(DELAY_TO_AVOID_THROTTLE_MS);
         mCustomAudienceClient.joinCustomAudience(customAudience2).get(10, TimeUnit.SECONDS);
 
         // Adding AdSelection override, asserting a failure since app is not debuggable.
@@ -166,20 +197,17 @@ public class FledgeCtsTest {
                         AD_SELECTION_CONFIG, decisionLogicJs, TRUSTED_SCORING_SIGNALS);
 
         ListenableFuture<Void> adSelectionOverrideResult =
-                mAdSelectionClient.overrideAdSelectionConfigRemoteInfo(
+                mTestAdSelectionClient.overrideAdSelectionConfigRemoteInfo(
                         addAdSelectionOverrideRequest);
 
         Exception adSelectionOverrideException =
                 assertThrows(
                         ExecutionException.class,
-                        () -> {
-                            adSelectionOverrideResult.get(10, TimeUnit.SECONDS);
-                        });
+                        () -> adSelectionOverrideResult.get(10, TimeUnit.SECONDS));
         assertThat(adSelectionOverrideException.getCause()).isInstanceOf(SecurityException.class);
 
         AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest =
                 new AddCustomAudienceOverrideRequest.Builder()
-                        .setOwner(customAudience2.getOwner())
                         .setBuyer(customAudience2.getBuyer())
                         .setName(customAudience2.getName())
                         .setBiddingLogicJs(biddingLogicJs)
@@ -188,30 +216,26 @@ public class FledgeCtsTest {
 
         // Adding Custom audience override, asserting a failure since app is not debuggable.
         ListenableFuture<Void> customAudienceOverrideResult =
-                mCustomAudienceClient.overrideCustomAudienceRemoteInfo(
+                mTestCustomAudienceClient.overrideCustomAudienceRemoteInfo(
                         addCustomAudienceOverrideRequest);
 
         Exception customAudienceOverrideException =
                 assertThrows(
                         ExecutionException.class,
-                        () -> {
-                            customAudienceOverrideResult.get(10, TimeUnit.SECONDS);
-                        });
+                        () -> customAudienceOverrideResult.get(10, TimeUnit.SECONDS));
         assertThat(customAudienceOverrideException.getCause())
                 .isInstanceOf(SecurityException.class);
 
         // Running ad selection and asserting that a failure is returned since the fetch calls
         // should fail.
-        Exception runAdSelectionException =
+        Exception selectAdsException =
                 assertThrows(
                         ExecutionException.class,
-                        () -> {
-                            mAdSelectionClient
-                                    .runAdSelection(AD_SELECTION_CONFIG)
-                                    .get(30, TimeUnit.SECONDS);
-                        });
-        assertThat(runAdSelectionException.getCause().getCause())
-                .isInstanceOf(IllegalStateException.class);
+                        () ->
+                                mAdSelectionClient
+                                        .selectAds(AD_SELECTION_CONFIG)
+                                        .get(30, TimeUnit.SECONDS));
+        assertThat(selectAdsException.getCause()).isInstanceOf(IllegalStateException.class);
         // Cannot perform reporting since no ad selection id is returned.
     }
 
@@ -237,16 +261,15 @@ public class FledgeCtsTest {
         }
 
         return new CustomAudience.Builder()
-                .setOwner(CustomAudienceFixture.VALID_OWNER)
                 .setBuyer(buyer)
                 .setName(buyer + CustomAudienceFixture.VALID_NAME)
                 .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
                 .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
-                .setDailyUpdateUrl(CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyer))
+                .setDailyUpdateUri(CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyer))
                 .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                 .setTrustedBiddingData(
                         TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(buyer))
-                .setBiddingLogicUrl(
+                .setBiddingLogicUri(
                         CommonFixture.getUri(
                                 buyer, BUYER_BIDDING_LOGIC_URI_PREFIX + buyer.toString()))
                 .setAds(ads)

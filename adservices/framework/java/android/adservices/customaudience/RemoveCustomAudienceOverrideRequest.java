@@ -18,48 +18,37 @@ package android.adservices.customaudience;
 
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.os.OutcomeReceiver;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
 /**
- * This POJO represents the {@link
- * CustomAudienceManager#removeCustomAudienceRemoteInfoOverride(RemoveCustomAudienceOverrideRequest,
- * Executor, OutcomeReceiver)} request
+ * This POJO represents the {@link TestCustomAudienceManager#removeCustomAudienceRemoteInfoOverride(
+ * RemoveCustomAudienceOverrideRequest, Executor, OutcomeReceiver)} request.
  *
- * <p>It contains 3 fields {@code owner}, {@code buyer}, and {@code name} which will serve as the
- * identifier for the overrides
+ * <p>It contains fields {@code buyer} and {@code name} which will serve as the identifier for the
+ * overrides to be removed.
  */
 public class RemoveCustomAudienceOverrideRequest {
-    @NonNull private final String mOwner;
     @NonNull private final AdTechIdentifier mBuyer;
     @NonNull private final String mName;
 
     public RemoveCustomAudienceOverrideRequest(
-            @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name) {
-        mOwner = owner;
+            @NonNull AdTechIdentifier buyer,
+            @NonNull String name) {
         mBuyer = buyer;
         mName = name;
     }
 
-    /**
-     * @return the owner
-     */
-    @NonNull
-    public String getOwner() {
-        return mOwner;
-    }
-
-    /** @return the buyer */
+    /** @return an {@link AdTechIdentifier} representing the buyer */
     @NonNull
     public AdTechIdentifier getBuyer() {
         return mBuyer;
     }
 
-    /**
-     * @return name
-     */
+    /** @return name of the custom audience being overridden */
     @NonNull
     public String getName() {
         return mName;
@@ -67,22 +56,12 @@ public class RemoveCustomAudienceOverrideRequest {
 
     /** Builder for {@link RemoveCustomAudienceOverrideRequest} objects. */
     public static final class Builder {
-        private String mOwner;
-        private AdTechIdentifier mBuyer;
-        private String mName;
+        @Nullable private AdTechIdentifier mBuyer;
+        @Nullable private String mName;
 
         public Builder() {}
 
-        /** Set the Owner. */
-        @NonNull
-        public RemoveCustomAudienceOverrideRequest.Builder setOwner(@NonNull String owner) {
-            Objects.requireNonNull(owner);
-
-            this.mOwner = owner;
-            return this;
-        }
-
-        /** Set the Buyer. */
+        /** Sets the buyer {@link AdTechIdentifier} for the custom audience. */
         @NonNull
         public RemoveCustomAudienceOverrideRequest.Builder setBuyer(
                 @NonNull AdTechIdentifier buyer) {
@@ -92,7 +71,7 @@ public class RemoveCustomAudienceOverrideRequest {
             return this;
         }
 
-        /** Set the Name. */
+        /** Sets the name for the custom audience that was overridden. */
         @NonNull
         public RemoveCustomAudienceOverrideRequest.Builder setName(@NonNull String name) {
             Objects.requireNonNull(name);
@@ -104,11 +83,10 @@ public class RemoveCustomAudienceOverrideRequest {
         /** Builds a {@link RemoveCustomAudienceOverrideRequest} instance. */
         @NonNull
         public RemoveCustomAudienceOverrideRequest build() {
-            Objects.requireNonNull(mOwner);
             Objects.requireNonNull(mBuyer);
             Objects.requireNonNull(mName);
 
-            return new RemoveCustomAudienceOverrideRequest(mOwner, mBuyer, mName);
+            return new RemoveCustomAudienceOverrideRequest(mBuyer, mName);
         }
     }
 }

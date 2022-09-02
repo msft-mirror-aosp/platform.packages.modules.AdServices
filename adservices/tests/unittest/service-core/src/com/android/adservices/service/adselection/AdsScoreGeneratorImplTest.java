@@ -18,6 +18,7 @@ package com.android.adservices.service.adselection;
 
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.MISSING_TRUSTED_SCORING_SIGNALS;
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.QUERY_PARAM_RENDER_URLS;
+import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.SCORING_TIMED_OUT;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
@@ -29,17 +30,18 @@ import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.http.MockWebServerRule;
+import android.annotation.NonNull;
 import android.net.Uri;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.DBAdSelectionOverride;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
@@ -49,7 +51,6 @@ import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.google.mockwebserver.Dispatcher;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
@@ -69,8 +70,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 public class AdsScoreGeneratorImplTest {
@@ -84,8 +83,9 @@ public class AdsScoreGeneratorImplTest {
 
     @Mock private AdSelectionScriptEngine mMockAdSelectionScriptEngine;
 
-    private ListeningExecutorService mListeningExecutorService;
-    private ExecutorService mExecutorService;
+    private ListeningExecutorService mLightweightExecutorService;
+    private ListeningExecutorService mBackgroundExecutorService;
+    private ListeningExecutorService mBlockingExecutorService;
     private AdServicesHttpsClient mWebClient;
     private String mSellerDecisionLogicJs;
 
@@ -111,10 +111,10 @@ public class AdsScoreGeneratorImplTest {
         MockitoAnnotations.initMocks(this);
 
         mDevContext = DevContext.createForDevOptionsDisabled();
-
-        mExecutorService = Executors.newFixedThreadPool(20);
-        mListeningExecutorService = MoreExecutors.listeningDecorator(mExecutorService);
-        mWebClient = new AdServicesHttpsClient(mExecutorService);
+        mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
+        mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
+        mBlockingExecutorService = AdServicesExecutors.getBlockingExecutor();
+        mWebClient = new AdServicesHttpsClient(AdServicesExecutors.getBlockingExecutor());
 
         mAdBiddingOutcomeBuyer1 =
                 AdBiddingOutcomeFixture.anAdBiddingOutcomeBuilder(BUYER_1, 1.0).build();
@@ -191,13 +191,18 @@ public class AdsScoreGeneratorImplTest {
 
         mRequestMatcherExactMatch =
                 (actualRequest, expectedRequest) -> actualRequest.equals(expectedRequest);
-
-        mFlags = FlagsFactory.getFlagsForTest();
-
+        mFlags =
+                new Flags() {
+                    @Override
+                    public long getAdSelectionScoringTimeoutMs() {
+                        return 300;
+                    }
+                };
         mAdsScoreGenerator =
                 new AdsScoreGeneratorImpl(
                         mMockAdSelectionScriptEngine,
-                        mListeningExecutorService,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mWebClient,
                         mDevContext,
                         mAdSelectionEntryDao,
@@ -360,7 +365,8 @@ public class AdsScoreGeneratorImplTest {
         mAdsScoreGenerator =
                 new AdsScoreGeneratorImpl(
                         mMockAdSelectionScriptEngine,
-                        mListeningExecutorService,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mWebClient,
                         mDevContext,
                         mAdSelectionEntryDao,
@@ -459,7 +465,8 @@ public class AdsScoreGeneratorImplTest {
         mAdsScoreGenerator =
                 new AdsScoreGeneratorImpl(
                         mMockAdSelectionScriptEngine,
-                        mListeningExecutorService,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
                         mWebClient,
                         mDevContext,
                         mAdSelectionEntryDao,
@@ -493,20 +500,21 @@ public class AdsScoreGeneratorImplTest {
                                                         a.getCustomAudienceBiddingInfo()
                                                                 .getCustomAudienceSignals())
                                         .collect(Collectors.toList())))
-                .thenReturn(getScoresWithDelay(scores));
+                .thenAnswer((invocation) -> getScoresWithDelay(scores, flagsWithSmallerLimits));
 
         FluentFuture<List<AdScoringOutcome>> scoringResultFuture =
                 mAdsScoreGenerator.runAdScoring(mAdBiddingOutcomeList, mAdSelectionConfig);
 
         ExecutionException thrown =
                 assertThrows(ExecutionException.class, scoringResultFuture::get);
-        assertTrue(thrown.getMessage().contains("TimeoutFuture$TimeoutFutureException"));
+        assertTrue(thrown.getMessage().contains(SCORING_TIMED_OUT));
     }
 
-    private ListenableFuture<List<Double>> getScoresWithDelay(List<Double> scores) {
-        return mListeningExecutorService.submit(
+    private ListenableFuture<List<Double>> getScoresWithDelay(
+            List<Double> scores, @NonNull Flags flags) {
+        return mBlockingExecutorService.submit(
                 () -> {
-                    Thread.sleep(2 * mFlags.getAdSelectionScoringTimeoutMs());
+                    Thread.sleep(2 * flags.getAdSelectionScoringTimeoutMs());
                     return scores;
                 });
     }
@@ -516,7 +524,7 @@ public class AdsScoreGeneratorImplTest {
             throws Exception {
         CountDownLatch resultLatch = new CountDownLatch(1);
         ListenableFuture<T> futureResult = function.get();
-        futureResult.addListener(resultLatch::countDown, mExecutorService);
+        futureResult.addListener(resultLatch::countDown, mLightweightExecutorService);
         resultLatch.await();
         return futureResult.get();
     }
