@@ -16,7 +16,6 @@
 package com.android.adservices.service.measurement;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
@@ -46,6 +45,7 @@ import android.adservices.measurement.WebTriggerRegistrationRequestInternal;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.content.Context;
+import android.os.Binder;
 import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
@@ -53,10 +53,12 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.PermissionHelper;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.measurement.access.AppPackageAccessResolver;
+import com.android.adservices.service.measurement.access.ForegroundEnforcementAccessResolver;
 import com.android.adservices.service.measurement.access.IAccessResolver;
 import com.android.adservices.service.measurement.access.KillSwitchAccessResolver;
 import com.android.adservices.service.measurement.access.ManifestBasedAdtechAccessResolver;
@@ -91,6 +93,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
     private final AdServicesLogger mAdServicesLogger;
     private final ConsentManager mConsentManager;
     private final EnrollmentDao mEnrollmentDao;
+    private final AppImportanceFilter mAppImportanceFilter;
     private final Context mContext;
     private final Throttler mThrottler;
     private static final String RATE_LIMIT_REACHED = "Rate limit reached to call this API.";
@@ -101,7 +104,8 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             @NonNull Clock clock,
             @NonNull ConsentManager consentManager,
             @NonNull EnrollmentDao enrollmentDao,
-            @NonNull Flags flags) {
+            @NonNull Flags flags,
+            @NonNull AppImportanceFilter appImportanceFilter) {
         this(
                 MeasurementImpl.getInstance(context),
                 context,
@@ -110,7 +114,8 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                 enrollmentDao,
                 Throttler.getInstance(FlagsFactory.getFlags().getSdkRequestPermitsPerSecond()),
                 flags,
-                AdServicesLoggerImpl.getInstance());
+                AdServicesLoggerImpl.getInstance(),
+                appImportanceFilter);
     }
 
     @VisibleForTesting
@@ -122,7 +127,8 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             @NonNull EnrollmentDao enrollmentDao,
             @NonNull Throttler throttler,
             @NonNull Flags flags,
-            @NonNull AdServicesLogger adServicesLogger) {
+            @NonNull AdServicesLogger adServicesLogger,
+            @NonNull AppImportanceFilter appImportanceFilter) {
         mContext = context;
         mClock = clock;
         mMeasurementImpl = measurementImpl;
@@ -131,6 +137,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         mThrottler = throttler;
         mFlags = flags;
         mAdServicesLogger = adServicesLogger;
+        mAppImportanceFilter = appImportanceFilter;
     }
 
     @Override
@@ -155,6 +162,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             return;
         }
 
+        final int callerUid = Binder.getCallingUidOrThrow();
         final boolean attributionPermission = PermissionHelper.hasAttributionPermission(mContext);
         sBackgroundExecutor.execute(
                 () -> {
@@ -162,8 +170,14 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                             (service) -> service.register(request, now()),
                             List.of(
                                     new KillSwitchAccessResolver(() -> isRegisterDisabled(request)),
+                                    new ForegroundEnforcementAccessResolver(
+                                            apiNameId,
+                                            callerUid,
+                                            mAppImportanceFilter,
+                                            getRegisterSourceOrTriggerEnforcementForegroundStatus(
+                                                    request, mFlags)),
                                     new AppPackageAccessResolver(
-                                            mFlags.getPpapiAppSignatureBypassList(),
+                                            mFlags.getPpapiAppAllowList(),
                                             request.getPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
@@ -202,16 +216,24 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             return;
         }
 
+        final int callerUid = Binder.getCallingUidOrThrow();
         final boolean attributionPermission = PermissionHelper.hasAttributionPermission(mContext);
         sBackgroundExecutor.execute(
                 () -> {
+                    final Supplier<Boolean> enforceForeground =
+                            mFlags::getEnforceForegroundStatusForMeasurementRegisterWebSource;
                     performRegistration(
                             (service) -> service.registerWebSource(request, now()),
                             List.of(
                                     new KillSwitchAccessResolver(
                                             mFlags::getMeasurementApiRegisterWebSourceKillSwitch),
+                                    new ForegroundEnforcementAccessResolver(
+                                            apiNameId,
+                                            callerUid,
+                                            mAppImportanceFilter,
+                                            enforceForeground),
                                     new AppPackageAccessResolver(
-                                            mFlags.getPpapiAppSignatureBypassList(),
+                                            mFlags.getPpapiAppAllowList(),
                                             request.getPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
@@ -256,16 +278,24 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             return;
         }
 
+        final int callerUid = Binder.getCallingUidOrThrow();
         final boolean attributionPermission = PermissionHelper.hasAttributionPermission(mContext);
         sBackgroundExecutor.execute(
                 () -> {
+                    final Supplier<Boolean> enforceForeground =
+                            mFlags::getEnforceForegroundStatusForMeasurementRegisterWebTrigger;
                     performRegistration(
                             (service) -> service.registerWebTrigger(request, now()),
                             List.of(
                                     new KillSwitchAccessResolver(
                                             mFlags::getMeasurementApiRegisterWebTriggerKillSwitch),
+                                    new ForegroundEnforcementAccessResolver(
+                                            apiNameId,
+                                            callerUid,
+                                            mAppImportanceFilter,
+                                            enforceForeground),
                                     new AppPackageAccessResolver(
-                                            mFlags.getPpapiAppSignatureBypassList(),
+                                            mFlags.getPpapiAppAllowList(),
                                             request.getPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
@@ -306,16 +336,24 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             return;
         }
 
+        final int callerUid = Binder.getCallingUidOrThrow();
         sBackgroundExecutor.execute(
                 () -> {
+                    final Supplier<Boolean> enforceForeground =
+                            mFlags::getEnforceForegroundStatusForMeasurementDeleteRegistrations;
                     final Supplier<Boolean> killSwitchSupplier =
                             mFlags::getMeasurementApiDeleteRegistrationsKillSwitch;
                     performDeletion(
                             (service) -> mMeasurementImpl.deleteRegistrations(request),
                             List.of(
                                     new KillSwitchAccessResolver(killSwitchSupplier),
+                                    new ForegroundEnforcementAccessResolver(
+                                            apiNameId,
+                                            callerUid,
+                                            mAppImportanceFilter,
+                                            enforceForeground),
                                     new AppPackageAccessResolver(
-                                            mFlags.getPpapiAppSignatureBypassList(),
+                                            mFlags.getPpapiAppAllowList(),
                                             request.getPackageName()),
                                     new AppPackageAccessResolver(
                                             mFlags.getWebContextClientAppAllowList(),
@@ -339,17 +377,24 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
 
         final int apiNameId = AD_SERVICES_API_CALLED__API_NAME__GET_MEASUREMENT_API_STATUS;
 
+        final int callerUid = Binder.getCallingUidOrThrow();
         sLightExecutor.execute(
                 () -> {
                     @StatusCode int statusCode = STATUS_UNSET;
                     try {
-
+                        final Supplier<Boolean> enforceForeground =
+                                mFlags::getEnforceForegroundStatusForMeasurementStatus;
                         List<IAccessResolver> accessResolvers =
                                 List.of(
                                         new KillSwitchAccessResolver(
                                                 mFlags::getMeasurementApiStatusKillSwitch),
+                                        new ForegroundEnforcementAccessResolver(
+                                                apiNameId,
+                                                callerUid,
+                                                mAppImportanceFilter,
+                                                enforceForeground),
                                         new AppPackageAccessResolver(
-                                                mFlags.getPpapiAppSignatureBypassList(),
+                                                mFlags.getPpapiAppAllowList(),
                                                 statusParam.getAppPackageName()));
 
                         final Optional<IAccessResolver> optionalResolver =
@@ -359,7 +404,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                             final IAccessResolver resolver = optionalResolver.get();
                             LogUtil.e(resolver.getErrorMessage());
                             callback.onResult(MeasurementManager.MEASUREMENT_API_STATE_DISABLED);
-                            statusCode = STATUS_KILLSWITCH_ENABLED;
+                            statusCode = resolver.getErrorStatusCode();
                             return;
                         }
 
@@ -543,5 +588,12 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
 
     private long now() {
         return System.currentTimeMillis();
+    }
+
+    private Supplier<Boolean> getRegisterSourceOrTriggerEnforcementForegroundStatus(
+            RegistrationRequest request, Flags flags) {
+        return request.getRegistrationType() == RegistrationRequest.REGISTER_SOURCE
+                ? flags::getEnforceForegroundStatusForMeasurementRegisterSource
+                : flags::getEnforceForegroundStatusForMeasurementRegisterTrigger;
     }
 }

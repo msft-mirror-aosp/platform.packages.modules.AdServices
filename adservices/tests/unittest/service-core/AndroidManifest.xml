@@ -27,6 +27,9 @@
     <!-- Needed to resolve Intent to ComponentName for measurement verifiedDestination -->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
 
+    <!-- Needed to schedule MDD jobs to persist across device reboots  -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+
     <!-- android:debuggable="true is needed. See b/228384531 -->
     <application
         android:debuggable="true"

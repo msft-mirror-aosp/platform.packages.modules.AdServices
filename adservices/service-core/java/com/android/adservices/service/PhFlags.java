@@ -77,6 +77,18 @@ public final class PhFlags implements Flags {
             "measurement_registration_input_event_valid_window_ms";
     static final String KEY_MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED =
             "measurement_is_click_verification_enabled";
+    static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCE =
+            "measurement_enforce_foreground_status_register_source";
+    static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_TRIGGER =
+            "measurement_enforce_foreground_status_register_trigger";
+    static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_SOURCE =
+            "measurement_enforce_foreground_status_register_web_source";
+    static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER =
+            "measurement_enforce_foreground_status_register_web_trigger";
+    static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS =
+            "measurement_enforce_foreground_status_delete_registrations";
+    static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS =
+            "measurement_enforce_foreground_status_get_status";
 
     // FLEDGE Custom Audience keys
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = "fledge_custom_audience_max_count";
@@ -207,7 +219,7 @@ public final class PhFlags implements Flags {
             "fledge_custom_audience_service_kill_switch";
 
     // App/SDK AllowList/DenyList keys
-    static final String KEY_PPAPI_APP_SIGNATURE_BYPASS_LIST = "ppapi_app_signature_bypass_list";
+    static final String KEY_PPAPI_APP_ALLOW_LIST = "ppapi_app_allow_list";
     static final String KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST = "ppapi_app_signature_allow_list";
 
     // Rate Limit keys
@@ -1183,14 +1195,13 @@ public final class PhFlags implements Flags {
                                 /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH));
     }
 
-    // PPAPI Signature check Bypass List
     @Override
-    public String getPpapiAppSignatureBypassList() {
+    public String getPpapiAppAllowList() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getString(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_PPAPI_APP_SIGNATURE_BYPASS_LIST,
-                /* defaultValue */ PPAPI_APP_SIGNATURE_BYPASS_LIST);
+                /* flagName */ KEY_PPAPI_APP_ALLOW_LIST,
+                /* defaultValue */ PPAPI_APP_ALLOW_LIST);
     }
 
     // PPAPI Signature allow-list.
@@ -1335,6 +1346,54 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getEnforceForegroundStatusForMeasurementDeleteRegistrations() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS,
+                /* defaultValue */ MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS);
+    }
+
+    @Override
+    public boolean getEnforceForegroundStatusForMeasurementRegisterSource() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCE,
+                /* defaultValue */ MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCE);
+    }
+
+    @Override
+    public boolean getEnforceForegroundStatusForMeasurementRegisterTrigger() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_TRIGGER,
+                /* defaultValue */ MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_TRIGGER);
+    }
+
+    @Override
+    public boolean getEnforceForegroundStatusForMeasurementRegisterWebSource() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_SOURCE,
+                /* defaultValue */ MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_SOURCE);
+    }
+
+    @Override
+    public boolean getEnforceForegroundStatusForMeasurementRegisterWebTrigger() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER,
+                /* defaultValue */ MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER);
+    }
+
+    @Override
+    public boolean getEnforceForegroundStatusForMeasurementStatus() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS,
+                /* defaultValue */ MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS);
+    }
+
+    @Override
     public boolean getEnforceIsolateMaxHeapSize() {
         return DeviceConfig.getBoolean(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -1421,11 +1480,7 @@ public final class PhFlags implements Flags {
                         + KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST
                         + " = "
                         + getPpapiAppSignatureAllowList());
-        writer.println(
-                "\t"
-                        + KEY_PPAPI_APP_SIGNATURE_BYPASS_LIST
-                        + " = "
-                        + getPpapiAppSignatureBypassList());
+        writer.println("\t" + KEY_PPAPI_APP_ALLOW_LIST + " = " + getPpapiAppAllowList());
 
         writer.println("==== AdServices PH Flags Dump MDD related flags: ====");
         writer.println(
@@ -1530,6 +1585,36 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS
                         + " = "
                         + getMeasurementRegistrationInputEventValidWindowMs());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS
+                        + " = "
+                        + getEnforceForegroundStatusForMeasurementDeleteRegistrations());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS
+                        + " = "
+                        + getEnforceForegroundStatusForMeasurementStatus());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCE
+                        + " = "
+                        + getEnforceForegroundStatusForMeasurementRegisterSource());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_TRIGGER
+                        + " = "
+                        + getEnforceForegroundStatusForMeasurementRegisterTrigger());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_SOURCE
+                        + " = "
+                        + getEnforceForegroundStatusForMeasurementRegisterWebSource());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER
+                        + " = "
+                        + getEnforceForegroundStatusForMeasurementRegisterWebTrigger());
 
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(

@@ -20,9 +20,16 @@ import android.annotation.NonNull;
 import android.app.job.JobScheduler;
 import android.content.Context;
 
+import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
+import com.android.adservices.service.measurement.DeleteExpiredJobService;
+import com.android.adservices.service.measurement.attribution.AttributionJobService;
+import com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService;
+import com.android.adservices.service.measurement.reporting.AggregateReportingJobService;
+import com.android.adservices.service.measurement.reporting.EventFallbackReportingJobService;
+import com.android.adservices.service.measurement.reporting.EventReportingJobService;
 import com.android.adservices.service.topics.EpochJobService;
 
 import java.util.Objects;
@@ -38,6 +45,16 @@ public class BackgroundJobsManager {
         if (!FlagsFactory.getFlags().getTopicsKillSwitch()) {
             EpochJobService.scheduleIfNeeded(context, false);
             MaintenanceJobService.scheduleIfNeeded(context, false);
+            MddJobService.scheduleIfNeeded(context, /* forceSchedule */ false);
+        }
+
+        if (!FlagsFactory.getFlags().getMeasurementKillSwitch()) {
+            AggregateReportingJobService.scheduleIfNeeded(context, false);
+            AggregateFallbackReportingJobService.scheduleIfNeeded(context, false);
+            AttributionJobService.scheduleIfNeeded(context, false);
+            EventReportingJobService.scheduleIfNeeded(context, false);
+            EventFallbackReportingJobService.scheduleIfNeeded(context, false);
+            DeleteExpiredJobService.scheduleIfNeeded(context, false);
         }
     }
 
@@ -63,9 +80,6 @@ public class BackgroundJobsManager {
 
         jobScheduler.cancel(AdServicesConfig.CONSENT_NOTIFICATION_JOB_ID);
 
-        jobScheduler.cancel(AdServicesConfig.MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID);
-        jobScheduler.cancel(AdServicesConfig.MDD_CHARGING_PERIODIC_TASK_JOB_ID);
-        jobScheduler.cancel(AdServicesConfig.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID);
-        jobScheduler.cancel(AdServicesConfig.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID);
+        MddJobService.unscheduleAllJobs(jobScheduler);
     }
 }

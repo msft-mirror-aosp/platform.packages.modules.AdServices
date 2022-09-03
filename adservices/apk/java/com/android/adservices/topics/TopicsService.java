@@ -24,17 +24,14 @@ import android.os.IBinder;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
-import com.android.adservices.download.MddJobService;
 import com.android.adservices.download.MobileDataDownloadFactory;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.MaintenanceJobService;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.topics.CacheManager;
-import com.android.adservices.service.topics.EpochJobService;
 import com.android.adservices.service.topics.EpochManager;
 import com.android.adservices.service.topics.TopicsServiceImpl;
 import com.android.adservices.service.topics.TopicsWorker;
@@ -79,16 +76,6 @@ public class TopicsService extends Service {
                             appImportanceFilter);
             mTopicsService.init();
         }
-
-        schedulePeriodicJobs();
-    }
-
-    private void schedulePeriodicJobs() {
-        MaintenanceJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
-        EpochJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
-
-        // TODO(b/238674236): Schedule this after the boot complete.
-        MddJobService.schedule(this);
     }
 
     @Override

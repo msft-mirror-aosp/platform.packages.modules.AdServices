@@ -673,7 +673,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             if (mCheckedVisibilityPatch) {
                 writer.println("Build contains Webview visibility patch: " + mHasVisibilityPatch);
             }
-            writer.print(
+            writer.println(
                     "Killswitch enabled: " + mSdkSandboxSettingsListener.isKillSwitchEnabled());
             writer.println("mAppAndRemoteSdkLinks size: " + mAppAndRemoteSdkLinks.size());
         }
@@ -1070,6 +1070,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         PROPERTY_DISABLE_SDK_SANDBOX,
                         "false",
                         false);
+                mIsKillSwitchEnabled = false;
                 mKillSwitchBecameEnabled = false;
             }
         }

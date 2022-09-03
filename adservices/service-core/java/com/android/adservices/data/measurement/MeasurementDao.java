@@ -459,6 +459,12 @@ class MeasurementDao implements IMeasurementDao {
                 eventReport.getSourceType().toString());
         values.put(MeasurementTables.EventReportContract.RANDOMIZED_TRIGGER_RATE,
                 eventReport.getRandomizedTriggerRate());
+        values.put(
+                MeasurementTables.EventReportContract.SOURCE_DEBUG_KEY,
+                eventReport.getSourceDebugKey());
+        values.put(
+                MeasurementTables.EventReportContract.TRIGGER_DEBUG_KEY,
+                eventReport.getTriggerDebugKey());
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.EventReportContract.TABLE,
                         /*nullColumnHack=*/null, values);
@@ -1170,6 +1176,12 @@ class MeasurementDao implements IMeasurementDao {
                 aggregateReport.getStatus());
         values.put(MeasurementTables.AggregateReport.API_VERSION,
                 aggregateReport.getApiVersion());
+        values.put(
+                MeasurementTables.AggregateReport.SOURCE_DEBUG_KEY,
+                aggregateReport.getSourceDebugKey());
+        values.put(
+                MeasurementTables.AggregateReport.TRIGGER_DEBUG_KEY,
+                aggregateReport.getTriggerDebugKey());
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.AggregateReport.TABLE,
                         /*nullColumnHack=*/null, values);

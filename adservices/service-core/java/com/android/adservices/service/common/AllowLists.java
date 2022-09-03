@@ -34,7 +34,7 @@ import java.util.Arrays;
 
 /** Utility class to handle AllowList for Apps and SDKs. */
 public class AllowLists {
-    @VisibleForTesting static final String ALLOW_ALL = "*";
+    @VisibleForTesting public static final String ALLOW_ALL = "*";
 
     private static final String SPLITTER = ",";
     private static final String HASH_ALGORITHM = "SHA-256";
@@ -57,26 +57,20 @@ public class AllowLists {
         return Arrays.asList(allowList.split(SPLITTER)).contains(appPackageName);
     }
 
-    // TODO(b/243048002): Change Signature Allow List from using packageName to signature
     /**
      * A utility to check if all app signatures exist in the provided allow-list. The allow-list to
      * search is split by {@link #SPLITTER} without any white spaces.
      *
-     * <p>If the package name of an app is in the bypass list, the app will be regarded as allowed.
-     *
      * @param context the Context
      * @param signatureAllowList the list of signatures that is allowed.
-     * @param bypassList the list of package names that will bypass this check
      * @param appPackageName the package name of an app
      * @return true if this app is allowed. Otherwise, it returns false.
      */
-    public static boolean areSignaturesAllowListed(
+    public static boolean isSignatureAllowListed(
             @NonNull Context context,
             @NonNull String signatureAllowList,
-            @NonNull String bypassList,
             @NonNull String appPackageName) {
-        if (ALLOW_ALL.equals(signatureAllowList)
-                || isPackageAllowListed(bypassList, appPackageName)) {
+        if (ALLOW_ALL.equals(signatureAllowList)) {
             return true;
         }
 
