@@ -27,5 +27,7 @@ package android.app.sdksandbox;
  *
  * <p>An instance of the {@link SdkSandboxController} will be created by the SDK sandbox, and then
  * attached to the {@link SandboxedSdkProvider} when it was created.
+ *
+ * @hide
  */
 public interface SdkSandboxController {}

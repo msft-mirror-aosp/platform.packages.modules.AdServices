@@ -38,8 +38,8 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.compatibility.common.util.ShellUtils;
 
+import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -66,9 +66,9 @@ public class MeasurementManagerTest {
                     /* sdkCeDataDir = */ null,
                     /* sdkDeDataDir = */ null);
 
-    @Before
-    public void setUp() {
-        allowAllPpApis();
+    @After
+    public void tearDown() {
+        resetOverrideConsentManagerDebugMode();
     }
 
     @Test
@@ -320,7 +320,7 @@ public class MeasurementManagerTest {
         ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
     }
 
-    private void allowAllPpApis() {
-        ShellUtils.runShellCommand("device_config put adservices ppapi_app_allow_list *");
+    private void resetOverrideConsentManagerDebugMode() {
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode null");
     }
 }

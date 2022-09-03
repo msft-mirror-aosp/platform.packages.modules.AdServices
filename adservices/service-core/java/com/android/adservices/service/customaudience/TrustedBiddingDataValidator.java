@@ -62,6 +62,6 @@ public class TrustedBiddingDataValidator implements Validator<TrustedBiddingData
         Objects.requireNonNull(violations);
 
         mTrustedBiddingUriValidator.addValidation(
-                trustedBiddingData.getTrustedBiddingUrl(), violations);
+                trustedBiddingData.getTrustedBiddingUri(), violations);
     }
 }

@@ -306,16 +306,16 @@ public class SdkFledge extends SandboxedSdkProvider {
                 .setName(buyer + "testCustomAudienceName")
                 .setActivationTime(Instant.now().truncatedTo(ChronoUnit.MILLIS))
                 .setExpirationTime(Instant.now().plus(Duration.ofDays(40)))
-                .setDailyUpdateUrl(getUri(buyer.toString(), "/update"))
+                .setDailyUpdateUri(getUri(buyer.toString(), "/update"))
                 .setUserBiddingSignals(
                         AdSelectionSignals.fromString("{'valid': 'yep', 'opaque': 'definitely'}"))
                 .setTrustedBiddingData(
                         new TrustedBiddingData.Builder()
                                 .setTrustedBiddingKeys(
                                         Arrays.asList("example", "valid", "list", "of", "keys"))
-                                .setTrustedBiddingUrl(getUri(buyer.toString(), "/trusted/bidding"))
+                                .setTrustedBiddingUri(getUri(buyer.toString(), "/trusted/bidding"))
                                 .build())
-                .setBiddingLogicUrl(getUri(buyer.toString(), BUYER_BIDDING_LOGIC_URI_PATH))
+                .setBiddingLogicUri(getUri(buyer.toString(), BUYER_BIDDING_LOGIC_URI_PATH))
                 .setAds(ads)
                 .build();
     }

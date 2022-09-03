@@ -171,6 +171,8 @@ public class AggregateReportingJobHandler {
                 .setApiVersion(aggregateReport.getApiVersion())
                 .setReportingOrigin(reportingOrigin.toString())
                 .setDebugCleartextPayload(aggregateReport.getDebugCleartextPayload())
+                .setSourceDebugKey(aggregateReport.getSourceDebugKey())
+                .setTriggerDebugKey(aggregateReport.getTriggerDebugKey())
                 .build()
                 .toJson(key);
     }

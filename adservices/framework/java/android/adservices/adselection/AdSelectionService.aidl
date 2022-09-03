@@ -83,7 +83,7 @@ interface AdSelectionService {
     * internal server error is encountered.
     *
     * The reporting guarantee is at-most-once, any error during the connection to
-    * the seller and/or buyer reporting URLs might be retried but we won't
+    * the seller and/or buyer reporting URIs might be retried but we won't
     * guarantee the completion.
     *
     * {@hide}

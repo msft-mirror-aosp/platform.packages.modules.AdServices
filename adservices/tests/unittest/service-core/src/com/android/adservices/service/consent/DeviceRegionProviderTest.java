@@ -46,7 +46,7 @@ public class DeviceRegionProviderTest {
 
     @Test
     public void isEuDeviceTrue() {
-        doReturn("PL").when(mTelephonyManager).getSimCountryIso();
+        doReturn("pl").when(mTelephonyManager).getSimCountryIso();
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
         doReturn(mPackageManager).when(mContext).getPackageManager();
         doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
@@ -56,7 +56,7 @@ public class DeviceRegionProviderTest {
 
     @Test
     public void isEuDeviceFalse() {
-        doReturn("US").when(mTelephonyManager).getSimCountryIso();
+        doReturn("us").when(mTelephonyManager).getSimCountryIso();
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
         doReturn(mPackageManager).when(mContext).getPackageManager();
         doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
