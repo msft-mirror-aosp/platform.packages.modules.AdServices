@@ -38,6 +38,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.PermissionInfo;
 import android.os.Binder;
 import android.os.Bundle;
+import android.os.Parcel;
 
 import androidx.lifecycle.Lifecycle;
 import androidx.test.core.app.ActivityScenario;
@@ -458,5 +459,43 @@ public class SdkSandboxManagerTest {
                     .that(permissionInfo.getProtection())
                     .isEqualTo(PermissionInfo.PROTECTION_NORMAL);
         }
+    }
+
+    // TODO(b/244730098): The test below needs to be moved from e2e.
+    // It is not and e2e test.
+    @Test
+    public void testLoadSdkExceptionWriteToParcel() throws Exception {
+        final Bundle bundle = new Bundle();
+        bundle.putChar("testKey", /*testValue=*/ 'C');
+
+        final LoadSdkException exception = new LoadSdkException(/*Throwable=*/ null, bundle);
+
+        final Parcel parcel = Parcel.obtain();
+        exception.writeToParcel(parcel, /*flags=*/ 0);
+
+        // Create LoadSdkException with the same parcel
+        parcel.setDataPosition(0); // rewind
+        final LoadSdkException exceptionCheck = LoadSdkException.CREATOR.createFromParcel(parcel);
+
+        assertThat(exceptionCheck.getLoadSdkErrorCode()).isEqualTo(exception.getLoadSdkErrorCode());
+        assertThat(exceptionCheck.getExtraInformation().getChar("testKey"))
+                .isEqualTo(exception.getExtraInformation().getChar("testKey"));
+        assertThat(exceptionCheck.getExtraInformation().keySet()).containsExactly("testKey");
+    }
+
+    // TODO(b/244730098): The test below needs to be moved from e2e.
+    // It is not and e2e test.
+    @Test
+    public void testLoadSdkExceptionDescribeContents() throws Exception {
+        final LoadSdkException exception = new LoadSdkException(/*Throwable=*/ null, new Bundle());
+        assertThat(exception.describeContents()).isEqualTo(0);
+    }
+
+    // TODO(b/244730098): The test below needs to be moved from e2e.
+    // It is not and e2e test.
+    @Test
+    public void testSandboxedSdkDescribeContents() throws Exception {
+        final SandboxedSdk sandboxedSdk = new SandboxedSdk(new Binder());
+        assertThat(sandboxedSdk.describeContents()).isEqualTo(0);
     }
 }
