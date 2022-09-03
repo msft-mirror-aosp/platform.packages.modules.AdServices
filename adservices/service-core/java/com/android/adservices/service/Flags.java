@@ -983,9 +983,7 @@ public interface Flags extends Dumpable {
      * There must be not any empty space between comma.
      */
     String PPAPI_APP_ALLOW_LIST =
-            "android.platform.test.scenario,"
-                    + "android.adservices.crystalball,"
-                    + "android.adservices.cts,"
+            "android.adservices.cts,"
                     + "android.adservices.debuggablects,"
                     + "com.android.adservices.endtoendtest,"
                     + "com.android.adservices.servicecoretest,"
@@ -1024,6 +1022,8 @@ public interface Flags extends Dumpable {
                     // For example, com.example.adservices.samples.topics.sampleapp1
                     + "301aa3cb081134501c45f1422abc66c24224fd5ded5fdc8f17e697176fd866aa,"
                     // com.android.adservices.tests.cts.topics.testapp1
+                    // android.platform.test.scenario.adservices.GetTopicsApiCall
+                    // Both have [certificate: "platform"] in .bp file
                     + "c8a2e9bccf597c2fb6dc66bee293fc13f2fc47ec77bc6b2b0d52c11f51192ab8";
 
     /** Only App signatures belonging to this Allow List can use PP APIs. */
