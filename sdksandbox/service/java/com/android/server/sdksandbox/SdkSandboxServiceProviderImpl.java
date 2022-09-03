@@ -133,7 +133,7 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
     }
 
     @Override
-    public void unbindService(CallingInfo callingInfo) {
+    public void unbindService(CallingInfo callingInfo, boolean shouldForgetConnection) {
         synchronized (mLock) {
             SdkSandboxConnection sandbox = getSdkSandboxConnectionLocked(callingInfo);
 
@@ -142,9 +142,23 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
                 return;
             }
 
-            mContext.unbindService(sandbox.getServiceConnection());
+            if (sandbox.isBound) {
+                mContext.unbindService(sandbox.getServiceConnection());
+                sandbox.isBound = false;
+                Log.i(TAG, "Sdk sandbox for " + callingInfo + " has been unbound");
+            }
+
+            if (shouldForgetConnection) {
+                mAppSdkSandboxConnections.remove(callingInfo);
+                Log.i(TAG, "Sdk sandbox connection for " + callingInfo + " has been forgotten");
+            }
+        }
+    }
+
+    @Override
+    public void cleanup(CallingInfo callingInfo) {
+        synchronized (mLock) {
             mAppSdkSandboxConnections.remove(callingInfo);
-            Log.i(TAG, "Sdk sandbox has been unbound");
         }
     }
 
@@ -212,8 +226,11 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
         @Nullable
         private ISdkSandboxService mSupplementalProcessService = null;
 
+        public boolean isBound;
+
         SdkSandboxConnection(ServiceConnection serviceConnection) {
             mServiceConnection = serviceConnection;
+            isBound = true;
         }
 
         @Nullable

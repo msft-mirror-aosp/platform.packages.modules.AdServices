@@ -2137,7 +2137,14 @@ public class SdkSandboxManagerServiceUnitTest {
         }
 
         @Override
-        public void unbindService(CallingInfo callingInfo) {
+        public void unbindService(CallingInfo callingInfo, boolean shouldForgetConnection) {
+            if (shouldForgetConnection) {
+                mService.remove(callingInfo);
+            }
+        }
+
+        @Override
+        public void cleanup(CallingInfo callingInfo) {
             mService.remove(callingInfo);
         }
 
