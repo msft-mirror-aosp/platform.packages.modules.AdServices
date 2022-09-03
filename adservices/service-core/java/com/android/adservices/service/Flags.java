@@ -496,10 +496,10 @@ public interface Flags extends Dumpable {
         return FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
     }
 
-    boolean ADSERVICES_ENABLE_STATUS = false;
+    boolean ADSERVICES_ENABLED = false;
 
-    default boolean getAdservicesEnableStatus() {
-        return ADSERVICES_ENABLE_STATUS;
+    default boolean getAdServicesEnabled() {
+        return ADSERVICES_ENABLED;
     }
 
     /** Dump some debug info for the flags */
@@ -975,33 +975,35 @@ public interface Flags extends Dumpable {
         return getGlobalKillSwitch() || FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
     }
 
-    // TODO(b/243048002): Change Signature Allow List from using packageName to signature
     /*
-     * The bypass list for ppapi app signature allow list. The app with package names on this list
-     * won't be checked for signature.
-     *
-     * Note this list should only contain apps for test purpose
+     * The allow-list for PP APIs. This list has the list of app package names that we allow
+     * using PP APIs.
+     * App Package Name that does not belong to this allow-list will not be able to use PP APIs.
+     * If this list has special value "*", then all package names are allowed.
+     * There must be not any empty space between comma.
      */
-    String PPAPI_APP_SIGNATURE_BYPASS_LIST =
+    String PPAPI_APP_ALLOW_LIST =
             "android.platform.test.scenario,"
                     + "android.adservices.crystalball,"
                     + "android.adservices.cts,"
                     + "android.adservices.debuggablects,"
-                    + "com.android.tests.sandbox.fledge,"
                     + "com.android.adservices.endtoendtest,"
+                    + "com.android.adservices.servicecoretest,"
+                    + "com.android.adservices.tests.permissions.appoptout,"
+                    + "com.android.adservices.tests.permissions.valid,"
+                    + "com.android.tests.sandbox.fledge,"
                     + "com.example.adservices.samples.fledge.sampleapp,"
                     + "com.example.adservices.samples.fledge.sampleapp1,"
                     + "com.example.adservices.samples.fledge.sampleapp2,"
                     + "com.example.adservices.samples.fledge.sampleapp3,"
-                    + "com.example.adservices.samples.fledge.sampleapp4,"
-                    + "com.android.adservices.servicecoretest";
+                    + "com.example.adservices.samples.fledge.sampleapp4";
 
     /**
      * Returns bypass List for PPAPI app signature check. Apps with package name on this list will
      * bypass the signature check
      */
-    default String getPpapiAppSignatureBypassList() {
-        return PPAPI_APP_SIGNATURE_BYPASS_LIST;
+    default String getPpapiAppAllowList() {
+        return PPAPI_APP_ALLOW_LIST;
     }
 
     /*
@@ -1015,8 +1017,9 @@ public interface Flags extends Dumpable {
      */
     String PPAPI_APP_SIGNATURE_ALLOW_LIST =
             // com.android.adservices.tests.cts.endtoendtest
-            // com.android.tests.sandbox.topics
-            "a40da80a59d170caa950cf15c18c454d47a39b26989d8b640ecd745ba71bf5dc,"
+            "6cecc50e34ae31bfb5678986d6d6d3736c571ded2f2459527793e1f054eb0c9b,"
+                    // com.android.tests.sandbox.topics
+                    + "a40da80a59d170caa950cf15c18c454d47a39b26989d8b640ecd745ba71bf5dc,"
                     // Topics Sample Apps
                     // For example, com.example.adservices.samples.topics.sampleapp1
                     + "301aa3cb081134501c45f1422abc66c24224fd5ded5fdc8f17e697176fd866aa,"
@@ -1112,6 +1115,61 @@ public interface Flags extends Dumpable {
      */
     default boolean getEnforceForegroundStatusForFledgeCustomAudience() {
         return ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE;
+    }
+
+    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS = true;
+    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCE = true;
+    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_TRIGGER = true;
+    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_SOURCE = true;
+    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER = true;
+    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS = true;
+
+    /**
+     * @return true if Measurement Delete Registrations API should require that the calling API is
+     *     running in foreground.
+     */
+    default boolean getEnforceForegroundStatusForMeasurementDeleteRegistrations() {
+        return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS;
+    }
+
+    /**
+     * @return true if Measurement Register Source API should require that the calling API is
+     *     running in foreground.
+     */
+    default boolean getEnforceForegroundStatusForMeasurementRegisterSource() {
+        return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCE;
+    }
+
+    /**
+     * @return true if Measurement Register Trigger API should require that the calling API is
+     *     running in foreground.
+     */
+    default boolean getEnforceForegroundStatusForMeasurementRegisterTrigger() {
+        return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_TRIGGER;
+    }
+
+    /**
+     * @return true if Measurement Register Web Source API should require that the calling API is
+     *     running in foreground.
+     */
+    default boolean getEnforceForegroundStatusForMeasurementRegisterWebSource() {
+        return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_SOURCE;
+    }
+
+    /**
+     * @return true if Measurement Register Web Trigger API should require that the calling API is
+     *     running in foreground.
+     */
+    default boolean getEnforceForegroundStatusForMeasurementRegisterWebTrigger() {
+        return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER;
+    }
+
+    /**
+     * @return true if Measurement Get Status API should require that the calling API is running in
+     *     foreground.
+     */
+    default boolean getEnforceForegroundStatusForMeasurementStatus() {
+        return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS;
     }
 
     /** @return true if Topics API should require that the calling API is running in foreground. */

@@ -151,10 +151,10 @@ public class CustomAudienceValidatorTest {
         ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
                         CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
-                                .setDailyUpdateUrl(
+                                .setDailyUpdateUri(
                                         CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
                                                 ANOTHER_BUYER))
-                                .setBiddingLogicUrl(
+                                .setBiddingLogicUri(
                                         CustomAudienceFixture.getValidBiddingLogicUrlByBuyer(
                                                 ANOTHER_BUYER))
                                 .build()),

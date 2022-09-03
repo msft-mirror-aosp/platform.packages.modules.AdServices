@@ -85,8 +85,8 @@ public class PermissionsNoPermTest {
                 new CustomAudience.Builder()
                         .setBuyer(AdTechIdentifier.fromString("buyer.example.com"))
                         .setName("exampleCustomAudience")
-                        .setDailyUpdateUrl(Uri.parse("https://buyer.example.com/daily-update"))
-                        .setBiddingLogicUrl(Uri.parse("https://buyer.example.com/bidding-logic"))
+                        .setDailyUpdateUri(Uri.parse("https://buyer.example.com/daily-update"))
+                        .setBiddingLogicUri(Uri.parse("https://buyer.example.com/bidding-logic"))
                         .build();
 
         ExecutionException exception =

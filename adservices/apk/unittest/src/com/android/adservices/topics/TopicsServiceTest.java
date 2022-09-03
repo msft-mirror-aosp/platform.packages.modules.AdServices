@@ -21,7 +21,6 @@ import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.eq;
 
 import android.content.Context;
 import android.content.Intent;
@@ -100,14 +99,6 @@ public class TopicsServiceTest {
                             () ->
                                     AppImportanceFilter.create(
                                             any(Context.class), anyInt(), any(Supplier.class)));
-            ExtendedMockito.doReturn(true)
-                    .when(
-                            () ->
-                                    MaintenanceJobService.scheduleIfNeeded(
-                                            any(Context.class), eq(false)));
-            ExtendedMockito.doReturn(true)
-                    .when(() -> EpochJobService.scheduleIfNeeded(any(Context.class), eq(false)));
-            ExtendedMockito.doReturn(true).when(() -> MddJobService.schedule(any(Context.class)));
 
             TopicsService topicsService = new TopicsService();
             topicsService.onCreate();

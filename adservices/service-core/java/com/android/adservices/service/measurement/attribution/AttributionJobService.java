@@ -65,7 +65,8 @@ public class AttributionJobService extends JobService {
                                                     getApplicationContext()))
                                     .performPendingAttributions();
                     jobFinished(params, !success);
-                    scheduleIfNeeded(this, false);
+                    // jobFinished is asynchronous, so forcing scheduling avoiding concurrency issue
+                    scheduleIfNeeded(this, /* forceSchedule */ true);
                 });
         return true;
     }

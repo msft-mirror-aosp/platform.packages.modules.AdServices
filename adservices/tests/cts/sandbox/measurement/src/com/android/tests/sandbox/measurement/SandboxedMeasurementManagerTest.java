@@ -98,7 +98,7 @@ public class SandboxedMeasurementManagerTest {
     private void allowSandboxPackageNameAccessMeasurementApis() {
         final String sdkSbxName = "com.google.android.sdksandbox";
         ShellUtils.runShellCommand(
-                "device_config put adservices ppapi_app_signature_bypass_list " + sdkSbxName);
+                "device_config put adservices ppapi_app_allow_list " + sdkSbxName);
         ShellUtils.runShellCommand(
                 "device_config put adservices web_context_client_allow_list " + sdkSbxName);
     }
@@ -108,8 +108,7 @@ public class SandboxedMeasurementManagerTest {
     }
 
     private void resetAllowSandboxPackageNameAccessMeasurementApis() {
-        ShellUtils.runShellCommand(
-                "device_config put adservices ppapi_app_signature_bypass_list null");
+        ShellUtils.runShellCommand("device_config put adservices ppapi_app_allow_list null");
         ShellUtils.runShellCommand(
                 "device_config put adservices web_context_client_allow_list null");
     }

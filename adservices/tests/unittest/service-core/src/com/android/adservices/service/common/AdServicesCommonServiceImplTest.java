@@ -77,7 +77,7 @@ public class AdServicesCommonServiceImplTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        when(mFlags.getAdservicesEnableStatus()).thenReturn(true);
+        when(mFlags.getAdServicesEnabled()).thenReturn(true);
 
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
@@ -101,7 +101,7 @@ public class AdServicesCommonServiceImplTest {
 
     @Test
     public void getAdserviceStatusTest() throws InterruptedException {
-        when(mFlags.getAdservicesEnableStatus()).thenReturn(true);
+        when(mFlags.getAdServicesEnabled()).thenReturn(true);
         mCommonService = new AdServicesCommonServiceImpl(mContext, mFlags);
         // Calling get adservice status, init set the flag to true, expect to return true
         IsAdServicesEnabledResult[] capturedResponseParcel = getStatusResult();
@@ -113,7 +113,7 @@ public class AdServicesCommonServiceImplTest {
         assertThat(getStatusResult1.getAdServicesEnabled()).isTrue();
 
         // Set the flag to false
-        when(mFlags.getAdservicesEnableStatus()).thenReturn(false);
+        when(mFlags.getAdServicesEnabled()).thenReturn(false);
 
         // Calling again, expect to false
         capturedResponseParcel = getStatusResult();
@@ -162,7 +162,7 @@ public class AdServicesCommonServiceImplTest {
                         () ->
                                 ConsentNotificationJobService.schedule(
                                         any(Context.class), any(Boolean.class)));
-        when(mFlags.getAdservicesEnableStatus()).thenReturn(true);
+        when(mFlags.getAdServicesEnabled()).thenReturn(true);
         ExtendedMockito.when(mConsentManager.getConsent(any(PackageManager.class)))
                 .thenReturn(AdServicesApiConsent.getConsent(true));
         ExtendedMockito.doReturn(mConsentManager)

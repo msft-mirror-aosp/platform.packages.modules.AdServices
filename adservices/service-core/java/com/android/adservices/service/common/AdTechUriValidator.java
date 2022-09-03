@@ -26,7 +26,12 @@ import com.google.common.collect.ImmutableCollection;
 
 import java.util.Objects;
 
-/** Validates an ad tech uri against an ad tech identifier. */
+/**
+ * Validates an ad tech uri against an ad tech identifier.
+ *
+ * <p>If the ad tech identifier is built from an empty string, ad tech identifier host matching is
+ * skipped.
+ */
 // TODO(b/239729221): Apply this to AdSelection
 public class AdTechUriValidator implements Validator<Uri> {
 
@@ -67,6 +72,9 @@ public class AdTechUriValidator implements Validator<Uri> {
 
     /**
      * Validate an uri uses HTTPS and under the ad tech identifier domain.
+     *
+     * <p>If the ad tech identifier used to build the {@link AdTechUriValidator} object is empty,
+     * then ad tech identifier host matching is skipped.
      *
      * @param uri the uri to be validated.
      */
