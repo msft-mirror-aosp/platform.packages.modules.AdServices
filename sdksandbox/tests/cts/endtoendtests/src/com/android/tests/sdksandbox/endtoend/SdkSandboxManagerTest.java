@@ -80,6 +80,12 @@ public class SdkSandboxManagerTest {
     }
 
     @Test
+    public void testGetSdkSandboxState() throws Exception {
+        int state = mSdkSandboxManager.getSdkSandboxState();
+        assertThat(state).isEqualTo(SdkSandboxManager.SDK_SANDBOX_STATE_ENABLED_PROCESS_ISOLATION);
+    }
+
+    @Test
     public void loadSdkSuccessfully() {
         final String sdkName = "com.android.loadSdkSuccessfullySdkProvider";
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
