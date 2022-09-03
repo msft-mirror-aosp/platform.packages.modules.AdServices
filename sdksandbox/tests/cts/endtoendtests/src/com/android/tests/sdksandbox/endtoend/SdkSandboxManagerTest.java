@@ -154,11 +154,7 @@ public class SdkSandboxManagerTest {
         // Calls to an unloaded SDK should throw an exception.
         final FakeRequestSurfacePackageCallback requestSurfacePackageCallback =
                 new FakeRequestSurfacePackageCallback();
-        Bundle params = new Bundle();
-        params.putInt(EXTRA_WIDTH_IN_PIXELS, 500);
-        params.putInt(EXTRA_HEIGHT_IN_PIXELS, 500);
-        params.putInt(EXTRA_DISPLAY_ID, 0);
-        params.putBinder(EXTRA_HOST_TOKEN, new Binder());
+        Bundle params = getRequestSurfacePackageParams();
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -205,13 +201,8 @@ public class SdkSandboxManagerTest {
         // Further calls to the SDK should still be valid.
         final FakeRequestSurfacePackageCallback surfacePackageCallback =
                 new FakeRequestSurfacePackageCallback();
-        Bundle params = new Bundle();
-        params.putInt(EXTRA_WIDTH_IN_PIXELS, 500);
-        params.putInt(EXTRA_HEIGHT_IN_PIXELS, 500);
-        params.putInt(EXTRA_DISPLAY_ID, 0);
-        params.putBinder(EXTRA_HOST_TOKEN, new Binder());
         mSdkSandboxManager.requestSurfacePackage(
-                sdkName, params, Runnable::run, surfacePackageCallback);
+                sdkName, getRequestSurfacePackageParams(), Runnable::run, surfacePackageCallback);
         assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isTrue();
     }
 
@@ -332,13 +323,8 @@ public class SdkSandboxManagerTest {
 
         final FakeRequestSurfacePackageCallback surfacePackageCallback =
                 new FakeRequestSurfacePackageCallback();
-        Bundle params = new Bundle();
-        params.putInt(EXTRA_WIDTH_IN_PIXELS, 500);
-        params.putInt(EXTRA_HEIGHT_IN_PIXELS, 500);
-        params.putInt(EXTRA_DISPLAY_ID, 0);
-        params.putBinder(EXTRA_HOST_TOKEN, new Binder());
         mSdkSandboxManager.requestSurfacePackage(
-                sdkName, params, Runnable::run, surfacePackageCallback);
+                sdkName, getRequestSurfacePackageParams(), Runnable::run, surfacePackageCallback);
         assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isTrue();
     }
 
@@ -352,13 +338,8 @@ public class SdkSandboxManagerTest {
 
         final FakeRequestSurfacePackageCallback surfacePackageCallback =
                 new FakeRequestSurfacePackageCallback();
-        Bundle params = new Bundle();
-        params.putInt(EXTRA_WIDTH_IN_PIXELS, 500);
-        params.putInt(EXTRA_HEIGHT_IN_PIXELS, 500);
-        params.putInt(EXTRA_DISPLAY_ID, 0);
-        params.putBinder(EXTRA_HOST_TOKEN, new Binder());
         mSdkSandboxManager.requestSurfacePackage(
-                sdkName, params, Runnable::run, surfacePackageCallback);
+                sdkName, getRequestSurfacePackageParams(), Runnable::run, surfacePackageCallback);
         assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isFalse();
         assertThat(surfacePackageCallback.getSurfacePackageErrorCode())
                 .isEqualTo(SdkSandboxManager.REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR);
@@ -377,13 +358,8 @@ public class SdkSandboxManagerTest {
 
         final FakeRequestSurfacePackageCallback surfacePackageCallback =
                 new FakeRequestSurfacePackageCallback();
-        Bundle params = new Bundle();
-        params.putInt(EXTRA_WIDTH_IN_PIXELS, 500);
-        params.putInt(EXTRA_HEIGHT_IN_PIXELS, 500);
-        params.putInt(EXTRA_DISPLAY_ID, 0);
-        params.putBinder(EXTRA_HOST_TOKEN, new Binder());
         mSdkSandboxManager.requestSurfacePackage(
-                sdkName, params, Runnable::run, surfacePackageCallback);
+                sdkName, getRequestSurfacePackageParams(), Runnable::run, surfacePackageCallback);
         assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isFalse();
         assertThat(surfacePackageCallback.getSurfacePackageErrorCode())
                 .isEqualTo(SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE);
@@ -395,33 +371,6 @@ public class SdkSandboxManagerTest {
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
-    }
-
-    private void loadMultipleSdks() {
-        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
-        final String sdk1 = "com.android.loadSdkSuccessfullySdkProvider";
-        mSdkSandboxManager.loadSdk(sdk1, new Bundle(), Runnable::run, callback);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
-
-        FakeLoadSdkCallback callback2 = new FakeLoadSdkCallback();
-        final String sdk2 = "com.android.loadSdkSuccessfullySdkProviderTwo";
-        mSdkSandboxManager.loadSdk(sdk2, new Bundle(), Runnable::run, callback2);
-        assertThat(callback2.isLoadSdkSuccessful()).isTrue();
-    }
-
-    // Returns true if the sandbox was already likely existing, false otherwise.
-    private boolean killSandboxIfExists() throws Exception {
-        FakeSdkSandboxProcessDeathCallback callback = new FakeSdkSandboxProcessDeathCallback();
-        mSdkSandboxManager.addSdkSandboxProcessDeathCallback(Runnable::run, callback);
-        killSandbox();
-
-        return callback.isSdkSandboxDeathDetected();
-    }
-
-    private void killSandbox() throws Exception {
-        // TODO(b/241542162): Avoid using reflection as a workaround once test apis can be run
-        //  without issue.
-        mSdkSandboxManager.getClass().getMethod("stopSdkSandbox").invoke(mSdkSandboxManager);
     }
 
     @Test
@@ -440,6 +389,33 @@ public class SdkSandboxManagerTest {
                                 mSdkSandboxManager.loadSdk(
                                         sdkName, new Bundle(), Runnable::run, callback));
         assertThat(thrown).hasMessageThat().contains("does not run in the foreground");
+    }
+
+    @Test
+    public void testSandboxApisAreUsableAfterUnbindingSandbox() throws Exception {
+        final String sdkName1 = "com.android.requestSurfacePackageSuccessfullySdkProvider";
+        FakeLoadSdkCallback callback1 = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(sdkName1, new Bundle(), Runnable::run, callback1);
+        assertThat(callback1.isLoadSdkSuccessful(/*ignoreSdkAlreadyLoadedError=*/ true)).isTrue();
+
+        // Move the app to the background and bring it back to the foreground again.
+        mScenario.recreate();
+
+        // Loading another sdk should work without issue
+        final String sdkName2 = "com.android.loadSdkSuccessfullySdkProvider";
+        FakeLoadSdkCallback callback2 = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(sdkName2, new Bundle(), Runnable::run, callback2);
+        assertThat(callback2.isLoadSdkSuccessful()).isTrue();
+
+        // Requesting surface package from the first loaded sdk should work.
+        final FakeRequestSurfacePackageCallback surfacePackageCallback =
+                new FakeRequestSurfacePackageCallback();
+        mSdkSandboxManager.requestSurfacePackage(
+                sdkName1, getRequestSurfacePackageParams(), Runnable::run, surfacePackageCallback);
+        assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isTrue();
+
+        mSdkSandboxManager.unloadSdk(sdkName1);
+        mSdkSandboxManager.unloadSdk(sdkName2);
     }
 
     /** Checks that {@code SdkSandbox.apk} only requests normal permissions in its manifest. */
@@ -497,5 +473,42 @@ public class SdkSandboxManagerTest {
     public void testSandboxedSdkDescribeContents() throws Exception {
         final SandboxedSdk sandboxedSdk = new SandboxedSdk(new Binder());
         assertThat(sandboxedSdk.describeContents()).isEqualTo(0);
+    }
+
+    private Bundle getRequestSurfacePackageParams() {
+        Bundle params = new Bundle();
+        params.putInt(EXTRA_WIDTH_IN_PIXELS, 500);
+        params.putInt(EXTRA_HEIGHT_IN_PIXELS, 500);
+        params.putInt(EXTRA_DISPLAY_ID, 0);
+        params.putBinder(EXTRA_HOST_TOKEN, new Binder());
+
+        return params;
+    }
+
+    private void loadMultipleSdks() {
+        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        final String sdk1 = "com.android.loadSdkSuccessfullySdkProvider";
+        mSdkSandboxManager.loadSdk(sdk1, new Bundle(), Runnable::run, callback);
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+
+        FakeLoadSdkCallback callback2 = new FakeLoadSdkCallback();
+        final String sdk2 = "com.android.loadSdkSuccessfullySdkProviderTwo";
+        mSdkSandboxManager.loadSdk(sdk2, new Bundle(), Runnable::run, callback2);
+        assertThat(callback2.isLoadSdkSuccessful()).isTrue();
+    }
+
+    // Returns true if the sandbox was already likely existing, false otherwise.
+    private boolean killSandboxIfExists() throws Exception {
+        FakeSdkSandboxProcessDeathCallback callback = new FakeSdkSandboxProcessDeathCallback();
+        mSdkSandboxManager.addSdkSandboxProcessDeathCallback(Runnable::run, callback);
+        killSandbox();
+
+        return callback.isSdkSandboxDeathDetected();
+    }
+
+    private void killSandbox() throws Exception {
+        // TODO(b/241542162): Avoid using reflection as a workaround once test apis can be run
+        //  without issue.
+        mSdkSandboxManager.getClass().getMethod("stopSdkSandbox").invoke(mSdkSandboxManager);
     }
 }

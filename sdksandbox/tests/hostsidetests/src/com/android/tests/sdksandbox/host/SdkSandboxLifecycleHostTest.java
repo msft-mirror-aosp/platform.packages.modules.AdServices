@@ -19,6 +19,7 @@ package com.android.tests.sdksandbox.host;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
@@ -173,5 +174,39 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
         processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
         assertThat(processDump).contains(APP_PACKAGE);
         assertThat(processDump).doesNotContain(SANDBOX_1_PROCESS_NAME);
+    }
+
+    @Test
+    public void testBackgroundingAppReducesSandboxPriority() throws Exception {
+        startActivity(APP_PACKAGE, APP_ACTIVITY);
+
+        // Should see app/sdk sandbox running
+        String processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
+        assertThat(processDump).contains(APP_PACKAGE);
+        assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
+
+        int initialSandboxOomScoreAdj = getOomScoreAdj(SANDBOX_1_PROCESS_NAME);
+
+        // Navigate to home screen to send both apps to the background.
+        getDevice().executeShellCommand("input keyevent KEYCODE_HOME");
+
+        // Wait for app to be backgrounded and unbinding of sandbox to complete.
+        Thread.sleep(2000);
+
+        // Should see app/sdk sandbox running
+        processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
+        assertThat(processDump).contains(APP_PACKAGE);
+        assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
+
+        int finalSandboxOomScoreAdj = getOomScoreAdj(SANDBOX_1_PROCESS_NAME);
+        // The higher the oom adj score, the lower the priority of the process.
+        assertThat(finalSandboxOomScoreAdj).isGreaterThan(initialSandboxOomScoreAdj);
+    }
+
+    private int getOomScoreAdj(String processName) throws DeviceNotAvailableException {
+        String pid = getDevice().getProcessPid(processName);
+        String oomScoreAdj =
+                getDevice().executeShellCommand("cat /proc/" + pid + "/oom_score_adj").trim();
+        return Integer.parseInt(oomScoreAdj);
     }
 }
