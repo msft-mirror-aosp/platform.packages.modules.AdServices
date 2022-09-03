@@ -34,6 +34,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
 
@@ -87,7 +88,8 @@ public class AppSetIdWorker {
     }
 
     @NonNull
-    private IAppSetIdProviderService getService() {
+    @VisibleForTesting
+    IAppSetIdProviderService getService() {
         IAppSetIdProviderService service = mServiceBinder.getService();
         return service;
     }
