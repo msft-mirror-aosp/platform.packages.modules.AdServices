@@ -67,7 +67,7 @@ public class CustomAudienceFieldSizeValidatorTest {
         ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
                         CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
-                                .setBiddingLogicUrl(tooLongBiddingLogicUri)
+                                .setBiddingLogicUri(tooLongBiddingLogicUri)
                                 .build()),
                 String.format(
                         Locale.getDefault(),
@@ -85,7 +85,7 @@ public class CustomAudienceFieldSizeValidatorTest {
         ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
                         CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
-                                .setDailyUpdateUrl(tooLongDailyUpdateUri)
+                                .setDailyUpdateUri(tooLongDailyUpdateUri)
                                 .build()),
                 String.format(
                         Locale.getDefault(),
@@ -116,7 +116,7 @@ public class CustomAudienceFieldSizeValidatorTest {
         TrustedBiddingData tooBigTrustedBiddingData =
                 new TrustedBiddingData.Builder()
                         .setTrustedBiddingKeys(List.of())
-                        .setTrustedBiddingUrl(
+                        .setTrustedBiddingUri(
                                 getUriWithPathLength(
                                         CommonFixture.VALID_BUYER_1,
                                         FLAGS.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB()))

@@ -56,10 +56,10 @@ public final class AdWithBid implements Parcelable {
 
     /**
      * TODO(b/224873874): Define units used in bid generation
-     * @param adData An {@link AdData} object defining an ad's render URL and buyer metadata
-     * @param bid The amount of money a buyer has bid to show an ad; note that while the bid is
-     *            expected to be non-negative, this is only enforced during the ad selection process
      *
+     * @param adData An {@link AdData} object defining an ad's render URI and buyer metadata
+     * @param bid The amount of money a buyer has bid to show an ad; note that while the bid is
+     *     expected to be non-negative, this is only enforced during the ad selection process
      * @throws NullPointerException if adData is null
      */
     public AdWithBid(@NonNull AdData adData, double bid) {

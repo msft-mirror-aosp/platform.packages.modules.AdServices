@@ -37,6 +37,7 @@ import android.os.RemoteException;
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.consent.ConsentManager;
 
 import java.util.concurrent.Executor;
 
@@ -73,7 +74,7 @@ public class AdServicesCommonServiceImpl extends
                         }
                         callback.onResult(
                                 new IsAdServicesEnabledResult.Builder()
-                                        .setAdServicesEnabled(mFlags.getAdservicesEnableStatus())
+                                        .setAdServicesEnabled(mFlags.getAdServicesEnabled())
                                         .build());
                     } catch (Exception e) {
                         try {
@@ -121,9 +122,14 @@ public class AdServicesCommonServiceImpl extends
                                 "adid status is "
                                         + adIdEnabled
                                         + ", adservice status is "
-                                        + mFlags.getAdservicesEnableStatus());
-                        if (mFlags.getAdservicesEnableStatus() && adServicesEntryPointEnabled) {
+                                        + mFlags.getAdServicesEnabled());
+                        if (mFlags.getAdServicesEnabled() && adServicesEntryPointEnabled) {
                             ConsentNotificationJobService.schedule(mContext, adIdEnabled);
+                            if (ConsentManager.getInstance(mContext)
+                                    .getConsent(mContext.getPackageManager())
+                                    .isGiven()) {
+                                BackgroundJobsManager.scheduleAllBackgroundJobs(mContext);
+                            }
                         }
                     } catch (Exception e) {
                         LogUtil.e(

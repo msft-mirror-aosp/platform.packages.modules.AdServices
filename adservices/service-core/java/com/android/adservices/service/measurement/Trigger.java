@@ -256,14 +256,8 @@ public class Trigger {
         List<AggregateTriggerData> triggerDataList = new ArrayList<>();
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
-            String hexString = jsonObject.getString("key_piece");
-            if (hexString.startsWith("0x")) {
-                hexString = hexString.substring(2);
-            }
-            // Do not process trigger if a key exceeds 128 bits.
-            if (hexString.length() > 32) {
-                return Optional.empty();
-            }
+            // Remove "0x" prefix.
+            String hexString = jsonObject.getString("key_piece").substring(2);
             BigInteger bigInteger = new BigInteger(hexString, 16);
             JSONArray sourceKeys = jsonObject.getJSONArray("source_keys");
             Set<String> sourceKeySet = new HashSet<>();

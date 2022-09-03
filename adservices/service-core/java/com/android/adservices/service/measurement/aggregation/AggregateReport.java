@@ -19,6 +19,8 @@ package com.android.adservices.service.measurement.aggregation;
 import android.annotation.IntDef;
 import android.net.Uri;
 
+import androidx.annotation.Nullable;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -42,6 +44,8 @@ public class AggregateReport {
     private AggregateAttributionData mAggregateAttributionData;
     private @Status int mStatus;
     private String mApiVersion;
+    @Nullable private Long mSourceDebugKey;
+    @Nullable private Long mTriggerDebugKey;
 
     @IntDef(value = {
             Status.PENDING,
@@ -63,6 +67,8 @@ public class AggregateReport {
         mDebugCleartextPayload = null;
         mAggregateAttributionData = null;
         mStatus = AggregateReport.Status.PENDING;
+        mSourceDebugKey = null;
+        mTriggerDebugKey = null;
     }
 
     @Override
@@ -71,23 +77,34 @@ public class AggregateReport {
             return false;
         }
         AggregateReport aggregateReport = (AggregateReport) obj;
-        return  Objects.equals(mPublisher, aggregateReport.mPublisher)
+        return Objects.equals(mPublisher, aggregateReport.mPublisher)
                 && Objects.equals(mAttributionDestination, aggregateReport.mAttributionDestination)
                 && mSourceRegistrationTime == aggregateReport.mSourceRegistrationTime
                 && mScheduledReportTime == aggregateReport.mScheduledReportTime
                 && Objects.equals(mEnrollmentId, aggregateReport.mEnrollmentId)
                 && Objects.equals(mDebugCleartextPayload, aggregateReport.mDebugCleartextPayload)
-                && Objects.equals(mAggregateAttributionData,
-                        aggregateReport.mAggregateAttributionData)
+                && Objects.equals(
+                        mAggregateAttributionData, aggregateReport.mAggregateAttributionData)
                 && mStatus == aggregateReport.mStatus
-                && Objects.equals(mApiVersion, aggregateReport.mApiVersion);
+                && Objects.equals(mApiVersion, aggregateReport.mApiVersion)
+                && Objects.equals(mSourceDebugKey, aggregateReport.mSourceDebugKey)
+                && Objects.equals(mTriggerDebugKey, aggregateReport.mTriggerDebugKey);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mId, mPublisher, mAttributionDestination, mSourceRegistrationTime,
-                mScheduledReportTime, mEnrollmentId, mDebugCleartextPayload,
-                mAggregateAttributionData, mStatus);
+        return Objects.hash(
+                mId,
+                mPublisher,
+                mAttributionDestination,
+                mSourceRegistrationTime,
+                mScheduledReportTime,
+                mEnrollmentId,
+                mDebugCleartextPayload,
+                mAggregateAttributionData,
+                mStatus,
+                mSourceDebugKey,
+                mTriggerDebugKey);
     }
 
     /**
@@ -137,6 +154,18 @@ public class AggregateReport {
      */
     public String getDebugCleartextPayload() {
         return mDebugCleartextPayload;
+    }
+
+    /** Source Debug Key */
+    @Nullable
+    public Long getSourceDebugKey() {
+        return mSourceDebugKey;
+    }
+
+    /** Trigger Debug Key */
+    @Nullable
+    public Long getTriggerDebugKey() {
+        return mTriggerDebugKey;
     }
 
     /**
@@ -275,6 +304,18 @@ public class AggregateReport {
          */
         public Builder setApiVersion(String version) {
             mAttributionReport.mApiVersion = version;
+            return this;
+        }
+
+        /** See {@link AggregateReport#getSourceDebugKey()} ()} */
+        public Builder setSourceDebugKey(Long sourceDebugKey) {
+            mAttributionReport.mSourceDebugKey = sourceDebugKey;
+            return this;
+        }
+
+        /** See {@link AggregateReport#getTriggerDebugKey()} ()} */
+        public Builder setTriggerDebugKey(Long triggerDebugKey) {
+            mAttributionReport.mTriggerDebugKey = triggerDebugKey;
             return this;
         }
 

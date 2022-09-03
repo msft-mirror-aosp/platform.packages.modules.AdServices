@@ -280,21 +280,6 @@ public class JSScriptEngine {
     }
 
     /**
-     * Same as {@link #evaluate(String, List, String, IsolateSettings)} where the entry point
-     * function name is {@link #ENTRY_POINT_FUNC_NAME}.
-     */
-    // TODO(b/242358625): remove this method post updating the perf test
-    @NonNull
-    public ListenableFuture<String> evaluate(
-            @NonNull String jsScript, @NonNull List<JSScriptArgument> args) {
-        return evaluate(
-                jsScript,
-                args,
-                ENTRY_POINT_FUNC_NAME,
-                IsolateSettings.forMaxHeapSizeEnforcementDisabled());
-    }
-
-    /**
      * Invokes the function {@code entryFunctionName} defined by the JS code in {@code jsScript} and
      * return the result. It will reset the WebView status after evaluating the script.
      *
@@ -312,31 +297,6 @@ public class JSScriptEngine {
             @NonNull String entryFunctionName,
             @NonNull IsolateSettings isolateSettings) {
         return evaluateInternal(jsScript, args, entryFunctionName, null, isolateSettings);
-    }
-
-    /**
-     * Invokes the function {@code entryFunctionName} defined by the JS code in {@code jsScript} and
-     * return the result. It will reset the WebView status after evaluating the script.
-     *
-     * @param jsScript The JS script
-     * @param args The arguments to pass when invoking {@code entryFunctionName}
-     * @param entryFunctionName The name of a function defined in {@code jsScript} that should be
-     *     invoked.
-     * @return A {@link ListenableFuture} containing the JS string representation of the result of
-     *     {@code entryFunctionName}'s invocation
-     */
-    // TODO(b/242358625): remove this method post updating the perf test
-    @NonNull
-    public ListenableFuture<String> evaluate(
-            @NonNull String jsScript,
-            @NonNull List<JSScriptArgument> args,
-            @NonNull String entryFunctionName) {
-        return evaluateInternal(
-                jsScript,
-                args,
-                entryFunctionName,
-                null,
-                IsolateSettings.forMaxHeapSizeEnforcementDisabled());
     }
 
     /**
@@ -363,37 +323,6 @@ public class JSScriptEngine {
         Objects.requireNonNull(wasmBinary);
 
         return evaluateInternal(jsScript, args, entryFunctionName, wasmBinary, isolateSettings);
-    }
-
-    /**
-     * Loads the WASM module defined by {@code wasmBinary}, invokes the function {@code
-     * entryFunctionName} defined by the JS code in {@code jsScript} and return the result. It will
-     * reset the WebView status after evaluating the script. The function is expected to accept all
-     * the arguments defined in {@code args} plus an extra final parameter of type {@code
-     * WebAssembly.Module}.
-     *
-     * @param jsScript The JS script
-     * @param args The arguments to pass when invoking {@code entryFunctionName}
-     * @param entryFunctionName The name of a function defined in {@code jsScript} that should be
-     *     invoked.
-     * @return A {@link ListenableFuture} containing the JS string representation of the result of
-     *     {@code entryFunctionName}'s invocation
-     */
-    // TODO(b/242358625): remove this method post updating the perf test
-    @NonNull
-    public ListenableFuture<String> evaluate(
-            @NonNull String jsScript,
-            @NonNull byte[] wasmBinary,
-            @NonNull List<JSScriptArgument> args,
-            @NonNull String entryFunctionName) {
-        Objects.requireNonNull(wasmBinary);
-
-        return evaluateInternal(
-                jsScript,
-                args,
-                entryFunctionName,
-                wasmBinary,
-                IsolateSettings.forMaxHeapSizeEnforcementDisabled());
     }
 
     @NonNull

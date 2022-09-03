@@ -18,6 +18,7 @@ package com.android.server.sdksandbox;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -53,6 +54,9 @@ public class SdkSandboxShellCommandUnitTest {
     public void setup() throws Exception {
         mContext = Mockito.spy(InstrumentationRegistry.getInstrumentation().getContext());
 
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(Manifest.permission.READ_DEVICE_CONFIG);
         mService =
                 Mockito.spy(
                         new FakeSdkSandboxManagerService(
@@ -119,6 +123,24 @@ public class SdkSandboxShellCommandUnitTest {
                         Mockito.eq(INVALID_PACKAGE),
                         Mockito.anyInt(),
                         Mockito.any(UserHandle.class));
+    }
+
+    @Test
+    public void testStartFailsWhenSdkSandboxDisabled() {
+        final CallingInfo callingInfo = new CallingInfo(UID, DEBUGGABLE_PACKAGE);
+        Mockito.doReturn(false).when(mService).isSdkSandboxServiceRunning(callingInfo);
+        final SdkSandboxShellCommand cmd =
+                new SdkSandboxShellCommand(mService, mContext, new ShellInjector());
+        mService.setIsSdkSandboxDisabledResponse(true);
+        assertThat(cmd.exec(mService, mIn, mOut, mErr, new String[] {"start", DEBUGGABLE_PACKAGE}))
+                .isEqualTo(-1);
+        Mockito.verify(mService)
+                .stopSdkSandboxService(
+                        Mockito.any(CallingInfo.class),
+                        Mockito.eq(
+                                "Shell command `sdk_sandbox start` failed due to sandbox"
+                                        + " disabled."));
+        mService.setIsSdkSandboxDisabledResponse(false);
     }
 
     @Test
@@ -323,6 +345,7 @@ public class SdkSandboxShellCommandUnitTest {
     private static class FakeSdkSandboxManagerService extends SdkSandboxManagerService {
 
         private boolean mBindingSuccessful = true;
+        private boolean mIsDisabledResponse = false;
 
         FakeSdkSandboxManagerService(Context context, SdkSandboxServiceProvider provider) {
             super(context, provider);
@@ -344,6 +367,15 @@ public class SdkSandboxShellCommandUnitTest {
         boolean isSdkSandboxServiceRunning(CallingInfo callingInfo) {
             // Must be mocked in the tests accordingly
             throw new RuntimeException();
+        }
+
+        @Override
+        boolean isSdkSandboxDisabled(ISdkSandboxService boundService) {
+            return mIsDisabledResponse;
+        }
+
+        private void setIsSdkSandboxDisabledResponse(boolean response) {
+            mIsDisabledResponse = response;
         }
 
         private void setBindingSuccessful(boolean successful) {
