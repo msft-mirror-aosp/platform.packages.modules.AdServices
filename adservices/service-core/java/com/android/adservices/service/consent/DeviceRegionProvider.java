@@ -20,6 +20,7 @@ import android.annotation.NonNull;
 import android.content.Context;
 import android.telephony.TelephonyManager;
 
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 
@@ -75,7 +76,8 @@ public class DeviceRegionProvider {
 
             String simCountryIso = telephonyManager.getSimCountryIso();
 
-            if (simCountryIso.isEmpty() || !EU_ALPHA2_CODES.contains(simCountryIso)) {
+            if (simCountryIso.isEmpty()
+                    || !EU_ALPHA2_CODES.contains(simCountryIso.toUpperCase(Locale.ENGLISH))) {
                 return false;
             }
 

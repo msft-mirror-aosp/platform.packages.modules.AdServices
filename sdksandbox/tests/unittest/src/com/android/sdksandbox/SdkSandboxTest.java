@@ -26,6 +26,8 @@ import android.app.sdksandbox.testutils.StubSdkToServiceLink;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -88,15 +90,25 @@ public class SdkSandboxTest {
     private Context mContext;
     private InjectorForTest mInjector;
 
+    private PackageManager mSpyPackageManager;
+
     static class InjectorForTest extends SdkSandboxServiceImpl.Injector {
+
+        private Context mContext;
 
         InjectorForTest(Context context) {
             super(context);
+            mContext = context;
         }
 
         @Override
         int getCallingUid() {
             return Process.SYSTEM_UID;
+        }
+
+        @Override
+        Context getContext() {
+            return mContext;
         }
     }
 
@@ -110,7 +122,9 @@ public class SdkSandboxTest {
     public void setup() throws Exception {
         Context context = InstrumentationRegistry.getInstrumentation().getContext();
         mContext = Mockito.spy(context);
+        mSpyPackageManager = Mockito.spy(mContext.getPackageManager());
         mInjector = Mockito.spy(new InjectorForTest(mContext));
+        Mockito.doReturn(mSpyPackageManager).when(mContext).getPackageManager();
         mService = new SdkSandboxServiceImpl(mInjector);
         mApplicationInfo = mContext.getPackageManager().getApplicationInfo(SDK_PACKAGE, 0);
     }
@@ -325,6 +339,30 @@ public class SdkSandboxTest {
         assertThat(stringWriter.toString()).contains("mHeldSdk size:");
     }
 
+    @Test
+    public void testDisabledWhenWebviewNotResolvable() throws Exception {
+        // WebView provider cannot be resolved, therefore sandbox should be disabled.
+        Mockito.doReturn(null)
+                .when(mSpyPackageManager)
+                .getPackageInfo(
+                        Mockito.anyString(), Mockito.any(PackageManager.PackageInfoFlags.class));
+        SdkSandboxDisabledCallback callback = new SdkSandboxDisabledCallback();
+        mService.isDisabled(callback);
+        assertThat(callback.mIsDisabled).isTrue();
+    }
+
+    @Test
+    public void testNotDisabledWhenWebviewResolvable() throws Exception {
+        // WebView provider can be resolved, therefore sandbox should not be disabled.
+        Mockito.doReturn(new PackageInfo())
+                .when(mSpyPackageManager)
+                .getPackageInfo(
+                        Mockito.anyString(), Mockito.any(PackageManager.PackageInfoFlags.class));
+        SdkSandboxDisabledCallback callback = new SdkSandboxDisabledCallback();
+        mService.isDisabled(callback);
+        assertThat(callback.isDisabled()).isFalse();
+    }
+
     @Test(expected = SecurityException.class)
     public void testDump_WithoutPermission() {
         mService.dump(new FileDescriptor(), new PrintWriter(new StringWriter()), new String[0]);
@@ -452,6 +490,58 @@ public class SdkSandboxTest {
     }
 
     @Test
+    public void testLatencyMetrics_unloadSdk_success() throws Exception {
+        final CountDownLatch latch = new CountDownLatch(1);
+        final UnloadSdkCallbackImpl mUnloadSdkCallback = new UnloadSdkCallbackImpl(latch);
+        SANDBOX_LATENCY_INFO.setTimeSandboxReceivedCallFromSystemServer(
+                TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER);
+
+        Mockito.when(mInjector.getCurrentTime())
+                .thenReturn(
+                        // loadSdk mocks
+                        TIME_SANDBOX_CALLED_SDK,
+                        TIME_SDK_CALL_COMPLETED,
+                        TIME_SANDBOX_CALLED_SYSTEM_SERVER,
+                        // unloadSdk mocks
+                        TIME_SANDBOX_CALLED_SDK,
+                        TIME_SDK_CALL_COMPLETED,
+                        TIME_SANDBOX_CALLED_SYSTEM_SERVER);
+
+        IBinder sdkToken = new Binder();
+
+        mService.loadSdk(
+                CLIENT_PACKAGE_NAME,
+                sdkToken,
+                mApplicationInfo,
+                SDK_NAME,
+                SDK_PROVIDER_CLASS,
+                null,
+                null,
+                new Bundle(),
+                new RemoteCode(latch),
+                SANDBOX_LATENCY_INFO,
+                new StubSdkToServiceLink());
+
+        mService.unloadSdk(sdkToken, mUnloadSdkCallback, SANDBOX_LATENCY_INFO);
+
+        final SandboxLatencyInfo sandboxLatencyInfo = mUnloadSdkCallback.mSandboxLatencyInfo;
+
+        assertThat(sandboxLatencyInfo.getSdkLatency())
+                .isEqualTo((int) (TIME_SDK_CALL_COMPLETED - TIME_SANDBOX_CALLED_SDK));
+
+        assertThat(sandboxLatencyInfo.getSandboxLatency())
+                .isEqualTo(
+                        (int)
+                                (TIME_SANDBOX_CALLED_SYSTEM_SERVER
+                                        - TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER
+                                        - (TIME_SDK_CALL_COMPLETED - TIME_SANDBOX_CALLED_SDK)));
+        assertThat(sandboxLatencyInfo.getTimeSandboxCalledSystemServer())
+                .isEqualTo(TIME_SANDBOX_CALLED_SYSTEM_SERVER);
+        assertThat(sandboxLatencyInfo.getTimeSandboxCalledSystemServer())
+                .isEqualTo(TIME_SANDBOX_CALLED_SYSTEM_SERVER);
+    }
+
+    @Test
     public void testLatencyMetrics_requestSurfacePackage_success() throws Exception {
         final CountDownLatch latch = new CountDownLatch(1);
         final RemoteCode mRemoteCode = new RemoteCode(latch);
@@ -551,6 +641,21 @@ public class SdkSandboxTest {
         }
     }
 
+    private static class UnloadSdkCallbackImpl extends IUnloadSdkCallback.Stub {
+        private CountDownLatch mLatch;
+        private SandboxLatencyInfo mSandboxLatencyInfo;
+
+        UnloadSdkCallbackImpl(CountDownLatch latch) {
+            mLatch = latch;
+        }
+
+        @Override
+        public void onUnloadSdk(SandboxLatencyInfo sandboxLatencyInfo) {
+            mSandboxLatencyInfo = sandboxLatencyInfo;
+            mLatch.countDown();
+        }
+    }
+
     private static Bundle getBundleFromMap(Map<String, String> data) {
         Bundle bundle = new Bundle();
         for (String key : data.keySet()) {
@@ -596,6 +701,26 @@ public class SdkSandboxTest {
             mErrorCode = errorCode;
             mSuccessful = false;
             mLatch.countDown();
+        }
+    }
+
+    private static class SdkSandboxDisabledCallback extends ISdkSandboxDisabledCallback.Stub {
+        private final CountDownLatch mLatch;
+        private boolean mIsDisabled;
+
+        SdkSandboxDisabledCallback() {
+            mLatch = new CountDownLatch(1);
+        }
+
+        @Override
+        public void onResult(boolean isDisabled) {
+            mIsDisabled = isDisabled;
+            mLatch.countDown();
+        }
+
+        boolean isDisabled() throws Exception {
+            assertThat(mLatch.await(1, TimeUnit.SECONDS)).isTrue();
+            return mIsDisabled;
         }
     }
 }

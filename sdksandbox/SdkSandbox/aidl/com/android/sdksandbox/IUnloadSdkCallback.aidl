@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
-package android.app.sdksandbox;
+package com.android.sdksandbox;
+
+import com.android.sdksandbox.SandboxLatencyInfo;
 
 /** @hide */
-oneway interface ISdkSandboxLifecycleCallback {
-    void onSdkSandboxDied();
+oneway interface IUnloadSdkCallback {
+    void onUnloadSdk(in SandboxLatencyInfo sandboxLatencyInfo);
 }

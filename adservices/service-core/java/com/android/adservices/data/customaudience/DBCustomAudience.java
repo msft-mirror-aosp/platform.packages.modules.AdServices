@@ -183,7 +183,7 @@ public class DBCustomAudience {
                 .setCreationTime(currentTime)
                 .setLastAdsAndBiddingDataUpdatedTime(lastAdsAndBiddingDataUpdatedTime)
                 .setExpirationTime(expirationTime)
-                .setBiddingLogicUrl(parcelable.getBiddingLogicUrl())
+                .setBiddingLogicUrl(parcelable.getBiddingLogicUri())
                 .setTrustedBiddingData(
                         DBTrustedBiddingData.fromServiceObject(parcelable.getTrustedBiddingData()))
                 .setAds(

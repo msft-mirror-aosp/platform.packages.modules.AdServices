@@ -37,6 +37,8 @@ import android.net.Uri;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.DbHelper;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
@@ -47,10 +49,17 @@ import com.android.adservices.service.measurement.TriggerFixture;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.aggregation.AggregateReportFixture;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mockito;
+import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -68,6 +77,9 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 public class MeasurementDaoTest {
+    @Rule
+    public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
+            new TestableDeviceConfig.TestableDeviceConfigRule();
 
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Uri APP_TWO_SOURCES = Uri.parse("android-app://com.example1.two-sources");
@@ -122,6 +134,52 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void testInsertSource_reachedDbSizeLimitOnEdgeCase_doNotInsert() {
+        insertSourceReachingDbSizeLimit(/* dbSize = */ 100L, /* dbSizeMaxLimit = */ 100L);
+    }
+
+    @Test
+    public void testInsertSource_reachedDbSizeLimitUpperEdgeCase_doNotInsert() {
+        insertSourceReachingDbSizeLimit(/* dbSize = */ 101L, /* dbSizeMaxLimit = */ 100L);
+    }
+
+    private void insertSourceReachingDbSizeLimit(long dbSize, long dbSizeMaxLimit) {
+        final Source validSource = SourceFixture.getValidSource();
+
+        final MockitoSession session =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(DbHelper.class)
+                        .spyStatic(FlagsFactory.class)
+                        .strictness(Strictness.LENIENT)
+                        .startMocking();
+
+        try {
+            // Mocking that the DB file has a size of 100 bytes
+            final DbHelper spyDbHelper = Mockito.spy(DbHelper.getInstance(sContext));
+            ExtendedMockito.doReturn(spyDbHelper)
+                    .when(() -> DbHelper.getInstance(ArgumentMatchers.any()));
+            ExtendedMockito.doReturn(dbSize).when(spyDbHelper).getDbFileSize();
+
+            // Mocking that the flags return a max limit size of 100 bytes
+            Flags mockFlags = Mockito.mock(Flags.class);
+            ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
+            ExtendedMockito.doReturn(dbSizeMaxLimit).when(mockFlags).getMeasurementDbSizeLimit();
+
+            DatastoreManagerFactory.getDatastoreManager(sContext)
+                    .runInTransaction((dao) -> dao.insertSource(validSource));
+
+            try (Cursor sourceCursor =
+                    DbHelper.getInstance(sContext)
+                            .getReadableDatabase()
+                            .query(SourceContract.TABLE, null, null, null, null, null, null)) {
+                Assert.assertFalse(sourceCursor.moveToNext());
+            }
+        } finally {
+            session.finishMocking();
+        }
+    }
+
+    @Test
     public void testInsertTrigger() {
         Trigger validTrigger = TriggerFixture.getValidTrigger();
         DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) ->
@@ -142,6 +200,52 @@ public class MeasurementDaoTest {
             assertEquals(validTrigger.getRegistrant(), trigger.getRegistrant());
             assertEquals(validTrigger.getTriggerTime(), trigger.getTriggerTime());
             assertEquals(validTrigger.getEventTriggers(), trigger.getEventTriggers());
+        }
+    }
+
+    @Test
+    public void testInsertTrigger_reachedDbSizeLimitOnEdgeCase_doNotInsert() {
+        insertTriggerReachingDbSizeLimit(/* dbSize = */ 100L, /* dbSizeMaxLimit = */ 100L);
+    }
+
+    @Test
+    public void testInsertTrigger_reachedDbSizeLimitUpperEdgeCase_doNotInsert() {
+        insertTriggerReachingDbSizeLimit(/* dbSize = */ 101L, /* dbSizeMaxLimit = */ 100L);
+    }
+
+    private void insertTriggerReachingDbSizeLimit(long dbSize, long dbSizeMaxLimit) {
+        final Trigger validTrigger = TriggerFixture.getValidTrigger();
+
+        final MockitoSession session =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(DbHelper.class)
+                        .spyStatic(FlagsFactory.class)
+                        .strictness(Strictness.LENIENT)
+                        .startMocking();
+
+        try {
+            // Mocking that the DB file has a size of 100 bytes
+            final DbHelper spyDbHelper = Mockito.spy(DbHelper.getInstance(sContext));
+            ExtendedMockito.doReturn(spyDbHelper)
+                    .when(() -> DbHelper.getInstance(ArgumentMatchers.any()));
+            ExtendedMockito.doReturn(dbSize).when(spyDbHelper).getDbFileSize();
+
+            // Mocking that the flags return a max limit size of 100 bytes
+            Flags mockFlags = Mockito.mock(Flags.class);
+            ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
+            ExtendedMockito.doReturn(dbSizeMaxLimit).when(mockFlags).getMeasurementDbSizeLimit();
+
+            DatastoreManagerFactory.getDatastoreManager(sContext)
+                    .runInTransaction((dao) -> dao.insertTrigger(validTrigger));
+
+            try (Cursor sourceCursor =
+                    DbHelper.getInstance(sContext)
+                            .getReadableDatabase()
+                            .query(TriggerContract.TABLE, null, null, null, null, null, null)) {
+                Assert.assertFalse(sourceCursor.moveToNext());
+            }
+        } finally {
+            session.finishMocking();
         }
     }
 

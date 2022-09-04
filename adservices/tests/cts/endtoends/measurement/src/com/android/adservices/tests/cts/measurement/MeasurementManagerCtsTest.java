@@ -82,11 +82,8 @@ public class MeasurementManagerCtsTest {
 
     @Before
     public void setup() {
-        // To grant access to all web context
-        ShellUtils.runShellCommand("device_config put adservices web_context_client_allow_list *");
-
         // To grant access to all pp api app
-        ShellUtils.runShellCommand("device_config put adservices ppapi_app_allow_list *");
+        allowAllPackageNamesAccessMeasurementApis();
 
         // We need to turn the Consent Manager into debug mode
         overrideConsentManagerDebugMode();
@@ -100,6 +97,9 @@ public class MeasurementManagerCtsTest {
 
     @After
     public void tearDown() throws Exception {
+        resetAllowSandboxPackageNameAccessMeasurementApis();
+        resetOverrideConsentManagerDebugMode();
+        resetOverrideDisableMeasurementEnrollmentCheck();
         TimeUnit.SECONDS.sleep(1);
     }
 
@@ -271,14 +271,37 @@ public class MeasurementManagerCtsTest {
         overrideDisableMeasurementEnrollmentCheck("0");
     }
 
+    private void allowAllPackageNamesAccessMeasurementApis() {
+        final String packageName = "*";
+        ShellUtils.runShellCommand(
+                "device_config put adservices ppapi_app_allow_list " + packageName);
+        ShellUtils.runShellCommand(
+                "device_config put adservices web_context_client_allow_list " + packageName);
+    }
+
+    // Override the Consent Manager behaviour - Consent Given
+    private void overrideConsentManagerDebugMode() {
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
+    }
+
     // Override the flag to disable Measurement enrollment check. Setting to 1 disables enforcement.
     private void overrideDisableMeasurementEnrollmentCheck(String val) {
         ShellUtils.runShellCommand(
                 "setprop debug.adservices.disable_measurement_enrollment_check " + val);
     }
 
-    // Override the Consent Manager behaviour - Consent Given
-    private void overrideConsentManagerDebugMode() {
-        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
+    private void resetAllowSandboxPackageNameAccessMeasurementApis() {
+        ShellUtils.runShellCommand("device_config put adservices ppapi_app_allow_list null");
+        ShellUtils.runShellCommand(
+                "device_config put adservices web_context_client_allow_list null");
+    }
+
+    private void resetOverrideConsentManagerDebugMode() {
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode null");
+    }
+
+    private void resetOverrideDisableMeasurementEnrollmentCheck() {
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.disable_measurement_enrollment_check null");
     }
 }

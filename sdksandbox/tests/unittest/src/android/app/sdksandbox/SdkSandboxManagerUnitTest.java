@@ -393,10 +393,9 @@ public class SdkSandboxManagerUnitTest {
     public void testLoadSdk_latencySystemServerToAppLogged_success() throws Exception {
         final Bundle params = new Bundle();
 
-        mSdkSandboxManager.loadSdk(
-                SDK_NAME, params, Runnable::run, Mockito.spy(new FakeOutcomeReceiver<>()));
+        mSdkSandboxManager.loadSdk(SDK_NAME, params, Runnable::run, new FakeOutcomeReceiver<>());
 
-        ArgumentCaptor<ILoadSdkCallback> callbackArgumentCaptor =
+        final ArgumentCaptor<ILoadSdkCallback> callbackArgumentCaptor =
                 ArgumentCaptor.forClass(ILoadSdkCallback.class);
         Mockito.verify(mBinder)
                 .loadSdk(

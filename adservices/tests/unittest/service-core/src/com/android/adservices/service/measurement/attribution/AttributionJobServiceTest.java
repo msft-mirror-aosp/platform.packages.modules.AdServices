@@ -120,7 +120,7 @@ public class AttributionJobServiceTest {
                     verify(mMockDatastoreManager, times(1)).runInTransactionWithResult(any());
                     verify(mSpyService, times(1)).jobFinished(any(), anyBoolean());
                     ExtendedMockito.verify(
-                            () -> AttributionJobService.scheduleIfNeeded(any(), anyBoolean()),
+                            () -> AttributionJobService.scheduleIfNeeded(any(), eq(true)),
                             times(1));
                     verify(mMockJobScheduler, never()).cancel(eq(MEASUREMENT_ATTRIBUTION_JOB_ID));
                 });

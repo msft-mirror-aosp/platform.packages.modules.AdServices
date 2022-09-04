@@ -199,7 +199,7 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
     public void testJoinCustomAudience_mismatchDailyFetchUriDomain_fail() {
         CustomAudience customAudienceWithMismatchedDailyFetchUrlDomain =
                 CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
-                        .setDailyUpdateUrl(
+                        .setDailyUpdateUri(
                                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
                                         CommonFixture.VALID_BUYER_2))
                         .build();

@@ -26,10 +26,16 @@ import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.Flags.ClassifierType;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.topics.PackageManagerUtil;
+import com.android.internal.annotations.VisibleForTesting;
+
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Random;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -38,14 +44,15 @@ import java.util.stream.Stream;
  * classifier flags.
  */
 public class ClassifierManager implements Classifier {
-
     private static ClassifierManager sSingleton;
 
-    private OnDeviceClassifier mOnDeviceClassifier;
-    private PrecomputedClassifier mPrecomputedClassifier;
+    private Supplier<OnDeviceClassifier> mOnDeviceClassifier;
+    private Supplier<PrecomputedClassifier> mPrecomputedClassifier;
 
+    @VisibleForTesting
     ClassifierManager(
-            OnDeviceClassifier onDeviceClassifier, PrecomputedClassifier precomputedClassifier) {
+            @NonNull Supplier<OnDeviceClassifier> onDeviceClassifier,
+            @NonNull Supplier<PrecomputedClassifier> precomputedClassifier) {
         mOnDeviceClassifier = onDeviceClassifier;
         mPrecomputedClassifier = precomputedClassifier;
     }
@@ -55,10 +62,20 @@ public class ClassifierManager implements Classifier {
     public static ClassifierManager getInstance(@NonNull Context context) {
         synchronized (ClassifierManager.class) {
             if (sSingleton == null) {
+                // Note: we need to have a singleton ModelManager shared by both Classifiers.
                 sSingleton =
                         new ClassifierManager(
-                                OnDeviceClassifier.getInstance(context),
-                                PrecomputedClassifier.getInstance(context));
+                                Suppliers.memoize(
+                                        () ->
+                                                new OnDeviceClassifier(
+                                                        new Preprocessor(context),
+                                                        new PackageManagerUtil(context),
+                                                        new Random(),
+                                                        ModelManager.getInstance(context))),
+                                Suppliers.memoize(
+                                        () ->
+                                                new PrecomputedClassifier(
+                                                        ModelManager.getInstance(context))));
             }
         }
         return sSingleton;
@@ -73,15 +90,15 @@ public class ClassifierManager implements Classifier {
     public Map<String, List<Topic>> classify(Set<String> apps) {
         @ClassifierType int classifierTypeFlag = FlagsFactory.getFlags().getClassifierType();
         if (classifierTypeFlag == Flags.PRECOMPUTED_CLASSIFIER) {
-            return mPrecomputedClassifier.classify(apps);
+            return mPrecomputedClassifier.get().classify(apps);
         } else if (classifierTypeFlag == Flags.ON_DEVICE_CLASSIFIER) {
-            return mOnDeviceClassifier.classify(apps);
+            return mOnDeviceClassifier.get().classify(apps);
         } else {
             // PRECOMPUTED_THEN_ON_DEVICE
             // Default if classifierTypeFlag value is not set/invalid.
             // precomputedClassifications expects non-empty values.
             Map<String, List<Topic>> precomputedClassifications =
-                    mPrecomputedClassifier.classify(apps);
+                    mPrecomputedClassifier.get().classify(apps);
             // Collect package names that do not have any topics in the precomputed list.
             Set<String> remainingApps =
                     apps.stream()
@@ -90,7 +107,7 @@ public class ClassifierManager implements Classifier {
                                             !isValidValue(packageName, precomputedClassifications))
                             .collect(toSet());
             Map<String, List<Topic>> onDeviceClassifications =
-                    mOnDeviceClassifier.classify(remainingApps);
+                    mOnDeviceClassifier.get().classify(remainingApps);
 
             // Combine classification values. On device classifications are used for values that
             // do not have valid precomputed classifications.
@@ -120,14 +137,16 @@ public class ClassifierManager implements Classifier {
         // If the loaded assets are same, the output will be same.
         // TODO(b/240478024): Unify asset loading for Classifiers to ensure same assets are used.
         if (classifierTypeFlag == Flags.ON_DEVICE_CLASSIFIER) {
-            return mOnDeviceClassifier.getTopTopics(
-                    appTopics, numberOfTopTopics, numberOfRandomTopics);
+            return mOnDeviceClassifier
+                    .get()
+                    .getTopTopics(appTopics, numberOfTopTopics, numberOfRandomTopics);
         } else {
             // Use getTopics from PrecomputedClassifier as default.
             // TODO(b/240478024): Unify asset loading for Classifiers to ensure same assets are
             //  used.
-            return mPrecomputedClassifier.getTopTopics(
-                    appTopics, numberOfTopTopics, numberOfRandomTopics);
+            return mPrecomputedClassifier
+                    .get()
+                    .getTopTopics(appTopics, numberOfTopTopics, numberOfRandomTopics);
         }
     }
 

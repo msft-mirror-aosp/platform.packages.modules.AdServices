@@ -34,6 +34,7 @@ import android.net.Uri;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -150,7 +151,8 @@ public class CustomAudienceDaoTest {
                     .setBiddingLogicUrl(BIDDING_LOGIC_URL_1)
                     .setUserBiddingSignals(USER_BIDDING_SIGNALS_1)
                     .setAds(List.of(ADS_1))
-                    .setTrustedBiddingData(null)
+                    .setTrustedBiddingData(
+                            DBTrustedBiddingDataFixture.getValidBuilderByBuyer(BUYER_1).build())
                     .build();
 
     private static final DBCustomAudienceBackgroundFetchData CUSTOM_AUDIENCE_BGF_DATA_1 =
@@ -177,7 +179,8 @@ public class CustomAudienceDaoTest {
                     .setBiddingLogicUrl(BIDDING_LOGIC_URL_2)
                     .setUserBiddingSignals(USER_BIDDING_SIGNALS_1)
                     .setAds(List.of(ADS_1))
-                    .setTrustedBiddingData(null)
+                    .setTrustedBiddingData(
+                            DBTrustedBiddingDataFixture.getValidBuilderByBuyer(BUYER_1).build())
                     .build();
 
     private static final DBCustomAudienceBackgroundFetchData CUSTOM_AUDIENCE_BGF_DATA_1_1 =
@@ -370,7 +373,17 @@ public class CustomAudienceDaoTest {
                     .setTrustedBiddingData(TRUSTED_BIDDING_DATA_2)
                     .build();
 
-    private static final DBCustomAudience CUSTOM_AUDIENCE_NO_TRUSTED_BIDDING_DATA_URL =
+    private static final DBCustomAudienceBackgroundFetchData
+            CUSTOM_AUDIENCE_BGF_DATA_NO_USER_BIDDING_SIGNALS =
+                    DBCustomAudienceBackgroundFetchData.builder()
+                            .setOwner(OWNER_1)
+                            .setBuyer(BUYER_1)
+                            .setName(NAME_1)
+                            .setDailyUpdateUrl(DAILY_UPDATE_URL_1)
+                            .setEligibleUpdateTime(Instant.EPOCH)
+                            .build();
+
+    private static final DBCustomAudience CUSTOM_AUDIENCE_NO_TRUSTED_BIDDING_DATA =
             new DBCustomAudience.Builder()
                     .setOwner(OWNER_2)
                     .setBuyer(BUYER_2)
@@ -385,6 +398,16 @@ public class CustomAudienceDaoTest {
                     .setTrustedBiddingData(null)
                     .build();
 
+    private static final DBCustomAudienceBackgroundFetchData
+            CUSTOM_AUDIENCE_BGF_DATA_NO_TRUSTED_BIDDING_DATA =
+                    DBCustomAudienceBackgroundFetchData.builder()
+                            .setOwner(OWNER_2)
+                            .setBuyer(BUYER_2)
+                            .setName(NAME_2)
+                            .setDailyUpdateUrl(DAILY_UPDATE_URL_1)
+                            .setEligibleUpdateTime(Instant.EPOCH)
+                            .build();
+
     private static final DBCustomAudience CUSTOM_AUDIENCE_NO_ADS =
             new DBCustomAudience.Builder()
                     .setOwner(OWNER_3)
@@ -398,6 +421,15 @@ public class CustomAudienceDaoTest {
                     .setUserBiddingSignals(USER_BIDDING_SIGNALS_1)
                     .setAds(null)
                     .setTrustedBiddingData(TRUSTED_BIDDING_DATA_2)
+                    .build();
+
+    private static final DBCustomAudienceBackgroundFetchData CUSTOM_AUDIENCE_BGF_DATA_NO_ADS =
+            DBCustomAudienceBackgroundFetchData.builder()
+                    .setOwner(OWNER_3)
+                    .setBuyer(BUYER_3)
+                    .setName(NAME_3)
+                    .setDailyUpdateUrl(DAILY_UPDATE_URL_1)
+                    .setEligibleUpdateTime(Instant.EPOCH)
                     .build();
 
     private static final String APP_PACKAGE_NAME_1 = "appPackageName1";
@@ -784,6 +816,55 @@ public class CustomAudienceDaoTest {
     }
 
     @Test
+    public void testCreateOrUpdate_immediatelyEligibleForUpdate() {
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_NO_USER_BIDDING_SIGNALS, DAILY_UPDATE_URL_1);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_NO_TRUSTED_BIDDING_DATA, DAILY_UPDATE_URL_1);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_NO_ADS, DAILY_UPDATE_URL_1);
+
+        assertEquals(
+                CUSTOM_AUDIENCE_NO_USER_BIDDING_SIGNALS,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_NO_USER_BIDDING_SIGNALS.getOwner(),
+                        CUSTOM_AUDIENCE_NO_USER_BIDDING_SIGNALS.getBuyer(),
+                        CUSTOM_AUDIENCE_NO_USER_BIDDING_SIGNALS.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_NO_USER_BIDDING_SIGNALS,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_NO_USER_BIDDING_SIGNALS.getOwner(),
+                        CUSTOM_AUDIENCE_NO_USER_BIDDING_SIGNALS.getBuyer(),
+                        CUSTOM_AUDIENCE_NO_USER_BIDDING_SIGNALS.getName()));
+
+        assertEquals(
+                CUSTOM_AUDIENCE_NO_TRUSTED_BIDDING_DATA,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_NO_TRUSTED_BIDDING_DATA.getOwner(),
+                        CUSTOM_AUDIENCE_NO_TRUSTED_BIDDING_DATA.getBuyer(),
+                        CUSTOM_AUDIENCE_NO_TRUSTED_BIDDING_DATA.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_NO_TRUSTED_BIDDING_DATA,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_NO_TRUSTED_BIDDING_DATA.getOwner(),
+                        CUSTOM_AUDIENCE_NO_TRUSTED_BIDDING_DATA.getBuyer(),
+                        CUSTOM_AUDIENCE_NO_TRUSTED_BIDDING_DATA.getName()));
+
+        assertEquals(
+                CUSTOM_AUDIENCE_NO_ADS,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_NO_ADS.getOwner(),
+                        CUSTOM_AUDIENCE_NO_ADS.getBuyer(),
+                        CUSTOM_AUDIENCE_NO_ADS.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_NO_ADS,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_NO_ADS.getOwner(),
+                        CUSTOM_AUDIENCE_NO_ADS.getBuyer(),
+                        CUSTOM_AUDIENCE_NO_ADS.getName()));
+    }
+
+    @Test
     public void testCreateOrUpdate_UpdateExistingBackgroundFetchData() {
         doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
 
@@ -914,11 +995,9 @@ public class CustomAudienceDaoTest {
 
     @Test
     public void testGetActiveCustomAudienceByBuyersInvalidCAs() {
-        doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
-
         List<AdTechIdentifier> buyers = Arrays.asList(BUYER_1, BUYER_2, BUYER_3);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_NO_TRUSTED_BIDDING_DATA_URL, DAILY_UPDATE_URL_1);
+                CUSTOM_AUDIENCE_NO_TRUSTED_BIDDING_DATA, DAILY_UPDATE_URL_1);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 CUSTOM_AUDIENCE_NO_USER_BIDDING_SIGNALS, DAILY_UPDATE_URL_1);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(

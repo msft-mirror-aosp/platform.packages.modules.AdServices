@@ -54,6 +54,9 @@ import java.util.List;
 /** Unit test for {@link EventReportingJobHandler} */
 @RunWith(MockitoJUnitRunner.class)
 public class EventReportingJobHandlerTest {
+    private static final Long SOURCE_DEBUG_KEY = 237865L;
+    private static final Long TRIGGER_DEBUG_KEY = 928762L;
+
     private static final EnrollmentData ENROLLMENT = new EnrollmentData.Builder()
             .setAttributionReportingUrl(List.of("https://ad-tech.com"))
             .build();
@@ -97,6 +100,102 @@ public class EventReportingJobHandlerTest {
                 new EventReport.Builder()
                         .setId("eventReportId")
                         .setStatus(EventReport.Status.PENDING)
+                        .setSourceDebugKey(SOURCE_DEBUG_KEY)
+                        .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                        .build();
+        JSONObject eventReportPayload =
+                new EventReportPayload.Builder().setReportId(eventReport.getId()).build().toJson();
+
+        when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyEventReportingJobHandler)
+                .makeHttpPostRequest(Mockito.any(), Mockito.any());
+        doReturn(eventReportPayload)
+                .when(mSpyEventReportingJobHandler)
+                .createReportJsonPayload(Mockito.any());
+
+        doNothing().when(mMeasurementDao).markAggregateReportDelivered(eventReport.getId());
+
+        Assert.assertEquals(
+                AdServicesStatusUtils.STATUS_SUCCESS,
+                mSpyEventReportingJobHandler.performReport(eventReport.getId()));
+
+        verify(mMeasurementDao, times(1)).markEventReportDelivered(any());
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+    }
+
+    @Test
+    public void testSendReportForPendingReportSuccessSingleTriggerDebugKey()
+            throws DatastoreException, IOException, JSONException {
+        EventReport eventReport =
+                new EventReport.Builder()
+                        .setId("eventReportId")
+                        .setStatus(EventReport.Status.PENDING)
+                        .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                        .build();
+        JSONObject eventReportPayload =
+                new EventReportPayload.Builder().setReportId(eventReport.getId()).build().toJson();
+
+        when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyEventReportingJobHandler)
+                .makeHttpPostRequest(Mockito.any(), Mockito.any());
+        doReturn(eventReportPayload)
+                .when(mSpyEventReportingJobHandler)
+                .createReportJsonPayload(Mockito.any());
+
+        doNothing().when(mMeasurementDao).markAggregateReportDelivered(eventReport.getId());
+
+        Assert.assertEquals(
+                AdServicesStatusUtils.STATUS_SUCCESS,
+                mSpyEventReportingJobHandler.performReport(eventReport.getId()));
+
+        verify(mMeasurementDao, times(1)).markEventReportDelivered(any());
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+    }
+
+    @Test
+    public void testSendReportForPendingReportSuccessSingleSourceDebugKey()
+            throws DatastoreException, IOException, JSONException {
+        EventReport eventReport =
+                new EventReport.Builder()
+                        .setId("eventReportId")
+                        .setStatus(EventReport.Status.PENDING)
+                        .setSourceDebugKey(SOURCE_DEBUG_KEY)
+                        .build();
+        JSONObject eventReportPayload =
+                new EventReportPayload.Builder().setReportId(eventReport.getId()).build().toJson();
+
+        when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyEventReportingJobHandler)
+                .makeHttpPostRequest(Mockito.any(), Mockito.any());
+        doReturn(eventReportPayload)
+                .when(mSpyEventReportingJobHandler)
+                .createReportJsonPayload(Mockito.any());
+
+        doNothing().when(mMeasurementDao).markAggregateReportDelivered(eventReport.getId());
+
+        Assert.assertEquals(
+                AdServicesStatusUtils.STATUS_SUCCESS,
+                mSpyEventReportingJobHandler.performReport(eventReport.getId()));
+
+        verify(mMeasurementDao, times(1)).markEventReportDelivered(any());
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+    }
+
+    @Test
+    public void testSendReportForPendingReportSuccessWithNullDebugKeys()
+            throws DatastoreException, IOException, JSONException {
+        EventReport eventReport =
+                new EventReport.Builder()
+                        .setId("eventReportId")
+                        .setStatus(EventReport.Status.PENDING)
+                        .setSourceDebugKey(null)
+                        .setTriggerDebugKey(null)
                         .build();
         JSONObject eventReportPayload =
                 new EventReportPayload.Builder().setReportId(eventReport.getId()).build().toJson();
