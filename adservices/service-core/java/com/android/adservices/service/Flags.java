@@ -1084,6 +1084,7 @@ public interface Flags extends Dumpable {
     }
 
     boolean ENFORCE_FOREGROUND_STATUS_ADID = true;
+    boolean ENFORCE_FOREGROUND_STATUS_APPSETID = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES = true;
@@ -1188,6 +1189,13 @@ public interface Flags extends Dumpable {
     }
 
     int FOREGROUND_STATUS_LEVEL = IMPORTANCE_FOREGROUND_SERVICE;
+
+    /**
+     * @return true if AppSetId API should require that the calling API is running in foreground.
+     */
+    default boolean getEnforceForegroundStatusForAppSetId() {
+        return ENFORCE_FOREGROUND_STATUS_APPSETID;
+    }
 
     /** @return the importance level to use to check if an application is in foreground. */
     default int getForegroundStatuslLevelForValidation() {
