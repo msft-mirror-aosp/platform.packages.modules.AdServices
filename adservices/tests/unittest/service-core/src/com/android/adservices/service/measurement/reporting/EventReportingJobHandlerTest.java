@@ -99,12 +99,17 @@ public class EventReportingJobHandlerTest {
         EventReport eventReport =
                 new EventReport.Builder()
                         .setId("eventReportId")
+                        .setSourceId(1234L)
                         .setStatus(EventReport.Status.PENDING)
                         .setSourceDebugKey(SOURCE_DEBUG_KEY)
                         .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
                         .build();
         JSONObject eventReportPayload =
-                new EventReportPayload.Builder().setReportId(eventReport.getId()).build().toJson();
+                new EventReportPayload.Builder()
+                        .setReportId(eventReport.getId())
+                        .setSourceEventId(eventReport.getSourceId())
+                        .build()
+                        .toJson();
 
         when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
         doReturn(HttpURLConnection.HTTP_OK)
@@ -131,11 +136,16 @@ public class EventReportingJobHandlerTest {
         EventReport eventReport =
                 new EventReport.Builder()
                         .setId("eventReportId")
+                        .setSourceId(1234L)
                         .setStatus(EventReport.Status.PENDING)
                         .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
                         .build();
         JSONObject eventReportPayload =
-                new EventReportPayload.Builder().setReportId(eventReport.getId()).build().toJson();
+                new EventReportPayload.Builder()
+                        .setReportId(eventReport.getId())
+                        .setSourceEventId(eventReport.getSourceId())
+                        .build()
+                        .toJson();
 
         when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
         doReturn(HttpURLConnection.HTTP_OK)
@@ -162,11 +172,16 @@ public class EventReportingJobHandlerTest {
         EventReport eventReport =
                 new EventReport.Builder()
                         .setId("eventReportId")
+                        .setSourceId(1234L)
                         .setStatus(EventReport.Status.PENDING)
                         .setSourceDebugKey(SOURCE_DEBUG_KEY)
                         .build();
         JSONObject eventReportPayload =
-                new EventReportPayload.Builder().setReportId(eventReport.getId()).build().toJson();
+                new EventReportPayload.Builder()
+                        .setReportId(eventReport.getId())
+                        .setSourceEventId(eventReport.getSourceId())
+                        .build()
+                        .toJson();
 
         when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
         doReturn(HttpURLConnection.HTTP_OK)
@@ -193,12 +208,16 @@ public class EventReportingJobHandlerTest {
         EventReport eventReport =
                 new EventReport.Builder()
                         .setId("eventReportId")
+                        .setSourceId(1234L)
                         .setStatus(EventReport.Status.PENDING)
                         .setSourceDebugKey(null)
                         .setTriggerDebugKey(null)
                         .build();
         JSONObject eventReportPayload =
-                new EventReportPayload.Builder().setReportId(eventReport.getId()).build().toJson();
+                new EventReportPayload.Builder()
+                        .setReportId(eventReport.getId())
+                        .setSourceEventId(eventReport.getSourceId())
+                        .build().toJson();
 
         when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
         doReturn(HttpURLConnection.HTTP_OK)
@@ -224,10 +243,15 @@ public class EventReportingJobHandlerTest {
         EventReport eventReport =
                 new EventReport.Builder()
                         .setId("eventReportId")
+                        .setSourceId(1234L)
                         .setStatus(EventReport.Status.PENDING)
                         .build();
         JSONObject eventReportPayload =
-                new EventReportPayload.Builder().setReportId(eventReport.getId()).build().toJson();
+                new EventReportPayload.Builder()
+                        .setReportId(eventReport.getId())
+                        .setSourceEventId(eventReport.getSourceId())
+                        .build()
+                        .toJson();
 
         when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
         doReturn(HttpURLConnection.HTTP_BAD_REQUEST)
@@ -270,19 +294,29 @@ public class EventReportingJobHandlerTest {
         EventReport eventReport1 =
                 new EventReport.Builder()
                         .setId("eventReport1")
+                        .setSourceId(1234L)
                         .setStatus(EventReport.Status.PENDING)
                         .setReportTime(1000L)
                         .build();
         JSONObject eventReportPayload1 =
-                new EventReportPayload.Builder().setReportId(eventReport1.getId()).build().toJson();
+                new EventReportPayload.Builder()
+                        .setReportId(eventReport1.getId())
+                        .setSourceEventId(eventReport1.getSourceId())
+                        .build()
+                        .toJson();
         EventReport eventReport2 =
                 new EventReport.Builder()
                         .setId("eventReport2")
+                        .setSourceId(12345L)
                         .setStatus(EventReport.Status.PENDING)
                         .setReportTime(1100L)
                         .build();
         JSONObject eventReportPayload2 =
-                new EventReportPayload.Builder().setReportId(eventReport2.getId()).build().toJson();
+                new EventReportPayload.Builder()
+                        .setReportId(eventReport2.getId())
+                        .setSourceEventId(eventReport2.getSourceId())
+                        .build()
+                        .toJson();
 
         when(mMeasurementDao.getPendingEventReportIdsInWindow(1000, 1100))
                 .thenReturn(List.of(eventReport1.getId(), eventReport2.getId()));

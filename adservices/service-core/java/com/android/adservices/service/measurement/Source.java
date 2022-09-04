@@ -66,7 +66,7 @@ public class Source {
     public static final int DUAL_DESTINATION_IMPRESSION_NOISE_MULTIPLIER = 2;
 
     private String mId;
-    private long mEventId;
+    private long mEventId; // uint64 stored as long
     private Uri mPublisher;
     @EventSurfaceType private int mPublisherType;
     private Uri mAppDestination;
@@ -78,11 +78,11 @@ public class Source {
     @Status private int mStatus;
     private long mEventTime;
     private long mExpiryTime;
-    private List<Long> mDedupKeys;
+    private List<Long> mDedupKeys; // uint64s stored as longs
     @AttributionMode private int mAttributionMode;
     private long mInstallAttributionWindow;
     private long mInstallCooldownWindow;
-    private @Nullable Long mDebugKey;
+    private @Nullable Long mDebugKey; // uint64 stored as long
     private boolean mIsInstallAttributed;
     private String mAggregateFilterData;
     private String mAggregateSource;

@@ -29,25 +29,25 @@ import org.json.JSONObject;
 public final class EventReportPayload {
 
     private String mAttributionDestination;
-    private String mSourceEventId;
-    private String mTriggerData;
+    private Long mSourceEventId; // uint64 stored as long
+    @Nullable private Long mTriggerData; // uint64 stored as long
     private String mReportId;
     private String mSourceType;
     private double mRandomizedTriggerRate;
-    @Nullable private Long mSourceDebugKey;
-    @Nullable private Long mTriggerDebugKey;
+    @Nullable private Long mSourceDebugKey; // uint64 stored as long
+    @Nullable private Long mTriggerDebugKey; // uint64 stored as long
 
     private EventReportPayload() {};
 
     private EventReportPayload(EventReportPayload other) {
-        this.mAttributionDestination = other.mAttributionDestination;
-        this.mSourceEventId = other.mSourceEventId;
-        this.mTriggerData = other.mTriggerData;
-        this.mReportId = other.mReportId;
-        this.mSourceType = other.mSourceType;
-        this.mRandomizedTriggerRate = other.mRandomizedTriggerRate;
-        this.mSourceDebugKey = other.mSourceDebugKey;
-        this.mTriggerDebugKey = other.mTriggerDebugKey;
+        mAttributionDestination = other.mAttributionDestination;
+        mSourceEventId = other.mSourceEventId;
+        mTriggerData = other.mTriggerData;
+        mReportId = other.mReportId;
+        mSourceType = other.mSourceType;
+        mRandomizedTriggerRate = other.mRandomizedTriggerRate;
+        mSourceDebugKey = other.mSourceDebugKey;
+        mTriggerDebugKey = other.mTriggerDebugKey;
     }
 
     /**
@@ -56,17 +56,19 @@ public final class EventReportPayload {
     public JSONObject toJson() throws JSONException {
         JSONObject eventPayloadJson = new JSONObject();
 
-        eventPayloadJson.put("attribution_destination", this.mAttributionDestination);
-        eventPayloadJson.put("source_event_id", this.mSourceEventId);
-        eventPayloadJson.put("trigger_data", this.mTriggerData);
-        eventPayloadJson.put("report_id", this.mReportId);
-        eventPayloadJson.put("source_type", this.mSourceType);
-        eventPayloadJson.put("randomized_trigger_rate", this.mRandomizedTriggerRate);
+        eventPayloadJson.put("attribution_destination", mAttributionDestination);
+        eventPayloadJson.put("source_event_id", Long.toUnsignedString(mSourceEventId));
+        if (mTriggerData != null) {
+            eventPayloadJson.put("trigger_data", Long.toUnsignedString(mTriggerData));
+        }
+        eventPayloadJson.put("report_id", mReportId);
+        eventPayloadJson.put("source_type", mSourceType);
+        eventPayloadJson.put("randomized_trigger_rate", mRandomizedTriggerRate);
         if (mSourceDebugKey != null) {
-            eventPayloadJson.put("source_debug_key", Long.toUnsignedString(this.mSourceDebugKey));
+            eventPayloadJson.put("source_debug_key", Long.toUnsignedString(mSourceDebugKey));
         }
         if (mTriggerDebugKey != null) {
-            eventPayloadJson.put("trigger_debug_key", Long.toUnsignedString(this.mTriggerDebugKey));
+            eventPayloadJson.put("trigger_debug_key", Long.toUnsignedString(mTriggerDebugKey));
         }
 
         return eventPayloadJson;
@@ -93,7 +95,7 @@ public final class EventReportPayload {
         /**
          * 64-bit event id set on the attribution source.
          */
-        public @NonNull Builder setSourceEventId(@NonNull String sourceEventId) {
+        public @NonNull Builder setSourceEventId(@NonNull Long sourceEventId) {
             mBuilding.mSourceEventId = sourceEventId;
             return this;
         }
@@ -101,7 +103,7 @@ public final class EventReportPayload {
         /**
          * Course data set in the attribution trigger registration.
          */
-        public @NonNull Builder setTriggerData(@NonNull String triggerData) {
+        public @NonNull Builder setTriggerData(@NonNull Long triggerData) {
             mBuilding.mTriggerData = triggerData;
             return this;
         }
