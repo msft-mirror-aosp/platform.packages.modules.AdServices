@@ -164,12 +164,21 @@ public final class PhFlags implements Flags {
     static final String KEY_FOREGROUND_STATUS_LEVEL = "foreground_validation_status_level";
     static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE =
             "fledge_ad_selection_enforce_foreground_status_custom_audience";
+
+    // Topics invoking app status key.
     static final String KEY_ENFORCE_FOREGROUND_STATUS_TOPICS = "topics_enforce_foreground_status";
+
+    // AdId invoking app status key.
+    static final String KEY_ENFORCE_FOREGROUND_STATUS_ADID = "adid_enforce_foreground_status";
 
     // Fledge JS isolate setting keys
     static final String KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE =
             "fledge_js_isolate_enforce_max_heap_size";
     static final String KEY_ISOLATE_MAX_HEAP_SIZE_BYTES = "fledge_js_isolate_max_heap_size_bytes";
+
+    // AppSetId invoking app status key.
+    static final String KEY_ENFORCE_FOREGROUND_STATUS_APPSETID =
+            "appsetid_enforce_foreground_status";
 
     // MDD keys.
     static final String KEY_DOWNLOADER_CONNECTION_TIMEOUT_MS = "downloader_connection_timeout_ms";
@@ -1303,6 +1312,26 @@ public final class PhFlags implements Flags {
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_ENFORCE_FOREGROUND_STATUS_TOPICS,
                         /* defaultValue */ ENFORCE_FOREGROUND_STATUS_TOPICS));
+    }
+
+    @Override
+    public boolean getEnforceForegroundStatusForAdId() {
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(KEY_ENFORCE_FOREGROUND_STATUS_ADID),
+                /* defaultValue */ DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_ENFORCE_FOREGROUND_STATUS_ADID,
+                        /* defaultValue */ ENFORCE_FOREGROUND_STATUS_ADID));
+    }
+
+    @Override
+    public boolean getEnforceForegroundStatusForAppSetId() {
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(KEY_ENFORCE_FOREGROUND_STATUS_APPSETID),
+                /* defaultValue */ DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_ENFORCE_FOREGROUND_STATUS_APPSETID,
+                        /* defaultValue */ ENFORCE_FOREGROUND_STATUS_APPSETID));
     }
 
     @Override
