@@ -16,6 +16,7 @@
 
 package com.android.adservices.data.customaudience;
 
+import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
@@ -90,16 +91,26 @@ public abstract class CustomAudienceDao {
         Objects.requireNonNull(customAudience);
         Objects.requireNonNull(dailyUpdateUrl);
 
+        Instant eligibleUpdateTime;
+        if (customAudience.getUserBiddingSignals() == null
+                || customAudience.getTrustedBiddingData() == null
+                || customAudience.getAds() == null
+                || customAudience.getAds().isEmpty()) {
+            eligibleUpdateTime = Instant.EPOCH;
+        } else {
+            eligibleUpdateTime =
+                    DBCustomAudienceBackgroundFetchData
+                            .computeNextEligibleUpdateTimeAfterSuccessfulUpdate(
+                                    customAudience.getCreationTime());
+        }
+
         DBCustomAudienceBackgroundFetchData fetchData =
                 DBCustomAudienceBackgroundFetchData.builder()
                         .setOwner(customAudience.getOwner())
                         .setBuyer(customAudience.getBuyer())
                         .setName(customAudience.getName())
                         .setDailyUpdateUrl(dailyUpdateUrl)
-                        .setEligibleUpdateTime(
-                                DBCustomAudienceBackgroundFetchData
-                                        .computeNextEligibleUpdateTimeAfterSuccessfulUpdate(
-                                                customAudience.getCreationTime()))
+                        .setEligibleUpdateTime(eligibleUpdateTime)
                         .build();
 
         insertOrOverwriteCustomAudienceAndBackgroundFetchData(customAudience, fetchData);
@@ -186,7 +197,7 @@ public abstract class CustomAudienceDao {
             "SELECT EXISTS(SELECT 1 FROM custom_audience_overrides WHERE owner = :owner "
                     + "AND buyer = :buyer AND name = :name LIMIT 1)")
     public abstract boolean doesCustomAudienceOverrideExist(
-            @NonNull String owner, @NonNull String buyer, @NonNull String name);
+            @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name);
 
     /**
      * Get custom audience by its unique key.
@@ -197,7 +208,7 @@ public abstract class CustomAudienceDao {
     @Nullable
     @VisibleForTesting
     public abstract DBCustomAudience getCustomAudienceByPrimaryKey(
-            @NonNull String owner, @NonNull String buyer, @NonNull String name);
+            @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name);
 
     /**
      * Get custom audience background fetch data by its unique key.
@@ -211,7 +222,7 @@ public abstract class CustomAudienceDao {
     @VisibleForTesting
     public abstract DBCustomAudienceBackgroundFetchData
             getCustomAudienceBackgroundFetchDataByPrimaryKey(
-                    @NonNull String owner, @NonNull String buyer, @NonNull String name);
+                    @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name);
 
     /**
      * Get custom audience JS override by its unique key.
@@ -222,10 +233,9 @@ public abstract class CustomAudienceDao {
             "SELECT bidding_logic FROM custom_audience_overrides WHERE owner = :owner "
                     + "AND buyer = :buyer AND name = :name AND app_package_name= :appPackageName")
     @Nullable
-    @VisibleForTesting
     public abstract String getBiddingLogicUrlOverride(
             @NonNull String owner,
-            @NonNull String buyer,
+            @NonNull AdTechIdentifier buyer,
             @NonNull String name,
             @NonNull String appPackageName);
 
@@ -238,24 +248,23 @@ public abstract class CustomAudienceDao {
             "SELECT trusted_bidding_data FROM custom_audience_overrides WHERE owner = :owner "
                     + "AND buyer = :buyer AND name = :name AND app_package_name= :appPackageName")
     @Nullable
-    @VisibleForTesting
     public abstract String getTrustedBiddingDataOverride(
             @NonNull String owner,
-            @NonNull String buyer,
+            @NonNull AdTechIdentifier buyer,
             @NonNull String name,
             @NonNull String appPackageName);
 
     /** Delete the custom audience given owner, buyer, and name. */
     @Query("DELETE FROM custom_audience WHERE owner = :owner AND buyer = :buyer AND name = :name")
     protected abstract void deleteCustomAudienceByPrimaryKey(
-            @NonNull String owner, @NonNull String buyer, @NonNull String name);
+            @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name);
 
     /** Delete background fetch data for the custom audience given owner, buyer, and name. */
     @Query(
             "DELETE FROM custom_audience_background_fetch_data WHERE owner = :owner "
                     + "AND buyer = :buyer AND name = :name")
     protected abstract void deleteCustomAudienceBackgroundFetchDataByPrimaryKey(
-            @NonNull String owner, @NonNull String buyer, @NonNull String name);
+            @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name);
 
     /**
      * Delete all custom audience data corresponding to the given {@code owner}, {@code buyer}, and
@@ -263,7 +272,7 @@ public abstract class CustomAudienceDao {
      */
     @Transaction
     public void deleteAllCustomAudienceDataByPrimaryKey(
-            @NonNull String owner, @NonNull String buyer, @NonNull String name) {
+            @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name) {
         deleteCustomAudienceByPrimaryKey(owner, buyer, name);
         deleteCustomAudienceBackgroundFetchDataByPrimaryKey(owner, buyer, name);
     }
@@ -308,19 +317,94 @@ public abstract class CustomAudienceDao {
         return deleteAllExpiredCustomAudiences(expiryTime);
     }
 
+    /**
+     * Deletes ALL custom audiences from the table.
+     *
+     * <p>This method is not intended to be called on its own. Please use {@link
+     * #deleteAllCustomAudienceData()} instead.
+     */
+    @Query("DELETE FROM custom_audience")
+    protected abstract void deleteAllCustomAudiences();
+
+    /**
+     * Deletes ALL custom audience background fetch data from the table.
+     *
+     * <p>This method is not intended to be called on its own. Please use {@link
+     * #deleteAllCustomAudienceData()} instead.
+     */
+    @Query("DELETE FROM custom_audience_background_fetch_data")
+    protected abstract void deleteAllCustomAudienceBackgroundFetchData();
+
+    /**
+     * Deletes ALL custom audience overrides from the table.
+     *
+     * <p>This method is not intended to be called on its own. Please use {@link
+     * #deleteAllCustomAudienceData()} instead.
+     */
+    @Query("DELETE FROM custom_audience_overrides")
+    protected abstract void deleteAllCustomAudienceOverrides();
+
+    /** Deletes ALL custom audience data from the database in a single transaction. */
+    @Transaction
+    public void deleteAllCustomAudienceData() {
+        deleteAllCustomAudiences();
+        deleteAllCustomAudienceBackgroundFetchData();
+        deleteAllCustomAudienceOverrides();
+    }
+
+    /**
+     * Deletes all custom audiences belonging to the {@code owner} application from the table.
+     *
+     * <p>This method is not intended to be called on its own. Please use {@link
+     * #deleteCustomAudienceDataByOwner(String)} instead.
+     */
+    @Query("DELETE FROM custom_audience WHERE owner = :owner")
+    protected abstract void deleteCustomAudiencesByOwner(@NonNull String owner);
+
+    /**
+     * Deletes all custom audience background fetch data belonging to the {@code owner} application
+     * from the table.
+     *
+     * <p>This method is not intended to be called on its own. Please use {@link
+     * #deleteCustomAudienceDataByOwner(String)} instead.
+     */
+    @Query("DELETE FROM custom_audience_background_fetch_data WHERE owner = :owner")
+    protected abstract void deleteCustomAudienceBackgroundFetchDataByOwner(@NonNull String owner);
+
+    /**
+     * Deletes all custom audience overrides belonging to the {@code owner} application from the
+     * table.
+     *
+     * <p>This method is not intended to be called on its own. Please use {@link
+     * #deleteCustomAudienceDataByOwner(String)} instead.
+     */
+    @Query("DELETE FROM custom_audience_overrides WHERE owner = :owner")
+    protected abstract void deleteCustomAudienceOverridesByOwner(@NonNull String owner);
+
+    /**
+     * Deletes all custom audience data belonging to the {@code owner} application from the database
+     * in a single transaction.
+     */
+    @Transaction
+    public void deleteCustomAudienceDataByOwner(@NonNull String owner) {
+        deleteCustomAudiencesByOwner(owner);
+        deleteCustomAudienceBackgroundFetchDataByOwner(owner);
+        deleteCustomAudienceOverridesByOwner(owner);
+    }
+
     /** Clean up selected custom audience override data by its primary key */
     @Query(
             "DELETE FROM custom_audience_overrides WHERE owner = :owner AND buyer = :buyer "
                     + "AND name = :name AND app_package_name = :appPackageName")
     public abstract void removeCustomAudienceOverrideByPrimaryKeyAndPackageName(
             @NonNull String owner,
-            @NonNull String buyer,
+            @NonNull AdTechIdentifier buyer,
             @NonNull String name,
             @NonNull String appPackageName);
 
-    /** Clean up all custom audience override data */
+    /** Clean up all custom audience override data for the given package name. */
     @Query("DELETE FROM custom_audience_overrides WHERE app_package_name = :appPackageName")
-    public abstract void removeAllCustomAudienceOverrides(@NonNull String appPackageName);
+    public abstract void removeCustomAudienceOverridesByPackageName(@NonNull String appPackageName);
 
     /**
      * Fetch all the Custom Audience corresponding to the buyers
@@ -329,21 +413,15 @@ public abstract class CustomAudienceDao {
      * @param currentTime to compare against CA time values and find an active CA
      * @return All the Custom Audience that represent given buyers
      */
-    // TODO(229297645): replace the validation check with last update time within 48 hours with a
-    // value that is passed in by a P/H flag.
     @Query(
-            "SELECT * FROM custom_audience "
-                    + "WHERE buyer in (:buyers) "
-                    + "AND activation_time <= (:currentTime) "
-                    + "AND (:currentTime) < expiration_time "
-                    + "AND (last_ads_and_bidding_data_updated_time + 48 * 3600000) "
-                    + ">= (:currentTime) "
-                    + "AND user_bidding_signals IS NOT NULL "
-                    + "AND trusted_bidding_data_url IS NOT NULL "
-                    + "AND ads IS NOT NULL ")
+            "SELECT * FROM custom_audience WHERE buyer in (:buyers) AND activation_time <="
+                    + " (:currentTime) AND (:currentTime) < expiration_time AND"
+                    + " (last_ads_and_bidding_data_updated_time + (:activeWindowTimeMs)) >="
+                    + " (:currentTime) AND user_bidding_signals IS NOT NULL AND"
+                    + " trusted_bidding_data_url IS NOT NULL AND ads IS NOT NULL ")
     @Nullable
     public abstract List<DBCustomAudience> getActiveCustomAudienceByBuyers(
-            List<String> buyers, Instant currentTime);
+            List<AdTechIdentifier> buyers, Instant currentTime, long activeWindowTimeMs);
 
     /**
      * Gets up to {@code maxRowsReturned} rows of {@link DBCustomAudienceBackgroundFetchData} which

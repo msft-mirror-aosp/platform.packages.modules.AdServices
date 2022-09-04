@@ -51,7 +51,7 @@ public class CustomAudienceScoringSignalsArgument {
             String name, CustomAudienceSignals customAudienceSignals) throws JSONException {
         return recordArg(
                 name,
-                stringArg(BUYER_FIELD_NAME, customAudienceSignals.getBuyer()),
+                stringArg(BUYER_FIELD_NAME, customAudienceSignals.getBuyer().toString()),
                 stringArg(NAME_FIELD_NAME, customAudienceSignals.getName()));
     }
 

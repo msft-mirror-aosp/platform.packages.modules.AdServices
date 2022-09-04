@@ -18,6 +18,7 @@ package com.android.adservices.service.customaudience;
 
 import android.adservices.common.AdData;
 import android.adservices.common.AdDataFixture;
+import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
@@ -34,7 +35,9 @@ import com.android.adservices.service.common.ValidatorUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Locale;
 
 public class CustomAudienceValidatorTest {
     private static final AdTechIdentifier ANOTHER_BUYER = AdTechIdentifier.fromString("b.com");
@@ -49,7 +52,7 @@ public class CustomAudienceValidatorTest {
                 mValidator
                         .getValidationViolations(
                                 CustomAudienceFixture.getValidBuilderForBuyer(
-                                                CommonFixture.VALID_BUYER)
+                                                CommonFixture.VALID_BUYER_1)
                                         .build())
                         .isEmpty());
     }
@@ -60,7 +63,7 @@ public class CustomAudienceValidatorTest {
                 mValidator
                         .getValidationViolations(
                                 CustomAudienceFixture.getValidBuilderForBuyer(
-                                                CommonFixture.VALID_BUYER)
+                                                CommonFixture.VALID_BUYER_1)
                                         .setTrustedBiddingData(null)
                                         .setUserBiddingSignals(null)
                                         .build())
@@ -70,7 +73,7 @@ public class CustomAudienceValidatorTest {
     @Test
     public void testInvalidBuyer() {
         AdTechIdentifier buyerWithPath =
-                AdTechIdentifier.fromString(CommonFixture.VALID_BUYER.getStringForm() + "/path");
+                AdTechIdentifier.fromString(CommonFixture.VALID_BUYER_1.toString() + "/path");
         List<AdData> adDataList = AdDataFixture.getValidAdsByBuyer(buyerWithPath);
 
         ValidatorTestUtil.assertViolationContainsOnly(
@@ -86,51 +89,51 @@ public class CustomAudienceValidatorTest {
                         buyerWithPath,
                         ValidatorUtil.AD_TECH_ROLE_BUYER,
                         CustomAudienceValidator.DAILY_UPDATE_URI_FIELD_NAME,
-                        CommonFixture.VALID_BUYER),
+                        CommonFixture.VALID_BUYER_1),
                 String.format(
                         AdTechUriValidator.IDENTIFIER_AND_URL_ARE_INCONSISTENT,
                         ValidatorUtil.AD_TECH_ROLE_BUYER,
                         buyerWithPath,
                         ValidatorUtil.AD_TECH_ROLE_BUYER,
                         CustomAudienceValidator.BIDDING_LOGIC_URI_FIELD_NAME,
-                        CommonFixture.VALID_BUYER),
+                        CommonFixture.VALID_BUYER_1),
                 String.format(
                         AdTechUriValidator.IDENTIFIER_AND_URL_ARE_INCONSISTENT,
                         ValidatorUtil.AD_TECH_ROLE_BUYER,
                         buyerWithPath,
                         ValidatorUtil.AD_TECH_ROLE_BUYER,
                         TrustedBiddingDataValidator.TRUSTED_BIDDING_URI_FIELD_NAME,
-                        CommonFixture.VALID_BUYER),
+                        CommonFixture.VALID_BUYER_1),
                 String.format(
                         AdDataValidator.VIOLATION_FORMAT,
                         adDataList.get(0),
                         String.format(
                                 AdTechUriValidator.IDENTIFIER_AND_URL_ARE_INCONSISTENT,
                                 ValidatorUtil.AD_TECH_ROLE_BUYER,
-                                buyerWithPath.getStringForm(),
+                                buyerWithPath.toString(),
                                 ValidatorUtil.AD_TECH_ROLE_BUYER,
                                 AdDataValidator.RENDER_URI_FIELD_NAME,
-                                CommonFixture.VALID_BUYER)),
+                                CommonFixture.VALID_BUYER_1)),
                 String.format(
                         AdDataValidator.VIOLATION_FORMAT,
                         adDataList.get(1),
                         String.format(
                                 AdTechUriValidator.IDENTIFIER_AND_URL_ARE_INCONSISTENT,
                                 ValidatorUtil.AD_TECH_ROLE_BUYER,
-                                buyerWithPath.getStringForm(),
+                                buyerWithPath.toString(),
                                 ValidatorUtil.AD_TECH_ROLE_BUYER,
                                 AdDataValidator.RENDER_URI_FIELD_NAME,
-                                CommonFixture.VALID_BUYER)),
+                                CommonFixture.VALID_BUYER_1)),
                 String.format(
                         AdDataValidator.VIOLATION_FORMAT,
                         adDataList.get(2),
                         String.format(
                                 AdTechUriValidator.IDENTIFIER_AND_URL_ARE_INCONSISTENT,
                                 ValidatorUtil.AD_TECH_ROLE_BUYER,
-                                buyerWithPath.getStringForm(),
+                                buyerWithPath.toString(),
                                 ValidatorUtil.AD_TECH_ROLE_BUYER,
                                 AdDataValidator.RENDER_URI_FIELD_NAME,
-                                CommonFixture.VALID_BUYER)),
+                                CommonFixture.VALID_BUYER_1)),
                 String.format(
                         AdDataValidator.VIOLATION_FORMAT,
                         adDataList.get(3),
@@ -140,32 +143,32 @@ public class CustomAudienceValidatorTest {
                                 buyerWithPath,
                                 ValidatorUtil.AD_TECH_ROLE_BUYER,
                                 AdDataValidator.RENDER_URI_FIELD_NAME,
-                                CommonFixture.VALID_BUYER)));
+                                CommonFixture.VALID_BUYER_1)));
     }
 
     @Test
     public void testInvalidDailyUpdateUriAndBiddingLogicUri() {
         ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
-                                .setDailyUpdateUrl(
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+                                .setDailyUpdateUri(
                                         CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
                                                 ANOTHER_BUYER))
-                                .setBiddingLogicUrl(
+                                .setBiddingLogicUri(
                                         CustomAudienceFixture.getValidBiddingLogicUrlByBuyer(
                                                 ANOTHER_BUYER))
                                 .build()),
                 String.format(
                         AdTechUriValidator.IDENTIFIER_AND_URL_ARE_INCONSISTENT,
                         ValidatorUtil.AD_TECH_ROLE_BUYER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         ValidatorUtil.AD_TECH_ROLE_BUYER,
                         CustomAudienceValidator.DAILY_UPDATE_URI_FIELD_NAME,
                         ANOTHER_BUYER),
                 String.format(
                         AdTechUriValidator.IDENTIFIER_AND_URL_ARE_INCONSISTENT,
                         ValidatorUtil.AD_TECH_ROLE_BUYER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         ValidatorUtil.AD_TECH_ROLE_BUYER,
                         CustomAudienceValidator.BIDDING_LOGIC_URI_FIELD_NAME,
                         ANOTHER_BUYER));
@@ -175,7 +178,7 @@ public class CustomAudienceValidatorTest {
     public void testInvalidTrustedBiddingData() {
         ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .setTrustedBiddingData(
                                         TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(
                                                 ANOTHER_BUYER))
@@ -183,7 +186,7 @@ public class CustomAudienceValidatorTest {
                 String.format(
                         AdTechUriValidator.IDENTIFIER_AND_URL_ARE_INCONSISTENT,
                         ValidatorUtil.AD_TECH_ROLE_BUYER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         ValidatorUtil.AD_TECH_ROLE_BUYER,
                         TrustedBiddingDataValidator.TRUSTED_BIDDING_URI_FIELD_NAME,
                         ANOTHER_BUYER));
@@ -193,8 +196,9 @@ public class CustomAudienceValidatorTest {
     public void testInvalidUserBiddingSignals() {
         ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
-                                .setUserBiddingSignals("Not[A]VALID[JSON]")
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+                                .setUserBiddingSignals(
+                                        AdSelectionSignals.fromString("Not[A]VALID[JSON]"))
                                 .build()),
                 String.format(
                         JsonValidator.SHOULD_BE_A_VALID_JSON,
@@ -207,7 +211,7 @@ public class CustomAudienceValidatorTest {
 
         ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .setActivationTime(
                                         CustomAudienceFixture.INVALID_DELAYED_ACTIVATION_TIME)
                                 .build()),
@@ -226,7 +230,7 @@ public class CustomAudienceValidatorTest {
     public void testExpirationTimeBeforeNow() {
         ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .setExpirationTime(
                                         CustomAudienceFixture.INVALID_BEFORE_NOW_EXPIRATION_TIME)
                                 .build()),
@@ -239,7 +243,7 @@ public class CustomAudienceValidatorTest {
     public void testExpirationTimeBeforeActivation() {
         ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .setExpirationTime(
                                         CustomAudienceFixture
                                                 .INVALID_BEFORE_DELAYED_EXPIRATION_TIME)
@@ -263,19 +267,19 @@ public class CustomAudienceValidatorTest {
                 new AdData.Builder()
                         .setRenderUri(
                                 AdDataFixture.getValidRenderUrlByBuyer(
-                                        CommonFixture.VALID_BUYER, 2))
+                                        CommonFixture.VALID_BUYER_1, 2))
                         .setMetadata("not[valid]json")
                         .build();
         AdData validAdData =
                 new AdData.Builder()
                         .setRenderUri(
                                 AdDataFixture.getValidRenderUrlByBuyer(
-                                        CommonFixture.VALID_BUYER, 3))
+                                        CommonFixture.VALID_BUYER_1, 3))
                         .setMetadata("{\"a\":1}")
                         .build();
         ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .setAds(
                                         List.of(
                                                 invalidAdDataWithAnotherBuyer,
@@ -288,7 +292,7 @@ public class CustomAudienceValidatorTest {
                         String.format(
                                 AdTechUriValidator.IDENTIFIER_AND_URL_ARE_INCONSISTENT,
                                 ValidatorUtil.AD_TECH_ROLE_BUYER,
-                                CommonFixture.VALID_BUYER,
+                                CommonFixture.VALID_BUYER_1,
                                 ValidatorUtil.AD_TECH_ROLE_BUYER,
                                 AdDataValidator.RENDER_URI_FIELD_NAME,
                                 ANOTHER_BUYER)),
@@ -299,5 +303,24 @@ public class CustomAudienceValidatorTest {
                                 JsonValidator.SHOULD_BE_A_VALID_JSON,
                                 AdDataValidator.AD_DATA_CLASS_NAME,
                                 AdDataValidator.METADATA_FIELD_NAME)));
+    }
+
+    @Test
+    public void testNameTooLong() {
+        String tooLongName =
+                "This is a super long name.This is a super long name.This is a super long"
+                    + " name.This is a super long name.This is a super long name.This is a super"
+                    + " long name.This is a super long name.This is a super long name.This is a"
+                    + " super long name.This is a super long name.";
+        ValidatorTestUtil.assertViolationContainsOnly(
+                mValidator.getValidationViolations(
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+                                .setName(tooLongName)
+                                .build()),
+                String.format(
+                        Locale.getDefault(),
+                        CustomAudienceFieldSizeValidator.VIOLATION_NAME_TOO_LONG,
+                        CommonFixture.FLAGS_FOR_TEST.getFledgeCustomAudienceMaxNameSizeB(),
+                        tooLongName.getBytes(StandardCharsets.UTF_8).length));
     }
 }

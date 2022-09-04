@@ -44,27 +44,20 @@ public class WebSourceRegistrationRequestInternalTest {
     private static final Uri VERIFIED_DESTINATION = Uri.parse("https://verified-dest.com");
     private static final KeyEvent INPUT_KEY_EVENT =
             new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_1);
+    private static final long REQUEST_TIME = 10000L;
 
     private static final WebSourceParams SOURCE_REGISTRATION_1 =
-            new WebSourceParams.Builder()
-                    .setRegistrationUri(REGISTRATION_URI_1)
-                    .setAllowDebugKey(true)
-                    .build();
+            new WebSourceParams.Builder(REGISTRATION_URI_1).setDebugKeyAllowed(true).build();
 
     private static final WebSourceParams SOURCE_REGISTRATION_2 =
-            new WebSourceParams.Builder()
-                    .setRegistrationUri(REGISTRATION_URI_2)
-                    .setAllowDebugKey(false)
-                    .build();
+            new WebSourceParams.Builder(REGISTRATION_URI_2).setDebugKeyAllowed(false).build();
 
     private static final List<WebSourceParams> SOURCE_REGISTRATIONS =
             Arrays.asList(SOURCE_REGISTRATION_1, SOURCE_REGISTRATION_2);
 
     private static final WebSourceRegistrationRequest EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST =
-            new WebSourceRegistrationRequest.Builder()
-                    .setSourceParams(SOURCE_REGISTRATIONS)
-                    .setTopOriginUri(TOP_ORIGIN_URI)
-                    .setOsDestination(OS_DESTINATION_URI)
+            new WebSourceRegistrationRequest.Builder(SOURCE_REGISTRATIONS, TOP_ORIGIN_URI)
+                    .setAppDestination(OS_DESTINATION_URI)
                     .setWebDestination(WEB_DESTINATION_URI)
                     .setVerifiedDestination(VERIFIED_DESTINATION)
                     .setInputEvent(INPUT_KEY_EVENT)
@@ -90,17 +83,17 @@ public class WebSourceRegistrationRequestInternalTest {
         assertThrows(
                 NullPointerException.class,
                 () ->
-                        new WebSourceRegistrationRequestInternal.Builder()
-                                .setSourceRegistrationRequest(null)
-                                .setPackageName(CONTEXT.getAttributionSource().getPackageName())
+                        new WebSourceRegistrationRequestInternal.Builder(
+                                        null,
+                                        CONTEXT.getAttributionSource().getPackageName(),
+                                        REQUEST_TIME)
                                 .build());
 
         assertThrows(
                 NullPointerException.class,
                 () ->
-                        new WebSourceRegistrationRequestInternal.Builder()
-                                .setSourceRegistrationRequest(EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST)
-                                .setPackageName(null)
+                        new WebSourceRegistrationRequestInternal.Builder(
+                                        EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST, null, REQUEST_TIME)
                                 .build());
     }
 
@@ -124,9 +117,8 @@ public class WebSourceRegistrationRequestInternalTest {
     public void testHashCode_notEquals() {
         final WebSourceRegistrationRequestInternal request1 = createExampleRegistrationRequest();
         final WebSourceRegistrationRequestInternal request2 =
-                new WebSourceRegistrationRequestInternal.Builder()
-                        .setSourceRegistrationRequest(EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST)
-                        .setPackageName("com.foo")
+                new WebSourceRegistrationRequestInternal.Builder(
+                                EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST, "com.foo", REQUEST_TIME)
                         .build();
 
         final Set<WebSourceRegistrationRequestInternal> requestSet1 = Set.of(request1);
@@ -137,9 +129,10 @@ public class WebSourceRegistrationRequestInternalTest {
     }
 
     private WebSourceRegistrationRequestInternal createExampleRegistrationRequest() {
-        return new WebSourceRegistrationRequestInternal.Builder()
-                .setSourceRegistrationRequest(EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST)
-                .setPackageName(CONTEXT.getAttributionSource().getPackageName())
+        return new WebSourceRegistrationRequestInternal.Builder(
+                        EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST,
+                        CONTEXT.getAttributionSource().getPackageName(),
+                        REQUEST_TIME)
                 .build();
     }
 
@@ -151,7 +144,7 @@ public class WebSourceRegistrationRequestInternalTest {
     private void verifyExampleRegistration(WebSourceRegistrationRequest request) {
         assertEquals(SOURCE_REGISTRATIONS, request.getSourceParams());
         assertEquals(TOP_ORIGIN_URI, request.getTopOriginUri());
-        assertEquals(OS_DESTINATION_URI, request.getOsDestination());
+        assertEquals(OS_DESTINATION_URI, request.getAppDestination());
         assertEquals(WEB_DESTINATION_URI, request.getWebDestination());
         assertEquals(INPUT_KEY_EVENT.getAction(), ((KeyEvent) request.getInputEvent()).getAction());
         assertEquals(

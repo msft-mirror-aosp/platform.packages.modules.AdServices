@@ -16,25 +16,26 @@
 
 package com.android.sdksandboxcode_webview;
 
+import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
+import android.os.Binder;
 import android.os.Bundle;
 import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 public class SandboxedSdkWebViewProvider extends SandboxedSdkProvider {
     @Override
-    public void onLoadSdk(Bundle params, Executor executor, OnLoadSdkCallback callback) {
-        callback.onLoadSdkFinished(null);
+    public SandboxedSdk onLoadSdk(Bundle params) {
+        return new SandboxedSdk(new Binder());
     }
 
     @Override
-    public View getView(Context windowContext, Bundle params) {
+    public View getView(Context windowContext, Bundle params, int width, int height) {
         final CountDownLatch latch = new CountDownLatch(1);
         final TestWebView webview = new TestWebView();
         try {
@@ -45,9 +46,6 @@ public class SandboxedSdkWebViewProvider extends SandboxedSdkProvider {
             return null;
         }
     }
-
-    @Override
-    public void onDataReceived(Bundle data, DataReceivedCallback callback) {}
 
     private class TestWebView {
 

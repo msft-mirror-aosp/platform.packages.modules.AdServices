@@ -39,26 +39,22 @@ public class WebTriggerRegistrationRequestTest {
     private static final Uri TOP_ORIGIN_URI = Uri.parse("https://top-origin.com");
 
     private static final WebTriggerParams TRIGGER_REGISTRATION_1 =
-            new WebTriggerParams.Builder()
-                    .setRegistrationUri(REGISTRATION_URI_1)
-                    .setAllowDebugKey(true)
-                    .build();
+            new WebTriggerParams.Builder(REGISTRATION_URI_1).setDebugKeyAllowed(true).build();
 
     private static final WebTriggerParams TRIGGER_REGISTRATION_2 =
-            new WebTriggerParams.Builder()
-                    .setRegistrationUri(REGISTRATION_URI_2)
-                    .setAllowDebugKey(false)
-                    .build();
+            new WebTriggerParams.Builder(REGISTRATION_URI_2).setDebugKeyAllowed(false).build();
 
     private static final List<WebTriggerParams> TRIGGER_REGISTRATIONS =
             Arrays.asList(TRIGGER_REGISTRATION_1, TRIGGER_REGISTRATION_2);
 
+    private static final WebTriggerRegistrationRequest TRIGGER_REGISTRATION_REQUEST =
+            new WebTriggerRegistrationRequest.Builder(TRIGGER_REGISTRATIONS, TOP_ORIGIN_URI)
+                    .build();
+
     @Test
     public void testDefaults() throws Exception {
         WebTriggerRegistrationRequest request =
-                new WebTriggerRegistrationRequest.Builder()
-                        .setTriggerParams(TRIGGER_REGISTRATIONS)
-                        .setDestination(TOP_ORIGIN_URI)
+                new WebTriggerRegistrationRequest.Builder(TRIGGER_REGISTRATIONS, TOP_ORIGIN_URI)
                         .build();
 
         assertEquals(TRIGGER_REGISTRATIONS, request.getTriggerParams());
@@ -67,13 +63,13 @@ public class WebTriggerRegistrationRequestTest {
 
     @Test
     public void testCreationAttribution() {
-        verifyExampleRegistration(createExampleRegistrationRequest());
+        verifyExampleRegistration(TRIGGER_REGISTRATION_REQUEST);
     }
 
     @Test
     public void testParcelingAttribution() {
         Parcel p = Parcel.obtain();
-        createExampleRegistrationRequest().writeToParcel(p, 0);
+        TRIGGER_REGISTRATION_REQUEST.writeToParcel(p, 0);
         p.setDataPosition(0);
         verifyExampleRegistration(WebTriggerRegistrationRequest.CREATOR.createFromParcel(p));
         p.recycle();
@@ -82,19 +78,14 @@ public class WebTriggerRegistrationRequestTest {
     @Test
     public void build_withInvalidParams_fail() {
         assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        new WebTriggerRegistrationRequest.Builder()
-                                .setTriggerParams(null)
-                                .setDestination(TOP_ORIGIN_URI)
-                                .build());
+                NullPointerException.class,
+                () -> new WebTriggerRegistrationRequest.Builder(null, TOP_ORIGIN_URI).build());
 
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                        new WebTriggerRegistrationRequest.Builder()
-                                .setTriggerParams(Collections.emptyList())
-                                .setDestination(TOP_ORIGIN_URI)
+                        new WebTriggerRegistrationRequest.Builder(
+                                        Collections.emptyList(), TOP_ORIGIN_URI)
                                 .build());
     }
 
@@ -118,9 +109,8 @@ public class WebTriggerRegistrationRequestTest {
     public void testHashCode_notEquals() {
         final WebTriggerRegistrationRequest request1 = createExampleRegistrationRequest();
         final WebTriggerRegistrationRequest request2 =
-                new WebTriggerRegistrationRequest.Builder()
-                        .setTriggerParams(TRIGGER_REGISTRATIONS)
-                        .setDestination(Uri.parse("https://notEqual"))
+                new WebTriggerRegistrationRequest.Builder(
+                                TRIGGER_REGISTRATIONS, Uri.parse("https://notEqual"))
                         .build();
         final Set<WebTriggerRegistrationRequest> requestSet1 = Set.of(request1);
         final Set<WebTriggerRegistrationRequest> requestSet2 = Set.of(request2);
@@ -130,9 +120,7 @@ public class WebTriggerRegistrationRequestTest {
     }
 
     private WebTriggerRegistrationRequest createExampleRegistrationRequest() {
-        return new WebTriggerRegistrationRequest.Builder()
-                .setTriggerParams(TRIGGER_REGISTRATIONS)
-                .setDestination(TOP_ORIGIN_URI)
+        return new WebTriggerRegistrationRequest.Builder(TRIGGER_REGISTRATIONS, TOP_ORIGIN_URI)
                 .build();
     }
 

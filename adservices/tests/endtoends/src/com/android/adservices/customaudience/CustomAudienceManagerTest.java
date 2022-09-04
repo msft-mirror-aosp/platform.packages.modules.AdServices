@@ -18,6 +18,7 @@ package com.android.adservices.customaudience;
 
 import static org.junit.Assert.assertTrue;
 
+import android.Manifest;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudience;
@@ -26,13 +27,18 @@ import android.content.Context;
 import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.LogUtil;
+import com.android.adservices.service.PhFlagsFixture;
 import com.android.compatibility.common.util.ShellUtils;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeoutException;
 
 public class CustomAudienceManagerTest {
     private static final String TAG = "CustomAudienceManagerTest";
@@ -43,45 +49,58 @@ public class CustomAudienceManagerTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private static final CustomAudience CUSTOM_AUDIENCE =
-            CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER).build();
+            CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build();
+
+    private static final int DELAY_TO_AVOID_THROTTLE_MS = 1001;
+
+    @Before
+    public void setUp() throws TimeoutException {
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+        // Disable API throttling
+        PhFlagsFixture.overrideSdkRequestPermitsPerSecond(Integer.MAX_VALUE);
+        // This test is running in background
+        PhFlagsFixture.overrideForegroundStatusForFledgeCustomAudience(false);
+    }
 
     private void measureJoinCustomAudience(String label) throws Exception {
         Log.i(TAG, "Calling joinCustomAudience()");
+        Thread.sleep(DELAY_TO_AVOID_THROTTLE_MS);
         final long start = System.currentTimeMillis();
 
-        AdvertisingCustomAudienceClient client = new AdvertisingCustomAudienceClient.Builder()
-                .setContext(CONTEXT)
-                .setExecutor(CALLBACK_EXECUTOR)
-                .build();
+        AdvertisingCustomAudienceClient client =
+                new AdvertisingCustomAudienceClient.Builder()
+                        .setContext(CONTEXT)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
 
         client.joinCustomAudience(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .build())
                 .get();
 
         final long duration = System.currentTimeMillis() - start;
-        Log.i(TAG, "joinCustomAudience() took "
-                + duration + " ms: " + label);
+        Log.i(TAG, "joinCustomAudience() took " + duration + " ms: " + label);
     }
 
     private void measureLeaveCustomAudience(String label) throws Exception {
         Log.i(TAG, "Calling joinCustomAudience()");
         final long start = System.currentTimeMillis();
 
-        AdvertisingCustomAudienceClient client = new AdvertisingCustomAudienceClient.Builder()
-                .setContext(CONTEXT)
-                .setExecutor(CALLBACK_EXECUTOR)
-                .build();
+        AdvertisingCustomAudienceClient client =
+                new AdvertisingCustomAudienceClient.Builder()
+                        .setContext(CONTEXT)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
 
         client.leaveCustomAudience(
-                        CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER.getStringForm(),
+                        CommonFixture.VALID_BUYER_1,
                         CustomAudienceFixture.VALID_NAME)
                 .get();
 
         final long duration = System.currentTimeMillis() - start;
-        Log.i(TAG, "joinCustomAudience() took "
-                + duration + " ms: " + label);
+        Log.i(TAG, "joinCustomAudience() took " + duration + " ms: " + label);
     }
 
     @Test
@@ -93,22 +112,20 @@ public class CustomAudienceManagerTest {
     }
 
     /**
-     * Test to measure an "end-to-end" latency of registerSource()
-     * and registerTrigger, * when the service process isn't running.
-     * <p>
-     * To run this test alone, use the following command.
-     * {@code atest com.android.adservices.customaudience
+     * Test to measure an "end-to-end" latency of registerSource() and registerTrigger, * when the
+     * service process isn't running.
+     *
+     * <p>To run this test alone, use the following command. {@code atest
+     * com.android.adservices.customaudience
      * .CustomAudienceManagerTest#testCallCustomAudienceAPIAfterKillingService}
      *
-     * Note the performance varies depending on various factors (examples below),
-     * so getting the "real world number" is really hard.
-     * - What other processes are running, what they're doing, and the temperature of the
-     * device,
-     * which affects the CPU clock, disk I/O performance, etc...
-     * The busy the CPU is, the higher the clock gets, but that causes the CPU to become hot,
-     * which then will lower the CPU clock.
-     * For micro-benchmarks, we fixate to a lower clock speed to avoid fluctuation, which works
-     * okay for comparing multiple algorithms, but not a good way to get the "actual" number.
+     * <p>Note the performance varies depending on various factors (examples below), so getting the
+     * "real world number" is really hard. - What other processes are running, what they're doing,
+     * and the temperature of the device, which affects the CPU clock, disk I/O performance, etc...
+     * The busy the CPU is, the higher the clock gets, but that causes the CPU to become hot, which
+     * then will lower the CPU clock. For micro-benchmarks, we fixate to a lower clock speed to
+     * avoid fluctuation, which works okay for comparing multiple algorithms, but not a good way to
+     * get the "actual" number.
      */
     @Test
     public void testCallCustomAudienceAPIAfterKillingService() throws Exception {
@@ -128,6 +145,7 @@ public class CustomAudienceManagerTest {
                 succeed = true;
                 break;
             } catch (Exception exception) {
+                LogUtil.e(exception, "Failure testing Custom Audience API");
                 Thread.sleep(1000);
                 count++;
             }

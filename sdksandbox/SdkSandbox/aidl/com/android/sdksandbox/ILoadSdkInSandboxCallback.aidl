@@ -19,6 +19,9 @@ package com.android.sdksandbox;
 import android.os.Bundle;
 
 import com.android.sdksandbox.ISdkSandboxManagerToSdkSandboxCallback;
+import android.app.sdksandbox.SandboxedSdk;
+import android.app.sdksandbox.LoadSdkException;
+import com.android.sdksandbox.SandboxLatencyInfo;
 
 /** @hide */
 oneway interface ILoadSdkInSandboxCallback {
@@ -26,7 +29,9 @@ oneway interface ILoadSdkInSandboxCallback {
     const int LOAD_SDK_PROVIDER_INIT_ERROR = 2;
     const int LOAD_SDK_NOT_FOUND = 3;
     const int LOAD_SDK_INSTANTIATION_ERROR = 4;
+    const int LOAD_SDK_SDK_DEFINED_ERROR = 5;
+    const int LOAD_SDK_INTERNAL_ERROR = 6;
 
-    void onLoadSdkSuccess(in Bundle params, in ISdkSandboxManagerToSdkSandboxCallback callback);
-    void onLoadSdkError(int errorCode, in String errorMessage);
+    void onLoadSdkSuccess(in SandboxedSdk sandboxedSdk, in ISdkSandboxManagerToSdkSandboxCallback callback, in SandboxLatencyInfo sandboxLatencyInfo);
+    void onLoadSdkError(in LoadSdkException exception, in SandboxLatencyInfo sandboxLatencyInfo);
 }

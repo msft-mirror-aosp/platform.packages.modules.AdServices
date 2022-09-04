@@ -51,18 +51,16 @@ public final class RegisterWebTrigger implements Action {
                         regParamsJson.optString(TestFormatJsonMapping.ATTRIBUTION_SOURCE_KEY));
 
         WebTriggerRegistrationRequest registrationRequest =
-                new WebTriggerRegistrationRequest.Builder()
-                        .setTriggerParams(createTriggerParams(triggerParamsArray))
-                        .setDestination(
+                new WebTriggerRegistrationRequest.Builder(
+                                createTriggerParams(triggerParamsArray),
                                 Uri.parse(
                                         regParamsJson.getString(
                                                 TestFormatJsonMapping.TRIGGER_TOP_ORIGIN_URI_KEY)))
                         .build();
 
         mRegistrationRequest =
-                new WebTriggerRegistrationRequestInternal.Builder()
-                        .setTriggerRegistrationRequest(registrationRequest)
-                        .setPackageName(attributionSource.getPackageName())
+                new WebTriggerRegistrationRequestInternal.Builder(
+                                registrationRequest, attributionSource.getPackageName())
                         .build();
 
         mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);
@@ -81,12 +79,11 @@ public final class RegisterWebTrigger implements Action {
         for (int i = 0; i < triggerParamsArray.length(); i++) {
             JSONObject triggerParams = triggerParamsArray.getJSONObject(i);
             triggerParamsList.add(
-                    new WebTriggerParams.Builder()
-                            .setRegistrationUri(
+                    new WebTriggerParams.Builder(
                                     Uri.parse(
                                             triggerParams.getString(
                                                     TestFormatJsonMapping.REGISTRATION_URI_KEY)))
-                            .setAllowDebugKey(
+                            .setDebugKeyAllowed(
                                     triggerParams.optBoolean(
                                             TestFormatJsonMapping.DEBUG_KEY, false))
                             .build());

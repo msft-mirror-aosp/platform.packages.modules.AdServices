@@ -33,7 +33,7 @@ import org.junit.Test;
 
 public class CustomAudienceDevOverridesHelperTest {
     private CustomAudienceDao mCustomAudienceDao;
-    private static final String BUYER = "buyer";
+    private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("buyer");
     private static final String NAME = "name";
     private static final String APP_PACKAGE_NAME = "appPackageName";
     private static final String BIDDING_LOGIC_JS = "function test() { return \"hello world\"; }";
@@ -72,9 +72,7 @@ public class CustomAudienceDevOverridesHelperTest {
 
         assertThat(helper.getBiddingLogicOverride(APP_PACKAGE_NAME, BUYER, NAME))
                 .isEqualTo(BIDDING_LOGIC_JS);
-        assertThat(
-                        helper.getTrustedBiddingSignalsOverride(
-                                APP_PACKAGE_NAME, AdTechIdentifier.fromString(BUYER), NAME))
+        assertThat(helper.getTrustedBiddingSignalsOverride(APP_PACKAGE_NAME, BUYER, NAME))
                 .isEqualTo(AdSelectionSignals.fromString(TRUSTED_BIDDING_DATA));
     }
 
@@ -96,10 +94,7 @@ public class CustomAudienceDevOverridesHelperTest {
                 new CustomAudienceDevOverridesHelper(devContext, mCustomAudienceDao);
 
         assertThat(helper.getBiddingLogicOverride(APP_PACKAGE_NAME, BUYER, NAME)).isNull();
-        assertThat(
-                        helper.getTrustedBiddingSignalsOverride(
-                                APP_PACKAGE_NAME, AdTechIdentifier.fromString(BUYER), NAME))
-                .isNull();
+        assertThat(helper.getTrustedBiddingSignalsOverride(APP_PACKAGE_NAME, BUYER, NAME)).isNull();
     }
 
     @Test
@@ -124,9 +119,6 @@ public class CustomAudienceDevOverridesHelperTest {
                 new CustomAudienceDevOverridesHelper(devContext, mCustomAudienceDao);
 
         assertThat(helper.getBiddingLogicOverride(APP_PACKAGE_NAME, BUYER, NAME)).isNull();
-        assertThat(
-                        helper.getTrustedBiddingSignalsOverride(
-                                APP_PACKAGE_NAME, AdTechIdentifier.fromString(BUYER), NAME))
-                .isNull();
+        assertThat(helper.getTrustedBiddingSignalsOverride(APP_PACKAGE_NAME, BUYER, NAME)).isNull();
     }
 }

@@ -21,6 +21,7 @@ import android.adservices.customaudience.CustomAudience;
 import android.annotation.NonNull;
 import android.content.Context;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
@@ -35,7 +36,6 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * Worker for implementation of {@link CustomAudienceServiceImpl}.
@@ -103,12 +103,18 @@ public class CustomAudienceImpl {
      * Perform check on {@link CustomAudience} and write into db if it is valid.
      *
      * @param customAudience instance staged to be inserted.
+     * @param callerPackageName package name for the calling application, used as the owner
+     *     application identifier
      */
-    public void joinCustomAudience(@NonNull CustomAudience customAudience) {
+    public void joinCustomAudience(
+            @NonNull CustomAudience customAudience, @NonNull String callerPackageName) {
         Objects.requireNonNull(customAudience);
+        Objects.requireNonNull(callerPackageName);
         Instant currentTime = mClock.instant();
 
-        mCustomAudienceQuantityChecker.check(customAudience);
+        LogUtil.v("Validating CA limits");
+        mCustomAudienceQuantityChecker.check(customAudience, callerPackageName);
+        LogUtil.v("Validating CA");
         mCustomAudienceValidator.validate(customAudience);
 
         Duration customAudienceDefaultExpireIn =
@@ -116,10 +122,14 @@ public class CustomAudienceImpl {
 
         DBCustomAudience dbCustomAudience =
                 DBCustomAudience.fromServiceObject(
-                        customAudience, currentTime, customAudienceDefaultExpireIn);
+                        customAudience,
+                        callerPackageName,
+                        currentTime,
+                        customAudienceDefaultExpireIn);
 
+        LogUtil.v("Inserting CA in the DB");
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dbCustomAudience, customAudience.getDailyUpdateUrl());
+                dbCustomAudience, customAudience.getDailyUpdateUri());
     }
 
     /** Delete a custom audience with given key. No-op if not exist. */
@@ -129,10 +139,7 @@ public class CustomAudienceImpl {
         Objects.requireNonNull(buyer);
         Preconditions.checkStringNotEmpty(name);
 
-        mCustomAudienceDao.deleteAllCustomAudienceDataByPrimaryKey(
-                Optional.ofNullable(owner).orElse("not.implemented.yet"),
-                buyer.getStringForm(),
-                name);
+        mCustomAudienceDao.deleteAllCustomAudienceDataByPrimaryKey(owner, buyer, name);
     }
 
     /** Returns DAO to be used in {@link CustomAudienceServiceImpl} */

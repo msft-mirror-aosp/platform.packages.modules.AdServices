@@ -16,9 +16,11 @@
 
 package com.android.adservices.data.enrollment;
 
+import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
@@ -36,17 +38,17 @@ import java.util.Objects;
 public class EnrollmentDao implements IEnrollmentDao {
 
     private static EnrollmentDao sSingleton;
-
     private final DbHelper mDbHelper;
+    private final Context mContext;
+    @VisibleForTesting static final String ENROLLMENT_SHARED_PREF = "adservices_enrollment";
+    @VisibleForTesting static final String IS_SEEDED = "is_seeded";
 
-    /**
-     * It's only public to unit test.
-     *
-     * @param dbHelper The database to query
-     */
     @VisibleForTesting
-    public EnrollmentDao(DbHelper dbHelper) {
+    public EnrollmentDao(Context context, DbHelper dbHelper) {
+        mContext = context;
         mDbHelper = dbHelper;
+        // TODO: move this to be called when the enrollment download job is scheduled.
+        seed();
     }
 
     /** Returns an instance of the EnrollmentDao given a context. */
@@ -54,15 +56,46 @@ public class EnrollmentDao implements IEnrollmentDao {
     public static EnrollmentDao getInstance(@NonNull Context context) {
         synchronized (EnrollmentDao.class) {
             if (sSingleton == null) {
-                sSingleton = new EnrollmentDao(DbHelper.getInstance(context));
+                sSingleton = new EnrollmentDao(context, DbHelper.getInstance(context));
             }
             return sSingleton;
         }
     }
 
+    @VisibleForTesting
+    boolean isSeeded() {
+        SharedPreferences prefs =
+                mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
+        return prefs.getBoolean(IS_SEEDED, false);
+    }
+
+    private void seed() {
+        if (!isSeeded()) {
+            boolean success = true;
+            for (EnrollmentData enrollment : PreEnrolledAdTechForTest.getList()) {
+                success = success && insert(enrollment);
+            }
+
+            if (success) {
+                SharedPreferences prefs =
+                        mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
+                SharedPreferences.Editor edit = prefs.edit();
+                edit.putBoolean(IS_SEEDED, true);
+                edit.apply();
+            }
+        }
+    }
+
+    private void unSeed() {
+        SharedPreferences prefs =
+                mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
+        SharedPreferences.Editor edit = prefs.edit();
+        edit.putBoolean(IS_SEEDED, false);
+        edit.apply();
+    }
+
     @Override
     @Nullable
-    @VisibleForTesting
     public EnrollmentData getEnrollmentData(String enrollmentId) {
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         if (db == null) {
@@ -88,8 +121,7 @@ public class EnrollmentDao implements IEnrollmentDao {
 
     @Override
     @Nullable
-    @VisibleForTesting
-    public EnrollmentData getEnrollmentDataGivenUrl(String url) {
+    public EnrollmentData getEnrollmentDataFromMeasurementUrl(String url) {
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         if (db == null) {
             return null;
@@ -122,8 +154,41 @@ public class EnrollmentDao implements IEnrollmentDao {
 
     @Override
     @Nullable
-    @VisibleForTesting
-    public EnrollmentData getEnrollmentDataGivenSdkName(String sdkName) {
+    public EnrollmentData getEnrollmentDataForFledgeByAdTechIdentifier(
+            AdTechIdentifier adTechIdentifier) {
+        String adTechIdentifierString = adTechIdentifier.toString();
+        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
+        if (db == null) {
+            return null;
+        }
+        try (Cursor cursor =
+                db.query(
+                        EnrollmentTables.EnrollmentDataContract.TABLE,
+                        /*columns=*/ null,
+                        EnrollmentTables.EnrollmentDataContract
+                                        .REMARKETING_RESPONSE_BASED_REGISTRATION_URL
+                                + " LIKE '%"
+                                + adTechIdentifierString
+                                + "%'",
+                        null,
+                        /*groupBy=*/ null,
+                        /*having=*/ null,
+                        /*orderBy=*/ null,
+                        /*limit=*/ null)) {
+            if (cursor == null || cursor.getCount() != 1) {
+                return null;
+            }
+            cursor.moveToNext();
+            return SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
+        }
+    }
+
+    @Override
+    @Nullable
+    public EnrollmentData getEnrollmentDataFromSdkName(String sdkName) {
+        if (sdkName.contains(" ") || sdkName.contains(",")) {
+            return null;
+        }
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         if (db == null) {
             return null;
@@ -150,11 +215,10 @@ public class EnrollmentDao implements IEnrollmentDao {
     }
 
     @Override
-    @VisibleForTesting
-    public void insertEnrollmentData(EnrollmentData enrollmentData) {
+    public boolean insert(EnrollmentData enrollmentData) {
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
-            return;
+            return false;
         }
 
         ContentValues values = new ContentValues();
@@ -188,16 +252,17 @@ public class EnrollmentDao implements IEnrollmentDao {
                     values);
         } catch (SQLException e) {
             LogUtil.e("Failed to insert EnrollmentData. Exception : " + e.getMessage());
+            return false;
         }
+        return true;
     }
 
     @Override
-    @VisibleForTesting
-    public void deleteEnrollmentData(String enrollmentId) {
+    public boolean delete(String enrollmentId) {
         Objects.requireNonNull(enrollmentId);
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
-            return;
+            return false;
         }
         try {
             db.delete(
@@ -206,25 +271,31 @@ public class EnrollmentDao implements IEnrollmentDao {
                     new String[] {enrollmentId});
         } catch (SQLException e) {
             LogUtil.e("Failed to delete EnrollmentData." + e.getMessage());
+            return false;
         }
+        return true;
     }
 
     /** Deletes the whole EnrollmentData table. */
     @Override
-    public void deleteEnrollmentDataTable() {
+    public boolean deleteAll() {
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
-            return;
+            return false;
         }
 
+        boolean success = false;
         // Handle this in a transaction.
         db.beginTransaction();
         try {
             db.delete(EnrollmentTables.EnrollmentDataContract.TABLE, null, null);
+            success = true;
+            unSeed();
             // Mark the transaction successful.
             db.setTransactionSuccessful();
         } finally {
             db.endTransaction();
         }
+        return success;
     }
 }

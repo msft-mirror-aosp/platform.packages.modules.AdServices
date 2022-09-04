@@ -15,10 +15,17 @@
  */
 package com.android.adservices.measurement;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__MEASUREMENT;
+
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 
+import com.android.adservices.LogUtil;
+import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.MeasurementServiceImpl;
@@ -27,6 +34,7 @@ import com.android.adservices.service.measurement.reporting.AggregateFallbackRep
 import com.android.adservices.service.measurement.reporting.AggregateReportingJobService;
 import com.android.adservices.service.measurement.reporting.EventFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.EventReportingJobService;
+import com.android.adservices.service.stats.Clock;
 
 import java.util.Objects;
 
@@ -39,24 +47,54 @@ public class MeasurementService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        if (mMeasurementService == null) {
-            mMeasurementService =
-                    new MeasurementServiceImpl(this, ConsentManager.getInstance(this));
+        Flags flags = FlagsFactory.getFlags();
+        if (flags.getMeasurementKillSwitch()) {
+            LogUtil.e("Measurement API is disabled");
+            return;
         }
-        schedulePeriodicJobs();
-    }
 
-    private void schedulePeriodicJobs() {
-        AggregateReportingJobService.schedule(this);
-        AggregateFallbackReportingJobService.schedule(this);
-        AttributionJobService.schedule(this);
-        EventReportingJobService.schedule(this);
-        EventFallbackReportingJobService.schedule(this);
-        DeleteExpiredJobService.schedule(this);
+        if (mMeasurementService == null) {
+            final AppImportanceFilter appImportanceFilter =
+                    AppImportanceFilter.create(
+                            this,
+                            AD_SERVICES_API_CALLED__API_CLASS__MEASUREMENT,
+                            () -> FlagsFactory.getFlags().getForegroundStatuslLevelForValidation());
+
+            mMeasurementService =
+                    new MeasurementServiceImpl(
+                            this,
+                            Clock.SYSTEM_CLOCK,
+                            ConsentManager.getInstance(this),
+                            EnrollmentDao.getInstance(this),
+                            flags,
+                            appImportanceFilter);
+        }
+
+        if (hasUserConsent()) {
+            schedulePeriodicJobsIfNeeded();
+        }
     }
 
     @Override
     public IBinder onBind(Intent intent) {
+        if (FlagsFactory.getFlags().getMeasurementKillSwitch()) {
+            LogUtil.e("Measurement API is disabled");
+            // Return null so that clients can not bind to the service.
+            return null;
+        }
         return Objects.requireNonNull(mMeasurementService);
+    }
+
+    private boolean hasUserConsent() {
+        return ConsentManager.getInstance(this).getConsent(this.getPackageManager()).isGiven();
+    }
+
+    private void schedulePeriodicJobsIfNeeded() {
+        AggregateReportingJobService.scheduleIfNeeded(this, false);
+        AggregateFallbackReportingJobService.scheduleIfNeeded(this, false);
+        AttributionJobService.scheduleIfNeeded(this, false);
+        EventReportingJobService.scheduleIfNeeded(this, false);
+        EventFallbackReportingJobService.scheduleIfNeeded(this, false);
+        DeleteExpiredJobService.scheduleIfNeeded(this, false);
     }
 }

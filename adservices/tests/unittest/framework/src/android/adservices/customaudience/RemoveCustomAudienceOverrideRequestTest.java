@@ -23,7 +23,6 @@ import android.adservices.common.AdTechIdentifier;
 import org.junit.Test;
 
 public class RemoveCustomAudienceOverrideRequestTest {
-    private static final String OWNER = "owner";
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("buyer");
     private static final String NAME = "name";
 
@@ -31,13 +30,11 @@ public class RemoveCustomAudienceOverrideRequestTest {
     public void testBuildAddCustomAudienceOverrideRequest() {
         RemoveCustomAudienceOverrideRequest request =
                 new RemoveCustomAudienceOverrideRequest.Builder()
-                        .setOwner(OWNER)
-                        .setBuyer(BUYER.getStringForm())
+                        .setBuyer(BUYER)
                         .setName(NAME)
                         .build();
 
-        assertEquals(request.getOwner(), OWNER);
-        assertEquals(request.getBuyer(), BUYER.getStringForm());
+        assertEquals(request.getBuyer(), BUYER);
         assertEquals(request.getName(), NAME);
     }
 }

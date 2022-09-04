@@ -32,6 +32,7 @@ import android.content.Context;
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.service.exception.JSExecutionException;
+import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
 import com.android.adservices.service.js.JSScriptEngine;
 
@@ -47,6 +48,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -120,9 +122,16 @@ public class AdSelectionScriptEngine {
     private final JSScriptEngine mJsEngine;
     // Used for the Futures.transform calls to compose futures.
     private final Executor mExecutor = MoreExecutors.directExecutor();
+    private final Supplier<Boolean> mEnforceMaxHeapSizeFeatureSupplier;
+    private final Supplier<Long> mMaxHeapSizeBytesSupplier;
 
-    public AdSelectionScriptEngine(Context context) {
+    public AdSelectionScriptEngine(
+            Context context,
+            Supplier<Boolean> enforceMaxHeapSizeFeatureSupplier,
+            Supplier<Long> maxHeapSizeBytesSupplier) {
         mJsEngine = JSScriptEngine.getInstance(context);
+        mEnforceMaxHeapSizeFeatureSupplier = enforceMaxHeapSizeFeatureSupplier;
+        mMaxHeapSizeBytesSupplier = maxHeapSizeBytesSupplier;
     }
 
     /**
@@ -152,11 +161,14 @@ public class AdSelectionScriptEngine {
 
         ImmutableList<JSScriptArgument> signals =
                 ImmutableList.<JSScriptArgument>builder()
-                        .add(jsonArg(AUCTION_SIGNALS_ARG_NAME, auctionSignals))
-                        .add(jsonArg(PER_BUYER_SIGNALS_ARG_NAME, perBuyerSignals))
-                        .add(jsonArg(TRUSTED_BIDDING_SIGNALS_ARG_NAME, trustedBiddingSignals))
-                        .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals))
-                        .add(jsonArg(USER_SIGNALS_ARG_NAME, userSignals))
+                        .add(jsonArg(AUCTION_SIGNALS_ARG_NAME, auctionSignals.toString()))
+                        .add(jsonArg(PER_BUYER_SIGNALS_ARG_NAME, perBuyerSignals.toString()))
+                        .add(
+                                jsonArg(
+                                        TRUSTED_BIDDING_SIGNALS_ARG_NAME,
+                                        trustedBiddingSignals.toString()))
+                        .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals.toString()))
+                        .add(jsonArg(USER_SIGNALS_ARG_NAME, userSignals.toString()))
                         .add(
                                 CustomAudienceBiddingSignalsArgument.asScriptArgument(
                                         CUSTOM_AUDIENCE_SIGNALS_ARG_NAME, customAudienceSignals))
@@ -201,9 +213,12 @@ public class AdSelectionScriptEngine {
                         .add(
                                 AdSelectionConfigArgument.asScriptArgument(
                                         adSelectionConfig, AUCTION_CONFIG_ARG_NAME))
-                        .add(jsonArg(SELLER_SIGNALS_ARG_NAME, sellerSignals))
-                        .add(jsonArg(TRUSTED_SCORING_SIGNALS_ARG_NAME, trustedScoringSignals))
-                        .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals))
+                        .add(jsonArg(SELLER_SIGNALS_ARG_NAME, sellerSignals.toString()))
+                        .add(
+                                jsonArg(
+                                        TRUSTED_SCORING_SIGNALS_ARG_NAME,
+                                        trustedScoringSignals.toString()))
+                        .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals.toString()))
                         .add(
                                 CustomAudienceScoringSignalsArgument.asScriptArgument(
                                         CUSTOM_AUDIENCE_SIGNALS_ARG_NAME,
@@ -316,11 +331,17 @@ public class AdSelectionScriptEngine {
      */
     ListenableFuture<Boolean> validateAuctionScript(
             String jsScript, List<String> expectedFunctionsNames) {
+        IsolateSettings isolateSettings =
+                mEnforceMaxHeapSizeFeatureSupplier.get()
+                        ? IsolateSettings.forMaxHeapSizeEnforcementEnabled(
+                                mMaxHeapSizeBytesSupplier.get())
+                        : IsolateSettings.forMaxHeapSizeEnforcementDisabled();
         return transform(
                 mJsEngine.evaluate(
                         jsScript + "\n" + CHECK_FUNCTIONS_EXIST_JS,
                         ImmutableList.of(
-                                stringArrayArg(FUNCTION_NAMES_ARG_NAME, expectedFunctionsNames))),
+                                stringArrayArg(FUNCTION_NAMES_ARG_NAME, expectedFunctionsNames)),
+                        isolateSettings),
                 Boolean::parseBoolean,
                 mExecutor);
     }
@@ -377,6 +398,11 @@ public class AdSelectionScriptEngine {
         String argPassing =
                 allArgs.stream().map(JSScriptArgument::name).collect(Collectors.joining(", "));
 
+        IsolateSettings isolateSettings =
+                mEnforceMaxHeapSizeFeatureSupplier.get()
+                        ? IsolateSettings.forMaxHeapSizeEnforcementEnabled(
+                                mMaxHeapSizeBytesSupplier.get())
+                        : IsolateSettings.forMaxHeapSizeEnforcementDisabled();
         return mJsEngine.evaluate(
                 jsScript
                         + "\n"
@@ -384,7 +410,8 @@ public class AdSelectionScriptEngine {
                                 AD_SELECTION_BATCH_PROCESSING_JS,
                                 argPassing,
                                 auctionFunctionCallGenerator.apply(otherArgs)),
-                allArgs);
+                allArgs,
+                isolateSettings);
     }
 
     private String callGenerateBid(List<JSScriptArgument> otherArgs) {

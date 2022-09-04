@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertFalse;
@@ -24,6 +25,9 @@ import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdWithBid;
 import android.adservices.common.AdData;
 import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.CommonFixture;
+import android.adservices.customaudience.CustomAudienceFixture;
 import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
@@ -34,6 +38,7 @@ import androidx.test.filters.SmallTest;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.service.adselection.AdSelectionScriptEngine.AuctionScriptResult;
 import com.android.adservices.service.exception.JSExecutionException;
+import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
 
 import com.google.common.collect.ImmutableList;
@@ -61,15 +66,29 @@ public class AdSelectionScriptEngineTest {
     private static final Instant NOW = Instant.now();
     private static final CustomAudienceSignals CUSTOM_AUDIENCE_SIGNALS_1 =
             new CustomAudienceSignals(
-                    "owner", "buyer_1", "name", NOW, NOW.plus(Duration.ofDays(1)), "{}");
+                    CustomAudienceFixture.VALID_OWNER,
+                    CommonFixture.VALID_BUYER_1,
+                    "name",
+                    NOW,
+                    NOW.plus(Duration.ofDays(1)),
+                    AdSelectionSignals.EMPTY);
     private static final CustomAudienceSignals CUSTOM_AUDIENCE_SIGNALS_2 =
             new CustomAudienceSignals(
-                    "owner", "buyer_2", "name", NOW, NOW.plus(Duration.ofDays(1)), "{}");
+                    CustomAudienceFixture.VALID_OWNER,
+                    CommonFixture.VALID_BUYER_1,
+                    "name",
+                    NOW,
+                    NOW.plus(Duration.ofDays(1)),
+                    AdSelectionSignals.EMPTY);
     private static final List<CustomAudienceSignals> CUSTOM_AUDIENCE_SIGNALS_LIST =
             ImmutableList.of(CUSTOM_AUDIENCE_SIGNALS_1, CUSTOM_AUDIENCE_SIGNALS_2);
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(1);
+    IsolateSettings mIsolateSettings = IsolateSettings.forMaxHeapSizeEnforcementDisabled();
     private final AdSelectionScriptEngine mAdSelectionScriptEngine =
-            new AdSelectionScriptEngine(sContext);
+            new AdSelectionScriptEngine(
+                    sContext,
+                    () -> mIsolateSettings.getEnforceMaxHeapSizeFeature(),
+                    () -> mIsolateSettings.getMaxHeapSizeBytes());
 
     @Test
     public void testAuctionScriptIsInvalidIfRequiredFunctionDoesNotExist() throws Exception {
@@ -293,13 +312,13 @@ public class AdSelectionScriptEngineTest {
 
     private AdSelectionConfig anAdSelectionConfig() throws MalformedURLException {
         return new AdSelectionConfig.Builder()
-                .setSeller("www.mydomain.com")
+                .setSeller(AdTechIdentifier.fromString("www.mydomain.com"))
                 .setPerBuyerSignals(ImmutableMap.of())
-                .setContextualAds(ImmutableList.of())
                 .setDecisionLogicUri(Uri.parse("http://www.mydomain.com/updateAds"))
-                .setSellerSignals("{}")
-                .setCustomAudienceBuyers(ImmutableList.of("www.buyer.com"))
-                .setAdSelectionSignals("{}")
+                .setSellerSignals(AdSelectionSignals.EMPTY)
+                .setCustomAudienceBuyers(
+                        ImmutableList.of(AdTechIdentifier.fromString("www.buyer.com")))
+                .setAdSelectionSignals(AdSelectionSignals.EMPTY)
                 .setTrustedScoringSignalsUri(Uri.parse("https://kvtrusted.com/scoring_signals"))
                 .build();
     }

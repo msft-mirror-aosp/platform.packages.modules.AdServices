@@ -17,6 +17,7 @@
 package android.adservices.adselection;
 
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -26,12 +27,15 @@ import java.util.Objects;
 
 /**
  * Represent input params to the reportImpression API.
+ *
+ * @hide
  */
 public final class ReportImpressionInput implements Parcelable {
     private static final long UNSET = 0;
 
     private final long mAdSelectionId;
     @NonNull private final AdSelectionConfig mAdSelectionConfig;
+    @NonNull private final String mCallerPackageName;
 
     @NonNull
     public static final Parcelable.Creator<ReportImpressionInput> CREATOR =
@@ -46,11 +50,14 @@ public final class ReportImpressionInput implements Parcelable {
             };
 
     private ReportImpressionInput(
-            long adSelectionId, @NonNull AdSelectionConfig adSelectionConfig) {
+            long adSelectionId,
+            @NonNull AdSelectionConfig adSelectionConfig,
+            @NonNull String callerPackageName) {
         Objects.requireNonNull(adSelectionConfig);
 
         this.mAdSelectionId = adSelectionId;
         this.mAdSelectionConfig = adSelectionConfig;
+        this.mCallerPackageName = callerPackageName;
     }
 
     private ReportImpressionInput(@NonNull Parcel in) {
@@ -58,6 +65,7 @@ public final class ReportImpressionInput implements Parcelable {
 
         this.mAdSelectionId = in.readLong();
         this.mAdSelectionConfig = AdSelectionConfig.CREATOR.createFromParcel(in);
+        this.mCallerPackageName = in.readString();
     }
 
     @Override
@@ -71,6 +79,7 @@ public final class ReportImpressionInput implements Parcelable {
 
         dest.writeLong(mAdSelectionId);
         mAdSelectionConfig.writeToParcel(dest, flags);
+        dest.writeString(mCallerPackageName);
     }
 
     /**
@@ -90,12 +99,23 @@ public final class ReportImpressionInput implements Parcelable {
         return mAdSelectionConfig;
     }
 
-    /** Builder for {@link ReportImpressionInput} objects. */
+    /** @return the caller package name */
+    @NonNull
+    public String getCallerPackageName() {
+        return mCallerPackageName;
+    }
+
+    /**
+     * Builder for {@link ReportImpressionInput} objects.
+     *
+     * @hide
+     */
     public static final class Builder {
         // Initializing mAdSelectionId to start as -1, to differentiate it from the default
         // initialization of 0.
         private long mAdSelectionId = UNSET;
-        private AdSelectionConfig mAdSelectionConfig;
+        @Nullable private AdSelectionConfig mAdSelectionConfig;
+        private String mCallerPackageName;
 
         public Builder() {}
 
@@ -116,14 +136,26 @@ public final class ReportImpressionInput implements Parcelable {
             return this;
         }
 
+        /** Sets the caller's package name. */
+        @NonNull
+        public ReportImpressionInput.Builder setCallerPackageName(
+                @NonNull String callerPackageName) {
+            Objects.requireNonNull(callerPackageName);
+
+            this.mCallerPackageName = callerPackageName;
+            return this;
+        }
+
         /** Builds a {@link ReportImpressionInput} instance. */
         @NonNull
         public ReportImpressionInput build() {
             Objects.requireNonNull(mAdSelectionConfig);
+            Objects.requireNonNull(mCallerPackageName);
 
             Preconditions.checkArgument(mAdSelectionId != UNSET, "AdSelectionId not set");
 
-            return new ReportImpressionInput(mAdSelectionId, mAdSelectionConfig);
+            return new ReportImpressionInput(
+                    mAdSelectionId, mAdSelectionConfig, mCallerPackageName);
         }
     }
 }

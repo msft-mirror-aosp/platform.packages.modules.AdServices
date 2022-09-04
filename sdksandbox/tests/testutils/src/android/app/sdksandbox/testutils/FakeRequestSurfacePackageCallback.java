@@ -19,31 +19,33 @@ package android.app.sdksandbox.testutils;
 import static com.google.common.truth.Truth.assertThat;
 
 import android.app.sdksandbox.RequestSurfacePackageException;
-import android.app.sdksandbox.RequestSurfacePackageResponse;
+import android.os.Bundle;
 import android.os.OutcomeReceiver;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 public class FakeRequestSurfacePackageCallback
-        implements OutcomeReceiver<RequestSurfacePackageResponse, RequestSurfacePackageException> {
+        implements OutcomeReceiver<Bundle, RequestSurfacePackageException> {
     private CountDownLatch mSurfacePackageLatch = new CountDownLatch(1);
 
     private boolean mSurfacePackageSuccess;
 
     private int mErrorCode;
     private String mErrorMsg;
+    private Bundle mExtraErrorInformation;
 
     @Override
     public void onError(RequestSurfacePackageException exception) {
         mSurfacePackageSuccess = false;
         mErrorCode = exception.getRequestSurfacePackageErrorCode();
         mErrorMsg = exception.getMessage();
+        mExtraErrorInformation = exception.getExtraErrorInformation();
         mSurfacePackageLatch.countDown();
     }
 
     @Override
-    public void onResult(RequestSurfacePackageResponse response) {
+    public void onResult(Bundle response) {
         mSurfacePackageSuccess = true;
         mSurfacePackageLatch.countDown();
     }
@@ -51,6 +53,12 @@ public class FakeRequestSurfacePackageCallback
     public boolean isRequestSurfacePackageSuccessful() {
         waitForLatch(mSurfacePackageLatch);
         return mSurfacePackageSuccess;
+    }
+
+    public Bundle getExtraErrorInformation() {
+        waitForLatch(mSurfacePackageLatch);
+        assertThat(mSurfacePackageSuccess).isFalse();
+        return mExtraErrorInformation;
     }
 
     public int getSurfacePackageErrorCode() {

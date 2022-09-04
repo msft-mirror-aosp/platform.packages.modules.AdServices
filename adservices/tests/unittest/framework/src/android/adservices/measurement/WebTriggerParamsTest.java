@@ -17,7 +17,6 @@
 package android.adservices.measurement;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import android.net.Uri;
@@ -28,36 +27,27 @@ import org.junit.Test;
 /** Unit tests for {@link WebTriggerParams}. */
 public class WebTriggerParamsTest {
     private static final Uri REGISTRATION_URI = Uri.parse("http://foo.com");
+    private static final WebTriggerParams WEB_TRIGGER_PARAMS =
+            new WebTriggerParams.Builder(REGISTRATION_URI).setDebugKeyAllowed(true).build();
 
     private WebTriggerParams createExampleRegistration() {
-        return new WebTriggerParams.Builder()
-                .setRegistrationUri(REGISTRATION_URI)
-                .setAllowDebugKey(true)
-                .build();
+        return new WebTriggerParams.Builder(REGISTRATION_URI).setDebugKeyAllowed(true).build();
     }
 
-    void verifyExampleRegistration(WebTriggerParams request) {
+    private void verifyExampleRegistration(WebTriggerParams request) {
         assertEquals(REGISTRATION_URI, request.getRegistrationUri());
-        assertTrue(request.isAllowDebugKey());
+        assertTrue(request.isDebugKeyAllowed());
     }
 
     @Test
-    public void testDefaults() throws Exception {
-        WebTriggerParams webTriggerParams =
-                new WebTriggerParams.Builder().setRegistrationUri(REGISTRATION_URI).build();
-        assertEquals(REGISTRATION_URI, webTriggerParams.getRegistrationUri());
-        assertFalse(webTriggerParams.isAllowDebugKey());
+    public void testCreationAttribution() {
+        verifyExampleRegistration(WEB_TRIGGER_PARAMS);
     }
 
     @Test
-    public void testCreationAttribution() throws Exception {
-        verifyExampleRegistration(createExampleRegistration());
-    }
-
-    @Test
-    public void testParcelingAttribution() throws Exception {
+    public void testParcelingAttribution() {
         Parcel p = Parcel.obtain();
-        createExampleRegistration().writeToParcel(p, 0);
+        WEB_TRIGGER_PARAMS.writeToParcel(p, 0);
         p.setDataPosition(0);
         verifyExampleRegistration(WebTriggerParams.CREATOR.createFromParcel(p));
         p.recycle();

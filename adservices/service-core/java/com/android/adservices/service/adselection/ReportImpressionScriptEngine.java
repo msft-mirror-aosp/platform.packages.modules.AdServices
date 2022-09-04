@@ -28,7 +28,9 @@ import android.annotation.NonNull;
 import android.content.Context;
 import android.net.Uri;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
+import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.internal.util.Preconditions;
@@ -43,6 +45,7 @@ import org.json.JSONObject;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executor;
+import java.util.function.Supplier;
 
 /**
  * Utility class to execute a reporting script. Current implementation is thread safe but relies on
@@ -76,9 +79,16 @@ public class ReportImpressionScriptEngine {
     private final JSScriptEngine mJsEngine;
     // Used for the Futures.transform calls to compose futures.
     private final Executor mExecutor = MoreExecutors.directExecutor();
+    private final Supplier<Boolean> mEnforceMaxHeapSizeFeatureSupplier;
+    private final Supplier<Long> mMaxHeapSizeBytesSupplier;
 
-    public ReportImpressionScriptEngine(Context context) {
+    public ReportImpressionScriptEngine(
+            Context context,
+            Supplier<Boolean> enforceMaxHeapSizeFeatureSupplier,
+            Supplier<Long> maxHeapSizeBytesSupplier) {
         mJsEngine = JSScriptEngine.getInstance(context);
+        mEnforceMaxHeapSizeFeatureSupplier = enforceMaxHeapSizeFeatureSupplier;
+        mMaxHeapSizeBytesSupplier = maxHeapSizeBytesSupplier;
     }
 
     /**
@@ -105,6 +115,7 @@ public class ReportImpressionScriptEngine {
         Objects.requireNonNull(renderUrl);
         Objects.requireNonNull(contextualSignals);
 
+        LogUtil.v("Reporting result");
         ImmutableList<JSScriptArgument> arguments =
                 ImmutableList.<JSScriptArgument>builder()
                         .add(
@@ -112,7 +123,7 @@ public class ReportImpressionScriptEngine {
                                         adSelectionConfig, AD_SELECTION_CONFIG_ARG_NAME))
                         .add(stringArg(RENDER_URL_ARG_NAME, renderUrl.toString()))
                         .add(numericArg(BID_ARG_NAME, bid))
-                        .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals))
+                        .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals.toString()))
                         .build();
 
         return transform(
@@ -151,13 +162,14 @@ public class ReportImpressionScriptEngine {
         Objects.requireNonNull(signalsForBuyer);
         Objects.requireNonNull(contextualSignals);
         Objects.requireNonNull(customAudienceSignals);
+        LogUtil.v("Reporting win");
 
         ImmutableList<JSScriptArgument> arguments =
                 ImmutableList.<JSScriptArgument>builder()
-                        .add(jsonArg(AD_SELECTION_SIGNALS_ARG_NAME, adSelectionSignals))
-                        .add(jsonArg(PER_BUYER_SIGNALS_ARG_NAME, perBuyerSignals))
-                        .add(jsonArg(SIGNALS_FOR_BUYER_ARG_NAME, signalsForBuyer))
-                        .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals))
+                        .add(jsonArg(AD_SELECTION_SIGNALS_ARG_NAME, adSelectionSignals.toString()))
+                        .add(jsonArg(PER_BUYER_SIGNALS_ARG_NAME, perBuyerSignals.toString()))
+                        .add(jsonArg(SIGNALS_FOR_BUYER_ARG_NAME, signalsForBuyer.toString()))
+                        .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals.toString()))
                         .add(
                                 CustomAudienceBiddingSignalsArgument.asScriptArgument(
                                         CUSTOM_AUDIENCE_SIGNALS_ARG_NAME, customAudienceSignals))
@@ -171,6 +183,7 @@ public class ReportImpressionScriptEngine {
 
     ListenableFuture<ReportingScriptResult> runReportingScript(
             String jsScript, String functionName, List<JSScriptArgument> args) {
+        LogUtil.v("Executing reporting script");
         try {
             return transform(
                     callReportingScript(jsScript, functionName, args),
@@ -196,8 +209,12 @@ public class ReportImpressionScriptEngine {
     private ListenableFuture<String> callReportingScript(
             String jsScript, String functionName, List<JSScriptArgument> args)
             throws JSONException {
-
-        return mJsEngine.evaluate(jsScript, args, functionName);
+        IsolateSettings isolateSettings =
+                mEnforceMaxHeapSizeFeatureSupplier.get()
+                        ? IsolateSettings.forMaxHeapSizeEnforcementEnabled(
+                                mMaxHeapSizeBytesSupplier.get())
+                        : IsolateSettings.forMaxHeapSizeEnforcementDisabled();
+        return mJsEngine.evaluate(jsScript, args, functionName, isolateSettings);
     }
 
     /**
@@ -214,7 +231,7 @@ public class ReportImpressionScriptEngine {
     private SellerReportingResult handleReportResultOutput(
             @NonNull ReportingScriptResult reportResult) {
         Objects.requireNonNull(reportResult);
-
+        LogUtil.v("Handling reporting result output");
         Preconditions.checkState(
                 reportResult.status == JS_SCRIPT_STATUS_SUCCESS, "Report Result script failed!");
         Preconditions.checkState(
@@ -243,6 +260,7 @@ public class ReportImpressionScriptEngine {
     @NonNull
     private Uri handleReportWinOutput(@NonNull ReportingScriptResult reportResult) {
         Objects.requireNonNull(reportResult);
+        LogUtil.v("Handling report win output");
 
         Preconditions.checkState(
                 reportResult.status == JS_SCRIPT_STATUS_SUCCESS, "Report Result script failed!");
@@ -258,6 +276,7 @@ public class ReportImpressionScriptEngine {
     @NonNull
     private ReportingScriptResult parseReportingOutput(@NonNull String reportScriptResult) {
         Objects.requireNonNull(reportScriptResult);
+        LogUtil.v("Parsing Reporting output");
         try {
             Preconditions.checkState(
                     !reportScriptResult.equals("null"),

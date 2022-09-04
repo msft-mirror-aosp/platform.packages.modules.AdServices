@@ -31,13 +31,13 @@ public class TrustedBiddingDataFixture {
             Arrays.asList("example", "valid", "list", "of", "keys"));
 
     public static Uri getValidTrustedBiddingUrlByBuyer(AdTechIdentifier buyer) {
-        return CommonFixture.getUri(buyer.getStringForm(), VALID_TRUSTED_BIDDING_URL_PATH);
+        return CommonFixture.getUri(buyer, VALID_TRUSTED_BIDDING_URL_PATH);
     }
 
     public static TrustedBiddingData getValidTrustedBiddingDataByBuyer(AdTechIdentifier buyer) {
         return new TrustedBiddingData.Builder()
                 .setTrustedBiddingKeys(VALID_TRUSTED_BIDDING_KEYS)
-                .setTrustedBiddingUrl(getValidTrustedBiddingUrlByBuyer(buyer))
+                .setTrustedBiddingUri(getValidTrustedBiddingUrlByBuyer(buyer))
                 .build();
     }
 }

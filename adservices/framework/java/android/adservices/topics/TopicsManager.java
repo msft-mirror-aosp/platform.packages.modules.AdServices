@@ -15,22 +15,18 @@
  */
 package android.adservices.topics;
 
-import static com.android.adservices.ResultCode.RESULT_INTERNAL_ERROR;
-import static com.android.adservices.ResultCode.RESULT_INVALID_ARGUMENT;
-import static com.android.adservices.ResultCode.RESULT_IO_ERROR;
-import static com.android.adservices.ResultCode.RESULT_OK;
-import static com.android.adservices.ResultCode.RESULT_RATE_LIMIT_REACHED;
-import static com.android.adservices.ResultCode.RESULT_UNAUTHORIZED_CALL;
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_TOPICS;
+import static android.adservices.common.AdServicesStatusUtils.ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE;
 
-
+import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
-import android.adservices.exceptions.AdServicesException;
 import android.annotation.CallbackExecutor;
-import android.annotation.IntDef;
 import android.annotation.NonNull;
+import android.annotation.RequiresPermission;
 import android.annotation.TestApi;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
+import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 import android.os.SystemClock;
@@ -39,8 +35,6 @@ import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -49,34 +43,24 @@ import java.util.concurrent.Executor;
 /**
  * TopicsManager provides APIs for App and Ad-Sdks to get the user interest topics in a privacy
  * preserving way.
+ *
+ * <p>The instance of the {@link TopicsManager} can be obtained using {@link
+ * Context#getSystemService} and {@link TopicsManager} class.
  */
 public final class TopicsManager {
-
     /**
-     * Result codes from {@link TopicsManager#getTopics(GetTopicsRequest, Executor,
-     * OutcomeReceiver)} methods.
+     * Constant that represents the service name for {@link TopicsManager} to be used in {@link
+     * android.adservices.AdServicesFrameworkInitializer#registerServiceWrappers}
      *
      * @hide
      */
-    @IntDef(
-            value = {
-                RESULT_OK,
-                RESULT_INTERNAL_ERROR,
-                RESULT_INVALID_ARGUMENT,
-                RESULT_IO_ERROR,
-                RESULT_RATE_LIMIT_REACHED,
-            })
-
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface ResultCode {}
-
     public static final String TOPICS_SERVICE = "topics_service";
 
-    // Whent an app calls the Topics API directly, it sets the SDK name to empty string.
+    // When an app calls the Topics API directly, it sets the SDK name to empty string.
     static final String EMPTY_SDK = "";
 
-    private final Context mContext;
-    private final ServiceBinder<ITopicsService> mServiceBinder;
+    private Context mContext;
+    private ServiceBinder<ITopicsService> mServiceBinder;
 
     /**
      * Create TopicsManager
@@ -84,19 +68,36 @@ public final class TopicsManager {
      * @hide
      */
     public TopicsManager(Context context) {
+        // In case the TopicsManager is initiated from inside a sdk_sandbox process the fields
+        // will be immediately rewritten by the initialize method below.
+        initialize(context);
+    }
+
+    /**
+     * Initializes {@link TopicsManager} with the given {@code context}.
+     *
+     * <p>This method is called by the {@link SandboxedSdkContext} to propagate the correct context.
+     * For more information check the javadoc on the {@link
+     * android.app.sdksandbox.SdkSandboxSystemServiceRegistry}.
+     *
+     * @hide
+     * @see android.app.sdksandbox.SdkSandboxSystemServiceRegistry
+     */
+    public TopicsManager initialize(Context context) {
         mContext = context;
         mServiceBinder =
                 ServiceBinder.getServiceBinder(
                         context,
                         AdServicesCommon.ACTION_TOPICS_SERVICE,
                         ITopicsService.Stub::asInterface);
+        return this;
     }
 
     @NonNull
     private ITopicsService getService() {
         ITopicsService service = mServiceBinder.getService();
         if (service == null) {
-            throw new IllegalStateException("Unable to find the service");
+            throw new IllegalStateException(ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE);
         }
         return service;
     }
@@ -107,10 +108,12 @@ public final class TopicsManager {
      * @param getTopicsRequest The request for obtaining Topics.
      * @param executor The executor to run callback.
      * @param callback The callback that's called after topics are available or an error occurs.
-     * @throws Exception if caller is not authorized to call this API.
-     * @throws Exception if call results in an internal error.
+     * @throws SecurityException if caller is not authorized to call this API.
+     * @throws IllegalStateException if this API is not available.
+     * @throws LimitExceededException if rate limit was reached.
      */
     @NonNull
+    @RequiresPermission(ACCESS_ADSERVICES_TOPICS)
     public void getTopics(
             @NonNull GetTopicsRequest getTopicsRequest,
             @NonNull @CallbackExecutor Executor executor,
@@ -118,21 +121,41 @@ public final class TopicsManager {
         Objects.requireNonNull(getTopicsRequest);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(callback);
-        CallerMetadata callerMetadata = new CallerMetadata.Builder()
-                .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
-                .build();
+        CallerMetadata callerMetadata =
+                new CallerMetadata.Builder()
+                        .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
+                        .build();
         final ITopicsService service = getService();
-        String sdkName = getTopicsRequest.getSdkName();
+        String sdkName = getTopicsRequest.getAdsSdkName();
         String appPackageName = "";
         String sdkPackageName = "";
         // First check if context is SandboxedSdkContext or not
-        Context getTopicsRequestContext = getTopicsRequest.getContext();
-        if (getTopicsRequestContext instanceof SandboxedSdkContext) {
-            SandboxedSdkContext requestContext = ((SandboxedSdkContext) getTopicsRequestContext);
-            sdkPackageName = requestContext.getSdkPackageName();
-            appPackageName = requestContext.getClientPackageName();
-        } else { // This is the case without the Sandbox.
-            appPackageName = getTopicsRequestContext.getPackageName();
+        if (mContext instanceof SandboxedSdkContext) {
+            // This is the case with the Sandbox.
+            SandboxedSdkContext sandboxedSdkContext = ((SandboxedSdkContext) mContext);
+            sdkPackageName = sandboxedSdkContext.getSdkPackageName();
+            appPackageName = sandboxedSdkContext.getClientPackageName();
+
+            if (sdkName != null) {
+                throw new IllegalArgumentException(
+                        "When calling Topics API from Sandbox, caller should not set Ads Sdk Name");
+            }
+
+            String sdkNameFromSandboxedContext = sandboxedSdkContext.getSdkName();
+            if (null == sdkNameFromSandboxedContext || sdkNameFromSandboxedContext.isEmpty()) {
+                throw new IllegalArgumentException(
+                        "Sdk Name From SandboxedSdkContext should not be null or empty");
+            }
+
+            sdkName = sdkNameFromSandboxedContext;
+        } else {
+            // This is the case without the Sandbox.
+            if (null == sdkName) {
+                // When adsSdkName is not set, we assume the App calls the Topics API directly.
+                // We set the adsSdkName to empty to mark this.
+                sdkName = EMPTY_SDK;
+            }
+            appPackageName = mContext.getPackageName();
         }
         try {
             service.getTopics(
@@ -149,15 +172,14 @@ public final class TopicsManager {
                                     () -> {
                                         if (resultParcel.isSuccess()) {
                                             callback.onResult(
-                                                    new GetTopicsResponse.Builder()
-                                                            .setTopics(getTopicList(resultParcel))
+                                                    new GetTopicsResponse.Builder(
+                                                                    getTopicList(resultParcel))
                                                             .build());
                                         } else {
                                             // TODO: Errors should be returned in onFailure method.
                                             callback.onError(
-                                                    new AdServicesException(
-                                                            "Encountered failure during "
-                                                                    + "getTopics call."));
+                                                    AdServicesStatusUtils.asException(
+                                                            resultParcel));
                                         }
                                     });
                         }
@@ -165,22 +187,14 @@ public final class TopicsManager {
                         @Override
                         public void onFailure(int resultCode) {
                             executor.execute(
-                                    () -> {
-                                        if (resultCode == RESULT_UNAUTHORIZED_CALL) {
-                                            String errorMessage =
-                                                    "Got SecurityException, Caller is not"
-                                                            + " authorized to call this API.";
+                                    () ->
                                             callback.onError(
-                                                    new AdServicesException(
-                                                            errorMessage,
-                                                            new SecurityException(errorMessage)));
-                                        }
-                                    });
+                                                    AdServicesStatusUtils.asException(resultCode)));
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("RemoteException", e);
-            callback.onError(new AdServicesException("Internal Error", e));
+            LogUtil.e(e, "RemoteException");
+            callback.onError(e);
         }
     }
 

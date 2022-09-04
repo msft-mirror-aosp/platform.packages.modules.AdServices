@@ -16,9 +16,13 @@
 
 package com.android.adservices;
 
+import android.adservices.common.AdServicesStatusUtils;
+
 /**
  * Result Code for log call result.
+ *
  * @hide
+ * @deprecated use {@link AdServicesStatusUtils} instead.
  */
 public class ResultCode {
     /** Result code for success */

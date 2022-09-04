@@ -28,7 +28,6 @@ public class ConsentNotificationActivity extends FragmentActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         setContentView(R.layout.consent_notification_activity);
     }

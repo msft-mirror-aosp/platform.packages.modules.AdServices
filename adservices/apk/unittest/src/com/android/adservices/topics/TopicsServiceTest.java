@@ -18,19 +18,26 @@ package com.android.adservices.topics;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.spy;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.IBinder;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
+import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.topics.EpochJobService;
@@ -42,15 +49,22 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
+
+import java.util.function.Supplier;
 
 /** Unit test for {@link com.android.adservices.topics.TopicsService}. */
 public class TopicsServiceTest {
+    @SuppressWarnings("unused")
     private static final String TAG = "TopicsServiceTest";
 
-    @Mock Flags mMockFlags;
     @Mock TopicsWorker mMockTopicsWorker;
     @Mock ConsentManager mMockConsentManager;
-    @Mock AdServicesLoggerImpl mMockAdServicesLoggerImpl;
+    @Mock EnrollmentDao mMockEnrollmentDao;
+    @Mock AppImportanceFilter mMockAppImportanceFilter;
+    @Mock Flags mMockFlags;
+    @Mock AdServicesApiConsent mMockAdServicesApiConsent;
+    @Mock PackageManager mMockPackageManager;
 
     @Before
     public void setup() {
@@ -69,6 +83,9 @@ public class TopicsServiceTest {
                         .spyStatic(MaintenanceJobService.class)
                         .spyStatic(EpochJobService.class)
                         .spyStatic(MddJobService.class)
+                        .spyStatic(EnrollmentDao.class)
+                        .spyStatic(AppImportanceFilter.class)
+                        .strictness(Strictness.LENIENT)
                         .startMocking();
 
         try {
@@ -76,22 +93,39 @@ public class TopicsServiceTest {
             doReturn(false).when(mMockFlags).getTopicsKillSwitch();
 
             // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-            ExtendedMockito.doReturn(mMockFlags).when(() -> FlagsFactory.getFlags());
+            ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
             ExtendedMockito.doReturn(mMockTopicsWorker)
                     .when(() -> TopicsWorker.getInstance(any(Context.class)));
+
+            TopicsService spyTopicsService = spy(new TopicsService());
+            doReturn(mMockPackageManager).when(spyTopicsService).getPackageManager();
             ExtendedMockito.doReturn(mMockConsentManager)
                     .when(() -> ConsentManager.getInstance(any(Context.class)));
-            ExtendedMockito.doReturn(mMockAdServicesLoggerImpl)
-                    .when(() -> AdServicesLoggerImpl.getInstance());
-            ExtendedMockito.doNothing()
-                    .when(() -> MaintenanceJobService.schedule(any(Context.class)));
-            ExtendedMockito.doNothing().when(() -> EpochJobService.schedule(any(Context.class)));
-            ExtendedMockito.doNothing().when(() -> MddJobService.schedule(any(Context.class)));
+            doReturn(true).when(mMockAdServicesApiConsent).isGiven();
+            doReturn(mMockAdServicesApiConsent)
+                    .when(mMockConsentManager)
+                    .getConsent(mMockPackageManager);
 
-            TopicsService topicsService = new TopicsService();
-            topicsService.onCreate();
-            IBinder binder = topicsService.onBind(getIntentForTopicsService());
+            ExtendedMockito.doReturn(mMockEnrollmentDao)
+                    .when(() -> EnrollmentDao.getInstance(any(Context.class)));
+            ExtendedMockito.doReturn(mMockAppImportanceFilter)
+                    .when(
+                            () ->
+                                    AppImportanceFilter.create(
+                                            any(Context.class), anyInt(), any(Supplier.class)));
+            ExtendedMockito.doReturn(true)
+                    .when(
+                            () ->
+                                    MaintenanceJobService.scheduleIfNeeded(
+                                            any(Context.class), eq(false)));
+            ExtendedMockito.doReturn(true)
+                    .when(() -> EpochJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+            ExtendedMockito.doReturn(true)
+                    .when(() -> MddJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+
+            spyTopicsService.onCreate();
+            IBinder binder = spyTopicsService.onBind(getIntentForTopicsService());
             assertNotNull(binder);
         } finally {
             session.finishMocking();
@@ -109,7 +143,7 @@ public class TopicsServiceTest {
             doReturn(true).when(mMockFlags).getTopicsKillSwitch();
 
             // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-            ExtendedMockito.doReturn(mMockFlags).when(() -> FlagsFactory.getFlags());
+            ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
             TopicsService topicsService = new TopicsService();
             topicsService.onCreate();

@@ -40,24 +40,16 @@ public class WebTriggerRegistrationRequestInternalTest {
     private static final Uri TOP_ORIGIN_URI = Uri.parse("https://top-origin.com");
 
     private static final WebTriggerParams TRIGGER_REGISTRATION_1 =
-            new WebTriggerParams.Builder()
-                    .setRegistrationUri(REGISTRATION_URI_1)
-                    .setAllowDebugKey(true)
-                    .build();
+            new WebTriggerParams.Builder(REGISTRATION_URI_1).setDebugKeyAllowed(true).build();
 
     private static final WebTriggerParams TRIGGER_REGISTRATION_2 =
-            new WebTriggerParams.Builder()
-                    .setRegistrationUri(REGISTRATION_URI_2)
-                    .setAllowDebugKey(false)
-                    .build();
+            new WebTriggerParams.Builder(REGISTRATION_URI_2).setDebugKeyAllowed(false).build();
 
     private static final List<WebTriggerParams> TRIGGER_REGISTRATIONS =
             Arrays.asList(TRIGGER_REGISTRATION_1, TRIGGER_REGISTRATION_2);
 
     private static final WebTriggerRegistrationRequest EXAMPLE_EXTERNAL_TRIGGER_REG_REQUEST =
-            new WebTriggerRegistrationRequest.Builder()
-                    .setTriggerParams(TRIGGER_REGISTRATIONS)
-                    .setDestination(TOP_ORIGIN_URI)
+            new WebTriggerRegistrationRequest.Builder(TRIGGER_REGISTRATIONS, TOP_ORIGIN_URI)
                     .build();
 
     @Test
@@ -80,17 +72,15 @@ public class WebTriggerRegistrationRequestInternalTest {
         assertThrows(
                 NullPointerException.class,
                 () ->
-                        new WebTriggerRegistrationRequestInternal.Builder()
-                                .setTriggerRegistrationRequest(null)
-                                .setPackageName(CONTEXT.getAttributionSource().getPackageName())
+                        new WebTriggerRegistrationRequestInternal.Builder(
+                                        null, CONTEXT.getAttributionSource().getPackageName())
                                 .build());
 
         assertThrows(
                 NullPointerException.class,
                 () ->
-                        new WebTriggerRegistrationRequestInternal.Builder()
-                                .setTriggerRegistrationRequest(EXAMPLE_EXTERNAL_TRIGGER_REG_REQUEST)
-                                .setPackageName(null)
+                        new WebTriggerRegistrationRequestInternal.Builder(
+                                        EXAMPLE_EXTERNAL_TRIGGER_REG_REQUEST, null)
                                 .build());
     }
 
@@ -114,9 +104,8 @@ public class WebTriggerRegistrationRequestInternalTest {
     public void testHashCode_notEquals() {
         final WebTriggerRegistrationRequestInternal request1 = createExampleRegistrationRequest();
         final WebTriggerRegistrationRequestInternal request2 =
-                new WebTriggerRegistrationRequestInternal.Builder()
-                        .setTriggerRegistrationRequest(EXAMPLE_EXTERNAL_TRIGGER_REG_REQUEST)
-                        .setPackageName("com.foo")
+                new WebTriggerRegistrationRequestInternal.Builder(
+                                EXAMPLE_EXTERNAL_TRIGGER_REG_REQUEST, "com.foo")
                         .build();
         final Set<WebTriggerRegistrationRequestInternal> requestSet1 = Set.of(request1);
         final Set<WebTriggerRegistrationRequestInternal> requestSet2 = Set.of(request2);
@@ -126,9 +115,9 @@ public class WebTriggerRegistrationRequestInternalTest {
     }
 
     private WebTriggerRegistrationRequestInternal createExampleRegistrationRequest() {
-        return new WebTriggerRegistrationRequestInternal.Builder()
-                .setTriggerRegistrationRequest(EXAMPLE_EXTERNAL_TRIGGER_REG_REQUEST)
-                .setPackageName(CONTEXT.getAttributionSource().getPackageName())
+        return new WebTriggerRegistrationRequestInternal.Builder(
+                        EXAMPLE_EXTERNAL_TRIGGER_REG_REQUEST,
+                        CONTEXT.getAttributionSource().getPackageName())
                 .build();
     }
 

@@ -17,13 +17,18 @@
 package com.android.adservices.common;
 
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdServicesCommonServiceImpl;
+import com.android.adservices.service.common.AdServicesSyncUtil;
+import com.android.adservices.ui.notifications.ConsentNotificationTrigger;
 
 import java.util.Objects;
+import java.util.function.BiConsumer;
 
 /** Common service for work that applies to all PPAPIs. */
 public class AdServicesCommonService extends Service {
@@ -37,6 +42,26 @@ public class AdServicesCommonService extends Service {
         if (mAdServicesCommonService == null) {
             mAdServicesCommonService =
                     new AdServicesCommonServiceImpl(this, FlagsFactory.getFlags());
+        }
+        LogUtil.i("created adservices common service");
+        try {
+            AdServicesSyncUtil.getInstance()
+                    .register(
+                            new BiConsumer<Context, Boolean>() {
+                                @Override
+                                public void accept(
+                                        Context context, Boolean shouldDisplayEuNotification) {
+                                    LogUtil.i(
+                                            "running trigger command with "
+                                                    + shouldDisplayEuNotification);
+                                    ConsentNotificationTrigger.showConsentNotification(
+                                            context, shouldDisplayEuNotification);
+                                }
+                            });
+        } catch (Exception e) {
+            LogUtil.e(
+                    "getting exception when register consumer in AdServicesSyncUtil of "
+                            + e.getMessage());
         }
     }
 

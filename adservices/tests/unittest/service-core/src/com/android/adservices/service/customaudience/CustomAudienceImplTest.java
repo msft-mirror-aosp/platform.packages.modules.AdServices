@@ -41,10 +41,10 @@ import java.time.Clock;
 @RunWith(MockitoJUnitRunner.class)
 public class CustomAudienceImplTest {
     private static final CustomAudience VALID_CUSTOM_AUDIENCE =
-            CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER).build();
+            CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build();
 
     private static final DBCustomAudience VALID_DB_CUSTOM_AUDIENCE =
-            DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER).build();
+            DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1).build();
 
     @Mock
     private CustomAudienceDao mCustomAudienceDao;
@@ -70,15 +70,16 @@ public class CustomAudienceImplTest {
 
         when(mClock.instant()).thenReturn(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
 
-        mImpl.joinCustomAudience(VALID_CUSTOM_AUDIENCE);
+        mImpl.joinCustomAudience(VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER);
 
         verify(mCustomAudienceDao)
                 .insertOrOverwriteCustomAudience(
                         VALID_DB_CUSTOM_AUDIENCE,
                         CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
-                                CommonFixture.VALID_BUYER));
+                                CommonFixture.VALID_BUYER_1));
         verify(mClock).instant();
-        verify(mCustomAudienceQuantityChecker).check(VALID_CUSTOM_AUDIENCE);
+        verify(mCustomAudienceQuantityChecker)
+                .check(VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER);
         verify(mCustomAudienceValidator).validate(VALID_CUSTOM_AUDIENCE);
         verifyNoMoreInteractions(mClock, mCustomAudienceDao, mCustomAudienceValidator);
     }
@@ -87,13 +88,13 @@ public class CustomAudienceImplTest {
     public void testLeaveCustomAudience_runNormally() {
         mImpl.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
-                CommonFixture.VALID_BUYER,
+                CommonFixture.VALID_BUYER_1,
                 CustomAudienceFixture.VALID_NAME);
 
         verify(mCustomAudienceDao)
                 .deleteAllCustomAudienceDataByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER.getStringForm(),
+                        CommonFixture.VALID_BUYER_1,
                         CustomAudienceFixture.VALID_NAME);
 
         verifyNoMoreInteractions(

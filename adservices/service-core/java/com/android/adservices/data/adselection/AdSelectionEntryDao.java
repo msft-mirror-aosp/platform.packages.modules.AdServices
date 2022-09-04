@@ -22,18 +22,14 @@ import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 
-import com.android.internal.annotations.VisibleForTesting;
-
 import java.time.Instant;
 import java.util.List;
 
 /**
  * Data Access Object interface for access to the local AdSelection data storage.
  *
- * <p>Annotation will generate Room based SQLite Dao implementation. TODO(b/228114258) Add unit
- * tests
+ * <p>Annotation will generate Room based SQLite Dao implementation.
  */
-// TODO (b/229660121): Ad unit tests for this class
 @Dao
 public interface AdSelectionEntryDao {
     /**
@@ -152,7 +148,6 @@ public interface AdSelectionEntryDao {
             "SELECT decision_logic FROM ad_selection_overrides WHERE ad_selection_config_id ="
                     + " :adSelectionConfigId AND app_package_name = :appPackageName")
     @Nullable
-    @VisibleForTesting
     String getDecisionLogicOverride(String adSelectionConfigId, String appPackageName);
 
     /**
@@ -166,7 +161,6 @@ public interface AdSelectionEntryDao {
                     + " ad_selection_config_id = :adSelectionConfigId AND app_package_name ="
                     + " :appPackageName")
     @Nullable
-    @VisibleForTesting
     String getTrustedScoringSignalsOverride(String adSelectionConfigId, String appPackageName);
 
     /**
@@ -214,4 +208,20 @@ public interface AdSelectionEntryDao {
     /** Clean up all ad selection override data */
     @Query("DELETE FROM ad_selection_overrides WHERE  app_package_name = :appPackageName")
     void removeAllAdSelectionOverrides(String appPackageName);
+
+    /**
+     * Checks if there is a row in the ad selection data with the unique combination of
+     * ad_selection_id and caller_package_name
+     *
+     * @param adSelectionId which is the key to query the corresponding ad selection data.
+     * @param callerPackageName the caller's package name, to be verified against the
+     *     calling_package_name that exists in the ad_selection_entry
+     * @return true if row exists, false otherwise
+     */
+    @Query(
+            "SELECT EXISTS(SELECT 1 FROM ad_selection WHERE ad_selection_id = :adSelectionId"
+                    + " AND caller_package_name = :callerPackageName LIMIT"
+                    + " 1)")
+    boolean doesAdSelectionMatchingCallerPackageNameExist(
+            long adSelectionId, String callerPackageName);
 }

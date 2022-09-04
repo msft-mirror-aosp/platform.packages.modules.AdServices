@@ -39,6 +39,12 @@ android_test {
         "general-tests",
         "mts-adservices"
     ],
+    data: [
+        // Sample App will be installed and uninstalled in the test.
+        ":CtsSampleTopicsApp1",
+    ],
+    // To fix Pre-submit warning, suggested by farivar@
+    javacflags: ["-parameters"],
     sdk_version: "module_current",
     test_mainline_modules: ["com.google.android.adservices.apex"],
 }

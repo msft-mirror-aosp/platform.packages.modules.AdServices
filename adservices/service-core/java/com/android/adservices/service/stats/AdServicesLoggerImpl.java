@@ -51,6 +51,11 @@ public class AdServicesLoggerImpl implements AdServicesLogger {
     }
 
     @Override
+    public void logUIStats(UIStats uiStats) {
+        StatsdAdServicesLogger.getInstance().logUIStats(uiStats);
+    }
+
+    @Override
     public void logFledgeApiCallStats(int apiName, int resultCode) {
         // TODO(b/233628316): Implement latency measurement
         logApiCallStats(

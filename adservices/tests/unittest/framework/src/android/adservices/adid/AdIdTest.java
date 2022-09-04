@@ -31,5 +31,11 @@ public final class AdIdTest {
         // Validate the returned response is same to what we created
         assertEquals("TEST_ADID", response.getAdId());
         assertEquals(true, response.isLimitAdTrackingEnabled());
+
+        assertEquals(true, response.equals(new AdId("TEST_ADID", true)));
+        assertEquals(false, response.equals(new AdId("TEST_ADID", false)));
+        assertEquals(false, response.equals("TEST_ADID"));
+
+        assertEquals(true, response.hashCode() == new AdId("TEST_ADID", true).hashCode());
     }
 }
