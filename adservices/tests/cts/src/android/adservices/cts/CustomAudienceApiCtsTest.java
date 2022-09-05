@@ -118,7 +118,7 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
                         () ->
                                 mClient.joinCustomAudience(
                                                 CustomAudienceFixture.getValidBuilderForBuyer(
-                                                                CommonFixture.VALID_BUYER_1)
+                                                                CommonFixture.NOT_ENROLLED_BUYER)
                                                         .build())
                                         .get());
         assertThat(exception).hasCauseThat().isInstanceOf(SecurityException.class);
@@ -328,7 +328,7 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
                         ExecutionException.class,
                         () ->
                                 mClient.leaveCustomAudience(
-                                                CommonFixture.VALID_BUYER_1,
+                                                CommonFixture.NOT_ENROLLED_BUYER,
                                                 CustomAudienceFixture.VALID_NAME)
                                         .get());
         assertThat(exception).hasCauseThat().isInstanceOf(SecurityException.class);

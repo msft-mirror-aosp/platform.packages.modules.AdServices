@@ -71,8 +71,10 @@ import java.util.concurrent.TimeoutException;
 public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     // Time allowed by current test setup for APIs to respond
     private static final int API_RESPONSE_TIMEOUT_SECONDS = 5;
-    // This is used to check actual API timeout conditions
-    private static final int API_RESPONSE_LONGER_TIMEOUT_SECONDS = 10;
+
+    // This is used to check actual API timeout conditions; note that the default overall timeout
+    // for ad selection is 10 seconds
+    private static final int API_RESPONSE_LONGER_TIMEOUT_SECONDS = 12;
 
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
@@ -801,15 +803,22 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest2)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        // Ad Selection will fail due to scoring logic not found
+        // Ad Selection will fail due to scoring logic not found, because the URL that is used to
+        // fetch scoring logic does not exist
         Exception selectAdsException =
                 assertThrows(
                         ExecutionException.class,
                         () ->
                                 mAdSelectionClient
                                         .selectAds(AD_SELECTION_CONFIG)
-                                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS));
-        assertThat(selectAdsException.getCause()).isInstanceOf(IllegalStateException.class);
+                                        .get(
+                                                API_RESPONSE_LONGER_TIMEOUT_SECONDS,
+                                                TimeUnit.SECONDS));
+        // Sometimes a 400 status code is returned (ISE) instead of the network fetch timing out
+        assertThat(
+                        selectAdsException.getCause() instanceof TimeoutException
+                                || selectAdsException.getCause() instanceof IllegalStateException)
+                .isTrue();
     }
 
     @Test
