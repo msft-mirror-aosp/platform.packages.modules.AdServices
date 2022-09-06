@@ -18,6 +18,7 @@ package com.android.adservices.appsetid;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
@@ -44,7 +45,10 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.function.Supplier;
+
 /** Unit test for {@link com.android.adservices.appsetid.AppSetIdService}. */
 public class AppSetIdServiceTest {
     private static final String TAG = "AppSetIdServiceTest";
@@ -93,6 +97,10 @@ public class AppSetIdServiceTest {
             spyAppSetIdService.onCreate();
             IBinder binder = spyAppSetIdService.onBind(getIntentForAppSetIdService());
             assertNotNull(binder);
+
+            final StringWriter writer = new StringWriter();
+            spyAppSetIdService.dump(null, new PrintWriter(writer), null);
+            assertTrue(writer.toString().contains("nothing to dump"));
         } finally {
             session.finishMocking();
         }

@@ -18,6 +18,7 @@ package com.android.adservices.adid;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
@@ -44,6 +45,8 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.function.Supplier;
 
 /** Unit test for {@link com.android.adservices.adid.AdIdService}. */
@@ -96,6 +99,10 @@ public class AdIdServiceTest {
             spyAdIdService.onCreate();
             IBinder binder = spyAdIdService.onBind(getIntentForAdIdService());
             assertNotNull(binder);
+
+            final StringWriter writer = new StringWriter();
+            spyAdIdService.dump(null, new PrintWriter(writer), null);
+            assertTrue(writer.toString().contains("nothing to dump"));
         } finally {
             session.finishMocking();
         }
