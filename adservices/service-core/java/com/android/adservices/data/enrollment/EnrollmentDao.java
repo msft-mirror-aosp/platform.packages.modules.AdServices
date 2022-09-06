@@ -113,6 +113,7 @@ public class EnrollmentDao implements IEnrollmentDao {
                         /*orderBy=*/ null,
                         /*limit=*/ null)) {
             if (cursor == null || cursor.getCount() == 0) {
+                LogUtil.d("Failed to match enrollment for enrollment ID \"%s\"", enrollmentId);
                 return null;
             }
             cursor.moveToNext();
@@ -146,6 +147,7 @@ public class EnrollmentDao implements IEnrollmentDao {
                         /*orderBy=*/ null,
                         /*limit=*/ null)) {
             if (cursor == null || cursor.getCount() == 0) {
+                LogUtil.d("Failed to match enrollment for url \"%s\"", url);
                 return null;
             }
             cursor.moveToNext();
@@ -177,6 +179,9 @@ public class EnrollmentDao implements IEnrollmentDao {
                         /*orderBy=*/ null,
                         /*limit=*/ null)) {
             if (cursor == null || cursor.getCount() <= 0) {
+                LogUtil.d(
+                        "Failed to match enrollment for ad tech identifier \"%s\"",
+                        adTechIdentifierString);
                 return null;
             }
 
@@ -237,6 +242,7 @@ public class EnrollmentDao implements IEnrollmentDao {
                         /*orderBy=*/ null,
                         /*limit=*/ null)) {
             if (cursor == null || cursor.getCount() == 0) {
+                LogUtil.d("Failed to match enrollment for sdk \"%s\"", sdkName);
                 return null;
             }
             cursor.moveToNext();

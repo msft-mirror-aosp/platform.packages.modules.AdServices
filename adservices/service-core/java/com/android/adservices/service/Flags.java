@@ -1057,18 +1057,11 @@ public interface Flags extends Dumpable {
         return SDK_REQUEST_PERMITS_PER_SECOND;
     }
 
-    // TODO(b/238924460): Enable by default after enrollment process is open.
-    /**
-     * Once the enrollment process is open, this should be false by default, such that enrollment is
-     * always enforced, unless there are bugs with enrollment. Disabling enforcement for now since
-     * we don't want to block alpha testing while the enrollment process is being set up.
-     */
-    boolean DISABLE_TOPICS_ENROLLMENT_CHECK = true;
+    // Flags for ad tech enrollment enforcement
 
-    boolean DISABLE_FLEDGE_ENROLLMENT_CHECK = true; // By default, enrollment check is disabled
-
-    // TODO(b/243025320): Enable by default after enrollment process is open.
-    boolean DISABLE_MEASUREMENT_ENROLLMENT_CHECK = true;
+    boolean DISABLE_TOPICS_ENROLLMENT_CHECK = false;
+    boolean DISABLE_FLEDGE_ENROLLMENT_CHECK = false;
+    boolean DISABLE_MEASUREMENT_ENROLLMENT_CHECK = false;
 
     /** @return {@code true} if the Topics API should disable the ad tech enrollment check */
     default boolean isDisableTopicsEnrollmentCheck() {
@@ -1080,6 +1073,7 @@ public interface Flags extends Dumpable {
         return DISABLE_FLEDGE_ENROLLMENT_CHECK;
     }
 
+    /** @return {@code true} if the Measurement APIs should disable the ad tech enrollment check */
     default boolean isDisableMeasurementEnrollmentCheck() {
         return DISABLE_MEASUREMENT_ENROLLMENT_CHECK;
     }

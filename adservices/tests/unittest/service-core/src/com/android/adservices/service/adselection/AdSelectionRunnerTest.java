@@ -145,6 +145,11 @@ public class AdSelectionRunnerTest {
                 public long getAdSelectionOverallTimeoutMs() {
                     return 300;
                 }
+
+                @Override
+                public boolean getDisableFledgeEnrollmentCheck() {
+                    return true;
+                }
             };
     private Context mContext = ApplicationProvider.getApplicationContext();
     private AdServicesHttpsClient mAdServicesHttpsClient;
@@ -673,6 +678,11 @@ public class AdSelectionRunnerTest {
                     @Override
                     public boolean getEnforceForegroundStatusForFledgeRunAdSelection() {
                         return false;
+                    }
+
+                    @Override
+                    public boolean getDisableFledgeEnrollmentCheck() {
+                        return true;
                     }
                 };
 
@@ -1426,6 +1436,11 @@ public class AdSelectionRunnerTest {
                     @Override
                     public long getAdSelectionOverallTimeoutMs() {
                         return 100;
+                    }
+
+                    @Override
+                    public boolean getDisableFledgeEnrollmentCheck() {
+                        return true;
                     }
                 };
 
