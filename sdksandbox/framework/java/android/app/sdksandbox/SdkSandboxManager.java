@@ -39,6 +39,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Executor;
 
 /**
@@ -214,8 +215,8 @@ public final class SdkSandboxManager {
 
     /** @hide */
     public SdkSandboxManager(@NonNull Context context, @NonNull ISdkSandboxManager binder) {
-        mContext = context;
-        mService = binder;
+        mContext = Objects.requireNonNull(context, "context should not be null");
+        mService = Objects.requireNonNull(binder, "binder should not be null");
     }
 
     /**
@@ -254,12 +255,8 @@ public final class SdkSandboxManager {
     public void addSdkSandboxProcessDeathCallback(
             @NonNull @CallbackExecutor Executor callbackExecutor,
             @NonNull SdkSandboxProcessDeathCallback callback) {
-        if (callbackExecutor == null) {
-            throw new IllegalArgumentException("executor cannot be null");
-        }
-        if (callback == null) {
-            throw new IllegalArgumentException("callback cannot be null");
-        }
+        Objects.requireNonNull(callbackExecutor, "callbackExecutor should not be null");
+        Objects.requireNonNull(callback, "callback should not be null");
 
         synchronized (mLifecycleCallbacks) {
             final SdkSandboxProcessDeathCallbackProxy callbackProxy =
@@ -287,6 +284,7 @@ public final class SdkSandboxManager {
      */
     public void removeSdkSandboxProcessDeathCallback(
             @NonNull SdkSandboxProcessDeathCallback callback) {
+        Objects.requireNonNull(callback, "callback should not be null");
         synchronized (mLifecycleCallbacks) {
             for (int i = mLifecycleCallbacks.size() - 1; i >= 0; i--) {
                 final SdkSandboxProcessDeathCallbackProxy callbackProxy =
@@ -335,6 +333,10 @@ public final class SdkSandboxManager {
             @NonNull Bundle params,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<SandboxedSdk, LoadSdkException> receiver) {
+        Objects.requireNonNull(sdkName, "sdkName should not be null");
+        Objects.requireNonNull(params, "params should not be null");
+        Objects.requireNonNull(executor, "executor should not be null");
+        Objects.requireNonNull(receiver, "receiver should not be null");
         final LoadSdkReceiverProxy callbackProxy =
                 new LoadSdkReceiverProxy(executor, receiver, mService);
         try {
@@ -379,6 +381,7 @@ public final class SdkSandboxManager {
      * @throws IllegalArgumentException if the SDK is not loaded.
      */
     public void unloadSdk(@NonNull String sdkName) {
+        Objects.requireNonNull(sdkName, "sdkName should not be null");
         try {
             mService.unloadSdk(
                     mContext.getPackageName(),
@@ -426,6 +429,10 @@ public final class SdkSandboxManager {
             @NonNull Bundle params,
             @NonNull @CallbackExecutor Executor callbackExecutor,
             @NonNull OutcomeReceiver<Bundle, RequestSurfacePackageException> receiver) {
+        Objects.requireNonNull(sdkName, "sdkName should not be null");
+        Objects.requireNonNull(params, "params should not be null");
+        Objects.requireNonNull(callbackExecutor, "callbackExecutor should not be null");
+        Objects.requireNonNull(receiver, "receiver should not be null");
         try {
             int width = params.getInt(EXTRA_WIDTH_IN_PIXELS, -1); // -1 means invalid width
             if (width <= 0) {
