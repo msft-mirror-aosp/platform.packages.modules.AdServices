@@ -1252,6 +1252,10 @@ public final class PhFlags implements Flags {
 
     @Override
     public boolean getAdServicesEnabled() {
+        // if the global kill switch is enabled, feature should be disabled.
+        if (getGlobalKillSwitch()) {
+            return false;
+        }
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getBoolean(
                 DeviceConfig.NAMESPACE_ADSERVICES,
