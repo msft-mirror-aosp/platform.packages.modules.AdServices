@@ -67,6 +67,7 @@ public class SandboxedSdkContextUnitTest {
         mSandboxedSdkContext =
                 new SandboxedSdkContext(
                         InstrumentationRegistry.getContext(),
+                        getClass().getClassLoader(),
                         CLIENT_PACKAGE_NAME,
                         info,
                         SDK_NAME,
@@ -117,6 +118,11 @@ public class SandboxedSdkContextUnitTest {
     }
 
     @Test
+    public void testClassLoader() {
+        assertThat(mSandboxedSdkContext.getClassLoader()).isEqualTo(getClass().getClassLoader());
+    }
+
+    @Test
     public void testGetDataDir_CredentialEncrypted() throws Exception {
         assertThat(mSandboxedSdkContext.getDataDir().toString()).isEqualTo(SDK_CE_DATA_DIR);
 
@@ -153,6 +159,7 @@ public class SandboxedSdkContextUnitTest {
         SandboxedSdkContext sandboxedSdkContext =
                 new SandboxedSdkContext(
                         testContext,
+                        getClass().getClassLoader(),
                         CLIENT_PACKAGE_NAME,
                         info,
                         SDK_NAME,
@@ -179,6 +186,7 @@ public class SandboxedSdkContextUnitTest {
         SandboxedSdkContext sandboxedSdkContext =
                 new SandboxedSdkContext(
                         testContext,
+                        getClass().getClassLoader(),
                         CLIENT_PACKAGE_NAME,
                         info,
                         SDK_NAME,
@@ -204,6 +212,7 @@ public class SandboxedSdkContextUnitTest {
                 new SandboxedSdkContext(
                         InstrumentationRegistry.getContext()
                                 .createCredentialProtectedStorageContext(),
+                        getClass().getClassLoader(),
                         CLIENT_PACKAGE_NAME,
                         info,
                         SDK_NAME,
@@ -213,6 +222,7 @@ public class SandboxedSdkContextUnitTest {
                 new SandboxedSdkContext(
                         InstrumentationRegistry.getContext()
                                 .createCredentialProtectedStorageContext(),
+                        getClass().getClassLoader(),
                         CLIENT_PACKAGE_NAME,
                         info,
                         SDK_NAME,

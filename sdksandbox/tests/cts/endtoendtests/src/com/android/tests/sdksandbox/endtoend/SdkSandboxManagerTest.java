@@ -98,6 +98,17 @@ public class SdkSandboxManagerTest {
     }
 
     @Test
+    public void loadSdkAndCheckClassloader() {
+        final String sdkName = "com.android.loadSdkAndCheckClassloader";
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        assertNotNull(callback.getSandboxedSdk());
+        assertNotNull(callback.getSandboxedSdk().getInterface());
+        mSdkSandboxManager.unloadSdk(sdkName);
+    }
+
+    @Test
     public void retryLoadSameSdkShouldFail() {
         final String sdkName = "com.android.loadSdkSuccessfullySdkProviderTwo";
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();

@@ -61,6 +61,7 @@ public class MeasurementManagerSandboxCtsTest {
     protected static final Context sSandboxedSdkContext =
             new SandboxedSdkContext(
                     /* baseContext = */ sContext,
+                    /* classLoader = */ sContext.getClassLoader(),
                     /* clientPackageName = */ sContext.getPackageName(),
                     /* info = */ new ApplicationInfo(),
                     /* sdkName = */ "sdkName",

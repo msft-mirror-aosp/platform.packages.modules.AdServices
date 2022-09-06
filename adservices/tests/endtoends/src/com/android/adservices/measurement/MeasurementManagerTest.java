@@ -60,6 +60,7 @@ public class MeasurementManagerTest {
     private static final SandboxedSdkContext sSandboxedSdkContext =
             new SandboxedSdkContext(
                     sContext,
+                    sContext.getClassLoader(),
                     CLIENT_PACKAGE_NAME,
                     new ApplicationInfo(),
                     "sdkName",

@@ -46,11 +46,10 @@ import android.webkit.WebView;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 
-import dalvik.system.DexClassLoader;
+import dalvik.system.PathClassLoader;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.Objects;
 
@@ -305,27 +304,8 @@ public class SdkSandboxServiceImpl extends Service {
             }
         }
 
-        ClassLoader loader;
-        SandboxedSdkHolder sandboxedSdkHolder;
-        try {
-            loader = getClassLoader(applicationInfo);
-            Class<?> clz = Class.forName(SandboxedSdkHolder.class.getName(), true, loader);
-            sandboxedSdkHolder = (SandboxedSdkHolder) clz.getDeclaredConstructor().newInstance();
-        } catch (ClassNotFoundException | NoSuchMethodException e) {
-            sendLoadError(
-                    callback,
-                    ILoadSdkInSandboxCallback.LOAD_SDK_NOT_FOUND,
-                    "Failed to find: " + SandboxedSdkHolder.class.getName(),
-                    sandboxLatencyInfo);
-            return;
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            sendLoadError(
-                    callback,
-                    ILoadSdkInSandboxCallback.LOAD_SDK_INSTANTIATION_ERROR,
-                    "Failed to instantiate " + SandboxedSdkHolder.class.getName() + ": " + e,
-                    sandboxLatencyInfo);
-            return;
-        }
+        ClassLoader loader = getClassLoader(applicationInfo);
+        SandboxedSdkHolder sandboxedSdkHolder = new SandboxedSdkHolder();
 
         // We want to ensure that SandboxedSdkContext.getSystemService() will return different
         // instances for different SandboxedSdkContext contexts, so that different SDKs
@@ -346,6 +326,7 @@ public class SdkSandboxServiceImpl extends Service {
         SandboxedSdkContext sandboxedSdkContext =
                 new SandboxedSdkContext(
                         ctx,
+                        loader,
                         callingPackageName,
                         applicationInfo,
                         sdkName,
@@ -390,7 +371,9 @@ public class SdkSandboxServiceImpl extends Service {
     }
 
     private ClassLoader getClassLoader(ApplicationInfo appInfo) {
-        return new DexClassLoader(appInfo.sourceDir, null, null, getClass().getClassLoader());
+        final ClassLoader current = getClass().getClassLoader();
+        final ClassLoader parent = current != null ? current.getParent() : null;
+        return new PathClassLoader(appInfo.sourceDir, parent);
     }
 
     final class SdkSandboxServiceDelegate extends ISdkSandboxService.Stub {
