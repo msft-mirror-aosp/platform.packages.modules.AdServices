@@ -55,7 +55,8 @@ public class SharedPreferencesSyncManagerUnitTest {
             new SharedPreferencesKey(KEY_TO_UPDATE, SharedPreferencesKey.KEY_TYPE_STRING);
     private static final Map<String, String> TEST_DATA =
             Map.of(KEY_TO_UPDATE, "world1", "hello2", "world2", "empty", "");
-    private static final Set<SharedPreferencesKey> KEYS_TO_SYNC =
+    private static final Set<String> KEYS_TO_SYNC = Set.of(KEY_TO_UPDATE, "hello2", "empty");
+    private static final Set<SharedPreferencesKey> KEYS_WITH_TYPE_TO_SYNC =
             Set.of(
                     new SharedPreferencesKey(KEY_TO_UPDATE, SharedPreferencesKey.KEY_TYPE_STRING),
                     new SharedPreferencesKey("hello2", SharedPreferencesKey.KEY_TYPE_STRING),
@@ -93,45 +94,31 @@ public class SharedPreferencesSyncManagerUnitTest {
     @Test
     public void test_addSyncKeys_isIncremental() throws Exception {
         // Add one key
-        final SharedPreferencesKey foo =
-                new SharedPreferencesKey("foo", SharedPreferencesKey.KEY_TYPE_STRING);
-        mSyncManager.addSharedPreferencesSyncKeys(Set.of(foo));
-        assertThat(mSyncManager.getSharedPreferencesSyncKeys()).containsExactly(foo);
+        mSyncManager.addSharedPreferencesSyncKeys(Set.of("foo"));
+        assertThat(mSyncManager.getSharedPreferencesSyncKeys()).containsExactly("foo");
 
         // Add another key
-        final SharedPreferencesKey bar =
-                new SharedPreferencesKey("bar", SharedPreferencesKey.KEY_TYPE_STRING);
-        mSyncManager.addSharedPreferencesSyncKeys(Set.of(bar));
-        assertThat(mSyncManager.getSharedPreferencesSyncKeys()).containsExactly(foo, bar);
+        mSyncManager.addSharedPreferencesSyncKeys(Set.of("bar"));
+        assertThat(mSyncManager.getSharedPreferencesSyncKeys()).containsExactly("foo", "bar");
     }
 
     @Test
-    public void test_addSyncKeys_isIncremental_newOverwritesOld() throws Exception {
-        // Add one key
-        final SharedPreferencesKey fooStr =
-                new SharedPreferencesKey("foo", SharedPreferencesKey.KEY_TYPE_STRING);
-        mSyncManager.addSharedPreferencesSyncKeys(Set.of(fooStr));
-        assertThat(mSyncManager.getSharedPreferencesSyncKeys()).containsExactly(fooStr);
+    public void test_addSyncKeys_isIncremental_sameKeyCanBeAdded() throws Exception {
+        mSyncManager.addSharedPreferencesSyncKeys(Set.of("foo"));
+        assertThat(mSyncManager.getSharedPreferencesSyncKeys()).containsExactly("foo");
 
-        // Add another key
-        final SharedPreferencesKey fooInt =
-                new SharedPreferencesKey("foo", SharedPreferencesKey.KEY_TYPE_INTEGER);
-        mSyncManager.addSharedPreferencesSyncKeys(Set.of(fooInt));
-        assertThat(mSyncManager.getSharedPreferencesSyncKeys()).containsExactly(fooInt);
+        mSyncManager.addSharedPreferencesSyncKeys(Set.of("foo"));
+        assertThat(mSyncManager.getSharedPreferencesSyncKeys()).containsExactly("foo");
     }
 
     @Test
     public void test_removeKeys() throws Exception {
-        final SharedPreferencesKey foo =
-                new SharedPreferencesKey("foo", SharedPreferencesKey.KEY_TYPE_STRING);
-        final SharedPreferencesKey bar =
-                new SharedPreferencesKey("bar", SharedPreferencesKey.KEY_TYPE_STRING);
-        mSyncManager.addSharedPreferencesSyncKeys(Set.of(foo, bar));
+        mSyncManager.addSharedPreferencesSyncKeys(Set.of("foo", "bar"));
 
         // Remove key
-        mSyncManager.removeSharedPreferencesSyncKeys(Set.of(foo.getName()));
+        mSyncManager.removeSharedPreferencesSyncKeys(Set.of("foo"));
 
-        assertThat(mSyncManager.getSharedPreferencesSyncKeys()).containsExactly(bar);
+        assertThat(mSyncManager.getSharedPreferencesSyncKeys()).containsExactly("bar");
     }
 
     @Test
@@ -158,7 +145,7 @@ public class SharedPreferencesSyncManagerUnitTest {
 
         // Verify that sync manager passes empty value for missing keys
         final SharedPreferencesUpdate update = mSdkSandboxManagerService.getLastUpdate();
-        assertThat(update.getKeysInUpdate()).containsExactlyElementsIn(KEYS_TO_SYNC);
+        assertThat(update.getKeysInUpdate()).containsExactlyElementsIn(KEYS_WITH_TYPE_TO_SYNC);
         assertThat(update.getData().keySet()).isEmpty();
     }
 
@@ -178,18 +165,6 @@ public class SharedPreferencesSyncManagerUnitTest {
     }
 
     @Test
-    public void test_bulkSync_ignoreValueOfWrongType() throws Exception {
-        // Update key with a wrong type
-        getDefaultSharedPreferences().edit().putFloat(KEY_TO_UPDATE, 1.0f).commit();
-
-        mSyncManager.addSharedPreferencesSyncKeys(KEYS_TO_SYNC);
-
-        // Verify that sync manager ignores wrong type
-        final Bundle capturedData = mSdkSandboxManagerService.getLastUpdate().getData();
-        assertThat(capturedData.keySet()).doesNotContain(KEY_TO_UPDATE);
-    }
-
-    @Test
     public void test_bulkSync_supportsAllTypesOfValues() throws Exception {
         // Populate default shared preference with all valid types
 
@@ -204,19 +179,11 @@ public class SharedPreferencesSyncManagerUnitTest {
         editor.commit();
 
         // Set keys to sync and then sync data
-        final Set<SharedPreferencesKey> keysToSync =
-                Set.of(
-                        new SharedPreferencesKey("string", SharedPreferencesKey.KEY_TYPE_STRING),
-                        new SharedPreferencesKey("boolean", SharedPreferencesKey.KEY_TYPE_BOOLEAN),
-                        new SharedPreferencesKey("float", SharedPreferencesKey.KEY_TYPE_FLOAT),
-                        new SharedPreferencesKey("int", SharedPreferencesKey.KEY_TYPE_INTEGER),
-                        new SharedPreferencesKey("long", SharedPreferencesKey.KEY_TYPE_LONG),
-                        new SharedPreferencesKey("set", SharedPreferencesKey.KEY_TYPE_STRING_SET));
+        final Set<String> keysToSync = Set.of("string", "boolean", "float", "int", "long", "set");
         mSyncManager.addSharedPreferencesSyncKeys(keysToSync);
 
         // Verify that sync manager passes the correct data to SdkSandboxManager
         final Bundle capturedData = mSdkSandboxManagerService.getLastUpdate().getData();
-        assertThat(capturedData.keySet()).hasSize(6);
         assertThat(capturedData.getString("string")).isEqualTo(pref.getString("string", ""));
         assertThat(capturedData.getBoolean("boolean")).isEqualTo(pref.getBoolean("boolean", false));
         assertThat(capturedData.getFloat("float")).isEqualTo(pref.getFloat("float", 0.0f));
@@ -224,6 +191,7 @@ public class SharedPreferencesSyncManagerUnitTest {
         assertThat(capturedData.getLong("long")).isEqualTo(pref.getLong("long", 0L));
         assertThat(capturedData.getStringArrayList("set"))
                 .containsExactlyElementsIn(pref.getStringSet("set", Collections.emptySet()));
+        assertThat(capturedData.keySet()).hasSize(6);
     }
 
     @Test
@@ -245,26 +213,21 @@ public class SharedPreferencesSyncManagerUnitTest {
     public void test_updateListener_ignoresUnspecifiedKeys() throws Exception {
         // Set specified keys for sycing and register listener
         mSyncManager.addSharedPreferencesSyncKeys(KEYS_TO_SYNC);
+        mSdkSandboxManagerService.clearUpdates();
 
         // Update the SharedPreference to trigger listeners
         getDefaultSharedPreferences().edit().putString("unspecified_key", "update").commit();
 
         // Verify SdkSandboxManagerService does not receive the update for unspecified key
-        Thread.sleep(5000);
-        assertThat(mSdkSandboxManagerService.getNumberOfUpdatesReceived()).isEqualTo(1);
+        assertThrows(
+                TimeoutException.class,
+                () -> mSdkSandboxManagerService.blockForReceivingUpdates(1));
     }
 
     @Test
     public void test_updateListener_supportsAllTypesOfValues() throws Exception {
         // Set keys to sync and then sync data to register listener
-        final Set<SharedPreferencesKey> keysToSync =
-                Set.of(
-                        new SharedPreferencesKey("string", SharedPreferencesKey.KEY_TYPE_STRING),
-                        new SharedPreferencesKey("boolean", SharedPreferencesKey.KEY_TYPE_BOOLEAN),
-                        new SharedPreferencesKey("float", SharedPreferencesKey.KEY_TYPE_FLOAT),
-                        new SharedPreferencesKey("int", SharedPreferencesKey.KEY_TYPE_INTEGER),
-                        new SharedPreferencesKey("long", SharedPreferencesKey.KEY_TYPE_LONG),
-                        new SharedPreferencesKey("set", SharedPreferencesKey.KEY_TYPE_STRING_SET));
+        final Set<String> keysToSync = Set.of("string", "boolean", "float", "int", "long", "set");
         mSyncManager.addSharedPreferencesSyncKeys(keysToSync);
 
         // Clear the bulk update for ease of reasoning
@@ -356,7 +319,7 @@ public class SharedPreferencesSyncManagerUnitTest {
         mSdkSandboxManagerService.blockForReceivingUpdates(2);
         final SharedPreferencesUpdate lastUpdate = mSdkSandboxManagerService.getLastUpdate();
         assertThat(lastUpdate.getData().keySet()).isEmpty();
-        assertThat(lastUpdate.getKeysInUpdate()).containsExactlyElementsIn(KEYS_TO_SYNC);
+        assertThat(lastUpdate.getKeysInUpdate()).containsExactlyElementsIn(KEYS_WITH_TYPE_TO_SYNC);
     }
 
     @Test
@@ -490,27 +453,6 @@ public class SharedPreferencesSyncManagerUnitTest {
     private SharedPreferences getDefaultSharedPreferences() {
         final Context appContext = mContext.getApplicationContext();
         return PreferenceManager.getDefaultSharedPreferences(appContext);
-    }
-
-    private void assertThatSyncIsRunning() throws Exception {
-        // There must be some keys in the pool for sync to be running
-        final Set<SharedPreferencesKey> syncKeys = mSyncManager.getSharedPreferencesSyncKeys();
-        assertThat(syncKeys).isNotEmpty();
-
-        // If sync is still active, updating any key would result in syncing date
-        mSdkSandboxManagerService.clearUpdates(); // For easier assert
-        final SharedPreferencesKey syncKey = syncKeys.iterator().next();
-        assertThat(syncKey.getType()).isEqualTo(SharedPreferencesKey.KEY_TYPE_STRING);
-        getDefaultSharedPreferences()
-                .edit()
-                .putString(syncKey.getName(), "assertSyncRunning")
-                .commit();
-
-        // Verify that SyncManager tried to sync
-        mSdkSandboxManagerService.blockForReceivingUpdates(1);
-        final Bundle capturedData = mSdkSandboxManagerService.getLastUpdate().getData();
-        assertThat(capturedData.keySet()).containsExactly(syncKey);
-        assertThat(capturedData.getString(KEY_TO_UPDATE)).isEqualTo("assertSyncIsRunning");
     }
 
     private static class FakeSdkSandboxManagerService extends StubSdkSandboxManagerService {
