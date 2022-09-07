@@ -15,6 +15,8 @@
  */
 package android.adservices.appsetid;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
@@ -39,9 +41,24 @@ public final class GetAppSetIdResultTest {
         p.setDataPosition(0);
 
         GetAppSetIdResult fromParcel = GetAppSetIdResult.CREATOR.createFromParcel(p);
+        assertEquals(GetAppSetIdResult.CREATOR.newArray(1).length, 1);
 
         assertEquals(fromParcel.getAppSetId(), "UNITTEST_ID");
         assertEquals(fromParcel.getAppSetIdScope(), GetAppSetIdResult.SCOPE_APP);
+
+        assertEquals(fromParcel.equals(response), true);
+
+        GetAppSetIdResult mirrorFromParcel = fromParcel;
+        assertEquals(fromParcel.equals(mirrorFromParcel), true);
+        assertEquals(fromParcel.equals("UNITTEST_ID"), false);
+
+        assertEquals(fromParcel.hashCode(), response.hashCode());
+
+        assertEquals(response.getErrorMessage(), null);
+
+        assertEquals(response.describeContents(), 0);
+
+        assertThat(response.toString()).isNotNull();
     }
 
     @Test

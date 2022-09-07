@@ -35,6 +35,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
 
@@ -87,7 +88,8 @@ public class AdIdWorker {
     }
 
     @NonNull
-    private IAdIdProviderService getService() {
+    @VisibleForTesting
+    IAdIdProviderService getService() {
         return mServiceBinder.getService();
     }
 
