@@ -24,6 +24,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 
 import androidx.annotation.Nullable;
 
@@ -175,11 +176,40 @@ public class EnrollmentDao implements IEnrollmentDao {
                         /*having=*/ null,
                         /*orderBy=*/ null,
                         /*limit=*/ null)) {
-            if (cursor == null || cursor.getCount() != 1) {
+            if (cursor == null || cursor.getCount() <= 0) {
                 return null;
             }
-            cursor.moveToNext();
-            return SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
+
+            LogUtil.v(
+                    "Found %d rows potentially matching ad tech identifier \"%s\"",
+                    cursor.getCount(), adTechIdentifierString);
+
+            while (cursor.moveToNext()) {
+                EnrollmentData potentialMatch =
+                        SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
+                for (String rbrUriString :
+                        potentialMatch.getRemarketingResponseBasedRegistrationUrl()) {
+                    try {
+                        // Make sure the URI can be parsed and the parsed host matches the ad tech
+                        if (adTechIdentifierString.equalsIgnoreCase(
+                                Uri.parse(rbrUriString).getHost())) {
+                            LogUtil.v(
+                                    "Found positive match RBR URL \"%s\" for ad tech identifier"
+                                            + " \"%s\"",
+                                    rbrUriString, adTechIdentifierString);
+
+                            return potentialMatch;
+                        }
+                    } catch (IllegalArgumentException exception) {
+                        LogUtil.v(
+                                "Error while matching ad tech %s to FLEDGE RBR URI %s; skipping"
+                                        + " URI. Error message: %s",
+                                adTechIdentifierString, rbrUriString, exception.getMessage());
+                    }
+                }
+            }
+
+            return null;
         }
     }
 
