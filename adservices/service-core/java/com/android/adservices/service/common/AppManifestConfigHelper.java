@@ -72,6 +72,7 @@ public class AppManifestConfigHelper {
             AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(in);
             return appManifestConfig.isAllowedAttributionAccess(enrollmentId);
         } catch (PackageManager.NameNotFoundException e) {
+            LogUtil.v("Name not found while looking for manifest for app \"%s\"", appPackageName);
             LogUtil.e(e, "App manifest parse failed: NameNotFound.");
         } catch (XmlParseException | XmlPullParserException | IOException e) {
             LogUtil.e(e, "App manifest parse failed.");
@@ -80,15 +81,15 @@ public class AppManifestConfigHelper {
     }
 
     /**
-     * Parses the app's manifest config to determine whether this sdk is permitted to use the Custom
-     * Audiences API.
+     * Parses the app's manifest config to determine whether the given {@code enrollmentId}
+     * associated with an ad tech is permitted to use the Custom Audience API.
      *
-     * <p>If there is a parse error, it returns false.
+     * <p>If there is a parse error, it returns {@code false}.
      *
      * @param context the context for the API call. This needs to be the context where the calling
      *     UID is that of the API caller.
-     * @param appPackageName the package name of the app whose manifest config will be read.
-     * @param enrollmentId the enrollment id associate with the ad tech identifier.
+     * @param appPackageName the package name of the app whose manifest config will be read
+     * @param enrollmentId the enrollment ID associate with the ad tech
      */
     public static boolean isAllowedCustomAudiencesAccess(
             @NonNull Context context,
@@ -145,31 +146,6 @@ public class AppManifestConfigHelper {
             // If the request comes from the SdkRuntime, then the app had to have declared the Sdk
             // using <uses-sdk-library>, so no need to check.
             return appManifestConfig.isAllowedTopicsAccess(enrollmentId);
-        } catch (PackageManager.NameNotFoundException e) {
-            LogUtil.e(e, "App manifest parse failed: NameNotFound.");
-        } catch (XmlParseException | XmlPullParserException | IOException e) {
-            LogUtil.e(e, "App manifest parse failed.");
-        }
-        return false;
-    }
-
-    /**
-     * Parses the app's manifest config to determine whether this sdk is permitted to use the
-     * AppSetId API.
-     *
-     * <p>If there is a parse error, it returns false.
-     *
-     * @param context the context for the API call. This needs to be the context where the calling
-     *     UID is that of the API caller.
-     * @param appPackageName the package name of the app whose manifest config will be read.
-     * @param sdk the name of the sdk that will be checked against app's manifest config.
-     */
-    public static boolean isAllowedAppSetIdAccess(
-            @NonNull Context context, @NonNull String appPackageName, @NonNull String sdk) {
-        try {
-            XmlResourceParser in = getXmlParser(context, appPackageName);
-            AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(in);
-            return appManifestConfig.isAllowedAppSetIdAccess(sdk);
         } catch (PackageManager.NameNotFoundException e) {
             LogUtil.e(e, "App manifest parse failed: NameNotFound.");
         } catch (XmlParseException | XmlPullParserException | IOException e) {

@@ -60,11 +60,10 @@ public class SdkFledge extends SandboxedSdkProvider {
     private static final String TAG = "SdkFledge";
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
-    private static final AdTechIdentifier SELLER = AdTechIdentifier.fromString("store.google.com");
+    private static final AdTechIdentifier SELLER = AdTechIdentifier.fromString("test.com");
 
-    private static final AdTechIdentifier BUYER_1 =
-            AdTechIdentifier.fromString("developer.android.com");
-    private static final AdTechIdentifier BUYER_2 = AdTechIdentifier.fromString("google.com");
+    private static final AdTechIdentifier BUYER_1 = AdTechIdentifier.fromString("test2.com");
+    private static final AdTechIdentifier BUYER_2 = AdTechIdentifier.fromString("test3.com");
 
     private static final String AD_URL_PREFIX = "/adverts/123/";
 
@@ -133,7 +132,7 @@ public class SdkFledge extends SandboxedSdkProvider {
                         + " contextual_signals) { \n"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
                         + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
-                        + SELLER_REPORTING_PATH
+                        + getUri(SELLER.toString(), SELLER_REPORTING_PATH).toString()
                         + "' } };\n"
                         + "}";
 
@@ -146,7 +145,7 @@ public class SdkFledge extends SandboxedSdkProvider {
                         + "function reportWin(ad_selection_signals, per_buyer_signals,"
                         + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
                         + " return {'status': 0, 'results': {'reporting_url': '"
-                        + BUYER_REPORTING_PATH
+                        + getUri(BUYER_1.toString(), BUYER_REPORTING_PATH).toString()
                         + "' } };\n"
                         + "}";
 
@@ -160,7 +159,6 @@ public class SdkFledge extends SandboxedSdkProvider {
         try {
             mCustomAudienceClient.joinCustomAudience(customAudience1).get(10, TimeUnit.SECONDS);
             mCustomAudienceClient.joinCustomAudience(customAudience2).get(10, TimeUnit.SECONDS);
-
         } catch (Exception e) {
             String errorMessage =
                     String.format("Error setting up the test: message is %s", e.getMessage());
@@ -184,7 +182,14 @@ public class SdkFledge extends SandboxedSdkProvider {
         }
 
         try {
-            AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest =
+            AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest1 =
+                    new AddCustomAudienceOverrideRequest.Builder()
+                            .setBuyer(customAudience1.getBuyer())
+                            .setName(customAudience1.getName())
+                            .setBiddingLogicJs(biddingLogicJs)
+                            .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                            .build();
+            AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest2 =
                     new AddCustomAudienceOverrideRequest.Builder()
                             .setBuyer(customAudience2.getBuyer())
                             .setName(customAudience2.getName())
@@ -193,7 +198,10 @@ public class SdkFledge extends SandboxedSdkProvider {
                             .build();
 
             mTestCustomAudienceClient
-                    .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest)
+                    .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest1)
+                    .get(10, TimeUnit.SECONDS);
+            mTestCustomAudienceClient
+                    .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest2)
                     .get(10, TimeUnit.SECONDS);
         } catch (Exception e) {
             String errorMessage =
@@ -221,7 +229,10 @@ public class SdkFledge extends SandboxedSdkProvider {
 
             if (!outcome.getRenderUri()
                     .equals(getUri(BUYER_2.toString(), AD_URL_PREFIX + "/ad3"))) {
-                String errorMessage = String.format("Ad selection failed to select the correct ad");
+                String errorMessage =
+                        String.format(
+                                "Ad selection failed to select the correct ad, got %s instead",
+                                outcome.getRenderUri().toString());
                 Log.e(TAG, errorMessage);
                 throw new LoadSdkException(new Exception(errorMessage), new Bundle());
             }

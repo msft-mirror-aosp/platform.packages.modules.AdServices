@@ -989,9 +989,10 @@ public interface Flags extends Dumpable {
                     + "com.android.adservices.servicecoretest,"
                     + "com.android.adservices.tests.permissions.appoptout,"
                     + "com.android.adservices.tests.permissions.valid,"
-                    + "com.android.tests.sandbox.fledge,"
                     + "com.android.adservices.tests.adid,"
                     + "com.android.adservices.tests.appsetid,"
+                    + "com.android.tests.sandbox.fledge,"
+                    + "com.android.tests.sandbox.measurement,"
                     + "com.example.adservices.samples.adid.app,"
                     + "com.example.adservices.samples.appsetid.app,"
                     + "com.example.adservices.samples.fledge.sampleapp,"
@@ -1056,18 +1057,11 @@ public interface Flags extends Dumpable {
         return SDK_REQUEST_PERMITS_PER_SECOND;
     }
 
-    // TODO(b/238924460): Enable by default after enrollment process is open.
-    /**
-     * Once the enrollment process is open, this should be false by default, such that enrollment is
-     * always enforced, unless there are bugs with enrollment. Disabling enforcement for now since
-     * we don't want to block alpha testing while the enrollment process is being set up.
-     */
-    boolean DISABLE_TOPICS_ENROLLMENT_CHECK = true;
+    // Flags for ad tech enrollment enforcement
 
-    boolean DISABLE_FLEDGE_ENROLLMENT_CHECK = true; // By default, enrollment check is disabled
-
-    // TODO(b/243025320): Enable by default after enrollment process is open.
-    boolean DISABLE_MEASUREMENT_ENROLLMENT_CHECK = true;
+    boolean DISABLE_TOPICS_ENROLLMENT_CHECK = false;
+    boolean DISABLE_FLEDGE_ENROLLMENT_CHECK = false;
+    boolean DISABLE_MEASUREMENT_ENROLLMENT_CHECK = false;
 
     /** @return {@code true} if the Topics API should disable the ad tech enrollment check */
     default boolean isDisableTopicsEnrollmentCheck() {
@@ -1079,11 +1073,13 @@ public interface Flags extends Dumpable {
         return DISABLE_FLEDGE_ENROLLMENT_CHECK;
     }
 
+    /** @return {@code true} if the Measurement APIs should disable the ad tech enrollment check */
     default boolean isDisableMeasurementEnrollmentCheck() {
         return DISABLE_MEASUREMENT_ENROLLMENT_CHECK;
     }
 
     boolean ENFORCE_FOREGROUND_STATUS_ADID = true;
+    boolean ENFORCE_FOREGROUND_STATUS_APPSETID = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES = true;
@@ -1188,6 +1184,13 @@ public interface Flags extends Dumpable {
     }
 
     int FOREGROUND_STATUS_LEVEL = IMPORTANCE_FOREGROUND_SERVICE;
+
+    /**
+     * @return true if AppSetId API should require that the calling API is running in foreground.
+     */
+    default boolean getEnforceForegroundStatusForAppSetId() {
+        return ENFORCE_FOREGROUND_STATUS_APPSETID;
+    }
 
     /** @return the importance level to use to check if an application is in foreground. */
     default int getForegroundStatuslLevelForValidation() {

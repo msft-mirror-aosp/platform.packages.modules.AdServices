@@ -59,12 +59,11 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
 
     private static final String DECISION_LOGIC_JS = "function test() { return \"hello world\"; }";
     private static final long AD_SELECTION_ID = 1;
-    private static final AdTechIdentifier SELLER =
-            AdTechIdentifier.fromString("developer.android.com");
+    private static final AdTechIdentifier SELLER = AdTechIdentifier.fromString("test.com");
     private static final Uri DECISION_LOGIC_URI =
-            Uri.parse("https://developer.android.com/test/decisions_logic_urls");
+            Uri.parse("https://test.com/test/decisions_logic_urls");
     private static final Uri TRUSTED_SCORING_SIGNALS_URI =
-            Uri.parse("https://developer.android.com/test/decisions_logic_urls");
+            Uri.parse("https://test.com/test/decisions_logic_urls");
     private static final AdSelectionSignals TRUSTED_SCORING_SIGNALS =
             AdSelectionSignals.fromString(
                     "{\n"

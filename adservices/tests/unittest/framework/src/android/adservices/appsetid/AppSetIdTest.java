@@ -31,5 +31,19 @@ public final class AppSetIdTest {
         // Validate the returned response is same to what we created
         assertEquals("TEST_APPSETID", response.getId());
         assertEquals(GetAppSetIdResult.SCOPE_APP, response.getScope());
+
+        AppSetId mirrorResponse = response;
+        assertEquals(true, response.equals(mirrorResponse));
+        assertEquals(
+                true, response.equals(new AppSetId("TEST_APPSETID", GetAppSetIdResult.SCOPE_APP)));
+        assertEquals(
+                false,
+                response.equals(new AppSetId("TEST_APPSETID", GetAppSetIdResult.SCOPE_DEVELOPER)));
+        assertEquals(false, response.equals("TEST_APPSETID"));
+
+        assertEquals(
+                true,
+                response.hashCode()
+                        == new AppSetId("TEST_APPSETID", GetAppSetIdResult.SCOPE_APP).hashCode());
     }
 }

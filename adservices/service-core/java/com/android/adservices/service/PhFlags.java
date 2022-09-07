@@ -176,6 +176,10 @@ public final class PhFlags implements Flags {
             "fledge_js_isolate_enforce_max_heap_size";
     static final String KEY_ISOLATE_MAX_HEAP_SIZE_BYTES = "fledge_js_isolate_max_heap_size_bytes";
 
+    // AppSetId invoking app status key.
+    static final String KEY_ENFORCE_FOREGROUND_STATUS_APPSETID =
+            "appsetid_enforce_foreground_status";
+
     // MDD keys.
     static final String KEY_DOWNLOADER_CONNECTION_TIMEOUT_MS = "downloader_connection_timeout_ms";
     static final String KEY_DOWNLOADER_READ_TIMEOUT_MS = "downloader_read_timeout_ms";
@@ -1248,6 +1252,10 @@ public final class PhFlags implements Flags {
 
     @Override
     public boolean getAdServicesEnabled() {
+        // if the global kill switch is enabled, feature should be disabled.
+        if (getGlobalKillSwitch()) {
+            return false;
+        }
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getBoolean(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -1318,6 +1326,16 @@ public final class PhFlags implements Flags {
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_ENFORCE_FOREGROUND_STATUS_ADID,
                         /* defaultValue */ ENFORCE_FOREGROUND_STATUS_ADID));
+    }
+
+    @Override
+    public boolean getEnforceForegroundStatusForAppSetId() {
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(KEY_ENFORCE_FOREGROUND_STATUS_APPSETID),
+                /* defaultValue */ DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_ENFORCE_FOREGROUND_STATUS_APPSETID,
+                        /* defaultValue */ ENFORCE_FOREGROUND_STATUS_APPSETID));
     }
 
     @Override
