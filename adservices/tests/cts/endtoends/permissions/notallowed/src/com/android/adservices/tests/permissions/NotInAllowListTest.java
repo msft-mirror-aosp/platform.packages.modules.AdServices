@@ -25,6 +25,10 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.compatibility.common.util.ShellUtils;
+
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -42,6 +46,17 @@ public class NotInAllowListTest {
             "java.lang.SecurityException: Caller is not authorized to call this API. "
                     + "Caller is not allowed.";
 
+    @Before
+    public void setup() {
+        overrideConsentManagerDebugMode(true);
+        overridingAdservicesLoggingLevel("VERBOSE");
+    }
+
+    @After
+    public void teardown() {
+        overrideConsentManagerDebugMode(false);
+    }
+
     @Test
     public void testNotInAllowList() {
         AdvertisingTopicsClient advertisingTopicsClient1 =
@@ -55,5 +70,15 @@ public class NotInAllowListTest {
                 assertThrows(
                         ExecutionException.class, () -> advertisingTopicsClient1.getTopics().get());
         assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_ALLOWED);
+    }
+
+    private void overridingAdservicesLoggingLevel(String loggingLevel) {
+        ShellUtils.runShellCommand("setprop log.tag.adservices %s", loggingLevel);
+    }
+
+    // Override the Consent Manager behaviour - Consent Given
+    private void overrideConsentManagerDebugMode(boolean isGiven) {
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.consent_manager_debug_mode " + isGiven);
     }
 }
