@@ -380,6 +380,58 @@
       "uri": "android-app://remove.me"
     },
     {
+      "name": "Remove AggregateReport based on attribution destination & publisher",
+      "input": {
+        "aggregate_reports": [
+          {
+            "id": "a1",
+            "publisher": "android-app://do.not.remove.me",
+            "attributionDestination": "android-app://remove.me",
+            "sourceRegistrationTime": 1,
+            "scheduledReportTime": 2,
+            "enrollmentId": "enrollment-id-3",
+            "status": 0,
+            "debugCleartextPayload": ""
+          },
+          {
+            "id": "a2",
+            "publisher": "android-app://remove.me",
+            "attributionDestination": "android-app://do.not.remove.me",
+            "sourceRegistrationTime": 1,
+            "scheduledReportTime": 2,
+            "enrollmentId": "enrollment-id-3",
+            "status": 0,
+            "debugCleartextPayload": ""
+          },
+          {
+            "id": "a3",
+            "publisher": "android-app://do.not.remove.me",
+            "attributionDestination": "android-app://do.not.remove.me",
+            "sourceRegistrationTime": 1,
+            "scheduledReportTime": 2,
+            "enrollmentId": "enrollment-id-3",
+            "status": 0,
+            "debugCleartextPayload": ""
+          }
+        ]
+      },
+      "output": {
+        "aggregate_reports": [
+          {
+            "id": "a3",
+            "publisher": "android-app://do.not.remove.me",
+            "attributionDestination": "android-app://do.not.remove.me",
+            "sourceRegistrationTime": 1,
+            "scheduledReportTime": 2,
+            "enrollmentId": "enrollment-id-3",
+            "status": 0,
+            "debugCleartextPayload": ""
+          }
+        ]
+      },
+      "uri": "android-app://remove.me"
+    },
+    {
       "name": "Remove an Attribution",
       "input": {
         "sources": [
