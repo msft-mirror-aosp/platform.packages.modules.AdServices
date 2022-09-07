@@ -35,6 +35,7 @@ import com.android.adservices.service.enrollment.EnrollmentData;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import java.util.Arrays;
 
@@ -85,6 +86,19 @@ public class EnrollmentDaoTest {
                     .setEncryptionKeyUrl(Arrays.asList("https://2test.com/keys"))
                     .build();
 
+    private static final EnrollmentData DUPLICATE_ID_ENROLLMENT_DATA =
+            new EnrollmentData.Builder()
+                    .setEnrollmentId("1")
+                    .setCompanyId("1004")
+                    .setSdkNames("4sdk")
+                    .setAttributionSourceRegistrationUrl(Arrays.asList("https://4test.com/source"))
+                    .setAttributionTriggerRegistrationUrl(
+                            Arrays.asList("https://4test.com/trigger"))
+                    .setAttributionReportingUrl(Arrays.asList("https://4test.com"))
+                    .setRemarketingResponseBasedRegistrationUrl(Arrays.asList("https://4test.com"))
+                    .setEncryptionKeyUrl(Arrays.asList("https://4test.com/keys"))
+                    .build();
+
     @Before
     public void setup() {
         mDbHelper = DbHelper.getInstance(sContext);
@@ -101,7 +115,10 @@ public class EnrollmentDaoTest {
     @Test
     public void testInitialization() {
         // Check seeded
-        assertTrue(mEnrollmentDao.isSeeded());
+        EnrollmentDao spyEnrollmentDao = Mockito.spy(new EnrollmentDao(sContext, mDbHelper));
+        Mockito.doReturn(false).when(spyEnrollmentDao).isSeeded();
+
+        spyEnrollmentDao.seed();
         long count =
                 DatabaseUtils.queryNumEntries(
                         mDbHelper.getReadableDatabase(),
@@ -110,13 +127,13 @@ public class EnrollmentDaoTest {
         assertNotEquals(count, 0);
 
         // Check that seeded enrollments are in the table.
-        EnrollmentData e = mEnrollmentDao.getEnrollmentData("E1");
+        EnrollmentData e = spyEnrollmentDao.getEnrollmentData("E1");
         assertNotNull(e);
         assertEquals(e.getSdkNames().get(0), "sdk1");
-        EnrollmentData e2 = mEnrollmentDao.getEnrollmentData("E2");
+        EnrollmentData e2 = spyEnrollmentDao.getEnrollmentData("E2");
         assertNotNull(e2);
         assertEquals(e2.getSdkNames().get(0), "sdk2");
-        EnrollmentData e3 = mEnrollmentDao.getEnrollmentData("E3");
+        EnrollmentData e3 = spyEnrollmentDao.getEnrollmentData("E3");
         assertNotNull(e3);
         assertEquals(e3.getSdkNames().get(0), "sdk3");
     }
@@ -203,5 +220,16 @@ public class EnrollmentDaoTest {
         EnrollmentData e3 = mEnrollmentDao.getEnrollmentDataFromSdkName("31sdk");
         assertNotNull(e3);
         assertEquals(e3, ENROLLMENT_DATA3);
+    }
+
+    @Test
+    public void testDuplicateEnrollmentData() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA1);
+        EnrollmentData e = mEnrollmentDao.getEnrollmentData("1");
+        assertEquals(ENROLLMENT_DATA1, e);
+
+        mEnrollmentDao.insert(DUPLICATE_ID_ENROLLMENT_DATA);
+        e = mEnrollmentDao.getEnrollmentData("1");
+        assertEquals(DUPLICATE_ID_ENROLLMENT_DATA, e);
     }
 }
