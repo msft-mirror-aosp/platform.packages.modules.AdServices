@@ -16,7 +16,7 @@
 
 package com.android.tests.sandbox.measurement;
 
-import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
@@ -53,11 +53,23 @@ public class SandboxedMeasurementManagerTest {
     public void setup() throws TimeoutException {
         // Start a foreground activity
         SimpleActivity.startAndWaitForSimpleActivity(sContext, Duration.ofMillis(1000));
+
+        // We need to turn the Consent Manager into debug mode to simulate grant Consent
+        overrideConsentManagerDebugMode();
+
+        enforceMeasurementEnrollmentCheck(true);
+
+        // Allow sandbox package name to be able to execute Measurement APIs
+        allowSandboxPackageNameAccessMeasurementApis();
     }
 
     @After
     public void shutDown() {
         SimpleActivity.stopSimpleActivity(sContext);
+
+        // Reset back the original values.
+        resetAllowSandboxPackageNameAccessMeasurementApis();
+        resetOverrideConsentManagerDebugMode();
     }
 
     @Test
@@ -72,27 +84,30 @@ public class SandboxedMeasurementManagerTest {
         // In this test, we use the loadSdk's callback as a 2-way communications between the Test
         // app (this class) and the Sdk running within the Sandbox process.
 
-        // We need to turn the Consent Manager into debug mode to simulate grant Consent
-        overrideConsentManagerDebugMode();
-
-        // Allow sandbox package name to be able to execute Measurement APIs
-        allowSandboxPackageNameAccessMeasurementApis();
-
         final SdkSandboxManager sdkSandboxManager =
                 sContext.getSystemService(SdkSandboxManager.class);
 
-        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        // The enrolled URLs should time out when registering to them, because we don't control
+        // them; each timeout is 5 seconds, plus some wiggle room
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback(25);
 
         // Load SdkMeasurement
         sdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), CALLBACK_EXECUTOR, callback);
 
         // This verifies SdkMeasurement finished without errors.
         // callback.isLoadSdkSuccessful returns true if there were no errors.
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        assertWithMessage(
+                        callback.isLoadSdkSuccessful()
+                                ? "Callback was successful"
+                                : "Callback failed with message " + callback.getLoadSdkErrorMsg())
+                .that(callback.isLoadSdkSuccessful())
+                .isTrue();
+    }
 
-        // Reset back the original values.
-        resetAllowSandboxPackageNameAccessMeasurementApis();
-        resetOverrideConsentManagerDebugMode();
+    private void enforceMeasurementEnrollmentCheck(boolean shouldEnforce) {
+        ShellUtils.runShellCommand(
+                "device_config put adservices disable_measurement_enrollment_check %s",
+                !shouldEnforce);
     }
 
     private void allowSandboxPackageNameAccessMeasurementApis() {

@@ -257,7 +257,7 @@ public class ImpressionReporter {
 
                             @Override
                             public void onFailure(Throwable t) {
-                                LogUtil.e(t, "Report Impression failed!");
+                                LogUtil.e(t, "Report Impression invocation failed!");
                                 if (t instanceof ConsentManager.RevokedConsentException) {
                                     invokeSuccess(
                                             callback,
@@ -298,6 +298,7 @@ public class ImpressionReporter {
 
     @NonNull
     private ListenableFuture<List<Void>> doReport(ReportingUrls reportingUrls) {
+        LogUtil.v("Reporting URLs");
         ListenableFuture<Void> sellerFuture =
                 mAdServicesHttpsClient.reportUrl(reportingUrls.sellerReportingUri);
         ListenableFuture<Void> buyerFuture;
@@ -337,6 +338,9 @@ public class ImpressionReporter {
 
     private FluentFuture<DBAdSelectionEntry> fetchAdSelectionEntry(
             long adSelectionId, String callerPackageName) {
+        LogUtil.v(
+                "Fetching ad selection entry ID %d for caller \"%s\"",
+                adSelectionId, callerPackageName);
         return FluentFuture.from(
                 mBackgroundExecutorService.submit(
                         () -> {
@@ -405,6 +409,7 @@ public class ImpressionReporter {
     private FluentFuture<Pair<ReportingUrls, ReportingContext>> invokeBuyerScript(
             ReportImpressionScriptEngine.SellerReportingResult sellerReportingResult,
             ReportingContext ctx) {
+        LogUtil.v("Invoking buyer script");
         final boolean isContextual =
                 Objects.isNull(ctx.mDBAdSelectionEntry.getCustomAudienceSignals())
                         && Objects.isNull(ctx.mDBAdSelectionEntry.getBuyerDecisionLogicJs());

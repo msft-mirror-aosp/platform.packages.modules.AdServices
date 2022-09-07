@@ -1989,5 +1989,10 @@ public class FledgeE2ETest {
             // Unlimited rate for unit tests to avoid flake in tests due to rate limiting
             return -1;
         }
+
+        @Override
+        public boolean getDisableFledgeEnrollmentCheck() {
+            return true;
+        }
     }
 }

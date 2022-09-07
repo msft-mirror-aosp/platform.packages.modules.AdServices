@@ -18,18 +18,18 @@ package com.android.adservices.service.adselection;
 
 import com.android.adservices.service.Flags;
 
-public class FlagsWithOverriddenAppImportanceCheck implements Flags {
+public class FlagsWithOverriddenFledgeChecks implements Flags {
     private final boolean mEnabled;
 
-    public static Flags createFlagsWithAppImportanceCheckEnabled() {
-        return new FlagsWithOverriddenAppImportanceCheck(true);
+    public static Flags createFlagsWithFledgeChecksEnabled() {
+        return new FlagsWithOverriddenFledgeChecks(true);
     }
 
-    public static Flags createFlagsWithAppImportanceCheckDisabled() {
-        return new FlagsWithOverriddenAppImportanceCheck(false);
+    public static Flags createFlagsWithFledgeChecksDisabled() {
+        return new FlagsWithOverriddenFledgeChecks(false);
     }
 
-    FlagsWithOverriddenAppImportanceCheck(boolean enabled) {
+    FlagsWithOverriddenFledgeChecks(boolean enabled) {
         this.mEnabled = enabled;
     }
 
@@ -46,5 +46,10 @@ public class FlagsWithOverriddenAppImportanceCheck implements Flags {
     @Override
     public boolean getEnforceForegroundStatusForFledgeOverrides() {
         return mEnabled;
+    }
+
+    @Override
+    public boolean getDisableFledgeEnrollmentCheck() {
+        return !mEnabled;
     }
 }
