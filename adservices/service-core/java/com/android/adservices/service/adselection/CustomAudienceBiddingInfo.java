@@ -55,7 +55,7 @@ public abstract class CustomAudienceBiddingInfo {
     /**
      * Creates an object of CustomAudienceBiddingInfo
      *
-     * @param biddingLogicUri url that fetches bidding logic
+     * @param biddingLogicUri URI that fetches bidding logic
      * @param buyerDecisionLogicJs JS that helps in making bidding decision
      * @param customAudienceSignals signals for CA
      * @return an instance of CustomAudienceBiddingInfo

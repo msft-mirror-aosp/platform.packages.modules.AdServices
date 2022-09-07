@@ -117,8 +117,8 @@ public class AdSelectionEntryDaoTest {
             "function test() { return \"hello world_1\"; }";
     private static final String TRUSTED_SCORING_SIGNALS_1 =
             "{\n"
-                    + "\t\"render_url_1\": \"signals_for_1_1\",\n"
-                    + "\t\"render_url_2\": \"signals_for_1_2\"\n"
+                    + "\t\"render_uri_1\": \"signals_for_1_1\",\n"
+                    + "\t\"render_uri_2\": \"signals_for_1_2\"\n"
                     + "}";
     public static final DBAdSelectionOverride DB_AD_SELECTION_OVERRIDE_1 =
             DBAdSelectionOverride.builder()
@@ -133,8 +133,8 @@ public class AdSelectionEntryDaoTest {
             "function test() { return \"hello world_2\"; }";
     private static final String TRUSTED_SCORING_SIGNALS_2 =
             "{\n"
-                    + "\t\"render_url_1\": \"signals_for_2_1\",\n"
-                    + "\t\"render_url_2\": \"signals_for_2_2\"\n"
+                    + "\t\"render_uri_1\": \"signals_for_2_1\",\n"
+                    + "\t\"render_uri_2\": \"signals_for_2_2\"\n"
                     + "}";
     public static final DBAdSelectionOverride DB_AD_SELECTION_OVERRIDE_2 =
             DBAdSelectionOverride.builder()
@@ -148,8 +148,8 @@ public class AdSelectionEntryDaoTest {
             "function test() { return \"hello world_3\"; }";
     private static final String TRUSTED_SCORING_SIGNALS_3 =
             "{\n"
-                    + "\t\"render_url_1\": \"signals_for_3_1\",\n"
-                    + "\t\"render_url_2\": \"signals_for_3_2\"\n"
+                    + "\t\"render_uri_1\": \"signals_for_3_1\",\n"
+                    + "\t\"render_uri_2\": \"signals_for_3_2\"\n"
                     + "}";
     public static final DBAdSelectionOverride DB_AD_SELECTION_OVERRIDE_3 =
             DBAdSelectionOverride.builder()
@@ -164,8 +164,8 @@ public class AdSelectionEntryDaoTest {
             "function test() { return \"hello world_4\"; }";
     private static final String TRUSTED_SCORING_SIGNALS_4 =
             "{\n"
-                    + "\t\"render_url_1\": \"signals_for_4_1\",\n"
-                    + "\t\"render_url_2\": \"signals_for_4_2\"\n"
+                    + "\t\"render_uri_1\": \"signals_for_4_1\",\n"
+                    + "\t\"render_uri_2\": \"signals_for_4_2\"\n"
                     + "}";
     public static final DBAdSelectionOverride DB_AD_SELECTION_OVERRIDE_4 =
             DBAdSelectionOverride.builder()

@@ -24,7 +24,7 @@ import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 public class DBTrustedBiddingDataFixture {
     public static DBTrustedBiddingData.Builder getValidBuilderByBuyer(AdTechIdentifier buyer) {
         return new DBTrustedBiddingData.Builder()
-                .setUri(TrustedBiddingDataFixture.getValidTrustedBiddingUrlByBuyer(buyer))
+                .setUri(TrustedBiddingDataFixture.getValidTrustedBiddingUriByBuyer(buyer))
                 .setKeys(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_KEYS);
     }
 }
