@@ -168,6 +168,7 @@ import static com.android.adservices.service.PhFlags.KEY_GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_ISOLATE_MAX_HEAP_SIZE_BYTES;
 import static com.android.adservices.service.PhFlags.KEY_MAINTENANCE_JOB_FLEX_MS;
 import static com.android.adservices.service.PhFlags.KEY_MAINTENANCE_JOB_PERIOD_MS;
+import static com.android.adservices.service.PhFlags.KEY_MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES;
 import static com.android.adservices.service.PhFlags.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL;
@@ -2906,6 +2907,24 @@ public class PhFlagsTest {
         String[] args = new String[] {};
         Flags phFlags = FlagsFactory.getFlags();
         phFlags.dump(printWriter, args);
+    }
+
+    @Test
+    public void testGetMaxResponseBasedRegistrationPayloadSizeBytes_measurementOverride() {
+        // without any overriding, the value is hard coded constant
+        assertThat(FlagsFactory.getFlags().getMaxResponseBasedRegistrationPayloadSizeBytes())
+                .isEqualTo(Flags.MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES);
+
+        final long phOverrideValue = 5L;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES,
+                Long.toString(phOverrideValue),
+                false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getMaxResponseBasedRegistrationPayloadSizeBytes())
+                .isEqualTo(phOverrideValue);
     }
     // CHECKSTYLE:ON IndentationCheck
 }
