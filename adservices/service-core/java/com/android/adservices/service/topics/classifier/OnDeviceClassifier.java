@@ -16,14 +16,15 @@
 
 package com.android.adservices.service.topics.classifier;
 
+import static com.android.adservices.service.topics.classifier.Preprocessor.limitDescriptionSize;
+
 import android.annotation.NonNull;
-import android.content.Context;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.topics.AppInfo;
 import com.android.adservices.service.topics.PackageManagerUtil;
-import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -47,9 +48,6 @@ public class OnDeviceClassifier implements Classifier {
 
     private static OnDeviceClassifier sSingleton;
 
-    // TODO(b/235497008): Convert MAX_LABELS_PER_APP to a flag.
-    @VisibleForTesting static final int MAX_LABELS_PER_APP = 10;
-
     private static final String EMPTY = "";
     private static final AppInfo EMPTY_APP_INFO = new AppInfo(EMPTY, EMPTY);
 
@@ -71,7 +69,7 @@ public class OnDeviceClassifier implements Classifier {
     private boolean mLoaded;
     private ImmutableMap<String, AppInfo> mAppInfoMap;
 
-    public OnDeviceClassifier(
+    OnDeviceClassifier(
             @NonNull Preprocessor preprocessor,
             @NonNull PackageManagerUtil packageManagerUtil1,
             @NonNull Random random,
@@ -82,22 +80,6 @@ public class OnDeviceClassifier implements Classifier {
         mLoaded = false;
         mAppInfoMap = ImmutableMap.of();
         mModelManager = modelManager;
-    }
-
-    /** Returns the singleton instance of the {@link OnDeviceClassifier} given a context. */
-    @NonNull
-    public static OnDeviceClassifier getInstance(@NonNull Context context) {
-        synchronized (OnDeviceClassifier.class) {
-            if (sSingleton == null) {
-                sSingleton =
-                        new OnDeviceClassifier(
-                                new Preprocessor(context),
-                                new PackageManagerUtil(context),
-                                new Random(),
-                                ModelManager.getInstance(context));
-            }
-        }
-        return sSingleton;
     }
 
     @Override
@@ -157,11 +139,23 @@ public class OnDeviceClassifier implements Classifier {
 
         // Limit the number of entries to first MAX_LABELS_PER_APP.
         // TODO(b/235435229): Evaluate the strategy to use first x elements.
+        int numberOfTopLabels = FlagsFactory.getFlags().getClassifierNumberOfTopLabels();
+        float classifierThresholdValue = FlagsFactory.getFlags().getClassifierThreshold();
+        LogUtil.i(
+                "numberOfTopLabels = %s\n classifierThresholdValue = %s",
+                numberOfTopLabels, classifierThresholdValue);
         return classifications.stream()
+                .sorted((c1, c2) -> Float.compare(c2.getScore(), c1.getScore())) // Reverse sorted.
+                .filter(category -> isAboveThreshold(category, classifierThresholdValue))
                 .map(OnDeviceClassifier::convertCategoryLabelToTopicId)
                 .map(this::createTopic)
-                .limit(MAX_LABELS_PER_APP)
+                .limit(numberOfTopLabels)
                 .collect(Collectors.toList());
+    }
+
+    // Filter category above the required threshold.
+    private static boolean isAboveThreshold(Category category, float classifierThresholdValue) {
+        return category.getScore() >= classifierThresholdValue;
     }
 
     // Converts Category Label to TopicId. Expects label to be labelId of the classified category.
@@ -188,6 +182,12 @@ public class OnDeviceClassifier implements Classifier {
         // Preprocess the app description for the model.
         appDescription = mPreprocessor.preprocessAppDescription(appDescription);
         appDescription = mPreprocessor.removeStopWords(appDescription);
+        // Limit description size.
+        int maxNumberOfWords = FlagsFactory.getFlags().getClassifierDescriptionMaxWords();
+        int maxNumberOfCharacters = FlagsFactory.getFlags().getClassifierDescriptionMaxLength();
+        appDescription =
+                limitDescriptionSize(appDescription, maxNumberOfWords, maxNumberOfCharacters);
+
         return appDescription;
     }
 

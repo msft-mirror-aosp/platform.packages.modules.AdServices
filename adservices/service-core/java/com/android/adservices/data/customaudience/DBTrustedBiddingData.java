@@ -69,7 +69,7 @@ public class DBTrustedBiddingData {
             return null;
         }
         return new DBTrustedBiddingData.Builder()
-                .setUrl(parcelable.getTrustedBiddingUrl())
+                .setUrl(parcelable.getTrustedBiddingUri())
                 .setKeys(parcelable.getTrustedBiddingKeys())
                 .build();
     }

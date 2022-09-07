@@ -35,6 +35,7 @@ import androidx.fragment.app.FragmentManager;
 import com.android.adservices.api.R;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.consent.App;
+import com.android.adservices.service.consent.DeviceRegionProvider;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.UIStats;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsAppsFragment;
@@ -54,8 +55,6 @@ import java.io.IOException;
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
  */
 public class ActionDelegate {
-    private static final String EEA_DEVICE = "com.google.android.feature.EEA_DEVICE";
-
     private final AdServicesSettingsActivity mAdServicesSettingsActivity;
     private final FragmentManager mFragmentManager;
     private final MainViewModel mMainViewModel;
@@ -75,7 +74,7 @@ public class ActionDelegate {
         mTopicsViewModel = topicsViewModel;
         mAppsViewModel = appsViewModel;
         mDeviceLoggingRegion =
-                adServicesSettingsActivity.getPackageManager().hasSystemFeature(EEA_DEVICE)
+                DeviceRegionProvider.isEuDevice(adServicesSettingsActivity)
                         ? AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU
                         : AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
 

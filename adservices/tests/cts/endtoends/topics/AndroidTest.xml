@@ -36,7 +36,6 @@
 <!-- Create place to store tests apks that will be installed/uninstalled in the test. -->
 <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
     <option name="run-command" value="mkdir -p /data/local/tmp/cts/install" />
-    <option name="run-command" value="adb shell setprop log.tag.adservices VERBOSE" />
     <option name="teardown-command" value="rm -rf /data/local/tmp/cts"/>
     <!-- Uninstall the test app anyway in case failed test skips the uninstallation -->
     <option name="teardown-command"

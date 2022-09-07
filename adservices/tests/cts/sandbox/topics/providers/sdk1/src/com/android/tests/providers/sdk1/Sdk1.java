@@ -20,9 +20,10 @@ import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.Topic;
 import android.app.sdksandbox.LoadSdkException;
-import android.app.sdksandbox.LoadSdkResponse;
+import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
+import android.os.Binder;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -37,18 +38,20 @@ public class Sdk1 extends SandboxedSdkProvider {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     // Override the Epoch Job Period to this value to speed up the epoch computation.
-    private static final long TEST_EPOCH_JOB_PERIOD_MS = 4000;
+    private static final long TEST_EPOCH_JOB_PERIOD_MS = 6000;
+
+    // Expected Taxonomy version and Model version. This should be changed along with corresponding
+    // model change.
+    private static final long TAXONOMY_VERSION = 2L;
+    private static final long MODEL_VERSION = 2L;
 
     // Set of classification topics for the Test App. The returned topic should be one of these
     // Topics.
     private static final ImmutableSet<Integer> TOPIC_ID_SET =
-            ImmutableSet.of(20, 183, 96, 6, 13, 286, 112, 194, 242, 17);
-
-    private Executor mExecutor;
-    private OnLoadSdkCallback mCallback;
+            ImmutableSet.of(10147, 10253, 10175, 10254, 10333);
 
     @Override
-    public LoadSdkResponse onLoadSdk(Bundle params) throws LoadSdkException {
+    public SandboxedSdk onLoadSdk(Bundle params) throws LoadSdkException {
         try {
             // The first call to the Topics API. This will record the usage of the test app to
             // the Topics API.
@@ -72,7 +75,7 @@ public class Sdk1 extends SandboxedSdkProvider {
             // previous epoch, we should have some returned topic now.
             GetTopicsResponse response = callTopicsApi();
             if (response.getTopics().isEmpty()) {
-                // Trigger the error callback to tell the Test App that the we did not receive
+                // Trigger the error callback to tell the Test App that we did not receive
                 // any topic. This will tell the Test App to fail the test.
                 Log.e(TAG, "Failed. No topics!");
                 throw new LoadSdkException(new Exception("Failed. No topics!"), new Bundle());
@@ -81,14 +84,14 @@ public class Sdk1 extends SandboxedSdkProvider {
                 Topic topic = response.getTopics().get(0);
                 boolean correctResult =
                         TOPIC_ID_SET.contains(topic.getTopicId())
-                                && topic.getTaxonomyVersion() == 1L
-                                && topic.getModelVersion() == 1L;
+                                && topic.getTaxonomyVersion() == TAXONOMY_VERSION
+                                && topic.getModelVersion() == MODEL_VERSION;
                 if (correctResult) {
                     // Return a response to tell the Test App that the second Topics
                     // API call got back some topic which is expected. This will tell the Test
                     // App to pass the test.
                     Log.i(TAG, "Get correct returned topic: " + topic.getTopicId());
-                    return new LoadSdkResponse(new Bundle());
+                    return new SandboxedSdk(new Binder());
                 } else {
                     // Throw an exception to tell the test app that we received
                     // a wrong topic. This will tell the Test App to fail the test.
@@ -109,9 +112,6 @@ public class Sdk1 extends SandboxedSdkProvider {
     public View getView(Context windowContext, Bundle params, int width, int height) {
         return null;
     }
-
-    @Override
-    public void onDataReceived(Bundle data, DataReceivedCallback callback) {}
 
     private GetTopicsResponse callTopicsApi() throws Exception {
         AdvertisingTopicsClient advertisingTopicsClient =

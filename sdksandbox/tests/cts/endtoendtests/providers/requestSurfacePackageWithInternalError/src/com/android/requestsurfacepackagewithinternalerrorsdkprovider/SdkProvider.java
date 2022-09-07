@@ -16,17 +16,18 @@
 
 package com.android.requestsurfacepackagewithinternalerrorsdkprovider;
 
-import android.app.sdksandbox.LoadSdkResponse;
+import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
+import android.os.Binder;
 import android.os.Bundle;
 import android.view.View;
 
 public class SdkProvider extends SandboxedSdkProvider {
 
     @Override
-    public LoadSdkResponse onLoadSdk(Bundle params) {
-        return new LoadSdkResponse(new Bundle());
+    public SandboxedSdk onLoadSdk(Bundle params) {
+        return new SandboxedSdk(new Binder());
     }
 
     @Override
@@ -34,6 +35,4 @@ public class SdkProvider extends SandboxedSdkProvider {
         throw new RuntimeException("General Exception");
     }
 
-    @Override
-    public void onDataReceived(Bundle data, DataReceivedCallback callback) {}
 }

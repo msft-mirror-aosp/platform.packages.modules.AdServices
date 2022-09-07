@@ -41,7 +41,7 @@ public final class SourceFixture {
         return new Source.Builder()
                 .setPublisher(ValidSourceParams.PUBLISHER)
                 .setAppDestination(ValidSourceParams.ATTRIBUTION_DESTINATION)
-                .setAdTechDomain(ValidSourceParams.AD_TECH_DOMAIN)
+                .setEnrollmentId(ValidSourceParams.ENROLLMENT_ID)
                 .setRegistrant(ValidSourceParams.REGISTRANT);
     }
 
@@ -53,7 +53,7 @@ public final class SourceFixture {
                 .setPublisher(ValidSourceParams.PUBLISHER)
                 .setAppDestination(ValidSourceParams.ATTRIBUTION_DESTINATION)
                 .setWebDestination(ValidSourceParams.WEB_DESTINATION)
-                .setAdTechDomain(ValidSourceParams.AD_TECH_DOMAIN)
+                .setEnrollmentId(ValidSourceParams.ENROLLMENT_ID)
                 .setRegistrant(ValidSourceParams.REGISTRANT)
                 .setEventTime(ValidSourceParams.SOURCE_EVENT_TIME)
                 .setExpiryTime(ValidSourceParams.EXPIRY_TIME)
@@ -77,7 +77,7 @@ public final class SourceFixture {
         public static Uri WEB_DESTINATION = Uri.parse("https://destination.com");
         public static final Uri PUBLISHER = Uri.parse("android-app://com.publisher");
         public static final Uri REGISTRANT = Uri.parse("android-app://com.registrant");
-        public static final Uri AD_TECH_DOMAIN = Uri.parse("https://com.example");
+        public static final String ENROLLMENT_ID = "enrollment-id";
         public static final Source.SourceType SOURCE_TYPE = Source.SourceType.EVENT;
         public static final Long INSTALL_ATTRIBUTION_WINDOW = 841839879274L;
         public static final Long INSTALL_COOLDOWN_WINDOW = 8418398274L;

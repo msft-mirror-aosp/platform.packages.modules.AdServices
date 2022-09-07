@@ -28,14 +28,15 @@ public class AdDataValidatorTest {
 
     AdDataValidator mValidator =
             new AdDataValidator(
-                    ValidatorUtil.AD_TECH_ROLE_BUYER, CommonFixture.VALID_BUYER.toString());
+                    ValidatorUtil.AD_TECH_ROLE_BUYER, CommonFixture.VALID_BUYER_1.toString());
 
     @Test
     public void testValidAdData() {
         Assert.assertTrue(
                 mValidator
                         .getValidationViolations(
-                                AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER).get(0))
+                                AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER_1)
+                                        .get(0))
                         .isEmpty());
     }
 
@@ -55,7 +56,7 @@ public class AdDataValidatorTest {
                         String.format(
                                 AdTechUriValidator.IDENTIFIER_AND_URL_ARE_INCONSISTENT,
                                 ValidatorUtil.AD_TECH_ROLE_BUYER,
-                                CommonFixture.VALID_BUYER,
+                                CommonFixture.VALID_BUYER_1,
                                 ValidatorUtil.AD_TECH_ROLE_BUYER,
                                 AdDataValidator.RENDER_URI_FIELD_NAME,
                                 uriHost)));
@@ -65,7 +66,7 @@ public class AdDataValidatorTest {
     public void testInvalidMetadata() {
         AdData adData =
                 new AdData.Builder()
-                        .setRenderUri(Uri.parse("https://" + CommonFixture.VALID_BUYER + "/aaa"))
+                        .setRenderUri(Uri.parse("https://" + CommonFixture.VALID_BUYER_1 + "/aaa"))
                         .setMetadata("invalid[json]field")
                         .build();
         ValidatorTestUtil.assertViolationContainsOnly(

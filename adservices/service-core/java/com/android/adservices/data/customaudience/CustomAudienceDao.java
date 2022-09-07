@@ -91,16 +91,26 @@ public abstract class CustomAudienceDao {
         Objects.requireNonNull(customAudience);
         Objects.requireNonNull(dailyUpdateUrl);
 
+        Instant eligibleUpdateTime;
+        if (customAudience.getUserBiddingSignals() == null
+                || customAudience.getTrustedBiddingData() == null
+                || customAudience.getAds() == null
+                || customAudience.getAds().isEmpty()) {
+            eligibleUpdateTime = Instant.EPOCH;
+        } else {
+            eligibleUpdateTime =
+                    DBCustomAudienceBackgroundFetchData
+                            .computeNextEligibleUpdateTimeAfterSuccessfulUpdate(
+                                    customAudience.getCreationTime());
+        }
+
         DBCustomAudienceBackgroundFetchData fetchData =
                 DBCustomAudienceBackgroundFetchData.builder()
                         .setOwner(customAudience.getOwner())
                         .setBuyer(customAudience.getBuyer())
                         .setName(customAudience.getName())
                         .setDailyUpdateUrl(dailyUpdateUrl)
-                        .setEligibleUpdateTime(
-                                DBCustomAudienceBackgroundFetchData
-                                        .computeNextEligibleUpdateTimeAfterSuccessfulUpdate(
-                                                customAudience.getCreationTime()))
+                        .setEligibleUpdateTime(eligibleUpdateTime)
                         .build();
 
         insertOrOverwriteCustomAudienceAndBackgroundFetchData(customAudience, fetchData);

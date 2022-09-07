@@ -18,6 +18,7 @@ package com.android.tests.sandbox.fledge;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import android.Manifest;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.content.Context;
@@ -26,13 +27,14 @@ import android.os.Process;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -44,7 +46,8 @@ public class SandboxedFledgeManagerTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final String SDK_NAME = "com.android.tests.providers.sdkfledge";
 
-    private static Context sContext;
+    private static final Context sContext =
+            InstrumentationRegistry.getInstrumentation().getContext();
 
     private DevContext mDevContext;
 
@@ -52,21 +55,8 @@ public class SandboxedFledgeManagerTest {
 
     private String mAccessStatus;
 
-    static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION =
-            "fledge_ad_selection_enforce_foreground_status_run_ad_selection";
-    static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION =
-            "fledge_ad_selection_enforce_foreground_status_report_impression";
-    static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE =
-            "fledge_ad_selection_enforce_foreground_status_ad_selection_override";
-    static final String KEY_FOREGROUND_STATUS_LEVEL = "foreground_validation_status_level";
-
-    static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE =
-            "fledge_ad_selection_enforce_foreground_status_custom_audience";
-
     @Before
     public void setup() throws TimeoutException {
-        sContext = InstrumentationRegistry.getInstrumentation().getContext();
-
         DevContextFilter devContextFilter = DevContextFilter.create(sContext);
         mDevContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
         boolean isDebuggable =
@@ -77,18 +67,36 @@ public class SandboxedFledgeManagerTest {
                 String.format("Debuggable: %b\n", isDebuggable)
                         + String.format("Developer options on: %b", isDeveloperMode);
 
-        // Start a foreground activity
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+
+        // Enable CTS to be run with versions of WebView < M105
+        PhFlagsFixture.overrideEnforceIsolateMaxHeapSize(false);
+        PhFlagsFixture.overrideIsolateMaxHeapSizeBytes(0);
+
+        PhFlagsFixture.overrideSdkRequestPermitsPerSecond(Integer.MAX_VALUE);
+        makeTestProcessForeground();
+        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
+        overrideConsentManagerDebugMode(true);
+    }
+
+    /**
+     * Starts a foreground activity to make the test process a foreground one to pass PPAPI and SDK
+     * Sandbox checks
+     */
+    private void makeTestProcessForeground() throws TimeoutException {
         SimpleActivity.startAndWaitForSimpleActivity(sContext, Duration.ofMillis(500));
     }
 
     @After
     public void shutDown() {
         SimpleActivity.stopSimpleActivity(sContext);
+        overrideConsentManagerDebugMode(false);
     }
 
     @Test
-    @Ignore("b/242540363")
-    public void loadSdkAndRunFledgeFlow() throws Exception {
+    public void loadSdkAndRunFledgeFlow() {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 
         final SdkSandboxManager sdkSandboxManager =
@@ -98,8 +106,16 @@ public class SandboxedFledgeManagerTest {
 
         sdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), CALLBACK_EXECUTOR, callback);
 
-        assertWithMessage("Callback failed with message " + callback.getLoadSdkErrorMsg())
+        assertWithMessage(
+                        callback.isLoadSdkSuccessful()
+                                ? "Callback was successful"
+                                : "Callback failed with message " + callback.getLoadSdkErrorMsg())
                 .that(callback.isLoadSdkSuccessful())
                 .isTrue();
+    }
+
+    private void overrideConsentManagerDebugMode(boolean enable) {
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.consent_manager_debug_mode %s", enable);
     }
 }

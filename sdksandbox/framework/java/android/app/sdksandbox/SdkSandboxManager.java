@@ -30,6 +30,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
+import android.util.Log;
 import android.view.SurfaceControlViewHost.SurfacePackage;
 
 import com.android.internal.annotations.GuardedBy;
@@ -38,6 +39,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Executor;
 
 /**
@@ -67,6 +69,14 @@ public final class SdkSandboxManager {
     public static final String SDK_SANDBOX_SERVICE = "sdk_sandbox";
 
     /**
+     * Sdk sandbox process is not available.
+     *
+     * <p>This indicates that the sdk sandbox process is not available, either because it has died,
+     * disconnected or was not created in the first place.
+     */
+    public static final int SDK_SANDBOX_PROCESS_NOT_AVAILABLE = 503;
+
+    /**
      * SDK not found.
      *
      * <p>This indicates that client application tried to load a non-existing SDK by calling {@link
@@ -92,6 +102,14 @@ public final class SdkSandboxManager {
      */
     public static final int LOAD_SDK_SDK_DEFINED_ERROR = 102;
 
+    /**
+     * SDK sandbox is disabled.
+     *
+     * <p>This indicates that the SDK sandbox is disabled. Any subsequent attempts to load SDKs in
+     * this boot will also fail.
+     */
+    public static final int LOAD_SDK_SDK_SANDBOX_DISABLED = 103;
+
     /** Internal error while loading SDK.
      *
      * <p>This indicates a generic internal error happened while applying the call from
@@ -99,14 +117,17 @@ public final class SdkSandboxManager {
      */
     public static final int LOAD_SDK_INTERNAL_ERROR = 500;
 
+    private static final String TAG = "SdkSandboxManager";
+
     /** @hide */
     @IntDef(
-            prefix = "LOAD_SDK_",
             value = {
                 LOAD_SDK_NOT_FOUND,
                 LOAD_SDK_ALREADY_LOADED,
                 LOAD_SDK_SDK_DEFINED_ERROR,
+                LOAD_SDK_SDK_SANDBOX_DISABLED,
                 LOAD_SDK_INTERNAL_ERROR,
+                SDK_SANDBOX_PROCESS_NOT_AVAILABLE
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface LoadSdkErrorCode {}
@@ -119,25 +140,10 @@ public final class SdkSandboxManager {
     public static final int REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR = 700;
 
     /** @hide */
-    @IntDef(prefix = "REQUEST_SURFACE_PACKAGE_", value = {
-            REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR
-    })
+    @IntDef(value = {REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR, SDK_SANDBOX_PROCESS_NOT_AVAILABLE})
     @Retention(RetentionPolicy.SOURCE)
     public @interface RequestSurfacePackageErrorCode {}
 
-    /**
-     * Internal error while performing {@link SdkSandboxManager#sendData}.
-     *
-     * <p>This indicates a generic internal error happened while requesting to send data to an SDK.
-     */
-    public static final int SEND_DATA_INTERNAL_ERROR = 800;
-
-    /** @hide */
-    @IntDef(
-            prefix = "SEND_DATA_",
-            value = {SEND_DATA_INTERNAL_ERROR})
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface SendDataErrorCode {}
 
     /**
      * SDK Sandbox is disabled.
@@ -204,13 +210,13 @@ public final class SdkSandboxManager {
     private final Context mContext;
 
     @GuardedBy("mLifecycleCallbacks")
-    private final ArrayList<SdkSandboxLifecycleCallbackProxy> mLifecycleCallbacks =
+    private final ArrayList<SdkSandboxProcessDeathCallbackProxy> mLifecycleCallbacks =
             new ArrayList<>();
 
     /** @hide */
     public SdkSandboxManager(@NonNull Context context, @NonNull ISdkSandboxManager binder) {
-        mContext = context;
-        mService = binder;
+        mContext = Objects.requireNonNull(context, "context should not be null");
+        mService = Objects.requireNonNull(binder, "binder should not be null");
     }
 
     /**
@@ -243,25 +249,23 @@ public final class SdkSandboxManager {
      * callbacks can be added to detect death.
      *
      * @param callbackExecutor the {@link Executor} on which to invoke the callback
-     * @param callback the {@link SdkSandboxLifecycleCallback} which will receive sdk sandbox
+     * @param callback the {@link SdkSandboxProcessDeathCallback} which will receive sdk sandbox
      *     lifecycle events.
      */
-    public void addSdkSandboxLifecycleCallback(
+    public void addSdkSandboxProcessDeathCallback(
             @NonNull @CallbackExecutor Executor callbackExecutor,
-            @NonNull SdkSandboxLifecycleCallback callback) {
-        if (callbackExecutor == null) {
-            throw new IllegalArgumentException("executor cannot be null");
-        }
-        if (callback == null) {
-            throw new IllegalArgumentException("callback cannot be null");
-        }
+            @NonNull SdkSandboxProcessDeathCallback callback) {
+        Objects.requireNonNull(callbackExecutor, "callbackExecutor should not be null");
+        Objects.requireNonNull(callback, "callback should not be null");
 
         synchronized (mLifecycleCallbacks) {
-            final SdkSandboxLifecycleCallbackProxy callbackProxy =
-                    new SdkSandboxLifecycleCallbackProxy(callbackExecutor, callback);
+            final SdkSandboxProcessDeathCallbackProxy callbackProxy =
+                    new SdkSandboxProcessDeathCallbackProxy(callbackExecutor, callback);
             try {
-                mService.addSdkSandboxLifecycleCallback(
-                        mContext.getPackageName(), callbackProxy);
+                mService.addSdkSandboxProcessDeathCallback(
+                        mContext.getPackageName(),
+                        /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                        callbackProxy);
             } catch (RemoteException e) {
                 throw e.rethrowFromSystemServer();
             }
@@ -270,22 +274,27 @@ public final class SdkSandboxManager {
     }
 
     /**
-     * Remove an {@link SdkSandboxLifecycleCallback} that was previously added using {@link
-     * SdkSandboxManager#addSdkSandboxLifecycleCallback(Executor, SdkSandboxLifecycleCallback)}
+     * Remove an {@link SdkSandboxProcessDeathCallback} that was previously added using {@link
+     * SdkSandboxManager#addSdkSandboxProcessDeathCallback(Executor,
+     * SdkSandboxProcessDeathCallback)}
      *
-     * @param callback the {@link SdkSandboxLifecycleCallback} which was previously added using
-     *     {@link SdkSandboxManager#addSdkSandboxLifecycleCallback(Executor,
-     *     SdkSandboxLifecycleCallback)}
+     * @param callback the {@link SdkSandboxProcessDeathCallback} which was previously added using
+     *     {@link SdkSandboxManager#addSdkSandboxProcessDeathCallback(Executor,
+     *     SdkSandboxProcessDeathCallback)}
      */
-    public void removeSdkSandboxLifecycleCallback(
-            @NonNull SdkSandboxLifecycleCallback callback) {
+    public void removeSdkSandboxProcessDeathCallback(
+            @NonNull SdkSandboxProcessDeathCallback callback) {
+        Objects.requireNonNull(callback, "callback should not be null");
         synchronized (mLifecycleCallbacks) {
             for (int i = mLifecycleCallbacks.size() - 1; i >= 0; i--) {
-                final SdkSandboxLifecycleCallbackProxy callbackProxy = mLifecycleCallbacks.get(i);
+                final SdkSandboxProcessDeathCallbackProxy callbackProxy =
+                        mLifecycleCallbacks.get(i);
                 if (callbackProxy.callback == callback) {
                     try {
-                        mService.removeSdkSandboxLifecycleCallback(
-                                mContext.getPackageName(), callbackProxy);
+                        mService.removeSdkSandboxProcessDeathCallback(
+                                mContext.getPackageName(),
+                                /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                                callbackProxy);
                     } catch (RemoteException e) {
                         throw e.rethrowFromSystemServer();
                     }
@@ -312,18 +321,24 @@ public final class SdkSandboxManager {
      * <p>This API may only be called while the caller is running in the foreground. Calls from the
      * background will result in a {@link SecurityException} being thrown.
      *
-     * @param sdkName name of the SDK to be loaded
-     * @param params the parameters App passes to SDK
+     * @param sdkName name of the SDK to be loaded.
+     * @param params additional parameters to be passed to the SDK in the form of a {@link Bundle}
+     *     as agreed between the client and the SDK.
      * @param executor the {@link Executor} on which to invoke the receiver.
-     * @param receiver This either returns a Bundle of params on a successful run, or {@link
+     * @param receiver This either returns a {@link SandboxedSdk} on a successful run, or {@link
      *     LoadSdkException}.
      */
     public void loadSdk(
             @NonNull String sdkName,
             @NonNull Bundle params,
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<LoadSdkResponse, LoadSdkException> receiver) {
-        final LoadSdkReceiverProxy callbackProxy = new LoadSdkReceiverProxy(executor, receiver);
+            @NonNull OutcomeReceiver<SandboxedSdk, LoadSdkException> receiver) {
+        Objects.requireNonNull(sdkName, "sdkName should not be null");
+        Objects.requireNonNull(params, "params should not be null");
+        Objects.requireNonNull(executor, "executor should not be null");
+        Objects.requireNonNull(receiver, "receiver should not be null");
+        final LoadSdkReceiverProxy callbackProxy =
+                new LoadSdkReceiverProxy(executor, receiver, mService);
         try {
             mService.loadSdk(
                     mContext.getPackageName(),
@@ -340,6 +355,7 @@ public final class SdkSandboxManager {
      * Fetches information about Sdks that are loaded in the sandbox.
      *
      * @return List of {@link SharedLibraryInfo} containing all currently loaded sdks
+     * @hide
      */
     public @NonNull List<SharedLibraryInfo> getLoadedSdkLibrariesInfo() {
         try {
@@ -355,9 +371,8 @@ public final class SdkSandboxManager {
      * Unloads an SDK that has been previously loaded by the caller.
      *
      * <p>It is not guaranteed that the memory allocated for this SDK will be freed immediately. All
-     * subsequent calls to {@link #sendData(String, Bundle, Executor, OutcomeReceiver)} or {@link
-     * #requestSurfacePackage(String, Bundle, Executor, OutcomeReceiver)} for the given {@code
-     * sdkName} will fail.
+     * subsequent calls to {@link #requestSurfacePackage(String, Bundle, Executor, OutcomeReceiver)}
+     * for the given {@code sdkName} will fail.
      *
      * <p>This API may only be called while the caller is running in the foreground. Calls from the
      * background will result in a {@link SecurityException} being thrown.
@@ -366,6 +381,7 @@ public final class SdkSandboxManager {
      * @throws IllegalArgumentException if the SDK is not loaded.
      */
     public void unloadSdk(@NonNull String sdkName) {
+        Objects.requireNonNull(sdkName, "sdkName should not be null");
         try {
             mService.unloadSdk(
                     mContext.getPackageName(),
@@ -390,11 +406,12 @@ public final class SdkSandboxManager {
      * <p>This API may only be called while the caller is running in the foreground. Calls from the
      * background will result in a {@link SecurityException} being thrown.
      *
-     * @param sdkName name of the SDK loaded into sdk sandbox
+     * @param sdkName name of the SDK loaded into sdk sandbox.
      * @param params the parameters which the client application passes to the SDK, it should
      *     contain the following params: (EXTRA_WIDTH_IN_PIXELS, EXTRA_HEIGHT_IN_PIXELS,
      *     EXTRA_DISPLAY_ID, EXTRA_HOST_TOKEN). If any of these params is missing, an
-     *     IllegalArgumentException will be thrown.
+     *     IllegalArgumentException will be thrown. Any additional parameters may be passed as
+     *     agreed between the client and the SDK.
      * @param callbackExecutor the {@link Executor} on which to invoke the callback
      * @param receiver This either returns a {@link Bundle} on success which should contain the key
      *     EXTRA_SURFACE_PACKAGE with value of {@link SurfacePackage} response, or {@link
@@ -412,6 +429,10 @@ public final class SdkSandboxManager {
             @NonNull Bundle params,
             @NonNull @CallbackExecutor Executor callbackExecutor,
             @NonNull OutcomeReceiver<Bundle, RequestSurfacePackageException> receiver) {
+        Objects.requireNonNull(sdkName, "sdkName should not be null");
+        Objects.requireNonNull(params, "params should not be null");
+        Objects.requireNonNull(callbackExecutor, "callbackExecutor should not be null");
+        Objects.requireNonNull(receiver, "receiver should not be null");
         try {
             int width = params.getInt(EXTRA_WIDTH_IN_PIXELS, -1); // -1 means invalid width
             if (width <= 0) {
@@ -446,7 +467,7 @@ public final class SdkSandboxManager {
             }
 
             final RequestSurfacePackageReceiverProxy callbackProxy =
-                    new RequestSurfacePackageReceiverProxy(callbackExecutor, receiver);
+                    new RequestSurfacePackageReceiverProxy(callbackExecutor, receiver, mService);
 
             mService.requestSurfacePackage(
                     mContext.getPackageName(),
@@ -464,45 +485,14 @@ public final class SdkSandboxManager {
     }
 
     /**
-     * Sends a bundle of {@code data} to SDK.
-     *
-     * <p>After the client application receives a signal about a successful SDK load, it is then
-     * able to asynchronously request to send any data to the SDK in the sandbox. If the SDK is not
-     * loaded, {@link IllegalArgumentException} is thrown.
-     *
-     * <p>This API may only be called while the caller is running in the foreground. Calls from the
-     * background will result in a {@link SecurityException} being thrown.
-     *
-     * @param sdkName name of the SDK loaded into sdk sandbox, the same name used in {@link
-     *     SdkSandboxManager#loadSdk(String, Bundle, Executor, OutcomeReceiver)}
-     * @param data the data to be sent to the SDK represented in the form of a {@link Bundle}
-     * @param callbackExecutor the {@link Executor} on which to invoke the callback
-     * @param receiver the {@link OutcomeReceiver} which will receive events from loading and
-     *     interacting with SDKs. The SDK may also send a Bundle of data back on a successful run.
-     * @throws IllegalArgumentException if the SDK is not loaded.
-     */
-    public void sendData(
-            @NonNull String sdkName,
-            @NonNull Bundle data,
-            @NonNull @CallbackExecutor Executor callbackExecutor,
-            @NonNull OutcomeReceiver<SendDataResponse, SendDataException> receiver) {
-        SendDataReceiverProxy callbackProxy = new SendDataReceiverProxy(callbackExecutor, receiver);
-        try {
-            mService.sendData(mContext.getPackageName(), sdkName, data, callbackProxy);
-        } catch (RemoteException e) {
-            throw e.rethrowFromSystemServer();
-        }
-    }
-
-    /**
      * A callback for tracking events SDK sandbox death.
      *
      * <p>The callback can be added using {@link
-     * SdkSandboxManager#addSdkSandboxLifecycleCallback(Executor, SdkSandboxLifecycleCallback)}
-     * and removed using {@link
-     * SdkSandboxManager#removeSdkSandboxLifecycleCallback(SdkSandboxLifecycleCallback)}
+     * SdkSandboxManager#addSdkSandboxProcessDeathCallback(Executor,
+     * SdkSandboxProcessDeathCallback)} and removed using {@link
+     * SdkSandboxManager#removeSdkSandboxProcessDeathCallback(SdkSandboxProcessDeathCallback)}
      */
-    public interface SdkSandboxLifecycleCallback {
+    public interface SdkSandboxProcessDeathCallback {
         /**
          * Notifies the client application that the SDK sandbox has died. The sandbox could die for
          * various reasons, for example, due to memory pressure on the system, or a crash in the
@@ -517,13 +507,13 @@ public final class SdkSandboxManager {
     }
 
     /** @hide */
-    private static class SdkSandboxLifecycleCallbackProxy
-            extends ISdkSandboxLifecycleCallback.Stub {
+    private static class SdkSandboxProcessDeathCallbackProxy
+            extends ISdkSandboxProcessDeathCallback.Stub {
         private final Executor mExecutor;
-        public final SdkSandboxLifecycleCallback callback;
+        public final SdkSandboxProcessDeathCallback callback;
 
-        SdkSandboxLifecycleCallbackProxy(
-                Executor executor, SdkSandboxLifecycleCallback lifecycleCallback) {
+        SdkSandboxProcessDeathCallbackProxy(
+                Executor executor, SdkSandboxProcessDeathCallback lifecycleCallback) {
             mExecutor = executor;
             callback = lifecycleCallback;
         }
@@ -537,22 +527,43 @@ public final class SdkSandboxManager {
     /** @hide */
     private static class LoadSdkReceiverProxy extends ILoadSdkCallback.Stub {
         private final Executor mExecutor;
-        private final OutcomeReceiver<LoadSdkResponse, LoadSdkException> mCallback;
+        private final OutcomeReceiver<SandboxedSdk, LoadSdkException> mCallback;
+        private final ISdkSandboxManager mService;
 
         LoadSdkReceiverProxy(
-                Executor executor, OutcomeReceiver<LoadSdkResponse, LoadSdkException> callback) {
+                Executor executor,
+                OutcomeReceiver<SandboxedSdk, LoadSdkException> callback,
+                ISdkSandboxManager service) {
             mExecutor = executor;
             mCallback = callback;
+            mService = service;
         }
 
         @Override
-        public void onLoadSdkSuccess(LoadSdkResponse response) {
-            mExecutor.execute(() -> mCallback.onResult(response));
+        public void onLoadSdkSuccess(SandboxedSdk sandboxedSdk, long timeSystemServerCalledApp) {
+            logLatencyFromSystemServerToApp(timeSystemServerCalledApp);
+            mExecutor.execute(() -> mCallback.onResult(sandboxedSdk));
         }
 
         @Override
-        public void onLoadSdkFailure(LoadSdkException exception) {
+        public void onLoadSdkFailure(LoadSdkException exception, long timeSystemServerCalledApp) {
+            logLatencyFromSystemServerToApp(timeSystemServerCalledApp);
             mExecutor.execute(() -> mCallback.onError(exception));
+        }
+
+        private void logLatencyFromSystemServerToApp(long timeSystemServerCalledApp) {
+            try {
+                mService.logLatencyFromSystemServerToApp(
+                        ISdkSandboxManager.LOAD_SDK,
+                        // TODO(b/242832156): Add Injector class for testing
+                        (int) (System.currentTimeMillis() - timeSystemServerCalledApp));
+            } catch (RemoteException e) {
+                Log.w(
+                        TAG,
+                        "Remote exception while calling logLatencyFromSystemServerToApp."
+                                + "Error: "
+                                + e.getMessage());
+            }
         }
     }
 
@@ -561,17 +572,24 @@ public final class SdkSandboxManager {
             extends IRequestSurfacePackageCallback.Stub {
         private final Executor mExecutor;
         private final OutcomeReceiver<Bundle, RequestSurfacePackageException> mReceiver;
+        private final ISdkSandboxManager mService;
 
         RequestSurfacePackageReceiverProxy(
                 Executor executor,
-                OutcomeReceiver<Bundle, RequestSurfacePackageException> receiver) {
+                OutcomeReceiver<Bundle, RequestSurfacePackageException> receiver,
+                ISdkSandboxManager service) {
             mExecutor = executor;
             mReceiver = receiver;
+            mService = service;
         }
 
         @Override
-        public void onSurfacePackageReady(SurfacePackage surfacePackage,
-                int surfacePackageId, Bundle params) {
+        public void onSurfacePackageReady(
+                SurfacePackage surfacePackage,
+                int surfacePackageId,
+                Bundle params,
+                long timeSystemServerCalledApp) {
+            logLatencyFromSystemServerToApp(timeSystemServerCalledApp);
             mExecutor.execute(
                     () -> {
                         params.putParcelable(EXTRA_SURFACE_PACKAGE, surfacePackage);
@@ -580,33 +598,28 @@ public final class SdkSandboxManager {
         }
 
         @Override
-        public void onSurfacePackageError(int errorCode, String errorMsg) {
+        public void onSurfacePackageError(
+                int errorCode, String errorMsg, long timeSystemServerCalledApp) {
+            logLatencyFromSystemServerToApp(timeSystemServerCalledApp);
             mExecutor.execute(
                     () ->
                             mReceiver.onError(
                                     new RequestSurfacePackageException(errorCode, errorMsg)));
         }
-    }
 
-    /** @hide */
-    private static class SendDataReceiverProxy extends ISendDataCallback.Stub {
-        private final Executor mExecutor;
-        private final OutcomeReceiver<SendDataResponse, SendDataException> mReceiver;
-
-        SendDataReceiverProxy(
-                Executor executor, OutcomeReceiver<SendDataResponse, SendDataException> receiver) {
-            mExecutor = executor;
-            mReceiver = receiver;
-        }
-
-        @Override
-        public void onSendDataSuccess(Bundle params) {
-            mExecutor.execute(() -> mReceiver.onResult(new SendDataResponse(params)));
-        }
-
-        @Override
-        public void onSendDataError(int errorCode, String errorMsg) {
-            mExecutor.execute(() -> mReceiver.onError(new SendDataException(errorCode, errorMsg)));
+        private void logLatencyFromSystemServerToApp(long timeSystemServerCalledApp) {
+            try {
+                mService.logLatencyFromSystemServerToApp(
+                        ISdkSandboxManager.REQUEST_SURFACE_PACKAGE,
+                        // TODO(b/242832156): Add Injector class for testing
+                        (int) (System.currentTimeMillis() - timeSystemServerCalledApp));
+            } catch (RemoteException e) {
+                Log.w(
+                        TAG,
+                        "Remote exception while calling logLatencyFromSystemServerToApp."
+                                + "Error: "
+                                + e.getMessage());
+            }
         }
     }
 }

@@ -57,4 +57,10 @@ java_sdk_library {
         "//packages/modules/AdServices:__subpackages__",
     ],
     apex_available: ["com.android.adservices"],
+    jacoco: {
+        exclude_filter: [
+            "com.android.sdksandbox.**",
+            "com.android.server.sdksandbox.**",
+        ],
+    },
 }
