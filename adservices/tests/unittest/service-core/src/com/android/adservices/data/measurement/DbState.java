@@ -20,6 +20,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 
+import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
@@ -43,7 +44,7 @@ public class DbState {
     List<Source> mSourceList;
     List<Trigger> mTriggerList;
     List<EventReport> mEventReportList;
-    List<AttributionRateLimit> mAttrRateLimitList;
+    List<Attribution> mAttrRateLimitList;
     List<AggregateEncryptionKey> mAggregateEncryptionKeyList;
     List<AggregateReport> mAggregateReportList;
 
@@ -89,12 +90,12 @@ public class DbState {
             }
         }
 
-        // AttributionRateLimits
-        if (testInput.has("attribution_rate_limits")) {
-            JSONArray attrs = testInput.getJSONArray("attribution_rate_limits");
+        // Attributions
+        if (testInput.has("attributions")) {
+            JSONArray attrs = testInput.getJSONArray("attributions");
             for (int i = 0; i < attrs.length(); i++) {
                 JSONObject attrJSON = attrs.getJSONObject(i);
-                AttributionRateLimit attrRateLimit = getAttributionRateLimitFrom(attrJSON);
+                Attribution attrRateLimit = getAttributionFrom(attrJSON);
                 mAttrRateLimitList.add(attrRateLimit);
             }
         }
@@ -155,11 +156,11 @@ public class DbState {
         }
         eventReportCursor.close();
 
-        // Read AttributionRateLimit table
-        Cursor attrCursor = readerDB.query(MeasurementTables.AttributionRateLimitContract.TABLE,
-                null, null, null, null, null, MeasurementTables.AttributionRateLimitContract.ID);
+        // Read Attribution table
+        Cursor attrCursor = readerDB.query(MeasurementTables.AttributionContract.TABLE,
+                null, null, null, null, null, MeasurementTables.AttributionContract.ID);
         while (attrCursor.moveToNext()) {
-            mAttrRateLimitList.add(getAttributionRateLimitFrom(attrCursor));
+            mAttrRateLimitList.add(getAttributionFrom(attrCursor));
         }
         attrCursor.close();
 
@@ -201,7 +202,7 @@ public class DbState {
                         .thenComparing(EventReport::getTriggerTime));
 
         mAttrRateLimitList.sort(
-                Comparator.comparing(AttributionRateLimit::getTriggerTime));
+                Comparator.comparing(Attribution::getTriggerTime));
 
         mAggregateEncryptionKeyList.sort(
                 Comparator.comparing(AggregateEncryptionKey::getKeyId));
@@ -223,8 +224,9 @@ public class DbState {
                         Source.SourceType.valueOf(
                                 sJSON.getString("sourceType").toUpperCase(Locale.ENGLISH)))
                 .setPublisher(Uri.parse(sJSON.getString("publisher")))
+                .setPublisherType(sJSON.optInt("publisherType"))
                 .setAppDestination(Uri.parse(sJSON.getString("appDestination")))
-                .setAdTechDomain(Uri.parse(sJSON.getString("adTechDomain")))
+                .setEnrollmentId(sJSON.getString("enrollmentId"))
                 .setEventTime(sJSON.getLong("eventTime"))
                 .setExpiryTime(sJSON.getLong("expiryTime"))
                 .setPriority(sJSON.getLong("priority"))
@@ -244,7 +246,8 @@ public class DbState {
         return new Trigger.Builder()
                 .setId(tJSON.getString("id"))
                 .setAttributionDestination(Uri.parse(tJSON.getString("attributionDestination")))
-                .setAdTechDomain(Uri.parse(tJSON.getString("adTechDomain")))
+                .setDestinationType(tJSON.optInt("destinationType"))
+                .setEnrollmentId(tJSON.getString("enrollmentId"))
                 .setEventTriggers(tJSON.getString("eventTriggers"))
                 .setTriggerTime(tJSON.getLong("triggerTime"))
                 .setStatus(tJSON.getInt("status"))
@@ -258,7 +261,7 @@ public class DbState {
                 .setId(rJSON.getString("id"))
                 .setSourceId(rJSON.getLong("sourceId"))
                 .setAttributionDestination(Uri.parse(rJSON.getString("attributionDestination")))
-                .setAdTechDomain(Uri.parse(rJSON.getString("adTechDomain")))
+                .setEnrollmentId(rJSON.getString("enrollmentId"))
                 .setTriggerData(rJSON.getLong("triggerData"))
                 .setTriggerTime(rJSON.getLong("triggerTime"))
                 .setReportTime(rJSON.getLong("reportTime"))
@@ -271,15 +274,15 @@ public class DbState {
                 .build();
     }
 
-    private AttributionRateLimit getAttributionRateLimitFrom(JSONObject attrJSON)
+    private Attribution getAttributionFrom(JSONObject attrJSON)
             throws JSONException {
-        return new AttributionRateLimit.Builder()
+        return new Attribution.Builder()
                 .setId(attrJSON.getString("id"))
                 .setSourceSite(attrJSON.getString("sourceSite"))
                 .setSourceOrigin(attrJSON.getString("sourceOrigin"))
                 .setDestinationSite(attrJSON.getString("destinationSite"))
                 .setDestinationOrigin(attrJSON.getString("destinationOrigin"))
-                .setAdTechDomain(attrJSON.getString("adTechDomain"))
+                .setEnrollmentId(attrJSON.getString("enrollmentId"))
                 .setTriggerTime(attrJSON.getLong("triggerTime"))
                 .setRegistrant(attrJSON.getString("registrant"))
                 .build();
@@ -295,24 +298,39 @@ public class DbState {
                 .build();
     }
 
-    private AttributionRateLimit getAttributionRateLimitFrom(Cursor cursor) {
-        return new AttributionRateLimit.Builder()
-                .setId(cursor.getString(cursor.getColumnIndex(
-                        MeasurementTables.AttributionRateLimitContract.ID)))
-                .setSourceSite(cursor.getString(cursor.getColumnIndex(
-                        MeasurementTables.AttributionRateLimitContract.SOURCE_SITE)))
-                .setSourceOrigin(cursor.getString(cursor.getColumnIndex(
-                        MeasurementTables.AttributionRateLimitContract.SOURCE_ORIGIN)))
-                .setDestinationSite(cursor.getString(cursor.getColumnIndex(
-                        MeasurementTables.AttributionRateLimitContract.DESTINATION_SITE)))
-                .setDestinationOrigin(cursor.getString(cursor.getColumnIndex(
-                        MeasurementTables.AttributionRateLimitContract.DESTINATION_ORIGIN)))
-                .setAdTechDomain(cursor.getString(cursor.getColumnIndex(
-                        MeasurementTables.AttributionRateLimitContract.AD_TECH_DOMAIN)))
-                .setTriggerTime(cursor.getLong(cursor.getColumnIndex(
-                        MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME)))
-                .setRegistrant(cursor.getString(cursor.getColumnIndex(
-                        MeasurementTables.AttributionRateLimitContract.REGISTRANT)))
+    private Attribution getAttributionFrom(Cursor cursor) {
+        return new Attribution.Builder()
+                .setId(
+                        cursor.getString(
+                                cursor.getColumnIndex(MeasurementTables.AttributionContract.ID)))
+                .setSourceSite(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AttributionContract.SOURCE_SITE)))
+                .setSourceOrigin(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AttributionContract.SOURCE_ORIGIN)))
+                .setDestinationSite(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AttributionContract.DESTINATION_SITE)))
+                .setDestinationOrigin(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AttributionContract.DESTINATION_ORIGIN)))
+                .setEnrollmentId(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AttributionContract.ENROLLMENT_ID)))
+                .setTriggerTime(
+                        cursor.getLong(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AttributionContract.TRIGGER_TIME)))
+                .setRegistrant(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AttributionContract.REGISTRANT)))
                 .build();
     }
 
@@ -324,7 +342,7 @@ public class DbState {
                 .setAttributionDestination(Uri.parse(rJSON.getString("attributionDestination")))
                 .setSourceRegistrationTime(rJSON.getLong("sourceRegistrationTime"))
                 .setScheduledReportTime(rJSON.getLong("scheduledReportTime"))
-                .setReportingOrigin(Uri.parse(rJSON.getString("reportingOrigin")))
+                .setEnrollmentId(rJSON.getString("enrollmentId"))
                 .setDebugCleartextPayload(rJSON.getString("debugCleartextPayload"))
                 .setStatus(rJSON.getInt("status"))
                 .build();

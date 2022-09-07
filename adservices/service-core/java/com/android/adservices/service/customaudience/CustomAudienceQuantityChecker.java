@@ -67,9 +67,12 @@ public class CustomAudienceQuantityChecker {
      * </ol>
      *
      * @param customAudience The custom audience really to be validated against.
+     * @param callerPackageName the package name for the calling application, used as the owner
+     *     application identifier
      */
-    public void check(@NonNull CustomAudience customAudience) {
+    public void check(@NonNull CustomAudience customAudience, @NonNull String callerPackageName) {
         Objects.requireNonNull(customAudience);
+        Objects.requireNonNull(callerPackageName);
 
         long mCustomAudienceMaxOwnerCount = mFlags.getFledgeCustomAudienceMaxOwnerCount();
         long mCustomAudienceMaxCount = mFlags.getFledgeCustomAudienceMaxCount();
@@ -77,7 +80,7 @@ public class CustomAudienceQuantityChecker {
 
         List<String> violations = new ArrayList<>();
         CustomAudienceDao.CustomAudienceStats customAudienceStats =
-                mCustomAudienceDao.getCustomAudienceStats(customAudience.getOwnerPackageName());
+                mCustomAudienceDao.getCustomAudienceStats(callerPackageName);
         if (customAudienceStats.getPerOwnerCount() == 0
                 && customAudienceStats.getOwnerCount() >= mCustomAudienceMaxOwnerCount) {
             violations.add(THE_MAX_NUMBER_OF_OWNER_ALLOWED_FOR_THE_DEVICE_HAD_REACHED);

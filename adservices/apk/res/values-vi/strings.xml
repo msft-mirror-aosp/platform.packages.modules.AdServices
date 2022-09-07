@@ -22,10 +22,8 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="1644434244130657749">"Cho phép ứng dụng truy cập vào các AdServices Attribution API."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="2766614780488510189">"truy cập vào AdServices Custom Audience API"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"Cho phép ứng dụng truy cập vào AdServices Custom Audience API."</string>
-    <!-- no translation found for permlab_accessAdServicesAdId (2754825914769538156) -->
-    <skip />
-    <!-- no translation found for permdesc_accessAdServicesAdId (7717770480967762044) -->
-    <skip />
+    <string name="permlab_accessAdServicesAdId" msgid="2754825914769538156">"Truy cập vào API mã nhận dạng cho quảng cáo"</string>
+    <string name="permdesc_accessAdServicesAdId" msgid="7717770480967762044">"Cho phép ứng dụng truy cập vào API mã nhận dạng cho quảng cáo."</string>
     <string name="permlab_accessAdServicesConsent" msgid="3203633397142568707">"truy cập vào AdServices Consent API"</string>
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Cho phép ứng dụng truy cập vào AdServices Consent API."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Truy cập vào Ad ID API"</string>
@@ -34,72 +32,63 @@
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Cho phép ứng dụng truy cập vào App Set ID API."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Truy cập vào Consent Service API"</string>
     <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"Cho phép ứng dụng truy cập vào Consent Service API."</string>
+    <string name="permlab_modifyAdServicesState" msgid="3594653261299518914">"Truy cập API sửa đổi trạng thái bật của AdService"</string>
+    <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Cho phép ứng dụng truy cập API sửa đổi trạng thái bật của AdService."</string>
+    <string name="permlab_accessAdServicesState" msgid="482058883975394398">"Truy cập API trạng thái bật của AdService"</string>
+    <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Cho phép ứng dụng truy cập API trạng thái bật của AdService."</string>
     <string name="app_label" msgid="5985320129629013968">"Hệ thống Android"</string>
-    <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"Hộp cát về quyền riêng tư bản beta"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"Hộp cát về quyền riêng tư bản beta"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"Chuyển đổi Hộp cát về quyền riêng tư bản beta"</string>
-    <string name="settingsUI_main_view_title" msgid="255982490790282252">"Bản beta về quyền riêng tư trong quảng cáo của Android"</string>
-    <string name="settingsUI_main_view_subtitle" msgid="3380585883687237827">"Thử nghiệm hệ thống Hộp cát về quyền riêng tư mới với tính năng hạn chế theo dõi trên ứng dụng"</string>
-    <string name="settingsUI_main_view_info_text1" msgid="8353580266621706164">"Cách hoạt động của Hộp cát về quyền riêng tư"</string>
-    <string name="settingsUI_main_view_info_text2" msgid="5144888171043725329">"Dữ liệu được thu thập trong Hộp cát về quyền riêng tư để hiển thị những quảng cáo bạn có thể thích, dữ liệu được chia sẻ nhưng không xác định bạn hoặc thiết bị của bạn."</string>
-    <string name="settingsUI_main_view_info_text3" msgid="9106658161862318732">"Loại dữ liệu nào được lưu trữ trong Hộp cát về quyền riêng tư?"</string>
-    <string name="settingsUI_main_view_info_text4" msgid="5819359066240454954">"• Các mối quan tâm chung"</string>
-    <string name="settingsUI_main_view_info_text5" msgid="6064832868440367397">"Android tạo dữ liệu này dựa trên các ứng dụng bạn dùng và thêm dữ liệu vào Hộp cát về quyền riêng tư. Chẳng hạn như một trong những sở thích chung của bạn có thể là “Thể thao”. \n\n Bạn có thể xem danh sách sở thích của mình trong cài đặt Quyền riêng tư và chặn bất kỳ mục nào bạn không hứng thú."</string>
-    <string name="settingsUI_main_view_info_text6" msgid="3406976290919982143">"• Các mối quan tâm cụ thể"</string>
-    <string name="settingsUI_main_view_info_text7" msgid="210269084665708892">"Ứng dụng sẽ tạo dữ liệu này dựa trên cách bạn sử dụng chúng và thêm dữ liệu đó vào Hộp cát về quyền riêng tư. Ví dụ như một ứng dụng mà bạn dùng để mua giày chạy bộ có thể thêm nhãn sport_running.\n\nỞ mục cài đặt quyền riêng tư, bạn có thể xem danh sách các ứng dụng thực hiện việc này, bạn cũng có thể chặn bất kỳ ứng dụng nào đóng góp dữ liệu vào Hộp cát về quyền riêng tư."</string>
-    <string name="settingsUI_topics_view_title" msgid="7437641813424176118">"Quản lý các sở thích"</string>
-    <string name="settingsUI_topics_view_subtitle" msgid="5347912133908026725">"Hộp cát về quyền riêng tư trong Android hạn chế việc theo dõi trên nhiều ứng dụng nhưng vẫn cho phép các ứng dụng hiển thị quảng cáo mà bạn có thể thích. Android chia sẻ dữ liệu này với các nhà quảng cáo nhưng không xác định bạn hoặc thiết bị của bạn.\n\nDựa trên các ứng dụng bạn dùng, Android sẽ tạo và cập nhật danh sách các sở thích chung về quảng cáo của bạn. Nếu bạn chặn một sở thích thì nó sẽ không được thêm vào danh sách trừ khi bạn bỏ chặn. Một số quảng cáo liên quan vẫn hiển thị."</string>
-    <string name="settingsUI_topics_view_info_text1" msgid="6729245512525985403">"Các mối quan tâm chung về quảng cáo"</string>
-    <string name="settingsUI_topics_view_info_text2" msgid="8355913397424818046">"Android tạo ra những mối quan tâm này dựa trên các ứng dụng bạn dùng. \n\nChẳng hạn nếu thiết bị của bạn có một vài ứng dụng thể thao, Android có thể thêm sở thích “Thể thao” vào Hộp cát về quyền riêng tư.\n\nDữ liệu này được chia sẻ với các nhà quảng cáo sau đó nhưng không xác định bạn hoặc thiết bị của bạn."</string>
-    <string name="settingsUI_apps_key" msgid="5279102708260885695">"apps_preference"</string>
-    <string name="settingsUI_apps_title" msgid="2177966577556486280">"Ứng dụng của bạn tạo ra các mối quan tâm cụ thể"</string>
-    <string name="settingsUI_apps_summary" msgid="2382082513059909726">"Quản lý các ứng dụng tạo ra các mối quan tâm cụ thể"</string>
-    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Các ứng dụng bạn đã chặn"</string>
-    <string name="settingsUI_apps_view_title" msgid="3615627092403761282">"Quản lý ứng dụng"</string>
-    <string name="settingsUI_apps_view_subtitle" msgid="5257332567222983503">"Dựa vào cách bạn sử dụng, một số ứng dụng sẽ tạo dữ liệu liên quan đến các mối quan tâm cụ thể của bạn đối với quảng cáo cho Hộp cát về quyền riêng tư. Android cập nhật danh sách ứng dụng này để bạn có thể xem hoặc chỉnh sửa.\n\nNếu bạn chặn một ứng dụng, ứng dụng đó sẽ không thêm bất kỳ mối quan tâm cụ thể nào. Những ứng dụng bị chặn sẽ không được thêm lại vào danh sách này trừ phi bạn bỏ chặn. Những mối quan tâm đã được ứng dụng bị chặn tạo sẽ bị xóa, nhưng bạn vẫn có thể thấy một số quảng cáo có liên quan."</string>
-    <string name="settingsUI_apps_view_no_apps_text" msgid="1056905761942948495">"Hiện không có ứng dụng nào hiển thị"</string>
-    <string name="settingsUI_reset_apps_title" msgid="3308597019425923552">"Đặt lại dữ liệu do ứng dụng tạo"</string>
-    <string name="settingsUI_apps_view_info_text1" msgid="503353133396835755">"Sở thích về quảng cáo cụ thể"</string>
-    <string name="settingsUI_apps_view_info_text2" msgid="6562781312486257254">"Một số ứng dụng bạn dùng sẽ tạo dữ liệu về sở thích cụ thể của bạn để quảng cáo và thêm dữ liệu đó vào Hộp cát về quyền riêng tư.\n\nChẳng hạn một ứng dụng bạn dùng để mua giày chạy bộ có thể thêm nhãn sport_running.\n\nSau đó, dữ liệu đã thu thập trong Hộp cát về quyền riêng tư sẽ được chia sẻ với các nhà quảng cáo mà không nhận dạng bạn hoặc thiết bị của bạn. Vì vậy, bạn vẫn thấy những quảng cáo mà bạn có thể thích, nhưng với khả năng bảo vệ quyền riêng tư cao hơn."</string>
-    <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="5700261138344146462">"Hiện không có ứng dụng bị chặn nào hiển thị"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Hiện bạn không có mối quan tâm nào"</string>
-    <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
-    <string name="settingsUI_topics_title" msgid="4024683469932819788">"Mối quan tâm chung của bạn"</string>
-    <string name="settingsUI_topics_summary" msgid="3146101472984434355">"Quản lý mối quan tâm chung của bạn"</string>
-    <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"Quản lý mối quan tâm chung của bạn về quảng cáo"</string>
+    <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Tham gia phiên bản beta về quyền riêng tư trong quảng cáo của Android"</string>
+    <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android đang khám phá nhiều cách bảo mật hơn để các ứng dụng có thể hiển thị quảng cáo cho bạn"</string>
+    <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Tìm hiểu thêm"</string>
+    <string name="notificationUI_header_title_eu" msgid="4955298263079910371">"Bản beta về quyền riêng tư trong quảng cáo của Android"</string>
+    <string name="notificationUI_container1_title_eu" msgid="8315199862119660570">"Có gì mới"</string>
+    <string name="notificationUI_container1_body_text_eu" msgid="1700290522706948241">"Các tính năng bảo mật mới trong Hộp cát về quyền riêng tư cho phép ứng dụng hiển thị cho bạn các quảng cáo có liên quan, nhưng hạn chế những gì ứng dụng đó có thể tìm hiểu về hoạt động của bạn trên các trang web cũng như ứng dụng từ nhà phát triển khác."</string>
+    <string name="notificationUI_container1_control_text_eu" msgid="3158258148321255153">"Cách thức hoạt động"</string>
+    <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Cách tham gia"</string>
+    <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Khi bạn bật bản beta, các ứng dụng có thể thử nghiệm những cách mới, riêng tư hơn để hiển thị quảng cáo cho bạn. Bạn có thể tắt bản beta bất kỳ lúc nào trong chế độ cài đặt quyền riêng tư."</string>
+    <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Không, cảm ơn"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"Có, tôi sẽ tham gia"</string>
+    <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Cảm ơn bạn đã tham gia."</string>
+    <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Bạn là một phần của bản beta về quyền riêng tư trong quảng cáo của Android. Hộp cát về quyền riêng tư được bật cho thiết bị của bạn.\n\nBạn có thể tìm hiểu thêm hoặc tắt bản beta bất kỳ lúc nào trong mục cài đặt quyền riêng tư của mình."</string>
+    <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Bạn đã chọn không tham gia"</string>
+    <string name="notificationUI_confirmation_decline_subtitle" msgid="4194388733937808440">"Cảm ơn bạn đã phản hồi. Hộp cát về quyền riêng tư đã bị tắt trong thiết bị của bạn.\n\nNếu bạn thay đổi ý định hoặc muốn tìm hiểu thêm, hãy di chuyển tới mục cài đặt quyền riêng tư của mình."</string>
+    <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"Chế độ cài đặt quyền riêng tư"</string>
+    <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"Tôi hiểu"</string>
+    <string name="notificationUI_container2_title" msgid="3844342008598264655">"Bạn là một phần của bản beta"</string>
+    <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Hộp cát về quyền riêng tư đã được bật cho thiết bị của bạn, nhờ vậy, các ứng dụng có thể thử nghiệm những cách mới, riêng tư hơn để hiển thị quảng cáo cho bạn. Bạn có thể tắt bản beta bất kỳ lúc nào trong chế độ cài đặt quyền riêng tư."</string>
+    <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"Quản lý các tùy chọn cài đặt bảo mật"</string>
+    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Đã hiểu"</string>
+    <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Hộp cát về quyền riêng tư của Android cung cấp các tính năng mới mà các ứng dụng có thể dùng để hiển thị những quảng cáo bạn có thể thích. Những công nghệ này không sử dụng số nhận dạng thiết bị.\n\nAndroid và ứng dụng có thể ước tính các loại quảng cáo mà bạn có thể quan tâm và tạm thời lưu những sở thích này trên thiết bị của bạn. Điều này cho phép các ứng dụng hiển thị những quảng cáo bạn có thể thích mà không cần theo dõi hoạt động của bạn trên các trang web cũng như ứng dụng từ các nhà phát triển khác."</string>
+    <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"Cá nhân hóa quảng cáo với Hộp cát về quyền riêng tư"</string>
+    <string name="notificationUI_how_it_works_expanded_text3" msgid="603165966360369018">"•  Sở thích do Android ước tính"</string>
+    <string name="notificationUI_how_it_works_expanded_text4" msgid="3910573920883580609">"Android ước tính định kỳ các sở thích hàng đầu của bạn dựa trên các ứng dụng bạn dùng, chẳng hạn như \"Thể thao\" hoặc \"Du lịch\".\n\nSau đó, một ứng dụng có thể yêu cầu Android sử dụng những sở thích đó để hiển thị cho bạn các quảng cáo phù hợp hơn.\n\nBạn có thể xem danh sách sở thích hiện tại trong mục cài đặt quyền riêng tư và chặn bất kỳ quảng cáo nào bạn không thích."</string>
+    <string name="notificationUI_how_it_works_expanded_text5" msgid="7257714040472055781">"•  Sở thích do ứng dụng ước tính"</string>
+    <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"Các ứng dụng có thể ước tính sở thích của bạn và tạm thời lưu những sở thích này trong Android. Chẳng hạn như một ứng dụng bạn dùng để mua giày chạy bộ có thể ước tính sở thích của bạn là \"chạy marathon\".\n\nSau đó, dựa trên sở thích này, một ứng dụng khác có thể hiển thị cho bạn một quảng cáo liên quan đến chạy marathon.\n\nBạn có thể quản lý danh sách các ứng dụng đã lưu sở thích trong mục cài đặt quyền riêng tư."</string>
+    <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Hộp cát về quyền riêng tư"</string>
+    <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Tham gia vào phiên bản beta về quyền riêng tư trong quảng cáo của Android"</string>
+    <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Hộp cát về quyền riêng tư"</string>
+    <string name="settingsUI_topics_title" msgid="5996189869721397937">"Sở thích do Android ước tính"</string>
+    <string name="settingsUI_apps_title" msgid="2772289096915264175">"Ứng dụng ước tính sở thích"</string>
+    <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"Đo lường quảng cáo"</string>
+    <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"Các ứng dụng có thể sử dụng Hộp cát về quyền riêng tư để đo lường hiệu quả của quảng cáo. Để làm điều này, các nhà quảng cáo có thể tạm thời lưu dữ liệu tương tác của bạn giữa quảng cáo và ứng dụng của họ qua Android. Lượng dữ liệu họ có thể lưu bị hạn chế và sẽ bị xóa thường xuyên.\n\nBạn có thể xóa dữ liệu này bất kỳ lúc nào bằng cách tắt Hộp cát về quyền riêng tư."</string>
+    <string name="settingsUI_topics_view_subtitle" msgid="6608135144119617292">"Android ước tính định kỳ những mối quan tâm hàng đầu dựa trên các ứng dụng bạn dùng. Các ứng dụng có thể yêu cầu Android sử dụng những sở thích đó để hiển thị cho bạn các quảng cáo phù hợp hơn.\n\nNếu bạn chặn một sở thích thì sở thích đó sẽ không được thêm lại vào danh sách trừ khi bạn bỏ chặn. Bạn vẫn có thể thấy một số quảng cáo có liên quan."</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Chặn"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Bỏ chặn"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Mối quan tâm bạn đã chặn"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Đặt lại tất cả các mối quan tâm"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="5717377146633882375">"Hiện không có sở thích bị chặn nào hiển thị"</string>
-    <string name="notificationUI_notification_content_eu" msgid="7419441022808120101">"Thử nghiệm các tính năng mới sẽ hạn chế việc theo dõi trên nhiều ứng dụng"</string>
-    <string name="notificationUI_header_title_eu" msgid="6822288197367284058">"Tham gia phiên bản beta về quyền riêng tư quảng cáo"</string>
-    <string name="notificationUI_container3_title_eu" msgid="3157854074121291065">"Việc bạn có thể làm"</string>
-    <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Không, cảm ơn"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="7294736040084958697">"Có, tôi sẽ thử"</string>
-    <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Cảm ơn bạn đã tham gia."</string>
-    <string name="notificationUI_confirmation_accept_subtitle" msgid="722290263168711051">"Giờ thì bạn đã là một thành viên của bản beta Hộp cát về quyền riêng tư. \n\nBạn có thể tìm hiểu thêm hoặc rời khỏi bản beta bất kỳ lúc nào bằng cách chỉnh mục cài đặt Quyền riêng tư."</string>
-    <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Bạn đã chọn không tham gia"</string>
-    <string name="notificationUI_confirmation_decline_subtitle" msgid="1869322730722065768">"Cảm ơn bạn đã phản hồi. Bạn chưa chọn bản beta Hộp cát về quyền riêng tư.\n\nNếu bạn thay đổi ý định hoặc muốn tìm hiểu thêm, vui lòng chuyển đến mục cài đặt quyền riêng tư."</string>
-    <string name="notificationUI_notification_content" msgid="2096372976024736172">"Bạn đang thử nghiệm các tính năng mới hạn chế theo dõi đa ứng dụng"</string>
-    <string name="notificationUI_header_title" msgid="857744302422337933">"Bạn đang giúp Android hạn chế theo dõi đa ứng dụng"</string>
-    <string name="notificationUI_header_subtitle" msgid="522289584167376388">"Android đang thử nghiệm các tính năng mới sẽ hạn chế việc theo dõi đa ứng dụng của các nhà quảng cáo"</string>
-    <string name="notificationUI_container1_title" msgid="3837529978480615552">"Theo dõi đa ứng dụng là gì?"</string>
-    <string name="notificationUI_container1_body_text" msgid="2564452110982505130">"Ngày nay, dữ liệu về việc sử dụng ứng dụng của bạn có thể dễ dàng được liên kết với thiết bị của bạn, sau đó được chia sẻ trên các ứng dụng cho mục đích quảng cáo."</string>
-    <string name="notificationUI_container2_title" msgid="4796199061758878885">"Những gì Android đang làm"</string>
-    <string name="notificationUI_container2_body_text" msgid="7717896223210525953">"Android đang thử nghiệm Hộp cát về quyền riêng tư mới giúp lưu trữ và chia sẻ dữ liệu quảng cáo một cách an toàn - mà không cần nhận dạng bạn hoặc thiết bị của bạn. \n\nHệ thống mới này giúp ngăn các ứng dụng truyền dữ liệu trực tiếp đến các ứng dụng khác, nhưng vẫn cho phép chúng hiển thị cho bạn những quảng cáo mà bạn có thể thích."</string>
-    <string name="notificationUI_container2_control_text" msgid="3031227311095645064">"Cách hoạt động"</string>
-    <string name="notificationUI_container3_title" msgid="1283794406634157611">"Bạn đang giúp như thế nào"</string>
-    <string name="notificationUI_container3_body_text" msgid="2636703086913037594">"Mặc dù bạn có thể không nhận thấy những thay đổi trong quảng cáo, nhưng việc trở thành một phần của bản beta sẽ giúp Android hạn chế tính năng theo dõi trên ứng dụng theo thời gian. Bạn có thể rời khỏi bản beta bất kỳ lúc nào bằng cách chỉnh mục cài đặt quyền riêng tư."</string>
-    <string name="notificationUI_left_control_button_text" msgid="6459461402253858770">"Chế độ cài đặt quyền riêng tư"</string>
-    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Đã hiểu"</string>
-    <string name="notificationUI_how_it_works_expanded_text1" msgid="1753701052925879129">"Cách hoạt động của Hộp cát về quyền riêng tư"</string>
-    <string name="notificationUI_how_it_works_expanded_text2" msgid="3117263986288195274">"Dữ liệu được thu thập trong Hộp cát về quyền riêng tư để hiển thị những quảng cáo bạn có thể thích, dữ liệu được chia sẻ nhưng không xác định bạn hoặc thiết bị của bạn."</string>
-    <string name="notificationUI_how_it_works_expanded_text3" msgid="7270822532577167752">"Loại dữ liệu nào sẽ được lưu trữ trong Hộp cát riêng tư?"</string>
-    <string name="notificationUI_how_it_works_expanded_text4" msgid="5609475052636889205">"• Các mối quan tâm chung"</string>
-    <string name="notificationUI_how_it_works_expanded_text5" msgid="6757375506547548599">"Android tạo dữ liệu này dựa trên các ứng dụng bạn dùng và thêm dữ liệu vào Hộp cát về quyền riêng tư. Chẳng hạn như một trong những sở thích chung của bạn có thể là Thể thao. \n\n Bạn có thể xem danh sách sở thích của mình trong cài đặt Quyền riêng tư và chặn bất kỳ mục nào bạn không hứng thú."</string>
-    <string name="notificationUI_how_it_works_expanded_text6" msgid="2863877874268072458">"• Các mối quan tâm cụ thể"</string>
-    <string name="notificationUI_how_it_works_expanded_text7" msgid="2140515900209351523">"Ứng dụng sẽ tạo dữ liệu này dựa trên cách bạn sử dụng chúng và thêm dữ liệu đó vào Hộp cát về quyền riêng tư. Ví dụ như một ứng dụng mà bạn dùng để mua giày chạy bộ có thể thêm nhãn sport_running.\n\nỞ mục cài đặt quyền riêng tư, bạn có thể xem danh sách các ứng dụng thực hiện việc này, bạn cũng có thể chặn bất kỳ ứng dụng nào đóng góp dữ liệu vào hộp cát."</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Hiện bạn không có mối quan tâm nào"</string>
+    <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Hộp cát về quyền riêng tư"</string>
+    <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Bản beta về quyền riêng tư trong quảng cáo của Android cung cấp các tính năng mới mà ứng dụng có thể dùng để hiển thị những quảng cáo bạn có thể thích. Các công nghệ này không sử dụng số nhận dạng thiết bị.\n\nAndroid có thể ước tính các loại quảng cáo mà bạn có thể quan tâm và tạm thời lưu những sở thích này trên thiết bị của bạn. Điều này cho phép các ứng dụng hiển thị những quảng cáo có liên quan mà không cần theo dõi hoạt động của bạn trên các trang web cũng như ứng dụng từ nhà phát triển khác."</string>
+    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
+    <skip />
+    <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Các ứng dụng có thể ước tính sở thích của bạn và tạm thời lưu những sở thích này trong Android. Sau đó, một ứng dụng khác có thể hiển thị cho bạn quảng cáo dựa trên những sở thích này.\n\nNếu bạn chặn một ứng dụng, ứng dụng đó sẽ không ước tính thêm sở thích nào nữa. Ứng dụng bị chặn sẽ không được thêm lại vào danh sách ứng dụng này trừ khi bạn bỏ chặn. Các sở thích đã được ứng dụng ước tính sẽ bị xóa, nhưng bạn vẫn có thể thấy một số quảng cáo có liên quan."</string>
+    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Các ứng dụng bạn đã chặn"</string>
+    <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Đặt lại sở thích do ứng dụng ước tính"</string>
+    <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Hiện không có ứng dụng nào đang tạo các sở thích cho bạn"</string>
+    <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Hộp cát về quyền riêng tư"</string>
+    <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Bản beta về quyền riêng tư trong quảng cáo của Android cung cấp các tính năng mới mà ứng dụng có thể dùng để hiển thị những quảng cáo bạn có thể thích. Các công nghệ này không sử dụng số nhận dạng thiết bị.\n\nỨng dụng có thể ước tính các loại quảng cáo mà bạn có thể quan tâm và tạm thời lưu những sở thích này trên thiết bị của bạn. Điều này cho phép các ứng dụng hiển thị những quảng cáo có liên quan mà không cần theo dõi hoạt động của bạn trên các trang web cũng như ứng dụng từ nhà phát triển khác."</string>
+    <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Bạn không có ứng dụng nào bị chặn"</string>
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Bạn không có sở thích nào bị chặn"</string>
     <string name="topic10001" msgid="1636806320891333775">"Nghệ thuật &amp; Giải trí"</string>
     <string name="topic10002" msgid="1226367977754287428">"Diễn xuất &amp; Kịch nghệ"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime &amp; Manga"</string>

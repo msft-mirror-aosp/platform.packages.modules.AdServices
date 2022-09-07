@@ -80,6 +80,8 @@ public class BackgroundFetchJobServiceTest {
 
     private final Flags mFlagsWithEnabledBgF = new FlagsWithEnabledBgF();
     private final Flags mFlagsWithDisabledBgF = new FlagsWithDisabledBgF();
+    private final Flags mFlagsWithCustomAudienceServiceKillSwitchOn = new FlagsWithKillSwitchOn();
+    private final Flags mFlagsWithCustomAudienceServiceKillSwitchOff = new FlagsWithKillSwitchOff();
 
     @Before
     public void setup() {
@@ -156,6 +158,59 @@ public class BackgroundFetchJobServiceTest {
 
         assertNull(JOB_SCHEDULER.getPendingJob(FLEDGE_BACKGROUND_FETCH_JOB_ID));
         verify(mBgFWorkerMock, never()).runBackgroundFetch(any());
+        verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
+        verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
+    }
+
+    @Test
+    public void testOnStartJobCustomAudienceKillSwitchOn()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        doReturn(mFlagsWithCustomAudienceServiceKillSwitchOn).when(FlagsFactory::getFlags);
+        doReturn(JOB_SCHEDULER).when(mBgFJobServiceSpy).getSystemService(JobScheduler.class);
+        doNothing().when(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
+
+        // Schedule the job to assert after starting that the scheduled job has been cancelled
+        JobInfo existingJobInfo =
+                new JobInfo.Builder(
+                                FLEDGE_BACKGROUND_FETCH_JOB_ID,
+                                new ComponentName(CONTEXT, BackgroundFetchJobService.class))
+                        .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
+                        .build();
+        JOB_SCHEDULER.schedule(existingJobInfo);
+        assertNotNull(JOB_SCHEDULER.getPendingJob(FLEDGE_BACKGROUND_FETCH_JOB_ID));
+
+        assertFalse(mBgFJobServiceSpy.onStartJob(mJobParametersMock));
+
+        assertNull(JOB_SCHEDULER.getPendingJob(FLEDGE_BACKGROUND_FETCH_JOB_ID));
+        verify(mBgFWorkerMock, never()).runBackgroundFetch(any());
+        verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
+        verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
+    }
+
+    @Test
+    public void testOnStartJobCustomAudienceKillSwitchOff()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        doReturn(mFlagsWithCustomAudienceServiceKillSwitchOff).when(FlagsFactory::getFlags);
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
+        doReturn(mPackageManagerMock).when(mBgFJobServiceSpy).getPackageManager();
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
+        doNothing().when(mBgFWorkerMock).runBackgroundFetch(any());
+        CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
+
+        doAnswer(
+                        unusedInvocation -> {
+                            jobFinishedCountDown.countDown();
+                            return null;
+                        })
+                .when(mBgFJobServiceSpy)
+                .jobFinished(mJobParametersMock, false);
+
+        assertTrue(mBgFJobServiceSpy.onStartJob(mJobParametersMock));
+        jobFinishedCountDown.await();
+
+        verify(() -> BackgroundFetchWorker.getInstance(mBgFJobServiceSpy));
+        verify(mBgFWorkerMock).runBackgroundFetch(any());
         verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
     }
@@ -375,6 +430,34 @@ public class BackgroundFetchJobServiceTest {
         @Override
         public long getFledgeBackgroundFetchJobFlexMs() {
             throw new IllegalStateException("This configured value should not be called");
+        }
+    }
+
+    private static class FlagsWithKillSwitchOn implements Flags {
+
+        @Override
+        public boolean getFledgeCustomAudienceServiceKillSwitch() {
+            return true;
+        }
+
+        // For testing the corner case where the BgF is enabled but overall Custom Audience Service
+        // kill switch is on
+        @Override
+        public boolean getFledgeBackgroundFetchEnabled() {
+            return true;
+        }
+    }
+
+    private static class FlagsWithKillSwitchOff implements Flags {
+
+        @Override
+        public boolean getFledgeCustomAudienceServiceKillSwitch() {
+            return false;
+        }
+
+        @Override
+        public boolean getFledgeBackgroundFetchEnabled() {
+            return true;
         }
     }
 }

@@ -22,10 +22,8 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="1644434244130657749">"Veitir forriti aðgang að forritaskilum eigindar AdServices."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="2766614780488510189">"opna forritaskil sérsniðinna áhorfenda AdServices"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"Veitir forritum aðgang að forritaskilum sérsniðinna áhorfenda AdServices."</string>
-    <!-- no translation found for permlab_accessAdServicesAdId (2754825914769538156) -->
-    <skip />
-    <!-- no translation found for permdesc_accessAdServicesAdId (7717770480967762044) -->
-    <skip />
+    <string name="permlab_accessAdServicesAdId" msgid="2754825914769538156">"Aðgangur að forritaskilum auglýsingaauðkennis."</string>
+    <string name="permdesc_accessAdServicesAdId" msgid="7717770480967762044">"Veitir forriti aðgang að forritaskilum auglýsingaauðkennis."</string>
     <string name="permlab_accessAdServicesConsent" msgid="3203633397142568707">"opna forritaskil samþykkja AdServices"</string>
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Veitir forriti aðgang að forritaskilum samþykkja AdServices"</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Aðgangur að forritaskilum auglýsingaauðkennis."</string>
@@ -34,72 +32,63 @@
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Veitir forriti aðgang að forritaskilum kennis forritahóps."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Aðgangur að forritaskilum samþykkjaþjónustu"</string>
     <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"Veitir forriti aðgang að forritaskilum samþykkjaþjónustu."</string>
+    <string name="permlab_modifyAdServicesState" msgid="3594653261299518914">"Aðgangur að forritaskilum AdService fyrir breytingar virknistöðu."</string>
+    <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Veitir forriti aðgang að forritaskilum AdService fyrir breytingar virknistöðu."</string>
+    <string name="permlab_accessAdServicesState" msgid="482058883975394398">"Aðgangur að virknistöðuforritaskilum AdService"</string>
+    <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Veitir forriti aðgang að virknistöðuforritaskilum AdService."</string>
     <string name="app_label" msgid="5985320129629013968">"Android kerfið"</string>
-    <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"Betaútgáfa Privacy Sandbox"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"Betaútgáfa Privacy Sandbox"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"Velja/afvelja betaútgáfu Privacy Sandbox"</string>
-    <string name="settingsUI_main_view_title" msgid="255982490790282252">"Persónuvernd Android auglýsinga (betaútgáfa)"</string>
-    <string name="settingsUI_main_view_subtitle" msgid="3380585883687237827">"Prófaðu nýja Privacy Sandbox kerfið sem takmarkar forritarakningu"</string>
-    <string name="settingsUI_main_view_info_text1" msgid="8353580266621706164">"Svona virkar Privacy Sandbox"</string>
-    <string name="settingsUI_main_view_info_text2" msgid="5144888171043725329">"Gögnum er safnað í Privacy Sandbox til að sýna þér auglýsingar sem þér gæti líkað, en þeim er deilt án þess að auðkenna þig eða tækið þitt."</string>
-    <string name="settingsUI_main_view_info_text3" msgid="9106658161862318732">"Hvers konar gögn eru geymd í Privacy Sandbox?"</string>
-    <string name="settingsUI_main_view_info_text4" msgid="5819359066240454954">"•  Almenn áhugasvið"</string>
-    <string name="settingsUI_main_view_info_text5" msgid="6064832868440367397">"Android útbýr þessi gögn með því að byggja á þeim forritum sem þú notar og bætir þeim við Privacy Sandbox. Til dæmis gætu „Íþróttir“ verið eitt af almennum áhugasviðum þínum.\n\nÞú getur séð listann yfir áhugasviðin þín í persónuverndarstillingunum þínum og lokað fyrir þau sem þú kærir þig ekki um."</string>
-    <string name="settingsUI_main_view_info_text6" msgid="3406976290919982143">"•  Sértæk áhugasvið"</string>
-    <string name="settingsUI_main_view_info_text7" msgid="210269084665708892">"Forritin þín útbúa þessi gögn með því að byggja á því hvernig þú notar þau og bæta þeim við Privacy Sandbox. Til dæmis gæti forrit sem þú notar til að kaupa hlaupaskó bætt við flokknum sport_running.\n\nÞú getur séð listann yfir forrit sem nota þessa virkni í persónuverndarstillingunum þínum og lokað fyrir að forrit bæti gögnum við Privacy Sandbox."</string>
-    <string name="settingsUI_topics_view_title" msgid="7437641813424176118">"Stjórna áhugasviðum"</string>
-    <string name="settingsUI_topics_view_subtitle" msgid="5347912133908026725">"Privacy Sandbox frá Android takmarkar forritarakningu en gerir forritum þó kleift að birta þér auglýsingar sem þér gæti líkað. Android deilir þessum gögnum með auglýsendum án þess að auðkenna þig eða tækið þitt.\n\nAndroid notar upplýsingar um forritin sem þú notar til að útbúa og uppfæra þennan lista yfir almenn áhugasvið þín í tengslum við auglýsingar. Ef þú lokar á áhugasvið verður það ekki skráð aftur á listann nema þú opnir fyrir það. Þú gætir áfram séð auglýsingar sem þeim tengjast."</string>
-    <string name="settingsUI_topics_view_info_text1" msgid="6729245512525985403">"Auglýsingar almennra áhugasviða"</string>
-    <string name="settingsUI_topics_view_info_text2" msgid="8355913397424818046">"Android útbýr þessi áhugasvið með því að byggja á þeim forritum sem þú notar.\n\nTil dæmis ef þú ert með nokkur íþróttaforrit í tækinu þínu gæti Android bætt áhugasviðinu „Íþróttir“ við Privacy Sandbox.\n\nGögnunum er deilt síðar með auglýsendum, án þess að auðkenna þig eða tækið þitt."</string>
-    <string name="settingsUI_apps_key" msgid="5279102708260885695">"apps_preference"</string>
-    <string name="settingsUI_apps_title" msgid="2177966577556486280">"Forritin þín sem vekja sérstakan áhuga"</string>
-    <string name="settingsUI_apps_summary" msgid="2382082513059909726">"Stjórna forritunum þínum sem vekja sérstakan áhuga"</string>
-    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Forrit sem þú hefur lokað á"</string>
-    <string name="settingsUI_apps_view_title" msgid="3615627092403761282">"Stjórna forritum"</string>
-    <string name="settingsUI_apps_view_subtitle" msgid="5257332567222983503">"Sum forrit, eftir því hvernig þú notar þau, útbúa gögn fyrir Privacy Sandbox um sérstök áhugasvið þín í tengslum við auglýsingar. Android uppfærir þennan forritalista svo þú getir skoðað eða eytt honum.\n\nEf þú lokar á forrit mun það ekki bæta við fleiri sérstökum áhugasviðum. Það bætist ekki aftur á listann nema þú opnir á það. Áhugasviðum sem forritið hefur þegar búið til verður eytt en þú gætir áfram séð auglýsingar sem þeim tengjast."</string>
-    <string name="settingsUI_apps_view_no_apps_text" msgid="1056905761942948495">"Engin forrit til að sýna eins og er"</string>
-    <string name="settingsUI_reset_apps_title" msgid="3308597019425923552">"Endurstilla gögn sem forrit hafa útbúið"</string>
-    <string name="settingsUI_apps_view_info_text1" msgid="503353133396835755">"Auglýsingar fyrir sértæk áhugasvið"</string>
-    <string name="settingsUI_apps_view_info_text2" msgid="6562781312486257254">"Sum forrit sem þú notar útbúa gögn um sértæk áhugasvið þín til að sýna þér tengdar auglýsingar og bæta þeim við Privacy Sandbox.\n\nTil dæmis gæti forrit sem þú notar til að kaupa hlaupaskó bætt við flokknum sport_running.\n\nGögnunum er deilt síðar með auglýsendum, án þess að auðkenna þig eða tækið þitt. Þannig muntu ennþá sjá auglýsingar sem þér gæti líkað, en með aukinni öryggisvernd."</string>
-    <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="5700261138344146462">"Engin forrit á bannlista til að sýna eins og er"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Engin áhugasvið til að sýna sem stendur"</string>
-    <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
-    <string name="settingsUI_topics_title" msgid="4024683469932819788">"Almenn áhugasvið þín"</string>
-    <string name="settingsUI_topics_summary" msgid="3146101472984434355">"Stjórna almennum áhugasviðum þínum"</string>
-    <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"Stjórna almennum áhugasviðum fyrir auglýsingar"</string>
+    <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Taktu þátt í betaútgáfu persónuverndar Android-auglýsinga"</string>
+    <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android kannar lokaðri leiðir fyrir forrit til að birta þér auglýsingar."</string>
+    <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Nánar"</string>
+    <string name="notificationUI_header_title_eu" msgid="4955298263079910371">"Betaútgáfa persónuverndar Android-auglýsinga"</string>
+    <string name="notificationUI_container1_title_eu" msgid="8315199862119660570">"Nýjungar"</string>
+    <string name="notificationUI_container1_body_text_eu" msgid="1700290522706948241">"Nýju persónuverndareiginleikarnir í Privacy Sandbox gera forritum kleift að birta þér viðeigandi auglýsingar en takmarka á sama tíma hvaða upplýsingar forritin geta fengið um virkni þína á vefsvæðum og í forritum annarra þróunaraðila."</string>
+    <string name="notificationUI_container1_control_text_eu" msgid="3158258148321255153">"Svona virkar þetta"</string>
+    <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Svona tekurðu þátt"</string>
+    <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Ef kveikt er á betaútgáfunni geta forrit prófað þessar nýju, lokaðri leiðir til að birta þér auglýsingar. Þú getur slökkt á betaútgáfunni hvenær sem er í persónuverndarstillingunum."</string>
+    <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Nei, takk"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"Já, ég vil taka þátt"</string>
+    <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Takk fyrir að taka þátt"</string>
+    <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Þú tekur þátt í betaútgáfu persónuverndar Android-auglýsinga. Kveikt er á Privacy Sandbox fyrir tækið þitt.\n\nÞú getur kynnt þér betaútgáfuna nánar eða slökkt á henni hvenær sem er í persónuverndarstillingunum þínum."</string>
+    <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Þú valdir að taka ekki þátt"</string>
+    <string name="notificationUI_confirmation_decline_subtitle" msgid="4194388733937808440">"Takk fyrir svarið. Slökkt er á Privacy Sandbox fyrir tækið þitt.\n\nEf þér snýst hugur eða vilt kynna þér þetta nánar skaltu fara í persónuverndarstillingarnar þínar."</string>
+    <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"Persónuverndarstillingar"</string>
+    <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"Ég skil"</string>
+    <string name="notificationUI_container2_title" msgid="3844342008598264655">"Þú tekur þátt í betaútgáfunni"</string>
+    <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Kveikt er á Privacy Sandbox fyrir tækið þitt og forrit geta prófað þessar nýju, lokaðri leiðir til að birta þér auglýsingar. Þú getur slökkt á betaútgáfunni hvenær sem er í persónuverndarstillingunum."</string>
+    <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"Stjórna persónuverndarstillingum"</string>
+    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Ég skil"</string>
+    <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Privacy Sandbox frá Android býður upp á nýja eiginleika sem forrit geta nýtt sér til að birta þér auglýsingar sem gætu höfðað til þín. Þessi tækni notar ekki auðkenni tækja.\n\nAndroid og forritin þín geta áætlað hvernig auglýsingar gætu höfðað til þín og vistað áhugasviðin tímabundið í tækinu þínu. Þetta gerir forritum kleift að birta þér viðeigandi auglýsingar án þess að rekja virkni þína á vefsvæðum eða í forritum annarra þróunaraðila."</string>
+    <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"Sérsniðnar auglýsingar með Privacy Sandbox"</string>
+    <string name="notificationUI_how_it_works_expanded_text3" msgid="603165966360369018">"•  Áhugasvið sem Android hefur áætlað"</string>
+    <string name="notificationUI_how_it_works_expanded_text4" msgid="3910573920883580609">"Við og við áætlar Android þín helstu áhugasvið byggt á forritunum sem þú notar, t.d. „Íþróttir“ eða „Ferðalög“.\n\nForrit getur seinna meir beðið Android um að nota þessi áhugasvið til að birta þér auglýsingar sem eiga betur við þig.\n\nÞú getur séð listann yfir núverandi áhugasvið í persónuverndarstillingunum þínum og lokað á þau sem þú kærir þig ekki um."</string>
+    <string name="notificationUI_how_it_works_expanded_text5" msgid="7257714040472055781">"•  Áhugasvið sem forrit hafa áætlað"</string>
+    <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"Forrit geta áætlað áhugasviðin þín og vistað þau tímabundið með Android. Til dæmis gæti forrit sem þú notar til að kaupa hlaupaskó áætlað áhugasviðið „maraþonhlaup“.\n\nSíðar gæti annað forrit birt þér auglýsingu sem tengist maraþonhlaupum í samræmi við þetta áhugasvið.\n\nÞú getur stjórnað listanum yfir forrit sem hafa vistað áhugasvið í persónuverndarstillingunum þínum."</string>
+    <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
+    <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Taka þátt í betaútgáfu persónuverndar Android-auglýsinga"</string>
+    <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Privacy Sandbox"</string>
+    <string name="settingsUI_topics_title" msgid="5996189869721397937">"Áhugasvið sem Android hefur áætlað"</string>
+    <string name="settingsUI_apps_title" msgid="2772289096915264175">"Forrit sem áætla áhugasvið"</string>
+    <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"Auglýsingamælingar"</string>
+    <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"Forrit geta notað Privacy Sandbox til að mæla áhrif auglýsinga sinna. Til að gera það geta auglýsendur vistað gögn tímabundið með Android um gagnvirkni á milli auglýsinga þeirra og forrita. Gagnamagnið sem hægt er að vista er takmarkað og er gögnunum reglulega eytt.\n\nÞú getur eytt gögnunum hvenær sem er með því að slökkva á Privacy Sandbox."</string>
+    <string name="settingsUI_topics_view_subtitle" msgid="6608135144119617292">"Við og við áætlar Android þín helstu áhugasvið byggt á forritunum sem þú notar. Forrit geta beðið Android um að nota áhugasviðin til að birta þér auglýsingar sem eiga betur við þig.\n\nEf þú setur áhugasvið á bannlista verður því ekki bætt við listann aftur nema þú takir það af bannlista. Þú gætir áfram séð einhverjar tengdar auglýsingar."</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Setja á bannlista"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Taka af bannlista"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Áhugasvið sem þú hefur lokað á"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Endurstilla öll áhugasvið"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="5717377146633882375">"Engin áhugasvið á bannlista til að sýna eins og er"</string>
-    <string name="notificationUI_notification_content_eu" msgid="7419441022808120101">"Prófa nýja eiginleika sem takmarka forritarakningu"</string>
-    <string name="notificationUI_header_title_eu" msgid="6822288197367284058">"Taktu þátt í betaútgáfu persónuverndar auglýsinga"</string>
-    <string name="notificationUI_container3_title_eu" msgid="3157854074121291065">"Það sem þú getur gert"</string>
-    <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Nei, takk"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="7294736040084958697">"Já, ég vil prófa þetta"</string>
-    <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Takk fyrir að taka þátt"</string>
-    <string name="notificationUI_confirmation_accept_subtitle" msgid="722290263168711051">"Nú ertu þátttakandi í betaútgáfu Privacy Sandbox. \n\nÞú getur kynnt þér málið nánar eða hætt í betaútgáfunni hvenær sem er í persónuverndarstillingunum."</string>
-    <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Þú valdir að taka ekki þátt"</string>
-    <string name="notificationUI_confirmation_decline_subtitle" msgid="1869322730722065768">"Takk fyrir svarið. Þér var ekki bætt við betaútgáfu Privacy Sandbox.\n\nEf þér snýst hugur eða vilt kynna þér málið nánar skaltu opna persónuverndarstillingarnar."</string>
-    <string name="notificationUI_notification_content" msgid="2096372976024736172">"Þú prófar nýja eiginleika sem takmarka forritarakningu"</string>
-    <string name="notificationUI_header_title" msgid="857744302422337933">"Þú aðstoðar Android við að takmarka forritarakningu"</string>
-    <string name="notificationUI_header_subtitle" msgid="522289584167376388">"Android prufukeyrir nýja eiginleika sem takmarka forritarakningu auglýsenda"</string>
-    <string name="notificationUI_container1_title" msgid="3837529978480615552">"Hvað er forritarakning?"</string>
-    <string name="notificationUI_container1_body_text" msgid="2564452110982505130">"Eins og staðan er í dag er auðvelt að tengja gögn um forritanotkun við tækið þitt og deila þeim síðan með öðrum forritum í auglýsingaskyni."</string>
-    <string name="notificationUI_container2_title" msgid="4796199061758878885">"Það sem Android er að gera"</string>
-    <string name="notificationUI_container2_body_text" msgid="7717896223210525953">"Android prufukeyrir nýtt Privacy Sandbox sem geymir og deilir auglýsingagögnum á öruggan máta – án þess að auðkenna þig eða tækið þitt. \n\nÞetta nýja kerfi stuðlar að því að koma í veg fyrir að forrit miðli gögnum beint til annarra forrita en gerir þeim þó áfram kleift að birta auglýsingar sem gætu höfðað til þín."</string>
-    <string name="notificationUI_container2_control_text" msgid="3031227311095645064">"Svona virkar þetta"</string>
-    <string name="notificationUI_container3_title" msgid="1283794406634157611">"Það sem felst í þinni aðstoð"</string>
-    <string name="notificationUI_container3_body_text" msgid="2636703086913037594">"Þrátt fyrir að þú takir ekki eftir breytingum í auglýsingunum sem þú sérð ertu að aðstoða Android við að takmarka forritarakningu með tímanum með því að vera hluti af betaútgáfunni. Þú getur yfirgefið betaútgáfuna hvenær sem er í persónuverndarstillingunum þínum."</string>
-    <string name="notificationUI_left_control_button_text" msgid="6459461402253858770">"Persónuverndarstillingar"</string>
-    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Ég skil"</string>
-    <string name="notificationUI_how_it_works_expanded_text1" msgid="1753701052925879129">"Svona virkar Privacy Sandbox"</string>
-    <string name="notificationUI_how_it_works_expanded_text2" msgid="3117263986288195274">"Gögnum er safnað í Privacy Sandbox til að sýna þér auglýsingar sem þér gæti líkað, en þeim er deilt án þess að auðkenna þig eða tækið þitt."</string>
-    <string name="notificationUI_how_it_works_expanded_text3" msgid="7270822532577167752">"Hvers konar gögn eru geymd í Privacy Sandbox?"</string>
-    <string name="notificationUI_how_it_works_expanded_text4" msgid="5609475052636889205">"•  Almenn áhugasvið"</string>
-    <string name="notificationUI_how_it_works_expanded_text5" msgid="6757375506547548599">"Android útbýr þessi gögn út frá þeim forritum sem þú notar og bætir þeim við Privacy Sandbox. Til dæmis gætu „Íþróttir“ verið skráðar sem eitt af almennum áhugasviðum þínum.\n\nÞú getur skoðað lista yfir áhugasviðin þín í persónuverndarstillingunum og lokað á þau sem ekki eiga við."</string>
-    <string name="notificationUI_how_it_works_expanded_text6" msgid="2863877874268072458">"•  Sértæk áhugasvið"</string>
-    <string name="notificationUI_how_it_works_expanded_text7" msgid="2140515900209351523">"Forritin þín útbúa þessi gögn með því að byggja á því hvernig þú notar þau og bæta þeim við Privacy Sandbox. Til dæmis gæti forrit sem þú notar til að kaupa hlaupaskó bætt við flokknum sport_running.\n\nÞú getur séð lista yfir forrit sem nota þessa virkni í persónuverndarstillingunum þínum og lokað fyrir að forrit bæti gögnum við sandkassann."</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Engin áhugasvið til að sýna sem stendur"</string>
+    <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
+    <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Betaútgáfa persónuverndar Android-auglýsinga býður upp á nýja eiginleika sem forrit geta notað til að birta þér auglýsingar sem gætu höfðað til þín. Þessi tækni notar ekki auðkenni tækja.\n\nAndroid getur áætlað hvernig auglýsingar gætu höfðað til þín og vistað áhugasviðin tímabundið í tækinu þínu. Þetta gerir forritum kleift að birta þér viðeigandi auglýsingar án þess að rekja virkni þína á vefsvæðum eða í forritum annarra þróunaraðila."</string>
+    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
+    <skip />
+    <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Forrit geta áætlað áhugasviðin þín og vistað þau tímabundið með Android. Síðar gæti annað forrit birt þér auglýsingu í samræmi við þessi áhugasvið.\n\nEf þú lokar á forrit getur það ekki áætlað áhugasviðin þín lengur. Því verður ekki bætt við forritalistann aftur nema þú takir það af bannlista. Áhugasviðunum sem forrit hefur nú þegar áætlað verður eytt en þú gætir áfram fengið einhverjar tengdar auglýsingar."</string>
+    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Forrit sem þú hefur lokað á"</string>
+    <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Endurstilla áhugasvið sem forrit hafa áætlað"</string>
+    <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Engin forrit áætla áhugasviðin þín eins og er"</string>
+    <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
+    <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Betaútgáfa persónuverndar Android-auglýsinga býður upp á nýja eiginleika sem forrit geta notað til að birta þér auglýsingar sem gætu höfðað til þín. Þessi tækni notar ekki auðkenni tækja.\n\nForrit geta áætlað hvernig auglýsingar gætu höfðað til þín og vistað áhugasviðin tímabundið í tækinu þínu. Þetta gerir forritum kleift að birta þér viðeigandi auglýsingar án þess að rekja virkni þína á vefsvæðum eða í forritum annarra þróunaraðila."</string>
+    <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Þú hefur ekki sett nein forrit á bannlista"</string>
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Þú hefur ekki sett nein áhugasvið á bannlista"</string>
     <string name="topic10001" msgid="1636806320891333775">"Listir og afþreying"</string>
     <string name="topic10002" msgid="1226367977754287428">"Leiklist og leikhús"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime og manga"</string>

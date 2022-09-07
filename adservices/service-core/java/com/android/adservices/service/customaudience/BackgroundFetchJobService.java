@@ -46,15 +46,17 @@ public class BackgroundFetchJobService extends JobService {
     public boolean onStartJob(JobParameters params) {
         LogUtil.d("BackgroundFetchJobService.onStartJob");
 
-        if (!FlagsFactory.getFlags().getFledgeBackgroundFetchEnabled()
+        if (!FlagsFactory.getFlags().getFledgeBackgroundFetchEnabled()) {
+            LogUtil.d("FLEDGE background fetch is disabled; skipping and cancelling job");
+            return skipAndCancelBackgroundJob(params);
+        }
+
+        if (FlagsFactory.getFlags().getFledgeCustomAudienceServiceKillSwitch()
                 || !ConsentManager.getInstance(this)
                         .getConsent(this.getPackageManager())
                         .isGiven()) {
-            LogUtil.d("FLEDGE background fetch is disabled; skipping and cancelling job");
-            this.getSystemService(JobScheduler.class).cancel(FLEDGE_BACKGROUND_FETCH_JOB_ID);
-
-            jobFinished(params, false);
-            return false;
+            LogUtil.d("FLEDGE Custom Audience API is disabled ; skipping and cancelling job");
+            return skipAndCancelBackgroundJob(params);
         }
 
         // TODO(b/235841960): Consider using com.android.adservices.service.stats.Clock instead of
@@ -88,6 +90,13 @@ public class BackgroundFetchJobService extends JobService {
                         });
 
         return true;
+    }
+
+    private boolean skipAndCancelBackgroundJob(final JobParameters params) {
+        this.getSystemService(JobScheduler.class).cancel(FLEDGE_BACKGROUND_FETCH_JOB_ID);
+
+        jobFinished(params, false);
+        return false;
     }
 
     @Override

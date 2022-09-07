@@ -16,9 +16,9 @@
 
 package android.adservices.adselection;
 
-import android.adservices.common.AdData;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
@@ -30,22 +30,20 @@ import java.util.Map;
 /** This is a static class meant to help with tests that involve creating an AdSelectionConfig. */
 public class AdSelectionConfigFixture {
 
-    public static final AdTechIdentifier SELLER = AdTechIdentifier.fromString("store.google.com");
-    public static final AdTechIdentifier SELLER_1 = AdTechIdentifier.fromString("play.google.com");
+    public static final AdTechIdentifier SELLER = AdTechIdentifier.fromString("test.com");
+    public static final AdTechIdentifier SELLER_1 = AdTechIdentifier.fromString("test2.com");
 
     // Uri Constants
-    public static final String SCHEME = "testScheme";
-    public static final String DECISION_LOGIC_FRAGMENT = "decisionFragment";
-    public static final String TRUSTED_SCORING_SIGNAL_FRAGMENT = "trustedScoringSignalsFragment";
+    public static final String DECISION_LOGIC_FRAGMENT = "/decisionFragment";
+    public static final String TRUSTED_SCORING_SIGNAL_FRAGMENT = "/trustedScoringSignalsFragment";
 
     public static final Uri DECISION_LOGIC_URI =
-            Uri.fromParts("https", SELLER.toString(), DECISION_LOGIC_FRAGMENT);
+            CommonFixture.getUri(SELLER, DECISION_LOGIC_FRAGMENT);
 
-    public static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("buyer");
-    public static final AdTechIdentifier BUYER_1 =
-            AdTechIdentifier.fromString("developer.android.com");
-    public static final AdTechIdentifier BUYER_2 = AdTechIdentifier.fromString("google.com");
-    public static final AdTechIdentifier BUYER_3 = AdTechIdentifier.fromString("cs.android.com");
+    public static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("buyer.example.com");
+    public static final AdTechIdentifier BUYER_1 = AdTechIdentifier.fromString("test.com");
+    public static final AdTechIdentifier BUYER_2 = AdTechIdentifier.fromString("test2.com");
+    public static final AdTechIdentifier BUYER_3 = AdTechIdentifier.fromString("test3.com");
     public static final List<AdTechIdentifier> CUSTOM_AUDIENCE_BUYERS =
             Arrays.asList(BUYER_1, BUYER_2, BUYER_3);
 
@@ -68,24 +66,8 @@ public class AdSelectionConfigFixture {
                     BUYER,
                     AdSelectionSignals.fromString("{\"buyer_signals\":0}"));
 
-    // Contextual Ads Components
-    public static final AdWithBid ADS_WITH_BID_1 =
-            createAdsWithBid(Uri.fromParts("adsScheme", "ssp1", null), "{\"metadata\":1}", 1.0);
-
-    public static final AdWithBid ADS_WITH_BID_2 =
-            createAdsWithBid(Uri.fromParts("adsScheme", "ssp2", null), "{\"metadata\":2}", 2.0);
-
-    public static final AdWithBid ADS_WITH_BID_3 =
-            createAdsWithBid(Uri.fromParts("adsScheme", "ssp3", null), "{\"metadata\":3}", 3.0);
-
     public static final Uri TRUSTED_SCORING_SIGNALS_URI =
-            Uri.fromParts("https", SELLER.toString(), TRUSTED_SCORING_SIGNAL_FRAGMENT);
-
-    private static AdWithBid createAdsWithBid(Uri renderUri, String metaData, double bid) {
-        AdData asData = new AdData(renderUri, metaData);
-
-        return new AdWithBid(asData, bid);
-    }
+            CommonFixture.getUri(SELLER, TRUSTED_SCORING_SIGNAL_FRAGMENT);
 
     /** Creates an AdSelectionConfig object to be used in unit and integration tests */
     public static AdSelectionConfig anAdSelectionConfig() {

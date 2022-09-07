@@ -15,11 +15,14 @@
  */
 package android.adservices.adid;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 import org.junit.Test;
 
@@ -35,8 +38,31 @@ public final class GetAdIdResultTest {
         p.setDataPosition(0);
 
         GetAdIdResult fromParcel = GetAdIdResult.CREATOR.createFromParcel(p);
+        assertEquals(GetAdIdResult.CREATOR.newArray(1).length, 1);
 
         assertEquals(fromParcel.getAdId(), "UNITTEST_ADID");
         assertEquals(fromParcel.isLatEnabled(), true);
+
+        assertEquals(fromParcel.equals(response), true);
+        assertEquals(fromParcel.equals(fromParcel), true);
+        assertEquals(fromParcel.equals("UNITTEST_ADID"), false);
+
+        assertEquals(fromParcel.hashCode(), response.hashCode());
+
+        assertEquals(response.getErrorMessage(), null);
+
+        assertEquals(response.describeContents(), 0);
+
+        assertThat(response.toString()).isNotNull();
+    }
+
+    @Test
+    public void testWriteToParcel_nullableThrows() throws Exception {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    GetAdIdResult unusedResponse =
+                            new GetAdIdResult.Builder().setAdId(null).build();
+                });
     }
 }

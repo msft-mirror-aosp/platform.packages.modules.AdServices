@@ -27,6 +27,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 public class DbHelperTest {
@@ -43,18 +44,37 @@ public class DbHelperTest {
         assertTrue(doesTableExistAndColumnCountMatch(db, "topics_returned_topics", 7));
         assertTrue(doesTableExistAndColumnCountMatch(db, "topics_usage_history", 3));
         assertTrue(doesTableExistAndColumnCountMatch(db, "topics_app_usage_history", 3));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_source", 21));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_trigger", 11));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_source", 22));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_trigger", 12));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_async_registration_contract", 13));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_event_report", 12));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_attribution_rate_limit", 8));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_aggregate_report", 9));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_event_report", 14));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_attribution", 8));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_aggregate_report", 11));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_aggregate_encryption_key", 4));
         assertTrue(doesTableExistAndColumnCountMatch(db, "enrollment_data", 8));
-        assertTrue(doesIndexExist(db, "idx_msmt_source_ad_atd_et"));
-        assertTrue(doesIndexExist(db, "idx_msmt_trigger_ad_atd_tt"));
+        assertTrue(doesIndexExist(db, "idx_msmt_source_ad_ei_et"));
+        assertTrue(doesIndexExist(db, "idx_msmt_source_p_ad_wd_s_et"));
+        assertTrue(doesIndexExist(db, "idx_msmt_trigger_ad_ei_tt"));
         assertTrue(doesIndexExist(db, "idx_msmt_source_et"));
         assertTrue(doesIndexExist(db, "idx_msmt_trigger_tt"));
-        assertTrue(doesIndexExist(db, "idx_msmt_attribution_rate_limit_ss_so_ds_do_atd_tt"));
+        assertTrue(doesIndexExist(db, "idx_msmt_attribution_ss_so_ds_do_ei_tt"));
+    }
+
+    @Test
+    public void testGetDbFileSize() {
+        final String databaseName = "testsize.db";
+        DbHelper dbHelper = new DbHelper(sContext, databaseName, 1);
+
+        // Create database
+        dbHelper.getReadableDatabase();
+
+        // Verify size should be more than 0 bytes as database was created
+        Assert.assertTrue(dbHelper.getDbFileSize() > 0);
+
+        // Delete database file
+        sContext.getDatabasePath(databaseName).delete();
+
+        // Verify database does not exist anymore
+        Assert.assertEquals(-1, dbHelper.getDbFileSize());
     }
 }

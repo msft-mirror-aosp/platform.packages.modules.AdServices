@@ -94,12 +94,11 @@ public class AdvertisingCustomAudienceClient {
     /** Leave custom audience. */
     @NonNull
     public ListenableFuture<Void> leaveCustomAudience(
-            @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name) {
+            @NonNull AdTechIdentifier buyer, @NonNull String name) {
         return CallbackToFutureAdapter.getFuture(
                 completer -> {
                     LeaveCustomAudienceRequest request =
                             new LeaveCustomAudienceRequest.Builder()
-                                    .setOwnerPackageName(owner)
                                     .setBuyer(buyer)
                                     .setName(name)
                                     .build();

@@ -34,6 +34,7 @@ import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.Flags.ClassifierType;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -64,7 +65,10 @@ public class ClassifierManagerTest {
     public void setUp() throws IOException {
         MockitoAnnotations.initMocks(this);
 
-        mClassifierManager = new ClassifierManager(mOnDeviceClassifier, mPrecomputedClassifier);
+        mClassifierManager =
+                new ClassifierManager(
+                        Suppliers.memoize(() -> mOnDeviceClassifier),
+                        Suppliers.memoize(() -> mPrecomputedClassifier));
     }
 
     @Test

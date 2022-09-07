@@ -132,7 +132,7 @@ public class WebSourceRegistrationRequestInternal implements Parcelable {
             mRequestTime = requestTime;
         }
 
-        /** Pre-validates paramerters and builds {@link WebSourceRegistrationRequestInternal}. */
+        /** Pre-validates parameters and builds {@link WebSourceRegistrationRequestInternal}. */
         @NonNull
         public WebSourceRegistrationRequestInternal build() {
             return new WebSourceRegistrationRequestInternal(this);

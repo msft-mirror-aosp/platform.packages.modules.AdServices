@@ -81,4 +81,14 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                         .setAppPackageName("")
                         .build());
     }
+
+    @Override
+    public void logMeasurementRegistrationsResponseSize(
+            MeasurementRegistrationResponseStats stats) {
+        AdServicesStatsLog.write(
+                stats.getCode(),
+                stats.getRegistrationType(),
+                stats.getResponseSize(),
+                stats.getAdTechDomain());
+    }
 }

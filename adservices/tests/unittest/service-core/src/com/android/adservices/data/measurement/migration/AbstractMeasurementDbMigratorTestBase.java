@@ -73,7 +73,9 @@ public abstract class AbstractMeasurementDbMigratorTestBase {
     protected DbHelper getDbHelper(int version) {
         synchronized (DbHelper.class) {
             if (sDbHelper == null) {
-                sDbHelper = new DbHelper(sContext, DATABASE_NAME_FOR_MIGRATION, version);
+                if (version == 1) {
+                    sDbHelper = new DbHelperV1(sContext, DATABASE_NAME_FOR_MIGRATION, version);
+                }
             }
             return sDbHelper;
         }
@@ -82,4 +84,7 @@ public abstract class AbstractMeasurementDbMigratorTestBase {
     abstract int getTargetVersion();
 
     abstract AbstractMeasurementDbMigrator getTestSubject();
+
 }
+
+

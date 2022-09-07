@@ -10,7 +10,7 @@
             "sourceType": "navigation",
             "publisher": "android-app://example1.com",
             "appDestination": "android-app://example2.com",
-            "adTechDomain": "https://example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 100,
@@ -24,7 +24,7 @@
             "id": "id",
             "sourceId": 1,
             "attributionDestination": "android-app://example2.com",
-            "adTechDomain": "https://example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000002,
             "status": 0,
@@ -33,13 +33,13 @@
             "sourceType": "navigation"
           }
         ],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [],
         "triggers": [],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "uri": "android-app://com.example.abc"
     },
@@ -53,7 +53,7 @@
             "sourceType": "navigation",
             "publisher": "android-app://example1.com",
             "appDestination": "android-app://example2.com",
-            "adTechDomain": "https://example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 100,
@@ -66,7 +66,7 @@
             "sourceType": "navigation",
             "publisher": "android-app://example1.com",
             "appDestination": "android-app://example2.com",
-            "adTechDomain": "https://example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 100,
@@ -80,7 +80,7 @@
             "id": "id",
             "sourceId": 1,
             "attributionDestination": "android-app://no-match.com",
-            "adTechDomain": "https://example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000002,
             "status": 0,
@@ -89,7 +89,7 @@
             "sourceType": "navigation"
           }
         ],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -99,7 +99,7 @@
             "sourceType": "navigation",
             "publisher": "android-app://example1.com",
             "appDestination": "android-app://example2.com",
-            "adTechDomain": "https://example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 100,
@@ -113,7 +113,7 @@
             "id": "id",
             "sourceId": 1,
             "attributionDestination": "android-app://no-match.com",
-            "adTechDomain": "https://example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000002,
             "status": 0,
@@ -122,7 +122,7 @@
             "sourceType": "navigation"
           }
         ],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "uri": "android-app://remove.me"
     },
@@ -136,7 +136,7 @@
             "sourceType": "navigation",
             "publisher": "android-app://example1.com",
             "appDestination": "android-app://example2.com",
-            "adTechDomain": "https://example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 100,
@@ -148,7 +148,7 @@
           {
             "id": "T1",
             "attributionDestination": "android-app://example2.com",
-            "adTechDomain": "https://example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 0,
             "triggerTime": 8640000002,
             "registrant": "android-app://remove.me",
@@ -165,7 +165,7 @@
           {
             "id": "T2",
             "attributionDestination": "android-app://example2.com",
-            "adTechDomain": "https://example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 0,
             "triggerTime": 8640000002,
             "registrant": "android-app://dont.remove.me",
@@ -185,7 +185,7 @@
             "id": "id",
             "sourceId": 1,
             "attributionDestination": "android-app://no-match.com",
-            "adTechDomain": "https://example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000002,
             "status": 0,
@@ -194,7 +194,7 @@
             "sourceType": "navigation"
           }
         ],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -204,7 +204,7 @@
             "sourceType": "navigation",
             "publisher": "android-app://example1.com",
             "appDestination": "android-app://example2.com",
-            "adTechDomain": "https://example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 100,
@@ -216,7 +216,7 @@
           {
             "id": "T2",
             "attributionDestination": "android-app://example2.com",
-            "adTechDomain": "https://example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 0,
             "triggerTime": 8640000002,
             "registrant": "android-app://dont.remove.me",
@@ -236,7 +236,7 @@
             "id": "id",
             "sourceId": 1,
             "attributionDestination": "android-app://no-match.com",
-            "adTechDomain": "https://example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000002,
             "status": 0,
@@ -245,7 +245,7 @@
             "sourceType": "navigation"
           }
         ],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "uri": "android-app://remove.me"
     },
@@ -259,7 +259,7 @@
             "sourceType": "navigation",
             "publisher": "android-app://example1.com",
             "appDestination": "android-app://example2.com",
-            "adTechDomain": "https://example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 100,
@@ -271,7 +271,7 @@
           {
             "id": "T1",
             "attributionDestination": "android-app://example2.com",
-            "adTechDomain": "https://example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 0,
             "triggerTime": 8640000002,
             "registrant": "android-app://dont.remove.me",
@@ -291,7 +291,7 @@
             "id": "R1",
             "sourceId": 1,
             "attributionDestination": "android-app://remove.me",
-            "adTechDomain": "https://example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000002,
             "status": 0,
@@ -303,7 +303,7 @@
             "id": "R2",
             "sourceId": 1,
             "attributionDestination": "android-app://remove.me",
-            "adTechDomain": "https://example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000002,
             "status": 0,
@@ -315,7 +315,7 @@
             "id": "R3",
             "sourceId": 1,
             "attributionDestination": "android-app://dont.remove.me",
-            "adTechDomain": "https://example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000002,
             "status": 0,
@@ -324,7 +324,7 @@
             "sourceType": "navigation"
           }
         ],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -334,7 +334,7 @@
             "sourceType": "navigation",
             "publisher": "android-app://example1.com",
             "appDestination": "android-app://example2.com",
-            "adTechDomain": "https://example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 100,
@@ -346,7 +346,7 @@
           {
             "id": "T1",
             "attributionDestination": "android-app://example2.com",
-            "adTechDomain": "https://example3.com",
+            "enrollmentId": "enrollment-id-3",
             "status": 0,
             "triggerTime": 8640000002,
             "registrant": "android-app://dont.remove.me",
@@ -366,7 +366,7 @@
             "id": "R3",
             "sourceId": 1,
             "attributionDestination": "android-app://dont.remove.me",
-            "adTechDomain": "https://example3.com",
+            "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000002,
             "status": 0,
@@ -375,12 +375,64 @@
             "sourceType": "navigation"
           }
         ],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "uri": "android-app://remove.me"
     },
     {
-      "name": "Remove an AttributionRateLimit",
+      "name": "Remove AggregateReport based on attribution destination & publisher",
+      "input": {
+        "aggregate_reports": [
+          {
+            "id": "a1",
+            "publisher": "android-app://do.not.remove.me",
+            "attributionDestination": "android-app://remove.me",
+            "sourceRegistrationTime": 1,
+            "scheduledReportTime": 2,
+            "enrollmentId": "enrollment-id-3",
+            "status": 0,
+            "debugCleartextPayload": ""
+          },
+          {
+            "id": "a2",
+            "publisher": "android-app://remove.me",
+            "attributionDestination": "android-app://do.not.remove.me",
+            "sourceRegistrationTime": 1,
+            "scheduledReportTime": 2,
+            "enrollmentId": "enrollment-id-3",
+            "status": 0,
+            "debugCleartextPayload": ""
+          },
+          {
+            "id": "a3",
+            "publisher": "android-app://do.not.remove.me",
+            "attributionDestination": "android-app://do.not.remove.me",
+            "sourceRegistrationTime": 1,
+            "scheduledReportTime": 2,
+            "enrollmentId": "enrollment-id-3",
+            "status": 0,
+            "debugCleartextPayload": ""
+          }
+        ]
+      },
+      "output": {
+        "aggregate_reports": [
+          {
+            "id": "a3",
+            "publisher": "android-app://do.not.remove.me",
+            "attributionDestination": "android-app://do.not.remove.me",
+            "sourceRegistrationTime": 1,
+            "scheduledReportTime": 2,
+            "enrollmentId": "enrollment-id-3",
+            "status": 0,
+            "debugCleartextPayload": ""
+          }
+        ]
+      },
+      "uri": "android-app://remove.me"
+    },
+    {
+      "name": "Remove an Attribution",
       "input": {
         "sources": [
           {
@@ -389,7 +441,7 @@
             "sourceType": "navigation",
             "publisher": "android-app://example1.com",
             "appDestination": "android-app://example2.com",
-            "adTechDomain": "https://example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 100,
@@ -403,7 +455,7 @@
             "id": "id",
             "sourceId": 1,
             "attributionDestination": "android-app://example2.com",
-            "adTechDomain": "https://dont.remove.me",
+            "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000002,
             "status": 0,
@@ -412,14 +464,14 @@
             "sourceType": "navigation"
           }
         ],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "Attr1",
             "sourceSite": "android-app://remove.me",
             "sourceOrigin": "android-app://remove.me",
             "destinationSite": "android-app://no.match",
             "destinationOrigin": "android-app://no.match",
-            "adTechDomain": "https://example.one",
+            "enrollmentId": "enrollment-id-1",
             "triggerTime": 10,
             "registrant": "android-app://com.example.xyz"
           },
@@ -429,7 +481,7 @@
             "sourceOrigin": "android-app://no.match",
             "destinationSite": "android-app://remove.me",
             "destinationOrigin": "android-app://remove.me",
-            "adTechDomain": "https://example.one",
+            "enrollmentId": "enrollment-id-1",
             "triggerTime": 10,
             "registrant": "android-app://com.example.xyz"
           },
@@ -439,7 +491,7 @@
             "sourceOrigin": "android-app://dont.remove.me",
             "destinationSite": "android-app://dont.remove.me",
             "destinationOrigin": "android-app://dont.remove.me",
-            "adTechDomain": "https://example.one",
+            "enrollmentId": "enrollment-id-1",
             "triggerTime": 10,
             "registrant": "android-app://com.example.xyz"
           }
@@ -453,7 +505,7 @@
             "sourceType": "navigation",
             "publisher": "android-app://example1.com",
             "appDestination": "android-app://example2.com",
-            "adTechDomain": "https://example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 100,
@@ -467,7 +519,7 @@
             "id": "id",
             "sourceId": 1,
             "attributionDestination": "android-app://example2.com",
-            "adTechDomain": "https://dont.remove.me",
+            "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
             "triggerTime": 8640000002,
             "status": 0,
@@ -476,14 +528,14 @@
             "sourceType": "navigation"
           }
         ],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "Attr3",
             "sourceSite": "android-app://dont.remove.me",
             "sourceOrigin": "android-app://dont.remove.me",
             "destinationSite": "android-app://dont.remove.me",
             "destinationOrigin": "android-app://dont.remove.me",
-            "adTechDomain": "https://example.one",
+            "enrollmentId": "enrollment-id-1",
             "triggerTime": 10,
             "registrant": "android-app://com.example.xyz"
           }
@@ -501,7 +553,7 @@
             "sourceType": "navigation",
             "publisher": "android-app://example1.com",
             "appDestination": "android-app://remove.me",
-            "adTechDomain": "https://example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 100,
@@ -514,7 +566,7 @@
             "sourceType": "navigation",
             "publisher": "android-app://com.example.xyz",
             "appDestination": "android-app://com.example.xyz",
-            "adTechDomain": "https://example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 100,
@@ -524,7 +576,7 @@
         ],
         "triggers": [],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -534,7 +586,7 @@
             "sourceType": "navigation",
             "publisher": "android-app://com.example.xyz",
             "appDestination": "android-app://com.example.xyz",
-            "adTechDomain": "https://example3.com",
+            "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 100,
@@ -544,7 +596,7 @@
         ],
         "triggers": [],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "uri": "android-app://remove.me"
     }

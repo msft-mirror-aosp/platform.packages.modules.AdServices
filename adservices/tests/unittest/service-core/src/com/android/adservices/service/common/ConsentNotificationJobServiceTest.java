@@ -27,6 +27,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import android.app.job.JobParameters;
@@ -51,16 +52,15 @@ import org.mockito.Spy;
 import org.mockito.quality.Strictness;
 
 import java.util.Calendar;
+import java.util.TimeZone;
 import java.util.concurrent.CountDownLatch;
 
 /** Unit test for {@link com.android.adservices.ui.notifications.ConsentNotificationJobService}. */
 public class ConsentNotificationJobServiceTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
 
-    @Spy private final ConsentManager mConsentManager = ConsentManager.getInstance(CONTEXT);
-
     @Spy
-    private final ConsentNotificationJobService mConsentNotificationJobService =
+    private ConsentNotificationJobService mConsentNotificationJobService =
             new ConsentNotificationJobService();
 
     @Mock JobParameters mMockJobParameters;
@@ -98,32 +98,36 @@ public class ConsentNotificationJobServiceTest {
     /** Test successful onStart method execution when notification was not yet displayed. */
     @Test
     public void testOnStartJobAsyncUtilExecute() throws InterruptedException {
+        ConsentManager consentManager = spy(ConsentManager.getInstance(CONTEXT));
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
         doReturn(mPackageManager).when(mConsentNotificationJobService).getPackageManager();
         doReturn(Boolean.FALSE)
-                .when(mConsentManager)
+                .when(consentManager)
                 .wasNotificationDisplayed(any(PackageManager.class));
-        doNothing().when(mConsentManager).recordNotificationDisplayed(any());
-        mConsentNotificationJobService.setConsentManager(mConsentManager);
-        doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any(Context.class)));
+        doNothing().when(consentManager).recordNotificationDisplayed(any());
+        mConsentNotificationJobService.setConsentManager(consentManager);
+        doReturn(consentManager).when(() -> ConsentManager.getInstance(any(Context.class)));
         doReturn(true).when(() -> ConsentNotificationJobService.isEuDevice(any(Context.class)));
         when(mMockJobParameters.getExtras()).thenReturn(mPersistableBundle);
         when(mPersistableBundle.getBoolean(anyString(), anyBoolean())).thenReturn(true);
-        doReturn(mAdservicesSyncUtil).when(() -> AdServicesSyncUtil.getInstance());
-        doAnswer(unusedInvocation -> {
-            jobFinishedCountDown.countDown();
-            return null;
-        }).when(mConsentNotificationJobService).jobFinished(mMockJobParameters, false);
+        doReturn(mAdservicesSyncUtil).when(AdServicesSyncUtil::getInstance);
+        doAnswer(
+                unusedInvocation -> {
+                    jobFinishedCountDown.countDown();
+                    return null;
+                })
+                .when(mConsentNotificationJobService)
+                .jobFinished(mMockJobParameters, false);
 
         doNothing().when(mAdservicesSyncUtil).execute(any(Context.class), any(Boolean.class));
-        doReturn(mFlags).when(() -> FlagsFactory.getFlags());
+        doReturn(mFlags).when(FlagsFactory::getFlags);
         when(mFlags.getConsentNotificationDebugMode()).thenReturn(false);
 
         mConsentNotificationJobService.onStartJob(mMockJobParameters);
         jobFinishedCountDown.await();
 
-        verify(mConsentManager).wasNotificationDisplayed(any());
+        verify(consentManager).wasNotificationDisplayed(any());
         verify(mAdservicesSyncUtil).execute(any(Context.class), any(Boolean.class));
         verify(mConsentNotificationJobService).jobFinished(mMockJobParameters, false);
     }
@@ -141,11 +145,10 @@ public class ConsentNotificationJobServiceTest {
      */
     @Test
     public void testDelaysWhenCalledBeforeIntervalBegins() {
-        Calendar calendar = Calendar.getInstance();
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("Etc/UTC"));
         calendar.setTimeInMillis(0);
 
         doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
-
         long initialDelay = ConsentNotificationJobService.calculateInitialDelay(calendar);
         long deadline = ConsentNotificationJobService.calculateDeadline(calendar);
 
@@ -162,7 +165,7 @@ public class ConsentNotificationJobServiceTest {
     @Test
     public void testDelaysWhenCalledWithinTheInterval() {
         long expectedDelay = /* 100 seconds */ 100000;
-        Calendar calendar = Calendar.getInstance();
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("Etc/UTC"));
         calendar.setTimeInMillis(
                 FlagsFactory.getFlagsForTest().getConsentNotificationIntervalBeginMs()
                         + expectedDelay);
@@ -188,7 +191,7 @@ public class ConsentNotificationJobServiceTest {
     @Test
     public void testDelaysWhenCalledAfterTheInterval() {
         long delay = /* 100 seconds */ 100000;
-        Calendar calendar = Calendar.getInstance();
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("Etc/UTC"));
         calendar.setTimeInMillis(
                 FlagsFactory.getFlagsForTest().getConsentNotificationIntervalEndMs() + delay);
 
@@ -216,7 +219,7 @@ public class ConsentNotificationJobServiceTest {
 
     @Test
     public void testDelaysWhenDebugModeOn() {
-        doReturn(mFlags).when(() -> FlagsFactory.getFlags());
+        doReturn(mFlags).when(FlagsFactory::getFlags);
         when(mFlags.getConsentNotificationDebugMode()).thenReturn(true);
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(0);

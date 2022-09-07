@@ -24,20 +24,23 @@ import static org.junit.Assert.assertThrows;
 
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
-import android.app.sdksandbox.testutils.FakeSendDataCallback;
+import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallback;
 import android.app.usage.StorageStats;
 import android.app.usage.StorageStatsManager;
 import android.content.Context;
+import android.os.Binder;
 import android.os.Bundle;
 import android.os.Process;
 import android.os.UserHandle;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import junit.framework.AssertionFailedError;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -58,6 +61,8 @@ public class SdkSandboxStorageTestApp {
     private static final String JAVA_FILE_NOT_FOUND_MSG =
             "open failed: ENOENT (No such file or directory)";
 
+    @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(TestActivity.class);
+
     private Context mContext;
     private SdkSandboxManager mSdkSandboxManager;
 
@@ -66,18 +71,23 @@ public class SdkSandboxStorageTestApp {
         mContext = ApplicationProvider.getApplicationContext();
         mSdkSandboxManager = mContext.getSystemService(SdkSandboxManager.class);
         assertThat(mSdkSandboxManager).isNotNull();
+        mRule.getScenario();
     }
 
     // Run a phase of the test inside the code loaded for this app
+    // TODO(b/242678799): We want to use interface provided by loadSdk to perform the communication
+    // i.e. use the correct approach
     private void runPhaseInsideCode(String phaseName) {
-        Bundle bundle = new Bundle();
-        bundle.putString(BUNDLE_KEY_PHASE_NAME, phaseName);
-
-        final FakeSendDataCallback callback = new FakeSendDataCallback();
-        mSdkSandboxManager.sendData(SDK_NAME, bundle, Runnable::run, callback);
-        if (!callback.isSendDataSuccessful()) {
-            throw new AssertionError(callback.getSendDataErrorMsg());
-        }
+        FakeRequestSurfacePackageCallback callback = new FakeRequestSurfacePackageCallback();
+        Bundle params = new Bundle();
+        params.putInt(mSdkSandboxManager.EXTRA_WIDTH_IN_PIXELS, 500);
+        params.putInt(mSdkSandboxManager.EXTRA_HEIGHT_IN_PIXELS, 500);
+        params.putInt(mSdkSandboxManager.EXTRA_DISPLAY_ID, 0);
+        params.putBinder(mSdkSandboxManager.EXTRA_HOST_TOKEN, new Binder());
+        params.putString(BUNDLE_KEY_PHASE_NAME, phaseName);
+        mSdkSandboxManager.requestSurfacePackage(SDK_NAME, params, Runnable::run, callback);
+        // Wait for SDK to finish handling the request
+        assertThat(callback.isRequestSurfacePackageSuccessful()).isFalse();
     }
 
     @Test
@@ -95,10 +105,7 @@ public class SdkSandboxStorageTestApp {
 
     @Test
     public void testSdkDataPackageDirectory_SharedStorageIsUsable() throws Exception {
-        // First load SDK
-        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
-        mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        loadSdk();
 
         // Run phase inside the SDK
         runPhaseInsideCode("testSdkDataPackageDirectory_SharedStorageIsUsable");
@@ -106,22 +113,14 @@ public class SdkSandboxStorageTestApp {
 
     @Test
     public void testSdkDataSubDirectory_PerSdkStorageIsUsable() throws Exception {
-        // First load SDK
-        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
-        mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        loadSdk();
 
-        // Run phase inside the SDK
         runPhaseInsideCode("testSdkDataSubDirectory_PerSdkStorageIsUsable");
     }
 
     @Test
     public void testSdkDataIsAttributedToApp() throws Exception {
-        // First load sdk
-        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
-        mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
-        // Wait for sdk to finish loading
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        loadSdk();
 
         final StorageStatsManager stats = InstrumentationRegistry.getInstrumentation().getContext()
                                                 .getSystemService(StorageStatsManager.class);

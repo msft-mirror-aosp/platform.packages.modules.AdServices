@@ -22,26 +22,53 @@ import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
+import static org.mockito.ArgumentMatchers.any;
+
+import android.content.Context;
 import android.content.Intent;
 
 import androidx.test.core.app.ActivityScenario;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.common.BackgroundJobsManager;
 import com.android.adservices.ui.settings.AdServicesSettingsActivity;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.dx.mockito.inline.extended.StaticMockitoSession;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.MockitoAnnotations;
+import org.mockito.quality.Strictness;
 
 /** Tests for {@link ConsentNotificationActivity}. */
 public class NotificationActivityTest {
     private static final String NOTIFICATION_INTENT = "android.test.adservices.ui.NOTIFICATIONS";
+    private StaticMockitoSession mStaticMockSession;
 
     @Before
     public void setup() {
+        MockitoAnnotations.initMocks(this);
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(BackgroundJobsManager.class)
+                        .strictness(Strictness.WARN)
+                        .initMocks(this)
+                        .startMocking();
+        ExtendedMockito.doNothing()
+                .when(() -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
+
         Intent mIntent = new Intent(NOTIFICATION_INTENT);
         mIntent.putExtra("isEUDevice", false);
         ActivityScenario.launch(mIntent);
+    }
+
+    @After
+    public void teardown() {
+        if (mStaticMockSession != null) {
+            mStaticMockSession.finishMocking();
+        }
     }
 
     /**
@@ -74,7 +101,7 @@ public class NotificationActivityTest {
     }
 
     private void checkConsentNotificationFragmentIsDisplayed() {
-        onView(withText(R.string.notificationUI_header_subtitle)).check(matches(isDisplayed()));
+        onView(withText(R.string.notificationUI_header_title)).check(matches(isDisplayed()));
     }
 
     private void launchEUActivity() {
