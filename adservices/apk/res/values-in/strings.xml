@@ -45,8 +45,7 @@
     <string name="notificationUI_container1_body_text_eu" msgid="1700290522706948241">"Fitur privasi baru di Privacy Sandbox memungkinkan aplikasi menampilkan iklan yang relevan kepada Anda, tetapi membatasi info yang dapat dipelajari oleh aplikasi tersebut tentang aktivitas Anda di situs dan aplikasi dari developer lainnya."</string>
     <string name="notificationUI_container1_control_text_eu" msgid="3158258148321255153">"Cara kerja"</string>
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Cara berpartisipasi"</string>
-    <!-- no translation found for notificationUI_container2_body_text_eu (5763735880112009239) -->
-    <skip />
+    <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Mengaktifkan program beta memungkinkan aplikasi menguji cara baru yang lebih pribadi ini untuk menampilkan iklan kepada Anda. Anda dapat menonaktifkan program beta kapan saja di setelan privasi."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Lain kali"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"Ya, saya akan bergabung"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Terima kasih sudah berpartisipasi"</string>
@@ -56,8 +55,7 @@
     <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"Setelan privasi"</string>
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"Oke"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"Anda berpartisipasi dalam program beta"</string>
-    <!-- no translation found for notificationUI_container2_body_text (758560159693325060) -->
-    <skip />
+    <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Privacy Sandbox aktif untuk perangkat Anda, dan aplikasi dapat menguji cara baru yang lebih pribadi ini untuk menampilkan iklan kepada Anda. Anda dapat menonaktifkan program beta kapan saja di setelan privasi."</string>
     <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"Kelola setelan privasi"</string>
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Oke"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Privacy Sandbox Android memberikan fitur baru yang dapat digunakan aplikasi untuk menampilkan iklan yang mungkin Anda sukai. Teknologi ini tidak menggunakan ID perangkat.\n\nAndroid dan aplikasi dapat memperkirakan jenis iklan yang mungkin menarik bagi Anda, dan menyimpan minat untuk sementara di perangkat Anda. Hal ini memungkinkan aplikasi menampilkan iklan yang mungkin Anda sukai, tanpa melacak aktivitas Anda di seluruh situs dan aplikasi dari developer lainnya."</string>

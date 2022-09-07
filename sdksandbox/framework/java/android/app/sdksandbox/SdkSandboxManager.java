@@ -39,6 +39,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Executor;
 
 /**
@@ -101,6 +102,14 @@ public final class SdkSandboxManager {
      */
     public static final int LOAD_SDK_SDK_DEFINED_ERROR = 102;
 
+    /**
+     * SDK sandbox is disabled.
+     *
+     * <p>This indicates that the SDK sandbox is disabled. Any subsequent attempts to load SDKs in
+     * this boot will also fail.
+     */
+    public static final int LOAD_SDK_SDK_SANDBOX_DISABLED = 103;
+
     /** Internal error while loading SDK.
      *
      * <p>This indicates a generic internal error happened while applying the call from
@@ -116,6 +125,7 @@ public final class SdkSandboxManager {
                 LOAD_SDK_NOT_FOUND,
                 LOAD_SDK_ALREADY_LOADED,
                 LOAD_SDK_SDK_DEFINED_ERROR,
+                LOAD_SDK_SDK_SANDBOX_DISABLED,
                 LOAD_SDK_INTERNAL_ERROR,
                 SDK_SANDBOX_PROCESS_NOT_AVAILABLE
             })
@@ -200,13 +210,13 @@ public final class SdkSandboxManager {
     private final Context mContext;
 
     @GuardedBy("mLifecycleCallbacks")
-    private final ArrayList<SdkSandboxLifecycleCallbackProxy> mLifecycleCallbacks =
+    private final ArrayList<SdkSandboxProcessDeathCallbackProxy> mLifecycleCallbacks =
             new ArrayList<>();
 
     /** @hide */
     public SdkSandboxManager(@NonNull Context context, @NonNull ISdkSandboxManager binder) {
-        mContext = context;
-        mService = binder;
+        mContext = Objects.requireNonNull(context, "context should not be null");
+        mService = Objects.requireNonNull(binder, "binder should not be null");
     }
 
     /**
@@ -239,25 +249,23 @@ public final class SdkSandboxManager {
      * callbacks can be added to detect death.
      *
      * @param callbackExecutor the {@link Executor} on which to invoke the callback
-     * @param callback the {@link SdkSandboxLifecycleCallback} which will receive sdk sandbox
+     * @param callback the {@link SdkSandboxProcessDeathCallback} which will receive sdk sandbox
      *     lifecycle events.
      */
-    public void addSdkSandboxLifecycleCallback(
+    public void addSdkSandboxProcessDeathCallback(
             @NonNull @CallbackExecutor Executor callbackExecutor,
-            @NonNull SdkSandboxLifecycleCallback callback) {
-        if (callbackExecutor == null) {
-            throw new IllegalArgumentException("executor cannot be null");
-        }
-        if (callback == null) {
-            throw new IllegalArgumentException("callback cannot be null");
-        }
+            @NonNull SdkSandboxProcessDeathCallback callback) {
+        Objects.requireNonNull(callbackExecutor, "callbackExecutor should not be null");
+        Objects.requireNonNull(callback, "callback should not be null");
 
         synchronized (mLifecycleCallbacks) {
-            final SdkSandboxLifecycleCallbackProxy callbackProxy =
-                    new SdkSandboxLifecycleCallbackProxy(callbackExecutor, callback);
+            final SdkSandboxProcessDeathCallbackProxy callbackProxy =
+                    new SdkSandboxProcessDeathCallbackProxy(callbackExecutor, callback);
             try {
-                mService.addSdkSandboxLifecycleCallback(
-                        mContext.getPackageName(), callbackProxy);
+                mService.addSdkSandboxProcessDeathCallback(
+                        mContext.getPackageName(),
+                        /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                        callbackProxy);
             } catch (RemoteException e) {
                 throw e.rethrowFromSystemServer();
             }
@@ -266,22 +274,27 @@ public final class SdkSandboxManager {
     }
 
     /**
-     * Remove an {@link SdkSandboxLifecycleCallback} that was previously added using {@link
-     * SdkSandboxManager#addSdkSandboxLifecycleCallback(Executor, SdkSandboxLifecycleCallback)}
+     * Remove an {@link SdkSandboxProcessDeathCallback} that was previously added using {@link
+     * SdkSandboxManager#addSdkSandboxProcessDeathCallback(Executor,
+     * SdkSandboxProcessDeathCallback)}
      *
-     * @param callback the {@link SdkSandboxLifecycleCallback} which was previously added using
-     *     {@link SdkSandboxManager#addSdkSandboxLifecycleCallback(Executor,
-     *     SdkSandboxLifecycleCallback)}
+     * @param callback the {@link SdkSandboxProcessDeathCallback} which was previously added using
+     *     {@link SdkSandboxManager#addSdkSandboxProcessDeathCallback(Executor,
+     *     SdkSandboxProcessDeathCallback)}
      */
-    public void removeSdkSandboxLifecycleCallback(
-            @NonNull SdkSandboxLifecycleCallback callback) {
+    public void removeSdkSandboxProcessDeathCallback(
+            @NonNull SdkSandboxProcessDeathCallback callback) {
+        Objects.requireNonNull(callback, "callback should not be null");
         synchronized (mLifecycleCallbacks) {
             for (int i = mLifecycleCallbacks.size() - 1; i >= 0; i--) {
-                final SdkSandboxLifecycleCallbackProxy callbackProxy = mLifecycleCallbacks.get(i);
+                final SdkSandboxProcessDeathCallbackProxy callbackProxy =
+                        mLifecycleCallbacks.get(i);
                 if (callbackProxy.callback == callback) {
                     try {
-                        mService.removeSdkSandboxLifecycleCallback(
-                                mContext.getPackageName(), callbackProxy);
+                        mService.removeSdkSandboxProcessDeathCallback(
+                                mContext.getPackageName(),
+                                /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                                callbackProxy);
                     } catch (RemoteException e) {
                         throw e.rethrowFromSystemServer();
                     }
@@ -320,6 +333,10 @@ public final class SdkSandboxManager {
             @NonNull Bundle params,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<SandboxedSdk, LoadSdkException> receiver) {
+        Objects.requireNonNull(sdkName, "sdkName should not be null");
+        Objects.requireNonNull(params, "params should not be null");
+        Objects.requireNonNull(executor, "executor should not be null");
+        Objects.requireNonNull(receiver, "receiver should not be null");
         final LoadSdkReceiverProxy callbackProxy =
                 new LoadSdkReceiverProxy(executor, receiver, mService);
         try {
@@ -364,6 +381,7 @@ public final class SdkSandboxManager {
      * @throws IllegalArgumentException if the SDK is not loaded.
      */
     public void unloadSdk(@NonNull String sdkName) {
+        Objects.requireNonNull(sdkName, "sdkName should not be null");
         try {
             mService.unloadSdk(
                     mContext.getPackageName(),
@@ -411,6 +429,10 @@ public final class SdkSandboxManager {
             @NonNull Bundle params,
             @NonNull @CallbackExecutor Executor callbackExecutor,
             @NonNull OutcomeReceiver<Bundle, RequestSurfacePackageException> receiver) {
+        Objects.requireNonNull(sdkName, "sdkName should not be null");
+        Objects.requireNonNull(params, "params should not be null");
+        Objects.requireNonNull(callbackExecutor, "callbackExecutor should not be null");
+        Objects.requireNonNull(receiver, "receiver should not be null");
         try {
             int width = params.getInt(EXTRA_WIDTH_IN_PIXELS, -1); // -1 means invalid width
             if (width <= 0) {
@@ -466,11 +488,11 @@ public final class SdkSandboxManager {
      * A callback for tracking events SDK sandbox death.
      *
      * <p>The callback can be added using {@link
-     * SdkSandboxManager#addSdkSandboxLifecycleCallback(Executor, SdkSandboxLifecycleCallback)}
-     * and removed using {@link
-     * SdkSandboxManager#removeSdkSandboxLifecycleCallback(SdkSandboxLifecycleCallback)}
+     * SdkSandboxManager#addSdkSandboxProcessDeathCallback(Executor,
+     * SdkSandboxProcessDeathCallback)} and removed using {@link
+     * SdkSandboxManager#removeSdkSandboxProcessDeathCallback(SdkSandboxProcessDeathCallback)}
      */
-    public interface SdkSandboxLifecycleCallback {
+    public interface SdkSandboxProcessDeathCallback {
         /**
          * Notifies the client application that the SDK sandbox has died. The sandbox could die for
          * various reasons, for example, due to memory pressure on the system, or a crash in the
@@ -485,13 +507,13 @@ public final class SdkSandboxManager {
     }
 
     /** @hide */
-    private static class SdkSandboxLifecycleCallbackProxy
-            extends ISdkSandboxLifecycleCallback.Stub {
+    private static class SdkSandboxProcessDeathCallbackProxy
+            extends ISdkSandboxProcessDeathCallback.Stub {
         private final Executor mExecutor;
-        public final SdkSandboxLifecycleCallback callback;
+        public final SdkSandboxProcessDeathCallback callback;
 
-        SdkSandboxLifecycleCallbackProxy(
-                Executor executor, SdkSandboxLifecycleCallback lifecycleCallback) {
+        SdkSandboxProcessDeathCallbackProxy(
+                Executor executor, SdkSandboxProcessDeathCallback lifecycleCallback) {
             mExecutor = executor;
             callback = lifecycleCallback;
         }

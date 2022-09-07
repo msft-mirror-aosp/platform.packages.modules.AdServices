@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
+import android.Manifest;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
@@ -44,6 +45,7 @@ import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.compatibility.common.util.ShellUtils;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -62,10 +64,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class FledgeCtsTest extends ForegroundCtsTest {
-
-    private static final String WRITE_DEVICE_CONFIG_PERMISSION =
-            "android.permission.WRITE_DEVICE_CONFIG";
-
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private static final AdTechIdentifier BUYER_1 = AdSelectionConfigFixture.BUYER_1;
@@ -81,8 +79,7 @@ public class FledgeCtsTest extends ForegroundCtsTest {
                             + "\t\"render_url_2\": \"signals_for_2\"\n"
                             + "}");
 
-    private static final AdTechIdentifier SELLER =
-            AdTechIdentifier.fromString("developer.android.com");
+    private static final AdTechIdentifier SELLER = AdTechIdentifier.fromString("test.com");
     private static final String SELLER_REPORTING_PATH = "/reporting/seller";
     private static final String BUYER_REPORTING_PATH = "/reporting/buyer";
 
@@ -133,11 +130,18 @@ public class FledgeCtsTest extends ForegroundCtsTest {
 
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
-                .adoptShellPermissionIdentity(WRITE_DEVICE_CONFIG_PERMISSION);
+                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
         // Enabling tests to run with WebView version < M105
         PhFlagsFixture.overrideEnforceIsolateMaxHeapSize(false);
         PhFlagsFixture.overrideIsolateMaxHeapSizeBytes(0);
         PhFlagsFixture.overrideSdkRequestPermitsPerSecond(Integer.MAX_VALUE);
+        // We need to turn the Consent Manager into debug mode
+        overrideConsentManagerDebugMode();
+    }
+
+    // Override the Consent Manager behaviour - Consent Given
+    private void overrideConsentManagerDebugMode() {
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
     }
 
     @Test
@@ -260,11 +264,11 @@ public class FledgeCtsTest extends ForegroundCtsTest {
                 .setName(buyer + CustomAudienceFixture.VALID_NAME)
                 .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
                 .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
-                .setDailyUpdateUrl(CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyer))
+                .setDailyUpdateUri(CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyer))
                 .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                 .setTrustedBiddingData(
                         TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(buyer))
-                .setBiddingLogicUrl(
+                .setBiddingLogicUri(
                         CommonFixture.getUri(
                                 buyer, BUYER_BIDDING_LOGIC_URI_PREFIX + buyer.toString()))
                 .setAds(ads)

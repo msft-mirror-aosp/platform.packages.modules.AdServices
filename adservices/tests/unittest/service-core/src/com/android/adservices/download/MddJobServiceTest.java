@@ -17,13 +17,15 @@
 package com.android.adservices.download;
 
 import static com.android.adservices.download.MddTaskScheduler.KEY_MDD_TASK_TAG;
+import static com.android.adservices.service.AdServicesConfig.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID;
+import static com.android.adservices.service.AdServicesConfig.MDD_CHARGING_PERIODIC_TASK_JOB_ID;
+import static com.android.adservices.service.AdServicesConfig.MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID;
 import static com.android.adservices.service.AdServicesConfig.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.staticMockMarker;
 
 import static com.google.android.libraries.mobiledatadownload.TaskScheduler.WIFI_CHARGING_PERIODIC_TASK;
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.util.concurrent.Futures.immediateFuture;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -76,6 +78,7 @@ public class MddJobServiceTest {
     @Mock MobileDataDownload mMockMdd;
     @Mock MobileDataDownloadFactory mMockMddFactory;
     @Mock Flags mMockFlags;
+    @Mock MddFlags mMockMddFlags;
 
     @Before
     public void setup() {
@@ -87,6 +90,7 @@ public class MddJobServiceTest {
                         .spyStatic(MddJobService.class)
                         .spyStatic(MobileDataDownloadFactory.class)
                         .spyStatic(FlagsFactory.class)
+                        .spyStatic(MddFlags.class)
                         .startMocking();
 
         // Mock JobScheduler invocation in EpochJobService
@@ -167,29 +171,14 @@ public class MddJobServiceTest {
 
     @Test
     public void testSchedule_killswitchOff() throws InterruptedException {
+        // Mock static method MddFlags.getInstance() to return Mock MddFlags.
+        ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         // Killswitch is off.
         doReturn(false).when(mMockFlags).getMddBackgroundTaskKillSwitch();
 
-        // Add a countDownLatch to ensure background thread gets executed
-        CountDownLatch countDownLatch = new CountDownLatch(1);
-
-        ExtendedMockito.doReturn(mMockMdd)
-                .when(() -> MobileDataDownloadFactory.getMdd(any(Context.class), any(Flags.class)));
-
-        when(mMockMdd.schedulePeriodicBackgroundTasks()).thenReturn(immediateFuture(null));
-
-        mSpyMddJobService.schedule(CONTEXT);
-
-        // The countDownLatch doesn't get decreased and waits until timeout.
-        assertThat(countDownLatch.await(BACKGROUND_TASK_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-                .isFalse();
-
-        // Check that Mdd.handleTask is executed.
-        ExtendedMockito.verify(
-                () -> MobileDataDownloadFactory.getMdd(any(Context.class), any(Flags.class)));
-        verify(mMockMdd).schedulePeriodicBackgroundTasks();
+        assertThat(MddJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isTrue();
     }
 
     @Test
@@ -199,9 +188,10 @@ public class MddJobServiceTest {
         // Killswitch is off.
         doReturn(true).when(mMockFlags).getMddBackgroundTaskKillSwitch();
 
-        mSpyMddJobService.schedule(CONTEXT);
+        mSpyMddJobService.scheduleIfNeeded(CONTEXT, false);
 
         verifyZeroInteractions(staticMockMarker(MobileDataDownloadFactory.class));
+        assertThat(MddJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isFalse();
     }
 
     @Test
@@ -210,7 +200,135 @@ public class MddJobServiceTest {
         mSpyMddJobService.onStopJob(mMockJobParameters);
     }
 
-    // TODO: Implement after the decision between WorkManager and JobScheduler is made.
     @Test
-    public void testSchedule() {}
+    public void testScheduleIfNeeded_Success() {
+        // Mock static method MddFlags.getInstance() to return Mock MddFlags.
+        ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
+        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+
+        assertThat(MddJobService.scheduleIfNeeded(CONTEXT, false)).isTrue();
+        assertThat(JOB_SCHEDULER.getPendingJob(MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID)).isNotNull();
+        assertThat(JOB_SCHEDULER.getPendingJob(MDD_CHARGING_PERIODIC_TASK_JOB_ID)).isNotNull();
+        assertThat(JOB_SCHEDULER.getPendingJob(MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID))
+                .isNotNull();
+        assertThat(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID)).isNotNull();
+    }
+
+    @Test
+    public void testScheduleIfNeeded_ScheduledWithSameParameters() {
+        // Mock static method MddFlags.getInstance() to return Mock MddFlags.
+        ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
+        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        doReturn(/* MaintenanceGcmTaskPeriod default value */ 86400L)
+                .when(mMockMddFlags)
+                .maintenanceGcmTaskPeriod();
+
+        // The first invocation of scheduleIfNeeded() schedules the job.
+        assertThat(MddJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isTrue();
+        assertThat(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID)).isNotNull();
+
+        // The second invocation of scheduleIfNeeded() with same parameters skips the scheduling.
+        assertThat(MddJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isFalse();
+    }
+
+    @Test
+    public void testScheduleIfNeeded_ScheduledWithDifferentParameters() {
+        // Mock static method MddFlags.getInstance() to return Mock MddFlags.
+        ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
+        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        doReturn(/* MaintenanceGcmTaskPeriod default value */ 86400L)
+                .when(mMockMddFlags)
+                .maintenanceGcmTaskPeriod();
+
+        // The first invocation of scheduleIfNeeded() schedules the job.
+        assertThat(MddJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isTrue();
+        assertThat(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID)).isNotNull();
+
+        doReturn(/* MaintenanceGcmTaskPeriod default value */ 86400L + 1L)
+                .when(mMockMddFlags)
+                .maintenanceGcmTaskPeriod();
+        // The second invocation of scheduleIfNeeded() with same parameters skips the scheduling.
+        assertThat(MddJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isTrue();
+    }
+
+    @Test
+    public void testScheduleIfNeeded_forceRun() {
+        // Mock static method MddFlags.getInstance() to return Mock MddFlags.
+        ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
+        // Mock static method FlagsFactory.getFlags() to return test Flags.
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+
+        doReturn(/* MaintenanceGcmTaskPeriod default value */ 86400L)
+                .when(mMockMddFlags)
+                .maintenanceGcmTaskPeriod();
+        // The first invocation of scheduleIfNeeded() schedules the job.
+        assertThat(MddJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isTrue();
+        assertThat(JOB_SCHEDULER.getPendingJob(MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID)).isNotNull();
+        assertThat(JOB_SCHEDULER.getPendingJob(MDD_CHARGING_PERIODIC_TASK_JOB_ID)).isNotNull();
+        assertThat(JOB_SCHEDULER.getPendingJob(MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID))
+                .isNotNull();
+        assertThat(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID)).isNotNull();
+
+        // The second invocation of scheduleIfNeeded() with same parameters skips the scheduling.
+        assertThat(MddJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isFalse();
+
+        // The third invocation of scheduleIfNeeded() is forced and re-schedules the job.
+        assertThat(MddJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ true)).isTrue();
+    }
+
+    @Test
+    public void testScheduleIfNeededMddSingleTask_mddMaintenancePeriodicTask() {
+        // Mock static method MddFlags.getInstance() to return Mock MddFlags.
+        ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
+        // Mock static method FlagsFactory.getFlags() to return test Flags.
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        doReturn(/* MaintenanceGcmTaskPeriod default value */ 86400L)
+                .when(mMockMddFlags)
+                .maintenanceGcmTaskPeriod();
+        assertThat(MddJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isTrue();
+        assertThat(JOB_SCHEDULER.getPendingJob(MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID)).isNotNull();
+    }
+
+    @Test
+    public void testScheduleIfNeededMddSingleTask_mddChargingPeriodicTask() {
+        // Mock static method MddFlags.getInstance() to return Mock MddFlags.
+        ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
+        // Mock static method FlagsFactory.getFlags() to return test Flags.
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        doReturn(/* MaintenanceGcmTaskPeriod default value */ 21600L)
+                .when(mMockMddFlags)
+                .chargingGcmTaskPeriod();
+        assertThat(MddJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isTrue();
+        assertThat(JOB_SCHEDULER.getPendingJob(MDD_CHARGING_PERIODIC_TASK_JOB_ID)).isNotNull();
+    }
+
+    @Test
+    public void testScheduleIfNeededMddSingleTask_mddCellularChargingPeriodicTask() {
+        // Mock static method MddFlags.getInstance() to return Mock MddFlags.
+        ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
+        // Mock static method FlagsFactory.getFlags() to return test Flags.
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        doReturn(/* MaintenanceGcmTaskPeriod default value */ 21600L)
+                .when(mMockMddFlags)
+                .cellularChargingGcmTaskPeriod();
+        assertThat(MddJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isTrue();
+        assertThat(JOB_SCHEDULER.getPendingJob(MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID))
+                .isNotNull();
+    }
+
+    @Test
+    public void testScheduleIfNeededMddSingleTask_mddWifiChargingPeriodicTask() {
+        // Mock static method MddFlags.getInstance() to return Mock MddFlags.
+        ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
+        // Mock static method FlagsFactory.getFlags() to return test Flags.
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        doReturn(/* MaintenanceGcmTaskPeriod default value */ 21600L)
+                .when(mMockMddFlags)
+                .wifiChargingGcmTaskPeriod();
+        assertThat(MddJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isTrue();
+        assertThat(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID)).isNotNull();
+    }
 }

@@ -19,6 +19,7 @@ package com.android.adservices.service.common;
 import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
 
@@ -51,6 +52,9 @@ public class FledgeAllowListsFilter {
             throws AppNotAllowedException {
         Objects.requireNonNull(appPackageName);
         if (!AllowLists.isPackageAllowListed(mFlags.getPpapiAppAllowList(), appPackageName)) {
+            LogUtil.v(
+                    "App package name \"%s\" not authorized to call API %d",
+                    appPackageName, apiNameLoggingId);
             mAdServicesLogger.logFledgeApiCallStats(
                     apiNameLoggingId, AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED);
             throw new AppNotAllowedException();

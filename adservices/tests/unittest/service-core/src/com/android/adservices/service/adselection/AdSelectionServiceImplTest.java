@@ -120,6 +120,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -127,16 +128,15 @@ import java.util.concurrent.TimeUnit;
 public class AdSelectionServiceImplTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final Clock CLOCK = Clock.fixed(Instant.now(), ZoneOffset.UTC);
-    private static final Uri RENDER_URL = Uri.parse("http://www.domain.com/advert/");
+    private static final Uri RENDER_URL = Uri.parse("https://test.com/advert/");
     private static final Instant ACTIVATION_TIME = CLOCK.instant().truncatedTo(ChronoUnit.MILLIS);
-    private static final Uri BUYER_BIDDING_LOGIC_URI = Uri.parse("http://www.seller.com");
+    private static final Uri BUYER_BIDDING_LOGIC_URI = Uri.parse("https://test.com");
     private static final long AD_SELECTION_ID = 1;
     private static final long INCORRECT_AD_SELECTION_ID = 2;
     private static final double BID = 5.0;
-    private static final AdTechIdentifier SELLER_VALID =
-            AdTechIdentifier.fromString("developer.android.com");
+    private static final AdTechIdentifier SELLER_VALID = AdTechIdentifier.fromString("test.com");
     private static final Uri DECISION_LOGIC_URI_INCONSISTENT =
-            Uri.parse("https://developer%$android.com/test/decisions_logic_urls");
+            Uri.parse("https://testinconsistent.com/test/decisions_logic_urls");
     private static final String DUMMY_DECISION_LOGIC_JS =
             "function test() { return \"hello world\"; }";
     private static final AdSelectionSignals DUMMY_TRUSTED_SCORING_SIGNALS =
@@ -2181,8 +2181,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
-                        FlagsWithOverriddenAppImportanceCheck
-                                .createFlagsWithAppImportanceCheckDisabled(),
+                        FlagsWithOverriddenFledgeChecks.createFlagsWithFledgeChecksDisabled(),
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -2291,8 +2290,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
-                        FlagsWithOverriddenAppImportanceCheck
-                                .createFlagsWithAppImportanceCheckDisabled(),
+                        FlagsWithOverriddenFledgeChecks.createFlagsWithFledgeChecksDisabled(),
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -2387,8 +2385,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
-                        FlagsWithOverriddenAppImportanceCheck
-                                .createFlagsWithAppImportanceCheckDisabled(),
+                        FlagsWithOverriddenFledgeChecks.createFlagsWithFledgeChecksDisabled(),
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -2478,8 +2475,7 @@ public class AdSelectionServiceImplTest {
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
-                        FlagsWithOverriddenAppImportanceCheck
-                                .createFlagsWithAppImportanceCheckDisabled(),
+                        FlagsWithOverriddenFledgeChecks.createFlagsWithFledgeChecksDisabled(),
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy);
@@ -3141,6 +3137,11 @@ public class AdSelectionServiceImplTest {
                     }
 
                     @Override
+                    public boolean getDisableFledgeEnrollmentCheck() {
+                        return true;
+                    }
+
+                    @Override
                     public float getSdkRequestPermitsPerSecond() {
                         // Getting default value of flags with throttling enabled
                         return 1;
@@ -3259,7 +3260,7 @@ public class AdSelectionServiceImplTest {
                 + "         end = new Date().getTime();\n"
                 + "      }\n"
                 + "    }\n"
-                + String.format("    wait(\"%d\");\n", waitTime);
+                + String.format(Locale.ENGLISH, "    wait(\"%d\");\n", waitTime);
     }
 
     public static class ReportImpressionTestCallback extends ReportImpressionCallback.Stub {

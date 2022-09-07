@@ -28,6 +28,7 @@ import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
 import com.android.adservices.common.DBAdDataFixture;
+import com.android.adservices.common.JsonFixture;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
@@ -49,7 +50,7 @@ public class CustomAudienceUpdatableDataTest {
     public void testBuildUpdatableDataSuccess() throws JSONException {
         AdSelectionSignals validUserBiddingSignalsAsJsonObjectString =
                 AdSelectionSignals.fromString(
-                        CustomAudienceUpdatableDataFixture.formatAsOrgJsonJSONObjectString(
+                        JsonFixture.formatAsOrgJsonJSONObjectString(
                                 CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString()));
         boolean expectedContainsSuccessfulUpdate = true;
         CustomAudienceUpdatableData updatableDataFromBuilder =
@@ -311,7 +312,7 @@ public class CustomAudienceUpdatableDataTest {
         }
 
         String validUserBiddingSignalsAsJsonObjectString =
-                CustomAudienceUpdatableDataFixture.formatAsOrgJsonJSONObjectString(
+                JsonFixture.formatAsOrgJsonJSONObjectString(
                         CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString());
         final String jsonResponse =
                 CustomAudienceUpdatableDataFixture.toJsonResponseString(
@@ -357,7 +358,7 @@ public class CustomAudienceUpdatableDataTest {
         }
 
         String validUserBiddingSignalsAsJsonObjectString =
-                CustomAudienceUpdatableDataFixture.formatAsOrgJsonJSONObjectString(
+                JsonFixture.formatAsOrgJsonJSONObjectString(
                         CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString());
         final String jsonResponse =
                 CustomAudienceUpdatableDataFixture.toJsonResponseString(

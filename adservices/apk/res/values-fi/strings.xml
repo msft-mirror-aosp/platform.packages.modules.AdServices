@@ -45,8 +45,7 @@
     <string name="notificationUI_container1_body_text_eu" msgid="1700290522706948241">"Privacy Sandboxin uusien yksityisyysominaisuuksien ansiosta sovellukset voivat näyttää sinulle osuvia mainoksia, mutta sitä, mitä sovellukset saavat tietää toiminnastasi verkkosivustoilla ja muiden kehittäjien sovelluksissa, on rajoitettu."</string>
     <string name="notificationUI_container1_control_text_eu" msgid="3158258148321255153">"Näin se toimii"</string>
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Osallistuminen"</string>
-    <!-- no translation found for notificationUI_container2_body_text_eu (5763735880112009239) -->
-    <skip />
+    <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Kun betaohjelma on päällä, sovellukset voivat kokeilla näitä uusia, aiempaa yksityisempiä tapoja näyttää sinulle mainoksia. Voit laittaa betaohjelman pois päältä milloin tahansa yksityisyysasetuksista."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Ei kiitos"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"Kyllä, haluan liittyä"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Kiitos osallistumisesta"</string>
@@ -56,8 +55,7 @@
     <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"Yksityisyysasetukset"</string>
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"OK"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"Osallistut betaohjelmaan"</string>
-    <!-- no translation found for notificationUI_container2_body_text (758560159693325060) -->
-    <skip />
+    <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Privacy Sandbox on päällä laitteellasi, ja sovellukset voivat kokeilla näitä uusia, aiempaa yksityisempiä tapoja näyttää sinulle mainoksia. Voit laittaa betaohjelman pois päältä milloin tahansa yksityisyysasetuksista."</string>
     <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"Muuta yksityisyysasetuksia"</string>
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"OK"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Androidin Privacy Sandbox tarjoaa uusia ominaisuuksia, joiden avulla sovellukset voivat näyttää mainoksia, joista saatat pitää. Nämä teknologiat eivät käytä tunnisteita.\n\nAndroid ja sovelluksesi voivat arvioida, millaisista mainoksista voisit olla kiinnostunut, ja tallentaa kiinnostuksen kohteet väliaikaisesti laitteellesi. Näin sovellukset voivat näyttää mainoksia, joista saatat pitää, seuraamatta toimintaasi verkkosivustoilla ja muiden kehittäjien sovelluksissa."</string>

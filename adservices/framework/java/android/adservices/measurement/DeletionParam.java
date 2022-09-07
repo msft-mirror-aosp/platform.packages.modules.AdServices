@@ -62,14 +62,14 @@ public final class DeletionParam implements Parcelable {
 
         boolean hasStart = in.readBoolean();
         if (hasStart) {
-            mStart = Instant.ofEpochMilli(in.readLong());
+            mStart = Instant.parse(in.readString());
         } else {
             mStart = null;
         }
 
         boolean hasEnd = in.readBoolean();
         if (hasEnd) {
-            mEnd = Instant.ofEpochMilli(in.readLong());
+            mEnd = Instant.parse(in.readString());
         } else {
             mEnd = null;
         }
@@ -109,14 +109,14 @@ public final class DeletionParam implements Parcelable {
 
         if (mStart != null) {
             out.writeBoolean(true);
-            out.writeLong(mStart.toEpochMilli());
+            out.writeString(mStart.toString());
         } else {
             out.writeBoolean(false);
         }
 
         if (mEnd != null) {
             out.writeBoolean(true);
-            out.writeLong(mEnd.toEpochMilli());
+            out.writeString(mEnd.toString());
         } else {
             out.writeBoolean(false);
         }
@@ -155,13 +155,19 @@ public final class DeletionParam implements Parcelable {
         return mMatchBehavior;
     }
 
-    /** Instant in time the deletion starts, or null if none. */
+    /**
+     * Instant in time the deletion starts, or {@link java.time.Instant#MIN} if starting at the
+     * oldest possible time.
+     */
     @NonNull
     public Instant getStart() {
         return mStart;
     }
 
-    /** Instant in time the deletion ends, or null if none. */
+    /**
+     * Instant in time the deletion ends, or {@link java.time.Instant#MAX} if ending at the most
+     * recent time.
+     */
     @NonNull
     public Instant getEnd() {
         return mEnd;

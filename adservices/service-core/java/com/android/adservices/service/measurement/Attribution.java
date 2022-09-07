@@ -31,7 +31,6 @@ public class Attribution {
     private final String mSourceOrigin;
     private final String mDestinationSite;
     private final String mDestinationOrigin;
-    private final String mAdTechDomain;
     private final String mEnrollmentId;
     private final long mTriggerTime;
     private final String mRegistrant;
@@ -42,7 +41,6 @@ public class Attribution {
         this.mSourceOrigin = builder.mSourceOrigin;
         this.mDestinationSite = builder.mDestinationSite;
         this.mDestinationOrigin = builder.mDestinationOrigin;
-        this.mAdTechDomain = builder.mAdTechDomain;
         this.mEnrollmentId = builder.mEnrollmentId;
         this.mTriggerTime = builder.mTriggerTime;
         this.mRegistrant = builder.mRegistrant;
@@ -59,7 +57,6 @@ public class Attribution {
                 && Objects.equals(mSourceOrigin, attr.mSourceOrigin)
                 && Objects.equals(mDestinationSite, attr.mDestinationSite)
                 && Objects.equals(mDestinationOrigin, attr.mDestinationOrigin)
-                && Objects.equals(mAdTechDomain, attr.mAdTechDomain)
                 && Objects.equals(mEnrollmentId, attr.mEnrollmentId)
                 && Objects.equals(mRegistrant, attr.mRegistrant);
     }
@@ -71,7 +68,6 @@ public class Attribution {
                 mSourceOrigin,
                 mDestinationSite,
                 mDestinationOrigin,
-                mAdTechDomain,
                 mEnrollmentId,
                 mTriggerTime,
                 mRegistrant);
@@ -102,11 +98,6 @@ public class Attribution {
         return mDestinationOrigin;
     }
 
-    /** @return {@link Source} or {@link Trigger} ad-tech domain */
-    public String getAdTechDomain() {
-        return mAdTechDomain;
-    }
-
     /** @return {@link Source} or {@link Trigger} enrollment ID */
     public String getEnrollmentId() {
         return mEnrollmentId;
@@ -129,7 +120,6 @@ public class Attribution {
         private String mSourceOrigin;
         private String mDestinationSite;
         private String mDestinationOrigin;
-        private String mAdTechDomain;
         private String mEnrollmentId;
         private long mTriggerTime;
         private String mRegistrant;
@@ -164,12 +154,6 @@ public class Attribution {
             return this;
         }
 
-        /** See {@link Attribution#getAdTechDomain()}. */
-        public Builder setAdTechDomain(String adTechDomain) {
-            mAdTechDomain = adTechDomain;
-            return this;
-        }
-
         /** See {@link Attribution#getEnrollmentId()}. */
         public Builder setEnrollmentId(String enrollmentId) {
             mEnrollmentId = enrollmentId;
@@ -195,9 +179,7 @@ public class Attribution {
                     mSourceOrigin,
                     mDestinationSite,
                     mDestinationOrigin,
-                    mAdTechDomain,
-                    // TODO (b/238924528): uncomment when enforcing enrollment
-                    //mEnrollmentId,
+                    mEnrollmentId,
                     mRegistrant);
             return new Attribution(this);
         }

@@ -19,6 +19,8 @@ package com.android.adservices.service.measurement;
 import android.annotation.IntDef;
 import android.net.Uri;
 
+import androidx.annotation.Nullable;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Objects;
@@ -34,13 +36,14 @@ public class EventReport {
     private long mTriggerTime;
     private long mTriggerPriority;
     private Uri mAttributionDestination;
-    private Uri mAdTechDomain;
     private String mEnrollmentId;
     private long mTriggerData;
     private Long mTriggerDedupKey;
     private double mRandomizedTriggerRate;
     private @Status int mStatus;
     private Source.SourceType mSourceType;
+    @Nullable private Long mSourceDebugKey;
+    @Nullable private Long mTriggerDebugKey;
 
     @IntDef(value = {
             Status.PENDING,
@@ -65,7 +68,6 @@ public class EventReport {
         return mStatus == eventReport.mStatus
                 && mReportTime == eventReport.mReportTime
                 && Objects.equals(mAttributionDestination, eventReport.mAttributionDestination)
-                && Objects.equals(mAdTechDomain, eventReport.mAdTechDomain)
                 && Objects.equals(mEnrollmentId, eventReport.mEnrollmentId)
                 && mTriggerTime == eventReport.mTriggerTime
                 && mTriggerData == eventReport.mTriggerData
@@ -73,14 +75,27 @@ public class EventReport {
                 && mTriggerPriority == eventReport.mTriggerPriority
                 && Objects.equals(mTriggerDedupKey, eventReport.mTriggerDedupKey)
                 && mSourceType == eventReport.mSourceType
-                && mRandomizedTriggerRate == eventReport.mRandomizedTriggerRate;
+                && mRandomizedTriggerRate == eventReport.mRandomizedTriggerRate
+                && Objects.equals(mSourceDebugKey, eventReport.mSourceDebugKey)
+                && Objects.equals(mTriggerDebugKey, eventReport.mTriggerDebugKey);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mStatus, mReportTime, mAttributionDestination, mAdTechDomain,
-                mEnrollmentId, mTriggerTime, mTriggerData, mSourceId, mTriggerPriority,
-                mTriggerDedupKey, mSourceType, mRandomizedTriggerRate);
+        return Objects.hash(
+                mStatus,
+                mReportTime,
+                mAttributionDestination,
+                mEnrollmentId,
+                mTriggerTime,
+                mTriggerData,
+                mSourceId,
+                mTriggerPriority,
+                mTriggerDedupKey,
+                mSourceType,
+                mRandomizedTriggerRate,
+                mSourceDebugKey,
+                mTriggerDebugKey);
     }
 
     /**
@@ -126,13 +141,6 @@ public class EventReport {
     }
 
     /**
-     * Ad Tech base endpoint for reports.
-     */
-    public Uri getAdTechDomain() {
-        return mAdTechDomain;
-    }
-
-    /**
      * Ad Tech enrollment ID.
      */
     public String getEnrollmentId() {
@@ -174,9 +182,19 @@ public class EventReport {
         return mRandomizedTriggerRate;
     }
 
-    /**
-     * Builder for {@link EventReport}
-     */
+    /** Source Debug Key */
+    @Nullable
+    public Long getSourceDebugKey() {
+        return mSourceDebugKey;
+    }
+
+    /** Trigger Debug Key */
+    @Nullable
+    public Long getTriggerDebugKey() {
+        return mTriggerDebugKey;
+    }
+
+    /** Builder for {@link EventReport} */
     public static final class Builder {
 
         private final EventReport mBuilding;
@@ -198,14 +216,6 @@ public class EventReport {
          */
         public Builder setSourceId(long sourceId) {
             mBuilding.mSourceId = sourceId;
-            return this;
-        }
-
-        /**
-         * See {@link EventReport#getAdTechDomain()} ()}
-         */
-        public Builder setAdTechDomain(Uri adTechDomain) {
-            mBuilding.mAdTechDomain = adTechDomain;
             return this;
         }
 
@@ -289,6 +299,18 @@ public class EventReport {
             return this;
         }
 
+        /** See {@link EventReport#getSourceDebugKey()} ()} */
+        public Builder setSourceDebugKey(Long sourceDebugKey) {
+            mBuilding.mSourceDebugKey = sourceDebugKey;
+            return this;
+        }
+
+        /** See {@link EventReport#getTriggerDebugKey()} ()} */
+        public Builder setTriggerDebugKey(Long triggerDebugKey) {
+            mBuilding.mTriggerDebugKey = triggerDebugKey;
+            return this;
+        }
+
         /** Populates fields using {@link Source}, {@link Trigger} and {@link EventTrigger}. */
         public Builder populateFromSourceAndTrigger(
                 Source source, Trigger trigger, EventTrigger eventTrigger) {
@@ -298,7 +320,6 @@ public class EventReport {
             mBuilding.mTriggerData = getTruncatedTriggerData(source, eventTrigger);
             mBuilding.mTriggerTime = trigger.getTriggerTime();
             mBuilding.mSourceId = source.getEventId();
-            mBuilding.mAdTechDomain = source.getAdTechDomain();
             mBuilding.mEnrollmentId = source.getEnrollmentId();
             mBuilding.mStatus = Status.PENDING;
             mBuilding.mAttributionDestination = trigger.getAttributionDestination();
@@ -308,6 +329,8 @@ public class EventReport {
                             trigger.getDestinationType());
             mBuilding.mSourceType = source.getSourceType();
             mBuilding.mRandomizedTriggerRate = source.getRandomAttributionProbability();
+            mBuilding.mSourceDebugKey = source.getDebugKey();
+            mBuilding.mTriggerDebugKey = trigger.getDebugKey();
             return this;
         }
 

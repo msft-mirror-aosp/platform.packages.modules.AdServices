@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import android.Manifest;
+import android.app.NotificationManager;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -56,6 +57,15 @@ import java.util.UUID;
  */
 @RunWith(JUnit4.class)
 public class SdkSandboxRestrictionsTest {
+
+    /** Tests that the SDK sandbox cannot send notifications. */
+    @Test
+    public void testNoNotifications() {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        NotificationManager notificationManager =
+                context.getSystemService(NotificationManager.class);
+        assertThat(notificationManager.areNotificationsEnabled()).isFalse();
+    }
 
     /**
      * Tests that sandbox cannot access the Widevine ID.

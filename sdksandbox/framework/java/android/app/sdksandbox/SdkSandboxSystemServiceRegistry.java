@@ -97,7 +97,7 @@ public final class SdkSandboxSystemServiceRegistry {
     }
 
     /**
-     * A functional interface representing a method on a {@code Manager} class to set the contex.
+     * A functional interface representing a method on a {@code Manager} class to set the context.
      *
      * <p>This interface is required in order to break the circular dependency between {@code
      * framework-sdsksandbox} and {@code framework-adservices} build targets.

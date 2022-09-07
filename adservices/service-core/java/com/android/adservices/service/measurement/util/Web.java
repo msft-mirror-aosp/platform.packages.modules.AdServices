@@ -22,7 +22,7 @@ import com.google.common.net.InternetDomainName;
 
 import java.util.Optional;
 
-/** Filtering utilities for measurement. */
+/** Web utilities for measurement. */
 public final class Web {
 
     private Web() { }

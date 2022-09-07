@@ -21,7 +21,6 @@ import android.annotation.Nullable;
 import android.annotation.RequiresPermission;
 import android.app.Service;
 import android.app.sdksandbox.ISdkToServiceCallback;
-import android.app.sdksandbox.ISharedPreferencesSyncCallback;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SharedPreferencesKey;
@@ -30,6 +29,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -40,6 +41,7 @@ import android.text.TextUtils;
 import android.util.ArrayMap;
 import android.util.ArraySet;
 import android.util.Log;
+import android.webkit.WebView;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
@@ -136,19 +138,27 @@ public class SdkSandboxServiceImpl extends Service {
     }
 
     /** Unloads SDK. */
-    public void unloadSdk(IBinder sdkToken) {
+    public void unloadSdk(
+            IBinder sdkToken, IUnloadSdkCallback callback, SandboxLatencyInfo sandboxLatencyInfo) {
         enforceCallerIsSystemServer();
         final long token = Binder.clearCallingIdentity();
         try {
+            sandboxLatencyInfo.setTimeSandboxCalledSdk(mInjector.getCurrentTime());
             unloadSdkInternal(sdkToken);
+            sandboxLatencyInfo.setTimeSdkCallCompleted(mInjector.getCurrentTime());
         } finally {
             Binder.restoreCallingIdentity(token);
+        }
+        sandboxLatencyInfo.setTimeSandboxCalledSystemServer(mInjector.getCurrentTime());
+        try {
+            callback.onUnloadSdk(sandboxLatencyInfo);
+        } catch (RemoteException ignore) {
+            Log.e(TAG, "Could not send onUnloadSdk");
         }
     }
 
     /** Sync data from client. */
-    public void syncDataFromClient(
-            SharedPreferencesUpdate update, ISharedPreferencesSyncCallback callback) {
+    public void syncDataFromClient(SharedPreferencesUpdate update) {
         SharedPreferences pref =
                 PreferenceManager.getDefaultSharedPreferences(mInjector.getContext());
         SharedPreferences.Editor editor = pref.edit();
@@ -158,12 +168,6 @@ public class SdkSandboxServiceImpl extends Service {
         }
         // TODO(b/239403323): What if writing to persistent storage fails?
         editor.apply();
-
-        try {
-            callback.onSuccess();
-        } catch (RemoteException ignore) {
-            // The app died. Safe to ignore as sandbox will be killed soon.
-        }
     }
 
     private void updateSharedPreferences(
@@ -217,6 +221,36 @@ public class SdkSandboxServiceImpl extends Service {
                             + key
                             + " Type: "
                             + type);
+        }
+    }
+
+    /**
+     * Checks if the SDK sandbox is disabled. This will be {@code true} iff the WebView provider is
+     * not visible to the sandbox.
+     */
+    public void isDisabled(ISdkSandboxDisabledCallback callback) {
+        enforceCallerIsSystemServer();
+        PackageInfo info = WebView.getCurrentWebViewPackage();
+        PackageInfo webViewProviderInfo = null;
+        boolean isDisabled = false;
+        try {
+            if (info != null) {
+                webViewProviderInfo =
+                        mInjector
+                                .getContext()
+                                .getPackageManager()
+                                .getPackageInfo(
+                                        info.packageName, PackageManager.PackageInfoFlags.of(0));
+            }
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.w(TAG, "Could not verify if the SDK sandbox should be disabled", e);
+            isDisabled = true;
+        }
+        isDisabled |= webViewProviderInfo == null;
+        try {
+            callback.onResult(isDisabled);
+        } catch (RemoteException e) {
+            Log.e(TAG, "Could not call back into ISdkSandboxDisabledCallback", e);
         }
     }
 
@@ -404,18 +438,28 @@ public class SdkSandboxServiceImpl extends Service {
         }
 
         @Override
-        public void unloadSdk(@NonNull IBinder sdkToken) {
+        public void unloadSdk(
+                @NonNull IBinder sdkToken,
+                @NonNull IUnloadSdkCallback callback,
+                @NonNull SandboxLatencyInfo sandboxLatencyInfo) {
+            Objects.requireNonNull(sandboxLatencyInfo, "sandboxLatencyInfo should not be null");
+            sandboxLatencyInfo.setTimeSandboxReceivedCallFromSystemServer(
+                    mInjector.getCurrentTime());
             Objects.requireNonNull(sdkToken, "sdkToken should not be null");
-            SdkSandboxServiceImpl.this.unloadSdk(sdkToken);
+            Objects.requireNonNull(callback, "callback should not be null");
+            SdkSandboxServiceImpl.this.unloadSdk(sdkToken, callback, sandboxLatencyInfo);
         }
 
         @Override
-        public void syncDataFromClient(
-                @NonNull SharedPreferencesUpdate update,
-                @NonNull ISharedPreferencesSyncCallback callback) {
+        public void syncDataFromClient(@NonNull SharedPreferencesUpdate update) {
             Objects.requireNonNull(update, "update should not be null");
+            SdkSandboxServiceImpl.this.syncDataFromClient(update);
+        }
+
+        @Override
+        public void isDisabled(@NonNull ISdkSandboxDisabledCallback callback) {
             Objects.requireNonNull(callback, "callback should not be null");
-            SdkSandboxServiceImpl.this.syncDataFromClient(update, callback);
+            SdkSandboxServiceImpl.this.isDisabled(callback);
         }
     }
 }

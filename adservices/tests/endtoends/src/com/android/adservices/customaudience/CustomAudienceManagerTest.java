@@ -18,6 +18,7 @@ package com.android.adservices.customaudience;
 
 import static org.junit.Assert.assertTrue;
 
+import android.Manifest;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudience;
@@ -40,9 +41,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 
 public class CustomAudienceManagerTest {
-    private static final String WRITE_DEVICE_CONFIG_PERMISSION =
-            "android.permission.WRITE_DEVICE_CONFIG";
-
     private static final String TAG = "CustomAudienceManagerTest";
     private static final String SERVICE_APK_NAME = "com.android.adservices.api";
     private static final int MAX_RETRY = 50;
@@ -59,7 +57,7 @@ public class CustomAudienceManagerTest {
     public void setUp() throws TimeoutException {
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
-                .adoptShellPermissionIdentity(WRITE_DEVICE_CONFIG_PERMISSION);
+                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
         // Disable API throttling
         PhFlagsFixture.overrideSdkRequestPermitsPerSecond(Integer.MAX_VALUE);
         // This test is running in background

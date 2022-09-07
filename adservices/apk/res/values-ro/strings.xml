@@ -45,8 +45,7 @@
     <string name="notificationUI_container1_body_text_eu" msgid="1700290522706948241">"Noile funcții pentru confidențialitate din Privacy Sandbox le permit aplicațiilor să îți afișeze anunțuri relevante, dar restricționează informațiile pe care le pot afla aplicațiile respective despre activitățile tale în site-uri și aplicații de la alți dezvoltatori."</string>
     <string name="notificationUI_container1_control_text_eu" msgid="3158258148321255153">"Cum funcționează"</string>
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Cum să participi"</string>
-    <!-- no translation found for notificationUI_container2_body_text_eu (5763735880112009239) -->
-    <skip />
+    <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Dacă activezi versiunea beta, aplicațiile pot testa noile modalități mai private de a-ți afișa anunțuri. Poți să dezactivezi oricând versiunea beta în setările de confidențialitate."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Nu, mulțumesc"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"Da, mă înscriu"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Vă mulțumim pentru participare"</string>
@@ -56,8 +55,7 @@
     <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"Setări de confidențialitate"</string>
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"OK"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"Te-ai înscris în versiunea beta"</string>
-    <!-- no translation found for notificationUI_container2_body_text (758560159693325060) -->
-    <skip />
+    <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Privacy Sandbox este activat pentru dispozitivul tău și aplicațiile pot testa aceste noi modalități mai private de a-ți afișa anunțuri. Poți să dezactivezi oricând versiunea beta în setările de confidențialitate."</string>
     <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"Gestionați setările de confidențialitate"</string>
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"OK"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Privacy Sandbox pentru Android oferă noi funcții pe care aplicațiile le pot folosi pentru a-ți afișa anunțuri care ți-ar putea plăcea. Aceste tehnologii nu utilizează identificatorii dispozitivului.\n\nAndroid și aplicațiile tale pot să estimeze tipurile de anunțuri care te-ar putea interesa și salvează temporar categoriile de interese pe dispozitivul tău. Astfel, aplicațiile îți pot afișa anunțuri care ar putea să-ți placă, fără să-ți urmărească activitatea în site-uri și aplicații de la alți dezvoltatori."</string>

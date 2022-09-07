@@ -45,8 +45,7 @@
     <string name="notificationUI_container1_body_text_eu" msgid="1700290522706948241">"Izakhi ezintsha zobumfihlo ku-Privacy Sandbox zivumela i-app ukuthi ikubonise izikhangiso ezifanele, kodwa zikhawulela lokho lawo ama-app angakufunda mayelana nemisebenzi yakho kumawebhusayithi nama-app avela kwabanye onjiniyela."</string>
     <string name="notificationUI_container1_control_text_eu" msgid="3158258148321255153">"Isebenza kanjani"</string>
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Indlela yokuhlanganyela"</string>
-    <!-- no translation found for notificationUI_container2_body_text_eu (5763735880112009239) -->
-    <skip />
+    <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Ukuvula i-beta kuvumela ama-app ukuthi ahlole lezi zindlela ezintsha, zokugodliwe zokukubonisa izikhangiso. Ungakwazi ukuvala i-beta noma nini kumasethingi akho obumfihlo."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Cha ngiyabonga"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"Yebo, ngizojoyina"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Siyabonga ngokubamba iqhaza"</string>
@@ -56,8 +55,7 @@
     <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"Amasethingi obumfihlo"</string>
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"Ngiyezwa"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"Uyingxenye ye-beta"</string>
-    <!-- no translation found for notificationUI_container2_body_text (758560159693325060) -->
-    <skip />
+    <string name="notificationUI_container2_body_text" msgid="758560159693325060">"I-Privacy Sandbox ivuliwe kudivayisi yakho, futhi ama-app angahlola lezi zindlela ezintsha, ezigodliwe zokukubonisa izikhangiso. Ungakwazi ukuvala i-beta noma nini kumasethingi akho obumfihlo."</string>
     <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"Phatha amasethingi obumfihlo"</string>
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Ngiyezwa"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"I-Android Privacy Sandbox inikeza izakhi ezintsha ezingasetshenziswa ama-app ukuze akubonise izikhangiso ongase uzithande. Lobu buchwepheshe abuzisebenzisi izinkomba zedivayisi.\n\nI-Android nama-app akho kungalinganisela izinhlobo zezikhangiso ongaba nentshisekelo kuzo, futhi kulondoloze ongaba nentshisekelo kukho okwesikhashana kudivayisi yakho. Lokhu kuvumela ama-app ukuthi akubonise izikhangiso ongase uzithande, ngaphandle kokulandelela umsebenzi wakho kuwo wonke amawebhusayithi nama-app avela kwabanye onjiniyela."</string>

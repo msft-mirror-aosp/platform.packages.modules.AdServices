@@ -1818,20 +1818,20 @@ public class FledgeE2ETest {
                                 + CustomAudienceFixture.VALID_NAME)
                 .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
                 .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
-                .setDailyUpdateUrl(
+                .setDailyUpdateUri(
                         CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
                                 AdTechIdentifier.fromString(buyerDomain.getAuthority())))
                 .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                 .setTrustedBiddingData(
                         new TrustedBiddingData.Builder()
-                                .setTrustedBiddingUrl(
+                                .setTrustedBiddingUri(
                                         CommonFixture.getUri(
                                                 buyerDomain.getAuthority(),
                                                 BUYER_TRUSTED_SIGNAL_URI_PATH))
                                 .setTrustedBiddingKeys(
                                         TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_KEYS)
                                 .build())
-                .setBiddingLogicUrl(
+                .setBiddingLogicUri(
                         CommonFixture.getUri(
                                 buyerDomain.getAuthority(),
                                 BUYER_BIDDING_LOGIC_URI_PATH + customAudienceSeq))
@@ -1988,6 +1988,11 @@ public class FledgeE2ETest {
         public float getSdkRequestPermitsPerSecond() {
             // Unlimited rate for unit tests to avoid flake in tests due to rate limiting
             return -1;
+        }
+
+        @Override
+        public boolean getDisableFledgeEnrollmentCheck() {
+            return true;
         }
     }
 }

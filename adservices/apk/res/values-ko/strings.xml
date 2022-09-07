@@ -45,8 +45,7 @@
     <string name="notificationUI_container1_body_text_eu" msgid="1700290522706948241">"개인 정보 보호 샌드박스의 새로운 개인 정보 보호 기능을 이용하면 앱에서 관련성 있는 광고를 표시하되, 다른 개발자의 앱/웹사이트에서 이루어진 사용자 활동에 관해 해당 앱이 학습하는 정보를 제한할 수 있습니다."</string>
     <string name="notificationUI_container1_control_text_eu" msgid="3158258148321255153">"작동 방식"</string>
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"참여 방법"</string>
-    <!-- no translation found for notificationUI_container2_body_text_eu (5763735880112009239) -->
-    <skip />
+    <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"베타를 사용 설정하면 앱에서 개인 정보 보호를 강화하면서 광고를 표시하는 새로운 방법을 테스트할 수 있게 됩니다. 언제든지 개인 정보 보호 설정에서 베타 참여를 중단할 수 있습니다."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"아니요"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"참여"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"참여해 주셔서 감사합니다"</string>
@@ -56,8 +55,7 @@
     <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"개인 정보 보호 설정"</string>
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"확인"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"베타 참여 중"</string>
-    <!-- no translation found for notificationUI_container2_body_text (758560159693325060) -->
-    <skip />
+    <string name="notificationUI_container2_body_text" msgid="758560159693325060">"기기에 개인 정보 보호 샌드박스가 사용 설정되어 있으며 앱에서 개인 정보 보호를 강화하면서 광고를 표시하는 새로운 방법을 테스트할 수 있습니다. 언제든지 개인 정보 보호 설정에서 베타 참여를 중단할 수 있습니다."</string>
     <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"개인 정보 보호 설정 관리"</string>
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"확인"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Android의 개인 정보 보호 샌드박스는 앱에서 사용자가 좋아할 만한 광고를 표시할 수 있는 새로운 기능을 제공합니다. 이 새로운 기술은 기기 식별자를 사용하지 않습니다.\n\nAndroid와 앱은 사용자가 관심을 보일 만한 광고 종류를 추정하고 관심분야를 기기에 임시 저장합니다. 이렇게 하면 앱이 다른 개발자의 웹사이트/앱에서 이루어진 활동을 추적하지 않고도 사용자가 관심을 보일 만한 광고를 표시할 수 있습니다."</string>

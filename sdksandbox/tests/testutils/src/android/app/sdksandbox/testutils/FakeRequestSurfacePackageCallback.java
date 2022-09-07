@@ -33,12 +33,14 @@ public class FakeRequestSurfacePackageCallback
 
     private int mErrorCode;
     private String mErrorMsg;
+    private Bundle mExtraErrorInformation;
 
     @Override
     public void onError(RequestSurfacePackageException exception) {
         mSurfacePackageSuccess = false;
         mErrorCode = exception.getRequestSurfacePackageErrorCode();
         mErrorMsg = exception.getMessage();
+        mExtraErrorInformation = exception.getExtraErrorInformation();
         mSurfacePackageLatch.countDown();
     }
 
@@ -51,6 +53,12 @@ public class FakeRequestSurfacePackageCallback
     public boolean isRequestSurfacePackageSuccessful() {
         waitForLatch(mSurfacePackageLatch);
         return mSurfacePackageSuccess;
+    }
+
+    public Bundle getExtraErrorInformation() {
+        waitForLatch(mSurfacePackageLatch);
+        assertThat(mSurfacePackageSuccess).isFalse();
+        return mExtraErrorInformation;
     }
 
     public int getSurfacePackageErrorCode() {

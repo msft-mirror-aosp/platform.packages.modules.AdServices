@@ -29,7 +29,6 @@ public class AttributionTest {
     private static final String PUBLISHER_ORIGIN = "android-app://com.publisher/abc";
     private static final String PUBLISHER_SITE = "android-app://com.publisher";
     private static final String REGISTRANT = "android-app://com.registrant";
-    private static final String AD_TECH_DOMAIN = "https://com.example";
     private static final String ENROLLMENT_ID = "enrollment-id";
     private static final long TRIGGER_TIME = 10000L;
     private static final String SOME_OTHER_STRING = "some_other";
@@ -49,11 +48,6 @@ public class AttributionTest {
     public void equals_fail() {
         assertNotEquals(
                 createExampleAttributionBuilder().setRegistrant(SOME_OTHER_STRING).build(),
-                createExampleAttributionBuilder().build());
-        assertNotEquals(
-                createExampleAttributionBuilder()
-                        .setAdTechDomain(SOME_OTHER_STRING)
-                        .build(),
                 createExampleAttributionBuilder().build());
         assertNotEquals(
                 createExampleAttributionBuilder()
@@ -95,12 +89,6 @@ public class AttributionTest {
         assertNotEquals(
                 createExampleAttributionBuilder()
                         .setRegistrant(SOME_OTHER_STRING)
-                        .build()
-                        .hashCode(),
-                createExampleAttributionBuilder().build().hashCode());
-        assertNotEquals(
-                createExampleAttributionBuilder()
-                        .setAdTechDomain(SOME_OTHER_STRING)
                         .build()
                         .hashCode(),
                 createExampleAttributionBuilder().build().hashCode());
@@ -160,9 +148,6 @@ public class AttributionTest {
         assertEquals(
                 TRIGGER_TIME, createExampleAttributionBuilder().build().getTriggerTime());
         assertEquals(
-                AD_TECH_DOMAIN,
-                createExampleAttributionBuilder().build().getAdTechDomain());
-        assertEquals(
                 ENROLLMENT_ID,
                 createExampleAttributionBuilder().build().getEnrollmentId());
     }
@@ -177,11 +162,7 @@ public class AttributionTest {
                 () -> createExampleAttributionBuilder().setRegistrant(null).build());
         assertThrows(
                 IllegalArgumentException.class,
-                () -> createExampleAttributionBuilder().setAdTechDomain(null).build());
-        // TODO (b/238924528): uncomment when enforcing enrollment
-        /*assertThrows(
-                IllegalArgumentException.class,
-                () -> createExampleAttributionBuilder().setEnrollmentId(null).build());*/
+                () -> createExampleAttributionBuilder().setEnrollmentId(null).build());
         assertThrows(
                 IllegalArgumentException.class,
                 () -> createExampleAttributionBuilder().setDestinationSite(null).build());
@@ -201,7 +182,6 @@ public class AttributionTest {
                 .setId(ID)
                 .setRegistrant(REGISTRANT)
                 .setTriggerTime(TRIGGER_TIME)
-                .setAdTechDomain(AD_TECH_DOMAIN)
                 .setEnrollmentId(ENROLLMENT_ID)
                 .setDestinationOrigin(DESTINATION_ORIGIN)
                 .setDestinationSite(DESTINATION_SITE)

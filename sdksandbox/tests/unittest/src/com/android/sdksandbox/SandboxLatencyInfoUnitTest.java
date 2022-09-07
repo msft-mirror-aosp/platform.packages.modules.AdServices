@@ -158,6 +158,20 @@ public class SandboxLatencyInfoUnitTest {
         assertThat(sandboxLatencyInfo.isSuccessfulAtSdk()).isTrue();
     }
 
+    @Test
+    public void testGetTimeSystemServerCalledSandbox() {
+        final SandboxLatencyInfo sandboxLatencyInfo = getSandboxLatencyObjectWithAllFieldsSet();
+        assertThat(sandboxLatencyInfo.getTimeSystemServerCalledSandbox())
+                .isEqualTo(TIME_SYSTEM_SERVER_CALLED_SANDBOX);
+    }
+
+    @Test
+    public void testGetTimeSandboxCalledSystemServer() {
+        final SandboxLatencyInfo sandboxLatencyInfo = getSandboxLatencyObjectWithAllFieldsSet();
+        assertThat(sandboxLatencyInfo.getTimeSandboxCalledSystemServer())
+                .isEqualTo(TIME_SANDBOX_CALLED_SYSTEM_SERVER);
+    }
+
     private SandboxLatencyInfo getSandboxLatencyObjectWithAllFieldsSet() {
         final SandboxLatencyInfo sandboxLatencyInfo =
                 new SandboxLatencyInfo(TIME_SYSTEM_SERVER_CALLED_SANDBOX);

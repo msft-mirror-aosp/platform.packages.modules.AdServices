@@ -15,17 +15,27 @@
  */
 package com.android.adservices.service.measurement.registration;
 
-import static com.android.adservices.service.measurement.PrivacyParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
+import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATABLE_TRIGGER_DATA;
+import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
+import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_EVENT_TRIGGER_DATA;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__TRIGGER;
 
 import android.adservices.measurement.RegistrationRequest;
 import android.adservices.measurement.WebTriggerParams;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.annotation.NonNull;
+import android.content.Context;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
+import com.android.adservices.service.measurement.util.Enrollment;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONArray;
@@ -38,6 +48,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -54,26 +65,40 @@ public class TriggerFetcher {
     private final ExecutorService mIoExecutor = AdServicesExecutors.getBlockingExecutor();
     private final AdIdPermissionFetcher mAdIdPermissionFetcher;
     private final MeasurementHttpClient mNetworkConnection = new MeasurementHttpClient();
+    private final EnrollmentDao mEnrollmentDao;
+    private final Flags mFlags;
+    private final AdServicesLogger mLogger;
 
-    public TriggerFetcher() {
-        this(new AdIdPermissionFetcher());
+    public TriggerFetcher(Context context) {
+        this(
+                EnrollmentDao.getInstance(context),
+                new AdIdPermissionFetcher(),
+                FlagsFactory.getFlags(),
+                AdServicesLoggerImpl.getInstance());
     }
 
     @VisibleForTesting
-    TriggerFetcher(AdIdPermissionFetcher adIdPermissionFetcher) {
-        this.mAdIdPermissionFetcher = adIdPermissionFetcher;
+    public TriggerFetcher(
+            EnrollmentDao enrollmentDao,
+            AdIdPermissionFetcher adIdPermissionFetcher,
+            Flags flags,
+            AdServicesLogger logger) {
+        mEnrollmentDao = enrollmentDao;
+        mAdIdPermissionFetcher = adIdPermissionFetcher;
+        mFlags = flags;
+        mLogger = logger;
     }
 
     private boolean parseTrigger(
             @NonNull Uri topOrigin,
-            @NonNull Uri registrationUri,
+            @NonNull String enrollmentId,
             @NonNull Map<String, List<String>> headers,
             @NonNull List<TriggerRegistration> addToResults,
             boolean isWebSource,
             boolean isAllowDebugKey) {
         TriggerRegistration.Builder result = new TriggerRegistration.Builder();
         result.setTopOrigin(topOrigin);
-        result.setRegistrationUri(registrationUri);
+        result.setEnrollmentId(enrollmentId);
         List<String> field;
         field = headers.get("Attribution-Reporting-Register-Trigger");
         if (field == null || field.size() != 1) {
@@ -82,6 +107,10 @@ public class TriggerFetcher {
         try {
             JSONObject json = new JSONObject(field.get(0));
             if (!json.isNull(TriggerHeaderContract.EVENT_TRIGGER_DATA)) {
+                if (!isValidEventTriggerData(
+                        json.getJSONArray(TriggerHeaderContract.EVENT_TRIGGER_DATA))) {
+                    return false;
+                }
                 result.setEventTriggers(json.getString(TriggerHeaderContract.EVENT_TRIGGER_DATA));
             }
             if (!json.isNull(TriggerHeaderContract.AGGREGATABLE_TRIGGER_DATA)) {
@@ -145,6 +174,13 @@ public class TriggerFetcher {
             LogUtil.d(e, "Malformed registration registrationUri URL");
             return;
         }
+        Optional<String> enrollmentId =
+                Enrollment.maybeGetEnrollmentId(registrationUri, mEnrollmentDao);
+        if (!enrollmentId.isPresent()) {
+            LogUtil.d("fetchTrigger: unable to find enrollment ID. Registration URI: %s",
+                    registrationUri);
+            return;
+        }
         HttpURLConnection urlConnection;
         try {
             urlConnection = (HttpURLConnection) openUrl(url);
@@ -157,18 +193,25 @@ public class TriggerFetcher {
             urlConnection.setInstanceFollowRedirects(false);
             Map<String, List<String>> headers = urlConnection.getHeaderFields();
 
+            FetcherUtil.emitHeaderMetrics(
+                    mFlags,
+                    mLogger,
+                    AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__TRIGGER,
+                    headers,
+                    registrationUri);
+
             int responseCode = urlConnection.getResponseCode();
             LogUtil.d("Response code = " + responseCode);
 
-            if (!ResponseBasedFetcher.isRedirect(responseCode)
-                    && !ResponseBasedFetcher.isSuccess(responseCode)) {
+            if (!FetcherUtil.isRedirect(responseCode)
+                    && !FetcherUtil.isSuccess(responseCode)) {
                 return;
             }
 
             final boolean parsed =
                     parseTrigger(
                             topOrigin,
-                            registrationUri,
+                            enrollmentId.get(),
                             headers,
                             registrationsOut,
                             isWebSource,
@@ -179,7 +222,7 @@ public class TriggerFetcher {
             }
 
             if (shouldProcessRedirects) {
-                List<Uri> redirects = ResponseBasedFetcher.parseRedirects(headers);
+                List<Uri> redirects = FetcherUtil.parseRedirects(headers);
                 for (Uri redirect : redirects) {
                     fetchTrigger(
                             topOrigin,
@@ -265,21 +308,65 @@ public class TriggerFetcher {
                 mIoExecutor);
     }
 
-    private boolean isValidAggregateTriggerData(JSONArray aggregateTriggerData) {
-        if (aggregateTriggerData.length() > MAX_AGGREGATE_KEYS_PER_REGISTRATION) {
-            LogUtil.d(
-                    "Aggregate trigger data has more keys than permitted. %s",
-                    aggregateTriggerData.length());
+    private boolean isValidEventTriggerData(JSONArray eventTriggerDataArr) {
+        return eventTriggerDataArr.length() <= MAX_ATTRIBUTION_EVENT_TRIGGER_DATA;
+    }
+
+    private boolean isValidAggregateTriggerData(JSONArray aggregateTriggerDataArr)
+            throws JSONException {
+        if (aggregateTriggerDataArr.length() > MAX_AGGREGATABLE_TRIGGER_DATA) {
+            LogUtil.d("Aggregate trigger data list has more entries than permitted. %s",
+                    aggregateTriggerDataArr.length());
             return false;
+        }
+        for (int i = 0; i < aggregateTriggerDataArr.length(); i++) {
+            JSONObject aggregateTriggerData = aggregateTriggerDataArr.getJSONObject(i);
+            String keyPiece = aggregateTriggerData.optString("key_piece");
+            if (!FetcherUtil.isValidAggregateKeyPiece(keyPiece)) {
+                LogUtil.d("Aggregate trigger data key-piece is invalid. %s", keyPiece);
+                return false;
+            }
+            JSONArray sourceKeys = aggregateTriggerData.optJSONArray("source_keys");
+            if (sourceKeys == null || sourceKeys.length() > MAX_AGGREGATE_KEYS_PER_REGISTRATION) {
+                LogUtil.d("Aggregate trigger data source-keys list failed to parse or has more"
+                        + " entries than permitted.");
+                return false;
+            }
+            for (int j = 0; j < sourceKeys.length(); j++) {
+                String key = sourceKeys.optString(j);
+                if (!FetcherUtil.isValidAggregateKeyId(key)) {
+                    LogUtil.d("Aggregate trigger data source-key is invalid. %s", key);
+                    return false;
+                }
+            }
+            if (!aggregateTriggerData.isNull("filters") && !FetcherUtil.areValidAttributionFilters(
+                    aggregateTriggerData.optJSONObject("filters"))) {
+                LogUtil.d("Aggregate trigger data filters are invalid.");
+                return false;
+            }
+            if (!aggregateTriggerData.isNull("not_filters")
+                    && !FetcherUtil.areValidAttributionFilters(
+                            aggregateTriggerData.optJSONObject("not_filters"))) {
+                LogUtil.d("Aggregate trigger data not-filters are invalid.");
+                return false;
+            }
         }
         return true;
     }
 
     private boolean isValidAggregateValues(JSONObject aggregateValues) {
         if (aggregateValues.length() > MAX_AGGREGATE_KEYS_PER_REGISTRATION) {
-            LogUtil.d(
-                    "Aggregate values have more keys than permitted. %s", aggregateValues.length());
+            LogUtil.d("Aggregate values have more keys than permitted. %s",
+                    aggregateValues.length());
             return false;
+        }
+        Iterator<String> ids = aggregateValues.keys();
+        while (ids.hasNext()) {
+            String id = ids.next();
+            if (!FetcherUtil.isValidAggregateKeyId(id)) {
+                LogUtil.d("Aggregate values key ID is invalid. %s", id);
+                return false;
+            }
         }
         return true;
     }

@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID;
+
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
@@ -25,16 +27,18 @@ import android.content.Context;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.SystemHealthParams;
+import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.concurrent.Executor;
 
 /**
- * Main service for scheduling aggregate reporting jobs.
- * The actial job execution logic is part of {@link AggregateReportingJobHandler}
+ * Main service for scheduling aggregate reporting jobs. The actual job execution logic is part of
+ * {@link AggregateReportingJobHandler}
  */
 public final class AggregateReportingJobService extends JobService {
 
@@ -48,12 +52,14 @@ public final class AggregateReportingJobService extends JobService {
     @Override
     public boolean onStartJob(JobParameters params) {
         if (FlagsFactory.getFlags().getMeasurementJobAggregateReportingKillSwitch()) {
-            LogUtil.e("Aggregate Reporting Job is disabled");
-            return false;
+            LogUtil.e("AggregateReportingJobService is disabled");
+            return skipAndCancelBackgroundJob(params);
         }
 
+        LogUtil.d("AggregateReportingJobService.onStartJob");
         sBlockingExecutor.execute(() -> {
             boolean success = new AggregateReportingJobHandler(
+                    EnrollmentDao.getInstance(getApplicationContext()),
                     DatastoreManagerFactory.getDatastoreManager(
                             getApplicationContext()))
                     .performScheduledPendingReportsInWindow(
@@ -63,7 +69,6 @@ public final class AggregateReportingJobService extends JobService {
             jobFinished(params, !success);
         });
 
-        LogUtil.d("AggregateReportingJobService.onStartJob");
         return true;
     }
 
@@ -73,12 +78,9 @@ public final class AggregateReportingJobService extends JobService {
         return false;
     }
 
-    /**
-     * Schedules {@link AggregateReportingJobService}
-     */
-    public static void schedule(Context context) {
-        final JobScheduler jobScheduler = context.getSystemService(
-                JobScheduler.class);
+    /** Schedules {@link AggregateReportingJobService} */
+    @VisibleForTesting
+    static void schedule(Context context, JobScheduler jobScheduler) {
         final JobInfo job = new JobInfo.Builder(
                 AdServicesConfig.MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID,
                 new ComponentName(context, AggregateReportingJobService.class))
@@ -88,6 +90,46 @@ public final class AggregateReportingJobService extends JobService {
                 .setPeriodic(AdServicesConfig.getMeasurementAggregateMainReportingJobPeriodMs())
                 .build();
         jobScheduler.schedule(job);
-        LogUtil.d("Scheduling Aggregate Main Reporting job ...");
+    }
+
+    /**
+     * Schedule Aggregate Reporting Job if it is not already scheduled
+     *
+     * @param context the context
+     * @param forceSchedule flag to indicate whether to force rescheduling the job.
+     */
+    public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
+        if (FlagsFactory.getFlags().getMeasurementJobAggregateReportingKillSwitch()) {
+            LogUtil.d("AggregateReportingJobService is disabled, skip scheduling");
+            return;
+        }
+
+        final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
+        if (jobScheduler == null) {
+            LogUtil.e("JobScheduler not found");
+            return;
+        }
+
+        final JobInfo job = jobScheduler.getPendingJob(MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID);
+        // Schedule if it hasn't been scheduled already or force rescheduling
+        if (job == null || forceSchedule) {
+            schedule(context, jobScheduler);
+            LogUtil.d("Scheduled AggregateReportingJobService");
+        } else {
+            LogUtil.d("AggregateReportingJobService already scheduled, skipping reschedule");
+        }
+    }
+
+    private boolean skipAndCancelBackgroundJob(final JobParameters params) {
+        final JobScheduler jobScheduler = this.getSystemService(JobScheduler.class);
+        if (jobScheduler != null) {
+            jobScheduler.cancel(MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID);
+        }
+
+        // Tell the JobScheduler that the job has completed and does not need to be rescheduled.
+        jobFinished(params, false);
+
+        // Returning false means that this job has completed its work.
+        return false;
     }
 }
