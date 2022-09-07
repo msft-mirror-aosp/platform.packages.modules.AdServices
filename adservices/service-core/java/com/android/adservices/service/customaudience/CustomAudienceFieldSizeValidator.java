@@ -98,7 +98,7 @@ public class CustomAudienceFieldSizeValidator implements Validator<CustomAudienc
                             nameSize));
         }
 
-        int dailyUpdateUriSize = customAudience.getDailyUpdateUrl().toString().getBytes().length;
+        int dailyUpdateUriSize = customAudience.getDailyUpdateUri().toString().getBytes().length;
         if (dailyUpdateUriSize > mFlags.getFledgeCustomAudienceMaxDailyUpdateUriSizeB()) {
             violations.add(
                     String.format(
@@ -108,7 +108,7 @@ public class CustomAudienceFieldSizeValidator implements Validator<CustomAudienc
                             dailyUpdateUriSize));
         }
 
-        int biddingLogicUriSize = customAudience.getBiddingLogicUrl().toString().getBytes().length;
+        int biddingLogicUriSize = customAudience.getBiddingLogicUri().toString().getBytes().length;
         if (biddingLogicUriSize > mFlags.getFledgeCustomAudienceMaxBiddingLogicUriSizeB()) {
             violations.add(
                     String.format(

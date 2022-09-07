@@ -18,9 +18,10 @@ package android.app.sdksandbox.testutils;
 
 import android.app.sdksandbox.ILoadSdkCallback;
 import android.app.sdksandbox.IRequestSurfacePackageCallback;
-import android.app.sdksandbox.ISdkSandboxLifecycleCallback;
 import android.app.sdksandbox.ISdkSandboxManager;
-import android.app.sdksandbox.ISendDataCallback;
+import android.app.sdksandbox.ISdkSandboxProcessDeathCallback;
+import android.app.sdksandbox.ISharedPreferencesSyncCallback;
+import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.content.pm.SharedLibraryInfo;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -60,9 +61,6 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
             Bundle params,
             IRequestSurfacePackageCallback callback) {}
 
-    @Override
-    public void sendData(
-            String callingPackageName, String sdkName, Bundle data, ISendDataCallback callback) {}
 
     @Override
     public List<SharedLibraryInfo> getLoadedSdkLibrariesInfo(
@@ -75,13 +73,23 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     @Override
     public void syncDataFromClient(
-            String callingPackageName, long timeAppCalledSystemServer, Bundle data) {}
+            String callingPackageName,
+            long timeAppCalledSystemServer,
+            SharedPreferencesUpdate update,
+            ISharedPreferencesSyncCallback callback) {}
 
     @Override
-    public void addSdkSandboxLifecycleCallback(
-            String callingPackageName, ISdkSandboxLifecycleCallback callback) {}
+    public void addSdkSandboxProcessDeathCallback(
+            String callingPackageName,
+            long timeAppCalledSystemServer,
+            ISdkSandboxProcessDeathCallback callback) {}
 
     @Override
-    public void removeSdkSandboxLifecycleCallback(
-            String callingPackageName, ISdkSandboxLifecycleCallback callback) {}
+    public void removeSdkSandboxProcessDeathCallback(
+            String callingPackageName,
+            long timeAppCalledSystemServer,
+            ISdkSandboxProcessDeathCallback callback) {}
+
+    @Override
+    public void logLatencyFromSystemServerToApp(String method, int latency) {}
 }

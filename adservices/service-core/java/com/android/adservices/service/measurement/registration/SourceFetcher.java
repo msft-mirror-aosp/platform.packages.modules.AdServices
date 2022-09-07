@@ -15,26 +15,34 @@
  */
 package com.android.adservices.service.measurement.registration;
 
-import static com.android.adservices.service.measurement.PrivacyParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_INSTALL_ATTRIBUTION_WINDOW;
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_POST_INSTALL_EXCLUSIVITY_WINDOW;
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_INSTALL_ATTRIBUTION_WINDOW;
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_POST_INSTALL_EXCLUSIVITY_WINDOW;
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.util.BaseUriExtractor.getBaseUri;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE;
 
 import android.adservices.measurement.RegistrationRequest;
 import android.adservices.measurement.WebSourceParams;
 import android.adservices.measurement.WebSourceRegistrationRequest;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.content.Context;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
+import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.Web;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONArray;
@@ -67,14 +75,28 @@ public class SourceFetcher {
     private final String mDefaultAndroidAppScheme = "android-app";
     private final String mDefaultAndroidAppUriPrefix = mDefaultAndroidAppScheme + "://";
     private final MeasurementHttpClient mNetworkConnection = new MeasurementHttpClient();
+    private final EnrollmentDao mEnrollmentDao;
+    private final Flags mFlags;
+    private final AdServicesLogger mLogger;
 
-    public SourceFetcher() {
-        this(new AdIdPermissionFetcher());
+    public SourceFetcher(Context context) {
+        this(
+                EnrollmentDao.getInstance(context),
+                new AdIdPermissionFetcher(),
+                FlagsFactory.getFlags(),
+                AdServicesLoggerImpl.getInstance());
     }
 
     @VisibleForTesting
-    SourceFetcher(AdIdPermissionFetcher adIdPermissionFetcher) {
-        this.mAdIdPermissionFetcher = adIdPermissionFetcher;
+    public SourceFetcher(
+            EnrollmentDao enrollmentDao,
+            AdIdPermissionFetcher adIdPermissionFetcher,
+            Flags flags,
+            AdServicesLogger logger) {
+        mEnrollmentDao = enrollmentDao;
+        mAdIdPermissionFetcher = adIdPermissionFetcher;
+        mFlags = flags;
+        mLogger = logger;
     }
 
     private boolean parseCommonSourceParams(
@@ -96,7 +118,7 @@ public class SourceFetcher {
         result.setSourceEventId(json.getLong(SourceHeaderContract.SOURCE_EVENT_ID));
         if (!json.isNull(SourceHeaderContract.EXPIRY)) {
             long expiry =
-                    extractValidValue(
+                    extractValidNumberInRange(
                             json.getLong(SourceHeaderContract.EXPIRY),
                             MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
                             MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
@@ -112,7 +134,7 @@ public class SourceFetcher {
         }
         if (!json.isNull(SourceHeaderContract.INSTALL_ATTRIBUTION_WINDOW_KEY)) {
             long installAttributionWindow =
-                    extractValidValue(
+                    extractValidNumberInRange(
                             json.getLong(SourceHeaderContract.INSTALL_ATTRIBUTION_WINDOW_KEY),
                             MIN_INSTALL_ATTRIBUTION_WINDOW,
                             MAX_INSTALL_ATTRIBUTION_WINDOW);
@@ -120,7 +142,7 @@ public class SourceFetcher {
         }
         if (!json.isNull(SourceHeaderContract.POST_INSTALL_EXCLUSIVITY_WINDOW_KEY)) {
             long installCooldownWindow =
-                    extractValidValue(
+                    extractValidNumberInRange(
                             json.getLong(SourceHeaderContract.POST_INSTALL_EXCLUSIVITY_WINDOW_KEY),
                             MIN_POST_INSTALL_EXCLUSIVITY_WINDOW,
                             MAX_POST_INSTALL_EXCLUSIVITY_WINDOW);
@@ -129,6 +151,11 @@ public class SourceFetcher {
 
         // This "filter_data" field is used to generate reports.
         if (!json.isNull(SourceHeaderContract.FILTER_DATA)) {
+            if (!FetcherUtil.areValidAttributionFilters(
+                    json.optJSONObject(SourceHeaderContract.FILTER_DATA))) {
+                LogUtil.d("Source filter-data is invalid.");
+                return false;
+            }
             result.setAggregateFilterData(
                     json.getJSONObject(SourceHeaderContract.FILTER_DATA).toString());
         }
@@ -202,7 +229,7 @@ public class SourceFetcher {
                 && Objects.equals(expectedValue, Uri.parse(json.getString(fieldName)));
     }
 
-    private long extractValidValue(long value, long lowerLimit, long upperLimit) {
+    private long extractValidNumberInRange(long value, long lowerLimit, long upperLimit) {
         if (value < lowerLimit) {
             return lowerLimit;
         } else if (value > upperLimit) {
@@ -214,7 +241,7 @@ public class SourceFetcher {
 
     private boolean parseSource(
             @NonNull Uri topOrigin,
-            @NonNull Uri reportingOrigin,
+            @NonNull String enrollmentId,
             @Nullable Uri appDestination,
             @Nullable Uri webDestination,
             boolean shouldValidateDestination,
@@ -224,7 +251,7 @@ public class SourceFetcher {
             boolean isAllowDebugKey) {
         SourceRegistration.Builder result = new SourceRegistration.Builder();
         result.setTopOrigin(topOrigin);
-        result.setReportingOrigin(reportingOrigin);
+        result.setEnrollmentId(enrollmentId);
         List<String> field;
         field = headers.get("Attribution-Reporting-Register-Source");
         if (field == null || field.size() != 1) {
@@ -245,7 +272,7 @@ public class SourceFetcher {
                 return false;
             }
             if (!json.isNull(SourceHeaderContract.AGGREGATION_KEYS)) {
-                if (!isValidAggregateSource(
+                if (!areValidAggregationKeys(
                         json.getJSONArray(SourceHeaderContract.AGGREGATION_KEYS))) {
                     return false;
                 }
@@ -263,6 +290,7 @@ public class SourceFetcher {
 
     /** Provided a testing hook. */
     @NonNull
+    @VisibleForTesting
     public URLConnection openUrl(@NonNull URL url) throws IOException {
         return mNetworkConnection.setup(url);
     }
@@ -289,6 +317,13 @@ public class SourceFetcher {
             LogUtil.d(e, "Malformed registration target URL");
             return;
         }
+        Optional<String> enrollmentId =
+                Enrollment.maybeGetEnrollmentId(registrationUri, mEnrollmentDao);
+        if (!enrollmentId.isPresent()) {
+            LogUtil.d("fetchSource: unable to find enrollment ID. Registration URI: %s",
+                    registrationUri);
+            return;
+        }
         HttpURLConnection urlConnection;
         try {
             urlConnection = (HttpURLConnection) openUrl(url);
@@ -302,16 +337,23 @@ public class SourceFetcher {
             urlConnection.setInstanceFollowRedirects(false);
             Map<String, List<String>> headers = urlConnection.getHeaderFields();
 
+            FetcherUtil.emitHeaderMetrics(
+                    mFlags,
+                    mLogger,
+                    AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE,
+                    headers,
+                    registrationUri);
+
             int responseCode = urlConnection.getResponseCode();
-            if (!ResponseBasedFetcher.isRedirect(responseCode)
-                    && !ResponseBasedFetcher.isSuccess(responseCode)) {
+            if (!FetcherUtil.isRedirect(responseCode)
+                    && !FetcherUtil.isSuccess(responseCode)) {
                 return;
             }
 
             final boolean parsed =
                     parseSource(
                             topOrigin,
-                            registrationUri,
+                            enrollmentId.get(),
                             appDestination,
                             webDestination,
                             shouldValidateDestination,
@@ -325,7 +367,7 @@ public class SourceFetcher {
             }
 
             if (shouldProcessRedirects) {
-                List<Uri> redirects = ResponseBasedFetcher.parseRedirects(headers);
+                List<Uri> redirects = FetcherUtil.parseRedirects(headers);
                 if (!redirects.isEmpty()) {
                     processAsyncRedirects(
                             redirects,
@@ -469,11 +511,28 @@ public class SourceFetcher {
                 mIoExecutor);
     }
 
-    private boolean isValidAggregateSource(JSONArray aggregationKeys) {
+    private static boolean areValidAggregationKeys(JSONArray aggregationKeys) {
         if (aggregationKeys.length() > MAX_AGGREGATE_KEYS_PER_REGISTRATION) {
-            LogUtil.d(
-                    "Aggregate source has more keys than permitted. %s", aggregationKeys.length());
+            LogUtil.d("Aggregation-keys have more entries than permitted. %s",
+                    aggregationKeys.length());
             return false;
+        }
+        for (int i = 0; i < aggregationKeys.length(); i++) {
+            JSONObject keyObj = aggregationKeys.optJSONObject(i);
+            if (keyObj == null) {
+                LogUtil.d("SourceFetcher: aggregation key failed to parse.");
+                return false;
+            }
+            String id = keyObj.optString("id");
+            if (!FetcherUtil.isValidAggregateKeyId(id)) {
+                LogUtil.d("SourceFetcher: aggregation key ID is invalid. %s", id);
+                return false;
+            }
+            String keyPiece = keyObj.optString("key_piece");
+            if (!FetcherUtil.isValidAggregateKeyPiece(keyPiece)) {
+                LogUtil.d("SourceFetcher: aggregation key-piece is invalid. %s", keyPiece);
+                return false;
+            }
         }
         return true;
     }

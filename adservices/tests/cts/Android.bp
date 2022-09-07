@@ -23,7 +23,7 @@ android_test {
         "android.test.runner",
         "android.test.base",
     ],
-    srcs: ["src/**/*.java"],
+    srcs: ["src/**/*.java",],
     // Tag this module as a cts test artifact
     exclude_srcs: ["src/android/adservices/debuggablects/*.java"],
     test_suites: [
@@ -34,6 +34,7 @@ android_test {
     test_mainline_modules: ["com.google.android.adservices.apex"],
     static_libs: [
         "androidx.test.rules",
+        "androidx.test.ext.junit",
         "androidx.test.ext.truth",
         "compatibility-device-util-axt",
         "ctstestrunner-axt",
@@ -50,10 +51,7 @@ android_test {
 }
 android_test {
     name: "CtsAdServicesDebuggableDeviceTestCases",
-    defaults: [
-        "cts_defaults",
-        "modules-utils-testable-device-config-defaults"
-    ],
+    defaults: ["cts_defaults"],
     libs: [
         "android.test.runner",
         "android.test.base",
@@ -71,6 +69,7 @@ android_test {
         "androidx.room_room-runtime",
         "androidx.room_room-testing",
         "androidx.test.rules",
+        "androidx.test.ext.junit",
         "androidx.test.ext.truth",
         "compatibility-device-util-axt",
         "ctstestrunner-axt",

@@ -22,6 +22,7 @@ import android.annotation.NonNull;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 
@@ -67,12 +68,20 @@ public class CustomAudienceDevOverridesHelper {
         Objects.requireNonNull(name);
 
         if (!mDevContext.getDevOptionsEnabled()) {
+            LogUtil.v("Dev options disabled");
             return null;
         }
 
         String appPackageName = mDevContext.getCallingAppPackageName();
 
-        return mCustomAudienceDao.getBiddingLogicUrlOverride(owner, buyer, name, appPackageName);
+        String result =
+                mCustomAudienceDao.getBiddingLogicUrlOverride(owner, buyer, name, appPackageName);
+
+        LogUtil.v(
+                "Override for app '%s' and key (%s,%s,%s): is %s",
+                appPackageName, owner, buyer, name, result);
+
+        return result;
     }
 
     /**
@@ -124,6 +133,8 @@ public class CustomAudienceDevOverridesHelper {
         Objects.requireNonNull(biddingLogicJS);
         Objects.requireNonNull(trustedBiddingSignals);
 
+        LogUtil.v("addOverride");
+
         if (!mDevContext.getDevOptionsEnabled()) {
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
@@ -131,6 +142,15 @@ public class CustomAudienceDevOverridesHelper {
         String appPackageName = mDevContext.getCallingAppPackageName();
 
         if (Objects.equals(owner, appPackageName)) {
+            LogUtil.v(
+                    "Adding override for app '%s' and key (%s,%s,%s): " + "values (%s, %s)",
+                    appPackageName,
+                    owner,
+                    buyer,
+                    name,
+                    biddingLogicJS,
+                    trustedBiddingSignals.toString());
+
             mCustomAudienceDao.persistCustomAudienceOverride(
                     DBCustomAudienceOverride.builder()
                             .setOwner(owner)
@@ -140,6 +160,10 @@ public class CustomAudienceDevOverridesHelper {
                             .setTrustedBiddingData(trustedBiddingSignals.toString())
                             .setAppPackageName(appPackageName)
                             .build());
+        } else {
+            LogUtil.v(
+                    "Owner %s is not the calling app package name %s, ignoring override",
+                    owner, appPackageName);
         }
     }
 

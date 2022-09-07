@@ -21,6 +21,7 @@ import android.adservices.customaudience.CustomAudience;
 import android.annotation.NonNull;
 import android.content.Context;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
@@ -102,12 +103,18 @@ public class CustomAudienceImpl {
      * Perform check on {@link CustomAudience} and write into db if it is valid.
      *
      * @param customAudience instance staged to be inserted.
+     * @param callerPackageName package name for the calling application, used as the owner
+     *     application identifier
      */
-    public void joinCustomAudience(@NonNull CustomAudience customAudience) {
+    public void joinCustomAudience(
+            @NonNull CustomAudience customAudience, @NonNull String callerPackageName) {
         Objects.requireNonNull(customAudience);
+        Objects.requireNonNull(callerPackageName);
         Instant currentTime = mClock.instant();
 
-        mCustomAudienceQuantityChecker.check(customAudience);
+        LogUtil.v("Validating CA limits");
+        mCustomAudienceQuantityChecker.check(customAudience, callerPackageName);
+        LogUtil.v("Validating CA");
         mCustomAudienceValidator.validate(customAudience);
 
         Duration customAudienceDefaultExpireIn =
@@ -115,10 +122,14 @@ public class CustomAudienceImpl {
 
         DBCustomAudience dbCustomAudience =
                 DBCustomAudience.fromServiceObject(
-                        customAudience, currentTime, customAudienceDefaultExpireIn);
+                        customAudience,
+                        callerPackageName,
+                        currentTime,
+                        customAudienceDefaultExpireIn);
 
+        LogUtil.v("Inserting CA in the DB");
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dbCustomAudience, customAudience.getDailyUpdateUrl());
+                dbCustomAudience, customAudience.getDailyUpdateUri());
     }
 
     /** Delete a custom audience with given key. No-op if not exist. */

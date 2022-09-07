@@ -35,41 +35,46 @@ public class AdServicesPermissions {
             "android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE";
 
     /** This permission needs to be declared by the caller of Advertising ID APIs. */
-    public static final String ACCESS_ADSERVICES_ADID = "android.permission.ACCESS_ADSERVICES_ADID";
+    public static final String ACCESS_ADSERVICES_AD_ID =
+            "android.permission.ACCESS_ADSERVICES_AD_ID";
 
     /**
-     * This permission needs to be declared by the Consent Service to access AdServices.
+     * This is a signature permission that needs to be declared by the AdServices apk to access API
+     * for AdID provided by another provider service. The signature permission is required to make
+     * sure that only AdServices is permitted to access this api.
      *
      * @hide
      */
     @SystemApi
-    public static final String ACCESS_ADSERVICES_CONSENT =
-            "android.permission.ACCESS_ADSERVICES_CONSENT";
+    public static final String ACCESS_PRIVILEGED_AD_ID =
+            "android.permission.ACCESS_PRIVILEGED_AD_ID";
 
     /**
-     * This permission needs to be declared by the AdServices to access API for AdID.
+     * This is a signature permission needs to be declared by the AdServices apk to access API for
+     * AppSetId provided by another provider service. The signature permission is required to make
+     * sure that only AdServices is permitted to access this api.
      *
      * @hide
      */
     @SystemApi
-    public static final String ADSERVICES_ACCESS_AD_ID =
-            "android.permission.ADSERVICES_ACCESS_AD_ID";
+    public static final String ACCESS_PRIVILEGED_APP_SET_ID =
+            "android.permission.ACCESS_PRIVILEGED_APP_SET_ID";
 
     /**
-     * This permission needs to be declared by the AdServices to access API for AppSetId.
+     * The permission that lets it modify AdService's enablement state modification API.
      *
      * @hide
      */
     @SystemApi
-    public static final String ADSERVICES_ACCESS_APP_SET_ID =
-            "android.permission.ADSERVICES_ACCESS_APP_SET_ID";
+    public static final String MODIFY_ADSERVICES_STATE =
+            "android.permission.MODIFY_ADSERVICES_STATE";
 
     /**
-     * This permission needs to be declared by the AdServices to access Consent Service.
+     * The permission that lets it access AdService's enablement state modification API.
      *
      * @hide
      */
     @SystemApi
-    public static final String ADSERVICES_ACCESS_CONSENT_SERVICE =
-            "android.permission.ADSERVICES_ACCESS_CONSENT_SERVICE";
+    public static final String ACCESS_ADSERVICES_STATE =
+            "android.permission.ACCESS_ADSERVICES_STATE";
 }

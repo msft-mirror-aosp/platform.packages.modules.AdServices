@@ -17,6 +17,7 @@
 package com.android.adservices.service.measurement.reporting;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -30,6 +31,8 @@ public class EventReportPayloadTest {
     private static final String REPORT_ID = "678";
     private static final String SOURCE_TYPE = "event";
     private static final double RANDOMIZED_TRIGGER_RATE = 0.0024;
+    private static final Long SOURCE_DEBUG_KEY = 3894783L;
+    private static final Long TRIGGER_DEBUG_KEY = 2387222L;
 
     private EventReportPayload createEventReportPayloadExample1() {
         return new EventReportPayload.Builder()
@@ -39,6 +42,45 @@ public class EventReportPayloadTest {
                 .setReportId(REPORT_ID)
                 .setSourceType(SOURCE_TYPE)
                 .setRandomizedTriggerRate(RANDOMIZED_TRIGGER_RATE)
+                .setSourceDebugKey(SOURCE_DEBUG_KEY)
+                .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                .build();
+    }
+
+    private EventReportPayload createEventReportPayloadWithNullDebugKeys() {
+        return new EventReportPayload.Builder()
+                .setAttributionDestination(ATTRIBUTION_DESTINATION)
+                .setSourceEventId(SOURCE_EVENT_ID)
+                .setTriggerData(TRIGGER_DATA)
+                .setReportId(REPORT_ID)
+                .setSourceType(SOURCE_TYPE)
+                .setRandomizedTriggerRate(RANDOMIZED_TRIGGER_RATE)
+                .setSourceDebugKey(null)
+                .setTriggerDebugKey(null)
+                .build();
+    }
+
+    private EventReportPayload createEventReportPayloadWithSingleTriggerDebugKeys() {
+        return new EventReportPayload.Builder()
+                .setAttributionDestination(ATTRIBUTION_DESTINATION)
+                .setSourceEventId(SOURCE_EVENT_ID)
+                .setTriggerData(TRIGGER_DATA)
+                .setReportId(REPORT_ID)
+                .setSourceType(SOURCE_TYPE)
+                .setRandomizedTriggerRate(RANDOMIZED_TRIGGER_RATE)
+                .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                .build();
+    }
+
+    private EventReportPayload createEventReportPayloadWithSingleSourceDebugKeys() {
+        return new EventReportPayload.Builder()
+                .setAttributionDestination(ATTRIBUTION_DESTINATION)
+                .setSourceEventId(SOURCE_EVENT_ID)
+                .setTriggerData(TRIGGER_DATA)
+                .setReportId(REPORT_ID)
+                .setSourceType(SOURCE_TYPE)
+                .setRandomizedTriggerRate(RANDOMIZED_TRIGGER_RATE)
+                .setSourceDebugKey(SOURCE_DEBUG_KEY)
                 .build();
     }
 
@@ -55,5 +97,58 @@ public class EventReportPayloadTest {
         assertEquals(SOURCE_TYPE, eventPayloadReportJson.get("source_type"));
         assertEquals(RANDOMIZED_TRIGGER_RATE,
                 eventPayloadReportJson.get("randomized_trigger_rate"));
+        assertEquals(SOURCE_DEBUG_KEY, eventPayloadReportJson.get("source_debug_key"));
+        assertEquals(TRIGGER_DEBUG_KEY, eventPayloadReportJson.get("trigger_debug_key"));
+    }
+
+    @Test
+    public void testEventPayloadJsonSerializationWithNullDebugKeys() throws JSONException {
+        EventReportPayload eventReport = createEventReportPayloadWithNullDebugKeys();
+        JSONObject eventPayloadReportJson = eventReport.toJson();
+
+        assertEquals(
+                ATTRIBUTION_DESTINATION, eventPayloadReportJson.get("attribution_destination"));
+        assertEquals(SOURCE_EVENT_ID, eventPayloadReportJson.get("source_event_id"));
+        assertEquals(TRIGGER_DATA, eventPayloadReportJson.get("trigger_data"));
+        assertEquals(REPORT_ID, eventPayloadReportJson.get("report_id"));
+        assertEquals(SOURCE_TYPE, eventPayloadReportJson.get("source_type"));
+        assertEquals(
+                RANDOMIZED_TRIGGER_RATE, eventPayloadReportJson.get("randomized_trigger_rate"));
+        assertNull(eventPayloadReportJson.opt("source_debug_key"));
+        assertNull(eventPayloadReportJson.opt("trigger_debug_key"));
+    }
+
+    @Test
+    public void testEventPayloadJsonSerializationWithSingleTriggerDebugKeys() throws JSONException {
+        EventReportPayload eventReport = createEventReportPayloadWithSingleTriggerDebugKeys();
+        JSONObject eventPayloadReportJson = eventReport.toJson();
+
+        assertEquals(
+                ATTRIBUTION_DESTINATION, eventPayloadReportJson.get("attribution_destination"));
+        assertEquals(SOURCE_EVENT_ID, eventPayloadReportJson.get("source_event_id"));
+        assertEquals(TRIGGER_DATA, eventPayloadReportJson.get("trigger_data"));
+        assertEquals(REPORT_ID, eventPayloadReportJson.get("report_id"));
+        assertEquals(SOURCE_TYPE, eventPayloadReportJson.get("source_type"));
+        assertEquals(
+                RANDOMIZED_TRIGGER_RATE, eventPayloadReportJson.get("randomized_trigger_rate"));
+        assertNull(eventPayloadReportJson.opt("source_debug_key"));
+        assertEquals(TRIGGER_DEBUG_KEY, eventPayloadReportJson.get("trigger_debug_key"));
+    }
+
+    @Test
+    public void testEventPayloadJsonSerializationWithSingleSourceDebugKeys() throws JSONException {
+        EventReportPayload eventReport = createEventReportPayloadWithSingleSourceDebugKeys();
+        JSONObject eventPayloadReportJson = eventReport.toJson();
+
+        assertEquals(
+                ATTRIBUTION_DESTINATION, eventPayloadReportJson.get("attribution_destination"));
+        assertEquals(SOURCE_EVENT_ID, eventPayloadReportJson.get("source_event_id"));
+        assertEquals(TRIGGER_DATA, eventPayloadReportJson.get("trigger_data"));
+        assertEquals(REPORT_ID, eventPayloadReportJson.get("report_id"));
+        assertEquals(SOURCE_TYPE, eventPayloadReportJson.get("source_type"));
+        assertEquals(
+                RANDOMIZED_TRIGGER_RATE, eventPayloadReportJson.get("randomized_trigger_rate"));
+        assertNull(eventPayloadReportJson.opt("trigger_debug_key"));
+        assertEquals(SOURCE_DEBUG_KEY, eventPayloadReportJson.get("source_debug_key"));
     }
 }

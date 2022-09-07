@@ -22,10 +22,8 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="1644434244130657749">"Permite que um aplicativo tenha acesso a APIs AdServices Attribution."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="2766614780488510189">"acessar a API AdServices Custom Audience"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"Permite que um aplicativo tenha acesso à API AdServices Custom Audience."</string>
-    <!-- no translation found for permlab_accessAdServicesAdId (2754825914769538156) -->
-    <skip />
-    <!-- no translation found for permdesc_accessAdServicesAdId (7717770480967762044) -->
-    <skip />
+    <string name="permlab_accessAdServicesAdId" msgid="2754825914769538156">"Acessar a API AdId"</string>
+    <string name="permdesc_accessAdServicesAdId" msgid="7717770480967762044">"Permite que um aplicativo tenha acesso à API AdId."</string>
     <string name="permlab_accessAdServicesConsent" msgid="3203633397142568707">"acessar a API AdServices Consent"</string>
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Permite que um aplicativo tenha acesso à API AdServices Consent."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Acessar a API Ad ID"</string>
@@ -34,72 +32,63 @@
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Permite que um aplicativo tenha acesso à API App Set Id."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Acesso à API Consent Service"</string>
     <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"Permite que um aplicativo tenha acesso à API Consent Service."</string>
+    <string name="permlab_modifyAdServicesState" msgid="3594653261299518914">"Acesso à API para mudança do estado de ativação do AdService."</string>
+    <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Permite que um aplicativo tenha acesso à API para mudança do estado de ativação do AdService."</string>
+    <string name="permlab_accessAdServicesState" msgid="482058883975394398">"Acesso à API de estado de ativação do AdService."</string>
+    <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Permite que um aplicativo tenha acesso à API de estado de ativação do AdService."</string>
     <string name="app_label" msgid="5985320129629013968">"Sistema Android"</string>
-    <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"Sandbox de privacidade Beta"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"Sandbox de privacidade Beta"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"Alternar Sandbox de privacidade Beta"</string>
-    <string name="settingsUI_main_view_title" msgid="255982490790282252">"Privacidade de anúncios do Android (Beta)"</string>
-    <string name="settingsUI_main_view_subtitle" msgid="3380585883687237827">"Teste o novo sistema do Sandbox de privacidade que restringe o rastreamento entre apps"</string>
-    <string name="settingsUI_main_view_info_text1" msgid="8353580266621706164">"Como o Sandbox de privacidade funciona"</string>
-    <string name="settingsUI_main_view_info_text2" msgid="5144888171043725329">"Os dados são coletados no Sandbox de privacidade para mostrar anúncios que podem ser do seu interesse, mas são compartilhados sem identificar você ou o dispositivo."</string>
-    <string name="settingsUI_main_view_info_text3" msgid="9106658161862318732">"Que tipo de dados são armazenados no Sandbox de privacidade?"</string>
-    <string name="settingsUI_main_view_info_text4" msgid="5819359066240454954">"•  Interesses gerais"</string>
-    <string name="settingsUI_main_view_info_text5" msgid="6064832868440367397">"O Android gera esses dados com base nos apps que você usa e os adiciona ao Sandbox de privacidade. Por exemplo, um dos seus interesses gerais pode ser \"Esportes\". \n\nVocê pode conferir a lista dos seus interesses nas configurações de privacidade e bloquear os que não gostar."</string>
-    <string name="settingsUI_main_view_info_text6" msgid="3406976290919982143">"•  Interesses específicos"</string>
-    <string name="settingsUI_main_view_info_text7" msgid="210269084665708892">"Os apps geram esses dados com base em como você os usa e os adicionam ao Sandbox de privacidade. Por exemplo, um app que você usa para comprar tênis de corrida pode adicionar o rótulo sport_running.\n\nNas suas configurações de privacidade, você pode conferir a lista de apps que definem interesses e impedir que qualquer app contribua com dados para o Sandbox de privacidade."</string>
-    <string name="settingsUI_topics_view_title" msgid="7437641813424176118">"Gerenciar interesses"</string>
-    <string name="settingsUI_topics_view_subtitle" msgid="5347912133908026725">"O Sandbox de privacidade do Android restringe o rastreamento entre apps e, ao mesmo tempo, ainda permite que os apps mostrem anúncios de que você pode gostar. O Android compartilha esses dados com anunciantes sem identificar você ou o dispositivo.\n\nCom base nos apps usados, o Android gera e atualiza a lista de interesses gerais de anúncios. Se você bloquear um interesse, ele não será adicionado à lista novamente, a menos que você o desbloqueie. Talvez você ainda encontre alguns anúncios relacionados ao interesse bloqueado."</string>
-    <string name="settingsUI_topics_view_info_text1" msgid="6729245512525985403">"Interesses gerais de anúncios"</string>
-    <string name="settingsUI_topics_view_info_text2" msgid="8355913397424818046">"O Android gera esses interesses com base nos apps que você usa.\n\nPor exemplo, se você tiver vários apps de esportes no seu dispositivo, o Android pode adicionar o interesse \"Esportes\" ao Sandbox de privacidade.\n\nMais tarde, esses dados são compartilhados com anunciantes sem identificar você ou o dispositivo."</string>
-    <string name="settingsUI_apps_key" msgid="5279102708260885695">"apps_preference"</string>
-    <string name="settingsUI_apps_title" msgid="2177966577556486280">"Seus apps que geram interesses específicos"</string>
-    <string name="settingsUI_apps_summary" msgid="2382082513059909726">"Gerenciar seus apps que geram interesses específicos"</string>
-    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Apps bloqueados"</string>
-    <string name="settingsUI_apps_view_title" msgid="3615627092403761282">"Gerenciar apps"</string>
-    <string name="settingsUI_apps_view_subtitle" msgid="5257332567222983503">"Com base na forma como são usados, alguns apps geram dados sobre seus interesses de anúncio específicos para o Sandbox de privacidade. O Android atualiza essa lista de apps para que você possa conferir ou editar.\n\nSe algum app for bloqueado, ele não vai adicionar mais nenhum interesse específico. O app não será adicionado à lista novamente, a menos que você o desbloqueie. Os interesses já gerados pelo app serão excluídos, mas você talvez ainda encontre alguns anúncios relacionados."</string>
-    <string name="settingsUI_apps_view_no_apps_text" msgid="1056905761942948495">"Não há apps para mostrar no momento"</string>
-    <string name="settingsUI_reset_apps_title" msgid="3308597019425923552">"Redefinir dados gerados por apps"</string>
-    <string name="settingsUI_apps_view_info_text1" msgid="503353133396835755">"Interesses de anúncio específicos"</string>
-    <string name="settingsUI_apps_view_info_text2" msgid="6562781312486257254">"Alguns apps que você usa geram dados sobre seus interesses específicos em publicidade e os adicionam ao Sandbox de privacidade.\n\nPor exemplo, um app usado para comprar tênis de corrida pode adicionar o rótulo sport_running.\n\nDepois, os dados coletados no Sandbox de privacidade são compartilhados com os anunciantes sem identificar você ou o dispositivo. Desse modo, você ainda vai encontrar anúncios do seu interesse, mas com maior proteção de privacidade."</string>
-    <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="5700261138344146462">"Não há apps bloqueados para mostrar no momento"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Não há interesses para mostrar no momento"</string>
-    <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
-    <string name="settingsUI_topics_title" msgid="4024683469932819788">"Seus interesses gerais"</string>
-    <string name="settingsUI_topics_summary" msgid="3146101472984434355">"Gerenciar seus interesses gerais"</string>
-    <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"Gerenciar seus interesses gerais de anúncios"</string>
+    <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Participe do programa Beta da privacidade de anúncios do Android"</string>
+    <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"O Android está procurando como os apps podem mostrar anúncios de forma mais particular"</string>
+    <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Saiba mais"</string>
+    <string name="notificationUI_header_title_eu" msgid="4955298263079910371">"Privacidade de anúncios do Android (Beta)"</string>
+    <string name="notificationUI_container1_title_eu" msgid="8315199862119660570">"Novidades"</string>
+    <string name="notificationUI_container1_body_text_eu" msgid="1700290522706948241">"Os novos recursos no Sandbox de privacidade permitem que os apps mostrem anúncios relevantes, mas restringem o que esses apps podem aprender sobre suas atividades nos sites e aplicativos de outros desenvolvedores."</string>
+    <string name="notificationUI_container1_control_text_eu" msgid="3158258148321255153">"Como funciona"</string>
+    <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Como participar"</string>
+    <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Ativar a versão Beta permite que os apps testem essas formas novas e mais particulares de mostrar anúncios. Você pode desativar a versão Beta a qualquer momento nas configurações de privacidade."</string>
+    <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Agora não"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"Sim, vou participar"</string>
+    <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Agradecemos a participação"</string>
+    <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Você está participando do programa Beta da privacidade de anúncios do Android. O Sandbox de privacidade está ativado para seu dispositivo.\n\nSaiba mais ou desative a versão Beta a qualquer momento nas configurações de privacidade."</string>
+    <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Você preferiu não participar"</string>
+    <string name="notificationUI_confirmation_decline_subtitle" msgid="4194388733937808440">"Agradecemos sua resposta. O Sandbox de privacidade está desativado para seu dispositivo.\n\nSe você mudar de ideia ou quiser saber mais, acesse as configurações de privacidade."</string>
+    <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"Configurações de privacidade"</string>
+    <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"Entendi"</string>
+    <string name="notificationUI_container2_title" msgid="3844342008598264655">"Você está participando do programa Beta"</string>
+    <string name="notificationUI_container2_body_text" msgid="758560159693325060">"O Sandbox de privacidade está ativado para seu dispositivo, e os apps podem testar essas formas novas e mais particulares de mostrar anúncios. Você pode desativar a versão Beta a qualquer momento nas configurações de privacidade."</string>
+    <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"Gerenciar configurações de privacidade"</string>
+    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Entendi"</string>
+    <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"O Sandbox de privacidade do Android oferece novos recursos usados pelos apps para mostrar anúncios que você pode gostar. Essas tecnologias não usam identificadores de dispositivo.\n\nO Android e seus apps podem estimar os tipos de anúncios que podem ser do seu interesse e salvar essa informação temporariamente no seu dispositivo. Isso permite que os apps mostrem anúncios de que você pode gostar sem rastrear sua atividade nos sites e apps de outros desenvolvedores."</string>
+    <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"Personalização de anúncios com o Sandbox de privacidade"</string>
+    <string name="notificationUI_how_it_works_expanded_text3" msgid="603165966360369018">"• Interesses estimados pelo Android"</string>
+    <string name="notificationUI_how_it_works_expanded_text4" msgid="3910573920883580609">"O Android estima seus principais interesses periodicamente com base nos apps que você usa, como \"Esportes\" ou \"Viagens\".\n\nDepois, um app pode solicitar que o Android use esses interesses para mostrar anúncios mais relevantes.\n\nVocê pode ver a lista de interesses atuais nas suas configurações de privacidade e bloquear os que não gostar."</string>
+    <string name="notificationUI_how_it_works_expanded_text5" msgid="7257714040472055781">"• Interesses estimados pelos apps"</string>
+    <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"Os apps podem estimar e salvar seus interesses temporariamente com o Android. Por exemplo, um app que você usou para comprar um tênis de corrida pode estimar seu interesse como \"correr maratonas\".\n\nCom base nesse interesse, outro app pode mostrar um anúncio relacionado a maratonas.\n\nNas configurações de privacidade, você pode gerenciar a lista de apps que têm seus interesses salvos."</string>
+    <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Sandbox de privacidade"</string>
+    <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Participe do programa Beta da privacidade de anúncios do Android"</string>
+    <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Sandbox de privacidade"</string>
+    <string name="settingsUI_topics_title" msgid="5996189869721397937">"Interesses estimados pelo Android"</string>
+    <string name="settingsUI_apps_title" msgid="2772289096915264175">"Apps que estimam interesses"</string>
+    <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"Avaliação dos anúncios"</string>
+    <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"Os apps podem usar o Sandbox de privacidade para avaliar a eficácia dos anúncios. Para fazer isso, os anunciantes podem salvar dados temporariamente com o Android sobre suas interações com os anúncios e os apps deles. A quantidade de dados que eles podem salvar é restrita e vai ser excluída regularmente.\n\nVocê pode excluir esses dados a qualquer momento desativando o Sandbox de privacidade."</string>
+    <string name="settingsUI_topics_view_subtitle" msgid="6608135144119617292">"O Android estima seus principais interesses periodicamente com base nos apps que você usa. Os apps podem solicitar que o Android use esses interesses para mostrar anúncios mais relevantes.\n\nSe um interesse for bloqueado, ele não vai ser adicionado à lista novamente, a menos que ele seja desbloqueado. Talvez você ainda encontre alguns anúncios relacionados ao interesse bloqueado."</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Bloquear"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Desbloquear"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Interesses bloqueados"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Redefinir todos os interesses"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="5717377146633882375">"Não há interesses bloqueados para mostrar no momento"</string>
-    <string name="notificationUI_notification_content_eu" msgid="7419441022808120101">"Teste os novos recursos que vão restringir o rastreamento entre apps"</string>
-    <string name="notificationUI_header_title_eu" msgid="6822288197367284058">"Participe da versão Beta de privacidade dos anúncios"</string>
-    <string name="notificationUI_container3_title_eu" msgid="3157854074121291065">"O que você pode fazer"</string>
-    <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Agora não"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="7294736040084958697">"Sim, quero testar"</string>
-    <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Agradecemos a participação"</string>
-    <string name="notificationUI_confirmation_accept_subtitle" msgid="722290263168711051">"Agora, você faz parte do Sandbox de privacidade versão Beta. \n\nVocê pode saber mais ou sair da versão Beta a qualquer momento nas configurações de privacidade."</string>
-    <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Você preferiu não participar"</string>
-    <string name="notificationUI_confirmation_decline_subtitle" msgid="1869322730722065768">"Agradecemos sua resposta. Você não começou a participar do Sandbox de privacidade versão Beta.\n\nSe mudar de ideia ou se quiser saber mais, acesse suas configurações de privacidade."</string>
-    <string name="notificationUI_notification_content" msgid="2096372976024736172">"Você está testando novos recursos que restringem o rastreamento entre apps"</string>
-    <string name="notificationUI_header_title" msgid="857744302422337933">"Você está ajudando o Android a restringir o rastreamento entre apps"</string>
-    <string name="notificationUI_header_subtitle" msgid="522289584167376388">"O Android está testando novos recursos que vão restringir o rastreamento entre apps pelos anunciantes"</string>
-    <string name="notificationUI_container1_title" msgid="3837529978480615552">"O que é o rastreamento entre apps?"</string>
-    <string name="notificationUI_container1_body_text" msgid="2564452110982505130">"Atualmente, os dados sobre seu uso de apps podem ser facilmente associados ao seu dispositivo e compartilhados entre apps para fins de publicidade."</string>
-    <string name="notificationUI_container2_title" msgid="4796199061758878885">"O que o Android está fazendo"</string>
-    <string name="notificationUI_container2_body_text" msgid="7717896223210525953">"O Android está testando um novo Sandbox de privacidade que armazena e compartilha dados de publicidade com segurança, sem identificar você ou seu dispositivo. \n\nEsse novo sistema ajuda a impedir que os apps transmitam dados diretamente uns para os outros, mas ainda permite que eles mostrem anúncios que podem ser do seu interesse."</string>
-    <string name="notificationUI_container2_control_text" msgid="3031227311095645064">"Como funciona"</string>
-    <string name="notificationUI_container3_title" msgid="1283794406634157611">"Como você está ajudando"</string>
-    <string name="notificationUI_container3_body_text" msgid="2636703086913037594">"Embora você talvez não note mudanças nos anúncios mostrados, participar do programa Beta ajuda o Android a restringir o rastreamento entre apps ao longo do tempo. Você pode sair do programa Beta quando quiser, basta acessar suas configurações de privacidade."</string>
-    <string name="notificationUI_left_control_button_text" msgid="6459461402253858770">"Configurações de privacidade"</string>
-    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Entendi"</string>
-    <string name="notificationUI_how_it_works_expanded_text1" msgid="1753701052925879129">"Como o Sandbox de privacidade funciona"</string>
-    <string name="notificationUI_how_it_works_expanded_text2" msgid="3117263986288195274">"Os dados são coletados no Sandbox de privacidade para mostrar anúncios que podem ser do seu interesse, mas são compartilhados sem identificar você ou o dispositivo."</string>
-    <string name="notificationUI_how_it_works_expanded_text3" msgid="7270822532577167752">"Quais dados vão ser armazenados no Sandbox de privacidade?"</string>
-    <string name="notificationUI_how_it_works_expanded_text4" msgid="5609475052636889205">"•  Interesses gerais"</string>
-    <string name="notificationUI_how_it_works_expanded_text5" msgid="6757375506547548599">"O Android gera esses dados com base nos apps que você usa e os adiciona ao Sandbox de privacidade. Por exemplo, um dos seus interesses gerais pode ser Esportes.\n\nVocê pode conferir a lista dos seus interesses nas configurações de privacidade e bloquear os que não gostar."</string>
-    <string name="notificationUI_how_it_works_expanded_text6" msgid="2863877874268072458">"•  Interesses específicos"</string>
-    <string name="notificationUI_how_it_works_expanded_text7" msgid="2140515900209351523">"Os apps geram esses dados com base em como você os usa e os adicionam ao Sandbox de privacidade. Por exemplo, um app que você usa para comprar tênis de corrida pode adicionar o rótulo sport_running.\n\nNas suas configurações de privacidade, você pode conferir a lista de apps que definem interesses e impedir que apps contribuam com dados para o sandbox."</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Não há interesses para mostrar no momento"</string>
+    <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Sandbox de privacidade"</string>
+    <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"A versão Beta da privacidade de anúncios do Android oferece novos recursos usados pelos apps para mostrar anúncios que você pode gostar. Essas tecnologias não usam identificadores de dispositivo.\n\nO Android pode estimar os tipos de anúncios que podem ser do seu interesse e salvar essa informação temporariamente no seu dispositivo. Isso permite que os apps mostrem anúncios relevantes sem rastrear sua atividade nos sites e apps de outros desenvolvedores."</string>
+    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
+    <skip />
+    <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Os apps podem estimar e salvar seus interesses temporariamente com o Android. Depois, outro app pode mostrar um anúncio com base nesses interesses.\n\nSe você bloquear um app, ele não vai mais estimar interesses. Ele não vai ser adicionado à lista de apps novamente, a menos que você o desbloqueie. Os interesses já estimados pelo app vão ser excluídos, mas você talvez ainda encontre alguns anúncios relacionados."</string>
+    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Apps bloqueados"</string>
+    <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Redefinir interesses estimados por apps"</string>
+    <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Nenhum app está gerando interesses para você no momento"</string>
+    <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Sandbox de privacidade"</string>
+    <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"A versão Beta da privacidade de anúncios do Android oferece novos recursos usados pelos apps para mostrar anúncios que você pode gostar. Essas tecnologias não usam identificadores de dispositivo.\n\nOs apps podem estimar os tipos de anúncios que podem ser do seu interesse e salvar essa informação temporariamente no seu dispositivo. Isso permite que os apps mostrem anúncios relevantes sem rastrear sua atividade nos sites e apps de outros desenvolvedores."</string>
+    <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Você não tem apps bloqueados"</string>
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Você não tem interesses bloqueados"</string>
     <string name="topic10001" msgid="1636806320891333775">"Artes e entretenimento"</string>
     <string name="topic10002" msgid="1226367977754287428">"Atuação e cinema"</string>
     <string name="topic10003" msgid="6949890838957814881">"Animê e Mangá"</string>

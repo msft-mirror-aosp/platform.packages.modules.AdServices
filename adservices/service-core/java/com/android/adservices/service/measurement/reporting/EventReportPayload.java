@@ -18,6 +18,8 @@ package com.android.adservices.service.measurement.reporting;
 
 import android.annotation.NonNull;
 
+import androidx.annotation.Nullable;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -32,6 +34,8 @@ public final class EventReportPayload {
     private String mReportId;
     private String mSourceType;
     private double mRandomizedTriggerRate;
+    @Nullable private Long mSourceDebugKey;
+    @Nullable private Long mTriggerDebugKey;
 
     private EventReportPayload() {};
 
@@ -42,6 +46,8 @@ public final class EventReportPayload {
         this.mReportId = other.mReportId;
         this.mSourceType = other.mSourceType;
         this.mRandomizedTriggerRate = other.mRandomizedTriggerRate;
+        this.mSourceDebugKey = other.mSourceDebugKey;
+        this.mTriggerDebugKey = other.mTriggerDebugKey;
     }
 
     /**
@@ -56,6 +62,12 @@ public final class EventReportPayload {
         eventPayloadJson.put("report_id", this.mReportId);
         eventPayloadJson.put("source_type", this.mSourceType);
         eventPayloadJson.put("randomized_trigger_rate", this.mRandomizedTriggerRate);
+        if (mSourceDebugKey != null) {
+            eventPayloadJson.put("source_debug_key", this.mSourceDebugKey);
+        }
+        if (mTriggerDebugKey != null) {
+            eventPayloadJson.put("trigger_debug_key", this.mTriggerDebugKey);
+        }
 
         return eventPayloadJson;
     }
@@ -116,6 +128,18 @@ public final class EventReportPayload {
          */
         public @NonNull Builder setRandomizedTriggerRate(@NonNull double randomizedTriggerRate) {
             mBuilding.mRandomizedTriggerRate = randomizedTriggerRate;
+            return this;
+        }
+
+        /** Source debug key */
+        public @NonNull Builder setSourceDebugKey(@Nullable Long sourceDebugKey) {
+            mBuilding.mSourceDebugKey = sourceDebugKey;
+            return this;
+        }
+
+        /** Trigger debug key */
+        public @NonNull Builder setTriggerDebugKey(@Nullable Long triggerDebugKey) {
+            mBuilding.mTriggerDebugKey = triggerDebugKey;
             return this;
         }
 

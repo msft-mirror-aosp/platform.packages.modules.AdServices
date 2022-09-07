@@ -67,7 +67,7 @@ public class AdSelectionScriptEngineTest {
     private static final CustomAudienceSignals CUSTOM_AUDIENCE_SIGNALS_1 =
             new CustomAudienceSignals(
                     CustomAudienceFixture.VALID_OWNER,
-                    CommonFixture.VALID_BUYER,
+                    CommonFixture.VALID_BUYER_1,
                     "name",
                     NOW,
                     NOW.plus(Duration.ofDays(1)),
@@ -75,7 +75,7 @@ public class AdSelectionScriptEngineTest {
     private static final CustomAudienceSignals CUSTOM_AUDIENCE_SIGNALS_2 =
             new CustomAudienceSignals(
                     CustomAudienceFixture.VALID_OWNER,
-                    CommonFixture.VALID_BUYER,
+                    CommonFixture.VALID_BUYER_1,
                     "name",
                     NOW,
                     NOW.plus(Duration.ofDays(1)),

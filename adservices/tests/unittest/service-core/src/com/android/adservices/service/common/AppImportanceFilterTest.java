@@ -18,10 +18,8 @@ package com.android.adservices.service.common;
 
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND;
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND_SERVICE;
-import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_GONE;
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE;
 
-import static com.android.adservices.service.common.AppImportanceFilter.UNKNOWN_APP_PACKAGE_NAME;
 import static com.android.adservices.service.common.AppImportanceFilterTest.ApiCallStatsSubject.apiCallStats;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
@@ -54,7 +52,6 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -88,26 +85,8 @@ public class AppImportanceFilterTest {
 
     @Test
     public void testCalledWithForegroundAppPackageName_succeed() {
-        when(mActivityManager.getRunningAppProcesses())
-                .thenReturn(
-                        Collections.singletonList(
-                                generateProcessInfo(
-                                        APP_PACKAGE_NAME, IMPORTANCE_FOREGROUND, APP_UID)));
-
-        // No exception is thrown
-        mAppImportanceFilter.assertCallerIsInForeground(APP_PACKAGE_NAME, API_NAME, SDK_NAME);
-
-        verifyZeroInteractions(mAdServiceLogger, mPackageManager);
-    }
-
-    @Test
-    public void testPackageInMultipleProcesses_succeed() {
-        when(mActivityManager.getRunningAppProcesses())
-                .thenReturn(
-                        Arrays.asList(
-                                generateProcessInfo(
-                                        APP_PACKAGE_NAME, IMPORTANCE_FOREGROUND, APP_UID),
-                                generateProcessInfo(APP_PACKAGE_NAME, IMPORTANCE_GONE, APP_UID)));
+        when(mActivityManager.getPackageImportance(APP_PACKAGE_NAME))
+                .thenReturn(IMPORTANCE_FOREGROUND);
 
         // No exception is thrown
         mAppImportanceFilter.assertCallerIsInForeground(APP_PACKAGE_NAME, API_NAME, SDK_NAME);
@@ -117,11 +96,8 @@ public class AppImportanceFilterTest {
 
     @Test
     public void testCalledWithForegroundServiceImportanceAppPackageName_succeed() {
-        when(mActivityManager.getRunningAppProcesses())
-                .thenReturn(
-                        Collections.singletonList(
-                                generateProcessInfo(
-                                        APP_PACKAGE_NAME, IMPORTANCE_FOREGROUND_SERVICE, APP_UID)));
+        when(mActivityManager.getPackageImportance(APP_PACKAGE_NAME))
+                .thenReturn(IMPORTANCE_FOREGROUND_SERVICE);
 
         // No exception is thrown
         mAppImportanceFilter.assertCallerIsInForeground(APP_PACKAGE_NAME, API_NAME, SDK_NAME);
@@ -132,11 +108,8 @@ public class AppImportanceFilterTest {
     @Test
     public void
             testCalledWithLessThanForegroundImportanceAppPackageName_throwsIllegalStateException() {
-        when(mActivityManager.getRunningAppProcesses())
-                .thenReturn(
-                        Collections.singletonList(
-                                generateProcessInfo(
-                                        APP_PACKAGE_NAME, IMPORTANCE_VISIBLE, APP_UID)));
+        when(mActivityManager.getPackageImportance(APP_PACKAGE_NAME))
+                .thenReturn(IMPORTANCE_VISIBLE);
 
         assertThrows(
                 WrongCallingApplicationStateException.class,
@@ -149,11 +122,10 @@ public class AppImportanceFilterTest {
 
     @Test
     public void testCalledWithLessThanForegroundImportanceAppPackageName_logsFailure() {
-        when(mActivityManager.getRunningAppProcesses())
-                .thenReturn(
-                        Collections.singletonList(
-                                generateProcessInfo(
-                                        APP_PACKAGE_NAME, IMPORTANCE_VISIBLE, APP_UID)));
+        when(mActivityManager.getPackageImportance(APP_PACKAGE_NAME))
+                .thenReturn(IMPORTANCE_VISIBLE);
+        when(mPackageManager.getPackagesForUid(APP_UID))
+                .thenReturn(new String[] {APP_PACKAGE_NAME});
 
         assertThrows(
                 WrongCallingApplicationStateException.class,
@@ -176,59 +148,23 @@ public class AppImportanceFilterTest {
     }
 
     @Test
-    public void testLessThanForegroundImportanceAppPackageNameMultiplePackages_logsFailure() {
-        String otherAppPackageName = "other.app.package";
-        when(mActivityManager.getRunningAppProcesses())
-                .thenReturn(
-                        Collections.singletonList(
-                                generateProcessInfo(
-                                        Arrays.asList(APP_PACKAGE_NAME, otherAppPackageName),
-                                        IMPORTANCE_VISIBLE,
-                                        APP_UID)));
+    public void
+            testFailureTryingToRetrievePackageImportancePackageName_throwsIllegalStateException() {
+        when(mActivityManager.getPackageImportance(APP_PACKAGE_NAME))
+                .thenThrow(
+                        new IllegalStateException("Simulating failure calling activity manager"));
 
         assertThrows(
-                WrongCallingApplicationStateException.class,
-                () -> mAppImportanceFilter.assertCallerIsInForeground(APP_UID, API_NAME, SDK_NAME));
-
-        verify(mAdServiceLogger).logApiCallStats(mApiCallStatsArgumentCaptor.capture());
-        assertWithMessage("")
-                .about(apiCallStats())
-                .that(mApiCallStatsArgumentCaptor.getValue())
-                .hasCode(AD_SERVICES_API_CALLED)
-                .hasApiName(API_NAME)
-                .hasApiClass(API_CLASS)
-                .hasResultCode(AdServicesStatusUtils.STATUS_BACKGROUND_CALLER)
-                .hasSdkPackageName(SDK_NAME)
-                .hasAppPackageName(UNKNOWN_APP_PACKAGE_NAME);
-
-        verifyZeroInteractions(mPackageManager);
+                IllegalStateException.class,
+                () ->
+                        mAppImportanceFilter.assertCallerIsInForeground(
+                                APP_PACKAGE_NAME, API_NAME, SDK_NAME));
     }
 
     @Test
     public void testCalledWithForegroundAppUid_succeed() {
-        when(mActivityManager.getRunningAppProcesses())
-                .thenReturn(
-                        Collections.singletonList(
-                                generateProcessInfo(
-                                        APP_PACKAGE_NAME, IMPORTANCE_FOREGROUND, APP_UID)));
-
-        // No exception is thrown
-        mAppImportanceFilter.assertCallerIsInForeground(APP_UID, API_NAME, SDK_NAME);
-
-        verifyZeroInteractions(mAdServiceLogger);
-    }
-
-    @Test
-    public void testCalledWithAppUidWithOneAppInForeground_succeed() {
-        String otherAppPackageName = "other.app.package";
-        int otherAppUid = APP_UID + 1;
-        when(mActivityManager.getRunningAppProcesses())
-                .thenReturn(
-                        Arrays.asList(
-                                generateProcessInfo(
-                                        APP_PACKAGE_NAME, IMPORTANCE_FOREGROUND_SERVICE, APP_UID),
-                                generateProcessInfo(
-                                        otherAppPackageName, IMPORTANCE_VISIBLE, otherAppUid)));
+        when(mActivityManager.getPackageImportance(APP_PACKAGE_NAME))
+                .thenReturn(IMPORTANCE_FOREGROUND);
 
         // No exception is thrown
         mAppImportanceFilter.assertCallerIsInForeground(APP_UID, API_NAME, SDK_NAME);
@@ -238,11 +174,8 @@ public class AppImportanceFilterTest {
 
     @Test
     public void testCalledWithForegroundServiceImportanceAppUid_succeed() {
-        when(mActivityManager.getRunningAppProcesses())
-                .thenReturn(
-                        Collections.singletonList(
-                                generateProcessInfo(
-                                        APP_PACKAGE_NAME, IMPORTANCE_FOREGROUND_SERVICE, APP_UID)));
+        when(mActivityManager.getPackageImportance(APP_PACKAGE_NAME))
+                .thenReturn(IMPORTANCE_FOREGROUND_SERVICE);
 
         // No exception is thrown
         mAppImportanceFilter.assertCallerIsInForeground(APP_UID, API_NAME, SDK_NAME);
@@ -252,27 +185,7 @@ public class AppImportanceFilterTest {
 
     @Test
     public void testCalledWithLessThanForegroundImportanceAppUid_throwsIllegalStateException() {
-        when(mActivityManager.getRunningAppProcesses())
-                .thenReturn(
-                        Collections.singletonList(
-                                generateProcessInfo(
-                                        APP_PACKAGE_NAME, IMPORTANCE_VISIBLE, APP_UID)));
-
-        assertThrows(
-                WrongCallingApplicationStateException.class,
-                () -> mAppImportanceFilter.assertCallerIsInForeground(APP_UID, API_NAME, SDK_NAME));
-    }
-
-    @Test
-    public void testLessThanForegroundImportanceMultipleProcesses_throwsIllegalStateException() {
-        String otherAppPackageName = "other.app.package";
-        int otherAppUid = APP_UID + 1;
-        when(mActivityManager.getRunningAppProcesses())
-                .thenReturn(
-                        Arrays.asList(
-                                generateProcessInfo(APP_PACKAGE_NAME, IMPORTANCE_VISIBLE, APP_UID),
-                                generateProcessInfo(
-                                        otherAppPackageName, IMPORTANCE_FOREGROUND, otherAppUid)));
+        when(mActivityManager.getUidImportance(APP_UID)).thenReturn(IMPORTANCE_VISIBLE);
 
         assertThrows(
                 WrongCallingApplicationStateException.class,
@@ -281,11 +194,9 @@ public class AppImportanceFilterTest {
 
     @Test
     public void testCalledWithLessThanForegroundImportanceAppUid_logsFailure() {
-        when(mActivityManager.getRunningAppProcesses())
-                .thenReturn(
-                        Collections.singletonList(
-                                generateProcessInfo(
-                                        APP_PACKAGE_NAME, IMPORTANCE_VISIBLE, APP_UID)));
+        when(mActivityManager.getUidImportance(APP_UID)).thenReturn(IMPORTANCE_VISIBLE);
+        when(mPackageManager.getPackagesForUid(APP_UID))
+                .thenReturn(new String[] {APP_PACKAGE_NAME});
 
         assertThrows(
                 IllegalStateException.class,
@@ -305,11 +216,9 @@ public class AppImportanceFilterTest {
 
     @Test
     public void testCalledWithLessThanForegroundImportanceAppUidAndNullSdkName_logsFailure() {
-        when(mActivityManager.getRunningAppProcesses())
-                .thenReturn(
-                        Collections.singletonList(
-                                generateProcessInfo(
-                                        APP_PACKAGE_NAME, IMPORTANCE_VISIBLE, APP_UID)));
+        when(mActivityManager.getUidImportance(APP_UID)).thenReturn(IMPORTANCE_VISIBLE);
+        when(mPackageManager.getPackagesForUid(APP_UID))
+                .thenReturn(new String[] {APP_PACKAGE_NAME});
 
         assertThrows(
                 WrongCallingApplicationStateException.class,
@@ -328,129 +237,14 @@ public class AppImportanceFilterTest {
     }
 
     @Test
-    public void
-            testCalledWithMultipleLessThanForegroundImportanceAppUid_throwsIllegalStateException() {
-        String otherAppPackageName = "other.app.package";
-        int otherAppUid = APP_UID + 1;
-        when(mActivityManager.getRunningAppProcesses())
-                .thenReturn(
-                        Arrays.asList(
-                                generateProcessInfo(APP_PACKAGE_NAME, IMPORTANCE_VISIBLE, APP_UID),
-                                generateProcessInfo(
-                                        otherAppPackageName, IMPORTANCE_VISIBLE, otherAppUid)));
-
-        assertThrows(
-                IllegalStateException.class,
-                () -> mAppImportanceFilter.assertCallerIsInForeground(APP_UID, API_NAME, SDK_NAME));
-    }
-
-    @Test
-    public void testCalledWithMultipleLessThanForegroundImportanceAppUid_logsFailure() {
-        String otherAppPackageName = "other.app.package";
-        int otherAppUid = APP_UID + 1;
-        when(mActivityManager.getRunningAppProcesses())
-                .thenReturn(
-                        Arrays.asList(
-                                generateProcessInfo(APP_PACKAGE_NAME, IMPORTANCE_VISIBLE, APP_UID),
-                                generateProcessInfo(
-                                        otherAppPackageName, IMPORTANCE_VISIBLE, otherAppUid)));
-
-        assertThrows(
-                IllegalStateException.class,
-                () -> mAppImportanceFilter.assertCallerIsInForeground(APP_UID, API_NAME, SDK_NAME));
-
-        verify(mAdServiceLogger).logApiCallStats(mApiCallStatsArgumentCaptor.capture());
-        assertWithMessage("")
-                .about(apiCallStats())
-                .that(mApiCallStatsArgumentCaptor.getValue())
-                .hasCode(AD_SERVICES_API_CALLED)
-                .hasApiName(API_NAME)
-                .hasApiClass(API_CLASS)
-                .hasResultCode(AdServicesStatusUtils.STATUS_BACKGROUND_CALLER)
-                .hasSdkPackageName(SDK_NAME)
-                .hasAppPackageName(APP_PACKAGE_NAME);
-    }
-
-    @Test
     public void testFailureTryingToRetrievePackageImportanceFromUid_throwsIllegalStateException() {
-        when(mActivityManager.getRunningAppProcesses())
-                .thenThrow(new SecurityException("Simulating failure calling activity manager"));
+        when(mActivityManager.getUidImportance(APP_UID))
+                .thenThrow(
+                        new IllegalStateException("Simulating failure calling activity manager"));
 
         assertThrows(
                 IllegalStateException.class,
                 () -> mAppImportanceFilter.assertCallerIsInForeground(APP_UID, API_NAME, SDK_NAME));
-    }
-
-    @Test
-    public void testFailureTryingToRetrievePackageImportanceFromUid_logsFailure() {
-        when(mActivityManager.getRunningAppProcesses())
-                .thenThrow(new SecurityException("Simulating failure calling activity manager"));
-
-        assertThrows(
-                IllegalStateException.class,
-                () -> mAppImportanceFilter.assertCallerIsInForeground(APP_UID, API_NAME, SDK_NAME));
-
-        verify(mAdServiceLogger).logApiCallStats(mApiCallStatsArgumentCaptor.capture());
-        assertWithMessage("")
-                .about(apiCallStats())
-                .that(mApiCallStatsArgumentCaptor.getValue())
-                .hasCode(AD_SERVICES_API_CALLED)
-                .hasApiName(API_NAME)
-                .hasApiClass(API_CLASS)
-                .hasResultCode(AdServicesStatusUtils.STATUS_BACKGROUND_CALLER)
-                .hasSdkPackageName(SDK_NAME)
-                .hasAppPackageName(UNKNOWN_APP_PACKAGE_NAME);
-    }
-
-    @Test
-    public void testFailureFindingProcess_throwsIllegalStateException() {
-        when(mActivityManager.getRunningAppProcesses()).thenReturn(Collections.EMPTY_LIST);
-
-        assertThrows(
-                IllegalStateException.class,
-                () -> mAppImportanceFilter.assertCallerIsInForeground(APP_UID, API_NAME, SDK_NAME));
-    }
-
-    @Test
-    public void testFailureFindingProcess_logsFailure() {
-        when(mActivityManager.getRunningAppProcesses()).thenReturn(Collections.EMPTY_LIST);
-
-        assertThrows(
-                IllegalStateException.class,
-                () -> mAppImportanceFilter.assertCallerIsInForeground(APP_UID, API_NAME, SDK_NAME));
-
-        verify(mAdServiceLogger).logApiCallStats(mApiCallStatsArgumentCaptor.capture());
-        assertWithMessage("")
-                .about(apiCallStats())
-                .that(mApiCallStatsArgumentCaptor.getValue())
-                .hasCode(AD_SERVICES_API_CALLED)
-                .hasApiName(API_NAME)
-                .hasApiClass(API_CLASS)
-                .hasResultCode(AdServicesStatusUtils.STATUS_BACKGROUND_CALLER)
-                .hasSdkPackageName(SDK_NAME)
-                .hasAppPackageName(UNKNOWN_APP_PACKAGE_NAME);
-    }
-
-    @Test
-    public void testFailureFindingPackage_logsFailure() {
-        when(mActivityManager.getRunningAppProcesses()).thenReturn(Collections.EMPTY_LIST);
-
-        assertThrows(
-                IllegalStateException.class,
-                () ->
-                        mAppImportanceFilter.assertCallerIsInForeground(
-                                APP_PACKAGE_NAME, API_NAME, SDK_NAME));
-
-        verify(mAdServiceLogger).logApiCallStats(mApiCallStatsArgumentCaptor.capture());
-        assertWithMessage("")
-                .about(apiCallStats())
-                .that(mApiCallStatsArgumentCaptor.getValue())
-                .hasCode(AD_SERVICES_API_CALLED)
-                .hasApiName(API_NAME)
-                .hasApiClass(API_CLASS)
-                .hasResultCode(AdServicesStatusUtils.STATUS_BACKGROUND_CALLER)
-                .hasSdkPackageName(SDK_NAME)
-                .hasAppPackageName(APP_PACKAGE_NAME);
     }
 
     /** Helper to generate a process info object */

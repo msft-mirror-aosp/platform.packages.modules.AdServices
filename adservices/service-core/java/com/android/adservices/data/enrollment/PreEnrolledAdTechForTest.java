@@ -25,7 +25,12 @@ import java.util.List;
 final class PreEnrolledAdTechForTest {
 
     static List<EnrollmentData> getList() {
-        return Arrays.asList(SIMPLE_ENROLLMENT, ONE_SDK_MULTIPLE_URLS, SECOND_ENROLLMENT);
+        return Arrays.asList(
+                SIMPLE_ENROLLMENT,
+                ONE_SDK_MULTIPLE_URLS,
+                SECOND_ENROLLMENT,
+                TOPICS_SAMPLE_APPS,
+                MSMT_SYS_HEALTH_TEST_ENROLLMENT);
     }
 
     private static final EnrollmentData SIMPLE_ENROLLMENT =
@@ -66,5 +71,30 @@ final class PreEnrolledAdTechForTest {
                     .setAttributionReportingUrl(Arrays.asList("https://test3.com"))
                     .setRemarketingResponseBasedRegistrationUrl(Arrays.asList("https://test3.com"))
                     .setEncryptionKeyUrl(Arrays.asList("https://test3.com/keys"))
+                    .build();
+
+    private static final EnrollmentData TOPICS_SAMPLE_APPS =
+            new EnrollmentData.Builder()
+                    .setEnrollmentId("E4")
+                    .setCompanyId("1001")
+                    .setSdkNames(
+                            Arrays.asList(
+                                    "SdkName1", "SdkName2", "SdkName3", "SdkName4", "SdkName5"))
+                    .setAttributionSourceRegistrationUrl(Arrays.asList("https://test.com/source"))
+                    .setAttributionTriggerRegistrationUrl(Arrays.asList("https://test.com/trigger"))
+                    .setAttributionReportingUrl(Arrays.asList("https://test.com"))
+                    .setRemarketingResponseBasedRegistrationUrl(Arrays.asList("https://test.com"))
+                    .setEncryptionKeyUrl(Arrays.asList("https://test.com/keys"))
+                    .build();
+
+    private static final EnrollmentData MSMT_SYS_HEALTH_TEST_ENROLLMENT =
+            new EnrollmentData.Builder()
+                    .setEnrollmentId("E5")
+                    .setCompanyId("1003")
+                    .setAttributionSourceRegistrationUrl(
+                            Arrays.asList("https://localhost:38383/mockServer"))
+                    .setAttributionTriggerRegistrationUrl(
+                            Arrays.asList("https://localhost:38383/mockServer"))
+                    .setAttributionReportingUrl(Arrays.asList("https://localhost:38383/mockServer"))
                     .build();
 }

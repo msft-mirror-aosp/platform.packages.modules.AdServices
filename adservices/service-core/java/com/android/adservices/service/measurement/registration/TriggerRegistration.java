@@ -28,7 +28,7 @@ import java.util.Objects;
  */
 public final class TriggerRegistration {
     private final Uri mTopOrigin;
-    private final Uri mReportingOrigin;
+    private final String mEnrollmentId;
     private final String mAggregateTriggerData;
     private final String mAggregateValues;
     private final String mFilters;
@@ -38,14 +38,14 @@ public final class TriggerRegistration {
     /** Create a trigger registration. */
     private TriggerRegistration(
             @NonNull Uri topOrigin,
-            @NonNull Uri reportingOrigin,
+            @NonNull String enrollmentId,
             @NonNull String eventTriggers,
             @Nullable String aggregateTriggerData,
             @Nullable String aggregateValues,
             @Nullable String filters,
             @Nullable Long debugKey) {
         mTopOrigin = topOrigin;
-        mReportingOrigin = reportingOrigin;
+        mEnrollmentId = enrollmentId;
         mAggregateTriggerData = aggregateTriggerData;
         mAggregateValues = aggregateValues;
         mFilters = filters;
@@ -59,7 +59,7 @@ public final class TriggerRegistration {
         if (!(o instanceof TriggerRegistration)) return false;
         TriggerRegistration that = (TriggerRegistration) o;
         return Objects.equals(mTopOrigin, that.mTopOrigin)
-                && Objects.equals(mReportingOrigin, that.mReportingOrigin)
+                && Objects.equals(mEnrollmentId, that.mEnrollmentId)
                 && Objects.equals(mAggregateTriggerData, that.mAggregateTriggerData)
                 && Objects.equals(mAggregateValues, that.mAggregateValues)
                 && Objects.equals(mFilters, that.mFilters)
@@ -71,7 +71,7 @@ public final class TriggerRegistration {
     public int hashCode() {
         return Objects.hash(
                 mTopOrigin,
-                mReportingOrigin,
+                mEnrollmentId,
                 mAggregateTriggerData,
                 mAggregateValues,
                 mFilters,
@@ -85,10 +85,10 @@ public final class TriggerRegistration {
         return mTopOrigin;
     }
 
-    /** Reporting origin. */
+    /** Enrollment ID associated with this registration. */
     @NonNull
-    public Uri getReportingOrigin() {
-        return mReportingOrigin;
+    public String getEnrollmentId() {
+        return mEnrollmentId;
     }
 
     /** Event triggers - contains trigger data, priority, de-dup key and event-level filters. */
@@ -125,7 +125,7 @@ public final class TriggerRegistration {
      */
     public static final class Builder {
         private Uri mTopOrigin;
-        private Uri mReportingOrigin;
+        private String mEnrollmentId;
         private String mEventTriggers;
         private String mAggregateTriggerData;
         private String mAggregateValues;
@@ -140,11 +140,10 @@ public final class TriggerRegistration {
             return this;
         }
 
-        /** See {@link TriggerRegistration#getReportingOrigin}. */
+        /** See {@link TriggerRegistration#getEnrollmentId}. */
         @NonNull
-        public Builder setReportingOrigin(@NonNull Uri origin) {
-            Validation.validateUri(origin);
-            mReportingOrigin = origin;
+        public Builder setEnrollmentId(@NonNull String enrollmentId) {
+            mEnrollmentId = enrollmentId;
             return this;
         }
 
@@ -186,11 +185,11 @@ public final class TriggerRegistration {
         /** Build the TriggerRegistration. */
         @NonNull
         public TriggerRegistration build() {
-            Validation.validateNonNull(mTopOrigin, mReportingOrigin);
+            Validation.validateNonNull(mTopOrigin, mEnrollmentId);
 
             return new TriggerRegistration(
                     mTopOrigin,
-                    mReportingOrigin,
+                    mEnrollmentId,
                     mEventTriggers,
                     mAggregateTriggerData,
                     mAggregateValues,

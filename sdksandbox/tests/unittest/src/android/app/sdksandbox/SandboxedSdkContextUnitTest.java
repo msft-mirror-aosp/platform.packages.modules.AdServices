@@ -18,12 +18,17 @@ package android.app.sdksandbox;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
+import android.os.Bundle;
+import android.test.mock.MockContext;
+import android.view.View;
 
+import androidx.annotation.NonNull;
 import androidx.test.InstrumentationRegistry;
 
 import org.junit.Before;
@@ -105,6 +110,13 @@ public class SandboxedSdkContextUnitTest {
     }
 
     @Test
+    public void testExposureThroughSandboxedSdkProvider() throws Exception {
+        TestSdkProvider sdkProvider = new TestSdkProvider();
+        sdkProvider.attachContext(mSandboxedSdkContext);
+        assertThat(sdkProvider.getContext()).isSameInstanceAs(mSandboxedSdkContext);
+    }
+
+    @Test
     public void testGetDataDir_CredentialEncrypted() throws Exception {
         assertThat(mSandboxedSdkContext.getDataDir().toString()).isEqualTo(SDK_CE_DATA_DIR);
 
@@ -124,5 +136,136 @@ public class SandboxedSdkContextUnitTest {
 
         Context superClass = deContext;
         assertThat(superClass.getDataDir().toString()).isEqualTo(SDK_DE_DATA_DIR);
+    }
+
+    @Test
+    public void testGetSystemService_notRegistered_delegatesToBaseContext() throws Exception {
+        TestService testService = new TestService(InstrumentationRegistry.getContext());
+        TestContext testContext = new TestContext(testService);
+
+        ApplicationInfo info =
+                InstrumentationRegistry.getContext()
+                        .getPackageManager()
+                        .getApplicationInfo(
+                                RESOURCES_PACKAGE,
+                                PackageManager.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES);
+        SdkSandboxSystemServiceRegistry registry = new SdkSandboxSystemServiceRegistry();
+        SandboxedSdkContext sandboxedSdkContext =
+                new SandboxedSdkContext(
+                        testContext,
+                        CLIENT_PACKAGE_NAME,
+                        info,
+                        SDK_NAME,
+                        SDK_CE_DATA_DIR,
+                        SDK_DE_DATA_DIR,
+                        registry);
+        assertThat(sandboxedSdkContext.getSystemService("ignored")).isSameInstanceAs(testService);
+    }
+
+    @Test
+    public void testGetSystemService_registered_mutatesService() throws Exception {
+        TestService testService = new TestService(InstrumentationRegistry.getContext());
+        TestContext testContext = new TestContext(testService);
+
+        ApplicationInfo info =
+                InstrumentationRegistry.getContext()
+                        .getPackageManager()
+                        .getApplicationInfo(
+                                RESOURCES_PACKAGE,
+                                PackageManager.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES);
+        SdkSandboxSystemServiceRegistry registry = new SdkSandboxSystemServiceRegistry();
+        registry.registerServiceMutator(
+                "service", (service, ctx) -> (((TestService) service)).initialize(ctx));
+        SandboxedSdkContext sandboxedSdkContext =
+                new SandboxedSdkContext(
+                        testContext,
+                        CLIENT_PACKAGE_NAME,
+                        info,
+                        SDK_NAME,
+                        SDK_CE_DATA_DIR,
+                        SDK_DE_DATA_DIR,
+                        registry);
+        TestService service = (TestService) sandboxedSdkContext.getSystemService("service");
+        assertThat(service.mInitialized).isTrue();
+        assertThat(service.mCtx).isSameInstanceAs(sandboxedSdkContext);
+    }
+
+    @Test
+    public void testCachingPerContextIntance() throws Exception {
+        // TODO(b/242889021): simplify this test after refactoring the c-tor of SandboxedSdkContext
+
+        ApplicationInfo info =
+                InstrumentationRegistry.getContext()
+                        .getPackageManager()
+                        .getApplicationInfo(
+                                RESOURCES_PACKAGE,
+                                PackageManager.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES);
+        SandboxedSdkContext ctx1 =
+                new SandboxedSdkContext(
+                        InstrumentationRegistry.getContext()
+                                .createCredentialProtectedStorageContext(),
+                        CLIENT_PACKAGE_NAME,
+                        info,
+                        SDK_NAME,
+                        SDK_CE_DATA_DIR,
+                        SDK_DE_DATA_DIR);
+        SandboxedSdkContext ctx2 =
+                new SandboxedSdkContext(
+                        InstrumentationRegistry.getContext()
+                                .createCredentialProtectedStorageContext(),
+                        CLIENT_PACKAGE_NAME,
+                        info,
+                        SDK_NAME,
+                        SDK_CE_DATA_DIR,
+                        SDK_DE_DATA_DIR);
+
+        ActivityManager am1 = ctx1.getSystemService(ActivityManager.class);
+        ActivityManager am2 = ctx2.getSystemService(ActivityManager.class);
+        assertThat(am1).isNotSameInstanceAs(am2);
+    }
+
+    private static class TestContext extends MockContext {
+
+        private final TestService mMockService;
+
+        private TestContext(TestService mockService) {
+            mMockService = mockService;
+        }
+
+        @Override
+        public Object getSystemService(String serviceName) {
+            return mMockService;
+        }
+    }
+
+    private static class TestService {
+
+        private boolean mInitialized = false;
+        private Context mCtx;
+
+        private TestService(Context ctx) {
+            mCtx = ctx;
+        }
+
+        public TestService initialize(Context ctx) {
+            mInitialized = true;
+            mCtx = ctx;
+            return this;
+        }
+    }
+
+    private static class TestSdkProvider extends SandboxedSdkProvider {
+        @NonNull
+        @Override
+        public SandboxedSdk onLoadSdk(@NonNull Bundle params) throws LoadSdkException {
+            return null;
+        }
+
+        @NonNull
+        @Override
+        public View getView(
+                @NonNull Context windowContext, @NonNull Bundle params, int width, int height) {
+            return null;
+        }
     }
 }

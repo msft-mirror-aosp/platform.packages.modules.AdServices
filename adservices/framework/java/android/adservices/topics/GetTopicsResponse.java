@@ -59,13 +59,13 @@ public final class GetTopicsResponse {
     public static final class Builder {
         private List<Topic> mTopics = new ArrayList<>();
 
-        /** Creates a {@link Builder} for {@link GetTopicsResponse} objects. */
-        public Builder() {}
-
-        /** Set the list of the returned Topics */
-        public @NonNull Builder setTopics(@NonNull List<Topic> topics) {
-            mTopics = topics;
-            return this;
+        /**
+         * Creates a {@link Builder} for {@link GetTopicsResponse} objects.
+         *
+         * @param topics The list of the returned Topics.
+         */
+        public Builder(@NonNull List<Topic> topics) {
+            mTopics = Objects.requireNonNull(topics);
         }
 
         /**

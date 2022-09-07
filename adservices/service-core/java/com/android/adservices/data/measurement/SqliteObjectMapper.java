@@ -53,8 +53,8 @@ public class SqliteObjectMapper {
                 builder::setTriggerDedupKey);
         setUriColumn(cursor, MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
                 builder::setAttributionDestination);
-        setUriColumn(cursor, MeasurementTables.EventReportContract.AD_TECH_DOMAIN,
-                builder::setAdTechDomain);
+        setTextColumn(cursor, MeasurementTables.EventReportContract.ENROLLMENT_ID,
+                builder::setEnrollmentId);
         setLongColumn(cursor, MeasurementTables.EventReportContract.REPORT_TIME,
                 builder::setReportTime);
         setLongColumn(cursor, MeasurementTables.EventReportContract.TRIGGER_TIME,
@@ -63,6 +63,14 @@ public class SqliteObjectMapper {
                 (enumValue) -> builder.setSourceType(Source.SourceType.valueOf(enumValue)));
         setDoubleColumn(cursor, MeasurementTables.EventReportContract.RANDOMIZED_TRIGGER_RATE,
                 builder::setRandomizedTriggerRate);
+        setLongColumn(
+                cursor,
+                MeasurementTables.EventReportContract.SOURCE_DEBUG_KEY,
+                builder::setSourceDebugKey);
+        setLongColumn(
+                cursor,
+                MeasurementTables.EventReportContract.TRIGGER_DEBUG_KEY,
+                builder::setTriggerDebugKey);
         return builder.build();
     }
 
@@ -77,8 +85,8 @@ public class SqliteObjectMapper {
                 builder::setEventId);
         setLongColumn(cursor, MeasurementTables.SourceContract.PRIORITY,
                 builder::setPriority);
-        setUriColumn(cursor, MeasurementTables.SourceContract.AD_TECH_DOMAIN,
-                builder::setAdTechDomain);
+        setTextColumn(cursor, MeasurementTables.SourceContract.ENROLLMENT_ID,
+                builder::setEnrollmentId);
         setUriColumn(cursor, MeasurementTables.SourceContract.PUBLISHER,
                 builder::setPublisher);
         setIntColumn(cursor, MeasurementTables.SourceContract.PUBLISHER_TYPE,
@@ -121,6 +129,7 @@ public class SqliteObjectMapper {
                 builder::setAggregateSource);
         setIntColumn(cursor, MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS,
                 builder::setAggregateContributions);
+        setLongColumn(cursor, MeasurementTables.SourceContract.DEBUG_KEY, builder::setDebugKey);
         return builder.build();
     }
 
@@ -137,8 +146,8 @@ public class SqliteObjectMapper {
                 builder::setAttributionDestination);
         setIntColumn(cursor, MeasurementTables.TriggerContract.DESTINATION_TYPE,
                 builder::setDestinationType);
-        setUriColumn(cursor, MeasurementTables.TriggerContract.AD_TECH_DOMAIN,
-                builder::setAdTechDomain);
+        setTextColumn(cursor, MeasurementTables.TriggerContract.ENROLLMENT_ID,
+                builder::setEnrollmentId);
         setIntColumn(cursor, MeasurementTables.TriggerContract.STATUS,
                 builder::setStatus);
         setLongColumn(cursor, MeasurementTables.TriggerContract.TRIGGER_TIME,
@@ -150,6 +159,7 @@ public class SqliteObjectMapper {
         setTextColumn(cursor, MeasurementTables.TriggerContract.AGGREGATE_VALUES,
                 builder::setAggregateValues);
         setTextColumn(cursor, MeasurementTables.TriggerContract.FILTERS, builder::setFilters);
+        setLongColumn(cursor, MeasurementTables.TriggerContract.DEBUG_KEY, builder::setDebugKey);
         return builder.build();
     }
 
@@ -168,14 +178,22 @@ public class SqliteObjectMapper {
                 builder::setSourceRegistrationTime);
         setLongColumn(cursor, MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME,
                 builder::setScheduledReportTime);
-        setUriColumn(cursor, MeasurementTables.AggregateReport.REPORTING_ORIGIN,
-                builder::setReportingOrigin);
+        setTextColumn(cursor, MeasurementTables.AggregateReport.ENROLLMENT_ID,
+                builder::setEnrollmentId);
         setTextColumn(cursor, MeasurementTables.AggregateReport.DEBUG_CLEARTEXT_PAYLOAD,
                 builder::setDebugCleartextPayload);
         setIntColumn(cursor, MeasurementTables.AggregateReport.STATUS,
                 builder::setStatus);
         setTextColumn(cursor, MeasurementTables.AggregateReport.API_VERSION,
                 builder::setApiVersion);
+        setLongColumn(
+                cursor,
+                MeasurementTables.AggregateReport.SOURCE_DEBUG_KEY,
+                builder::setSourceDebugKey);
+        setLongColumn(
+                cursor,
+                MeasurementTables.AggregateReport.TRIGGER_DEBUG_KEY,
+                builder::setTriggerDebugKey);
         return builder.build();
     }
 
