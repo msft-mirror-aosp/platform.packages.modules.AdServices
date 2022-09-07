@@ -355,12 +355,24 @@ class MeasurementDao implements IMeasurementDao {
     @Nullable
     public List<EventReport> getSourceEventReports(Source source) throws DatastoreException {
         List<EventReport> eventReports = new ArrayList<>();
-        try (Cursor cursor = mSQLTransaction.getDatabase().query(
-                MeasurementTables.EventReportContract.TABLE,
-                /*columns=*/null,
-                MeasurementTables.EventReportContract.SOURCE_ID + " = ? ",
-                new String[]{String.valueOf(source.getEventId())},
-                /*groupBy=*/null, /*having=*/null, /*orderBy=*/null, /*limit=*/null)) {
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                MeasurementTables.EventReportContract.TABLE,
+                                /*columns=*/ null,
+                                MeasurementTables.EventReportContract.SOURCE_ID
+                                        + " = ? "
+                                        + " AND "
+                                        + MeasurementTables.EventReportContract.ENROLLMENT_ID
+                                        + " = ?",
+                                new String[] {
+                                    String.valueOf(source.getEventId()), source.getEnrollmentId()
+                                },
+                                /*groupBy=*/ null,
+                                /*having=*/ null,
+                                /*orderBy=*/ null,
+                                /*limit=*/ null)) {
             while (cursor.moveToNext()) {
                 eventReports.add(SqliteObjectMapper.constructEventReportFromCursor(cursor));
             }
