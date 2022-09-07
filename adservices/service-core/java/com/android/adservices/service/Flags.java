@@ -1203,6 +1203,7 @@ public interface Flags extends Dumpable {
 
     boolean ENFORCE_ISOLATE_MAX_HEAP_SIZE = true;
     long ISOLATE_MAX_HEAP_SIZE_BYTES = 10 * 1024 * 1024L; // 10 MB
+    long MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES = 16 * 1024; // 16 kB
 
     /**
      * @return true if we enforce to check that JavaScriptIsolate supports limiting the max heap
@@ -1215,5 +1216,13 @@ public interface Flags extends Dumpable {
     /** @return size in bytes we bound the heap memory for JavaScript isolate */
     default long getIsolateMaxHeapSizeBytes() {
         return ISOLATE_MAX_HEAP_SIZE_BYTES;
+    }
+
+    /**
+     * @return max allowed size in bytes for response based registrations payload of an individual
+     *     source/trigger registration.
+     */
+    default long getMaxResponseBasedRegistrationPayloadSizeBytes() {
+        return MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES;
     }
 }
