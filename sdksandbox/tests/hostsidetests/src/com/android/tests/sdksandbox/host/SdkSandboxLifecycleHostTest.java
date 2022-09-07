@@ -89,6 +89,8 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
         assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
 
         killApp(APP_PACKAGE);
+        // Wait a bit to allow sandbox death
+        Thread.sleep(2000);
         processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
         assertThat(processDump).doesNotContain(APP_PACKAGE);
         assertThat(processDump).doesNotContain(SANDBOX_1_PROCESS_NAME);
@@ -109,6 +111,8 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
         assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
 
         killApp(APP_2_PACKAGE);
+        // Wait a bit to allow sandbox death
+        Thread.sleep(2000);
         processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
         assertThat(processDump).doesNotContain(APP_2_PROCESS_NAME);
         assertThat(processDump).doesNotContain(SANDBOX_2_PROCESS_NAME);
