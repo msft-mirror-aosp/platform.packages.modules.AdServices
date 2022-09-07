@@ -22,7 +22,7 @@ import com.google.common.net.InternetDomainName;
 
 import java.util.Optional;
 
-/** Filtering utilities for measurement. */
+/** Web utilities for measurement. */
 public final class Web {
 
     private Web() { }
@@ -45,7 +45,6 @@ public final class Web {
             InternetDomainName domainName = InternetDomainName.from(host);
             String url = scheme + "://" + domainName.topPrivateDomain();
             return Optional.of(Uri.parse(url));
-
         } catch (IllegalArgumentException | IllegalStateException e) {
             return Optional.empty();
         }

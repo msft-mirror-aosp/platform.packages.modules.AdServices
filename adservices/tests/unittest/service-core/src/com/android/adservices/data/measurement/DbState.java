@@ -20,6 +20,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 
+import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
@@ -225,7 +226,7 @@ public class DbState {
                 .setPublisher(Uri.parse(sJSON.getString("publisher")))
                 .setPublisherType(sJSON.optInt("publisherType"))
                 .setAppDestination(Uri.parse(sJSON.getString("appDestination")))
-                .setAdTechDomain(Uri.parse(sJSON.getString("adTechDomain")))
+                .setEnrollmentId(sJSON.getString("enrollmentId"))
                 .setEventTime(sJSON.getLong("eventTime"))
                 .setExpiryTime(sJSON.getLong("expiryTime"))
                 .setPriority(sJSON.getLong("priority"))
@@ -246,7 +247,7 @@ public class DbState {
                 .setId(tJSON.getString("id"))
                 .setAttributionDestination(Uri.parse(tJSON.getString("attributionDestination")))
                 .setDestinationType(tJSON.optInt("destinationType"))
-                .setAdTechDomain(Uri.parse(tJSON.getString("adTechDomain")))
+                .setEnrollmentId(tJSON.getString("enrollmentId"))
                 .setEventTriggers(tJSON.getString("eventTriggers"))
                 .setTriggerTime(tJSON.getLong("triggerTime"))
                 .setStatus(tJSON.getInt("status"))
@@ -260,7 +261,7 @@ public class DbState {
                 .setId(rJSON.getString("id"))
                 .setSourceId(rJSON.getLong("sourceId"))
                 .setAttributionDestination(Uri.parse(rJSON.getString("attributionDestination")))
-                .setAdTechDomain(Uri.parse(rJSON.getString("adTechDomain")))
+                .setEnrollmentId(rJSON.getString("enrollmentId"))
                 .setTriggerData(rJSON.getLong("triggerData"))
                 .setTriggerTime(rJSON.getLong("triggerTime"))
                 .setReportTime(rJSON.getLong("reportTime"))
@@ -281,7 +282,7 @@ public class DbState {
                 .setSourceOrigin(attrJSON.getString("sourceOrigin"))
                 .setDestinationSite(attrJSON.getString("destinationSite"))
                 .setDestinationOrigin(attrJSON.getString("destinationOrigin"))
-                .setAdTechDomain(attrJSON.getString("adTechDomain"))
+                .setEnrollmentId(attrJSON.getString("enrollmentId"))
                 .setTriggerTime(attrJSON.getLong("triggerTime"))
                 .setRegistrant(attrJSON.getString("registrant"))
                 .build();
@@ -299,22 +300,37 @@ public class DbState {
 
     private Attribution getAttributionFrom(Cursor cursor) {
         return new Attribution.Builder()
-                .setId(cursor.getString(cursor.getColumnIndex(
-                        MeasurementTables.AttributionContract.ID)))
-                .setSourceSite(cursor.getString(cursor.getColumnIndex(
-                        MeasurementTables.AttributionContract.SOURCE_SITE)))
-                .setSourceOrigin(cursor.getString(cursor.getColumnIndex(
-                        MeasurementTables.AttributionContract.SOURCE_ORIGIN)))
-                .setDestinationSite(cursor.getString(cursor.getColumnIndex(
-                        MeasurementTables.AttributionContract.DESTINATION_SITE)))
-                .setDestinationOrigin(cursor.getString(cursor.getColumnIndex(
-                        MeasurementTables.AttributionContract.DESTINATION_ORIGIN)))
-                .setAdTechDomain(cursor.getString(cursor.getColumnIndex(
-                        MeasurementTables.AttributionContract.AD_TECH_DOMAIN)))
-                .setTriggerTime(cursor.getLong(cursor.getColumnIndex(
-                        MeasurementTables.AttributionContract.TRIGGER_TIME)))
-                .setRegistrant(cursor.getString(cursor.getColumnIndex(
-                        MeasurementTables.AttributionContract.REGISTRANT)))
+                .setId(
+                        cursor.getString(
+                                cursor.getColumnIndex(MeasurementTables.AttributionContract.ID)))
+                .setSourceSite(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AttributionContract.SOURCE_SITE)))
+                .setSourceOrigin(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AttributionContract.SOURCE_ORIGIN)))
+                .setDestinationSite(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AttributionContract.DESTINATION_SITE)))
+                .setDestinationOrigin(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AttributionContract.DESTINATION_ORIGIN)))
+                .setEnrollmentId(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AttributionContract.ENROLLMENT_ID)))
+                .setTriggerTime(
+                        cursor.getLong(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AttributionContract.TRIGGER_TIME)))
+                .setRegistrant(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AttributionContract.REGISTRANT)))
                 .build();
     }
 
@@ -326,7 +342,7 @@ public class DbState {
                 .setAttributionDestination(Uri.parse(rJSON.getString("attributionDestination")))
                 .setSourceRegistrationTime(rJSON.getLong("sourceRegistrationTime"))
                 .setScheduledReportTime(rJSON.getLong("scheduledReportTime"))
-                .setReportingOrigin(Uri.parse(rJSON.getString("reportingOrigin")))
+                .setEnrollmentId(rJSON.getString("enrollmentId"))
                 .setDebugCleartextPayload(rJSON.getString("debugCleartextPayload"))
                 .setStatus(rJSON.getInt("status"))
                 .build();

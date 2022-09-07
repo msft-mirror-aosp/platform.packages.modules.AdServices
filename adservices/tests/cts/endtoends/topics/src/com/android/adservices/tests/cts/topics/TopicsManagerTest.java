@@ -28,21 +28,22 @@ import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
 
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.runner.AndroidJUnit4;
 
 import com.android.adservices.LogUtil;
 import com.android.compatibility.common.util.ShellUtils;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-@RunWith(AndroidJUnit4.class)
+@RunWith(JUnit4.class)
 public class TopicsManagerTest {
     // The JobId of the Epoch Computation.
     private static final int EPOCH_JOB_ID = 2;
@@ -69,17 +70,17 @@ public class TopicsManagerTest {
         // We need to skip 3 epochs so that if there is any usage from other test runs, it will
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
+
+        overridingBeforeTest();
+    }
+
+    @After
+    public void teardown() {
+        overridingAfterTest();
     }
 
     @Test
     public void testTopicsManager() throws Exception {
-        overrideEnforceForegroundStatusForTopics(false);
-        overrideDisableTopicsEnrollmentCheck("1");
-        overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
-
-        // We need to turn off random topic so that we can verify the returned topic.
-        overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
-
         // The Test App has 2 SDKs: sdk1 calls the Topics API and sdk2 does not.
         // Sdk1 calls the Topics API.
         AdvertisingTopicsClient advertisingTopicsClient1 =
@@ -105,8 +106,8 @@ public class TopicsManagerTest {
         sdk1Result = advertisingTopicsClient1.getTopics().get();
         assertThat(sdk1Result.getTopics()).isNotEmpty();
 
-        // We only have 1 test app which has 5 classification topics: 147, 253, 175, 254, 33 in
-        // the precomputed list.
+        // We only have 1 test app which has 5 classification topics: 10147,10253,10175,10254,10333
+        // in the precomputed list.
         // These 5 classification topics will become top 5 topics of the epoch since there is
         // no other apps calling Topics API.
         // The app will be assigned one random topic from one of these 5 topics.
@@ -114,7 +115,7 @@ public class TopicsManagerTest {
         Topic topic = sdk1Result.getTopics().get(0);
 
         // topic is one of the 5 classification topics of the Test App.
-        assertThat(topic.getTopicId()).isIn(Arrays.asList(147, 253, 175, 254, 33));
+        assertThat(topic.getTopicId()).isIn(Arrays.asList(10147,10253,10175,10254,10333));
 
         assertThat(topic.getModelVersion()).isAtLeast(1L);
         assertThat(topic.getTaxonomyVersion()).isAtLeast(1L);
@@ -129,23 +130,41 @@ public class TopicsManagerTest {
 
         GetTopicsResponse sdk2Result2 = advertisingTopicsClient2.getTopics().get();
         assertThat(sdk2Result2.getTopics()).isEmpty();
+    }
 
-        // Reset back the original values.
-        overrideEnforceForegroundStatusForTopics(true);
+    private void overridingBeforeTest() {
+        overridingAdservicesLoggingLevel("VERBOSE");
+
+        overrideDisableTopicsEnrollmentCheck("1");
+        overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
+
+        // We need to turn off random topic so that we can verify the returned topic.
+        overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+
+        // We need to turn the Consent Manager into debug mode
+        overrideConsentManagerDebugMode();
+
+        // Turn off MDD to avoid model mismatching
+        disableMddBackgroundTasks(true);
+    }
+
+    private void overridingAfterTest() {
         overrideDisableTopicsEnrollmentCheck("0");
         overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
         overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+        disableMddBackgroundTasks(false);
+        overridingAdservicesLoggingLevel("INFO");
     }
 
-    // Override the flag to disable enforcing foreground.
-    private void overrideEnforceForegroundStatusForTopics(boolean enforce) {
+    // Switch on/off for MDD service. Default value is false, which means MDD is enabled.
+    private void disableMddBackgroundTasks(boolean isSwitchedOff) {
         ShellUtils.runShellCommand(
-                "setprop debug.adservices.topics_enforce_foreground_status " + enforce);
+                "setprop debug.adservices.mdd_background_task_kill_switch " + isSwitchedOff);
     }
 
     // Override the flag to disable Topics enrollment check.
     private void overrideDisableTopicsEnrollmentCheck(String val) {
-        // Setting it to 1 here disables the Topics enrollment check.
+        // Setting it to 1 here disables the Topics' enrollment check.
         ShellUtils.runShellCommand(
                 "setprop debug.adservices.disable_topics_enrollment_check " + val);
     }
@@ -163,10 +182,19 @@ public class TopicsManagerTest {
                         + overridePercentage);
     }
 
+    // Override the Consent Manager behaviour - Consent Given
+    private void overrideConsentManagerDebugMode() {
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
+    }
+
     /** Forces JobScheduler to run the Epoch Computation job */
     private void forceEpochComputationJob() {
         ShellUtils.runShellCommand(
                 "cmd jobscheduler run -f" + " " + ADSERVICES_PACKAGE_NAME + " " + EPOCH_JOB_ID);
+    }
+
+    private void overridingAdservicesLoggingLevel(String loggingLevel) {
+        ShellUtils.runShellCommand("setprop log.tag.adservices %s", loggingLevel);
     }
 
     // Used to get the package name. Copied over from com.android.adservices.AndroidServiceBinder

@@ -20,7 +20,6 @@ import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREG
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND_SERVICE;
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE;
 
-import static com.android.adservices.service.common.AppImportanceFilter.UNKNOWN_APP_PACKAGE_NAME;
 import static com.android.adservices.service.common.AppImportanceFilterTest.ApiCallStatsSubject.apiCallStats;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
@@ -53,12 +52,16 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.util.Collections;
+import java.util.List;
+
 public class AppImportanceFilterTest {
     private static final int API_CLASS = AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
     private static final int API_NAME = AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS;
     private static final int APP_UID = 321;
     private static final String APP_PACKAGE_NAME = "test.package.name";
     private static final String SDK_NAME = "sdk.name";
+    private static final String PROCESS_NAME = "process_name";
 
     @Mock private PackageManager mPackageManager;
     @Captor ArgumentCaptor<ApiCallStats> mApiCallStatsArgumentCaptor;
@@ -121,6 +124,8 @@ public class AppImportanceFilterTest {
     public void testCalledWithLessThanForegroundImportanceAppPackageName_logsFailure() {
         when(mActivityManager.getPackageImportance(APP_PACKAGE_NAME))
                 .thenReturn(IMPORTANCE_VISIBLE);
+        when(mPackageManager.getPackagesForUid(APP_UID))
+                .thenReturn(new String[] {APP_PACKAGE_NAME});
 
         assertThrows(
                 WrongCallingApplicationStateException.class,
@@ -143,27 +148,23 @@ public class AppImportanceFilterTest {
     }
 
     @Test
-    public void testCalledWithForegroundAppUid_succeed() {
-        when(mPackageManager.getPackagesForUid(APP_UID))
-                .thenReturn(new String[] {APP_PACKAGE_NAME});
+    public void
+            testFailureTryingToRetrievePackageImportancePackageName_throwsIllegalStateException() {
         when(mActivityManager.getPackageImportance(APP_PACKAGE_NAME))
-                .thenReturn(IMPORTANCE_FOREGROUND);
+                .thenThrow(
+                        new IllegalStateException("Simulating failure calling activity manager"));
 
-        // No exception is thrown
-        mAppImportanceFilter.assertCallerIsInForeground(APP_UID, API_NAME, SDK_NAME);
-
-        verifyZeroInteractions(mAdServiceLogger);
+        assertThrows(
+                IllegalStateException.class,
+                () ->
+                        mAppImportanceFilter.assertCallerIsInForeground(
+                                APP_PACKAGE_NAME, API_NAME, SDK_NAME));
     }
 
     @Test
-    public void testCalledWithAppUidWithOneAppInForeground_succeed() {
-        String otherAppPackageName = "other.app.package";
-        when(mPackageManager.getPackagesForUid(APP_UID))
-                .thenReturn(new String[] {APP_PACKAGE_NAME, otherAppPackageName});
+    public void testCalledWithForegroundAppUid_succeed() {
         when(mActivityManager.getPackageImportance(APP_PACKAGE_NAME))
                 .thenReturn(IMPORTANCE_FOREGROUND);
-        when(mActivityManager.getPackageImportance(otherAppPackageName))
-                .thenReturn(IMPORTANCE_VISIBLE);
 
         // No exception is thrown
         mAppImportanceFilter.assertCallerIsInForeground(APP_UID, API_NAME, SDK_NAME);
@@ -173,8 +174,6 @@ public class AppImportanceFilterTest {
 
     @Test
     public void testCalledWithForegroundServiceImportanceAppUid_succeed() {
-        when(mPackageManager.getPackagesForUid(APP_UID))
-                .thenReturn(new String[] {APP_PACKAGE_NAME});
         when(mActivityManager.getPackageImportance(APP_PACKAGE_NAME))
                 .thenReturn(IMPORTANCE_FOREGROUND_SERVICE);
 
@@ -186,10 +185,7 @@ public class AppImportanceFilterTest {
 
     @Test
     public void testCalledWithLessThanForegroundImportanceAppUid_throwsIllegalStateException() {
-        when(mPackageManager.getPackagesForUid(APP_UID))
-                .thenReturn(new String[] {APP_PACKAGE_NAME});
-        when(mActivityManager.getPackageImportance(APP_PACKAGE_NAME))
-                .thenReturn(IMPORTANCE_VISIBLE);
+        when(mActivityManager.getUidImportance(APP_UID)).thenReturn(IMPORTANCE_VISIBLE);
 
         assertThrows(
                 WrongCallingApplicationStateException.class,
@@ -198,10 +194,9 @@ public class AppImportanceFilterTest {
 
     @Test
     public void testCalledWithLessThanForegroundImportanceAppUid_logsFailure() {
+        when(mActivityManager.getUidImportance(APP_UID)).thenReturn(IMPORTANCE_VISIBLE);
         when(mPackageManager.getPackagesForUid(APP_UID))
                 .thenReturn(new String[] {APP_PACKAGE_NAME});
-        when(mActivityManager.getPackageImportance(APP_PACKAGE_NAME))
-                .thenReturn(IMPORTANCE_VISIBLE);
 
         assertThrows(
                 IllegalStateException.class,
@@ -221,10 +216,9 @@ public class AppImportanceFilterTest {
 
     @Test
     public void testCalledWithLessThanForegroundImportanceAppUidAndNullSdkName_logsFailure() {
+        when(mActivityManager.getUidImportance(APP_UID)).thenReturn(IMPORTANCE_VISIBLE);
         when(mPackageManager.getPackagesForUid(APP_UID))
                 .thenReturn(new String[] {APP_PACKAGE_NAME});
-        when(mActivityManager.getPackageImportance(APP_PACKAGE_NAME))
-                .thenReturn(IMPORTANCE_VISIBLE);
 
         assertThrows(
                 WrongCallingApplicationStateException.class,
@@ -243,80 +237,30 @@ public class AppImportanceFilterTest {
     }
 
     @Test
-    public void
-            testCalledWithMultipleLessThanForegroundImportanceAppUid_throwsIllegalStateException() {
-        String otherAppPackageName = "other.app.package";
-        when(mPackageManager.getPackagesForUid(APP_UID))
-                .thenReturn(new String[] {APP_PACKAGE_NAME, otherAppPackageName});
-        when(mActivityManager.getPackageImportance(APP_PACKAGE_NAME))
-                .thenReturn(IMPORTANCE_VISIBLE);
-        when(mActivityManager.getPackageImportance(otherAppPackageName))
-                .thenReturn(IMPORTANCE_VISIBLE);
-
-        assertThrows(
-                IllegalStateException.class,
-                () -> mAppImportanceFilter.assertCallerIsInForeground(APP_UID, API_NAME, SDK_NAME));
-    }
-
-    @Test
-    public void testCalledWithMultipleLessThanForegroundImportanceAppUid_logsFailure() {
-        String otherAppPackageName = "other.app.package";
-        when(mPackageManager.getPackagesForUid(APP_UID))
-                .thenReturn(new String[] {APP_PACKAGE_NAME, otherAppPackageName});
-        when(mActivityManager.getPackageImportance(APP_PACKAGE_NAME))
-                .thenReturn(IMPORTANCE_VISIBLE);
-        when(mActivityManager.getPackageImportance(otherAppPackageName))
-                .thenReturn(IMPORTANCE_VISIBLE);
-
-        assertThrows(
-                IllegalStateException.class,
-                () -> mAppImportanceFilter.assertCallerIsInForeground(APP_UID, API_NAME, SDK_NAME));
-
-        verify(mAdServiceLogger).logApiCallStats(mApiCallStatsArgumentCaptor.capture());
-        assertWithMessage("")
-                .about(apiCallStats())
-                .that(mApiCallStatsArgumentCaptor.getValue())
-                .hasCode(AD_SERVICES_API_CALLED)
-                .hasApiName(API_NAME)
-                .hasApiClass(API_CLASS)
-                .hasResultCode(AdServicesStatusUtils.STATUS_BACKGROUND_CALLER)
-                .hasSdkPackageName(SDK_NAME)
-                .hasAppPackageName(UNKNOWN_APP_PACKAGE_NAME);
-    }
-
-    @Test
     public void testFailureTryingToRetrievePackageImportanceFromUid_throwsIllegalStateException() {
-        when(mPackageManager.getPackagesForUid(APP_UID))
-                .thenReturn(new String[] {APP_PACKAGE_NAME});
-        when(mActivityManager.getPackageImportance(APP_PACKAGE_NAME))
-                .thenThrow(new SecurityException("Simulating failure calling activity manager"));
+        when(mActivityManager.getUidImportance(APP_UID))
+                .thenThrow(
+                        new IllegalStateException("Simulating failure calling activity manager"));
 
         assertThrows(
                 IllegalStateException.class,
                 () -> mAppImportanceFilter.assertCallerIsInForeground(APP_UID, API_NAME, SDK_NAME));
     }
 
-    @Test
-    public void testFailureTryingToRetrievePackageImportanceFromUid_logsFailure() {
-        when(mPackageManager.getPackagesForUid(APP_UID))
-                .thenReturn(new String[] {APP_PACKAGE_NAME});
-        when(mActivityManager.getPackageImportance(APP_PACKAGE_NAME))
-                .thenThrow(new SecurityException("Simulating failure calling activity manager"));
+    /** Helper to generate a process info object */
+    private static ActivityManager.RunningAppProcessInfo generateProcessInfo(
+            String packageName, int importance, int uid) {
+        return generateProcessInfo(Collections.singletonList(packageName), importance, uid);
+    }
 
-        assertThrows(
-                IllegalStateException.class,
-                () -> mAppImportanceFilter.assertCallerIsInForeground(APP_UID, API_NAME, SDK_NAME));
-
-        verify(mAdServiceLogger).logApiCallStats(mApiCallStatsArgumentCaptor.capture());
-        assertWithMessage("")
-                .about(apiCallStats())
-                .that(mApiCallStatsArgumentCaptor.getValue())
-                .hasCode(AD_SERVICES_API_CALLED)
-                .hasApiName(API_NAME)
-                .hasApiClass(API_CLASS)
-                .hasResultCode(AdServicesStatusUtils.STATUS_BACKGROUND_CALLER)
-                .hasSdkPackageName(SDK_NAME)
-                .hasAppPackageName(APP_PACKAGE_NAME);
+    private static ActivityManager.RunningAppProcessInfo generateProcessInfo(
+            List<String> packageNames, int importance, int uid) {
+        ActivityManager.RunningAppProcessInfo process =
+                new ActivityManager.RunningAppProcessInfo(
+                        PROCESS_NAME, 100, packageNames.toArray(new String[0]));
+        process.importance = importance;
+        process.uid = uid;
+        return process;
     }
 
     public static final class ApiCallStatsSubject extends Subject {

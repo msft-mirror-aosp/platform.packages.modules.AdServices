@@ -33,9 +33,11 @@ import android.os.Bundle;
 import android.provider.DeviceConfig;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -49,6 +51,10 @@ public class SdkSandboxRestrictionsTestApp {
             "enforce_broadcast_receiver_restrictions";
 
     private static final String SDK_PACKAGE = "com.android.tests.sdkprovider.restrictionstest";
+
+    @Rule
+    public final ActivityScenarioRule mRule =
+            new ActivityScenarioRule<>(SdkSandboxEmptyActivity.class);
 
     @Before
     public void setup() {
@@ -79,6 +85,8 @@ public class SdkSandboxRestrictionsTestApp {
      */
     @Test
     public void testSdkSandboxBroadcastRestrictions() throws Exception {
+        mRule.getScenario();
+
         DeviceConfig.setProperty(DeviceConfig.NAMESPACE_SDK_SANDBOX,
                 ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, "true", false);
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();

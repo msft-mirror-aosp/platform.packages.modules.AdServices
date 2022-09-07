@@ -24,6 +24,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
+import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.EventTrigger;
@@ -120,7 +121,7 @@ class AttributionJobHandler {
                     }
 
                     if (!hasAttributionQuota(source, trigger, measurementDao)
-                            || !isAdTechWithinPrivacyBounds(source, trigger, measurementDao)) {
+                            || !isEnrollmentWithinPrivacyBounds(source, trigger, measurementDao)) {
                         ignoreTrigger(trigger, measurementDao);
                         return;
                     }
@@ -172,7 +173,7 @@ class AttributionJobHandler {
                                     .setSourceRegistrationTime(
                                             roundDownToDay(source.getEventTime()))
                                     .setScheduledReportTime(trigger.getTriggerTime() + randomTime)
-                                    .setReportingOrigin(source.getAdTechDomain())
+                                    .setEnrollmentId(source.getEnrollmentId())
                                     .setDebugCleartextPayload(
                                             AggregateReport.generateDebugPayload(
                                                     contributions.get()))
@@ -316,7 +317,7 @@ class AttributionJobHandler {
             throws DatastoreException {
         trigger.setStatus(Trigger.Status.ATTRIBUTED);
         measurementDao.updateTriggerStatus(trigger);
-        measurementDao.insertAttribution(source, trigger);
+        measurementDao.insertAttribution(createAttribution(source, trigger));
     }
 
     private void ignoreTrigger(Trigger trigger, IMeasurementDao measurementDao)
@@ -456,24 +457,24 @@ class AttributionJobHandler {
         return Math.floorDiv(timestamp, TimeUnit.DAYS.toMillis(1)) * TimeUnit.DAYS.toMillis(1);
     }
 
-    private static boolean isAdTechWithinPrivacyBounds(Source source, Trigger trigger,
+    private static boolean isEnrollmentWithinPrivacyBounds(Source source, Trigger trigger,
             IMeasurementDao measurementDao) throws DatastoreException {
         Optional<Pair<Uri, Uri>> publisherAndDestination =
                 getPublisherAndDestinationTopPrivateDomains(source, trigger);
         if (publisherAndDestination.isPresent()) {
             Integer count =
-                    measurementDao.countDistinctAdTechsPerPublisherXDestinationInAttribution(
+                    measurementDao.countDistinctEnrollmentsPerPublisherXDestinationInAttribution(
                             publisherAndDestination.get().first,
                             publisherAndDestination.get().second,
-                            trigger.getAdTechDomain(), // TODO: will be replaced with enrollment ID
+                            trigger.getEnrollmentId(),
                             trigger.getTriggerTime()
                                     - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS,
                             trigger.getTriggerTime());
 
             return count < PrivacyParams
-                    .MAX_DISTINCT_AD_TECHS_PER_PUBLISHER_X_DESTINATION_IN_ATTRIBUTION;
+                    .MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_ATTRIBUTION;
         } else {
-            LogUtil.d("isAdTechWithinPrivacyBounds: getPublisherAndDestinationTopPrivateDomains"
+            LogUtil.d("isEnrollmentWithinPrivacyBounds: getPublisherAndDestinationTopPrivateDomains"
                     + " failed. %s %s", source.getPublisher(), trigger.getAttributionDestination());
             return true;
         }
@@ -499,5 +500,40 @@ class AttributionJobHandler {
                     publisherTopPrivateDomain.get(),
                     triggerDestinationTopPrivateDomain.get()));
         }
+    }
+
+    public Attribution createAttribution(@NonNull Source source, @NonNull Trigger trigger) {
+        Optional<Uri> publisherTopPrivateDomain =
+                getTopPrivateDomain(source.getPublisher(), source.getPublisherType());
+        Uri destination = trigger.getAttributionDestination();
+        Optional<Uri> destinationTopPrivateDomain =
+                getTopPrivateDomain(destination, trigger.getDestinationType());
+
+        if (!publisherTopPrivateDomain.isPresent()
+                || !destinationTopPrivateDomain.isPresent()) {
+            throw new IllegalArgumentException(
+                    String.format(
+                            "insertAttributionRateLimit: "
+                                    + "getSourceAndDestinationTopPrivateDomains"
+                                    + " failed. Publisher: %s; Attribution destination: %s",
+                            source.getPublisher(), destination));
+        }
+
+        return new Attribution.Builder()
+                .setSourceSite(publisherTopPrivateDomain.get().toString())
+                .setSourceOrigin(source.getPublisher().toString())
+                .setDestinationSite(destinationTopPrivateDomain.get().toString())
+                .setDestinationOrigin(BaseUriExtractor.getBaseUri(destination).toString())
+                .setEnrollmentId(trigger.getEnrollmentId())
+                .setTriggerTime(trigger.getTriggerTime())
+                .setRegistrant(trigger.getRegistrant().toString())
+                .build();
+    }
+
+    private static Optional<Uri> getTopPrivateDomain(
+            Uri uri, @EventSurfaceType int eventSurfaceType) {
+        return eventSurfaceType == EventSurfaceType.APP
+                ? Optional.of(BaseUriExtractor.getBaseUri(uri))
+                : Web.topPrivateDomainAndScheme(uri);
     }
 }

@@ -26,29 +26,20 @@ import java.util.concurrent.Executor;
 
 /**
  * This POJO represents the {@link TestCustomAudienceManager#removeCustomAudienceRemoteInfoOverride(
- * RemoveCustomAudienceOverrideRequest, Executor, OutcomeReceiver)} request
+ * RemoveCustomAudienceOverrideRequest, Executor, OutcomeReceiver)} request.
  *
- * <p>It contains 3 fields {@code ownerPackageName}, {@code buyer}, and {@code name} which will
- * serve as the identifier for the overrides
+ * <p>It contains fields {@code buyer} and {@code name} which will serve as the identifier for the
+ * overrides to be removed.
  */
 public class RemoveCustomAudienceOverrideRequest {
-    @NonNull private final String mOwnerPackageName;
     @NonNull private final AdTechIdentifier mBuyer;
     @NonNull private final String mName;
 
     public RemoveCustomAudienceOverrideRequest(
-            @NonNull String ownerPackageName,
             @NonNull AdTechIdentifier buyer,
             @NonNull String name) {
-        mOwnerPackageName = ownerPackageName;
         mBuyer = buyer;
         mName = name;
-    }
-
-    /** @return the package name for the owner application */
-    @NonNull
-    public String getOwnerPackageName() {
-        return mOwnerPackageName;
     }
 
     /** @return an {@link AdTechIdentifier} representing the buyer */
@@ -65,21 +56,10 @@ public class RemoveCustomAudienceOverrideRequest {
 
     /** Builder for {@link RemoveCustomAudienceOverrideRequest} objects. */
     public static final class Builder {
-        @Nullable private String mOwnerPackageName;
         @Nullable private AdTechIdentifier mBuyer;
         @Nullable private String mName;
 
         public Builder() {}
-
-        /** Sets the owner application's package name. */
-        @NonNull
-        public RemoveCustomAudienceOverrideRequest.Builder setOwnerPackageName(
-                @NonNull String ownerPackageName) {
-            Objects.requireNonNull(ownerPackageName);
-
-            this.mOwnerPackageName = ownerPackageName;
-            return this;
-        }
 
         /** Sets the buyer {@link AdTechIdentifier} for the custom audience. */
         @NonNull
@@ -103,11 +83,10 @@ public class RemoveCustomAudienceOverrideRequest {
         /** Builds a {@link RemoveCustomAudienceOverrideRequest} instance. */
         @NonNull
         public RemoveCustomAudienceOverrideRequest build() {
-            Objects.requireNonNull(mOwnerPackageName);
             Objects.requireNonNull(mBuyer);
             Objects.requireNonNull(mName);
 
-            return new RemoveCustomAudienceOverrideRequest(mOwnerPackageName, mBuyer, mName);
+            return new RemoveCustomAudienceOverrideRequest(mBuyer, mName);
         }
     }
 }

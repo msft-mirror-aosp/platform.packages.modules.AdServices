@@ -22,10 +22,8 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="1644434244130657749">"允许应用访问 AdServices Attribution API。"</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="2766614780488510189">"访问 AdServices Custom Audience API"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"允许应用访问 AdServices Custom Audience API。"</string>
-    <!-- no translation found for permlab_accessAdServicesAdId (2754825914769538156) -->
-    <skip />
-    <!-- no translation found for permdesc_accessAdServicesAdId (7717770480967762044) -->
-    <skip />
+    <string name="permlab_accessAdServicesAdId" msgid="2754825914769538156">"访问 AdId API"</string>
+    <string name="permdesc_accessAdServicesAdId" msgid="7717770480967762044">"允许应用访问 AdId API。"</string>
     <string name="permlab_accessAdServicesConsent" msgid="3203633397142568707">"访问 AdServices Consent API"</string>
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"允许应用访问 AdServices Consent API。"</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"访问 Ad ID API"</string>
@@ -34,72 +32,63 @@
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"允许应用访问 App Set ID API。"</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"访问 Consent Service API"</string>
     <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"允许应用访问 Consent Service API。"</string>
+    <string name="permlab_modifyAdServicesState" msgid="3594653261299518914">"访问 AdService 的 enablement state modification API"</string>
+    <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"允许应用访问 AdService 的 enablement state modification API。"</string>
+    <string name="permlab_accessAdServicesState" msgid="482058883975394398">"访问 AdService 的 enablement state API"</string>
+    <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"允许应用访问 AdService 的 enablement state API。"</string>
     <string name="app_label" msgid="5985320129629013968">"Android 系统"</string>
-    <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"Privacy Sandbox Beta 版"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"Privacy Sandbox Beta 版"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"切换 Privacy Sandbox Beta 版"</string>
-    <string name="settingsUI_main_view_title" msgid="255982490790282252">"Android 广告隐私权 Beta 版"</string>
-    <string name="settingsUI_main_view_subtitle" msgid="3380585883687237827">"测试会限制跨应用跟踪的新 Privacy Sandbox 系统"</string>
-    <string name="settingsUI_main_view_info_text1" msgid="8353580266621706164">"Privacy Sandbox 的运作方式"</string>
-    <string name="settingsUI_main_view_info_text2" msgid="5144888171043725329">"Privacy Sandbox 中收集的数据用于向您展示您可能感兴趣的广告，但这些数据会在不识别您的身份或设备的情况下分享。"</string>
-    <string name="settingsUI_main_view_info_text3" msgid="9106658161862318732">"Privacy Sandbox 中会存储哪些类型的数据？"</string>
-    <string name="settingsUI_main_view_info_text4" msgid="5819359066240454954">"•  一般兴趣"</string>
-    <string name="settingsUI_main_view_info_text5" msgid="6064832868440367397">"Android 会根据您使用的应用生成此类数据，并将其添加到 Privacy Sandbox 中。例如，您的一般兴趣之一可能会是“体育”。\n\n您可以在隐私设置中查看您感兴趣主题的列表，并屏蔽任何您不感兴趣的主题。"</string>
-    <string name="settingsUI_main_view_info_text6" msgid="3406976290919982143">"•  特定兴趣"</string>
-    <string name="settingsUI_main_view_info_text7" msgid="210269084665708892">"您的应用会根据您的应用使用情况生成此类数据，并将其添加到 Privacy Sandbox 中。例如，如果您使用某个应用选购跑鞋，该应用可能会为您添加标签“sport_running”。\n\n在您的隐私设置中，您可以查看有此行为的应用的列表，并禁止任何此类应用向 Privacy Sandbox 提供数据。"</string>
-    <string name="settingsUI_topics_view_title" msgid="7437641813424176118">"管理感兴趣的主题"</string>
-    <string name="settingsUI_topics_view_subtitle" msgid="5347912133908026725">"Android 的 Privacy Sandbox 会限制跨应用跟踪，同时仍允许应用显示您可能感兴趣的广告。Android 会在不识别您的身份或设备的情况下将这类数据分享给广告主。\n\nAndroid 还会根据您使用的应用，生成并更新您的这份一般广告兴趣列表。如果您屏蔽了某个感兴趣主题，除非您取消屏蔽，否则它不会再添加到列表中。您可能仍会看到一些与此主题相关的广告。"</string>
-    <string name="settingsUI_topics_view_info_text1" msgid="6729245512525985403">"一般广告兴趣"</string>
-    <string name="settingsUI_topics_view_info_text2" msgid="8355913397424818046">"Android 会根据您使用的应用生成这类兴趣数据。\n\n例如，如果您设备上装有几款体育类应用，Android 可能会向 Privacy Sandbox 中添加“体育”这一兴趣。\n\n日后，这类数据会在不识别您的身份或设备的情况下分享给广告主。"</string>
-    <string name="settingsUI_apps_key" msgid="5279102708260885695">"apps_preference"</string>
-    <string name="settingsUI_apps_title" msgid="2177966577556486280">"会产生特定兴趣的应用"</string>
-    <string name="settingsUI_apps_summary" msgid="2382082513059909726">"管理会产生特定兴趣的应用"</string>
-    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"您屏蔽的应用"</string>
-    <string name="settingsUI_apps_view_title" msgid="3615627092403761282">"管理应用"</string>
-    <string name="settingsUI_apps_view_subtitle" msgid="5257332567222983503">"根据您使用应用的方式，某些应用会为 Privacy Sandbox 生成关于您的特定广告兴趣的数据。Android 会更新此应用列表，以便您查看或修改该列表。\n\n如果您屏蔽某个应用，该应用将不再添加任何特定感兴趣主题。除非您取消屏蔽，否则它不会再添加到此列表中。应用已经生成的感兴趣主题将被删除，但是您可能仍会看到一些相关的广告。"</string>
-    <string name="settingsUI_apps_view_no_apps_text" msgid="1056905761942948495">"目前没有可显示的应用"</string>
-    <string name="settingsUI_reset_apps_title" msgid="3308597019425923552">"重置应用生成的数据"</string>
-    <string name="settingsUI_apps_view_info_text1" msgid="503353133396835755">"特定广告兴趣"</string>
-    <string name="settingsUI_apps_view_info_text2" msgid="6562781312486257254">"您使用的某些应用会生成关于您的特定广告兴趣的数据，并将其添加到 Privacy Sandbox 中。\n\n例如，如果您使用某个应用选购跑鞋，该应用可能会为您添加标签“sport_running”。\n\n日后，系统会在不识别您的身份或设备的情况下将 Privacy Sandbox 中收集的数据分享给广告主。因此，虽然您仍会看到可能感兴趣的广告，但您的隐私得到了更好的保护。"</string>
-    <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="5700261138344146462">"目前没有可显示的已屏蔽的应用"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"目前没有可显示的感兴趣主题"</string>
-    <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
-    <string name="settingsUI_topics_title" msgid="4024683469932819788">"您的一般兴趣"</string>
-    <string name="settingsUI_topics_summary" msgid="3146101472984434355">"管理您的一般兴趣"</string>
-    <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"管理您的一般广告兴趣"</string>
+    <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"加入 Android 广告隐私权 Beta 版测试计划"</string>
+    <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android 团队正在探索更注重保护隐私的方式以便应用向您展示广告"</string>
+    <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"了解详情"</string>
+    <string name="notificationUI_header_title_eu" msgid="4955298263079910371">"Android 广告隐私权 Beta 版"</string>
+    <string name="notificationUI_container1_title_eu" msgid="8315199862119660570">"新变化"</string>
+    <string name="notificationUI_container1_body_text_eu" msgid="1700290522706948241">"Privacy Sandbox 中新增的隐私保护功能让应用能够向您展示与您相关的广告，但会限制这些应用可从您在其他开发者的网站和应用上的活动中得知什么。"</string>
+    <string name="notificationUI_container1_control_text_eu" msgid="3158258148321255153">"运作方式"</string>
+    <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"参与方式"</string>
+    <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"开启 Beta 版会允许应用测试这些更注重保护隐私的新方式以向您展示广告。您随时可在隐私设置中关闭 Beta 版。"</string>
+    <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"不用了"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"是的，我加入"</string>
+    <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"感谢您的加入"</string>
+    <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"您已加入 Android 广告隐私权 Beta 版测试计划。我们已为您的设备开启 Privacy Sandbox。\n\n您随时可在隐私设置中了解详情或关闭 Beta 版。"</string>
+    <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"您已选择不加入"</string>
+    <string name="notificationUI_confirmation_decline_subtitle" msgid="4194388733937808440">"感谢您的回复。我们已为您的设备关闭 Privacy Sandbox。\n\n如果您改变了主意或想了解详情，请前往隐私设置。"</string>
+    <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"隐私设置"</string>
+    <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"知道了"</string>
+    <string name="notificationUI_container2_title" msgid="3844342008598264655">"您已加入 Beta 版测试计划"</string>
+    <string name="notificationUI_container2_body_text" msgid="758560159693325060">"您的设备已开启 Privacy Sandbox，因此应用已能测试这些更注重保护隐私的新方式来向您展示广告。您随时可在隐私设置中关闭 Beta 版。"</string>
+    <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"管理隐私设置"</string>
+    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"知道了"</string>
+    <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Android 的 Privacy Sandbox 提供了新功能，以便应用向您展示您可能会喜欢的广告。这些技术不使用标识符。\n\nAndroid 和您的应用可推测您可能会对哪些类型的广告感兴趣，并将这些兴趣暂时存储在您的设备上。这样一来，应用不必追踪您在其他开发者的网站和应用上的活动便能向您展示您可能会喜欢的广告。"</string>
+    <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"通过 Privacy Sandbox 实现广告个性化"</string>
+    <string name="notificationUI_how_it_works_expanded_text3" msgid="603165966360369018">"•  Android 推测兴趣"</string>
+    <string name="notificationUI_how_it_works_expanded_text4" msgid="3910573920883580609">"Android 会定期根据您使用的应用推测您的主要兴趣，例如“体育”或“旅行”。\n\n之后，应用可请求 Android 基于这些兴趣向您展示与您更相关的广告。\n\n您可在隐私设置中查看当前兴趣列表并屏蔽您不喜欢的主题。"</string>
+    <string name="notificationUI_how_it_works_expanded_text5" msgid="7257714040472055781">"•  应用推测兴趣"</string>
+    <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"应用可推测您的兴趣并将这些兴趣暂时存储在 Android 上。例如，您用来购买跑鞋的某个应用可能会推测您的兴趣为“跑马拉松”。\n\n之后，另一个应用可基于这项兴趣向您展示与马拉松相关的广告。\n\n您可在隐私设置中管理已保存兴趣的应用的列表。"</string>
+    <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
+    <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"参与 Android 广告隐私权 Beta 版测试计划"</string>
+    <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Privacy Sandbox"</string>
+    <string name="settingsUI_topics_title" msgid="5996189869721397937">"Android 推测出的兴趣"</string>
+    <string name="settingsUI_apps_title" msgid="2772289096915264175">"会推测兴趣的应用"</string>
+    <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"广告衡量"</string>
+    <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"应用可以使用 Privacy Sandbox 衡量广告效果。为此，广告客户可将您与其广告/应用之间的互动数据暂时存储在 Android 上。他们可保存的数据量受限并会被定期删除。\n\n您随时可通过关闭 Privacy Sandbox 删除此类数据。"</string>
+    <string name="settingsUI_topics_view_subtitle" msgid="6608135144119617292">"Android 会定期根据您使用的应用推测您的主要兴趣。应用可以请求 Android 基于这些兴趣向您展示与您更相关的广告。\n\n如果您屏蔽了某项兴趣，它将不再添加到列表中，除非您取消屏蔽它。您可能仍会看到一些与这项兴趣相关的广告。"</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"屏蔽"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"取消屏蔽"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"您屏蔽的感兴趣主题"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"重置所有感兴趣的主题"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="5717377146633882375">"目前没有可显示的已屏蔽的感兴趣主题"</string>
-    <string name="notificationUI_notification_content_eu" msgid="7419441022808120101">"测试将限制跨应用跟踪的新功能"</string>
-    <string name="notificationUI_header_title_eu" msgid="6822288197367284058">"加入广告隐私权 Beta 版"</string>
-    <string name="notificationUI_container3_title_eu" msgid="3157854074121291065">"可以采取的措施"</string>
-    <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"不用了"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="7294736040084958697">"好，我要试试"</string>
-    <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"感谢您的加入"</string>
-    <string name="notificationUI_confirmation_accept_subtitle" msgid="722290263168711051">"您现已加入 Privacy Sandbox Beta 版计划。\n\n您可以在隐私设置中了解详情或随时退出该 Beta 版计划。"</string>
-    <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"您已选择不加入"</string>
-    <string name="notificationUI_confirmation_decline_subtitle" msgid="1869322730722065768">"感谢您的回复。您还未加入 Privacy Sandbox Beta 版计划。\n\n如果您改变主意或想了解详情，请转到隐私设置。"</string>
-    <string name="notificationUI_notification_content" msgid="2096372976024736172">"您正在测试会限制跨应用跟踪的新功能"</string>
-    <string name="notificationUI_header_title" msgid="857744302422337933">"您在协助 Android 限制跨应用跟踪行为"</string>
-    <string name="notificationUI_header_subtitle" msgid="522289584167376388">"Android 正在测试一些可限制广告主实施跨应用跟踪的新功能。"</string>
-    <string name="notificationUI_container1_title" msgid="3837529978480615552">"什么是跨应用跟踪？"</string>
-    <string name="notificationUI_container1_body_text" msgid="2564452110982505130">"如今，与您使用应用的活动相关的数据可以很容易地与您的设备关联起来，然后出于广告用途共享给不同的应用。"</string>
-    <string name="notificationUI_container2_title" msgid="4796199061758878885">"Android 动态"</string>
-    <string name="notificationUI_container2_body_text" msgid="7717896223210525953">"Android 正在测试一个新的 Privacy Sandbox，它可以在不识别您的身份或设备的情况下，安全地存储和共享广告相关数据。\n\n这个新的系统能够帮助阻止应用直接将数据传递给其他应用，而同时仍允许前者显示您可能感兴趣的广告。"</string>
-    <string name="notificationUI_container2_control_text" msgid="3031227311095645064">"运作方式"</string>
-    <string name="notificationUI_container3_title" msgid="1283794406634157611">"您是如何协助我们的"</string>
-    <string name="notificationUI_container3_body_text" msgid="2636703086913037594">"虽然您可能未发现自己看到的广告有变化，但我们建议您加入 Beta 版计划，协助 Android 逐步限制跨应用跟踪行为。您可以随时前往隐私设置，退出该 Beta 版计划。"</string>
-    <string name="notificationUI_left_control_button_text" msgid="6459461402253858770">"隐私设置"</string>
-    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"知道了"</string>
-    <string name="notificationUI_how_it_works_expanded_text1" msgid="1753701052925879129">"Privacy Sandbox 的运作方式"</string>
-    <string name="notificationUI_how_it_works_expanded_text2" msgid="3117263986288195274">"Privacy Sandbox 中收集的数据用于向您展示您可能感兴趣的广告，但这些数据会在不识别您的身份或设备的情况下分享。"</string>
-    <string name="notificationUI_how_it_works_expanded_text3" msgid="7270822532577167752">"Privacy Sandbox 中会存储哪些类型的数据？"</string>
-    <string name="notificationUI_how_it_works_expanded_text4" msgid="5609475052636889205">"•  一般兴趣"</string>
-    <string name="notificationUI_how_it_works_expanded_text5" msgid="6757375506547548599">"Android 会根据您使用的应用生成此类数据，并将其添加到 Privacy Sandbox 中。例如，您的一般兴趣之一可能会是“体育”。\n\n您可以在隐私设置中查看您感兴趣主题的列表，并屏蔽任何您不感兴趣的主题。"</string>
-    <string name="notificationUI_how_it_works_expanded_text6" msgid="2863877874268072458">"•  特定兴趣"</string>
-    <string name="notificationUI_how_it_works_expanded_text7" msgid="2140515900209351523">"您的应用会根据您的应用使用情况生成此类数据，并将其添加到 Privacy Sandbox 中。例如，如果您使用某个应用选购跑鞋，该应用可能会为您添加标签“sport_running”。\n\n在您的隐私设置中，您可以查看有此行为的应用的列表，并禁止任何此类应用向 Privacy Sandbox 提供数据。"</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"目前没有可显示的感兴趣主题"</string>
+    <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
+    <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android 广告隐私权 Beta 版提供了新功能，以便应用向您展示您可能会喜欢的广告。这些技术不使用标识符。\n\nAndroid 可推测您可能会对哪些类型的广告感兴趣，并将这些兴趣暂时存储在您的设备上。这样一来，应用不必追踪您在其他开发者的网站和应用上的活动便能向您展示与您相关的广告。"</string>
+    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
+    <skip />
+    <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"应用可推测您的兴趣并将这些兴趣暂时存储在 Android 上。之后，另一个应用可基于这些兴趣向您展示广告。\n\n如果您屏蔽了某个应用，它便不会再推测您的兴趣。除非您取消屏蔽该应用，否则它不会再添加到这个应用列表中。该应用已推测出的兴趣将被删除，但您可能仍会看到一些与您相关的广告。"</string>
+    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"您屏蔽的应用"</string>
+    <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"重置应用推测出的兴趣"</string>
+    <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"目前没有任何应用推测您的兴趣"</string>
+    <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
+    <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android 广告隐私权 Beta 版提供了新功能，以便应用向您展示您可能会喜欢的广告。这些技术不使用标识符。\n\n应用可推测您可能会对哪些类型的广告感兴趣，并将这些兴趣暂时存储在您的设备上。这样一来，应用不必追踪您在其他开发者的网站和应用上的活动便能向您展示与您相关的广告。"</string>
+    <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"您未屏蔽任何应用"</string>
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"您未屏蔽任何兴趣"</string>
     <string name="topic10001" msgid="1636806320891333775">"艺术与娱乐"</string>
     <string name="topic10002" msgid="1226367977754287428">"演出与剧场"</string>
     <string name="topic10003" msgid="6949890838957814881">"动漫与日本漫画"</string>

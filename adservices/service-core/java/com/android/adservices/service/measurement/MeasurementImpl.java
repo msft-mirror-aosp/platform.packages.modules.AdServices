@@ -56,11 +56,13 @@ import com.android.adservices.service.measurement.registration.SourceFetcher;
 import com.android.adservices.service.measurement.registration.SourceRegistration;
 import com.android.adservices.service.measurement.registration.TriggerFetcher;
 import com.android.adservices.service.measurement.registration.TriggerRegistration;
+import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Web;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -92,8 +94,8 @@ public final class MeasurementImpl {
         mContext = context;
         mContentResolver = context.getContentResolver();
         mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
-        mSourceFetcher = new SourceFetcher();
-        mTriggerFetcher = new TriggerFetcher();
+        mSourceFetcher = new SourceFetcher(context);
+        mTriggerFetcher = new TriggerFetcher(context);
         mClickVerifier = new ClickVerifier(context);
         mFlags = FlagsFactory.getFlags();
     }
@@ -140,7 +142,7 @@ public final class MeasurementImpl {
      * @param eventTime  time when the package was installed.
      */
     public void doInstallAttribution(@NonNull Uri packageUri, long eventTime) {
-        LogUtil.i("Attributing installation for: " + packageUri);
+        LogUtil.d("Attributing installation for: " + packageUri);
         Uri appUri = getAppUri(packageUri);
         mReadWriteLock.readLock().lock();
         try {
@@ -369,13 +371,13 @@ public final class MeasurementImpl {
             if (!isDestinationWithinPrivacyBounds(
                     publisher.get(),
                     publisherType,
-                    registration.getReportingOrigin(),
+                    registration.getEnrollmentId(),
                     sourceEventTime,
                     appDestination,
                     webDestination)) {
                 LogUtil.d("insertSources: destination exceeds privacy bound. %s %s %s %s",
                         appDestination, webDestination, publisher.get(),
-                        registration.getReportingOrigin());
+                        registration.getEnrollmentId());
                 continue;
             }
             if (!isAdTechWithinPrivacyBounds(
@@ -384,9 +386,9 @@ public final class MeasurementImpl {
                     sourceEventTime,
                     appDestination,
                     webDestination,
-                    registration.getReportingOrigin())) {
+                    registration.getEnrollmentId())) {
                 LogUtil.d("insertSources: ad-tech exceeds privacy bound. %s %s %s %s",
-                        registration.getReportingOrigin(), publisher.get(), appDestination,
+                        registration.getEnrollmentId(), publisher.get(), appDestination,
                         webDestination);
                 continue;
             }
@@ -394,6 +396,7 @@ public final class MeasurementImpl {
                     createSource(
                             sourceEventTime,
                             registration,
+                            registration.getEnrollmentId(),
                             topOriginUri,
                             publisherType,
                             registrant,
@@ -407,6 +410,7 @@ public final class MeasurementImpl {
     private Source createSource(
             long sourceEventTime,
             SourceRegistration registration,
+            String enrollmentId,
             Uri topOriginUri,
             @EventSurfaceType int publisherType,
             Uri registrant,
@@ -419,7 +423,7 @@ public final class MeasurementImpl {
                 .setPublisherType(publisherType)
                 .setAppDestination(destination)
                 .setWebDestination(webDestination)
-                .setAdTechDomain(getBaseUri(registration.getReportingOrigin()))
+                .setEnrollmentId(enrollmentId)
                 .setRegistrant(registrant)
                 .setSourceType(sourceType)
                 .setPriority(registration.getSourcePriority())
@@ -439,20 +443,41 @@ public final class MeasurementImpl {
                 .build();
     }
 
-    private void insertSource(Source source) {
-        List<EventReport> eventReports = getSourceEventReports(source);
+    @VisibleForTesting
+    void insertSource(Source source) {
+        List<EventReport> fakeEventReports = generateFakeEventReports(source);
         mDatastoreManager.runInTransaction(
                 (dao) -> {
                     dao.insertSource(source);
-                    for (EventReport report : eventReports) {
+                    for (EventReport report : fakeEventReports) {
                         dao.insertEventReport(report);
+                    }
+
+                    // We want to account for attribution if fake report generation was considered
+                    // based on the probability. In that case the attribution mode will be NEVER
+                    // (empty fake reports state) or FALSELY (non-empty fake reports).
+                    if (source.getAttributionMode() != Source.AttributionMode.TRUTHFULLY) {
+                        // Attribution rate limits for app and web destinations are counted
+                        // separately, so add a fake report entry for each type of destination if
+                        // non-null.
+                        if (!Objects.isNull(source.getAppDestination())) {
+                            dao.insertAttribution(
+                                    createFakeAttributionRateLimit(
+                                            source, source.getAppDestination()));
+                        }
+
+                        if (!Objects.isNull(source.getWebDestination())) {
+                            dao.insertAttribution(
+                                    createFakeAttributionRateLimit(
+                                            source, source.getWebDestination()));
+                        }
                     }
                 });
     }
 
     @VisibleForTesting
-    List<EventReport> getSourceEventReports(Source source) {
-        List<Source.FakeReport> fakeReports = source.assignAttributionModeAndGenerateFakeReport();
+    List<EventReport> generateFakeEventReports(Source source) {
+        List<Source.FakeReport> fakeReports = source.assignAttributionModeAndGenerateFakeReports();
         return fakeReports.stream()
                 .map(
                         fakeReport ->
@@ -460,9 +485,14 @@ public final class MeasurementImpl {
                                         .setSourceId(source.getEventId())
                                         .setReportTime(fakeReport.getReportingTime())
                                         .setTriggerData(fakeReport.getTriggerData())
-                                        .setAttributionDestination(source.getAppDestination())
-                                        .setAdTechDomain(source.getAdTechDomain())
-                                        .setTriggerTime(0)
+                                        .setAttributionDestination(fakeReport.getDestination())
+                                        .setEnrollmentId(source.getEnrollmentId())
+                                        // The query for attribution check is from
+                                        // (triggerTime - 30 days) to triggerTime and max expiry is
+                                        // 30 days, so it's safe to choose triggerTime as source
+                                        // event time so that it gets considered when the query is
+                                        // fired for attribution rate limit check.
+                                        .setTriggerTime(source.getEventTime())
                                         .setTriggerPriority(0L)
                                         .setTriggerDedupKey(null)
                                         .setSourceType(source.getSourceType())
@@ -494,7 +524,12 @@ public final class MeasurementImpl {
             @EventSurfaceType int destinationType) {
         for (TriggerRegistration registration : responseBasedRegistrations) {
             Trigger trigger = createTrigger(
-                    registration, triggerTime, topOrigin, registrant, destinationType);
+                    registration,
+                    registration.getEnrollmentId(),
+                    triggerTime,
+                    topOrigin,
+                    registrant,
+                    destinationType);
             mDatastoreManager.runInTransaction((dao) -> dao.insertTrigger(trigger));
         }
         notifyTriggerContentProvider();
@@ -513,6 +548,7 @@ public final class MeasurementImpl {
 
     private Trigger createTrigger(
             TriggerRegistration registration,
+            String enrollmentId,
             long triggerTime,
             Uri topOrigin,
             Uri registrant,
@@ -520,7 +556,7 @@ public final class MeasurementImpl {
         return new Trigger.Builder()
                 .setAttributionDestination(topOrigin)
                 .setDestinationType(destinationType)
-                .setAdTechDomain(getBaseUri(registration.getReportingOrigin()))
+                .setEnrollmentId(enrollmentId)
                 .setRegistrant(registrant)
                 .setTriggerTime(triggerTime)
                 .setEventTriggers(registration.getEventTriggers())
@@ -607,6 +643,38 @@ public final class MeasurementImpl {
         }
     }
 
+    /**
+     * {@link Attribution} generated from here will only be used for fake report attribution.
+     *
+     * @param source source to derive parameters from
+     * @param destination destination for attribution
+     * @return a fake {@link Attribution}
+     */
+    private Attribution createFakeAttributionRateLimit(Source source, Uri destination) {
+        Optional<Uri> publisherBaseUri = extractBaseUri(source.getPublisher());
+        Optional<Uri> destinationBaseUri = extractBaseUri(destination);
+
+        if (!publisherBaseUri.isPresent() || !destinationBaseUri.isPresent()) {
+            throw new IllegalArgumentException(
+                    String.format(
+                            "insertAttributionRateLimit: getSourceAndDestinationTopPrivateDomains"
+                                    + " failed. Publisher: %s; Attribution destination: %s",
+                            source.getPublisher(), destination));
+        }
+
+        String publisherTopPrivateDomain = publisherBaseUri.get().toString();
+        String triggerDestinationTopPrivateDomain = destinationBaseUri.get().toString();
+        return new Attribution.Builder()
+                .setSourceSite(publisherTopPrivateDomain)
+                .setSourceOrigin(BaseUriExtractor.getBaseUri(source.getPublisher()).toString())
+                .setDestinationSite(triggerDestinationTopPrivateDomain)
+                .setDestinationOrigin(BaseUriExtractor.getBaseUri(destination).toString())
+                .setEnrollmentId(source.getEnrollmentId())
+                .setTriggerTime(source.getEventTime())
+                .setRegistrant(source.getRegistrant().toString())
+                .build();
+    }
+
     private static boolean isValid(WebTriggerRegistrationRequest triggerRegistrationRequest) {
         Uri destination = triggerRegistrationRequest.getDestination();
         return Web.topPrivateDomainAndScheme(destination).isPresent();
@@ -616,6 +684,17 @@ public final class MeasurementImpl {
         return uri.getQueryParameter("id");
     }
 
+    private static Optional<Uri> extractBaseUri(Uri uri) {
+        return hasAndroidAppScheme(uri)
+                ? Optional.of(BaseUriExtractor.getBaseUri(uri))
+                : Web.topPrivateDomainAndScheme(uri);
+    }
+
+    private static boolean hasAndroidAppScheme(Uri uri) {
+        String scheme = uri.getScheme();
+        return scheme != null && scheme.equals(ANDROID_APP_SCHEME);
+    }
+
     private interface AppVendorPackages {
         String PLAY_STORE = "com.android.vending";
     }
@@ -623,7 +702,7 @@ public final class MeasurementImpl {
     private boolean isDestinationWithinPrivacyBounds(
             Uri publisher,
             @EventSurfaceType int publisherType,
-            Uri reportingOrigin,
+            String enrollmentId,
             long requestTime,
             @Nullable Uri appDestination,
             @Nullable Uri webDestination) {
@@ -631,7 +710,7 @@ public final class MeasurementImpl {
         if (appDestination != null && !isDestinationWithinPrivacyBounds(
                 publisher,
                 publisherType,
-                reportingOrigin,
+                enrollmentId,
                 appDestination,
                 EventSurfaceType.APP,
                 windowStartTime,
@@ -641,7 +720,7 @@ public final class MeasurementImpl {
         if (webDestination != null && !isDestinationWithinPrivacyBounds(
                 publisher,
                 publisherType,
-                reportingOrigin,
+                enrollmentId,
                 webDestination,
                 EventSurfaceType.WEB,
                 windowStartTime,
@@ -654,17 +733,17 @@ public final class MeasurementImpl {
     private boolean isDestinationWithinPrivacyBounds(
             Uri publisher,
             @EventSurfaceType int publisherType,
-            Uri reportingOrigin,
+            String enrollmentId,
             Uri destination,
             @EventSurfaceType int destinationType,
             long windowStartTime,
             long requestTime) {
         Optional<Integer> destinationCount =
                 mDatastoreManager.runInTransactionWithResult((dao) ->
-                        dao.countDistinctDestinationsPerPublisherXAdTechInActiveSource(
+                        dao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
                                 publisher,
                                 publisherType,
-                                reportingOrigin,
+                                enrollmentId,
                                 destination,
                                 destinationType,
                                 windowStartTime,
@@ -672,12 +751,12 @@ public final class MeasurementImpl {
 
         if (destinationCount.isPresent()) {
             return destinationCount.get() < PrivacyParams
-                    .MAX_DISTINCT_DESTINATIONS_PER_PUBLISHER_IN_ACTIVE_SOURCE;
+                    .MAX_DISTINCT_DESTINATIONS_PER_PUBLISHER_X_ENROLLMENT_IN_ACTIVE_SOURCE;
         } else {
             LogUtil.e("isDestinationWithinPrivacyBounds: "
-                    + "dao.countDistinctDestinationsPerPublisherXAdTechInActiveSource not present."
-                    + " %s ::: %s ::: %s ::: %s", publisher, destination, windowStartTime,
-                    requestTime);
+                    + "dao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource not "
+                    + "present. %s ::: %s ::: %s ::: %s ::: %s", publisher, enrollmentId,
+                    destination, windowStartTime, requestTime);
             return false;
         }
     }
@@ -688,14 +767,13 @@ public final class MeasurementImpl {
             long requestTime,
             @Nullable Uri appDestination,
             @Nullable Uri webDestination,
-            Uri reportingOrigin) {
+            String enrollmentId) {
         long windowStartTime = requestTime - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS;
         if (appDestination != null && !isAdTechWithinPrivacyBounds(
                 publisher,
                 publisherType,
                 appDestination,
-                // TODO: will be replaced with enrollment ID
-                reportingOrigin,
+                enrollmentId,
                 windowStartTime,
                 requestTime)) {
             return false;
@@ -704,8 +782,7 @@ public final class MeasurementImpl {
                 publisher,
                 publisherType,
                 webDestination,
-                // TODO: will be replaced with enrollment ID
-                reportingOrigin,
+                enrollmentId,
                 windowStartTime,
                 requestTime)) {
             return false;
@@ -717,28 +794,27 @@ public final class MeasurementImpl {
             Uri publisher,
             @EventSurfaceType int publisherType,
             Uri destination,
-            Uri reportingOrigin,
+            String enrollmentId,
             long windowStartTime,
             long requestTime) {
         Optional<Integer> adTechCount =
                 mDatastoreManager.runInTransactionWithResult((dao) ->
-                        dao.countDistinctAdTechsPerPublisherXDestinationInSource(
+                        dao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
                                 publisher,
                                 publisherType,
                                 destination,
-                                // TODO: will be replaced with enrollment ID
-                                reportingOrigin,
+                                enrollmentId,
                                 windowStartTime,
                                 requestTime));
 
         if (adTechCount.isPresent()) {
             return adTechCount.get() < PrivacyParams
-                    .MAX_DISTINCT_AD_TECHS_PER_PUBLISHER_X_DESTINATION_IN_SOURCE;
+                    .MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_SOURCE;
         } else {
             LogUtil.e("isAdTechWithinPrivacyBounds: "
-                    + "dao.countDistinctAdTechsPerPublisherXDestinationInSource not present"
-                    + ". %s ::: %s ::: %s ::: %s ::: $s", publisher, destination,
-                    reportingOrigin, windowStartTime, requestTime);
+                    + "dao.countDistinctEnrollmentsPerPublisherXDestinationInSource not present"
+                    + ". %s ::: %s ::: %s ::: %s ::: $s", publisher, destination, enrollmentId,
+                    windowStartTime, requestTime);
             return false;
         }
     }

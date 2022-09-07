@@ -48,7 +48,8 @@ import java.util.concurrent.ExecutorService;
 /** Encapsulates the AdSelection Override Logic */
 public class AdSelectionOverrider {
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
-    @NonNull private final ListeningExecutorService mListeningExecutorService;
+    @NonNull private final ListeningExecutorService mLightweightExecutorService;
+    @NonNull private final ListeningExecutorService mBackgroundExecutorService;
     @NonNull private final AdSelectionDevOverridesHelper mAdSelectionDevOverridesHelper;
     @NonNull private final PackageManager mPackageManager;
     @NonNull private final ConsentManager mConsentManager;
@@ -64,7 +65,8 @@ public class AdSelectionOverrider {
     public AdSelectionOverrider(
             @NonNull DevContext devContext,
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
-            @NonNull ExecutorService executor,
+            @NonNull ExecutorService lightweightExecutorService,
+            @NonNull ExecutorService backgroundExecutorService,
             @NonNull PackageManager packageManager,
             @NonNull ConsentManager consentManager,
             @NonNull AdServicesLogger adServicesLogger,
@@ -73,14 +75,19 @@ public class AdSelectionOverrider {
             int callerUid) {
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(adSelectionEntryDao);
-        Objects.requireNonNull(executor);
+        Objects.requireNonNull(lightweightExecutorService);
+        Objects.requireNonNull(backgroundExecutorService);
+        Objects.requireNonNull(packageManager);
         Objects.requireNonNull(consentManager);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(appImportanceFilter);
         Objects.requireNonNull(flags);
 
         this.mAdSelectionEntryDao = adSelectionEntryDao;
-        this.mListeningExecutorService = MoreExecutors.listeningDecorator(executor);
+        this.mLightweightExecutorService =
+                MoreExecutors.listeningDecorator(lightweightExecutorService);
+        this.mBackgroundExecutorService =
+                MoreExecutors.listeningDecorator(backgroundExecutorService);
         this.mAdSelectionDevOverridesHelper =
                 new AdSelectionDevOverridesHelper(devContext, mAdSelectionEntryDao);
         this.mPackageManager = packageManager;
@@ -107,7 +114,7 @@ public class AdSelectionOverrider {
                 AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
 
         FluentFuture.from(
-                        mListeningExecutorService.submit(
+                        mLightweightExecutorService.submit(
                                 () -> {
                                     // Cannot read pH flags in the binder thread so this
                                     // checks will be done in a spawn thread.
@@ -122,7 +129,7 @@ public class AdSelectionOverrider {
                         ignoredVoid ->
                                 callAddOverride(
                                         adSelectionConfig, decisionLogicJS, trustedScoringSignals),
-                        mListeningExecutorService)
+                        mLightweightExecutorService)
                 .addCallback(
                         new FutureCallback<Integer>() {
                             @Override
@@ -137,7 +144,7 @@ public class AdSelectionOverrider {
                                 notifyFailureToCaller(callback, t, shortApiName);
                             }
                         },
-                        mListeningExecutorService);
+                        mLightweightExecutorService);
     }
 
     /**
@@ -154,7 +161,7 @@ public class AdSelectionOverrider {
                 AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
 
         FluentFuture.from(
-                        mListeningExecutorService.submit(
+                        mLightweightExecutorService.submit(
                                 () -> {
                                     // Cannot read pH flags in the binder thread so this
                                     // checks will be done in a spawn thread.
@@ -167,7 +174,7 @@ public class AdSelectionOverrider {
                                 }))
                 .transformAsync(
                         ignoredVoid -> callRemoveOverride(adSelectionConfig),
-                        mListeningExecutorService)
+                        mLightweightExecutorService)
                 .addCallback(
                         new FutureCallback<Integer>() {
                             @Override
@@ -182,7 +189,7 @@ public class AdSelectionOverrider {
                                 notifyFailureToCaller(callback, t, shortApiName);
                             }
                         },
-                        mListeningExecutorService);
+                        mLightweightExecutorService);
     }
 
     /**
@@ -196,7 +203,7 @@ public class AdSelectionOverrider {
                 AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES;
 
         FluentFuture.from(
-                        mListeningExecutorService.submit(
+                        mLightweightExecutorService.submit(
                                 () -> {
                                     // Cannot read pH flags in the binder thread so this
                                     // checks will be done in a spawn thread.
@@ -207,7 +214,8 @@ public class AdSelectionOverrider {
 
                                     return null;
                                 }))
-                .transformAsync(ignoredVoid -> callRemoveAllOverrides(), mListeningExecutorService)
+                .transformAsync(
+                        ignoredVoid -> callRemoveAllOverrides(), mLightweightExecutorService)
                 .addCallback(
                         new FutureCallback<Integer>() {
                             @Override
@@ -222,7 +230,7 @@ public class AdSelectionOverrider {
                                 notifyFailureToCaller(callback, t, shortApiName);
                             }
                         },
-                        mListeningExecutorService);
+                        mLightweightExecutorService);
     }
 
     private FluentFuture<Integer> callAddOverride(
@@ -230,7 +238,7 @@ public class AdSelectionOverrider {
             @NonNull String decisionLogicJS,
             @NonNull AdSelectionSignals trustedScoringSignals) {
         return FluentFuture.from(
-                mListeningExecutorService.submit(
+                mBackgroundExecutorService.submit(
                         () -> {
                             if (!mConsentManager.getConsent(mPackageManager).isGiven()) {
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
@@ -244,7 +252,7 @@ public class AdSelectionOverrider {
 
     private FluentFuture<Integer> callRemoveOverride(@NonNull AdSelectionConfig adSelectionConfig) {
         return FluentFuture.from(
-                mListeningExecutorService.submit(
+                mBackgroundExecutorService.submit(
                         () -> {
                             if (!mConsentManager.getConsent(mPackageManager).isGiven()) {
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
@@ -258,7 +266,7 @@ public class AdSelectionOverrider {
 
     private FluentFuture<Integer> callRemoveAllOverrides() {
         return FluentFuture.from(
-                mListeningExecutorService.submit(
+                mBackgroundExecutorService.submit(
                         () -> {
                             if (!mConsentManager.getConsent(mPackageManager).isGiven()) {
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;

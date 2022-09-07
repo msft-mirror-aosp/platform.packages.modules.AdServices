@@ -42,7 +42,9 @@ public final class AggregateReportFixture {
                 .setAttributionDestination(ValidAggregateReportParams.ATTRIBUTION_DESTINATION)
                 .setSourceRegistrationTime(ValidAggregateReportParams.SOURCE_REGISTRATION_TIME)
                 .setScheduledReportTime(ValidAggregateReportParams.TRIGGER_TIME + getRandomTime())
-                .setReportingOrigin(ValidAggregateReportParams.REPORTING_ORIGIN)
+                .setEnrollmentId(ValidAggregateReportParams.ENROLLMENT_ID)
+                .setSourceDebugKey(ValidAggregateReportParams.SOURCE_DEBUG_KEY)
+                .setTriggerDebugKey(ValidAggregateReportParams.TRIGGER_DEBUG_KEY)
                 .setDebugCleartextPayload(ValidAggregateReportParams.getDebugPayload())
                 .setStatus(EventReport.Status.PENDING)
                 .build();
@@ -54,7 +56,9 @@ public final class AggregateReportFixture {
                 Uri.parse("android-app://com.destination");
         public static final long SOURCE_REGISTRATION_TIME = 8640000000L;
         public static final long TRIGGER_TIME = 8640000000L;
-        public static final Uri REPORTING_ORIGIN = Uri.parse("https://com.example");
+        public static final long SOURCE_DEBUG_KEY = 43254545L;
+        public static final long TRIGGER_DEBUG_KEY = 67878545L;
+        public static final String ENROLLMENT_ID = "enrollment-id";
 
         public static final String getDebugPayload() {
             List<AggregateHistogramContribution> contributions = new ArrayList<>();

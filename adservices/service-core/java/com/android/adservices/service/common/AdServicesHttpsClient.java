@@ -109,7 +109,9 @@ public class AdServicesHttpsClient {
     private URL toUrl(@NonNull Uri uri) {
         Objects.requireNonNull(uri);
         Preconditions.checkArgument(
-                uri.getScheme().equalsIgnoreCase("https"), "Only HTTPS connections are allowed!");
+                ValidatorUtil.HTTPS_SCHEME.equalsIgnoreCase(uri.getScheme()),
+                "URI \"%s\" must use HTTPS",
+                uri.toString());
 
         URL url;
         try {
@@ -211,6 +213,7 @@ public class AdServicesHttpsClient {
     }
 
     private Void doReportUrl(@NonNull Uri uri) throws IOException {
+        LogUtil.v("Reporting to \"%s\"", uri.toString());
         URL url = toUrl(uri);
         HttpsURLConnection urlConnection;
 

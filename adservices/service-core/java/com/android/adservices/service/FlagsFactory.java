@@ -44,6 +44,16 @@ public class FlagsFactory {
             public long getAdSelectionOverallTimeoutMs() {
                 return 600000;
             }
+
+            @Override
+            public boolean getEnforceIsolateMaxHeapSize() {
+                return false;
+            }
+
+            @Override
+            public boolean getDisableFledgeEnrollmentCheck() {
+                return true;
+            }
         };
     }
 }

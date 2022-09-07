@@ -36,8 +36,6 @@ public class AdServicesSettingsMainFragment extends Fragment {
     public static final String ERROR_MESSAGE_VIEW_MODEL_EXCEPTION_WHILE_GET_CONSENT =
             "getConsent method failed. Will not change consent value in view model.";
     public static final String PRIVACY_SANDBOX_BETA_SWITCH_KEY = "privacy_sandbox_beta_switch";
-    public static final String TOPICS_PREFERENCE_BUTTON_KEY = "topics_preference";
-    public static final String APPS_PREFERENCE_BUTTON_KEY = "apps_preference";
 
     @Override
     public View onCreateView(

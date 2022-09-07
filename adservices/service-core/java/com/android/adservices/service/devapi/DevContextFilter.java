@@ -95,7 +95,9 @@ public class DevContextFilter {
 
         try {
             String callingAppPackage = mAppPackageNameRetriever.getAppPackageNameForUid(callingUid);
+            LogUtil.v("Creating Dev Context for calling app with package " + callingAppPackage);
             if (!isDebuggable(callingAppPackage)) {
+                LogUtil.v("Non debuggable, ignoring");
                 return DevContext.createForDevOptionsDisabled();
             }
 

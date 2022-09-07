@@ -21,10 +21,7 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.AddCustomAudienceOverrideRequest;
 import android.adservices.customaudience.RemoveCustomAudienceOverrideRequest;
-import android.content.Context;
 import android.os.Process;
-
-import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
@@ -38,12 +35,12 @@ import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
 
-public class CustomAudienceCtsDebuggableTest {
+public class CustomAudienceCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
     private TestAdvertisingCustomAudienceClient mTestClient;
 
-    private static final String OWNER = "owner";
-    private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("buyer");
+    private static final String OWNER = sContext.getPackageName();
+    private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("buyer.example.com");
     private static final String NAME = "name";
     private static final String BIDDING_LOGIC_JS = "function test() { return \"hello world\"; }";
     private static final AdSelectionSignals TRUSTED_BIDDING_SIGNALS =
@@ -55,14 +52,15 @@ public class CustomAudienceCtsDebuggableTest {
 
     @Before
     public void setup() {
-        Context context = ApplicationProvider.getApplicationContext();
+        assertForegroundActivityStarted();
+
         mTestClient =
                 new TestAdvertisingCustomAudienceClient.Builder()
-                        .setContext(context)
+                        .setContext(sContext)
                         .setExecutor(MoreExecutors.directExecutor())
                         .build();
-        DevContextFilter devContextFilter = DevContextFilter.create(context);
-        DevContext devContext = DevContextFilter.create(context).createDevContext(Process.myUid());
+        DevContextFilter devContextFilter = DevContextFilter.create(sContext);
+        DevContext devContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
         boolean isDebuggable = devContextFilter.isDebuggable(devContext.getCallingAppPackageName());
         boolean isDeveloperMode = devContextFilter.isDeveloperMode();
         mHasAccessToDevOverrides = devContext.getDevOptionsEnabled();
@@ -77,7 +75,6 @@ public class CustomAudienceCtsDebuggableTest {
 
         AddCustomAudienceOverrideRequest request =
                 new AddCustomAudienceOverrideRequest.Builder()
-                        .setOwnerPackageName(OWNER)
                         .setBuyer(BUYER)
                         .setName(NAME)
                         .setBiddingLogicJs(BIDDING_LOGIC_JS)
@@ -96,7 +93,6 @@ public class CustomAudienceCtsDebuggableTest {
 
         RemoveCustomAudienceOverrideRequest request =
                 new RemoveCustomAudienceOverrideRequest.Builder()
-                        .setOwnerPackageName(OWNER)
                         .setBuyer(BUYER)
                         .setName(NAME)
                         .build();
@@ -113,7 +109,6 @@ public class CustomAudienceCtsDebuggableTest {
 
         AddCustomAudienceOverrideRequest addRequest =
                 new AddCustomAudienceOverrideRequest.Builder()
-                        .setOwnerPackageName(OWNER)
                         .setBuyer(BUYER)
                         .setName(NAME)
                         .setBiddingLogicJs(BIDDING_LOGIC_JS)
@@ -127,7 +122,6 @@ public class CustomAudienceCtsDebuggableTest {
 
         RemoveCustomAudienceOverrideRequest removeRequest =
                 new RemoveCustomAudienceOverrideRequest.Builder()
-                        .setOwnerPackageName(OWNER)
                         .setBuyer(BUYER)
                         .setName(NAME)
                         .build();

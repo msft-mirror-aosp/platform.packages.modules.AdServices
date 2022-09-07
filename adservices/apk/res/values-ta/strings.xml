@@ -22,10 +22,8 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="1644434244130657749">"AdServices Attribution APIகளை அணுக ஆப்ஸை அனுமதிக்கும்."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="2766614780488510189">"AdServices Custom Audience APIயை அணுகுதல்"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"AdServices Custom Audience APIயை அணுக ஆப்ஸை அனுமதிக்கும்."</string>
-    <!-- no translation found for permlab_accessAdServicesAdId (2754825914769538156) -->
-    <skip />
-    <!-- no translation found for permdesc_accessAdServicesAdId (7717770480967762044) -->
-    <skip />
+    <string name="permlab_accessAdServicesAdId" msgid="2754825914769538156">"AdId APIக்கான அணுகல்"</string>
+    <string name="permdesc_accessAdServicesAdId" msgid="7717770480967762044">"AdId APIயை அணுக ஆப்ஸை அனுமதிக்கும்."</string>
     <string name="permlab_accessAdServicesConsent" msgid="3203633397142568707">"AdServices Consent APIயை அணுகுதல்"</string>
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"AdServices Consent APIயை அணுக ஆப்ஸை அனுமதிக்கும்."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID APIயை அணுகுதல்"</string>
@@ -34,72 +32,63 @@
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"App Set ID APIயை அணுக ஆப்ஸை அனுமதிக்கும்."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service APIயை அணுகுதல்"</string>
     <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"Consent Service APIயை அணுக ஆப்ஸை அனுமதிக்கும்."</string>
+    <string name="permlab_modifyAdServicesState" msgid="3594653261299518914">"AdServiceஸின் இயக்க நிலை மாற்ற APIக்கான அணுகல்"</string>
+    <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"AdServiceஸின் இயக்க நிலை மாற்ற APIயை அணுக ஆப்ஸை அனுமதிக்கும்."</string>
+    <string name="permlab_accessAdServicesState" msgid="482058883975394398">"AdServiceஸின் இயக்க நிலை APIக்கான அணுகல்"</string>
+    <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"AdServiceஸின் இயக்க நிலை APIயை அணுக ஆப்ஸை அனுமதிக்கும்."</string>
     <string name="app_label" msgid="5985320129629013968">"Android System"</string>
-    <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"தனியுரிமை சாண்ட்பாக்ஸ் பீட்டா"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"தனியுரிமை சாண்ட்பாக்ஸ் பீட்டா"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"தனியுரிமை சாண்ட்பாக்ஸ் பீட்டா பதிப்பை நிலைமாற்றலாம்"</string>
-    <string name="settingsUI_main_view_title" msgid="255982490790282252">"Androidன் விளம்பரத் தனியுரிமை (பீட்டா)"</string>
-    <string name="settingsUI_main_view_subtitle" msgid="3380585883687237827">"ஆப்ஸுக்கு இடையேயான கண்காணிப்பைக் கட்டுப்படுத்தும் புதிய தனியுரிமை சாண்ட்பாக்ஸ் சிஸ்டத்தைப் பரிசோதியுங்கள்"</string>
-    <string name="settingsUI_main_view_info_text1" msgid="8353580266621706164">"தனியுரிமை சாண்ட்பாக்ஸ் எப்படி வேலை செய்கிறது?"</string>
-    <string name="settingsUI_main_view_info_text2" msgid="5144888171043725329">"நீங்கள் விரும்பக்கூடிய விளம்பரங்களைக் காட்டுவதற்காகத் \'தனியுரிமை சாண்ட்பாக்ஸில்\' தரவு சேகரிக்கப்படுகிறது. ஆனால் தரவு உங்களையோ உங்கள் சாதனத்தையோ அடையாளம் காண முடியாத வகையில் பகிரப்படுகிறது."</string>
-    <string name="settingsUI_main_view_info_text3" msgid="9106658161862318732">"தனியுரிமை சாண்ட்பாக்ஸில் எந்த வகையான தரவு சேமிக்கப்படுகிறது?"</string>
-    <string name="settingsUI_main_view_info_text4" msgid="5819359066240454954">"•  பொதுவான ஆர்வங்கள்"</string>
-    <string name="settingsUI_main_view_info_text5" msgid="6064832868440367397">"நீங்கள் பயன்படுத்தும் ஆப்ஸின் அடிப்படையில் Android இந்தத் தரவை உருவாக்கி \'தனியுரிமை சாண்ட்பாக்ஸில்\' சேமிக்கிறது. உதாரணத்திற்கு, “விளையாட்டு” என்பதை உங்கள் பொதுவான ஆர்வங்களில் ஒன்றாக வைத்துக்கொள்வோம். \n\nதனியுரிமை அமைப்புகளில் உங்கள் ஆர்வங்களின் பட்டியலைப் பார்க்கலாம், உங்களுக்கு ஆர்வமில்லாதவற்றைத் தடுக்கலாம்."</string>
-    <string name="settingsUI_main_view_info_text6" msgid="3406976290919982143">"•  குறிப்பிட்ட ஆர்வங்கள்"</string>
-    <string name="settingsUI_main_view_info_text7" msgid="210269084665708892">"உங்கள் ஆப்ஸை எப்படிப் பயன்படுத்துகிறீர்கள் என்பதன் அடிப்படையில் இந்தத் தரவை உங்கள் ஆப்ஸ் உருவாக்கி \'தனியுரிமை சாண்ட்பாக்ஸில்\' சேமிக்கிறது. உதாரணத்திற்கு நீங்கள் ஓடுவதற்கான ஷூக்களை வாங்குவதற்குப் பயன்படுத்தும் ஆப்ஸ் sport_running எனும் லேபிளைச் சேர்க்கக்கூடும்.\n\nஇதைச் செய்யும் ஆப்ஸ் பட்டியலை உங்கள் தனியுரிமை அமைப்புகளில் பார்க்கலாம். மேலும் தனியுரிமை சாண்ட்பாக்ஸில் தரவைச் சேமிக்கும் எந்த ஆப்ஸையும் தடுக்கலாம்."</string>
-    <string name="settingsUI_topics_view_title" msgid="7437641813424176118">"ஆர்வங்களை நிர்வகித்தல்"</string>
-    <string name="settingsUI_topics_view_subtitle" msgid="5347912133908026725">"ஆப்ஸுக்கிடையிலான கண்காணிப்பை Androidன் தனியுரிமை சாண்ட்பாக்ஸ் வரம்பிடும்பட்சத்திலும் நீங்கள் விரும்பக்கூடிய விளம்பரங்களைக் காட்ட ஆப்ஸைத் தொடர்ந்து அனுமதிக்கும். உங்களையோ உங்கள் சாதனத்தையோ அடையாளம் காண முடியாத வகையில் விளம்பரதாரர்களுடன் Android இந்தத் தரவைப் பகிர்கிறது.\n\nநீங்கள் பயன்படுத்தும் ஆப்ஸின் அடிப்படையில், உங்கள் பொதுவான விளம்பர ஆர்வங்களுக்கான இந்தப் பட்டியலை Android உருவாக்கிப் புதுப்பிக்கிறது. ஓர் ஆர்வத்தை நீங்கள் தடுத்தால், அதற்கான தடையை நீக்கும் வரை பட்டியலில் அது மீண்டும் சேர்க்கப்படாது. எனினும், தொடர்புடைய சில விளம்பரங்களை நீங்கள் தொடர்ந்து பார்க்கக்கூடும்."</string>
-    <string name="settingsUI_topics_view_info_text1" msgid="6729245512525985403">"பொதுவான விளம்பர ஆர்வங்கள்"</string>
-    <string name="settingsUI_topics_view_info_text2" msgid="8355913397424818046">"நீங்கள் பயன்படுத்தும் ஆப்ஸின் அடிப்படையில் இந்த ஆர்வங்களை Android உருவாக்கும்.\n\nஉதாரணத்திற்கு, உங்கள் சாதனத்தில் பல விளையாட்டு ஆப்ஸைக் கொண்டிருந்தால் தனியுரிமை சாண்ட்பாக்ஸில் “விளையாட்டு” எனும் ஆர்வத்தை Android சேமிக்கக்கூடும்.\n\nஅதன் பிறகு உங்களையோ உங்கள் சாதனத்தையோ அடையாளம் காண முடியாத வகையில் இந்தத் தரவு விளம்பரதாரர்களுடன் பகிரப்படும்."</string>
-    <string name="settingsUI_apps_key" msgid="5279102708260885695">"apps_preference"</string>
-    <string name="settingsUI_apps_title" msgid="2177966577556486280">"குறிப்பிட்ட ஆர்வங்களை உருவாக்கும் உங்கள் ஆப்ஸ்"</string>
-    <string name="settingsUI_apps_summary" msgid="2382082513059909726">"குறிப்பிட்ட ஆர்வங்களை உருவாக்கும் உங்கள் ஆப்ஸை நிர்வகிக்கலாம்"</string>
-    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"நீங்கள் தடுத்த ஆப்ஸ்"</string>
-    <string name="settingsUI_apps_view_title" msgid="3615627092403761282">"ஆப்ஸை நிர்வகித்தல்"</string>
-    <string name="settingsUI_apps_view_subtitle" msgid="5257332567222983503">"நீங்கள் ஆப்ஸைப் பயன்படுத்தும் விதத்தைப் பொறுத்து, தனியுரிமை சாண்ட்பாக்ஸுக்கான உங்களின் குறிப்பிட்ட விளம்பர ஆர்வங்கள் குறித்த தரவைச் சில ஆப்ஸ் உருவாக்குகின்றன. இந்த ஆப்ஸ் பட்டியலை Android புதுப்பிக்கிறது. எனவே இதை நீங்கள் பார்க்கலாம் திருத்தலாம்.\n\nஓர் ஆப்ஸை நீங்கள் தடுத்தால் எந்தவொரு குறிப்பிட்ட ஆர்வத்தையும் அது சேர்க்காது. அதற்கான தடையை நீக்கும் வரை இந்தப் பட்டியலில் அது மீண்டும் சேர்க்கப்படாது. ஆப்ஸ் ஏற்கெனவே உருவாக்கிய ஆர்வங்கள் நீக்கப்படும். ஆனால் தொடர்புடைய சில விளம்பரங்களை நீங்கள் தொடர்ந்து பார்க்கக்கூடும்."</string>
-    <string name="settingsUI_apps_view_no_apps_text" msgid="1056905761942948495">"தற்சமயம் காட்ட ஆப்ஸ் எதுவுமில்லை"</string>
-    <string name="settingsUI_reset_apps_title" msgid="3308597019425923552">"ஆப்ஸ் மூலம் உருவாக்கிய தரவை ரீசெட் செய்"</string>
-    <string name="settingsUI_apps_view_info_text1" msgid="503353133396835755">"குறிப்பிட்ட விளம்பர ஆர்வங்கள்"</string>
-    <string name="settingsUI_apps_view_info_text2" msgid="6562781312486257254">"நீங்கள் பயன்படுத்தும் சில ஆப்ஸ், விளம்பரப்படுத்தல் தொடர்பான உங்கள் குறிப்பிட்ட ஆர்வங்கள் குறித்த தரவை உருவாக்கி \'தனியுரிமை சாண்ட்பாக்ஸில்\' இதைச் சேர்க்கிறது.\n\nஉதாரணமாக, ஓடுவதற்கான ஷூக்களை வாங்க நீங்கள் பயன்படுத்தும் ஆப்ஸானது sport_running எனும் லேபிளைச் சேர்க்கக்கூடும்.\n\nஅதன் பிறகு, தனியுரிமை சாண்ட்பாக்ஸில் சேகரிக்கப்பட்ட தரவு உங்களையோ உங்கள் சாதனத்தையோ அடையாளம் காண முடியாத வகையில் விளம்பரதாரர்களுடன் பகிரப்படும். எனவே நீங்கள் விரும்பக்கூடிய விளம்பரங்களைக் கூடுதல் தனியுரிமைப் பாதுகாப்புடன் தொடர்ந்து பார்க்க முடியும்."</string>
-    <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="5700261138344146462">"தற்சமயம் காட்ட தடைசெய்யப்பட்ட ஆப்ஸ் எதுவுமில்லை"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"தற்சமயம் காட்டுவதற்கு ஆர்வங்கள் எதுவும் இல்லை"</string>
-    <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
-    <string name="settingsUI_topics_title" msgid="4024683469932819788">"உங்களின் பொதுவான ஆர்வங்கள்"</string>
-    <string name="settingsUI_topics_summary" msgid="3146101472984434355">"உங்களின் பொதுவான ஆர்வங்களை நிர்வகிக்கலாம்"</string>
-    <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"விளம்பரங்களுக்கான உங்கள் பொதுவான ஆர்வங்களை நிர்வகித்தல்"</string>
+    <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Androidன் விளம்பரத் தனியுரிமை பீட்டா பதிப்பில் இணைதல்"</string>
+    <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"ஆப்ஸ் உங்களுக்கு விளம்பரங்களைக் காட்டுவதற்கான கூடுதல் வழிகளை Android ஆராய்ந்து வருகிறது"</string>
+    <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"மேலும் அறிக"</string>
+    <string name="notificationUI_header_title_eu" msgid="4955298263079910371">"Androidன் விளம்பரத் தனியுரிமை (பீட்டா)"</string>
+    <string name="notificationUI_container1_title_eu" msgid="8315199862119660570">"புதியவை"</string>
+    <string name="notificationUI_container1_body_text_eu" msgid="1700290522706948241">"தனியுரிமை சாண்ட்பாக்ஸிலுள்ள புதிய தனியுரிமை அம்சங்கள் உங்களுக்குத் தொடர்புடைய விளம்பரங்களைக் காட்ட ஆப்ஸை அனுமதிக்கின்றன. ஆனால் இணையதளங்கள் மற்றும் பிற டெவெலப்பர்களின் ஆப்ஸ் உங்கள் செயல்பாடுகள் பற்றித் தெரிந்துகொள்வதை இந்த அம்சங்கள் கட்டுப்படுத்துகின்றன."</string>
+    <string name="notificationUI_container1_control_text_eu" msgid="3158258148321255153">"இது எப்படிச் செயல்படுகிறது?"</string>
+    <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"எப்படிப் பங்கேற்பது?"</string>
+    <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"பீட்டாவை இயக்கினால், உங்களுக்கு விளம்பரங்களைக் காட்டுவதற்காக இந்தப் புதிய மற்றும் கூடுதலான தனிப்பட்ட வழிகளைப் பரிசோதனை செய்ய ஆப்ஸ் அனுமதிக்கப்படும். தனியுரிமை அமைப்புகளுக்குச் சென்று எப்போது வேண்டுமானாலும் பீட்டாவை முடக்கிக்கொள்ளலாம்."</string>
+    <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"வேண்டாம்"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"ஆம். இணைகிறேன்"</string>
+    <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"பங்கேற்பதற்கு நன்றி"</string>
+    <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"நீங்கள் Androidன் விளம்பரத் தனியுரிமை பீட்டா பதிப்பின் அங்கமாக உள்ளீர்கள். உங்கள் சாதனத்திற்குத் தனியுரிமை சாண்ட்பாக்ஸ் இயக்கப்பட்டுள்ளது.\n\nநீங்கள் மேலும் அறியலாம் அல்லது எப்போது வேண்டுமானாலும் தனியுரிமை அமைப்புகளுக்குச் சென்று பீட்டாவை முடக்கலாம்."</string>
+    <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"பங்கேற்க வேண்டாம் எனத் தேர்வுசெய்துள்ளீர்கள்"</string>
+    <string name="notificationUI_confirmation_decline_subtitle" msgid="4194388733937808440">"பதிலளித்தமைக்கு நன்றி. உங்கள் சாதனத்திற்குத் தனியுரிமை சாண்ட்பாக்ஸ் முடக்கப்பட்டுள்ளது.\n\nஉங்கள் மனதை மாற்றிக்கொண்டாலோ மேலும் அறிய விரும்பினாலோ தனியுரிமை அமைப்புகளுக்குச் செல்லவும்."</string>
+    <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"தனியுரிமை அமைப்புகள்"</string>
+    <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"சரி"</string>
+    <string name="notificationUI_container2_title" msgid="3844342008598264655">"நீங்கள் பீட்டாவின் அங்கமாக உள்ளீர்கள்"</string>
+    <string name="notificationUI_container2_body_text" msgid="758560159693325060">"உங்கள் சாதனத்தில் தனியுரிமை சாண்ட்பாக்ஸ் இயக்கப்பட்டுள்ளது. உங்களுக்கு விளம்பரங்களைக் காட்டுவதற்காக இந்தப் புதிய மற்றும் கூடுதலான தனிப்பட்ட வழிகளை ஆப்ஸால் பரிசோதனை செய்ய முடியும். தனியுரிமை அமைப்புகளுக்குச் சென்று எப்போது வேண்டுமானாலும் பீட்டாவை முடக்கிக்கொள்ளலாம்."</string>
+    <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"தனியுரிமை அமைப்புகளை நிர்வகியுங்கள்"</string>
+    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"சரி"</string>
+    <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Androidன் தனியுரிமை சாண்ட்பாக்ஸ் புதிய அம்சங்களை வழங்குகிறது. இந்த அம்சங்களைப் பயன்படுத்தி நீங்கள் விரும்பக்கூடிய விளம்பரங்களை ஆப்ஸால் காட்ட முடியும். இந்தத் தொழில்நுட்பங்கள் சாதன அடையாளங்காட்டிகளைப் பயன்படுத்தாது.\n\nAndroid மற்றும் ஆப்ஸ், நீங்கள் விரும்பக்கூடிய விளம்பர வகைகளைக் கணித்து அவற்றைத் தற்காலிகமாக உங்கள் சாதனத்தில் சேமித்து வைக்கும். இதன் மூலம், இணையதளங்களிலும் பிற டெவெலப்பர்களின் ஆப்ஸிலும் உங்கள் செயல்பாடுகளைக் கண்காணிக்காமலே நீங்கள் விரும்பக்கூடிய விளம்பரங்களை ஆப்ஸால் காட்ட முடியும்."</string>
+    <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"தனியுரிமை சாண்ட்பாக்ஸ் மூலம் விளம்பரப் பிரத்தியேகமாக்கல்"</string>
+    <string name="notificationUI_how_it_works_expanded_text3" msgid="603165966360369018">"•  Android மூலம் மதிப்பீடு செய்யப்பட்ட ஆர்வங்கள்"</string>
+    <string name="notificationUI_how_it_works_expanded_text4" msgid="3910573920883580609">"நீங்கள் பயன்படுத்தும் ஆப்ஸின் அடிப்படையில் Android அவ்வப்போது உங்கள் ஆர்வங்களை மதிப்பீடு செய்யும். உதாரணமாக, \"விளையாட்டு\" அல்லது \"பயணம்\".\n\nபிறகு, இந்த ஆர்வங்களைப் பயன்படுத்தி உங்களுக்கு இன்னும் தொடர்புடைய விளம்பரங்களைக் காட்ட ஆப்ஸ் Androidஐக் கேட்கலாம்.\n\nஉங்கள் தற்போதைய ஆர்வங்களின் பட்டியலைத் தனியுரிமை அமைப்புகளில் பார்க்கலாம் மற்றும் பிடிக்காதவற்றைத் தடுக்கலாம்."</string>
+    <string name="notificationUI_how_it_works_expanded_text5" msgid="7257714040472055781">"•  ஆப்ஸால் மதிப்பீடு செய்யப்பட்ட ஆர்வங்கள்"</string>
+    <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"ஆப்ஸால் உங்கள் ஆர்வங்களை மதிப்பீடு செய்து அவற்றை Androidல் தற்காலிகமாகச் சேமிக்க முடியும். உதாரணமாக, ஓடுவதற்கான ஷூக்களை வாங்க நீங்கள் பயன்படுத்தும் ஆப்ஸ் உங்கள் ஆர்வத்தை \"மாரத்தான் ஓடுதல்\" என்று மதிப்பிடக்கூடும்.\n\nபிறகு, இந்த ஆர்வத்தின் அடிப்படையில் வேறொரு ஆப்ஸ் உங்களுக்கு மாரத்தான்கள் தொடர்பான விளம்பரங்களைக் காட்டலாம்.\n\nஉங்கள் ஆர்வங்களைச் சேமித்துள்ள ஆப்ஸின் பட்டியலைத் தனியுரிமை அமைப்புகளில் நிர்வகிக்கலாம்."</string>
+    <string name="settingsUI_main_view_title" msgid="1663691082473230496">"தனியுரிமை சாண்ட்பாக்ஸ்"</string>
+    <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Androidன் விளம்பரத் தனியுரிமை பீட்டா பதிப்பில் பங்குபெறுங்கள்"</string>
+    <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"தனியுரிமை சாண்ட்பாக்ஸ்"</string>
+    <string name="settingsUI_topics_title" msgid="5996189869721397937">"Android மூலம் மதிப்பீடு செய்யப்பட்ட ஆர்வங்கள்"</string>
+    <string name="settingsUI_apps_title" msgid="2772289096915264175">"ஆர்வங்களை மதிப்பீடு செய்யும் ஆப்ஸ்"</string>
+    <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"விளம்பர அளவீடு"</string>
+    <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"விளம்பரங்களின் செயல்திறனை அளவிடுவதற்கு ஆப்ஸ் தனியுரிமை சாண்ட்பாக்ஸைப் பயன்படுத்தலாம். இதைச் செய்ய, விளம்பரதாரர்கள் தங்கள் விளம்பரங்களுக்கும் ஆப்ஸுக்கும் இடையிலான உங்கள் செயல்பாடுகள் குறித்த தரவை Androidல் தற்காலிகமாகச் சேமிக்கலாம். அவர்கள் சேமிக்கும் தரவின் அளவு கட்டுப்படுத்தப்பட்டு அவ்வப்போது நீக்கப்படும்.\n\nதனியுரிமை சாண்ட்பாக்ஸை முடக்குவதன் மூலம் நீங்கள் எப்போது வேண்டுமானாலும் இந்தத் தரவை நீக்கலாம்."</string>
+    <string name="settingsUI_topics_view_subtitle" msgid="6608135144119617292">"நீங்கள் பயன்படுத்தும் ஆப்ஸின் அடிப்படையில் Android அவ்வப்போது உங்கள் முதன்மை ஆர்வங்களை மதிப்பீடு செய்யும். இந்த ஆர்வங்களைப் பயன்படுத்தி உங்களுக்கு இன்னும் தொடர்புடைய விளம்பரங்களைக் காட்ட ஆப்ஸ் Androidஐக் கேட்கலாம்.\n\nநீங்கள் ஓர் ஆர்வத்தைத் தடுத்தால் தடுப்பை நீக்காதவரை அந்த ஆர்வம் பட்டியலில் மீண்டும் சேர்க்கப்படாது. இருப்பினும் சில தொடர்புடைய விளம்பரங்கள் காட்டப்படலாம்."</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"தடைசெய்"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"தடையை நீக்கு"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"நீங்கள் தடுத்த ஆர்வங்கள்"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"அனைத்துத் தலைப்புகளையும் மீட்டமை"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="5717377146633882375">"தற்சமயம் காட்ட தடைசெய்யப்பட்ட ஆர்வங்கள் எதுவுமில்லை"</string>
-    <string name="notificationUI_notification_content_eu" msgid="7419441022808120101">"ஆப்ஸுக்கிடையிலான கண்காணிப்பை வரம்பிடும் புதிய அம்சங்களைப் பரிசோதித்துப் பாருங்கள்"</string>
-    <string name="notificationUI_header_title_eu" msgid="6822288197367284058">"விளம்பரத் தனியுரிமை தொடர்பான பீட்டா அம்சத்தில் சேருங்கள்"</string>
-    <string name="notificationUI_container3_title_eu" msgid="3157854074121291065">"நீங்கள் என்ன செய்யலாம்?"</string>
-    <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"வேண்டாம்"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="7294736040084958697">"ஆம். அதை முயற்சித்துப் பார்க்கிறேன்"</string>
-    <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"பங்கேற்பதற்கு நன்றி"</string>
-    <string name="notificationUI_confirmation_accept_subtitle" msgid="722290263168711051">"தற்போது நீங்கள் தனியுரிமை சாண்ட்பாக்ஸ் பீட்டாவின் அங்கமாகிவிட்டீர்கள். \n\nதனியுரிமை அமைப்புகளுக்குச் சென்று எப்போது வேண்டுமானாலும் பீட்டா திட்டத்தைப் பற்றி மேலும் அறிந்துகொள்ளலாம் அல்லது அதிலிருந்து விலகலாம்."</string>
-    <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"பங்கேற்க வேண்டாம் எனத் தேர்வுசெய்துள்ளீர்கள்"</string>
-    <string name="notificationUI_confirmation_decline_subtitle" msgid="1869322730722065768">"பதிலளித்தமைக்கு நன்றி. தனியுரிமை சாண்ட்பாக்ஸ் பீட்டாவில் நீங்கள் சேர்க்கப்படவில்லை.\n\nஉங்கள் மனதை மாற்றிக்கொண்டாலோ மேலும் அறிய விரும்பினாலோ தனியுரிமை அமைப்புகளுக்குச் செல்லவும்."</string>
-    <string name="notificationUI_notification_content" msgid="2096372976024736172">"ஆப்ஸுக்கிடையிலான கண்காணிப்பை வரம்பிடும் புதிய அம்சங்களைப் பரிசோதிக்கிறீர்கள்"</string>
-    <string name="notificationUI_header_title" msgid="857744302422337933">"ஆப்ஸுக்கிடையிலான கண்காணிப்பை வரம்பிட Androidக்கு உதவுகிறீர்கள்"</string>
-    <string name="notificationUI_header_subtitle" msgid="522289584167376388">"ஆப்ஸுக்கு இடையேயான தரவை விளம்பரதாரர்கள் கண்காணிப்பதைக் கட்டுப்படுத்துவதற்கான புதிய அம்சங்களை Android பரிசோதிக்கிறது"</string>
-    <string name="notificationUI_container1_title" msgid="3837529978480615552">"ஆப்ஸுக்கு இடையேயான கண்காணிப்பு என்றால் என்ன?"</string>
-    <string name="notificationUI_container1_body_text" msgid="2564452110982505130">"இன்று, உங்கள் ஆப்ஸ் உபயோகத் தரவைச் சாதனத்துடன் எளிதாக இணைக்கலாம், அந்தத் தரவை பல்வேறு ஆப்ஸுக்கு இடையே விளம்பர நோக்கங்களுக்காகப் பகிர அனுமதிக்கலாம்."</string>
-    <string name="notificationUI_container2_title" msgid="4796199061758878885">"Android என்ன செய்கிறது?"</string>
-    <string name="notificationUI_container2_body_text" msgid="7717896223210525953">"உங்களையோ உங்கள் சாதனத்தையோ அடையாளம் காண முடியாத வகையில் விளம்பரத் தரவைப் பாதுகாப்பாகச் சேமித்துப் பகிரும் புதிய தனியுரிமை சாண்ட்பாக்ஸ் தொழில்நுட்பத்தை Android பரிசோதிக்கிறது. \n\nஇந்தப் புதிய சிஸ்டம் ஓர் ஆப்ஸில் இருந்து மற்ற ஆப்ஸுக்கு நேரடியாகத் தரவு அனுப்பப்படுவதைத் தடுக்க உதவும். அதே நேரத்தில் நீங்கள் விரும்பக்கூடிய விளம்பரங்களைக் காட்டுவதற்கும் அந்த ஆப்ஸை அனுமதிக்கும்."</string>
-    <string name="notificationUI_container2_control_text" msgid="3031227311095645064">"இது எப்படிச் செயல்படுகிறது?"</string>
-    <string name="notificationUI_container3_title" msgid="1283794406634157611">"நீங்கள் உதவுகின்ற விதம்"</string>
-    <string name="notificationUI_container3_body_text" msgid="2636703086913037594">"நீங்கள் பார்க்கும் விளம்பரங்களில் ஏற்படும் மாற்றங்களைக் கவனிக்கவில்லை என்றாலும், பீட்டாவில் ஓர் அங்கமாக இருப்பது ஆப்ஸுக்கிடையிலான கண்காணிப்பை வரம்பிட Androidக்குக் காலப்போக்கில் உதவும். தனியுரிமை அமைப்புகளுக்குச் சென்று எப்போது வேண்டுமானாலும் பீட்டாவில் இருந்து விலகிக்கொள்ளலாம்."</string>
-    <string name="notificationUI_left_control_button_text" msgid="6459461402253858770">"தனியுரிமை அமைப்புகள்"</string>
-    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"சரி"</string>
-    <string name="notificationUI_how_it_works_expanded_text1" msgid="1753701052925879129">"தனியுரிமை சாண்ட்பாக்ஸ் செயல்படும் விதம்"</string>
-    <string name="notificationUI_how_it_works_expanded_text2" msgid="3117263986288195274">"நீங்கள் விரும்பக்கூடிய விளம்பரங்களைக் காட்டுவதற்காக \'தனியுரிமை சாண்ட்பாக்ஸில்\' தரவு சேகரிக்கப்படுகிறது. ஆனால் உங்களையோ உங்கள் சாதனத்தையோ அடையாளம் காண முடியாத வகையில் தரவு பகிரப்படுகிறது."</string>
-    <string name="notificationUI_how_it_works_expanded_text3" msgid="7270822532577167752">"தனியுரிமை சாண்ட்பாக்ஸில் எந்த வகையான தரவு சேமிக்கப்படும்?"</string>
-    <string name="notificationUI_how_it_works_expanded_text4" msgid="5609475052636889205">"•  பொதுவான ஆர்வங்கள்"</string>
-    <string name="notificationUI_how_it_works_expanded_text5" msgid="6757375506547548599">"நீங்கள் பயன்படுத்தும் ஆப்ஸின் அடிப்படையில் Android இந்தத் தரவை உருவாக்கி தனியுரிமை சாண்ட்பாக்ஸில் இதைச் சேர்க்கிறது. உதாரணமாக, உங்கள் பொதுவான ஆர்வங்களில் ஒன்றாக \'விளையாட்டு\' இருக்கலாம். \n\nதனியுரிமை அமைப்புகளில் உங்கள் ஆர்வங்களின் பட்டியலைப் பார்க்கலாம், உங்களுக்கு விருப்பமில்லாதவற்றைத் தடுக்கலாம்."</string>
-    <string name="notificationUI_how_it_works_expanded_text6" msgid="2863877874268072458">"•  குறிப்பிட்ட ஆர்வங்கள்"</string>
-    <string name="notificationUI_how_it_works_expanded_text7" msgid="2140515900209351523">"ஆப்ஸை நீங்கள் பயன்படுத்தும் விதத்தைப் பொறுத்து, இந்தத் தரவை உங்கள் ஆப்ஸ் உருவாக்கி \'தனியுரிமை சாண்ட்பாக்ஸில்\' இதைச் சேர்க்கிறது. உதாரணமாக, ஓடுவதற்கான ஷூக்களை வாங்க நீங்கள் பயன்படுத்தும் ஆப்ஸானது sport_running எனும் லேபிளைச் சேர்க்கக்கூடும்.\n\nஇதைச் செய்யும் ஆப்ஸின் பட்டியலை உங்கள் தனியுரிமை அமைப்புகளில் பார்க்கலாம். மேலும் சாண்ட்பாக்ஸுக்குத் தரவை வழங்கும் எந்த ஆப்ஸையும் தடுக்கலாம்."</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"தற்சமயம் காட்டுவதற்கு ஆர்வங்கள் எதுவும் இல்லை"</string>
+    <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"தனியுரிமை சாண்ட்பாக்ஸ்"</string>
+    <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Androidன் விளம்பரத் தனியுரிமை பீட்டா பதிப்பு புதிய அம்சங்களை வழங்குகிறது. அவற்றைப் பயன்படுத்தி நீங்கள் விரும்பக்கூடிய விளம்பரங்களை ஆப்ஸால் வழங்க முடியும். இந்தத் தொழில்நுட்பங்கள் சாதன அடையாளங்காட்டிகளைப் பயன்படுத்தாது.\n\nAndroid நீங்கள் விரும்பக்கூடிய விளம்பர வகைகளை மதிப்பீடு செய்து அவற்றைத் தற்காலிகமாக உங்கள் சாதனத்தில் சேமித்து வைக்கும். இதன் மூலம், இணையதளங்களிலும் பிற டெவெலப்பர்களின் ஆப்ஸிலும் உங்கள் செயல்பாடுகளைக் கண்காணிக்காமலே தொடர்புடைய விளம்பரங்களை ஆப்ஸால் காட்ட முடியும்."</string>
+    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
+    <skip />
+    <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"ஆப்ஸால் உங்கள் ஆர்வங்களை மதிப்பீடு செய்து அவற்றை Androidல் தற்காலிகமாகச் சேமிக்க முடியும். பிறகு, வேறொரு ஆப்ஸ் இந்த ஆர்வங்களின் அடிப்படையில் விளம்பரங்களைக் காட்டலாம்.\n\nநீங்கள் ஓர் ஆப்ஸைத் தடுத்தால் அதன் பிறகு அந்த ஆப்ஸ் உங்கள் ஆர்வங்களை மதிப்பீடு செய்யாது. நீங்கள் தடுப்பை நீக்காதவரை அது இந்த ஆப்ஸ் பட்டியலில் மீண்டும் சேர்க்கப்படாது. ஆப்ஸால் ஏற்கெனவே மதிப்பீடு செய்யப்பட்ட ஆர்வங்கள் நீக்கப்படும். இருப்பினும் சில தொடர்புடைய விளம்பரங்கள் காட்டப்படலாம்."</string>
+    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"நீங்கள் தடுத்த ஆப்ஸ்"</string>
+    <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"ஆப்ஸால் மதிப்பீடு செய்யப்பட்ட ஆர்வங்களை மீட்டமை"</string>
+    <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"தற்சமயம் எந்த ஆப்ஸும் உங்களுக்கான ஆர்வங்களைப் பரிந்துரைக்கவில்லை"</string>
+    <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"தனியுரிமை சாண்ட்பாக்ஸ்"</string>
+    <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Androidன் விளம்பரத் தனியுரிமை பீட்டா பதிப்பு புதிய அம்சங்களை வழங்குகிறது. அவற்றைப் பயன்படுத்தி நீங்கள் விரும்பக்கூடிய விளம்பரங்களை ஆப்ஸால் வழங்க முடியும். இந்தத் தொழில்நுட்பங்கள் சாதன அடையாளங்காட்டிகளைப் பயன்படுத்தாது.\n\nஆப்ஸ் நீங்கள் விரும்பக்கூடிய விளம்பர வகைகளை மதிப்பீடு செய்து அவற்றைத் தற்காலிகமாக உங்கள் சாதனத்தில் சேமித்து வைக்கும். இதன் மூலம், இணையதளங்களிலும் பிற டெவெலப்பர்களின் ஆப்ஸிலும் உங்கள் செயல்பாடுகளைக் கண்காணிக்காமலே தொடர்புடைய விளம்பரங்களை ஆப்ஸால் காட்ட முடியும்."</string>
+    <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"தடுக்கப்பட்ட ஆப்ஸ் எதுவுமில்லை"</string>
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"தடுக்கப்பட்ட ஆர்வங்கள் எதுவுமில்லை"</string>
     <string name="topic10001" msgid="1636806320891333775">"கலை &amp; பொழுதுபோக்கு"</string>
     <string name="topic10002" msgid="1226367977754287428">"நடிப்பு &amp; திரையரங்கு"</string>
     <string name="topic10003" msgid="6949890838957814881">"அனிமே &amp; மங்கா"</string>

@@ -33,6 +33,7 @@ import org.junit.Test;
 @SmallTest
 public final class ReportImpressionInputTest {
     private static final long AUCTION_ID = 123;
+    private static final String CALLER_PACKAGE_NAME = "callerPackageName";
 
     @Test
     public void testWriteToParcel() throws Exception {
@@ -43,6 +44,7 @@ public final class ReportImpressionInputTest {
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(AUCTION_ID)
                         .setAdSelectionConfig(testAdSelectionConfig)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .build();
         Parcel p = Parcel.obtain();
         input.writeToParcel(p, 0);
@@ -52,6 +54,7 @@ public final class ReportImpressionInputTest {
 
         assertThat(fromParcel.getAdSelectionId()).isEqualTo(AUCTION_ID);
         assertThat(fromParcel.getAdSelectionConfig()).isEqualTo(testAdSelectionConfig);
+        assertThat(fromParcel.getCallerPackageName()).isEqualTo(CALLER_PACKAGE_NAME);
     }
 
     @Test
@@ -61,10 +64,26 @@ public final class ReportImpressionInputTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> {
-                        new ReportImpressionInput.Builder()
-                                // Not setting AdSelectionId making it null.
-                                .setAdSelectionConfig(testAdSelectionConfig)
-                                .build();
+                    new ReportImpressionInput.Builder()
+                            // Not setting AdSelectionId making it null.
+                            .setCallerPackageName(CALLER_PACKAGE_NAME)
+                            .setAdSelectionConfig(testAdSelectionConfig)
+                            .build();
+                });
+    }
+
+    @Test
+    public void testFailsToBuildWithNullCallerPackageName() {
+        AdSelectionConfig testAdSelectionConfig = anAdSelectionConfig();
+
+        assertThrows(
+                NullPointerException.class,
+                () -> {
+                    new ReportImpressionInput.Builder()
+                            .setAdSelectionId(AUCTION_ID)
+                            .setAdSelectionConfig(testAdSelectionConfig)
+                            // Not setting CallerPackageName making it null.
+                            .build();
                 });
     }
 
@@ -74,10 +93,11 @@ public final class ReportImpressionInputTest {
         assertThrows(
                 NullPointerException.class,
                 () -> {
-                        new ReportImpressionInput.Builder()
-                                .setAdSelectionId(AUCTION_ID)
-                                // Not setting AdSelectionConfig making it null.
-                                .build();
+                    new ReportImpressionInput.Builder()
+                            .setAdSelectionId(AUCTION_ID)
+                            .setCallerPackageName(CALLER_PACKAGE_NAME)
+                            // Not setting AdSelectionConfig making it null.
+                            .build();
                 });
     }
 
@@ -89,6 +109,7 @@ public final class ReportImpressionInputTest {
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(AUCTION_ID)
                         .setAdSelectionConfig(testAdSelectionConfig)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .build();
 
         assertEquals(obj.describeContents(), 0);

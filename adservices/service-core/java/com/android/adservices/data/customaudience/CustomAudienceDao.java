@@ -91,16 +91,26 @@ public abstract class CustomAudienceDao {
         Objects.requireNonNull(customAudience);
         Objects.requireNonNull(dailyUpdateUrl);
 
+        Instant eligibleUpdateTime;
+        if (customAudience.getUserBiddingSignals() == null
+                || customAudience.getTrustedBiddingData() == null
+                || customAudience.getAds() == null
+                || customAudience.getAds().isEmpty()) {
+            eligibleUpdateTime = Instant.EPOCH;
+        } else {
+            eligibleUpdateTime =
+                    DBCustomAudienceBackgroundFetchData
+                            .computeNextEligibleUpdateTimeAfterSuccessfulUpdate(
+                                    customAudience.getCreationTime());
+        }
+
         DBCustomAudienceBackgroundFetchData fetchData =
                 DBCustomAudienceBackgroundFetchData.builder()
                         .setOwner(customAudience.getOwner())
                         .setBuyer(customAudience.getBuyer())
                         .setName(customAudience.getName())
                         .setDailyUpdateUrl(dailyUpdateUrl)
-                        .setEligibleUpdateTime(
-                                DBCustomAudienceBackgroundFetchData
-                                        .computeNextEligibleUpdateTimeAfterSuccessfulUpdate(
-                                                customAudience.getCreationTime()))
+                        .setEligibleUpdateTime(eligibleUpdateTime)
                         .build();
 
         insertOrOverwriteCustomAudienceAndBackgroundFetchData(customAudience, fetchData);
@@ -392,9 +402,9 @@ public abstract class CustomAudienceDao {
             @NonNull String name,
             @NonNull String appPackageName);
 
-    /** Clean up all custom audience override data */
+    /** Clean up all custom audience override data for the given package name. */
     @Query("DELETE FROM custom_audience_overrides WHERE app_package_name = :appPackageName")
-    public abstract void removeAllCustomAudienceOverrides(@NonNull String appPackageName);
+    public abstract void removeCustomAudienceOverridesByPackageName(@NonNull String appPackageName);
 
     /**
      * Fetch all the Custom Audience corresponding to the buyers

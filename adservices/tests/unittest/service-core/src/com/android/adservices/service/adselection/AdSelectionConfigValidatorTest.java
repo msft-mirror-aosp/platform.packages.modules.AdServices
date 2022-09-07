@@ -62,7 +62,6 @@ public class AdSelectionConfigValidatorTest {
             String.format(
                     "Invalid object of type %s. The violations are:",
                     AdSelectionConfig.class.getName());
-
     private final AdSelectionConfig.Builder mAdSelectionConfigBuilder =
             AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                     .setSeller(SELLER_VALID)
@@ -183,7 +182,6 @@ public class AdSelectionConfigValidatorTest {
 
     @Test
     public void testVerifyInconsistentSellerUrls() {
-
         AdSelectionConfig adSelectionConfig =
                 mAdSelectionConfigBuilder
                         .setDecisionLogicUri(DECISION_LOGIC_URI_INCONSISTENT)
@@ -223,6 +221,7 @@ public class AdSelectionConfigValidatorTest {
 
     @Test
     public void testVerifyTrustedScoringSignalsUriIsNotHTTPS() {
+
         AdSelectionConfig adSelectionConfig =
                 mAdSelectionConfigBuilder
                         .setTrustedScoringSignalsUri(Uri.parse("http://google.com"))
@@ -241,6 +240,7 @@ public class AdSelectionConfigValidatorTest {
 
     @Test
     public void testVerifyInconsistentSellerUrlsByPrefix() {
+
         AdSelectionConfig adSelectionConfig =
                 mAdSelectionConfigBuilder
                         .setSeller(SELLER_VALID_WITH_PREFIX)

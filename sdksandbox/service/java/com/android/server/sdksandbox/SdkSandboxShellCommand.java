@@ -23,6 +23,7 @@ import android.os.Binder;
 import android.os.Process;
 import android.os.UserHandle;
 
+import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.BasicShellCommandHandler;
 import com.android.sdksandbox.ISdkSandboxService;
 
@@ -34,18 +35,32 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
 
     private final SdkSandboxManagerService mService;
     private final Context mContext;
+    private final Injector mInjector;
 
     private int mUserId = UserHandle.CURRENT.getIdentifier();
     private CallingInfo mCallingInfo;
 
-    SdkSandboxShellCommand(SdkSandboxManagerService service, Context context) {
+    static class Injector {
+        int getCallingUid() {
+            return Binder.getCallingUid();
+        }
+    }
+
+    @VisibleForTesting
+    SdkSandboxShellCommand(SdkSandboxManagerService service, Context context, Injector injector) {
         mService = service;
         mContext = context;
+        mInjector = injector;
+    }
+
+    SdkSandboxShellCommand(SdkSandboxManagerService service, Context context) {
+        this(service, context, new Injector());
     }
 
     @Override
     public int onCommand(String cmd) {
-        int callingUid = Binder.getCallingUid();
+        int callingUid = mInjector.getCallingUid();
+
         if (callingUid != Process.ROOT_UID && callingUid != Process.SHELL_UID) {
             throw new SecurityException("sdk_sandbox shell command is only callable by ADB");
         }
@@ -62,6 +77,9 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
                         break;
                     case "stop":
                         result = runStop();
+                        break;
+                    case "set-state":
+                        result = runSetState();
                         break;
                     default:
                         result = handleDefaultCommands(cmd);
@@ -124,12 +142,14 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
 
         private final CountDownLatch mLatch = new CountDownLatch(1);
         private boolean mSuccess = false;
+        private ISdkSandboxService mService;
         public static final int SANDBOX_BIND_TIMEOUT_S = 5;
 
         @Override
         public void onBindingSuccessful(ISdkSandboxService service) {
-            mLatch.countDown();
             mSuccess = true;
+            mService = service;
+            mLatch.countDown();
         }
 
         @Override
@@ -157,6 +177,10 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
                 return false;
             }
         }
+
+        private ISdkSandboxService getService() {
+            return mService;
+        }
     }
 
     private int runStart() {
@@ -171,8 +195,20 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
                 new LatchSandboxServiceConnectionCallback();
 
         mService.startSdkSandbox(mCallingInfo, callback);
-
-        return callback.isSuccessful() ? 0 : -1;
+        if (callback.isSuccessful()) {
+            ISdkSandboxService service = callback.getService();
+            if (mService.isSdkSandboxDisabled(service)) {
+                getErrPrintWriter().println("Error: SDK sandbox is disabled.");
+                mService.stopSdkSandboxService(
+                        mCallingInfo,
+                        "Shell command `sdk_sandbox start` failed due to sandbox disabled.");
+                return -1;
+            }
+            return 0;
+        }
+        getErrPrintWriter()
+                .println("Error: Could not start SDK sandbox for " + mCallingInfo.getPackageName());
+        return -1;
     }
 
     private int runStop() {
@@ -183,6 +219,25 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
             return -1;
         }
         mService.stopSdkSandboxService(mCallingInfo, "Shell command 'sdk_sandbox stop' issued");
+        return 0;
+    }
+
+    private int runSetState() {
+        String opt;
+        if ((opt = getNextOption()) != null) {
+            switch (opt) {
+                case "--enabled":
+                    mService.forceEnableSandbox();
+                    break;
+                case "--reset":
+                    mService.clearSdkSandboxState();
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unknown argument: " + opt);
+            }
+        } else {
+            throw new IllegalArgumentException("No argument supplied to `sdk_sandbox set-state`");
+        }
         return 0;
     }
 
@@ -202,5 +257,11 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
         pw.println("        Stop the SDK sandbox for the app <PACKAGE>. Options are:");
         pw.println("        --user <USER_ID> | current: Specify user for app; uses current user");
         pw.println("            if not specified");
+        pw.println();
+        pw.println("    set-state [--enabled | --reset]");
+        pw.println("        Sets the SDK sandbox state for testing purposes. Options are:");
+        pw.println("        --enabled: Sets the state to enabled");
+        pw.println("        --reset: Resets the state. It will be calculated the next time an");
+        pw.println("                 SDK is loaded");
     }
 }

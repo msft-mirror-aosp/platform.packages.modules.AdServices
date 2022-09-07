@@ -22,10 +22,8 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="1644434244130657749">"Колдонмого AdServices Attribution API\'лерин пайдаланууга мүмкүнчүлүк берет."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="2766614780488510189">"AdServices Custom Audience API\'син колдонуу мүмкүнчүлүгү"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"Колдонмого AdServices Custom Audience API\'син пайдаланууга мүмкүнчүлүк берет."</string>
-    <!-- no translation found for permlab_accessAdServicesAdId (2754825914769538156) -->
-    <skip />
-    <!-- no translation found for permdesc_accessAdServicesAdId (7717770480967762044) -->
-    <skip />
+    <string name="permlab_accessAdServicesAdId" msgid="2754825914769538156">"AdId API\'син колдонуу мүмкүнчүлүгү"</string>
+    <string name="permdesc_accessAdServicesAdId" msgid="7717770480967762044">"Колдонмого AdId API\'сине кирүүгө мүмкүнчүлүк берет."</string>
     <string name="permlab_accessAdServicesConsent" msgid="3203633397142568707">"AdServices Consent API\'син колдонуу мүмкүнчүлүгү"</string>
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Колдонмого AdServices Consent API\'син пайдаланууга мүмкүнчүлүк берет."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID API\'син колдонуу мүмкүнчүлүгү"</string>
@@ -34,72 +32,63 @@
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Колдонмого App Set ID API\'cин пайдаланууга мүмкүнчүлүк берет."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service API\'син колдонуу мүмкүнчүлүгү"</string>
     <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"Колдонмого Consent Service API\'cин пайдаланууга мүмкүнчүлүк берет."</string>
+    <string name="permlab_modifyAdServicesState" msgid="3594653261299518914">"AdService кызматынын иштетүү абалын өзгөртүү API\'сине кирүү"</string>
+    <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Колдонмого AdService кызматынын иштетүү абалын өзгөртүү API\'cин пайдаланууга мүмкүнчүлүк берет."</string>
+    <string name="permlab_accessAdServicesState" msgid="482058883975394398">"AdService кызматынын иштетүү абалынын API\'сине кирүү"</string>
+    <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Колдонмого AdService кызматынын иштетүү абалынын API\'син пайдаланууга мүмкүнчүлүк берет."</string>
     <string name="app_label" msgid="5985320129629013968">"Android Тутуму"</string>
-    <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"Privacy Sandbox бета версиясы"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"Privacy Sandbox бета версиясы"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"Privacy Sandbox бета версиясын өчүрүү/күйгүзүү"</string>
-    <string name="settingsUI_main_view_title" msgid="255982490790282252">"Android\'деги жарнамалардын купуялыгынын бета версиясы"</string>
-    <string name="settingsUI_main_view_subtitle" msgid="3380585883687237827">"Колдонмолордун арасында көз салууну чектеген жаңы Privacy Sandbox тутумун сынап көрүңүз"</string>
-    <string name="settingsUI_main_view_info_text1" msgid="8353580266621706164">"Privacy Sandbox кандайча иштейт"</string>
-    <string name="settingsUI_main_view_info_text2" msgid="5144888171043725329">"Сизге жага турган жарнамаларды көрсөтүү үчүн маалымат Privacy Sandbox\'то жыйналат, бирок өздүгүңүздү же түзмөгүңүздү аныктаган маалыматсыз бөлүшүлөт."</string>
-    <string name="settingsUI_main_view_info_text3" msgid="9106658161862318732">"Privacy Sandbox\'то кандай маалымат сакталат?"</string>
-    <string name="settingsUI_main_view_info_text4" msgid="5819359066240454954">"•  Жалпы кызыккан нерселер"</string>
-    <string name="settingsUI_main_view_info_text5" msgid="6064832868440367397">"Android сиз пайдаланган колдонмолордун негизинде бул маалыматты түзүп, Privacy Sandbox\'ко кошот. Мисалы, жалпы кызыккан нерселериңиздин бири \"Спорт\" болушу мүмкүн. \n\nКызыккан нерселериңиздин тизмесин Купуялык параметрлериңизден көрүп, жакпагандарын бөгөттөй аласыз."</string>
-    <string name="settingsUI_main_view_info_text6" msgid="3406976290919982143">"•  Өзгөчө кызыгууну жараткан нерселер"</string>
-    <string name="settingsUI_main_view_info_text7" msgid="210269084665708892">"Колдонмолоруңуз аларды пайдаланууңуздун негизинде бул маалыматты түзүп, Privacy Sandbox\'ко кошот. Мисалы, спорттук бут кийим сатып алуу үчүн пайдаланган колдонмоңуз sport_running деген белгини кошуусу мүмкүн.\n\nКупуялык параметрлериңизден андай колдонмолордун тизмесин көрүп, каалаган колдонмоңуздун Privacy Snadbox\'ко маалымат кошуу аракетин бөгөттөй аласыз."</string>
-    <string name="settingsUI_topics_view_title" msgid="7437641813424176118">"Кызыккан нерселерди башкаруу"</string>
-    <string name="settingsUI_topics_view_subtitle" msgid="5347912133908026725">"Android\'дин Privacy Sandbox технологиясы колдонмолор арасында көз салууну чектеп, бирок колдонмолорго сизге жага турган жарнамаларды көрсөтүү мүмкүнчүлүгүн берет. Android бул маалыматты жарнамачылар менен бөлүшөт, бирок аларга өздүгүңүздү же түзмөгүңүздү аныктаган маалымат берилбейт.\n\nПайдаланган колдонмолоруңуздун негизинде Android жарнамалар үчүн жалпы кызыккан нерселериңиздин тизмесин түзүп, аны жаңыртып турат. Эгер кызыккан нерсени бөгөттөсөңүз, аны бөгөттөн чыгармайынча тизмеге кайра кошулбайт. Бирок айрым окшош жарнамаларды көрө бересиз."</string>
-    <string name="settingsUI_topics_view_info_text1" msgid="6729245512525985403">"Жарнамалар үчүн жалпы кызыккан нерселер"</string>
-    <string name="settingsUI_topics_view_info_text2" msgid="8355913397424818046">"Android бул кызыккан нерселерди сиз пайдаланган колдонмолордун негизинде түзөт.\n\nМисалы, эгер түзмөгүңүздө бир нече спорттук колдонмо бар болсо, Android \"Спортту\" кызыккан нерсе катары Privacy Sandbox\'ко кошуусу мүмкүн.\n\nКийинчерээк бул маалымат жарнамачылар менен бөлүшүлөт, бирок аларга өздүгүңүздү же түзмөгүңүздү аныктаган маалымат берилбейт."</string>
-    <string name="settingsUI_apps_key" msgid="5279102708260885695">"apps_preference"</string>
-    <string name="settingsUI_apps_title" msgid="2177966577556486280">"Өзгөчө кызыгууну жараткан колдонмолоруңуз"</string>
-    <string name="settingsUI_apps_summary" msgid="2382082513059909726">"Өзгөчө кызыгууну жараткан колдонмолорду башкарыңыз"</string>
-    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Сиз бөгөттөгөн колдонмолор"</string>
-    <string name="settingsUI_apps_view_title" msgid="3615627092403761282">"Колдонмолорду тескөө"</string>
-    <string name="settingsUI_apps_view_subtitle" msgid="5257332567222983503">"Колдонулганына жараша айрым колдонмолор сиз кызыккан жарнамаларды Privacy Sandbox\'ко сактап коёт. Android колдонмолордун тизмесин жаңыртып турат, ал эми сиз аны көрүп жана түзөтө аласыз.\n\nЭгер колдонмону бөгөттөп койсоңуз, ал сизди өзгөчө кызыктырган нерселерди кошпой калат. Аны бөгөттөн чыгармайынча, ал ушул тизмеге кошулбайт. Колдонмо буга чейин чогултуп койгон кызыктырган нерселер жок кылынат, бирок ылайыктуу жарнамаларды дагы деле көрүшүңүз мүмкүн."</string>
-    <string name="settingsUI_apps_view_no_apps_text" msgid="1056905761942948495">"Учурда көрсөтүлө турган колдонмолор жок"</string>
-    <string name="settingsUI_reset_apps_title" msgid="3308597019425923552">"Колдонмолор чогулткан маалыматты баштапкы абалга келтирүү"</string>
-    <string name="settingsUI_apps_view_info_text1" msgid="503353133396835755">"Өзгөчө кызыгууну жараткан жарнамалар"</string>
-    <string name="settingsUI_apps_view_info_text2" msgid="6562781312486257254">"Сиз пайдаланган айрым колдонмолор сизди өзгөчө кызыктырган жарнамалар тууралуу маалыматты топтоп, Privacy Sandbox\'ко кошушат.\n\nМисалы, чуркоо үчүн бут кийим сатып алган колдонмо sport_running энбелгисин кошуп коюшу мүмкүн.\n\nКийинчерээк Privacy Sandbox\'то топтолгон нерселер, сиз же түзмөгүңүз тууралуу маалыматты бербестен, жарнамачылар менен бөлүшүлөт. Сизге ылайыктуу жарнамалар көрүнө берет, бирок купуялыгыңыз мурункудан да жакшыраак корголот."</string>
-    <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="5700261138344146462">"Учурда көрсөтүлө турган бөгөттөлгөн колдонмолор жок"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Учурда көрсөтүү үчүн кызыккан нерселер жок"</string>
-    <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
-    <string name="settingsUI_topics_title" msgid="4024683469932819788">"Жалпы кызыккан нерселериңиз"</string>
-    <string name="settingsUI_topics_summary" msgid="3146101472984434355">"Жалпы кызыккан нерселериңизди башкарыңыз"</string>
-    <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"Жарнамалар үчүн жалпы кызыккан нерселерди башкаруу"</string>
+    <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Android\'деги жарнамалардын купуялыгынын бета версиясына кошулуңуз"</string>
+    <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android сизге жарнамаларды көрсөтүүнүн мындан да купуя жолдорун изилдеп жатат"</string>
+    <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Кененирээк"</string>
+    <string name="notificationUI_header_title_eu" msgid="4955298263079910371">"Android\'деги жарнамалардын купуялыгынын бета версиясы"</string>
+    <string name="notificationUI_container1_title_eu" msgid="8315199862119660570">"Эмне жаңылык"</string>
+    <string name="notificationUI_container1_body_text_eu" msgid="1700290522706948241">"Privacy Sandbox технологиясындагы жаңы купуялык функциялары аркылуу колдонмолор ылайыктуу жарнамаларды көрсөтө алат, бирок башка иштеп чыгуучулардын колдонмолорунда жана вебсайттарында жасаган аракеттериңиз тууралуу биле албайт."</string>
+    <string name="notificationUI_container1_control_text_eu" msgid="3158258148321255153">"Бул кандайча иштейт"</string>
+    <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Кантип катышуу керек"</string>
+    <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Бета версияны күйгүзсөңүз, колдонмолор сизге жарнамаларды көрсөтүүнүн жаңы купуя жолдорун сынай алат. Бул бета версияны каалаган убакта купуялык параметрлеринен өчүрө аласыз."</string>
+    <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Жок, рахмат"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"Ооба, кошулам"</string>
+    <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Катышканыңыз үчүн рахмат"</string>
+    <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Android\'деги жарнамалардын купуялыгынын бета версиясына катышып жатасыз. Түзмөгүңүздө Privacy Sandbox өчүрүлдү.\n\nКеңири маалымат алып же каалаган убакта бета версияны купуялык параметрлеринен өчүрө аласыз."</string>
+    <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Кошулбоону тандадыңыз"</string>
+    <string name="notificationUI_confirmation_decline_subtitle" msgid="4194388733937808440">"Жообуңуз үчүн рахмат. Түзмөгүңүздө Privacy Sandbox өчүрүлдү.\n\nЭгер оюңуз өзгөрсө же кеңири маалымат алгыңыз келсе, купуялык параметрлерине өтүңүз."</string>
+    <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"Купуялык параметрлери"</string>
+    <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"Түшүндүм"</string>
+    <string name="notificationUI_container2_title" msgid="3844342008598264655">"Бета версияга катышып жатасыз"</string>
+    <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Түзмөгүңүздө Privacy Sandbox күйгүзүлдү. Ал аркылуу колдонмолор сизге жарнамаларды көрсөтүүнүн жаңы купуя жолдорун сынай алышат. Бул бета версияны каалаган убакта купуялык параметрлеринен өчүрө аласыз."</string>
+    <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"Купуялык параметрлерин башкаруу"</string>
+    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Түшүндүм"</string>
+    <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Android\'дин Privacy Sandbox технологиясы колдонмолор сизге кызыктуу жарнамаларды көрсөтүү үчүн пайдалана турган жаңы функцияларды сунуштайт. Бул технологиялар түзмөктүн идентификаторлорун колдонбойт.\n\nAndroid жана колдонмолоруңуз сизге кызыктуу жарнамаларды аныктап, кызыккан нерселериңизди түзмөгүңүзгө убактылуу сактай алат. Ал аркылуу колдонмолор сизге жага турган жарнамаларды көрсөтөт, бирок башка иштеп чыгуучулардын колдонмолорунда жана вебсайттарында жасаган аракеттериңизге көз сала албайт."</string>
+    <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"Privacy Sandbox аркылуу жарнамаларды жекелештирүү"</string>
+    <string name="notificationUI_how_it_works_expanded_text3" msgid="603165966360369018">"•  Кызыккан нерселерди Android аныктайт"</string>
+    <string name="notificationUI_how_it_works_expanded_text4" msgid="3910573920883580609">"Android сиз пайдаланган колдонмолордун негизинде маал-маалы менен негизги кызыккан нерселериңизди (мисалы, \"Спорт\" же \"Саякат\") аныктап турат.\n\nКийинчерээк колдонмо Android\'дин уруксаты менен ал кызыккан нерселер аркылуу сизге ылайыктуу жарнамаларды көрсөтө алат.\n\nУчурдагы кызыккан нерселердин тизмесин купуялык параметрлеринен көрүп, жакпагандарын бөгөттөй аласыз."</string>
+    <string name="notificationUI_how_it_works_expanded_text5" msgid="7257714040472055781">"•  Кызыккан нерселерди колдонмолор аныктайт"</string>
+    <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"Колдонмолор кызыккан нерселериңизди аныктап, аларды Android\'ге убактылуу сактай алат. Мисалы, спорттук бут кийим сатып алуу үчүн пайдаланган колдонмо кызыккан нерсеңизди \"чуркоо марафондору\" катары аныкташы мүмкүн.\n\nКийинчерээк ушул кызыккан нерсенин негизинде башка колдонмо марафондорго тийиштүү жарнаманы көрсөтүшү мүмкүн.\n\nКупуялык параметрлеринен кызыккан нерселерди сактаган колдонмолордун тизмесин башкара аласыз."</string>
+    <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
+    <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Android\'деги жарнамалардын купуялыгынын бета версиясына катышыңыз"</string>
+    <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Privacy Sandbox"</string>
+    <string name="settingsUI_topics_title" msgid="5996189869721397937">"Android аныктаган кызыккан нерселер"</string>
+    <string name="settingsUI_apps_title" msgid="2772289096915264175">"Кызыккан нерселерди аныктаган колдонмолор"</string>
+    <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"Жарнамаларды талдоо"</string>
+    <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"Колдонмолор Privacy Sandbox аркылуу жарнамаларынын майнаптуулугун талдай алат. Ал үчүн жарнамачылар жарнамалары жана колдонмолордун арасындагы өз ара аракеттешүүлөрүңүз тууралуу маалыматты Android\'ге убактылуу сакташы мүмкүн. Алар сактай турган маалыматтын өлчөмү чектелген жана өчүрүлүп турат.\n\nКаалаган убакта Privacy Sandbox технологиясын өчүрүп, бул маалыматты жок кыла аласыз."</string>
+    <string name="settingsUI_topics_view_subtitle" msgid="6608135144119617292">"Android сиз пайдаланган колдонмолордун негизинде негизги кызыккан нерселериңизди маал-маалы менен аныктап турат. Колдонмолор Android\'дин уруксаты менен ал кызыккан нерселер аркылуу сизге ылайыктуу жарнамаларды көрсөтө алат.\n\nКызыккан нерсени бөгөттөсөңүз, ал бөгөттөн чыгарылмайынча тизмеге кошулбайт. Бирок айрым окшош жарнамаларды көрө бересиз."</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Бөгөттөө"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Бөгөттөн чыгаруу"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Бөгөттөлгөн кызыккан нерселериңиз"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Бардык кызыккан нерселерди баштапкы абалга келтирүү"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="5717377146633882375">"Учурда көрсөтүлө турган бөгөттөлгөн кызыккан нерселер жок"</string>
-    <string name="notificationUI_notification_content_eu" msgid="7419441022808120101">"Колдонмолордун арасында көз салууну чектөөчү жаңы функцияларды сыноо"</string>
-    <string name="notificationUI_header_title_eu" msgid="6822288197367284058">"Жарнамалардын купуялыгынын бета версиясына кошулуу"</string>
-    <string name="notificationUI_container3_title_eu" msgid="3157854074121291065">"Эмне кылыш керек?"</string>
-    <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Жок, рахмат"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="7294736040084958697">"Ооба, байкап көрөм"</string>
-    <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Катышканыңыз үчүн рахмат"</string>
-    <string name="notificationUI_confirmation_accept_subtitle" msgid="722290263168711051">"Privacy Sandbox бета версиясына катталдыңыз. \n\nКененирээк маалымат алып же бета версиядан Купуялык параметрлеринен каалаган убакта чыгып кетсеңиз болот."</string>
-    <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Кошулбоону тандадыңыз"</string>
-    <string name="notificationUI_confirmation_decline_subtitle" msgid="1869322730722065768">"Жообуңуз үчүн рахмат. Privacy Sandbox бета версиясына кошулган жоксуз.\n\nЭгер оюңузду өзгөртсөңүз же кененирээк маалымат алгыңыз келсе, купуялык параметрлерине өтүңүз."</string>
-    <string name="notificationUI_notification_content" msgid="2096372976024736172">"Колдонмолордун арасында көз салууну чектөөчү жаңы функцияларды сынап жатасыз"</string>
-    <string name="notificationUI_header_title" msgid="857744302422337933">"Android\'ге колдонмолор арасында көз салуу аракетин чектөөгө жардам берип жатасыз"</string>
-    <string name="notificationUI_header_subtitle" msgid="522289584167376388">"Android жарнамачылардын колдонмолордун арасында көз салуу аракетин чектей турган жаңы функцияларды сынап жатат"</string>
-    <string name="notificationUI_container1_title" msgid="3837529978480615552">"Колдонмолордун арасында көз салуу деген эмне?"</string>
-    <string name="notificationUI_container1_body_text" msgid="2564452110982505130">"Бүгүн колдонмонун пайдаланылышы тууралуу маалыматты түзмөгүңүз менен оңой эле байланыштырууга, андан кийин жарнамалоо максатында колдонмолор менен бөлүшүүгө болот."</string>
-    <string name="notificationUI_container2_title" msgid="4796199061758878885">"Android эмне кылып жатат"</string>
-    <string name="notificationUI_container2_body_text" msgid="7717896223210525953">"Android өздүгүңүздү же түзмөгүңүздү аныктабай туруп, жарнамалоо маалыматын коопсуз сактап жана бөлүшө турган жаңы Privacy Sandbox технологиясын сынап жатат. \n\nБул жаңы тутум маалыматтын түздөн-түз башка колдонмолорго өткөрүлүшүнүн алдын алууга жардам берет. Бирок алар сизге жага турган жарнамаларды көрсөтө берет."</string>
-    <string name="notificationUI_container2_control_text" msgid="3031227311095645064">"Бул кандайча иштейт"</string>
-    <string name="notificationUI_container3_title" msgid="1283794406634157611">"Кантип жардам берип жатасыз"</string>
-    <string name="notificationUI_container3_body_text" msgid="2636703086913037594">"Көрүнүп жаткан жарнамалардагы өзгөртүүлөрдү байкабаганыңыз менен, бета программага катышуу Android\'ге убакыттын өтүшү менен колдонмолордун ортосундагы көз салууну чектөөгө жардам берет. Купуялык параметрлерине өтүп, бета программага катышууну каалаган убакта токтотуп койсоңуз болот."</string>
-    <string name="notificationUI_left_control_button_text" msgid="6459461402253858770">"Купуялык параметрлери"</string>
-    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Түшүндүм"</string>
-    <string name="notificationUI_how_it_works_expanded_text1" msgid="1753701052925879129">"Privacy Sandbox кандайча иштейт"</string>
-    <string name="notificationUI_how_it_works_expanded_text2" msgid="3117263986288195274">"Сизге жага турган жарнамаларды көрсөтүү үчүн маалымат Privacy Sandbox\'то жыйналат, бирок өздүгүңүздү же түзмөгүңүздү аныктаган маалыматсыз бөлүшүлөт."</string>
-    <string name="notificationUI_how_it_works_expanded_text3" msgid="7270822532577167752">"Privacy Sandbox\'то маалыматтын кайсы түрлөрү сакталат?"</string>
-    <string name="notificationUI_how_it_works_expanded_text4" msgid="5609475052636889205">"•  Жалпы кызыккан нерселер"</string>
-    <string name="notificationUI_how_it_works_expanded_text5" msgid="6757375506547548599">"Android\'сиз пайдаланган колдонмолордун негизинде бул маалыматты түзүп, Privacy Sandbox\'ко кошот. Мисалы, жалпы кызыккан нерселериңиздин бири \"Спорт\" болушу мүмкүн. \n\nКызыккан нерселериңиздин тизмесин Купуялык параметрлериңизден көрүп, жакпагандарын бөгөттөй аласыз."</string>
-    <string name="notificationUI_how_it_works_expanded_text6" msgid="2863877874268072458">"•  Өзгөчө кызыгууну жараткан нерселер"</string>
-    <string name="notificationUI_how_it_works_expanded_text7" msgid="2140515900209351523">"Колдонмолоруңуз аларды пайдаланууңуздун негизинде бул маалыматты түзүп, Privacy Sandbox\'ко кошот. Мисалы, спорттук бут кийим сатып алуу үчүн пайдаланган колдонмоңуз sport_running деген энбелгини кошуусу мүмкүн.\n\nКупуялык параметрлериңизден андай колдонмолордун тизмесин көрүп, каалаган колдонмоңуздун sandbox\'ко маалымат кошуу аракетин бөгөттөй аласыз."</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Учурда көрсөтүү үчүн кызыккан нерселер жок"</string>
+    <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
+    <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android\'деги жарнамалардын купуялыгынын бета версиясы колдонмолор сизге кызыктуу жарнамаларды көрсөтүү үчүн пайдалана турган жаңы функцияларды сунуштайт. Бул технологиялар түзмөктүн идентификаторлорун колдонбойт.\n\nAndroid сизге кызыктуу жарнамаларды аныктап, бул кызыккан нерселериңизди түзмөгүңүзгө убактылуу сактай алат. Ал аркылуу колдонмолор сизге ылайыктуу жарнамаларды көрсөтөт, бирок башка иштеп чыгуучулардын колдонмолорунда жана вебсайттарында жасаган аракеттериңизге көз сала албайт."</string>
+    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
+    <skip />
+    <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Колдонмолор кызыккан нерселериңизди аныктап, аларды Android\'ге убактылуу сактай алат. Кийинчерээк башка колдонмо сизге бул кызыккан нерселердин негизинде жарнама көрсөтө алат.\n\nЭгер колдонмону бөгөттөсөңүз, ал мындан кийин кызыккан нерселериңизди аныктабай калат. Аны бөгөттөн чыгармайынча, ал ушул колдонмолордун тизмесине кошулбайт. Колдонмо буга чейин аныктаган кызыккан нерселер өчүрүлөт, бирок ылайыктуу жарнамаларды дагы деле көрүшүңүз мүмкүн."</string>
+    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Сиз бөгөттөгөн колдонмолор"</string>
+    <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Колдонмолор аныктаган кызыккан нерселерди баштапкы абалга келтирүү"</string>
+    <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Учурда бир да колдонмо кызыккан нерселерди сунуштаган жок"</string>
+    <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
+    <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android\'деги жарнамалардын купуялыгынын бета версиясы колдонмолор сизге кызыктуу жарнамаларды көрсөтүү үчүн пайдалана турган жаңы функцияларды сунуштайт. Бул технологиялар түзмөктүн идентификаторлорун колдонбойт.\n\nКолдонмолор сизге кызыктуу жарнамаларды аныктап, бул кызыккан нерселериңизди түзмөгүңүзгө убактылуу сактай алат. Ал аркылуу колдонмолор сизге ылайыктуу жарнамаларды көрсөтөт, бирок башка иштеп чыгуучулардын колдонмолорунда жана вебсайттарында жасаган аракеттериңизге көз сала албайт."</string>
+    <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Бөгөттөлгөн колдонмолоруңуз жок"</string>
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Бөгөттөлгөн кызыккан нерселериңиз жок"</string>
     <string name="topic10001" msgid="1636806320891333775">"Искусство жана көңүл ачуу"</string>
     <string name="topic10002" msgid="1226367977754287428">"Актёрдук жана театр"</string>
     <string name="topic10003" msgid="6949890838957814881">"Аниме жана Манга"</string>

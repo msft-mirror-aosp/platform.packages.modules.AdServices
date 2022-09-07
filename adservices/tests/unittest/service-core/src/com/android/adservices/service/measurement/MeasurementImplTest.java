@@ -68,6 +68,7 @@ import android.view.MotionEvent;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
@@ -77,16 +78,18 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.registration.SourceFetcher;
 import com.android.adservices.service.measurement.registration.SourceRegistration;
 import com.android.adservices.service.measurement.registration.TriggerFetcher;
 import com.android.adservices.service.measurement.registration.TriggerRegistration;
-import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -106,16 +109,22 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /** Unit tests for {@link MeasurementImpl} */
 @SmallTest
 public final class MeasurementImplTest {
+    @Rule
+    public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
+            new TestableDeviceConfig.TestableDeviceConfigRule();
 
     private static final Context DEFAULT_CONTEXT = ApplicationProvider.getApplicationContext();
     private static final Uri URI_WITHOUT_APP_SCHEME = Uri.parse("com.example.abc");
     private static final Uri DEFAULT_URI = Uri.parse("android-app://com.example.abc");
     private static final Uri REGISTRATION_URI_1 = Uri.parse("https://foo.com/bar?ad=134");
     private static final Uri REGISTRATION_URI_2 = Uri.parse("https://foo.com/bar?ad=256");
+    private static final String DEFAULT_ENROLLMENT = "enrollment-id";
     private static final Uri WEB_DESTINATION = Uri.parse("https://web-destination.com");
     private static final Uri WEB_DESTINATION_WITH_SUBDOMAIN =
             Uri.parse("https://subdomain.web-destination.com");
@@ -159,7 +168,7 @@ public final class MeasurementImplTest {
     private static final TriggerRegistration VALID_TRIGGER_REGISTRATION =
             new TriggerRegistration.Builder()
                     .setTopOrigin(Uri.parse("https://foo.com"))
-                    .setReportingOrigin(Uri.parse("https://bar.com"))
+                    .setEnrollmentId(DEFAULT_ENROLLMENT)
                     .setEventTriggers(EVENT_TRIGGERS)
                     .setAggregateTriggerData(
                             "[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\"],"
@@ -170,26 +179,26 @@ public final class MeasurementImplTest {
                     .build();
     private static final SourceRegistration VALID_SOURCE_REGISTRATION_1 =
             new com.android.adservices.service.measurement.registration.SourceRegistration.Builder()
-                    .setSourceEventId(1L) //
-                    .setSourcePriority(100L) //
+                    .setSourceEventId(1L)
+                    .setSourcePriority(100L)
                     .setAppDestination(Uri.parse("android-app://com.destination"))
                     .setWebDestination(Uri.parse("https://web-destination.com"))
-                    .setExpiry(8640000010L) //
-                    .setInstallAttributionWindow(841839879274L) //
-                    .setInstallCooldownWindow(8418398274L) //
-                    .setReportingOrigin(Uri.parse("https://example.com")) //
+                    .setExpiry(8640000010L)
+                    .setInstallAttributionWindow(841839879274L)
+                    .setInstallCooldownWindow(8418398274L)
+                    .setEnrollmentId(DEFAULT_ENROLLMENT)
                     .setTopOrigin(Uri.parse("android-app://com.source"))
                     .build();
     private static final SourceRegistration VALID_SOURCE_REGISTRATION_2 =
             new com.android.adservices.service.measurement.registration.SourceRegistration.Builder()
-                    .setSourceEventId(2) //
-                    .setSourcePriority(200L) //
+                    .setSourceEventId(2)
+                    .setSourcePriority(200L)
                     .setAppDestination(Uri.parse("android-app://com.destination2"))
                     .setWebDestination(Uri.parse("https://web-destination2.com"))
-                    .setExpiry(865000010L) //
-                    .setInstallAttributionWindow(841839879275L) //
-                    .setInstallCooldownWindow(7418398274L) //
-                    .setReportingOrigin(Uri.parse("https://example2.com")) //
+                    .setExpiry(865000010L)
+                    .setInstallAttributionWindow(841839879275L)
+                    .setInstallCooldownWindow(7418398274L)
+                    .setEnrollmentId(DEFAULT_ENROLLMENT)
                     .setTopOrigin(Uri.parse("android-app://com.source2"))
                     .build();
     private static final WebSourceParams INPUT_SOURCE_REGISTRATION_1 =
@@ -226,6 +235,12 @@ public final class MeasurementImplTest {
     private MeasurementImpl mMeasurementImpl;
     @Mock
     ITransaction mTransaction;
+    @Mock
+    EnrollmentDao mEnrollmentDao;
+
+    private static EnrollmentData getEnrollment(String enrollmentId) {
+        return new EnrollmentData.Builder().setEnrollmentId(enrollmentId).build();
+    }
 
     class FakeDatastoreManager extends DatastoreManager {
 
@@ -307,6 +322,8 @@ public final class MeasurementImplTest {
                                 mTriggerFetcher,
                                 mClickVerifier));
         doReturn(true).when(mClickVerifier).isInputEventVerifiable(any(), anyLong());
+        when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(any()))
+                .thenReturn(getEnrollment(DEFAULT_ENROLLMENT));
     }
 
     @Test
@@ -320,10 +337,10 @@ public final class MeasurementImplTest {
         ArgumentCaptor<ThrowingCheckedConsumer> insertionLogicExecutorCaptor =
                 ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
 
-        when(mMeasurementDao.countDistinctDestinationsPerPublisherXAdTechInActiveSource(
+        when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
                 any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
                         .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctAdTechsPerPublisherXDestinationInSource(
+        when(mMeasurementDao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
                 any(), anyInt(), any(), any(), anyLong(), anyLong()))
                         .thenReturn(Integer.valueOf(0));
         DatastoreManager datastoreManager = spy(new FakeDatastoreManager());
@@ -341,7 +358,7 @@ public final class MeasurementImplTest {
 
         long eventTime = System.currentTimeMillis();
         // Disable Impression Noise
-        doReturn(Collections.emptyList()).when(measurementImpl).getSourceEventReports(any());
+        doReturn(Collections.emptyList()).when(measurementImpl).generateFakeEventReports(any());
         final int result = measurementImpl.register(registrationRequest, eventTime);
 
         // Assert
@@ -351,9 +368,9 @@ public final class MeasurementImplTest {
         verify(datastoreManager, times(2))
                 .runInTransaction(insertionLogicExecutorCaptor.capture());
         verify(mMeasurementDao, times(4))
-                .countDistinctDestinationsPerPublisherXAdTechInActiveSource(
+                .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
-        verify(mMeasurementDao, times(4)).countDistinctAdTechsPerPublisherXDestinationInSource(
+        verify(mMeasurementDao, times(4)).countDistinctEnrollmentsPerPublisherXDestinationInSource(
                 any(), anyInt(), any(), any(), anyLong(), anyLong());
         verify(mTriggerFetcher, never()).fetchTrigger(any());
 
@@ -380,7 +397,7 @@ public final class MeasurementImplTest {
         when(mSourceFetcher.fetchSource(any())).thenReturn(Optional.empty());
 
         // Disable Impression Noise
-        doReturn(Collections.emptyList()).when(mMeasurementImpl).getSourceEventReports(any());
+        doReturn(Collections.emptyList()).when(mMeasurementImpl).generateFakeEventReports(any());
         final int result =
                 mMeasurementImpl.register(SOURCE_REGISTRATION_REQUEST, System.currentTimeMillis());
         // STATUS_IO_ERROR is expected when fetchSource returns Optional.empty()
@@ -400,10 +417,10 @@ public final class MeasurementImplTest {
         ArgumentCaptor<ThrowingCheckedConsumer> insertionLogicExecutorCaptor =
                 ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
 
-        when(mMeasurementDao.countDistinctDestinationsPerPublisherXAdTechInActiveSource(
+        when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
                 any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
                         .thenReturn(Integer.valueOf(100));
-        when(mMeasurementDao.countDistinctAdTechsPerPublisherXDestinationInSource(
+        when(mMeasurementDao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
                 any(), anyInt(), any(), any(), anyLong(), anyLong()))
                         .thenReturn(Integer.valueOf(0));
         DatastoreManager datastoreManager = spy(new FakeDatastoreManager());
@@ -421,7 +438,7 @@ public final class MeasurementImplTest {
 
         long eventTime = System.currentTimeMillis();
         // Disable Impression Noise
-        doReturn(Collections.emptyList()).when(measurement).getSourceEventReports(any());
+        doReturn(Collections.emptyList()).when(measurement).generateFakeEventReports(any());
         final int result = measurement.register(registrationRequest, eventTime);
 
         // Assert
@@ -431,9 +448,9 @@ public final class MeasurementImplTest {
         verify(datastoreManager, never())
                 .runInTransaction(insertionLogicExecutorCaptor.capture());
         verify(mMeasurementDao, times(2))
-                .countDistinctDestinationsPerPublisherXAdTechInActiveSource(
+                .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
-        verify(mMeasurementDao, never()).countDistinctAdTechsPerPublisherXDestinationInSource(
+        verify(mMeasurementDao, never()).countDistinctEnrollmentsPerPublisherXDestinationInSource(
                 any(), anyInt(), any(), any(), anyLong(), anyLong());
         verify(mTriggerFetcher, never()).fetchTrigger(any());
     }
@@ -449,10 +466,10 @@ public final class MeasurementImplTest {
         ArgumentCaptor<ThrowingCheckedConsumer> insertionLogicExecutorCaptor =
                 ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
 
-        when(mMeasurementDao.countDistinctDestinationsPerPublisherXAdTechInActiveSource(
+        when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
                 any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
                         .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctAdTechsPerPublisherXDestinationInSource(
+        when(mMeasurementDao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
                 any(), anyInt(), any(), any(), anyLong(), anyLong()))
                         .thenReturn(Integer.valueOf(100))
                         .thenReturn(Integer.valueOf(0));
@@ -471,7 +488,7 @@ public final class MeasurementImplTest {
 
         long eventTime = System.currentTimeMillis();
         // Disable Impression Noise
-        doReturn(Collections.emptyList()).when(measurement).getSourceEventReports(any());
+        doReturn(Collections.emptyList()).when(measurement).generateFakeEventReports(any());
         final int result = measurement.register(registrationRequest, eventTime);
 
         // Assert
@@ -481,9 +498,9 @@ public final class MeasurementImplTest {
         verify(datastoreManager, times(1))
                 .runInTransaction(insertionLogicExecutorCaptor.capture());
         verify(mMeasurementDao, times(4))
-                .countDistinctDestinationsPerPublisherXAdTechInActiveSource(
+                .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
-        verify(mMeasurementDao, times(3)).countDistinctAdTechsPerPublisherXDestinationInSource(
+        verify(mMeasurementDao, times(3)).countDistinctEnrollmentsPerPublisherXDestinationInSource(
                 any(), anyInt(), any(), any(), anyLong(), anyLong());
         verify(mTriggerFetcher, never()).fetchTrigger(any());
 
@@ -564,6 +581,8 @@ public final class MeasurementImplTest {
                                         DEFAULT_CONTEXT.getAttributionSource().getPackageName())
                                 .setDomainUris(Collections.emptyList())
                                 .setOriginUris(Collections.emptyList())
+                                .setStart(Instant.ofEpochMilli(Long.MIN_VALUE))
+                                .setEnd(Instant.ofEpochMilli(Long.MAX_VALUE))
                                 .build());
         assertEquals(STATUS_SUCCESS, result);
     }
@@ -596,39 +615,10 @@ public final class MeasurementImplTest {
                                 .setOriginUris(Collections.singletonList(DEFAULT_URI))
                                 .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
                                 .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
+                                .setStart(Instant.ofEpochMilli(Long.MIN_VALUE))
+                                .setEnd(Instant.ofEpochMilli(Long.MAX_VALUE))
                                 .build());
         assertEquals(STATUS_SUCCESS, result);
-    }
-    @Test
-    public void testDeleteRegistrations_invalidParameterStartButNoEnd() {
-        final int result =
-                mMeasurementImpl.deleteRegistrations(
-                        new DeletionParam.Builder()
-                                .setPackageName(
-                                        DEFAULT_CONTEXT.getAttributionSource().getPackageName())
-                                .setDomainUris(Collections.emptyList())
-                                .setOriginUris(Collections.emptyList())
-                                .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
-                                .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
-                                .setStart(Instant.now())
-                                .build());
-        assertEquals(STATUS_INVALID_ARGUMENT, result);
-    }
-
-    @Test
-    public void testDeleteRegistrations_invalidParameterEndButNoStart() {
-        final int result =
-                mMeasurementImpl.deleteRegistrations(
-                        new DeletionParam.Builder()
-                                .setPackageName(
-                                        DEFAULT_CONTEXT.getAttributionSource().getPackageName())
-                                .setDomainUris(Collections.emptyList())
-                                .setOriginUris(Collections.emptyList())
-                                .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
-                                .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
-                                .setEnd(Instant.now())
-                                .build());
-        assertEquals(STATUS_INVALID_ARGUMENT, result);
     }
 
     @Test
@@ -643,6 +633,8 @@ public final class MeasurementImplTest {
                                 .setOriginUris(Collections.emptyList())
                                 .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
                                 .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
+                                .setStart(Instant.MIN)
+                                .setEnd(Instant.MAX)
                                 .build());
         assertEquals(STATUS_INTERNAL_ERROR, result);
     }
@@ -654,7 +646,6 @@ public final class MeasurementImplTest {
         // Creating source for easy comparison
         Source sampleSource =
                 SourceFixture.getValidSourceBuilder()
-                        .setAdTechDomain(BaseUriExtractor.getBaseUri(REGISTRATION_URI_1))
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setExpiryTime(eventTime + TimeUnit.SECONDS.toMillis(expiry))
                         .setEventTime(eventTime)
@@ -670,14 +661,14 @@ public final class MeasurementImplTest {
                                 .setAppDestination(sampleSource.getAppDestination())
                                 .setTopOrigin(sampleSource.getPublisher())
                                 .setExpiry(expiry)
-                                .setReportingOrigin(sampleSource.getAdTechDomain())
+                                .setEnrollmentId(DEFAULT_ENROLLMENT)
                                 .build());
         doReturn(Optional.of(sourceRegistrations)).when(mSourceFetcher).fetchSource(any());
 
-        when(mMeasurementDao.countDistinctDestinationsPerPublisherXAdTechInActiveSource(
+        when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
                 any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
                         .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctAdTechsPerPublisherXDestinationInSource(
+        when(mMeasurementDao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
                 any(), anyInt(), any(), any(), anyLong(), anyLong()))
                         .thenReturn(Integer.valueOf(0));
 
@@ -705,14 +696,13 @@ public final class MeasurementImplTest {
                         eventTime);
         assertEquals(STATUS_SUCCESS, result);
         ArgumentCaptor<Source> sourceArgs = ArgumentCaptor.forClass(Source.class);
-        verify(measurementImpl).getSourceEventReports(sourceArgs.capture());
+        verify(measurementImpl).generateFakeEventReports(sourceArgs.capture());
         Source capturedSource = sourceArgs.getValue();
         assertEquals(sampleSource.getSourceType(), capturedSource.getSourceType());
         assertEquals(sampleSource.getEventId(), capturedSource.getEventId());
         assertEquals(sampleSource.getEventTime(), capturedSource.getEventTime());
         assertEquals(sampleSource.getAggregateSource(), capturedSource.getAggregateSource());
         assertEquals(sampleSource.getAppDestination(), capturedSource.getAppDestination());
-        assertEquals(sampleSource.getAdTechDomain(), capturedSource.getAdTechDomain());
         assertEquals(sampleSource.getPublisher(), capturedSource.getPublisher());
         assertEquals(sampleSource.getPriority(), capturedSource.getPriority());
 
@@ -730,7 +720,6 @@ public final class MeasurementImplTest {
                                 .setEventTime(eventTime)
                                 .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(20))
                                 .setSourceType(Source.SourceType.NAVIGATION)
-                                .setAdTechDomain(BaseUriExtractor.getBaseUri(REGISTRATION_URI_1))
                                 .setAppDestination(DEFAULT_URI)
                                 .setPublisher(DEFAULT_URI)
                                 .build());
@@ -739,7 +728,7 @@ public final class MeasurementImplTest {
         SourceFetcher mockSourceFetcher = Mockito.mock(SourceFetcher.class);
         TriggerFetcher mockTriggerFetcher = Mockito.mock(TriggerFetcher.class);
 
-        List<EventReport> fakeEventReports = mMeasurementImpl.getSourceEventReports(source);
+        List<EventReport> fakeEventReports = mMeasurementImpl.generateFakeEventReports(source);
 
         // Generate valid report times
         Set<Long> reportingTimes = new HashSet<>();
@@ -756,10 +745,9 @@ public final class MeasurementImplTest {
         for (EventReport report : fakeEventReports) {
             Assert.assertEquals(source.getEventId(), report.getSourceId());
             Assert.assertTrue(reportingTimes.stream().anyMatch(x -> x == report.getReportTime()));
-            Assert.assertEquals(0, report.getTriggerTime());
+            Assert.assertEquals(source.getEventTime(), report.getTriggerTime());
             Assert.assertEquals(0, report.getTriggerPriority());
             Assert.assertEquals(source.getAppDestination(), report.getAttributionDestination());
-            Assert.assertEquals(source.getAdTechDomain(), report.getAdTechDomain());
             Assert.assertTrue(report.getTriggerData()
                     < source.getTriggerDataCardinality());
             Assert.assertNull(report.getTriggerDedupKey());
@@ -850,10 +838,10 @@ public final class MeasurementImplTest {
         ArgumentCaptor<ThrowingCheckedConsumer> insertionLogicExecutorCaptor =
                 ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
 
-        when(mMeasurementDao.countDistinctDestinationsPerPublisherXAdTechInActiveSource(
+        when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
                 any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
                         .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctAdTechsPerPublisherXDestinationInSource(
+        when(mMeasurementDao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
                 any(), anyInt(), any(), any(), anyLong(), anyLong()))
                         .thenReturn(Integer.valueOf(0));
         DatastoreManager datastoreManager = spy(new FakeDatastoreManager());
@@ -871,7 +859,7 @@ public final class MeasurementImplTest {
 
         long eventTime = System.currentTimeMillis();
         // Disable Impression Noise
-        doReturn(Collections.emptyList()).when(measurementImpl).getSourceEventReports(any());
+        doReturn(Collections.emptyList()).when(measurementImpl).generateFakeEventReports(any());
         final int result = measurementImpl.registerWebSource(registrationRequest, eventTime);
 
         // Assert
@@ -881,9 +869,9 @@ public final class MeasurementImplTest {
         verify(datastoreManager, times(2))
                 .runInTransaction(insertionLogicExecutorCaptor.capture());
         verify(mMeasurementDao, times(4))
-                .countDistinctDestinationsPerPublisherXAdTechInActiveSource(
+                .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
-        verify(mMeasurementDao, times(4)).countDistinctAdTechsPerPublisherXDestinationInSource(
+        verify(mMeasurementDao, times(4)).countDistinctEnrollmentsPerPublisherXDestinationInSource(
                 any(), anyInt(), any(), any(), anyLong(), anyLong());
         verify(mTriggerFetcher, never()).fetchWebTriggers(any());
 
@@ -910,7 +898,7 @@ public final class MeasurementImplTest {
         when(mSourceFetcher.fetchWebSources(any())).thenReturn(Optional.empty());
 
         // Disable Impression Noise
-        doReturn(Collections.emptyList()).when(mMeasurementImpl).getSourceEventReports(any());
+        doReturn(Collections.emptyList()).when(mMeasurementImpl).generateFakeEventReports(any());
         final int result =
                 mMeasurementImpl.registerWebSource(
                         createWebSourceRegistrationRequest(APP_DESTINATION, WEB_DESTINATION, null),
@@ -942,10 +930,10 @@ public final class MeasurementImplTest {
         ArgumentCaptor<ThrowingCheckedConsumer> insertionLogicExecutorCaptor =
                 ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
 
-        when(mMeasurementDao.countDistinctDestinationsPerPublisherXAdTechInActiveSource(
+        when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
                 any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
                         .thenReturn(Integer.valueOf(100));
-        when(mMeasurementDao.countDistinctAdTechsPerPublisherXDestinationInSource(
+        when(mMeasurementDao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
                 any(), anyInt(), any(), any(), anyLong(), anyLong()))
                         .thenReturn(Integer.valueOf(0));
         DatastoreManager datastoreManager = spy(new FakeDatastoreManager());
@@ -963,7 +951,7 @@ public final class MeasurementImplTest {
 
         long eventTime = System.currentTimeMillis();
         // Disable Impression Noise
-        doReturn(Collections.emptyList()).when(measurement).getSourceEventReports(any());
+        doReturn(Collections.emptyList()).when(measurement).generateFakeEventReports(any());
         final int result = measurement.registerWebSource(registrationRequest, eventTime);
 
         // Assert
@@ -973,9 +961,9 @@ public final class MeasurementImplTest {
         verify(datastoreManager, never())
                 .runInTransaction(insertionLogicExecutorCaptor.capture());
         verify(mMeasurementDao, times(2))
-                .countDistinctDestinationsPerPublisherXAdTechInActiveSource(
+                .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
-        verify(mMeasurementDao, never()).countDistinctAdTechsPerPublisherXDestinationInSource(
+        verify(mMeasurementDao, never()).countDistinctEnrollmentsPerPublisherXDestinationInSource(
                 any(), anyInt(), any(), any(), anyLong(), anyLong());
         verify(mTriggerFetcher, never()).fetchWebTriggers(any());
     }
@@ -992,10 +980,10 @@ public final class MeasurementImplTest {
         ArgumentCaptor<ThrowingCheckedConsumer> insertionLogicExecutorCaptor =
                 ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
 
-        when(mMeasurementDao.countDistinctDestinationsPerPublisherXAdTechInActiveSource(
+        when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
                 any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
                         .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctAdTechsPerPublisherXDestinationInSource(
+        when(mMeasurementDao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
                 any(), anyInt(), any(), any(), anyLong(), anyLong()))
                         .thenReturn(Integer.valueOf(100))
                         .thenReturn(Integer.valueOf(0));
@@ -1014,7 +1002,7 @@ public final class MeasurementImplTest {
 
         long eventTime = System.currentTimeMillis();
         // Disable Impression Noise
-        doReturn(Collections.emptyList()).when(measurement).getSourceEventReports(any());
+        doReturn(Collections.emptyList()).when(measurement).generateFakeEventReports(any());
         final int result = measurement.registerWebSource(registrationRequest, eventTime);
 
         // Assert
@@ -1024,9 +1012,9 @@ public final class MeasurementImplTest {
         verify(datastoreManager, times(1))
                 .runInTransaction(insertionLogicExecutorCaptor.capture());
         verify(mMeasurementDao, times(4))
-                .countDistinctDestinationsPerPublisherXAdTechInActiveSource(
+                .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
-        verify(mMeasurementDao, times(3)).countDistinctAdTechsPerPublisherXDestinationInSource(
+        verify(mMeasurementDao, times(3)).countDistinctEnrollmentsPerPublisherXDestinationInSource(
                 any(), anyInt(), any(), any(), anyLong(), anyLong());
         verify(mTriggerFetcher, never()).fetchWebTriggers(any());
 
@@ -1223,7 +1211,7 @@ public final class MeasurementImplTest {
         doReturn(Optional.of(sourceRegistrationsOut)).when(mSourceFetcher).fetchSource(any());
 
         // Disable Impression Noise
-        doReturn(Collections.emptyList()).when(mMeasurementImpl).getSourceEventReports(any());
+        doReturn(Collections.emptyList()).when(mMeasurementImpl).generateFakeEventReports(any());
 
         doReturn(false).when(mClickVerifier).isInputEventVerifiable(any(), anyLong());
 
@@ -1299,6 +1287,264 @@ public final class MeasurementImplTest {
         }
     }
 
+    @Test
+    public void insertSource_withFakeReportsFalseAppAttribution_accountsForFakeReportAttribution()
+            throws DatastoreException {
+        // Setup
+        int fakeReportsCount = 2;
+        Source source =
+                spy(
+                        SourceFixture.getValidSourceBuilder()
+                                .setAppDestination(
+                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
+                                .setWebDestination(null)
+                                .build());
+        List<Source.FakeReport> fakeReports =
+                createFakeReports(
+                        source,
+                        fakeReportsCount,
+                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION);
+        MeasurementImpl measurementImpl =
+                new MeasurementImpl(
+                        null,
+                        mContentResolver,
+                        mDatastoreManager,
+                        mSourceFetcher,
+                        mTriggerFetcher,
+                        mClickVerifier);
+        Answer<?> falseAttributionAnswer =
+                (arg) -> {
+                    source.setAttributionMode(Source.AttributionMode.FALSELY);
+                    return fakeReports;
+                };
+        doAnswer(falseAttributionAnswer).when(source).assignAttributionModeAndGenerateFakeReports();
+        ArgumentCaptor<ThrowingCheckedConsumer> consumerArgCaptor =
+                ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
+        ArgumentCaptor<Attribution> attributionRateLimitArgCaptor =
+                ArgumentCaptor.forClass(Attribution.class);
+
+        // Execution
+        measurementImpl.insertSource(source);
+
+        // Assertion
+        verify(mDatastoreManager).runInTransaction(consumerArgCaptor.capture());
+
+        consumerArgCaptor.getValue().accept(mMeasurementDao);
+
+        verify(mMeasurementDao).insertSource(source);
+        verify(mMeasurementDao, times(2)).insertEventReport(any());
+        verify(mMeasurementDao).insertAttribution(attributionRateLimitArgCaptor.capture());
+
+        assertEquals(
+                new Attribution.Builder()
+                        .setDestinationOrigin(source.getAppDestination().toString())
+                        .setDestinationSite(source.getAppDestination().toString())
+                        .setEnrollmentId(source.getEnrollmentId())
+                        .setSourceOrigin(source.getPublisher().toString())
+                        .setSourceSite(source.getPublisher().toString())
+                        .setRegistrant(source.getRegistrant().toString())
+                        .setTriggerTime(source.getEventTime())
+                        .build(),
+                attributionRateLimitArgCaptor.getValue());
+    }
+
+    @Test
+    public void insertSource_withFakeReportsFalseWebAttribution_accountsForFakeReportAttribution()
+            throws DatastoreException {
+        // Setup
+        int fakeReportsCount = 2;
+        Source source =
+                spy(
+                        SourceFixture.getValidSourceBuilder()
+                                .setAppDestination(null)
+                                .setWebDestination(SourceFixture.ValidSourceParams.WEB_DESTINATION)
+                                .build());
+        List<Source.FakeReport> fakeReports =
+                createFakeReports(
+                        source, fakeReportsCount, SourceFixture.ValidSourceParams.WEB_DESTINATION);
+        MeasurementImpl measurementImpl =
+                new MeasurementImpl(
+                        null,
+                        mContentResolver,
+                        mDatastoreManager,
+                        mSourceFetcher,
+                        mTriggerFetcher,
+                        mClickVerifier);
+        Answer<?> falseAttributionAnswer =
+                (arg) -> {
+                    source.setAttributionMode(Source.AttributionMode.FALSELY);
+                    return fakeReports;
+                };
+        doAnswer(falseAttributionAnswer).when(source).assignAttributionModeAndGenerateFakeReports();
+        ArgumentCaptor<ThrowingCheckedConsumer> consumerArgCaptor =
+                ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
+        ArgumentCaptor<Attribution> attributionRateLimitArgCaptor =
+                ArgumentCaptor.forClass(Attribution.class);
+
+        // Execution
+        measurementImpl.insertSource(source);
+
+        // Assertion
+        verify(mDatastoreManager).runInTransaction(consumerArgCaptor.capture());
+
+        consumerArgCaptor.getValue().accept(mMeasurementDao);
+
+        verify(mMeasurementDao).insertSource(source);
+        verify(mMeasurementDao, times(2)).insertEventReport(any());
+        verify(mMeasurementDao).insertAttribution(attributionRateLimitArgCaptor.capture());
+
+        assertEquals(
+                new Attribution.Builder()
+                        .setDestinationOrigin(source.getWebDestination().toString())
+                        .setDestinationSite(source.getWebDestination().toString())
+                        .setEnrollmentId(source.getEnrollmentId())
+                        .setSourceOrigin(source.getPublisher().toString())
+                        .setSourceSite(source.getPublisher().toString())
+                        .setRegistrant(source.getRegistrant().toString())
+                        .setTriggerTime(source.getEventTime())
+                        .build(),
+                attributionRateLimitArgCaptor.getValue());
+    }
+
+    @Test
+    public void insertSource_withFalseAppAndWebAttribution_accountsForFakeReportAttribution()
+            throws DatastoreException {
+        // Setup
+        int fakeReportsCount = 2;
+        Source source =
+                spy(
+                        SourceFixture.getValidSourceBuilder()
+                                .setAppDestination(
+                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
+                                .setWebDestination(SourceFixture.ValidSourceParams.WEB_DESTINATION)
+                                .build());
+        List<Source.FakeReport> fakeReports =
+                createFakeReports(
+                        source,
+                        fakeReportsCount,
+                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION);
+        MeasurementImpl measurementImpl =
+                new MeasurementImpl(
+                        null,
+                        mContentResolver,
+                        mDatastoreManager,
+                        mSourceFetcher,
+                        mTriggerFetcher,
+                        mClickVerifier);
+        Answer<?> falseAttributionAnswer =
+                (arg) -> {
+                    source.setAttributionMode(Source.AttributionMode.FALSELY);
+                    return fakeReports;
+                };
+        doAnswer(falseAttributionAnswer).when(source).assignAttributionModeAndGenerateFakeReports();
+        ArgumentCaptor<ThrowingCheckedConsumer> consumerArgCaptor =
+                ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
+        ArgumentCaptor<Attribution> attributionRateLimitArgCaptor =
+                ArgumentCaptor.forClass(Attribution.class);
+
+        // Execution
+        measurementImpl.insertSource(source);
+
+        // Assertion
+        verify(mDatastoreManager).runInTransaction(consumerArgCaptor.capture());
+
+        consumerArgCaptor.getValue().accept(mMeasurementDao);
+
+        verify(mMeasurementDao).insertSource(source);
+        verify(mMeasurementDao, times(2)).insertEventReport(any());
+        verify(mMeasurementDao, times(2))
+                .insertAttribution(attributionRateLimitArgCaptor.capture());
+
+        assertEquals(
+                new Attribution.Builder()
+                        .setDestinationOrigin(source.getAppDestination().toString())
+                        .setDestinationSite(source.getAppDestination().toString())
+                        .setEnrollmentId(source.getEnrollmentId())
+                        .setSourceOrigin(source.getPublisher().toString())
+                        .setSourceSite(source.getPublisher().toString())
+                        .setRegistrant(source.getRegistrant().toString())
+                        .setTriggerTime(source.getEventTime())
+                        .build(),
+                attributionRateLimitArgCaptor.getAllValues().get(0));
+
+        assertEquals(
+                new Attribution.Builder()
+                        .setDestinationOrigin(source.getWebDestination().toString())
+                        .setDestinationSite(source.getWebDestination().toString())
+                        .setEnrollmentId(source.getEnrollmentId())
+                        .setSourceOrigin(source.getPublisher().toString())
+                        .setSourceSite(source.getPublisher().toString())
+                        .setRegistrant(source.getRegistrant().toString())
+                        .setTriggerTime(source.getEventTime())
+                        .build(),
+                attributionRateLimitArgCaptor.getAllValues().get(1));
+    }
+
+    @Test
+    public void insertSource_withFakeReportsNeverAppAttribution_accountsForFakeReportAttribution()
+            throws DatastoreException {
+        // Setup
+        Source source =
+                spy(
+                        SourceFixture.getValidSourceBuilder()
+                                .setAppDestination(
+                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
+                                .setWebDestination(null)
+                                .build());
+        List<Source.FakeReport> fakeReports = Collections.emptyList();
+        MeasurementImpl measurementImpl =
+                new MeasurementImpl(
+                        null,
+                        mContentResolver,
+                        mDatastoreManager,
+                        mSourceFetcher,
+                        mTriggerFetcher,
+                        mClickVerifier);
+        Answer<?> neverAttributionAnswer =
+                (arg) -> {
+                    source.setAttributionMode(Source.AttributionMode.NEVER);
+                    return fakeReports;
+                };
+        doAnswer(neverAttributionAnswer).when(source).assignAttributionModeAndGenerateFakeReports();
+        ArgumentCaptor<ThrowingCheckedConsumer> consumerArgCaptor =
+                ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
+        ArgumentCaptor<Attribution> attributionRateLimitArgCaptor =
+                ArgumentCaptor.forClass(Attribution.class);
+
+        // Execution
+        measurementImpl.insertSource(source);
+
+        // Assertion
+        verify(mDatastoreManager).runInTransaction(consumerArgCaptor.capture());
+
+        consumerArgCaptor.getValue().accept(mMeasurementDao);
+
+        verify(mMeasurementDao).insertSource(source);
+        verify(mMeasurementDao, never()).insertEventReport(any());
+        verify(mMeasurementDao).insertAttribution(attributionRateLimitArgCaptor.capture());
+
+        assertEquals(
+                new Attribution.Builder()
+                        .setDestinationOrigin(source.getAppDestination().toString())
+                        .setDestinationSite(source.getAppDestination().toString())
+                        .setEnrollmentId(source.getEnrollmentId())
+                        .setSourceOrigin(source.getPublisher().toString())
+                        .setSourceSite(source.getPublisher().toString())
+                        .setRegistrant(source.getRegistrant().toString())
+                        .setTriggerTime(source.getEventTime())
+                        .build(),
+                attributionRateLimitArgCaptor.getValue());
+    }
+
+    private List<Source.FakeReport> createFakeReports(Source source, int count, Uri destination) {
+        return IntStream.range(0, count)
+                .mapToObj(
+                        x ->
+                                new Source.FakeReport(
+                                        0, source.getReportingTimeForNoising(0), destination))
+                .collect(Collectors.toList());
+    }
+
     private void verifyInsertSource(
             RegistrationRequest registrationRequest,
             SourceRegistration sourceRegistration,
@@ -1351,7 +1597,7 @@ public final class MeasurementImplTest {
                 .setPublisherType(publisherType)
                 .setAppDestination(firstSourceDestination)
                 .setWebDestination(firstSourceWebDestination)
-                .setAdTechDomain(sourceRegistration.getReportingOrigin())
+                .setEnrollmentId(DEFAULT_ENROLLMENT)
                 .setRegistrant(Uri.parse("android-app://" + packageName))
                 .setEventTime(eventTime)
                 .setExpiryTime(
@@ -1374,8 +1620,7 @@ public final class MeasurementImplTest {
         return TriggerFixture.getValidTriggerBuilder()
                 .setAttributionDestination(destination)
                 .setDestinationType(destinationType)
-                .setAdTechDomain(
-                        MeasurementImplTest.VALID_TRIGGER_REGISTRATION.getReportingOrigin())
+                .setEnrollmentId(DEFAULT_ENROLLMENT)
                 .setRegistrant(Uri.parse(ANDROID_APP_SCHEME + attributionSource.getPackageName()))
                 .setTriggerTime(triggerTime)
                 .setEventTriggers(EVENT_TRIGGERS)

@@ -33,6 +33,9 @@ import java.util.Set;
 @SmallTest
 public final class AggregateReportTest {
 
+    private static final Long SOURCE_DEBUG_KEY = 237865L;
+    private static final Long TRIGGER_DEBUG_KEY = 928762L;
+
     private AggregateReport createAttributionReport() {
         return new AggregateReport.Builder()
                 .setId("1")
@@ -40,12 +43,45 @@ public final class AggregateReportTest {
                 .setAttributionDestination(Uri.parse("https://example.com/aS"))
                 .setSourceRegistrationTime(5L)
                 .setScheduledReportTime(1L)
-                .setReportingOrigin(Uri.parse("https://example.com/rT"))
+                .setEnrollmentId("enrollment-id")
                 .setDebugCleartextPayload(" key: 1369, value: 32768; key: 3461, value: 1664;")
-                .setAggregateAttributionData(
-                        new AggregateAttributionData.Builder().build())
+                .setAggregateAttributionData(new AggregateAttributionData.Builder().build())
                 .setStatus(AggregateReport.Status.PENDING)
                 .setApiVersion("1452")
+                .setSourceDebugKey(SOURCE_DEBUG_KEY)
+                .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                .build();
+    }
+
+    private AggregateReport createAttributionReportSingleTriggerDebugKey() {
+        return new AggregateReport.Builder()
+                .setId("1")
+                .setPublisher(Uri.parse("android-app://com.example.abc"))
+                .setAttributionDestination(Uri.parse("https://example.com/aS"))
+                .setSourceRegistrationTime(5L)
+                .setScheduledReportTime(1L)
+                .setEnrollmentId("enrollment-id")
+                .setDebugCleartextPayload(" key: 1369, value: 32768; key: 3461, value: 1664;")
+                .setAggregateAttributionData(new AggregateAttributionData.Builder().build())
+                .setStatus(AggregateReport.Status.PENDING)
+                .setApiVersion("1452")
+                .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                .build();
+    }
+
+    private AggregateReport createAttributionReportSingleSourceDebugKey() {
+        return new AggregateReport.Builder()
+                .setId("1")
+                .setPublisher(Uri.parse("android-app://com.example.abc"))
+                .setAttributionDestination(Uri.parse("https://example.com/aS"))
+                .setSourceRegistrationTime(5L)
+                .setScheduledReportTime(1L)
+                .setEnrollmentId("enrollment-id")
+                .setDebugCleartextPayload(" key: 1369, value: 32768; key: 3461, value: 1664;")
+                .setAggregateAttributionData(new AggregateAttributionData.Builder().build())
+                .setStatus(AggregateReport.Status.PENDING)
+                .setApiVersion("1452")
+                .setSourceDebugKey(SOURCE_DEBUG_KEY)
                 .build();
     }
 
@@ -58,12 +94,54 @@ public final class AggregateReportTest {
                 attributionReport.getAttributionDestination());
         assertEquals(5L, attributionReport.getSourceRegistrationTime());
         assertEquals(1L, attributionReport.getScheduledReportTime());
-        assertEquals(Uri.parse("https://example.com/rT"), attributionReport.getReportingOrigin());
+        assertEquals("enrollment-id", attributionReport.getEnrollmentId());
         assertEquals(" key: 1369, value: 32768; key: 3461, value: 1664;",
                 attributionReport.getDebugCleartextPayload());
         assertNotNull(attributionReport.getAggregateAttributionData());
         assertEquals(AggregateReport.Status.PENDING, attributionReport.getStatus());
         assertEquals("1452", attributionReport.getApiVersion());
+        assertEquals(SOURCE_DEBUG_KEY, attributionReport.getSourceDebugKey());
+        assertEquals(TRIGGER_DEBUG_KEY, attributionReport.getTriggerDebugKey());
+    }
+
+    @Test
+    public void testCreationSingleSourceDebugKey() throws Exception {
+        AggregateReport attributionReport = createAttributionReportSingleSourceDebugKey();
+        assertEquals("1", attributionReport.getId());
+        assertEquals(Uri.parse("android-app://com.example.abc"), attributionReport.getPublisher());
+        assertEquals(
+                Uri.parse("https://example.com/aS"), attributionReport.getAttributionDestination());
+        assertEquals(5L, attributionReport.getSourceRegistrationTime());
+        assertEquals(1L, attributionReport.getScheduledReportTime());
+        assertEquals("enrollment-id", attributionReport.getEnrollmentId());
+        assertEquals(
+                " key: 1369, value: 32768; key: 3461, value: 1664;",
+                attributionReport.getDebugCleartextPayload());
+        assertNotNull(attributionReport.getAggregateAttributionData());
+        assertEquals(AggregateReport.Status.PENDING, attributionReport.getStatus());
+        assertEquals("1452", attributionReport.getApiVersion());
+        assertEquals(SOURCE_DEBUG_KEY, attributionReport.getSourceDebugKey());
+        assertNull(attributionReport.getTriggerDebugKey());
+    }
+
+    @Test
+    public void testCreationSingleTriggerDebugKey() throws Exception {
+        AggregateReport attributionReport = createAttributionReportSingleTriggerDebugKey();
+        assertEquals("1", attributionReport.getId());
+        assertEquals(Uri.parse("android-app://com.example.abc"), attributionReport.getPublisher());
+        assertEquals(
+                Uri.parse("https://example.com/aS"), attributionReport.getAttributionDestination());
+        assertEquals(5L, attributionReport.getSourceRegistrationTime());
+        assertEquals(1L, attributionReport.getScheduledReportTime());
+        assertEquals("enrollment-id", attributionReport.getEnrollmentId());
+        assertEquals(
+                " key: 1369, value: 32768; key: 3461, value: 1664;",
+                attributionReport.getDebugCleartextPayload());
+        assertNotNull(attributionReport.getAggregateAttributionData());
+        assertEquals(AggregateReport.Status.PENDING, attributionReport.getStatus());
+        assertEquals("1452", attributionReport.getApiVersion());
+        assertNull(attributionReport.getSourceDebugKey());
+        assertEquals(TRIGGER_DEBUG_KEY, attributionReport.getTriggerDebugKey());
     }
 
     @Test
@@ -75,11 +153,13 @@ public final class AggregateReportTest {
         assertNull(attributionReport.getAttributionDestination());
         assertEquals(0L, attributionReport.getSourceRegistrationTime());
         assertEquals(0L, attributionReport.getScheduledReportTime());
-        assertNull(attributionReport.getReportingOrigin());
+        assertNull(attributionReport.getEnrollmentId());
         assertNull(attributionReport.getDebugCleartextPayload());
         assertNull(attributionReport.getAggregateAttributionData());
         assertEquals(AggregateReport.Status.PENDING, attributionReport.getStatus());
         assertNull(attributionReport.getApiVersion());
+        assertNull(attributionReport.getSourceDebugKey());
+        assertNull(attributionReport.getTriggerDebugKey());
     }
 
     @Test
@@ -103,7 +183,7 @@ public final class AggregateReportTest {
                         .setAttributionDestination(Uri.parse("https://example.com/aS"))
                         .setSourceRegistrationTime(1L)
                         .setScheduledReportTime(1L)
-                        .setReportingOrigin(Uri.parse("https://example.com/rT"))
+                        .setEnrollmentId("another-enrollment-id")
                         .setDebugCleartextPayload(
                                 " key: 1369, value: 32768; key: 3461, value: 1664;")
                         .setAggregateAttributionData(new AggregateAttributionData.Builder().build())
