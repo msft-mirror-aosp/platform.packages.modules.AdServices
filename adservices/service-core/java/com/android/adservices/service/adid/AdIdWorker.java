@@ -17,9 +17,11 @@
 package com.android.adservices.service.adid;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import static com.android.adservices.AdServicesCommon.ACTION_ADID_PROVIDER_SERVICE;
 
+import android.adservices.adid.AdId;
 import android.adservices.adid.GetAdIdResult;
 import android.adservices.adid.IAdIdProviderService;
 import android.adservices.adid.IGetAdIdCallback;
@@ -31,6 +33,9 @@ import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
+import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
 
@@ -50,11 +55,13 @@ public class AdIdWorker {
     private static volatile AdIdWorker sAdIdWorker;
 
     private final Context mContext;
+    private final Flags mFlags;
     private final ServiceBinder<IAdIdProviderService> mServiceBinder;
 
     // @VisibleForTesting(visibility = VisibleForTesting.Visibility.PROTECTED)
-    public AdIdWorker(Context context) {
+    public AdIdWorker(Context context, Flags flags) {
         mContext = context;
+        mFlags = flags;
         mServiceBinder =
                 ServiceBinder.getServiceBinder(
                         context,
@@ -73,7 +80,7 @@ public class AdIdWorker {
         if (sAdIdWorker == null) {
             synchronized (AdIdWorker.class) {
                 if (sAdIdWorker == null) {
-                    sAdIdWorker = new AdIdWorker(context);
+                    sAdIdWorker = new AdIdWorker(context, FlagsFactory.getFlags());
                 }
             }
         }
@@ -81,12 +88,9 @@ public class AdIdWorker {
     }
 
     @NonNull
-    private IAdIdProviderService getService() {
-        IAdIdProviderService service = mServiceBinder.getService();
-        if (service == null) {
-            throw new IllegalStateException("Unable to find the service");
-        }
-        return service;
+    @VisibleForTesting
+    IAdIdProviderService getService() {
+        return mServiceBinder.getService();
     }
 
     @NonNull
@@ -108,6 +112,24 @@ public class AdIdWorker {
         Objects.requireNonNull(callback);
         LogUtil.v("AdIdWorker.getAdId for %s, %d", packageName, appUid);
         final IAdIdProviderService service = getService();
+
+        // Unable to find adId provider service. Return default values.
+        if (service == null) {
+            GetAdIdResult result =
+                    new GetAdIdResult.Builder()
+                            .setStatusCode(STATUS_SUCCESS)
+                            .setErrorMessage("")
+                            .setAdId(AdId.ZERO_OUT)
+                            .setLatEnabled(false)
+                            .build();
+            try {
+                callback.onResult(result);
+            } catch (RemoteException e) {
+                LogUtil.e("RemoteException");
+            } finally {
+                return;
+            }
+        }
 
         try {
             // Call adId provider service method to retrieve the adid and lat.

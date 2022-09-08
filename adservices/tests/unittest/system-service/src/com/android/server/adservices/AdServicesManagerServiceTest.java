@@ -41,6 +41,7 @@ public class AdServicesManagerServiceTest {
     private static final String PACKAGE_FULLY_REMOVED = "package_fully_removed";
     private static final String PACKAGE_ADDED = "package_added";
     private static final String PACKAGE_DATA_CLEARED = "package_data_cleared";
+    private static final int PACKAGE_UID = 12345;
 
     @Before
     public void setup() {
@@ -58,6 +59,7 @@ public class AdServicesManagerServiceTest {
     public void testSendBroadcastForPackageFullyRemoved() {
         Intent i = new Intent(Intent.ACTION_PACKAGE_FULLY_REMOVED);
         i.setData(Uri.parse("package:" + PACKAGE_NAME));
+        i.putExtra(Intent.EXTRA_UID, PACKAGE_UID);
 
         ArgumentCaptor<Intent> argumentIntent = ArgumentCaptor.forClass(Intent.class);
         ArgumentCaptor<UserHandle> argumentUser = ArgumentCaptor.forClass(UserHandle.class);
@@ -73,6 +75,8 @@ public class AdServicesManagerServiceTest {
         Truth.assertThat(argumentIntent.getValue().getData()).isEqualTo(i.getData());
         Truth.assertThat(argumentIntent.getValue().getStringExtra("action"))
                 .isEqualTo(PACKAGE_FULLY_REMOVED);
+        Truth.assertThat(argumentIntent.getValue().getIntExtra(Intent.EXTRA_UID, -1))
+                .isEqualTo(PACKAGE_UID);
         Truth.assertThat(argumentUser.getValue()).isEqualTo(mSpyContext.getUser());
     }
 
@@ -80,6 +84,7 @@ public class AdServicesManagerServiceTest {
     public void testSendBroadcastForPackageAdded() {
         Intent i = new Intent(Intent.ACTION_PACKAGE_ADDED);
         i.setData(Uri.parse("package:" + PACKAGE_NAME));
+        i.putExtra(Intent.EXTRA_UID, PACKAGE_UID);
         i.putExtra(Intent.EXTRA_REPLACING, false);
 
         ArgumentCaptor<Intent> argumentIntent = ArgumentCaptor.forClass(Intent.class);
@@ -96,6 +101,8 @@ public class AdServicesManagerServiceTest {
         Truth.assertThat(argumentIntent.getValue().getData()).isEqualTo(i.getData());
         Truth.assertThat(argumentIntent.getValue().getStringExtra("action"))
                 .isEqualTo(PACKAGE_ADDED);
+        Truth.assertThat(argumentIntent.getValue().getIntExtra(Intent.EXTRA_UID, -1))
+                .isEqualTo(PACKAGE_UID);
         Truth.assertThat(argumentUser.getValue()).isEqualTo(mSpyContext.getUser());
     }
 
@@ -103,6 +110,7 @@ public class AdServicesManagerServiceTest {
     public void testSendBroadcastForPackageDataCleared() {
         Intent i = new Intent(Intent.ACTION_PACKAGE_DATA_CLEARED);
         i.setData(Uri.parse("package:" + PACKAGE_NAME));
+        i.putExtra(Intent.EXTRA_UID, PACKAGE_UID);
 
         ArgumentCaptor<Intent> argumentIntent = ArgumentCaptor.forClass(Intent.class);
         ArgumentCaptor<UserHandle> argumentUser = ArgumentCaptor.forClass(UserHandle.class);
@@ -118,6 +126,8 @@ public class AdServicesManagerServiceTest {
         Truth.assertThat(argumentIntent.getValue().getData()).isEqualTo(i.getData());
         Truth.assertThat(argumentIntent.getValue().getStringExtra("action"))
                 .isEqualTo(PACKAGE_DATA_CLEARED);
+        Truth.assertThat(argumentIntent.getValue().getIntExtra(Intent.EXTRA_UID, -1))
+                .isEqualTo(PACKAGE_UID);
         Truth.assertThat(argumentUser.getValue()).isEqualTo(mSpyContext.getUser());
     }
 }

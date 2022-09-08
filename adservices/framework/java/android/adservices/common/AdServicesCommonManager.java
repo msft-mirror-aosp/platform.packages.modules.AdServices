@@ -16,9 +16,12 @@
 
 package android.adservices.common;
 
-import android.adservices.exceptions.AdServicesException;
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_STATE;
+import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE;
+
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
+import android.annotation.RequiresPermission;
 import android.annotation.SystemApi;
 import android.content.Context;
 import android.os.OutcomeReceiver;
@@ -31,9 +34,16 @@ import com.android.adservices.ServiceBinder;
 import java.util.concurrent.Executor;
 
 /**
- * AdServicesCommonManager contains APIs common across the various Adservices. Current we set It to
- * SystemApi as all two methods, isAdServicesEnabled and setAdServicesEntryPointEnabled, Are all
- * systemApi.
+ * AdServicesCommonManager contains APIs common across the various AdServices. It provides two
+ * SystemApis:
+ *
+ * <ul>
+ *   <li>isAdServicesEnabled - allows to get AdServices state.
+ *   <li>setAdServicesEntryPointEnabled - allows to control AdServices state.
+ * </ul>
+ *
+ * <p>The instance of the {@link AdServicesCommonManager} can be obtained using {@link
+ * Context#getSystemService} and {@link AdServicesCommonManager} class.
  *
  * @hide
  */
@@ -69,14 +79,16 @@ public class AdServicesCommonManager {
     }
 
     /**
-     * Get the adservices status.
+     * Get the AdService's enablement state which represents whether AdServices feature is enabled
+     * or not.
      *
      * @hide
      */
     @SystemApi
+    @RequiresPermission(ACCESS_ADSERVICES_STATE)
     public void isAdServicesEnabled(
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<Boolean, AdServicesException> callback) {
+            @NonNull OutcomeReceiver<Boolean, Exception> callback) {
         final IAdServicesCommonService service = getService();
         try {
             service.isAdServicesEnabled(
@@ -90,35 +102,42 @@ public class AdServicesCommonManager {
                         }
 
                         @Override
-                        public void onFailure(String errorMessage) {
+                        public void onFailure(int statusCode) {
                             executor.execute(
-                                    () -> {
-                                        callback.onError(new AdServicesException(errorMessage));
-                                    });
+                                    () ->
+                                            callback.onError(
+                                                    AdServicesStatusUtils.asException(statusCode)));
                         }
                     });
         } catch (RemoteException e) {
             LogUtil.e(e, "RemoteException");
-            executor.execute(() -> callback.onError(new AdServicesException("Internal Error!")));
+            executor.execute(
+                    () -> callback.onError(new IllegalStateException("Internal Error!", e)));
         }
     }
 
     /**
-     * Send the privacy sandbox UI entry point enable status to AdServices, indicating whether
-     * Privacy sandbox is enabled or not. If this is enabled, and AdServices is enabled, AdServices
-     * Will send out notification to user. Also send adid zero out status, if user opt-out adid, Its
-     * adid will become all 0s.
+     * Sets the AdService's enablement state based on the provided parameters.
+     *
+     * <p>As a result of the AdServices state, {@code adServicesEntryPointEnabled}, {@code
+     * adIdEnabled}, appropriate notification may be displayed to the user. It's displayed only once
+     * when all the following conditions are met:
+     *
+     * <ul>
+     *   <li>AdServices state - enabled.
+     *   <li>adServicesEntryPointEnabled - true.
+     * </ul>
      *
      * @param adServicesEntryPointEnabled indicate entry point enabled or not
      * @param adIdEnabled indicate user opt-out of adid or not
      * @hide
      */
     @SystemApi
-    public void setAdServicesNotificationConditions(
-            boolean adServicesEntryPointEnabled, boolean adIdEnabled) {
+    @RequiresPermission(MODIFY_ADSERVICES_STATE)
+    public void setAdServicesEnabled(boolean adServicesEntryPointEnabled, boolean adIdEnabled) {
         final IAdServicesCommonService service = getService();
         try {
-            service.setAdServicesNotificationConditions(adServicesEntryPointEnabled, adIdEnabled);
+            service.setAdServicesEnabled(adServicesEntryPointEnabled, adIdEnabled);
         } catch (RemoteException e) {
             LogUtil.e(e, "RemoteException");
         }

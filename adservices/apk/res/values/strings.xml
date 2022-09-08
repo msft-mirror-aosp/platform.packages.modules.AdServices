@@ -56,6 +56,17 @@
     <!-- Description of an application permission that lets it access Consent Service API. [CHAR LIMIT=NONE] -->
     <string name="permdesc_adServicesAccessConsentService">Allows an application to access Consent Service API.</string>
 
+    <!-- Title of an application permission that lets it access AdService's enablement state modification API. [CHAR LIMIT=NONE] -->
+    <string name="permlab_modifyAdServicesState">Access to AdService’s enablement state modification API</string>
+    <!-- Description of an application permission that lets it access AdService's enablement state modification API. [CHAR LIMIT=NONE] -->
+    <string name="permdesc_modifyAdServicesState">Allows an application to access AdService’s enablement state modification API.</string>
+
+    <!-- Title of an application permission that lets it access AdService's enablement state API. [CHAR LIMIT=NONE] -->
+    <string name="permlab_accessAdServicesState">Access to AdService’s enablement state API</string>
+    <!-- Description of an application permission that lets it access AdService's enablement state API. [CHAR LIMIT=NONE] -->
+    <string name="permdesc_accessAdServicesState">Allows an application to access AdService’s enablement state API.</string>
+
+    <!-- Settings App UI strings -->
 
     <!--*****************************************************************************************-->
     <!--************************************** UI Strings ***************************************-->
@@ -84,7 +95,7 @@
     <!-- Text for container2 title. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_container2_title_eu">How to participate</string>
     <!-- Text for container2 body text. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_container2_body_text_eu">Turning on the beta allows apps to test these new more private ways to show you ads. You can turn off the beta any time in your privacy settings.</string>
+    <string name="notificationUI_container2_body_text_eu">Turning on the beta allows apps to test these new, more private ways to show you ads. You can turn off the beta any time in your privacy settings.</string>
     <!-- Text for button to decline joining the Privacy Sandbox. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_left_control_button_text_eu">No thanks</string>
     <!-- Text for button to accept joining the Privacy Sandbox. [CHAR LIMIT=NONE] -->
@@ -125,7 +136,7 @@
     <!-- Text for container2 title. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_container2_title">You’re part of the beta</string>
     <!-- Text for container2 body text. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_container2_body_text">The Privacy Sandbox is on for your device, and apps can test these new more private ways to show you ads. You can turn off the beta any time in your privacy settings.</string>
+    <string name="notificationUI_container2_body_text">The Privacy Sandbox is on for your device, and apps can test these new, more private ways to show you ads. You can turn off the beta any time in your privacy settings.</string>
     <!-- Text for button to open Privacy Sandbox Settings from detailed notification activity. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_left_control_button_text">Manage privacy settings</string>
     <!-- Text for button to acknowledge and dismiss detailed notification activity.  [CHAR LIMIT=NONE] -->

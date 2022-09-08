@@ -41,7 +41,7 @@ public class AdSelectionConfigArgument {
 
     // TODO: (b/228094391): Put these common constants in a separate class
     public static final String SELLER_FIELD_NAME = "seller";
-    public static final String DECISION_LOGIC_URI_FIELD_NAME = "decision_logic_url";
+    public static final String DECISION_LOGIC_URI_FIELD_NAME = "decision_logic_uri";
     public static final String TRUSTED_SCORING_SIGNAL_URI_FIELD_NAME = "trusted_scoring_signal_uri";
     public static final String CUSTOM_AUDIENCE_BUYERS_FIELD_NAME = "custom_audience_buyers";
     public static final String AUCTION_SIGNALS_FIELD_NAME = "auction_signals";

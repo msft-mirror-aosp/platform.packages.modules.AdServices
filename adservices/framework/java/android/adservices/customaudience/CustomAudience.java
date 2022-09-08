@@ -22,14 +22,12 @@ import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
-import android.os.OutcomeReceiver;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.Executor;
 
 /**
  * Represents the information necessary for a custom audience to participate in ad selection.
@@ -39,16 +37,14 @@ import java.util.concurrent.Executor;
  * targeting a single custom audience.
  */
 public final class CustomAudience implements Parcelable {
-
-    @NonNull private final String mOwnerPackageName;
     @NonNull private final AdTechIdentifier mBuyer;
     @NonNull private final String mName;
     @Nullable private final Instant mActivationTime;
     @Nullable private final Instant mExpirationTime;
-    @NonNull private final Uri mDailyUpdateUrl;
+    @NonNull private final Uri mDailyUpdateUri;
     @Nullable private final AdSelectionSignals mUserBiddingSignals;
     @Nullable private final TrustedBiddingData mTrustedBiddingData;
-    @NonNull private final Uri mBiddingLogicUrl;
+    @NonNull private final Uri mBiddingLogicUri;
     @NonNull private final List<AdData> mAds;
 
     @NonNull
@@ -69,32 +65,30 @@ public final class CustomAudience implements Parcelable {
     private CustomAudience(@NonNull CustomAudience.Builder builder) {
         Objects.requireNonNull(builder);
 
-        mOwnerPackageName = builder.mOwnerPackageName;
         mBuyer = builder.mBuyer;
         mName = builder.mName;
         mActivationTime = builder.mActivationTime;
         mExpirationTime = builder.mExpirationTime;
-        mDailyUpdateUrl = builder.mDailyUpdateUrl;
+        mDailyUpdateUri = builder.mDailyUpdateUri;
         mUserBiddingSignals = builder.mUserBiddingSignals;
         mTrustedBiddingData = builder.mTrustedBiddingData;
-        mBiddingLogicUrl = builder.mBiddingLogicUrl;
+        mBiddingLogicUri = builder.mBiddingLogicUri;
         mAds = builder.mAds;
     }
 
     private CustomAudience(@NonNull Parcel in) {
         Objects.requireNonNull(in);
 
-        mOwnerPackageName = in.readString();
         mBuyer = AdTechIdentifier.CREATOR.createFromParcel(in);
         mName = in.readString();
         mActivationTime = in.readBoolean() ? Instant.ofEpochMilli(in.readLong()) : null;
         mExpirationTime = in.readBoolean() ? Instant.ofEpochMilli(in.readLong()) : null;
-        mDailyUpdateUrl = Uri.CREATOR.createFromParcel(in);
+        mDailyUpdateUri = Uri.CREATOR.createFromParcel(in);
         mUserBiddingSignals =
                 in.readBoolean() ? AdSelectionSignals.CREATOR.createFromParcel(in) : null;
         mTrustedBiddingData = in.readBoolean()
                 ? TrustedBiddingData.CREATOR.createFromParcel(in) : null;
-        mBiddingLogicUrl = Uri.CREATOR.createFromParcel(in);
+        mBiddingLogicUri = Uri.CREATOR.createFromParcel(in);
         mAds = in.createTypedArrayList(AdData.CREATOR);
     }
 
@@ -102,19 +96,18 @@ public final class CustomAudience implements Parcelable {
     public void writeToParcel(@NonNull Parcel dest, int flags) {
         Objects.requireNonNull(dest);
 
-        dest.writeString(mOwnerPackageName);
         mBuyer.writeToParcel(dest, flags);
         dest.writeString(mName);
         writeNullable(dest, mActivationTime,
                 () -> dest.writeLong(mActivationTime.toEpochMilli()));
         writeNullable(dest, mExpirationTime,
                 () -> dest.writeLong(mExpirationTime.toEpochMilli()));
-        mDailyUpdateUrl.writeToParcel(dest, flags);
+        mDailyUpdateUri.writeToParcel(dest, flags);
         writeNullable(
                 dest, mUserBiddingSignals, () -> mUserBiddingSignals.writeToParcel(dest, flags));
         writeNullable(dest, mTrustedBiddingData,
                 () -> mTrustedBiddingData.writeToParcel(dest, flags));
-        mBiddingLogicUrl.writeToParcel(dest, flags);
+        mBiddingLogicUri.writeToParcel(dest, flags);
         dest.writeTypedList(mAds);
     }
 
@@ -130,19 +123,6 @@ public final class CustomAudience implements Parcelable {
     @Override
     public int describeContents() {
         return 0;
-    }
-
-    /**
-     * Returns a String representing the custom audience's owner application package name.
-     *
-     * <p>The value of this field should be the package name of the calling app. Supplying another
-     * app's package name will result in failure when calling {@link
-     * CustomAudienceManager#joinCustomAudience(JoinCustomAudienceRequest, Executor,
-     * OutcomeReceiver)}.
-     */
-    @NonNull
-    public String getOwnerPackageName() {
-        return mOwnerPackageName;
     }
 
     /**
@@ -206,14 +186,14 @@ public final class CustomAudience implements Parcelable {
     }
 
     /**
-     * This URL points to a buyer-operated server that hosts updated bidding data and ads metadata
-     * to be used in the on-device ad selection process. The URL must use HTTPS.
+     * This URI points to a buyer-operated server that hosts updated bidding data and ads metadata
+     * to be used in the on-device ad selection process. The URI must use HTTPS.
      *
-     * @return the custom audience's daily update URL
+     * @return the custom audience's daily update URI
      */
     @NonNull
-    public Uri getDailyUpdateUrl() {
-        return mDailyUpdateUrl;
+    public Uri getDailyUpdateUri() {
+        return mDailyUpdateUri;
     }
 
     /**
@@ -235,7 +215,7 @@ public final class CustomAudience implements Parcelable {
     }
 
     /**
-     * Trusted bidding data consists of a URL pointing to a trusted server for buyers' bidding data
+     * Trusted bidding data consists of a URI pointing to a trusted server for buyers' bidding data
      * and a list of keys to query the server with. Note that the keys are arbitrary identifiers
      * that will only be used to query the trusted server for a buyer's bidding logic during ad
      * selection.
@@ -252,14 +232,14 @@ public final class CustomAudience implements Parcelable {
     }
 
     /**
-     * Returns the target URL used to fetch bidding logic when a custom audience participates in the
-     * ad selection process. The URL must use HTTPS.
+     * Returns the target URI used to fetch bidding logic when a custom audience participates in the
+     * ad selection process. The URI must use HTTPS.
      *
-     * @return the URL for fetching buyer bidding logic
+     * @return the URI for fetching buyer bidding logic
      */
     @NonNull
-    public Uri getBiddingLogicUrl() {
-        return mBiddingLogicUrl;
+    public Uri getBiddingLogicUri() {
+        return mBiddingLogicUri;
     }
 
     /**
@@ -286,15 +266,14 @@ public final class CustomAudience implements Parcelable {
         if (this == o) return true;
         if (!(o instanceof CustomAudience)) return false;
         CustomAudience that = (CustomAudience) o;
-        return mOwnerPackageName.equals(that.mOwnerPackageName)
-                && mBuyer.equals(that.mBuyer)
+        return mBuyer.equals(that.mBuyer)
                 && mName.equals(that.mName)
                 && Objects.equals(mActivationTime, that.mActivationTime)
                 && Objects.equals(mExpirationTime, that.mExpirationTime)
-                && mDailyUpdateUrl.equals(that.mDailyUpdateUrl)
+                && mDailyUpdateUri.equals(that.mDailyUpdateUri)
                 && Objects.equals(mUserBiddingSignals, that.mUserBiddingSignals)
                 && Objects.equals(mTrustedBiddingData, that.mTrustedBiddingData)
-                && mBiddingLogicUrl.equals(that.mBiddingLogicUrl)
+                && mBiddingLogicUri.equals(that.mBiddingLogicUri)
                 && mAds.equals(that.mAds);
     }
 
@@ -304,50 +283,31 @@ public final class CustomAudience implements Parcelable {
     @Override
     public int hashCode() {
         return Objects.hash(
-                mOwnerPackageName,
                 mBuyer,
                 mName,
                 mActivationTime,
                 mExpirationTime,
-                mDailyUpdateUrl,
+                mDailyUpdateUri,
                 mUserBiddingSignals,
                 mTrustedBiddingData,
-                mBiddingLogicUrl,
+                mBiddingLogicUri,
                 mAds);
     }
 
     /** Builder for {@link CustomAudience} objects. */
     public static final class Builder {
-        @Nullable private String mOwnerPackageName;
         @Nullable private AdTechIdentifier mBuyer;
         @Nullable private String mName;
         @Nullable private Instant mActivationTime;
         @Nullable private Instant mExpirationTime;
-        @Nullable private Uri mDailyUpdateUrl;
+        @Nullable private Uri mDailyUpdateUri;
         @Nullable private AdSelectionSignals mUserBiddingSignals;
         @Nullable private TrustedBiddingData mTrustedBiddingData;
-        @Nullable private Uri mBiddingLogicUrl;
+        @Nullable private Uri mBiddingLogicUri;
         @Nullable private List<AdData> mAds;
 
         // TODO(b/232883403): We may need to add @NonNUll members as args.
         public Builder() {
-        }
-
-        /**
-         * Sets the owner application package name.
-         *
-         * <p>The value of this field should be the package name of the calling app. Supplying
-         * another app's package name will result in failure when calling {@link
-         * CustomAudienceManager#joinCustomAudience(JoinCustomAudienceRequest, Executor,
-         * OutcomeReceiver)}.
-         *
-         * <p>See {@link #getOwnerPackageName()} for more information.
-         */
-        @NonNull
-        public CustomAudience.Builder setOwnerPackageName(@NonNull String ownerPackageName) {
-            Objects.requireNonNull(ownerPackageName);
-            mOwnerPackageName = ownerPackageName;
-            return this;
         }
 
         /**
@@ -402,14 +362,14 @@ public final class CustomAudience implements Parcelable {
         }
 
         /**
-         * Sets the daily update URL. The URL must use HTTPS.
-         * <p>
-         * See {@link #getDailyUpdateUrl()} for more information.
+         * Sets the daily update URI. The URI must use HTTPS.
+         *
+         * <p>See {@link #getDailyUpdateUri()} for more information.
          */
         @NonNull
-        public CustomAudience.Builder setDailyUpdateUrl(@NonNull Uri dailyUpdateUrl) {
-            Objects.requireNonNull(dailyUpdateUrl);
-            mDailyUpdateUrl = dailyUpdateUrl;
+        public CustomAudience.Builder setDailyUpdateUri(@NonNull Uri dailyUpdateUri) {
+            Objects.requireNonNull(dailyUpdateUri);
+            mDailyUpdateUri = dailyUpdateUri;
             return this;
         }
 
@@ -438,15 +398,15 @@ public final class CustomAudience implements Parcelable {
         }
 
         /**
-         * Sets the URL to fetch bidding logic from for use in the ad selection process. The URL
+         * Sets the URI to fetch bidding logic from for use in the ad selection process. The URI
          * must use HTTPS.
          *
-         * <p>See {@link #getBiddingLogicUrl()} ()} for more information.
+         * <p>See {@link #getBiddingLogicUri()} ()} for more information.
          */
         @NonNull
-        public CustomAudience.Builder setBiddingLogicUrl(@NonNull Uri biddingLogicUrl) {
-            Objects.requireNonNull(biddingLogicUrl);
-            mBiddingLogicUrl = biddingLogicUrl;
+        public CustomAudience.Builder setBiddingLogicUri(@NonNull Uri biddingLogicUri) {
+            Objects.requireNonNull(biddingLogicUri);
+            mBiddingLogicUri = biddingLogicUri;
             return this;
         }
 
@@ -471,11 +431,10 @@ public final class CustomAudience implements Parcelable {
          */
         @NonNull
         public CustomAudience build() {
-            Objects.requireNonNull(mOwnerPackageName);
             Objects.requireNonNull(mBuyer);
             Objects.requireNonNull(mName);
-            Objects.requireNonNull(mDailyUpdateUrl);
-            Objects.requireNonNull(mBiddingLogicUrl);
+            Objects.requireNonNull(mDailyUpdateUri);
+            Objects.requireNonNull(mBiddingLogicUri);
 
             // To pass the API lint, we should not allow null Collection.
             if (mAds == null) {

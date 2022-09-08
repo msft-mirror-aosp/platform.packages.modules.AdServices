@@ -20,11 +20,14 @@ import static com.android.adservices.service.js.JSScriptArgument.arrayArg;
 import static com.android.adservices.service.js.JSScriptArgument.numericArg;
 import static com.android.adservices.service.js.JSScriptArgument.recordArg;
 import static com.android.adservices.service.js.JSScriptArgument.stringArg;
+import static com.android.adservices.service.js.JSScriptEngine.JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_ERROR_MSG;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeFalse;
+import static org.junit.Assume.assumeTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doAnswer;
@@ -65,6 +68,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -80,8 +84,22 @@ import java.util.stream.Collectors;
 
 @SmallTest
 public class JSScriptEngineTest {
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
+
+    /**
+     * functions in simple_test_functions.wasm:
+     *
+     * <p>int increment(int n) { return n+1; }
+     *
+     * <p>int fib(int n) { if (n<=1) { return n; } else { return fib(n-2) + fib(n-1); } }
+     *
+     * <p>int fact(int n) { if (n<=1) { return 1; } else { return n * fact(n-1); } }
+     *
+     * <p>double log_base_2(double n) { return log(n) / log(2.0); }
+     */
+    public static final String WASM_MODULE = "simple_test_functions.wasm";
+
     private static final String TAG = JSScriptEngineTest.class.getSimpleName();
+    protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Profiler sMockProfiler = mock(Profiler.class);
     private static final StopWatch sSandboxInitWatch = mock(StopWatch.class);
     private static JSScriptEngine sJSScriptEngine;
@@ -326,7 +344,9 @@ public class JSScriptEngineTest {
 
         assertThat(executionException.getCause())
                 .isInstanceOf(JSScriptEngineConnectionException.class);
-
+        assertThat(executionException)
+                .hasMessageThat()
+                .contains(JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_ERROR_MSG);
         verify(sMockProfiler).start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
     }
 
@@ -358,7 +378,9 @@ public class JSScriptEngineTest {
 
         assertThat(executionException.getCause())
                 .isInstanceOf(JSScriptEngineConnectionException.class);
-
+        assertThat(executionException)
+                .hasMessageThat()
+                .contains(JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_ERROR_MSG);
         verify(sMockProfiler).start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
         verify(mMockedSandbox)
                 .isFeatureSupported(JavaScriptSandbox.JS_FEATURE_ISOLATE_MAX_HEAP_SIZE);
@@ -386,7 +408,9 @@ public class JSScriptEngineTest {
                                         enforcedHeapIsolateSettings));
         assertThat(executionException.getCause())
                 .isInstanceOf(JSScriptEngineConnectionException.class);
-
+        assertThat(executionException)
+                .hasMessageThat()
+                .contains(JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_ERROR_MSG);
         verify(sMockProfiler).start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
     }
 
@@ -688,6 +712,59 @@ public class JSScriptEngineTest {
         verify(mMockSandboxProvider).destroyCurrentInstance();
     }
 
+    @Test
+    public void testCanUseWasmModuleInScript() throws Exception {
+        assumeTrue(sJSScriptEngine.isWasmSupported().get(4, TimeUnit.SECONDS));
+
+        String jsUsingWasmModule =
+                "\"use strict\";\n"
+                        + "\n"
+                        + "function callWasm(input, wasmModule) {\n"
+                        + "  const instance = new WebAssembly.Instance(wasmModule);\n"
+                        + "\n"
+                        + "  return instance.exports._fact(input);\n"
+                        + "\n"
+                        + "}";
+
+        String result =
+                callJSEngine(
+                        jsUsingWasmModule,
+                        readBinaryAsset(WASM_MODULE),
+                        ImmutableList.of(numericArg("input", 3)),
+                        "callWasm",
+                        mDefaultIsolateSettings);
+
+        assertThat(result).isEqualTo("6");
+    }
+
+    @Test
+    public void testCanNotUseWasmModuleInScriptIfWebViewDoesNotSupportWasm() throws Exception {
+        assumeFalse(sJSScriptEngine.isWasmSupported().get(4, TimeUnit.SECONDS));
+
+        String jsUsingWasmModule =
+                "\"use strict\";\n"
+                        + "\n"
+                        + "function callWasm(input, wasmModule) {\n"
+                        + "  const instance = new WebAssembly.Instance(wasmModule);\n"
+                        + "\n"
+                        + "  return instance.exports._fact(input);\n"
+                        + "\n"
+                        + "}";
+
+        ExecutionException outer =
+                assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                callJSEngine(
+                                        jsUsingWasmModule,
+                                        readBinaryAsset(WASM_MODULE),
+                                        ImmutableList.of(numericArg("input", 3)),
+                                        "callWasm",
+                                        mDefaultIsolateSettings));
+
+        assertThat(outer.getCause()).isInstanceOf(IllegalStateException.class);
+    }
+
     private String callJSEngine(
             @NonNull String jsScript,
             @NonNull List<JSScriptArgument> args,
@@ -786,5 +863,9 @@ public class JSScriptEngineTest {
                 engine.evaluate(jsScript, wasmBytes, args, functionName, isolateSettings);
         result.addListener(resultLatch::countDown, mExecutorService);
         return result;
+    }
+
+    private byte[] readBinaryAsset(@NonNull String assetName) throws IOException {
+        return sContext.getAssets().open(assetName).readAllBytes();
     }
 }

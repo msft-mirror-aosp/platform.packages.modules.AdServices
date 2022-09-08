@@ -16,10 +16,13 @@
 
 package android.adservices.adselection;
 
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
+
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
+import android.annotation.RequiresPermission;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 
@@ -54,7 +57,7 @@ public class TestAdSelectionManager {
      *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
      *     Exception} indicates the error.
      */
-    @NonNull
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void overrideAdSelectionConfigRemoteInfo(
             @NonNull AddAdSelectionOverrideRequest request,
             @NonNull @CallbackExecutor Executor executor,
@@ -106,7 +109,7 @@ public class TestAdSelectionManager {
      *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
      *     Exception} indicates the error.
      */
-    @NonNull
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void removeAdSelectionConfigRemoteInfoOverride(
             @NonNull RemoveAdSelectionOverrideRequest request,
             @NonNull @CallbackExecutor Executor executor,
@@ -154,7 +157,7 @@ public class TestAdSelectionManager {
      *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
      *     Exception} indicates the error.
      */
-    @NonNull
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void resetAllAdSelectionConfigRemoteOverrides(
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<Object, Exception> receiver) {

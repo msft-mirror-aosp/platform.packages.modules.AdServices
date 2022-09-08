@@ -78,7 +78,7 @@ public class MainViewModelTest {
     public void testSetConsentTrue() {
         mMainViewModel.setConsent(true);
 
-        verify(mConsentManager, times(1)).enable(any(PackageManager.class));
+        verify(mConsentManager, times(1)).enable(any(Context.class));
     }
 
     /** Test if setConsent revokes consent with a call to {@link ConsentManager}. */

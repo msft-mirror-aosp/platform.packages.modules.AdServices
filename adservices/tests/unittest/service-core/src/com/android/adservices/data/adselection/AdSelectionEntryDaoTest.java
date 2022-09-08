@@ -46,10 +46,10 @@ public class AdSelectionEntryDaoTest {
     private static final String BUYER_DECISION_LOGIC_JS_2 =
             "function test() { return \"hello world 2\"; }";
 
-    private static final Uri BIDDING_LOGIC_URL_1 = Uri.parse("http://www.domain.com/logic/1");
-    private static final Uri BIDDING_LOGIC_URL_2 = Uri.parse("http://www.domain.com/logic/2");
+    private static final Uri BIDDING_LOGIC_URI_1 = Uri.parse("http://www.domain.com/logic/1");
+    private static final Uri BIDDING_LOGIC_URI_2 = Uri.parse("http://www.domain.com/logic/2");
 
-    private static final Uri RENDER_URL = Uri.parse("http://www.domain.com/advert/");
+    private static final Uri RENDER_URI = Uri.parse("http://www.domain.com/advert/");
 
     private static final Instant ACTIVATION_TIME = CLOCK.instant().truncatedTo(ChronoUnit.MILLIS);
 
@@ -65,13 +65,13 @@ public class AdSelectionEntryDaoTest {
 
     private static final DBBuyerDecisionLogic DB_BUYER_DECISION_LOGIC_1 =
             new DBBuyerDecisionLogic.Builder()
-                    .setBiddingLogicUri(BIDDING_LOGIC_URL_1)
+                    .setBiddingLogicUri(BIDDING_LOGIC_URI_1)
                     .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS_1)
                     .build();
 
     private static final DBBuyerDecisionLogic DB_BUYER_DECISION_LOGIC_2 =
             new DBBuyerDecisionLogic.Builder()
-                    .setBiddingLogicUri(BIDDING_LOGIC_URL_2)
+                    .setBiddingLogicUri(BIDDING_LOGIC_URI_2)
                     .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS_2)
                     .build();
 
@@ -83,8 +83,8 @@ public class AdSelectionEntryDaoTest {
                     .setAdSelectionId(AD_SELECTION_ID_1)
                     .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
                     .setContextualSignals(CONTEXTUAL_SIGNALS)
-                    .setBiddingLogicUri(BIDDING_LOGIC_URL_1)
-                    .setWinningAdRenderUri(RENDER_URL)
+                    .setBiddingLogicUri(BIDDING_LOGIC_URI_1)
+                    .setWinningAdRenderUri(RENDER_URI)
                     .setWinningAdBid(BID)
                     .setCreationTimestamp(ACTIVATION_TIME)
                     .setCallerPackageName(CALLER_PACKAGE_NAME_1)
@@ -95,8 +95,8 @@ public class AdSelectionEntryDaoTest {
                     .setAdSelectionId(AD_SELECTION_ID_2)
                     .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
                     .setContextualSignals(CONTEXTUAL_SIGNALS)
-                    .setBiddingLogicUri(BIDDING_LOGIC_URL_2)
-                    .setWinningAdRenderUri(RENDER_URL)
+                    .setBiddingLogicUri(BIDDING_LOGIC_URI_2)
+                    .setWinningAdRenderUri(RENDER_URI)
                     .setWinningAdBid(BID)
                     .setCreationTimestamp(ACTIVATION_TIME)
                     .setCallerPackageName(CALLER_PACKAGE_NAME_2)
@@ -106,7 +106,7 @@ public class AdSelectionEntryDaoTest {
             new DBAdSelection.Builder()
                     .setAdSelectionId(AD_SELECTION_ID_3)
                     .setContextualSignals(CONTEXTUAL_SIGNALS)
-                    .setWinningAdRenderUri(RENDER_URL)
+                    .setWinningAdRenderUri(RENDER_URI)
                     .setWinningAdBid(BID)
                     .setCreationTimestamp(ACTIVATION_TIME)
                     .setCallerPackageName(CALLER_PACKAGE_NAME_1)
@@ -117,8 +117,8 @@ public class AdSelectionEntryDaoTest {
             "function test() { return \"hello world_1\"; }";
     private static final String TRUSTED_SCORING_SIGNALS_1 =
             "{\n"
-                    + "\t\"render_url_1\": \"signals_for_1_1\",\n"
-                    + "\t\"render_url_2\": \"signals_for_1_2\"\n"
+                    + "\t\"render_uri_1\": \"signals_for_1_1\",\n"
+                    + "\t\"render_uri_2\": \"signals_for_1_2\"\n"
                     + "}";
     public static final DBAdSelectionOverride DB_AD_SELECTION_OVERRIDE_1 =
             DBAdSelectionOverride.builder()
@@ -133,8 +133,8 @@ public class AdSelectionEntryDaoTest {
             "function test() { return \"hello world_2\"; }";
     private static final String TRUSTED_SCORING_SIGNALS_2 =
             "{\n"
-                    + "\t\"render_url_1\": \"signals_for_2_1\",\n"
-                    + "\t\"render_url_2\": \"signals_for_2_2\"\n"
+                    + "\t\"render_uri_1\": \"signals_for_2_1\",\n"
+                    + "\t\"render_uri_2\": \"signals_for_2_2\"\n"
                     + "}";
     public static final DBAdSelectionOverride DB_AD_SELECTION_OVERRIDE_2 =
             DBAdSelectionOverride.builder()
@@ -148,8 +148,8 @@ public class AdSelectionEntryDaoTest {
             "function test() { return \"hello world_3\"; }";
     private static final String TRUSTED_SCORING_SIGNALS_3 =
             "{\n"
-                    + "\t\"render_url_1\": \"signals_for_3_1\",\n"
-                    + "\t\"render_url_2\": \"signals_for_3_2\"\n"
+                    + "\t\"render_uri_1\": \"signals_for_3_1\",\n"
+                    + "\t\"render_uri_2\": \"signals_for_3_2\"\n"
                     + "}";
     public static final DBAdSelectionOverride DB_AD_SELECTION_OVERRIDE_3 =
             DBAdSelectionOverride.builder()
@@ -164,8 +164,8 @@ public class AdSelectionEntryDaoTest {
             "function test() { return \"hello world_4\"; }";
     private static final String TRUSTED_SCORING_SIGNALS_4 =
             "{\n"
-                    + "\t\"render_url_1\": \"signals_for_4_1\",\n"
-                    + "\t\"render_url_2\": \"signals_for_4_2\"\n"
+                    + "\t\"render_uri_1\": \"signals_for_4_1\",\n"
+                    + "\t\"render_uri_2\": \"signals_for_4_2\"\n"
                     + "}";
     public static final DBAdSelectionOverride DB_AD_SELECTION_OVERRIDE_4 =
             DBAdSelectionOverride.builder()
@@ -530,8 +530,8 @@ public class AdSelectionEntryDaoTest {
     }
 
     /**
-     * Tests that if two decision logic inserts are made with the same URL, the second
-     * overwrites the first.
+     * Tests that if two decision logic inserts are made with the same URI, the second overwrites
+     * the first.
      */
     @Test
     public void testOverwriteDecisionLogic() {
