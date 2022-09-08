@@ -20,8 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.Manifest;
 import android.app.sdksandbox.SdkSandboxManager;
-import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
-import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallback;
+import android.app.sdksandbox.testutils.FakeRemoteSdkCallback;
 import android.content.Context;
 import android.os.Bundle;
 import android.provider.DeviceConfig;
@@ -35,6 +34,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.util.concurrent.CountDownLatch;
 
 @RunWith(JUnit4.class)
 public class SdkSandboxRestrictionsTestApp {
@@ -56,11 +56,10 @@ public class SdkSandboxRestrictionsTestApp {
     }
 
     // Run a phase of the test inside the SDK loaded for this app
-    private void runPhaseInsideSdk(String phaseName, FakeRequestSurfacePackageCallback callback) {
+    private void runPhaseInsideSdk(String phaseName) {
         Bundle bundle = new Bundle();
         bundle.putString(BUNDLE_KEY_PHASE_NAME, phaseName);
-        mSdkSandboxManager.requestSurfacePackage(
-                SDK_PACKAGE, 0, 500, 500, bundle, Runnable::run, callback);
+        mSdkSandboxManager.requestSurfacePackage(SDK_PACKAGE, 0, 500, 500, bundle);
     }
 
     /**
@@ -72,20 +71,17 @@ public class SdkSandboxRestrictionsTestApp {
     public void testSdkSandboxBroadcastRestrictions() throws Exception {
         DeviceConfig.setProperty(DeviceConfig.NAMESPACE_SDK_SANDBOX,
                 ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, "true", false);
-        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        FakeRemoteSdkCallback callback = new FakeRemoteSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
-
-        FakeRequestSurfacePackageCallback surfacePackageCallback1 =
-                new FakeRequestSurfacePackageCallback();
-        runPhaseInsideSdk("testSdkSandboxBroadcastRestrictions", surfacePackageCallback1);
-        assertThat(surfacePackageCallback1.isRequestSurfacePackageSuccessful()).isFalse();
+        runPhaseInsideSdk("testSdkSandboxBroadcastRestrictions");
+        assertThat(callback.isRequestSurfacePackageSuccessful()).isFalse();
 
         DeviceConfig.setProperty(DeviceConfig.NAMESPACE_SDK_SANDBOX,
                 ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, "false", false);
-        FakeRequestSurfacePackageCallback surfacePackageCallback2 =
-                new FakeRequestSurfacePackageCallback();
-        runPhaseInsideSdk("testSdkSandboxBroadcastRestrictions", surfacePackageCallback2);
-        assertThat(surfacePackageCallback2.isRequestSurfacePackageSuccessful()).isTrue();
+        // Reset the surface package countdown latch to allow us to perform another check.
+        callback.setSurfacePackageLatch(new CountDownLatch(1));
+        runPhaseInsideSdk("testSdkSandboxBroadcastRestrictions");
+        assertThat(callback.isRequestSurfacePackageSuccessful()).isTrue();
     }
 }

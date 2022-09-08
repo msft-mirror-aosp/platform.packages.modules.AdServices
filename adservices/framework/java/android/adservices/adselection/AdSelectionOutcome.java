@@ -34,19 +34,19 @@ public class AdSelectionOutcome {
     private static final int UNSET = 0;
 
     private final long mAdSelectionId;
-    @NonNull private final Uri mRenderUri;
+    @NonNull private final Uri mRenderUrl;
 
-    private AdSelectionOutcome(long adSelectionId, @NonNull Uri renderUri) {
-        Objects.requireNonNull(renderUri);
+    private AdSelectionOutcome(long adSelectionId, @NonNull Uri renderUrl) {
+        Objects.requireNonNull(renderUrl);
 
         mAdSelectionId = adSelectionId;
-        mRenderUri = renderUri;
+        mRenderUrl = renderUrl;
     }
 
-    /** Returns the renderUri that the AdSelection returns. */
+    /** Returns the renderUrl that the AdSelection returns. */
     @NonNull
-    public Uri getRenderUri() {
-        return mRenderUri;
+    public Uri getRenderUrl() {
+        return mRenderUrl;
     }
 
     /** Returns the adSelectionId that identifies the AdSelection. */
@@ -60,14 +60,14 @@ public class AdSelectionOutcome {
         if (o instanceof AdSelectionOutcome) {
             AdSelectionOutcome adSelectionOutcome = (AdSelectionOutcome) o;
             return mAdSelectionId == adSelectionOutcome.mAdSelectionId
-                    && Objects.equals(mRenderUri, adSelectionOutcome.mRenderUri);
+                    && Objects.equals(mRenderUrl, adSelectionOutcome.mRenderUrl);
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mAdSelectionId, mRenderUri);
+        return Objects.hash(mAdSelectionId, mRenderUrl);
     }
 
     /**
@@ -75,8 +75,7 @@ public class AdSelectionOutcome {
      */
     public static final class Builder {
         private long mAdSelectionId = UNSET;
-        @NonNull private Uri mRenderUri;
-        ;
+        @NonNull private Uri mRenderUrl;;
 
         public Builder() {}
 
@@ -87,12 +86,12 @@ public class AdSelectionOutcome {
             return this;
         }
 
-        /** Sets the RenderUri. */
+        /** Sets the RenderUrl. */
         @NonNull
-        public AdSelectionOutcome.Builder setRenderUri(@NonNull Uri renderUri) {
-            Objects.requireNonNull(renderUri);
+        public AdSelectionOutcome.Builder setRenderUrl(@NonNull Uri renderUrl) {
+            Objects.requireNonNull(renderUrl);
 
-            mRenderUri = renderUri;
+            mRenderUrl = renderUrl;
             return this;
         }
 
@@ -100,16 +99,17 @@ public class AdSelectionOutcome {
          * Builds a {@link AdSelectionOutcome} instance.
          *
          * @throws IllegalArgumentException if the adSelectionIid is not set
-         * @throws NullPointerException if the RenderUri is null
+         *
+         * @throws NullPointerException if the RenderUrl is null
          */
         @NonNull
         public AdSelectionOutcome build() {
-            Objects.requireNonNull(mRenderUri);
+            Objects.requireNonNull(mRenderUrl);
 
             Preconditions.checkArgument(
                     mAdSelectionId != UNSET, "AdSelectionId has not been set!");
 
-            return new AdSelectionOutcome(mAdSelectionId, mRenderUri);
+            return new AdSelectionOutcome(mAdSelectionId, mRenderUrl);
         }
     }
 }

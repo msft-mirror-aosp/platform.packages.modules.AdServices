@@ -19,7 +19,6 @@ package com.android.adservices.data.adselection;
 import static org.junit.Assert.assertEquals;
 
 import android.adservices.adselection.CustomAudienceSignalsFixture;
-import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
@@ -31,11 +30,11 @@ public class CustomAudienceSignalsTest {
     public void testBuildCustomAudienceSignals() {
         CustomAudienceSignals customAudienceSignals =
                 CustomAudienceSignalsFixture.aCustomAudienceSignalsBuilder()
-                        .setBuyer(CommonFixture.VALID_BUYER)
+                        .setBuyer(CustomAudienceFixture.VALID_BUYER)
                         .build();
 
         assertEquals(customAudienceSignals.getOwner(), CustomAudienceFixture.VALID_OWNER);
-        assertEquals(customAudienceSignals.getBuyer(), CommonFixture.VALID_BUYER);
+        assertEquals(customAudienceSignals.getBuyer(), CustomAudienceFixture.VALID_BUYER);
         assertEquals(customAudienceSignals.getName(), CustomAudienceFixture.VALID_NAME);
         assertEquals(
                 customAudienceSignals.getActivationTime(),
@@ -52,11 +51,10 @@ public class CustomAudienceSignalsTest {
     public void testBuildFromCustomAudience() {
         CustomAudienceSignals customAudienceSignals =
                 CustomAudienceSignals.buildFromCustomAudience(
-                        DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER)
-                                .build());
+                        DBCustomAudienceFixture.getValidBuilder().build());
 
         assertEquals(customAudienceSignals.getOwner(), CustomAudienceFixture.VALID_OWNER);
-        assertEquals(customAudienceSignals.getBuyer(), CommonFixture.VALID_BUYER);
+        assertEquals(customAudienceSignals.getBuyer(), CustomAudienceFixture.VALID_BUYER);
         assertEquals(customAudienceSignals.getName(), CustomAudienceFixture.VALID_NAME);
         assertEquals(
                 customAudienceSignals.getActivationTime(),

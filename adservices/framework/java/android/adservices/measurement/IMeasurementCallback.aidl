@@ -16,19 +16,23 @@
 
 package android.adservices.measurement;
 
-import android.adservices.measurement.MeasurementErrorResponse;
-
 /**
   * Interface for a Measurement API result callback.
   *
   * @hide
   */
 oneway interface IMeasurementCallback {
+    const int RESULT_OK = 0;
+    const int RESULT_INTERNAL_ERROR = 1;
+    const int RESULT_INVALID_ARGUMENT = 2;
+    const int RESULT_IO_ERROR = 3;
+    const int RESULT_RATE_LIMIT_REACHED = 4;
 
     /**
      * Callback invoked when a Measurement API request completes.
+     *
+     * @param result A RESULT_* value above.
      * @hide
      */
-    void onResult();
-    void onFailure(in MeasurementErrorResponse responseParcel);
+    void onResult(int result);
 }

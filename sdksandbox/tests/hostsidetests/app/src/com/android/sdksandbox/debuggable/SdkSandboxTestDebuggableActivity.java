@@ -18,7 +18,7 @@ package com.android.sdksandbox.debuggable;
 
 import android.app.Activity;
 import android.app.sdksandbox.SdkSandboxManager;
-import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
+import android.app.sdksandbox.testutils.FakeRemoteSdkCallback;
 import android.os.Bundle;
 
 public class SdkSandboxTestDebuggableActivity extends Activity {
@@ -33,7 +33,7 @@ public class SdkSandboxTestDebuggableActivity extends Activity {
                 getApplicationContext().getSystemService(SdkSandboxManager.class);
 
         Bundle params = new Bundle();
-        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        FakeRemoteSdkCallback callback = new FakeRemoteSdkCallback();
         assert sdkSandboxManager != null;
         sdkSandboxManager.loadSdk(SDK_NAME, params, Runnable::run, callback);
         if (!callback.isLoadSdkSuccessful()) {

@@ -45,6 +45,7 @@ class SandboxedSdkHolder {
     private static final String TAG = "SdkSandbox";
 
     private boolean mInitialized = false;
+    private ISdkSandboxToSdkSandboxManagerCallback mCallback;
     private SandboxedSdkProvider mSdk;
     private Context mContext;
 
@@ -55,43 +56,38 @@ class SandboxedSdkHolder {
 
     private final Handler mHandler = new Handler(Looper.getMainLooper());
 
-    void init(
-            Context context,
-            Bundle params,
-            ILoadSdkInSandboxCallback callback,
-            String sdkProviderClassName,
-            ClassLoader loader,
+    void init(Context context, Bundle params,
+            ISdkSandboxToSdkSandboxManagerCallback callback,
+            String sdkProviderClassName, ClassLoader loader,
             SandboxedSdkContext sandboxedSdkContext) {
         if (mInitialized) {
             throw new IllegalStateException("Already initialized!");
         }
         mInitialized = true;
+        mCallback = callback;
         mContext = context;
         mDisplayManager = mContext.getSystemService(DisplayManager.class);
         try {
             Class<?> clz = Class.forName(sdkProviderClassName, true, loader);
             mSdk = (SandboxedSdkProvider) clz.getConstructor().newInstance();
-            mSdk.attachBaseContext(sandboxedSdkContext);
-            mSdk.onLoadSdk(
-                    params,
-                    mContext.getMainExecutor(),
-                    new SandboxedSdkProvider.OnLoadSdkCallback() {
+            mSdk.initSdk(sandboxedSdkContext, params, mContext.getMainExecutor(),
+                    new SandboxedSdkProvider.InitSdkCallback() {
                         @Override
-                        public void onLoadSdkFinished(Bundle extraParams) {
-                            sendLoadSdkSuccess(callback);
+                        public void onInitSdkFinished(Bundle extraParams) {
+                            sendLoadSdkSuccess();
                         }
 
                         @Override
-                        public void onLoadSdkError(String errorMessage) {
-                            sendLoadSdkError(errorMessage, callback);
+                        public void onInitSdkError(String errorMessage) {
+                            sendLoadSdkError(errorMessage);
                         }
                     });
         } catch (ClassNotFoundException e) {
-            sendLoadSdkError("Could not find class: " + sdkProviderClassName, callback);
+            sendLoadSdkError("Could not find class: " + sdkProviderClassName);
         } catch (Exception e) {
-            sendLoadSdkError("Could not instantiate SandboxedSdkProvider: " + e, callback);
+            sendLoadSdkError("Could not instantiate SandboxedSdkProvider: " + e);
         } catch (Throwable e) {
-            sendLoadSdkError("Error thrown during init: " + e, callback);
+            sendLoadSdkError("Error thrown during init: " + e);
         }
     }
 
@@ -101,48 +97,31 @@ class SandboxedSdkHolder {
         writer.println(" mSdk class: " + sdkClass);
     }
 
-    private void sendLoadSdkSuccess(ILoadSdkInSandboxCallback callback) {
+    private void sendLoadSdkSuccess() {
         try {
-            callback.onLoadSdkSuccess(new Bundle(), new SdkSandboxCallbackImpl());
+            mCallback.onLoadSdkSuccess(new Bundle(), new SdkSandboxCallbackImpl());
         } catch (RemoteException e) {
             Log.e(TAG, "Could not send onLoadSdkSuccess: " + e);
         }
     }
 
-    private void sendSurfacePackageError(
-            String errorMessage, IRequestSurfacePackageFromSdkCallback callback) {
+    private void sendSurfacePackageError(String errorMessage) {
         try {
-            callback.onSurfacePackageError(
-                    IRequestSurfacePackageFromSdkCallback.SURFACE_PACKAGE_INTERNAL_ERROR,
+            mCallback.onSurfacePackageError(
+                    ISdkSandboxToSdkSandboxManagerCallback.SURFACE_PACKAGE_INTERNAL_ERROR,
                     errorMessage);
         } catch (RemoteException e) {
             Log.e(TAG, "Could not send onSurfacePackageError: " + e);
         }
     }
 
-    private void sendLoadSdkError(String errorMessage, ILoadSdkInSandboxCallback callback) {
+    private void sendLoadSdkError(String errorMessage) {
         try {
-            callback.onLoadSdkError(
-                    ILoadSdkInSandboxCallback.LOAD_SDK_PROVIDER_INIT_ERROR, errorMessage);
+            mCallback.onLoadSdkError(
+                    ISdkSandboxToSdkSandboxManagerCallback.LOAD_SDK_PROVIDER_INIT_ERROR,
+                    errorMessage);
         } catch (RemoteException e) {
             Log.e(TAG, "Could not send onLoadSdkError: " + e);
-        }
-    }
-
-    private void sendDataReceivedSuccess(Bundle params, IDataReceivedCallback callback) {
-        try {
-            callback.onDataReceivedSuccess(params);
-        } catch (RemoteException e) {
-            Log.e(TAG, "Could not send onDataReceivedSuccess: " + e);
-        }
-    }
-
-    private void sendDataReceivedError(String errorMessage, IDataReceivedCallback callback) {
-        try {
-            callback.onDataReceivedError(
-                    IDataReceivedCallback.DATA_RECEIVED_INTERNAL_ERROR, errorMessage);
-        } catch (RemoteException e) {
-            Log.e(TAG, "Could not send onDataReceivedError: " + e);
         }
     }
 
@@ -163,13 +142,8 @@ class SandboxedSdkHolder {
             extends ISdkSandboxManagerToSdkSandboxCallback.Stub {
 
         @Override
-        public void onSurfacePackageRequested(
-                IBinder token,
-                int displayId,
-                int width,
-                int height,
-                Bundle params,
-                IRequestSurfacePackageFromSdkCallback callback) {
+        public void onSurfacePackageRequested(IBinder token, int displayId,
+                int width, int height, Bundle params) {
             try {
                 Context displayContext = mContext.createDisplayContext(
                         mDisplayManager.getDisplay(displayId));
@@ -177,50 +151,25 @@ class SandboxedSdkHolder {
                 Context windowContext = displayContext.createWindowContext(
                         WindowManager.LayoutParams.TYPE_APPLICATION_PANEL, null);
                 // Creating a SurfaceControlViewHost needs to done on the handler thread.
-                mHandler.post(
-                        () -> {
-                            try {
-                                final View view = mSdk.getView(windowContext, params);
-                                SurfaceControlViewHost host =
-                                        new SurfaceControlViewHost(
-                                                windowContext,
-                                                mDisplayManager.getDisplay(displayId),
-                                                token);
-                                host.setView(view, width, height);
-                                SurfaceControlViewHost.SurfacePackage surfacePackage =
-                                        host.getSurfacePackage();
-                                int surfacePackageId = allocateSurfacePackageId(surfacePackage);
-                                callback.onSurfacePackageReady(
-                                        surfacePackage, surfacePackageId, params);
-                            } catch (RemoteException e) {
-                                Log.e(TAG, "Could not send onSurfacePackageReady", e);
-                            } catch (Throwable e) {
-                                sendSurfacePackageError(
-                                        "Error thrown while getting surface package: " + e,
-                                        callback);
-                            }
-                        });
+                mHandler.post(() -> {
+                    try {
+                        final View view = mSdk.getView(windowContext, params);
+                        SurfaceControlViewHost host = new SurfaceControlViewHost(windowContext,
+                                mDisplayManager.getDisplay(displayId), token);
+                        host.setView(view, width, height);
+                        SurfaceControlViewHost.SurfacePackage surfacePackage =
+                                host.getSurfacePackage();
+                        int surfacePackageId = allocateSurfacePackageId(surfacePackage);
+                        mCallback.onSurfacePackageReady(surfacePackage, surfacePackageId, params);
+                    } catch (RemoteException e) {
+                        Log.e(TAG, "Could not send onSurfacePackageReady", e);
+                    } catch (Throwable e) {
+                        sendSurfacePackageError("Error thrown while getting surface package: " + e);
+                    }
+                });
             } catch (Throwable e) {
-                sendSurfacePackageError(
-                        "Error thrown while getting surface package: " + e, callback);
+                sendSurfacePackageError("Error thrown while getting surface package: " + e);
             }
-        }
-
-        @Override
-        public void onDataReceived(Bundle data, IDataReceivedCallback callback) {
-            mSdk.onDataReceived(
-                    data,
-                    new SandboxedSdkProvider.DataReceivedCallback() {
-                        @Override
-                        public void onDataReceivedSuccess(Bundle params) {
-                            sendDataReceivedSuccess(params, callback);
-                        }
-
-                        @Override
-                        public void onDataReceivedError(String errorMessage) {
-                            sendDataReceivedError(errorMessage, callback);
-                        }
-                    });
         }
     }
 }

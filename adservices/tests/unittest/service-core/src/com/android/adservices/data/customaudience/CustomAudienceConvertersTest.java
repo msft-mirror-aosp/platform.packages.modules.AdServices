@@ -22,7 +22,6 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import android.adservices.common.AdDataFixture;
-import android.adservices.common.CommonFixture;
 
 import com.android.adservices.data.common.DBAdData;
 
@@ -43,10 +42,9 @@ public class CustomAudienceConvertersTest {
 
     @Test
     public void testSerializeAndDeserialize_runNormally() {
-        List<DBAdData> input =
-                AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER).stream()
-                        .map(DBAdData::fromServiceObject)
-                        .collect(Collectors.toList());
+        List<DBAdData> input = AdDataFixture.VALID_ADS.stream().map(
+                DBAdData::fromServiceObject).collect(
+                Collectors.toList());
         String serializedString = DBCustomAudience.Converters.toJson(input);
         List<DBAdData> output = DBCustomAudience.Converters.fromJson(serializedString);
         assertEquals(input, output);

@@ -28,19 +28,20 @@ import java.util.Map;
 /** This is a static class meant to help with tests that involve creating an AdSelectionConfig. */
 public class AdSelectionConfigFixture {
 
-    public static final String SELLER = "store.google.com";
+    public static final String SELLER = "testSeller";
 
     // Uri Constants
     public static final String SCHEME = "testScheme";
+    public static final String SSP = "testSSP";
     public static final String FRAGMENT = "testFragment";
 
-    public static final Uri DECISION_LOGIC_URI = Uri.fromParts("https", SELLER, FRAGMENT);
+    public static final Uri DECISION_LOGIC_URL = Uri.fromParts(SCHEME, SSP, FRAGMENT);
 
-    public static final String BUYER_1 = "developer.android.com";
-    public static final String BUYER_2 = "google.com";
-    public static final String BUYER_3 = "cs.android.com";
+    public static final String BUYER_1 = "buyer1";
+    public static final String BUYER_2 = "buyer2";
+
     public static final List<String> CUSTOM_AUDIENCE_BUYERS =
-            Arrays.asList(BUYER_1, BUYER_2, BUYER_3);
+            Arrays.asList("buyer1", "buyer2", "buyer3");
 
     public static final String EMPTY_SIGNALS = "{}";
 
@@ -50,11 +51,11 @@ public class AdSelectionConfigFixture {
 
     public static final Map<String, String> PER_BUYER_SIGNALS =
             Map.of(
-                    BUYER_1,
+                    "buyer1",
                     "{\"buyer_signals\":1}",
-                    BUYER_2,
+                    "buyer2",
                     "{\"buyer_signals\":2}",
-                    BUYER_3,
+                    "buyer3",
                     "{\"buyer_signals\":3}",
                     "buyer",
                     "{\"buyer_signals\":0}");
@@ -72,12 +73,8 @@ public class AdSelectionConfigFixture {
     public static final List<AdWithBid> CONTEXTUAL_ADS =
             Arrays.asList(ADS_WITH_BID_1, ADS_WITH_BID_2, ADS_WITH_BID_3);
 
-    public static final Uri TRUSTED_SCORING_SIGNALS_URI =
-            Uri.parse("https://www.kv-server.example");
-
-    private static AdWithBid createAdsWithBid(Uri renderUri, String metaData, double bid) {
-        AdData asData = new AdData(renderUri, metaData);
-
+    private static AdWithBid createAdsWithBid(Uri renderUrl, String metaData, double bid) {
+        AdData asData = new AdData(renderUrl, metaData);
         return new AdWithBid(asData, bid);
     }
 
@@ -88,34 +85,32 @@ public class AdSelectionConfigFixture {
 
     /**
      * @return returns a pre-loaded builder, where the internal members of the object can be changed
-     *     for the unit tests
+     * for the unit tests
      */
     public static AdSelectionConfig.Builder anAdSelectionConfigBuilder() {
         return new AdSelectionConfig.Builder()
                 .setSeller(SELLER)
-                .setDecisionLogicUri(DECISION_LOGIC_URI)
+                .setDecisionLogicUrl(DECISION_LOGIC_URL)
                 .setCustomAudienceBuyers(CUSTOM_AUDIENCE_BUYERS)
                 .setAdSelectionSignals(AD_SELECTION_SIGNALS)
                 .setSellerSignals(SELLER_SIGNALS)
                 .setPerBuyerSignals(PER_BUYER_SIGNALS)
-                .setContextualAds(CONTEXTUAL_ADS)
-                .setTrustedScoringSignalsUri(TRUSTED_SCORING_SIGNALS_URI);
+                .setContextualAds(CONTEXTUAL_ADS);
     }
 
     /**
-     * Creates an AdSelectionConfig object to be used in unit and integration tests Accepts a Uri
-     * decisionLogicUri to be used instead of the default
+     * Creates an AdSelectionConfig object to be used in unit and integration tests
+     * Accepts a Uri decisionLogicUrl to be used instead of the default
      */
-    public static AdSelectionConfig anAdSelectionConfig(@NonNull Uri decisionLogicUri) {
+    public static AdSelectionConfig anAdSelectionConfig(@NonNull Uri decisionLogicUrl) {
         return new AdSelectionConfig.Builder()
                 .setSeller(SELLER)
-                .setDecisionLogicUri(decisionLogicUri)
+                .setDecisionLogicUrl(decisionLogicUrl)
                 .setCustomAudienceBuyers(CUSTOM_AUDIENCE_BUYERS)
                 .setAdSelectionSignals(AD_SELECTION_SIGNALS)
                 .setSellerSignals(SELLER_SIGNALS)
                 .setPerBuyerSignals(PER_BUYER_SIGNALS)
                 .setContextualAds(CONTEXTUAL_ADS)
-                .setTrustedScoringSignalsUri(TRUSTED_SCORING_SIGNALS_URI)
                 .build();
     }
 }

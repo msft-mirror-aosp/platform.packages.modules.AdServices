@@ -33,7 +33,7 @@ import java.util.Objects;
 
 /**
  * This POJO represents the AdSelection data in the ad_selection table entity. TODO(b/228114258):
- * Add foreign key on the bidding_logic_uri column to enforce the mapping between AdSelection and
+ * Add foreign key on the bidding_logic_url column to enforce the mapping between AdSelection and
  * BuyerDecisionLogic, so that entries in the buyer_decision_logic table will not be deleted as long
  * as there is mapping exists in the ad_selection table.
  *
@@ -42,7 +42,7 @@ import java.util.Objects;
 // TODO (b/229660121): Ad unit tests for this class
 @Entity(
         tableName = "ad_selection",
-        indices = {@Index(value = {"bidding_logic_uri"})})
+        indices = {@Index(value = {"bidding_logic_url"})})
 public final class DBAdSelection {
     private static final int UNSET = 0;
 
@@ -58,13 +58,13 @@ public final class DBAdSelection {
     @NonNull
     private final String mContextualSignals;
 
-    @ColumnInfo(name = "bidding_logic_uri")
+    @ColumnInfo(name = "bidding_logic_url")
     @Nullable
-    private final Uri mBiddingLogicUri;
+    private final Uri mBiddingLogicUrl;
 
-    @ColumnInfo(name = "winning_ad_render_uri")
+    @ColumnInfo(name = "winning_ad_render_url")
     @NonNull
-    private final Uri mWinningAdRenderUri;
+    private final Uri mWinningAdRenderUrl;
 
     @ColumnInfo(name = "winning_ad_bid")
     private final double mWinningAdBid;
@@ -77,15 +77,15 @@ public final class DBAdSelection {
             long adSelectionId,
             @Nullable CustomAudienceSignals customAudienceSignals,
             @NonNull String contextualSignals,
-            @Nullable Uri biddingLogicUri,
-            @NonNull Uri winningAdRenderUri,
+            @Nullable Uri biddingLogicUrl,
+            @NonNull Uri winningAdRenderUrl,
             double winningAdBid,
             @NonNull Instant creationTimestamp) {
         this.mAdSelectionId = adSelectionId;
         this.mCustomAudienceSignals = customAudienceSignals;
         this.mContextualSignals = contextualSignals;
-        this.mBiddingLogicUri = biddingLogicUri;
-        this.mWinningAdRenderUri = winningAdRenderUri;
+        this.mBiddingLogicUrl = biddingLogicUrl;
+        this.mWinningAdRenderUrl = winningAdRenderUrl;
         this.mWinningAdBid = winningAdBid;
         this.mCreationTimestamp = creationTimestamp;
     }
@@ -98,8 +98,8 @@ public final class DBAdSelection {
             return mAdSelectionId == adSelection.mAdSelectionId
                     && Objects.equals(mCustomAudienceSignals, adSelection.mCustomAudienceSignals)
                     && mContextualSignals.equals(adSelection.mContextualSignals)
-                    && Objects.equals(mBiddingLogicUri, adSelection.mBiddingLogicUri)
-                    && Objects.equals(mWinningAdRenderUri, adSelection.mWinningAdRenderUri)
+                    && Objects.equals(mBiddingLogicUrl, adSelection.mBiddingLogicUrl)
+                    && Objects.equals(mWinningAdRenderUrl, adSelection.mWinningAdRenderUrl)
                     && mWinningAdBid == adSelection.mWinningAdBid
                     && Objects.equals(mCreationTimestamp, adSelection.mCreationTimestamp);
         }
@@ -112,8 +112,8 @@ public final class DBAdSelection {
                 mAdSelectionId,
                 mCustomAudienceSignals,
                 mContextualSignals,
-                mBiddingLogicUri,
-                mWinningAdRenderUri,
+                mBiddingLogicUrl,
+                mWinningAdRenderUrl,
                 mWinningAdBid,
                 mCreationTimestamp);
     }
@@ -143,17 +143,19 @@ public final class DBAdSelection {
     }
 
     /**
-     * @return the biddingLogicUri that is used to fetch the generateBid() and the reportResults().
+     * @return the biddingLogicUrl that is used to fetch the generateBid() and the reportResults().
      */
     @Nullable
-    public Uri getBiddingLogicUri() {
-        return mBiddingLogicUri;
+    public Uri getBiddingLogicUrl() {
+        return mBiddingLogicUrl;
     }
 
-    /** @return the rendering URI of the winning ad in this ad selection. */
+    /**
+     * @return the rendering URL of the winning ad in this ad selection.
+     */
     @NonNull
-    public Uri getWinningAdRenderUri() {
-        return mWinningAdRenderUri;
+    public Uri getWinningAdRenderUrl() {
+        return mWinningAdRenderUrl;
     }
 
     /**
@@ -176,8 +178,8 @@ public final class DBAdSelection {
         private long mAdSelectionId = UNSET;
         private CustomAudienceSignals mCustomAudienceSignals;
         private String mContextualSignals;
-        private Uri mBiddingLogicUri;
-        private Uri mWinningAdRenderUri;
+        private Uri mBiddingLogicUrl;
+        private Uri mWinningAdRenderUrl;
         private double mWinningAdBid;
         private Instant mCreationTimestamp;
 
@@ -208,20 +210,20 @@ public final class DBAdSelection {
         }
 
         /**
-         * Sets the buyer-provided biddingLogicUri that is used to fetch the generateBid() and
+         * Sets the buyer-provided biddingLogicUrl that is used to fetch the generateBid() and
          * reportResults() javascript.
          */
         @NonNull
-        public DBAdSelection.Builder setBiddingLogicUri(@Nullable Uri biddingLogicUri) {
-            this.mBiddingLogicUri = biddingLogicUri;
+        public DBAdSelection.Builder setBiddingLogicUrl(@Nullable Uri biddingLogicUrl) {
+            this.mBiddingLogicUrl = biddingLogicUrl;
             return this;
         }
 
-        /** Sets the winning ad's rendering URI for this AdSelection. */
+        /** Sets the winning ad's rendering URL for this AdSelection. */
         @NonNull
-        public DBAdSelection.Builder setWinningAdRenderUri(@NonNull Uri mWinningAdRenderUri) {
-            Objects.requireNonNull(mWinningAdRenderUri);
-            this.mWinningAdRenderUri = mWinningAdRenderUri;
+        public DBAdSelection.Builder setWinningAdRenderUrl(@NonNull Uri mWinningAdRenderUrl) {
+            Objects.requireNonNull(mWinningAdRenderUrl);
+            this.mWinningAdRenderUrl = mWinningAdRenderUrl;
             return this;
         }
 
@@ -256,19 +258,19 @@ public final class DBAdSelection {
             Preconditions.checkArgument(
                     mWinningAdBid > 0, "A winning ad should not have non-positive bid.");
             boolean oneNull =
-                    Objects.isNull(mCustomAudienceSignals) ^ Objects.isNull(mBiddingLogicUri);
+                    Objects.isNull(mCustomAudienceSignals) ^ Objects.isNull(mBiddingLogicUrl);
             Preconditions.checkArgument(
                     !oneNull, "Buyer fields must both be null in case of contextual ad.");
             Objects.requireNonNull(mContextualSignals);
-            Objects.requireNonNull(mWinningAdRenderUri);
+            Objects.requireNonNull(mWinningAdRenderUrl);
             Objects.requireNonNull(mCreationTimestamp);
 
             return new DBAdSelection(
                     mAdSelectionId,
                     mCustomAudienceSignals,
                     mContextualSignals,
-                    mBiddingLogicUri,
-                    mWinningAdRenderUri,
+                    mBiddingLogicUrl,
+                    mWinningAdRenderUrl,
                     mWinningAdBid,
                     mCreationTimestamp);
         }

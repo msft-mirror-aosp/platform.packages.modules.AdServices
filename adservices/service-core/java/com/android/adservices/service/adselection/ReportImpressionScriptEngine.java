@@ -77,7 +77,7 @@ public class ReportImpressionScriptEngine {
     private final Executor mExecutor = MoreExecutors.directExecutor();
 
     public ReportImpressionScriptEngine(Context context) {
-        mJsEngine = JSScriptEngine.getInstance(context);
+        mJsEngine = new JSScriptEngine(context);
     }
 
     /**

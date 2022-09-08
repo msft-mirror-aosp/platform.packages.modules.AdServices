@@ -28,13 +28,15 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 
-/** A public key used to encrypt aggregatable reports. */
-public final class AggregateEncryptionKeyManager {
+/**
+ * A public key used to encrypt aggregatable reports.
+ */
+final class AggregateEncryptionKeyManager {
     private final DatastoreManager mDatastoreManager;
     private final AggregateEncryptionKeyFetcher mAggregateEncryptionKeyFetcher;
     private final Clock mClock;
 
-    public AggregateEncryptionKeyManager(DatastoreManager datastoreManager) {
+    AggregateEncryptionKeyManager(DatastoreManager datastoreManager) {
         mDatastoreManager = datastoreManager;
         mAggregateEncryptionKeyFetcher = new AggregateEncryptionKeyFetcher();
         mClock = Clock.systemUTC();
@@ -48,11 +50,7 @@ public final class AggregateEncryptionKeyManager {
         mClock = clock;
     }
 
-    /**
-     * Retrieves a {@link List<AggregateEncryptionKey>} in which the size of the collection matches
-     * the numKeys specified in the parameters. If no keys are found, the collection would be empty.
-     */
-    public List<AggregateEncryptionKey> getAggregateEncryptionKeys(int numKeys) {
+    List<AggregateEncryptionKey> getAggregateEncryptionKeys(int numKeys) {
         long eventTime = mClock.millis();
 
         Optional<List<AggregateEncryptionKey>> aggregateEncryptionKeysOptional =

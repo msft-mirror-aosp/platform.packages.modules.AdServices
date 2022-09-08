@@ -16,17 +16,14 @@
 
 package com.android.adservices.service.common;
 
-import android.annotation.NonNull;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.AdServicesExecutors;
 import com.android.adservices.service.measurement.MeasurementImpl;
-import com.android.adservices.service.topics.TopicsWorker;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.concurrent.Executor;
@@ -52,9 +49,6 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     /** Value if the package change was an installation. */
     public static final String PACKAGE_ADDED = "package_added";
 
-    /** Value if the package had its data cleared. */
-    public static final String PACKAGE_DATA_CLEARED = "package_data_cleared";
-
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
 
     @Override
@@ -66,13 +60,9 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                 switch (intent.getStringExtra(ACTION_KEY)) {
                     case PACKAGE_FULLY_REMOVED:
                         onPackageFullyRemoved(context, packageUri);
-                        topicsOnPackageFullyRemoved(context, packageUri);
                         break;
                     case PACKAGE_ADDED:
                         onPackageAdded(context, packageUri);
-                        break;
-                    case PACKAGE_DATA_CLEARED:
-                        onPackageDataCleared(context, packageUri);
                         break;
                 }
                 break;
@@ -81,13 +71,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
 
     @VisibleForTesting
     void onPackageFullyRemoved(Context context, Uri packageUri) {
-        LogUtil.i("Package Fully Removed:" + packageUri);
-        sBackgroundExecutor.execute(
-                () -> MeasurementImpl.getInstance(context).deletePackageRecords(packageUri));
-    }
-
-    void onPackageDataCleared(Context context, Uri packageUri) {
-        LogUtil.i("Package Data Cleared: " + packageUri);
+        LogUtil.i("Package Fully Removed: " + packageUri);
         sBackgroundExecutor.execute(
                 () -> MeasurementImpl.getInstance(context).deletePackageRecords(packageUri));
     }
@@ -99,16 +83,5 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                 () ->
                         MeasurementImpl.getInstance(context)
                                 .doInstallAttribution(packageUri, System.currentTimeMillis()));
-    }
-
-    private void topicsOnPackageFullyRemoved(Context context, @NonNull Uri packageUri) {
-        if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
-            LogUtil.e("Topics API is disabled");
-            return;
-        }
-
-        LogUtil.d("Deleting topics data for package: " + packageUri.toString());
-        sBackgroundExecutor.execute(
-                () -> TopicsWorker.getInstance(context).deletePackageData(packageUri));
     }
 }

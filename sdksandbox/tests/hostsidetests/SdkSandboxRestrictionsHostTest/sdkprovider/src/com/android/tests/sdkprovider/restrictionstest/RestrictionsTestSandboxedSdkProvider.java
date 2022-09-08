@@ -16,6 +16,7 @@
 
 package com.android.tests.sdkprovider.restrictionstest;
 
+import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -29,10 +30,13 @@ import java.util.concurrent.Executor;
 public class RestrictionsTestSandboxedSdkProvider extends SandboxedSdkProvider {
 
     private static final String BUNDLE_KEY_PHASE_NAME = "phase-name";
+    private SandboxedSdkContext mSdkContext;
 
     @Override
-    public void onLoadSdk(Bundle params, Executor executor, OnLoadSdkCallback callback) {
-        callback.onLoadSdkFinished(new Bundle());
+    public void initSdk(SandboxedSdkContext sandboxedSdkContext, Bundle params, Executor executor,
+            InitSdkCallback callback) {
+        mSdkContext = sandboxedSdkContext;
+        callback.onInitSdkFinished(new Bundle());
     }
 
     @Override
@@ -43,7 +47,10 @@ public class RestrictionsTestSandboxedSdkProvider extends SandboxedSdkProvider {
     }
 
     @Override
-    public void onDataReceived(Bundle data, DataReceivedCallback callback) {}
+    public void onExtraDataReceived(Bundle extraData) {
+
+    }
+
 
     private void handlePhase(Bundle params) {
         String phaseName = params.getString(BUNDLE_KEY_PHASE_NAME, "");
@@ -58,12 +65,10 @@ public class RestrictionsTestSandboxedSdkProvider extends SandboxedSdkProvider {
     // Tries to register a broadcast receiver. An exception will be thrown if broadcast restrictions
     // are being enforced.
     void testSdkSandboxBroadcastRestrictions() {
-        getBaseContext()
-                .registerReceiver(
-                        new BroadcastReceiver() {
-                            @Override
-                            public void onReceive(Context context, Intent intent) {}
-                        },
-                        new IntentFilter(Intent.ACTION_SEND));
+        mSdkContext.registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+            }
+        }, new IntentFilter(Intent.ACTION_SEND));
     }
 }

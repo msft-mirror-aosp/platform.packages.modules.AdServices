@@ -109,13 +109,7 @@ public class DevContextFilter {
         }
     }
 
-    /**
-     * Returns true if the callingAppPackage is debuggable.
-     *
-     * @param callingAppPackage the calling app package
-     */
-    @VisibleForTesting
-    public boolean isDebuggable(String callingAppPackage) {
+    private boolean isDebuggable(String callingAppPackage) {
         try {
             ApplicationInfo applicationInfo =
                     mPackageManager.getApplicationInfo(
@@ -132,9 +126,7 @@ public class DevContextFilter {
         }
     }
 
-    /** Returns true if developer options are enabled. */
-    @VisibleForTesting
-    public boolean isDeveloperMode() {
+    private boolean isDeveloperMode() {
         return Settings.Global.getInt(
                         mContentResolver, Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0)
                 != 0;

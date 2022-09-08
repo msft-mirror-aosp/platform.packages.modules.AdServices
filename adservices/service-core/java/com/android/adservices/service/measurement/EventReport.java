@@ -283,12 +283,8 @@ public class EventReport {
             mBuilding.mSourceId = source.getEventId();
             mBuilding.mAdTechDomain = source.getAdTechDomain();
             mBuilding.mStatus = Status.PENDING;
-            mBuilding.mAttributionDestination = trigger.getAttributionDestination();
-            mBuilding.mReportTime =
-                    source.getReportingTime(
-                            trigger.getTriggerTime(),
-                            DestinationType.getDestinationType(
-                                    trigger.getAttributionDestination()));
+            mBuilding.mAttributionDestination = source.getAttributionDestination();
+            mBuilding.mReportTime = source.getReportingTime(trigger.getTriggerTime());
             mBuilding.mSourceType = source.getSourceType();
             mBuilding.mRandomizedTriggerRate = source.getRandomAttributionProbability();
             return this;

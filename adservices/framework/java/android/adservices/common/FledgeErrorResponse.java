@@ -18,6 +18,7 @@ package android.adservices.common;
 
 import android.adservices.common.AdServicesStatusUtils.StatusCode;
 import android.adservices.exceptions.AdServicesException;
+import android.adservices.exceptions.ApiNotAuthorizedException;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.os.Parcel;
@@ -107,7 +108,7 @@ public final class FledgeErrorResponse implements Parcelable {
                 innerException = new IllegalArgumentException();
                 break;
             case AdServicesStatusUtils.STATUS_UNAUTHORIZED:
-                innerException = new SecurityException();
+                innerException = new ApiNotAuthorizedException();
                 break;
             case AdServicesStatusUtils.STATUS_SUCCESS: // Intentional fallthrough
             case AdServicesStatusUtils.STATUS_UNKNOWN_ERROR: // Intentional fallthrough

@@ -69,7 +69,7 @@ public class AdSelectionClient {
                                     completer.set(
                                             new AdSelectionOutcome.Builder()
                                                     .setAdSelectionId(result.getAdSelectionId())
-                                                    .setRenderUri(result.getRenderUri())
+                                                    .setRenderUrl(result.getRenderUrl())
                                                     .build());
                                 }
 

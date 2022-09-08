@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.measurement.actions;
 
-import java.util.Objects;
-
 public final class ReportingJob implements Action {
     public final long mTimestamp;
 
@@ -27,18 +25,5 @@ public final class ReportingJob implements Action {
 
     public long getComparable() {
         return mTimestamp;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ReportingJob)) return false;
-        ReportingJob that = (ReportingJob) o;
-        return mTimestamp == that.mTimestamp;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(mTimestamp);
     }
 }

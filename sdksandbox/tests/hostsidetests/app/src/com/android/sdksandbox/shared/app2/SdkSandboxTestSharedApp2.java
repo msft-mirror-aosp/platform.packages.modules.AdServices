@@ -19,7 +19,7 @@ package com.android.sdksandbox.shared.app2;
 import static com.google.common.truth.Truth.assertThat;
 
 import android.app.sdksandbox.SdkSandboxManager;
-import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
+import android.app.sdksandbox.testutils.FakeRemoteSdkCallback;
 import android.content.Context;
 import android.os.Bundle;
 
@@ -48,7 +48,7 @@ public class SdkSandboxTestSharedApp2  {
     @Test
     public void testLoadSdkIsSuccessful() {
         Bundle params = new Bundle();
-        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        FakeRemoteSdkCallback callback = new FakeRemoteSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_PACKAGE_NAME, params,
                 Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isTrue();

@@ -20,9 +20,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/** Represent the result from the getTopics API. */
-public final class GetTopicsResponse {
-    /** List of Topic objects returned by getTopics API. */
+/**
+ * Represent the result from the getTopics API.
+ */
+public class GetTopicsResponse {
     private final List<Topic> mTopics;
 
     private GetTopicsResponse(@NonNull List<Topic> topics) {
@@ -52,8 +53,8 @@ public final class GetTopicsResponse {
     }
 
     /**
-     * Builder for {@link GetTopicsResponse} objects. This class should be used in test
-     * implementation as expected response from Topics API
+     * Builder for {@link GetTopicsResponse} objects.
+     * This class is unhidden so that developers can write tests.
      */
     public static final class Builder {
         private List<Topic> mTopics = new ArrayList<>();
@@ -74,7 +75,8 @@ public final class GetTopicsResponse {
          */
         public @NonNull GetTopicsResponse build() {
             if (mTopics == null) {
-                throw new IllegalArgumentException("Topics is null");
+                throw new IllegalArgumentException(
+                        "Topics or TaxonomyVersion or ModelVersion is null");
             }
             return new GetTopicsResponse(mTopics);
         }

@@ -102,7 +102,7 @@ public class SdkSandboxServiceImpl extends Service {
             String sdkCeDataDir,
             String sdkDeDataDir,
             Bundle params,
-            ILoadSdkInSandboxCallback callback) {
+            ISdkSandboxToSdkSandboxManagerCallback callback) {
         enforceCallerIsSystemServer();
         final long token = Binder.clearCallingIdentity();
         try {
@@ -158,12 +158,12 @@ public class SdkSandboxServiceImpl extends Service {
             @Nullable String sdkCeDataDir,
             @Nullable String sdkDeDataDir,
             @NonNull Bundle params,
-            @NonNull ILoadSdkInSandboxCallback callback) {
+            @NonNull ISdkSandboxToSdkSandboxManagerCallback callback) {
         synchronized (mHeldSdk) {
             if (mHeldSdk.containsKey(sdkToken)) {
-                sendLoadError(
-                        callback,
-                        ILoadSdkInSandboxCallback.LOAD_SDK_ALREADY_LOADED,
+                sendLoadError(callback,
+                        ISdkSandboxToSdkSandboxManagerCallback
+                                .LOAD_SDK_ALREADY_LOADED,
                         "Already loaded sdk for package " + applicationInfo.packageName);
                 return;
             }
@@ -193,19 +193,19 @@ public class SdkSandboxServiceImpl extends Service {
                 mHeldSdk.put(sdkToken, sandboxedSdkHolder);
             }
         } catch (ClassNotFoundException | NoSuchMethodException e) {
-            sendLoadError(
-                    callback,
-                    ILoadSdkInSandboxCallback.LOAD_SDK_NOT_FOUND,
+            sendLoadError(callback,
+                    ISdkSandboxToSdkSandboxManagerCallback.LOAD_SDK_NOT_FOUND,
                     "Failed to find: " + SandboxedSdkHolder.class.getName());
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            sendLoadError(
-                    callback,
-                    ILoadSdkInSandboxCallback.LOAD_SDK_INSTANTIATION_ERROR,
+            sendLoadError(callback,
+                    ISdkSandboxToSdkSandboxManagerCallback
+                            .LOAD_SDK_INSTANTIATION_ERROR,
                     "Failed to instantiate " + SandboxedSdkHolder.class.getName() + ": " + e);
         }
     }
 
-    private void sendLoadError(ILoadSdkInSandboxCallback callback, int errorCode, String message) {
+    private void sendLoadError(ISdkSandboxToSdkSandboxManagerCallback callback,
+            int errorCode, String message) {
         try {
             callback.onLoadSdkError(errorCode, message);
         } catch (RemoteException e) {
@@ -229,7 +229,7 @@ public class SdkSandboxServiceImpl extends Service {
                 @Nullable String sdkCeDataDir,
                 @Nullable String sdkDeDataDir,
                 @NonNull Bundle params,
-                @NonNull ILoadSdkInSandboxCallback callback) {
+                @NonNull ISdkSandboxToSdkSandboxManagerCallback callback) {
             Objects.requireNonNull(callingPackageName, "callingPackageName should not be null");
             Objects.requireNonNull(sdkToken, "sdkToken should not be null");
             Objects.requireNonNull(applicationInfo, "applicationInfo should not be null");

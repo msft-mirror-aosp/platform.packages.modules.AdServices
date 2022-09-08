@@ -24,9 +24,9 @@ import android.content.ComponentName;
 import android.content.Context;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.AdServicesConfig;
+import com.android.adservices.service.AdServicesExecutors;
 import com.android.adservices.service.measurement.SystemHealthParams;
 
 import java.util.concurrent.Executor;
@@ -38,7 +38,7 @@ import java.util.concurrent.Executor;
  */
 public final class EventFallbackReportingJobService extends JobService {
 
-    private static final Executor sBlockingExecutor = AdServicesExecutors.getBlockingExecutor();
+    private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
 
     @Override
     public void onCreate() {
@@ -47,7 +47,7 @@ public final class EventFallbackReportingJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
-        sBlockingExecutor.execute(() -> {
+        sBackgroundExecutor.execute(() -> {
             boolean success = new EventReportingJobHandler(
                     DatastoreManagerFactory.getDatastoreManager(
                             getApplicationContext()))

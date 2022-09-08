@@ -27,17 +27,19 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
-import android.net.Uri;
 
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
+import com.android.adservices.service.measurement.AdtechUrl;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
@@ -69,7 +71,6 @@ import java.util.concurrent.TimeUnit;
 public class AttributionJobHandlerTest {
 
     private static final Context sContext = ApplicationProvider.getApplicationContext();
-    private static final Uri APP_DESTINATION = Uri.parse("android-app://com.example.app");
     private static final String EVENT_TRIGGERS =
             "[\n"
                     + "{\n"
@@ -116,11 +117,26 @@ public class AttributionJobHandlerTest {
     public void before() {
         mDatastoreManager = new FakeDatastoreManager();
         SQLiteDatabase db = DbHelper.getInstance(sContext).getWritableDatabase();
+        List<AdtechUrl> adtechUrlList = new ArrayList<>();
+        adtechUrlList.add(buildAdtechUrl(
+                "https://test1.example.com", "test1"));
+        adtechUrlList.add(buildAdtechUrl(
+                "https://test2.example.com", "test1"));
+        adtechUrlList.add(buildAdtechUrl(
+                "https://test3.example.com", "test3"));
+        for (AdtechUrl adtechUrl : adtechUrlList) {
+            ContentValues values = new ContentValues();
+            values.put("postback_url", adtechUrl.getPostbackUrl());
+            values.put("ad_tech_id", adtechUrl.getAdtechId());
+            long row = db.insert("msmt_adtech_urls", null, values);
+            Assert.assertNotEquals("AdtechUrl insertion failed", -1, row);
+        }
     }
 
     @After
     public void after() {
         SQLiteDatabase db = DbHelper.getInstance(sContext).getWritableDatabase();
+        db.delete("msmt_adtech_urls", null, null);
     }
 
     @Test
@@ -416,20 +432,15 @@ public class AttributionJobHandlerTest {
                         .setStatus(EventReport.Status.PENDING)
                         .setTriggerPriority(100L)
                         .setReportTime(5L)
-                        .setAttributionDestination(APP_DESTINATION)
                         .build();
-        EventReport eventReport2 =
-                new EventReport.Builder()
-                        .setStatus(EventReport.Status.DELIVERED)
-                        .setReportTime(5L)
-                        .setAttributionDestination(source.getAppDestination())
-                        .build();
-        EventReport eventReport3 =
-                new EventReport.Builder()
-                        .setStatus(EventReport.Status.DELIVERED)
-                        .setReportTime(5L)
-                        .setAttributionDestination(source.getAppDestination())
-                        .build();
+        EventReport eventReport2 = new EventReport.Builder()
+                .setStatus(EventReport.Status.DELIVERED)
+                .setReportTime(5L)
+                .build();
+        EventReport eventReport3 = new EventReport.Builder()
+                .setStatus(EventReport.Status.DELIVERED)
+                .setReportTime(5L)
+                .build();
         List<EventReport> matchingReports = new ArrayList<>();
         matchingReports.add(eventReport1);
         matchingReports.add(eventReport2);
@@ -437,10 +448,9 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getSourceEventReports(source)).thenReturn(matchingReports);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
-        when(source.getReportingTime(anyLong(), any())).thenReturn(5L);
+        when(source.getReportingTime(anyLong())).thenReturn(5L);
         when(source.getDedupKeys()).thenReturn(new ArrayList<>());
         when(source.getAttributionMode()).thenReturn(Source.AttributionMode.TRUTHFULLY);
-        when(source.getAppDestination()).thenReturn(APP_DESTINATION);
         AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
         attributionService.performPendingAttributions();
         verify(mMeasurementDao).deleteEventReport(eventReport1);
@@ -483,6 +493,28 @@ public class AttributionJobHandlerTest {
         verify(mTransaction, times(2)).begin();
         verify(mTransaction).rollback();
         verify(mTransaction, times(2)).end();
+    }
+
+    @Test
+    public void testFindAdtechUrl() {
+        AttributionJobHandler attributionJobHandler = new AttributionJobHandler(
+                DatastoreManagerFactory.getDatastoreManager(sContext));
+        AdtechUrl adtechUrl = attributionJobHandler.findAdtechUrl(
+                "https://test1.example.com");
+        Assert.assertNotNull(adtechUrl);
+        Assert.assertEquals(adtechUrl.getAdtechId(), "test1");
+    }
+
+    @Test
+    public void testGetAllAdtechUrl() {
+        AttributionJobHandler attributionJobHandler = new AttributionJobHandler(
+                DatastoreManagerFactory.getDatastoreManager(sContext));
+        List<String> urls = attributionJobHandler.getAllAdtechUrls(
+                "https://test1.example.com");
+        Assert.assertEquals(urls.size(), 2);
+    }
+    private AdtechUrl buildAdtechUrl(String postbackUrl, String adtechId) {
+        return new AdtechUrl.Builder().setPostbackUrl(postbackUrl).setAdtechId(adtechId).build();
     }
 
     @Test
@@ -1054,10 +1086,8 @@ public class AttributionJobHandlerTest {
                         .setSourceId(source.getEventId())
                         .setAdTechDomain(source.getAdTechDomain())
                         .setStatus(EventReport.Status.PENDING)
-                        .setAttributionDestination(source.getAppDestination())
-                        .setReportTime(
-                                source.getReportingTime(
-                                        trigger.getTriggerTime(), trigger.getDestinationType()))
+                        .setAttributionDestination(source.getAttributionDestination())
+                        .setReportTime(source.getReportingTime(trigger.getTriggerTime()))
                         .setSourceType(source.getSourceType())
                         .setRandomizedTriggerRate(source.getRandomAttributionProbability())
                         .build();
@@ -1132,10 +1162,8 @@ public class AttributionJobHandlerTest {
                         .setSourceId(source.getEventId())
                         .setAdTechDomain(source.getAdTechDomain())
                         .setStatus(EventReport.Status.PENDING)
-                        .setAttributionDestination(source.getAppDestination())
-                        .setReportTime(
-                                source.getReportingTime(
-                                        trigger.getTriggerTime(), trigger.getDestinationType()))
+                        .setAttributionDestination(source.getAttributionDestination())
+                        .setReportTime(source.getReportingTime(trigger.getTriggerTime()))
                         .setSourceType(source.getSourceType())
                         .setRandomizedTriggerRate(source.getRandomAttributionProbability())
                         .build();
@@ -1213,10 +1241,8 @@ public class AttributionJobHandlerTest {
                         .setSourceId(source.getEventId())
                         .setAdTechDomain(source.getAdTechDomain())
                         .setStatus(EventReport.Status.PENDING)
-                        .setAttributionDestination(source.getAppDestination())
-                        .setReportTime(
-                                source.getReportingTime(
-                                        trigger.getTriggerTime(), trigger.getDestinationType()))
+                        .setAttributionDestination(source.getAttributionDestination())
+                        .setReportTime(source.getReportingTime(trigger.getTriggerTime()))
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setRandomizedTriggerRate(source.getRandomAttributionProbability())
                         .build();

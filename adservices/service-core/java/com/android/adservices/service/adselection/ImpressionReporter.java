@@ -34,7 +34,6 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelectionEntry;
-import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -58,7 +57,7 @@ public class ImpressionReporter {
 
     @NonNull private final Context mContext;
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
-    @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
+    @NonNull private final AdSelectionHttpClient mAdSelectionHttpClient;
     @NonNull private final ListeningExecutorService mListeningExecutorService;
     @NonNull private final ReportImpressionScriptEngine mJsEngine;
     @NonNull private final AdSelectionDevOverridesHelper mAdSelectionDevOverridesHelper;
@@ -68,20 +67,20 @@ public class ImpressionReporter {
             @NonNull Context context,
             @NonNull ExecutorService executor,
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
-            @NonNull AdServicesHttpsClient adServicesHttpsClient,
+            @NonNull AdSelectionHttpClient adSelectionHttpClient,
             @NonNull DevContext devContext,
             @NonNull AdServicesLogger adServicesLogger) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(adSelectionEntryDao);
-        Objects.requireNonNull(adServicesHttpsClient);
+        Objects.requireNonNull(adSelectionHttpClient);
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(adServicesLogger);
 
         mContext = context;
         mListeningExecutorService = MoreExecutors.listeningDecorator(executor);
         mAdSelectionEntryDao = adSelectionEntryDao;
-        mAdServicesHttpsClient = adServicesHttpsClient;
+        mAdSelectionHttpClient = adSelectionHttpClient;
         mJsEngine = new ReportImpressionScriptEngine(mContext);
         mAdSelectionDevOverridesHelper =
                 new AdSelectionDevOverridesHelper(devContext, mAdSelectionEntryDao);
@@ -187,11 +186,11 @@ public class ImpressionReporter {
     @NonNull
     private ListenableFuture<List<Void>> doReport(ReportingUrls reportingUrls) {
         ListenableFuture<Void> sellerFuture =
-                mAdServicesHttpsClient.reportUrl(reportingUrls.sellerReportingUri);
+                mAdSelectionHttpClient.reportUrl(reportingUrls.sellerReportingUri);
         ListenableFuture<Void> buyerFuture;
 
         if (!Objects.isNull(reportingUrls.buyerReportingUri)) {
-            buyerFuture = mAdServicesHttpsClient.reportUrl(reportingUrls.buyerReportingUri);
+            buyerFuture = mAdSelectionHttpClient.reportUrl(reportingUrls.buyerReportingUri);
         } else {
             buyerFuture = Futures.immediateFuture(null);
         }
@@ -247,8 +246,8 @@ public class ImpressionReporter {
                 .transformAsync(
                         jsOverride -> {
                             if (jsOverride == null) {
-                                return mAdServicesHttpsClient.fetchPayload(
-                                        ctx.mAdSelectionConfig.getDecisionLogicUri());
+                                return mAdSelectionHttpClient.fetchJavascript(
+                                        ctx.mAdSelectionConfig.getDecisionLogicUrl());
                             } else {
                                 LogUtil.i(
                                         "Developer options enabled and an override JS is provided "
@@ -269,7 +268,7 @@ public class ImpressionReporter {
                             mJsEngine.reportResult(
                                     decisionLogicJs,
                                     ctx.mAdSelectionConfig,
-                                    ctx.mDBAdSelectionEntry.getWinningAdRenderUri(),
+                                    ctx.mDBAdSelectionEntry.getWinningAdRenderUrl(),
                                     ctx.mDBAdSelectionEntry.getWinningAdBid(),
                                     ctx.mDBAdSelectionEntry.getContextualSignals()))
                     .transform(

@@ -25,28 +25,28 @@ import android.os.Parcel;
 
 import org.junit.Test;
 
-/** Unit tests for {@link WebSourceParams}. */
+/** Unit tests for {@link SourceParams}. */
 public class SourceParamsTest {
     private static final Uri REGISTRATION_URI = Uri.parse("http://foo.com");
 
-    private WebSourceParams createExampleRegistration() {
-        return new WebSourceParams.Builder()
+    private SourceParams createExampleRegistration() {
+        return new SourceParams.Builder()
                 .setRegistrationUri(REGISTRATION_URI)
-                .setAllowDebugKey(true)
+                .setDebugEnabled(true)
                 .build();
     }
 
-    private void verifyExampleRegistration(WebSourceParams request) {
+    private void verifyExampleRegistration(SourceParams request) {
         assertEquals(REGISTRATION_URI, request.getRegistrationUri());
-        assertTrue(request.isAllowDebugKey());
+        assertTrue(request.isDebugEnabled());
     }
 
     @Test
     public void testDefaults() throws Exception {
-        WebSourceParams sourceRegistration =
-                new WebSourceParams.Builder().setRegistrationUri(REGISTRATION_URI).build();
+        SourceParams sourceRegistration =
+                new SourceParams.Builder().setRegistrationUri(REGISTRATION_URI).build();
         assertEquals(REGISTRATION_URI, sourceRegistration.getRegistrationUri());
-        assertFalse(sourceRegistration.isAllowDebugKey());
+        assertFalse(sourceRegistration.isDebugEnabled());
     }
 
     @Test
@@ -59,7 +59,7 @@ public class SourceParamsTest {
         Parcel p = Parcel.obtain();
         createExampleRegistration().writeToParcel(p, 0);
         p.setDataPosition(0);
-        verifyExampleRegistration(WebSourceParams.CREATOR.createFromParcel(p));
+        verifyExampleRegistration(SourceParams.CREATOR.createFromParcel(p));
         p.recycle();
     }
 }

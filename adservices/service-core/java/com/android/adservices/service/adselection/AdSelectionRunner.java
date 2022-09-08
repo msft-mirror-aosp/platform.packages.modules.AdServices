@@ -35,8 +35,6 @@ import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBBuyerDecisionLogic;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
-import com.android.adservices.service.Flags;
-import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.internal.annotations.VisibleForTesting;
@@ -44,7 +42,6 @@ import com.android.internal.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.AsyncFunction;
-import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -56,11 +53,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -71,22 +64,6 @@ import java.util.stream.Collectors;
  * <p>Class takes in an executor on which it runs the AdSelection logic
  */
 public final class AdSelectionRunner {
-    @VisibleForTesting static final String AD_SELECTION_ERROR_PATTERN = "%s: %s";
-
-    @VisibleForTesting
-    static final String ERROR_AD_SELECTION_FAILURE = "Encountered failure during Ad Selection";
-
-    @VisibleForTesting static final String ERROR_NO_WINNING_AD_FOUND = "No winning Ads found";
-
-    @VisibleForTesting
-    static final String ERROR_NO_VALID_BIDS_FOR_SCORING = "No valid bids for scoring";
-
-    @VisibleForTesting static final String ERROR_NO_CA_AVAILABLE = "No Custom Audience available";
-
-    @VisibleForTesting
-    static final String ERROR_NO_BUYERS_AVAILABLE =
-            "The list of the custom audience buyers should not be empty.";
-
     @NonNull private final Context mContext;
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
@@ -96,7 +73,6 @@ public final class AdSelectionRunner {
     @NonNull private final AdSelectionIdGenerator mAdSelectionIdGenerator;
     @NonNull private final Clock mClock;
     @NonNull private final AdServicesLogger mAdServicesLogger;
-    @NonNull private final Flags mFlags;
 
     public AdSelectionRunner(
             @NonNull final Context context,
@@ -104,8 +80,7 @@ public final class AdSelectionRunner {
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
             @NonNull final ExecutorService executorService,
             @NonNull final AdServicesLogger adServicesLogger,
-            @NonNull final DevContext devContext,
-            @NonNull final Flags flags) {
+            @NonNull final DevContext devContext) {
         mContext = context;
         mCustomAudienceDao = customAudienceDao;
         mAdSelectionEntryDao = adSelectionEntryDao;
@@ -115,16 +90,13 @@ public final class AdSelectionRunner {
                 new AdsScoreGeneratorImpl(
                         new AdSelectionScriptEngine(mContext),
                         mExecutorService,
-                        new AdServicesHttpsClient(mExecutorService),
+                        new AdSelectionHttpClient(mExecutorService),
                         devContext,
-                        mAdSelectionEntryDao,
-                        flags);
+                        mAdSelectionEntryDao);
         mAdBidGenerator =
-                new AdBidGeneratorImpl(
-                        context, executorService, devContext, mCustomAudienceDao, flags);
+                new AdBidGeneratorImpl(context, executorService, devContext, mCustomAudienceDao);
         mAdSelectionIdGenerator = new AdSelectionIdGenerator();
         mClock = Clock.systemUTC();
-        mFlags = flags;
     }
 
     @VisibleForTesting
@@ -137,8 +109,7 @@ public final class AdSelectionRunner {
             @NonNull final AdBidGenerator adBidGenerator,
             @NonNull final AdSelectionIdGenerator adSelectionIdGenerator,
             @NonNull Clock clock,
-            @NonNull final AdServicesLogger adServicesLogger,
-            @NonNull final Flags flags) {
+            @NonNull final AdServicesLogger adServicesLogger) {
         mContext = context;
         mCustomAudienceDao = customAudienceDao;
         mAdSelectionEntryDao = adSelectionEntryDao;
@@ -148,7 +119,6 @@ public final class AdSelectionRunner {
         mAdSelectionIdGenerator = adSelectionIdGenerator;
         mClock = clock;
         mAdServicesLogger = adServicesLogger;
-        mFlags = flags;
     }
 
     /**
@@ -192,7 +162,7 @@ public final class AdSelectionRunner {
             callback.onSuccess(
                     new AdSelectionResponse.Builder()
                             .setAdSelectionId(result.getAdSelectionId())
-                            .setRenderUri(result.getWinningAdRenderUri())
+                            .setRenderUrl(result.getWinningAdRenderUrl())
                             .build());
             resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
         } catch (RemoteException e) {
@@ -213,11 +183,7 @@ public final class AdSelectionRunner {
             resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
             FledgeErrorResponse selectionFailureResponse =
                     new FledgeErrorResponse.Builder()
-                            .setErrorMessage(
-                                    String.format(
-                                            AD_SELECTION_ERROR_PATTERN,
-                                            ERROR_AD_SELECTION_FAILURE,
-                                            t.getMessage()))
+                            .setErrorMessage("Encountered failure during Ad Selection")
                             .setStatusCode(resultCode)
                             .build();
             LogUtil.e(t, "Ad Selection failure: ");
@@ -281,14 +247,8 @@ public final class AdSelectionRunner {
                     return persistAdSelection(adSelectionAndJs.first, adSelectionAndJs.second);
                 };
 
-        return FluentFuture.from(dbAdSelectionBuilder)
-                .transformAsync(saveResultToPersistence, mExecutorService)
-                .withTimeout(
-                        mFlags.getAdSelectionOverallTimeoutMs(),
-                        TimeUnit.MILLISECONDS,
-                        // TODO(b/237103033): Comply with thread usage policy for AdServices;
-                        //  use a global scheduled executor
-                        new ScheduledThreadPoolExecutor(1));
+        return Futures.transformAsync(
+                dbAdSelectionBuilder, saveResultToPersistence, mExecutorService);
     }
 
     private ListenableFuture<List<DBCustomAudience>> getBuyersCustomAudience(
@@ -300,13 +260,16 @@ public final class AdSelectionRunner {
         return listeningExecutorService.submit(
                 () -> {
                     List<String> buyers = adSelectionConfig.getCustomAudienceBuyers();
-                    Preconditions.checkArgument(!buyers.isEmpty(), ERROR_NO_BUYERS_AVAILABLE);
+                    Preconditions.checkArgument(
+                            !buyers.isEmpty(),
+                            "The list of the custom audience buyers should not be empty.");
                     List<DBCustomAudience> buyerCustomAudience =
                             mCustomAudienceDao.getActiveCustomAudienceByBuyers(
                                     buyers, mClock.instant());
                     if (buyerCustomAudience == null || buyerCustomAudience.isEmpty()) {
                         // TODO(b/233296309) : Remove this exception after adding contextual ads
-                        throw new IllegalStateException(ERROR_NO_CA_AVAILABLE);
+                        throw new IllegalStateException(
+                                "No Custom Audience available for the given list of buyers.");
                     }
                     return buyerCustomAudience;
                 });
@@ -314,56 +277,22 @@ public final class AdSelectionRunner {
 
     private ListenableFuture<List<AdBiddingOutcome>> runAdBidding(
             @NonNull final List<DBCustomAudience> customAudiences,
-            @NonNull final AdSelectionConfig adSelectionConfig)
-            throws InterruptedException, ExecutionException {
+            @NonNull final AdSelectionConfig adSelectionConfig) {
         if (customAudiences.isEmpty()) {
             return Futures.immediateFailedFuture(new Throwable("No CAs found for selection"));
         }
 
-        // TODO(b/237004875) : Use common thread pool for parallel execution if possible
-        ForkJoinPool customThreadPool = new ForkJoinPool(getParallelBiddingCount());
-        final List<ListenableFuture<AdBiddingOutcome>>[] bidWinningAds =
-                new List[] {new ArrayList<>()};
-
-        try {
-            customThreadPool
-                    .submit(
-                            () -> {
-                                bidWinningAds[0] =
-                                        customAudiences.parallelStream()
-                                                .map(
-                                                        customAudience -> {
-                                                            return runAdBiddingPerCA(
-                                                                    customAudience,
-                                                                    adSelectionConfig);
-                                                        })
-                                                .collect(Collectors.toList());
-                            })
-                    .get();
-        } catch (InterruptedException e) {
-            final String exceptionReason = "Bidding Interrupted Exception";
-            LogUtil.e(exceptionReason, e);
-            throw new InterruptedException(exceptionReason);
-        } catch (ExecutionException e) {
-            final String exceptionReason = "Bidding Execution Exception";
-            LogUtil.e(exceptionReason, e);
-            throw new ExecutionException(e.getCause());
-        } finally {
-            customThreadPool.shutdownNow();
+        List<ListenableFuture<AdBiddingOutcome>> bidWinningAds = new ArrayList<>();
+        for (DBCustomAudience customAudience : customAudiences) {
+            bidWinningAds.add(runAdBiddingPerCA(customAudience, adSelectionConfig));
         }
-        return Futures.successfulAsList(bidWinningAds[0]);
-    }
 
-    private int getParallelBiddingCount() {
-        int parallelBiddingCountConfigValue = mFlags.getAdSelectionConcurrentBiddingCount();
-        int numberOfAvailableProcessors = Runtime.getRuntime().availableProcessors();
-        return Math.min(parallelBiddingCountConfigValue, numberOfAvailableProcessors);
+        return Futures.successfulAsList(bidWinningAds);
     }
 
     private ListenableFuture<AdBiddingOutcome> runAdBiddingPerCA(
             @NonNull final DBCustomAudience customAudience,
             @NonNull final AdSelectionConfig adSelectionConfig) {
-        LogUtil.v(String.format("Invoking bidding for CA: %s", customAudience.getName()));
 
         // TODO(b/233239475) : Validate Buyer signals in Ad Selection Config
         String buyerSignal =
@@ -389,7 +318,7 @@ public final class AdSelectionRunner {
                 adBiddingOutcomes.stream().filter(Objects::nonNull).collect(Collectors.toList());
 
         if (validBiddingOutcomes.isEmpty()) {
-            throw new IllegalStateException(ERROR_NO_VALID_BIDS_FOR_SCORING);
+            throw new IllegalStateException("No valid bids for scoring");
         }
         return mAdsScoreGenerator.runAdScoring(validBiddingOutcomes, adSelectionConfig);
     }
@@ -403,7 +332,7 @@ public final class AdSelectionRunner {
                                 Double.compare(
                                         a.getAdWithScore().getScore(),
                                         b.getAdWithScore().getScore()))
-                .orElseThrow(() -> new IllegalStateException(ERROR_NO_WINNING_AD_FOUND));
+                .orElseThrow(() -> new IllegalStateException("No winning Ad found"));
     }
 
     /**
@@ -424,9 +353,9 @@ public final class AdSelectionRunner {
                 .setWinningAdBid(scoringWinner.getAdWithScore().getAdWithBid().getBid())
                 .setCustomAudienceSignals(
                         scoringWinner.getCustomAudienceBiddingInfo().getCustomAudienceSignals())
-                .setWinningAdRenderUri(
-                        scoringWinner.getAdWithScore().getAdWithBid().getAdData().getRenderUri())
-                .setBiddingLogicUri(
+                .setWinningAdRenderUrl(
+                        scoringWinner.getAdWithScore().getAdWithBid().getAdData().getRenderUrl())
+                .setBiddingLogicUrl(
                         scoringWinner.getCustomAudienceBiddingInfo().getBiddingLogicUrl())
                 .setContextualSignals("{}");
         // TODO(b/230569187): get the contextualSignal securely = "invoking app name"
@@ -453,7 +382,7 @@ public final class AdSelectionRunner {
                     mAdSelectionEntryDao.persistBuyerDecisionLogic(
                             new DBBuyerDecisionLogic.Builder()
                                     .setBuyerDecisionLogicJs(buyerDecisionLogicJS)
-                                    .setBiddingLogicUri(dbAdSelection.getBiddingLogicUri())
+                                    .setBiddingLogicUrl(dbAdSelection.getBiddingLogicUrl())
                                     .build());
                     return dbAdSelection;
                 });

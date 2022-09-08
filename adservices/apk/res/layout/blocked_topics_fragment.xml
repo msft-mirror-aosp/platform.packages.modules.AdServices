@@ -14,7 +14,7 @@
      limitations under the License.
 -->
 
-<LinearLayout
+<androidx.appcompat.widget.LinearLayoutCompat
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/topics_fragment"
     android:layout_width="match_parent"
@@ -22,15 +22,10 @@
     android:paddingStart="24dp"
     android:paddingEnd="24dp"
     android:orientation="vertical">
-
-    <TextView
-        android:id="@+id/settingsUI_blocked_topics_title"
-        android:text="@string/settingsUI_blocked_topics_title"
-        style="@style/MainStyle.H1" />
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/blocked_topics_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:clipToPadding="false"
         android:scrollbars="none" />
-</LinearLayout>
+</androidx.appcompat.widget.LinearLayoutCompat>

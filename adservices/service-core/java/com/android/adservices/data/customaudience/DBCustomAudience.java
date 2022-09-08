@@ -28,7 +28,6 @@ import androidx.room.TypeConverter;
 import androidx.room.TypeConverters;
 
 import com.android.adservices.data.common.DBAdData;
-import com.android.adservices.service.customaudience.CustomAudienceUpdatableData;
 import com.android.internal.util.Preconditions;
 
 import org.json.JSONArray;
@@ -54,6 +53,10 @@ import java.util.stream.Collectors;
 @TypeConverters({DBCustomAudience.Converters.class})
 public class DBCustomAudience {
     public static final String TABLE_NAME = "custom_audience";
+    // Default to 60-day expiry
+    private static final Duration DEFAULT_EXPIRE_IN = Duration.ofDays(60);
+    private static final Duration MAX_ACTIVATE_IN = Duration.ofDays(365);
+    private static final Duration MAX_EXPIRE_IN = Duration.ofDays(365);
 
     @ColumnInfo(name = "owner", index = true)
     @NonNull
@@ -84,6 +87,10 @@ public class DBCustomAudience {
     @NonNull
     private final Instant mLastAdsAndBiddingDataUpdatedTime;
 
+    @ColumnInfo(name = "daily_update_url")
+    @NonNull
+    private final Uri mDailyUpdateUrl;
+
     @ColumnInfo(name = "user_bidding_signals")
     @Nullable
     private final String mUserBiddingSignals;
@@ -100,17 +107,11 @@ public class DBCustomAudience {
     @Nullable
     private final List<DBAdData> mAds;
 
-    public DBCustomAudience(
-            @NonNull String owner,
-            @NonNull String buyer,
-            @NonNull String name,
-            @NonNull Instant expirationTime,
-            @NonNull Instant activationTime,
-            @NonNull Instant creationTime,
-            @NonNull Instant lastAdsAndBiddingDataUpdatedTime,
-            @Nullable String userBiddingSignals,
-            @Nullable DBTrustedBiddingData trustedBiddingData,
-            @NonNull Uri biddingLogicUrl,
+    public DBCustomAudience(@NonNull String owner, @NonNull String buyer,
+            @NonNull String name, @NonNull Instant expirationTime, @NonNull Instant activationTime,
+            @NonNull Instant creationTime, @NonNull Instant lastAdsAndBiddingDataUpdatedTime,
+            @NonNull Uri dailyUpdateUrl, @Nullable String userBiddingSignals,
+            @Nullable DBTrustedBiddingData trustedBiddingData, @NonNull Uri biddingLogicUrl,
             @Nullable List<DBAdData> ads) {
         Preconditions.checkStringNotEmpty(owner, "Owner must be provided");
         Preconditions.checkStringNotEmpty(buyer, "Buyer must be provided.");
@@ -119,6 +120,7 @@ public class DBCustomAudience {
         Objects.requireNonNull(creationTime, "Creation time must be provided.");
         Objects.requireNonNull(lastAdsAndBiddingDataUpdatedTime,
                 "Last ads and bidding data updated time must be provided.");
+        Objects.requireNonNull(dailyUpdateUrl, "Daily update url must be provided.");
         Objects.requireNonNull(biddingLogicUrl, "Bidding logic url must be provided.");
 
         mOwner = owner;
@@ -128,6 +130,7 @@ public class DBCustomAudience {
         mActivationTime = activationTime;
         mCreationTime = creationTime;
         mLastAdsAndBiddingDataUpdatedTime = lastAdsAndBiddingDataUpdatedTime;
+        mDailyUpdateUrl = dailyUpdateUrl;
         mUserBiddingSignals = userBiddingSignals;
         mTrustedBiddingData = trustedBiddingData;
         mBiddingLogicUrl = biddingLogicUrl;
@@ -137,22 +140,17 @@ public class DBCustomAudience {
     /**
      * Parse parcelable {@link CustomAudience} to storage model {@link DBCustomAudience}.
      *
-     * @param parcelable the service model.
+     * @param parcelable     the service model.
      * @param callingAppName the app name where the call came from.
-     * @param currentTime the timestamp when calling the method.
-     * @param defaultExpireIn the default expiration from activation.
+     * @param currentTime    the timestamp when calling the method.
      * @return storage model
      */
     @NonNull
-    public static DBCustomAudience fromServiceObject(
-            @NonNull CustomAudience parcelable,
-            @NonNull String callingAppName,
-            @NonNull Instant currentTime,
-            @NonNull Duration defaultExpireIn) {
+    public static DBCustomAudience fromServiceObject(@NonNull CustomAudience parcelable,
+            @NonNull String callingAppName, @NonNull Instant currentTime) {
         Objects.requireNonNull(parcelable);
         Objects.requireNonNull(callingAppName);
         Objects.requireNonNull(currentTime);
-        Objects.requireNonNull(defaultExpireIn);
 
         String owner = Optional.ofNullable(parcelable.getOwner()).orElse(callingAppName);
 
@@ -160,14 +158,15 @@ public class DBCustomAudience {
         // Make it easier at query for activated CAs.
         Instant activationTime = Optional.ofNullable(parcelable.getActivationTime()).orElse(
                 currentTime);
-
         if (activationTime.isBefore(currentTime)) {
             activationTime = currentTime;
         }
+        Preconditions.checkArgument(activationTime.isBefore(currentTime.plus(getMaxActivateIn())));
 
-        Instant expirationTime =
-                Optional.ofNullable(parcelable.getExpirationTime())
-                        .orElse(activationTime.plus(defaultExpireIn));
+        Instant expirationTime = Optional.ofNullable(parcelable.getExpirationTime())
+                .orElse(activationTime.plus(getDefaultExpireIn()));
+        Preconditions.checkArgument(expirationTime.isAfter(activationTime));
+        Preconditions.checkArgument(expirationTime.isBefore(activationTime.plus(getMaxExpireIn())));
 
         Instant lastAdsAndBiddingDataUpdatedTime = parcelable.getAds().isEmpty()
                 || parcelable.getTrustedBiddingData() == null
@@ -186,47 +185,42 @@ public class DBCustomAudience {
                 .setBiddingLogicUrl(parcelable.getBiddingLogicUrl())
                 .setTrustedBiddingData(
                         DBTrustedBiddingData.fromServiceObject(parcelable.getTrustedBiddingData()))
-                .setAds(
-                        parcelable.getAds().isEmpty()
-                                ? null
-                                : parcelable.getAds().stream()
-                                        .map(DBAdData::fromServiceObject)
-                                        .collect(Collectors.toList()))
+                .setAds(parcelable.getAds().isEmpty() ? null : parcelable.getAds().stream()
+                        .map(DBAdData::fromServiceObject)
+                        .collect(Collectors.toList()))
+                .setDailyUpdateUrl(parcelable.getDailyUpdateUrl())
                 .setUserBiddingSignals(parcelable.getUserBiddingSignals())
                 .build();
     }
 
     /**
-     * Creates a copy of the current {@link DBCustomAudience} object updated with data from a {@link
-     * CustomAudienceUpdatableData} object.
+     * See {@link #getExpirationTime()} for more information about expiration times.
+     *
+     * @return the default amount of time (in seconds) a {@link CustomAudience} object will live
+     * before being expiring and being removed
      */
-    @NonNull
-    public DBCustomAudience copyWithUpdatableData(
-            @NonNull CustomAudienceUpdatableData updatableData) {
-        Objects.requireNonNull(updatableData);
+    public static Duration getDefaultExpireIn() {
+        return DEFAULT_EXPIRE_IN;
+    }
 
-        if (!updatableData.getContainsSuccessfulUpdate()) {
-            return this;
-        }
+    /**
+     * See {@link #getActivationTime()} for more information about activation times.
+     *
+     * @return the maximum permitted difference in seconds between the {@link CustomAudience}
+     * object's creation time and its activation time
+     */
+    public static Duration getMaxActivateIn() {
+        return MAX_ACTIVATE_IN;
+    }
 
-        DBCustomAudience.Builder customAudienceBuilder =
-                new Builder(this)
-                        .setLastAdsAndBiddingDataUpdatedTime(
-                                updatableData.getAttemptedUpdateTime());
-
-        if (updatableData.getUserBiddingSignals() != null) {
-            customAudienceBuilder.setUserBiddingSignals(updatableData.getUserBiddingSignals());
-        }
-
-        if (updatableData.getTrustedBiddingData() != null) {
-            customAudienceBuilder.setTrustedBiddingData(updatableData.getTrustedBiddingData());
-        }
-
-        if (updatableData.getAds() != null) {
-            customAudienceBuilder.setAds(updatableData.getAds());
-        }
-
-        return customAudienceBuilder.build();
+    /**
+     * See {@link #getExpirationTime()} for more information about expiration times.
+     *
+     * @return the maximum permitted difference in seconds between the {@link CustomAudience}
+     * object's creation time and its activation time
+     */
+    public static Duration getMaxExpireIn() {
+        return MAX_EXPIRE_IN;
     }
 
     /**
@@ -299,6 +293,16 @@ public class DBCustomAudience {
     }
 
     /**
+     * Specify where Ads and other metadata (like user_bidding_signals) are fetched from. Encodes
+     * custom audience name, coarse geo, time on list and any other information needed for fetching
+     * Ads.
+     */
+    @NonNull
+    public Uri getDailyUpdateUrl() {
+        return mDailyUpdateUrl;
+    }
+
+    /**
      * Signals needed for any on-device bidding for remarketing Ads. For instance, an App might
      * decide to store an embedding from their user features a model here while creating the custom
      * audience.
@@ -338,13 +342,12 @@ public class DBCustomAudience {
         if (this == o) return true;
         if (!(o instanceof DBCustomAudience)) return false;
         DBCustomAudience that = (DBCustomAudience) o;
-        return mOwner.equals(that.mOwner)
-                && mBuyer.equals(that.mBuyer)
-                && mName.equals(that.mName)
+        return mOwner.equals(that.mOwner) && mBuyer.equals(that.mBuyer) && mName.equals(that.mName)
                 && mExpirationTime.equals(that.mExpirationTime)
                 && mActivationTime.equals(that.mActivationTime)
                 && mCreationTime.equals(that.mCreationTime)
                 && mLastAdsAndBiddingDataUpdatedTime.equals(that.mLastAdsAndBiddingDataUpdatedTime)
+                && mDailyUpdateUrl.equals(that.mDailyUpdateUrl)
                 && Objects.equals(mUserBiddingSignals, that.mUserBiddingSignals)
                 && Objects.equals(mTrustedBiddingData, that.mTrustedBiddingData)
                 && mBiddingLogicUrl.equals(that.mBiddingLogicUrl)
@@ -353,18 +356,10 @@ public class DBCustomAudience {
 
     @Override
     public int hashCode() {
-        return Objects.hash(
-                mOwner,
-                mBuyer,
-                mName,
-                mExpirationTime,
-                mActivationTime,
-                mCreationTime,
-                mLastAdsAndBiddingDataUpdatedTime,
-                mUserBiddingSignals,
+        return Objects.hash(mOwner, mBuyer, mName, mExpirationTime, mActivationTime, mCreationTime,
+                mLastAdsAndBiddingDataUpdatedTime, mDailyUpdateUrl, mUserBiddingSignals,
                 mTrustedBiddingData,
-                mBiddingLogicUrl,
-                mAds);
+                mBiddingLogicUrl, mAds);
     }
 
     @Override
@@ -377,6 +372,7 @@ public class DBCustomAudience {
                 + ", mActivationTime=" + mActivationTime
                 + ", mCreationTime=" + mCreationTime
                 + ", mLastAdsAndBiddingDataUpdatedTime=" + mLastAdsAndBiddingDataUpdatedTime
+                + ", mDailyUpdateUrl=" + mDailyUpdateUrl
                 + ", mUserBiddingSignals='" + mUserBiddingSignals + '\''
                 + ", mTrustedBiddingData=" + mTrustedBiddingData
                 + ", mBiddingLogicUrl=" + mBiddingLogicUrl
@@ -395,6 +391,7 @@ public class DBCustomAudience {
         private Instant mActivationTime;
         private Instant mCreationTime;
         private Instant mLastAdsAndBiddingDataUpdatedTime;
+        private Uri mDailyUpdateUrl;
         private String mUserBiddingSignals;
         private DBTrustedBiddingData mTrustedBiddingData;
         private Uri mBiddingLogicUrl;
@@ -414,6 +411,7 @@ public class DBCustomAudience {
             mCreationTime = customAudience.getCreationTime();
             mLastAdsAndBiddingDataUpdatedTime =
                     customAudience.getLastAdsAndBiddingDataUpdatedTime();
+            mDailyUpdateUrl = customAudience.getDailyUpdateUrl();
             mUserBiddingSignals = customAudience.getUserBiddingSignals();
             mTrustedBiddingData = customAudience.getTrustedBiddingData();
             mBiddingLogicUrl = customAudience.getBiddingLogicUrl();
@@ -478,6 +476,14 @@ public class DBCustomAudience {
         }
 
         /**
+         * See {@link #getDailyUpdateUrl()} for detail.
+         */
+        public Builder setDailyUpdateUrl(Uri dailyUpdateUrl) {
+            mDailyUpdateUrl = dailyUpdateUrl;
+            return this;
+        }
+
+        /**
          * See {@link #getUserBiddingSignals()} for detail.
          */
         public Builder setUserBiddingSignals(String userBiddingSignals) {
@@ -493,7 +499,9 @@ public class DBCustomAudience {
             return this;
         }
 
-        /** See {@link #getBiddingLogicUrl()} for detail. */
+        /**
+         * See {@link #getBiddingLogicUrl()} for detail.
+         */
         public Builder setBiddingLogicUrl(Uri biddingLogicUrl) {
             mBiddingLogicUrl = biddingLogicUrl;
             return this;
@@ -513,18 +521,9 @@ public class DBCustomAudience {
          * @return the built {@link DBCustomAudience}.
          */
         public DBCustomAudience build() {
-            return new DBCustomAudience(
-                    mOwner,
-                    mBuyer,
-                    mName,
-                    mExpirationTime,
-                    mActivationTime,
-                    mCreationTime,
-                    mLastAdsAndBiddingDataUpdatedTime,
-                    mUserBiddingSignals,
-                    mTrustedBiddingData,
-                    mBiddingLogicUrl,
-                    mAds);
+            return new DBCustomAudience(mOwner, mBuyer, mName, mExpirationTime, mActivationTime,
+                    mCreationTime, mLastAdsAndBiddingDataUpdatedTime, mDailyUpdateUrl,
+                    mUserBiddingSignals, mTrustedBiddingData, mBiddingLogicUrl, mAds);
         }
     }
 
@@ -591,7 +590,7 @@ public class DBCustomAudience {
          */
         private static JSONObject toJson(DBAdData adData) throws JSONException {
             return new org.json.JSONObject()
-                    .put(RENDER_URL_FIELD_NAME, serializeUrl(adData.getRenderUri()))
+                    .put(RENDER_URL_FIELD_NAME, serializeUrl(adData.getRenderUrl()))
                     .put(METADATA_FIELD_NAME, adData.getMetadata());
         }
 

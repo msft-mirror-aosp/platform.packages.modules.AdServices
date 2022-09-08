@@ -85,11 +85,6 @@ public class SandboxedSdkContextUnitTest {
     }
 
     @Test
-    public void testSdkPackageName() {
-        assertThat(mSandboxedSdkContext.getSdkPackageName()).isEqualTo(RESOURCES_PACKAGE);
-    }
-
-    @Test
     public void testClientPackageName() {
         assertThat(mSandboxedSdkContext.getClientPackageName()).isEqualTo(CLIENT_PACKAGE_NAME);
     }

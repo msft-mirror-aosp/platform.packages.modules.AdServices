@@ -57,8 +57,6 @@ public class ReportImpressionScriptEngineTest {
     private final ReportImpressionScriptEngine mReportImpressionScriptEngine =
             new ReportImpressionScriptEngine(sContext);
 
-    private static final String BUYER_1 = AdSelectionConfigFixture.BUYER_1;
-
     private final String mResultField = "result";
 
     private final String mDummyDomain = "http://www.domain.com/adverts/123";
@@ -76,6 +74,7 @@ public class ReportImpressionScriptEngineTest {
                     .setExpirationTime(Instant.now())
                     .setUserBiddingSignals("{\"user_bidding_signals\":1}")
                     .build();
+
 
     @Test
     public void testCanCallScript() throws Exception {
@@ -242,7 +241,7 @@ public class ReportImpressionScriptEngineTest {
                 reportWin(
                         jsScript,
                         adSelectionConfig.getAdSelectionSignals(),
-                        adSelectionConfig.getPerBuyerSignals().get(BUYER_1),
+                        adSelectionConfig.getPerBuyerSignals().get("buyer1"),
                         mSignalsForBuyer,
                         adSelectionConfig.getSellerSignals(),
                         mCustomAudienceSignals);
@@ -264,7 +263,7 @@ public class ReportImpressionScriptEngineTest {
                     reportWin(
                             jsScript,
                             adSelectionConfig.getAdSelectionSignals(),
-                            adSelectionConfig.getPerBuyerSignals().get(BUYER_1),
+                            adSelectionConfig.getPerBuyerSignals().get("buyer1"),
                             mSignalsForBuyer,
                             adSelectionConfig.getSellerSignals(),
                             mCustomAudienceSignals);
@@ -287,7 +286,7 @@ public class ReportImpressionScriptEngineTest {
                     reportWin(
                             jsScript,
                             adSelectionConfig.getAdSelectionSignals(),
-                            adSelectionConfig.getPerBuyerSignals().get(BUYER_1),
+                            adSelectionConfig.getPerBuyerSignals().get("buyer1"),
                             mSignalsForBuyer,
                             adSelectionConfig.getSellerSignals(),
                             mCustomAudienceSignals);

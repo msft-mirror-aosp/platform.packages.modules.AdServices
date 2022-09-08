@@ -35,20 +35,20 @@ public final class AdSelectionResponse implements Parcelable {
     private static final long UNSET = 0;
 
     private final long mAdSelectionId;
-    @NonNull private final Uri mRenderUri;
+    @NonNull private final Uri mRenderUrl;
 
-    private AdSelectionResponse(long adSelectionId, @NonNull Uri renderUri) {
-        Objects.requireNonNull(renderUri);
+    private AdSelectionResponse(long adSelectionId, @NonNull Uri renderUrl) {
+        Objects.requireNonNull(renderUrl);
 
         mAdSelectionId = adSelectionId;
-        mRenderUri = renderUri;
+        mRenderUrl = renderUrl;
     }
 
     private AdSelectionResponse(@NonNull Parcel in) {
         Objects.requireNonNull(in);
 
         mAdSelectionId = in.readLong();
-        mRenderUri = Uri.CREATOR.createFromParcel(in);
+        mRenderUrl = Uri.CREATOR.createFromParcel(in);
     }
 
     @NonNull
@@ -66,10 +66,10 @@ public final class AdSelectionResponse implements Parcelable {
                 }
             };
 
-    /** Returns the renderUri that the AdSelection returns. */
+    /** Returns the renderUrl that the AdSelection returns. */
     @NonNull
-    public Uri getRenderUri() {
-        return mRenderUri;
+    public Uri getRenderUrl() {
+        return mRenderUrl;
     }
 
     /** Returns the adSelectionId that identifies the AdSelection. */
@@ -83,14 +83,14 @@ public final class AdSelectionResponse implements Parcelable {
         if (o instanceof AdSelectionResponse) {
             AdSelectionResponse adSelectionResponse = (AdSelectionResponse) o;
             return mAdSelectionId == adSelectionResponse.mAdSelectionId
-                    && Objects.equals(mRenderUri, adSelectionResponse.mRenderUri);
+                    && Objects.equals(mRenderUrl, adSelectionResponse.mRenderUrl);
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mAdSelectionId, mRenderUri);
+        return Objects.hash(mAdSelectionId, mRenderUrl);
     }
 
     @Override
@@ -103,7 +103,7 @@ public final class AdSelectionResponse implements Parcelable {
         Objects.requireNonNull(dest);
 
         dest.writeLong(mAdSelectionId);
-        mRenderUri.writeToParcel(dest, flags);
+        mRenderUrl.writeToParcel(dest, flags);
     }
 
     /**
@@ -113,7 +113,7 @@ public final class AdSelectionResponse implements Parcelable {
      */
     public static final class Builder {
         private long mAdSelectionId = UNSET;
-        @NonNull private Uri mRenderUri;
+        @NonNull private Uri mRenderUrl;
 
         public Builder() {}
 
@@ -124,12 +124,12 @@ public final class AdSelectionResponse implements Parcelable {
             return this;
         }
 
-        /** Sets the RenderUri. */
+        /** Sets the RenderUrl. */
         @NonNull
-        public AdSelectionResponse.Builder setRenderUri(@NonNull Uri renderUri) {
-            Objects.requireNonNull(renderUri);
+        public AdSelectionResponse.Builder setRenderUrl(@NonNull Uri renderUrl) {
+            Objects.requireNonNull(renderUrl);
 
-            mRenderUri = renderUri;
+            mRenderUrl = renderUrl;
             return this;
         }
 
@@ -137,16 +137,17 @@ public final class AdSelectionResponse implements Parcelable {
          * Builds a {@link AdSelectionResponse} instance.
          *
          * @throws IllegalArgumentException if the adSelectionIid is not set
-         * @throws NullPointerException if the RenderUri is null
+         *
+         * @throws NullPointerException if the RenderUrl is null
          */
         @NonNull
         public AdSelectionResponse build() {
-            Objects.requireNonNull(mRenderUri);
+            Objects.requireNonNull(mRenderUrl);
 
             Preconditions.checkArgument(
                     mAdSelectionId != UNSET, "AdSelectionId has not been set!");
 
-            return new AdSelectionResponse(mAdSelectionId, mRenderUri);
+            return new AdSelectionResponse(mAdSelectionId, mRenderUrl);
         }
     }
 }

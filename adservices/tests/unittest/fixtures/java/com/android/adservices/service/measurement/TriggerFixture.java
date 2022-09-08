@@ -18,6 +18,14 @@ package com.android.adservices.service.measurement;
 
 import android.net.Uri;
 
+import com.android.adservices.LogUtil;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Arrays;
+
 public final class TriggerFixture {
     private TriggerFixture() { }
 
@@ -25,32 +33,33 @@ public final class TriggerFixture {
     // {@link ValidTriggerParams}
     public static Trigger.Builder getValidTriggerBuilder() {
         return new Trigger.Builder()
-            .setAttributionDestination(ValidTriggerParams.ATTRIBUTION_DESTINATION)
-            .setAdTechDomain(ValidTriggerParams.AD_TECH_DOMAIN)
-            .setRegistrant(ValidTriggerParams.REGISTRANT);
+            .setAttributionDestination(ValidTriggerParams.sAttributionDestination)
+            .setAdTechDomain(ValidTriggerParams.sAdTechDomain)
+            .setRegistrant(ValidTriggerParams.sRegistrant);
     }
 
     // Assume the field values in this Trigger have no relation to the field values in
     // {@link ValidTriggerParams}
     public static Trigger getValidTrigger() {
         return new Trigger.Builder()
-                .setAttributionDestination(ValidTriggerParams.ATTRIBUTION_DESTINATION)
-                .setAdTechDomain(ValidTriggerParams.AD_TECH_DOMAIN)
-                .setRegistrant(ValidTriggerParams.REGISTRANT)
+                .setAttributionDestination(ValidTriggerParams.sAttributionDestination)
+                .setAdTechDomain(ValidTriggerParams.sAdTechDomain)
+                .setRegistrant(ValidTriggerParams.sRegistrant)
                 .setTriggerTime(ValidTriggerParams.TRIGGER_TIME)
                 .setEventTriggers(ValidTriggerParams.EVENT_TRIGGERS)
-                .setAggregateTriggerData(ValidTriggerParams.AGGREGATE_TRIGGER_DATA)
-                .setAggregateValues(ValidTriggerParams.AGGREGATE_VALUES)
+                .setAggregateTriggerData(ValidTriggerParams.buildAggregateTriggerData())
+                .setAggregateValues(ValidTriggerParams.buildAggregateValues())
                 .setFilters(ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING)
                 .build();
     }
 
     public static class ValidTriggerParams {
         public static final Long TRIGGER_TIME = 8640000000L;
-        public static final Uri ATTRIBUTION_DESTINATION =
+        public static final Long TRIGGER_DATA = 3L;
+        public static final Uri sAttributionDestination =
                 Uri.parse("android-app://com.destination");
-        public static final Uri REGISTRANT = Uri.parse("android-app://com.registrant");
-        public static final Uri AD_TECH_DOMAIN = Uri.parse("https://com.example");
+        public static final Uri sRegistrant = Uri.parse("android-app://com.registrant");
+        public static final Uri sAdTechDomain = Uri.parse("https://com.example");
         public static final String TOP_LEVEL_FILTERS_JSON_STRING =
                 "{\n"
                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
@@ -77,20 +86,30 @@ public final class TriggerFixture {
                         + "}\n"
                         + "]\n";
 
-        public static final String AGGREGATE_TRIGGER_DATA =
-                "["
-                    + "{"
-                        + "\"key_piece\":\"0xA80\","
-                        + "\"source_keys\":[\"geoValue\",\"noMatch\"]"
-                    + "}"
-                + "]";
+        public static String buildAggregateTriggerData() {
+            try {
+                JSONArray triggerData = new JSONArray();
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("key_piece", "0xA80");
+                jsonObject.put("source_keys", new JSONArray(Arrays.asList("geoValue", "noMatch")));
+                triggerData.put(jsonObject);
+                return triggerData.toString();
+            } catch (JSONException e) {
+                LogUtil.e("JSONException when building aggregate trigger data.");
+            }
+            return null;
+        }
 
-        public static final String AGGREGATE_VALUES =
-                "{"
-                    + "\"campaignCounts\":32768,"
-                    + "\"geoValue\":1664"
-                + "}";
-
-        public static final Long DEBUG_KEY = 27836L;
+        public static String buildAggregateValues() {
+            try {
+                JSONObject values = new JSONObject();
+                values.put("campaignCounts", 32768);
+                values.put("geoValue", 1664);
+                return values.toString();
+            } catch (JSONException e) {
+                LogUtil.e("JSONException when building aggregate values.");
+            }
+            return null;
+        }
     }
 }

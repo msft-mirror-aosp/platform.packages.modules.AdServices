@@ -40,6 +40,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -87,7 +88,7 @@ public class TopicsApiLoggingHostTest implements IDeviceTest {
     }
 
     @Test
-    public void testGetTopicsLog() throws Exception {
+    public void testGetTopicsLog() throws Exception, IOException, InterruptedException {
         ITestDevice device = getDevice();
         assertNotNull("Device not set", device);
 

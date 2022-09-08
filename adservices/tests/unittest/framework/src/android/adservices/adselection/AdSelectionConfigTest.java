@@ -30,27 +30,22 @@ public class AdSelectionConfigTest {
         AdSelectionConfig config =
                 new AdSelectionConfig.Builder()
                         .setSeller(AdSelectionConfigFixture.SELLER)
-                        .setDecisionLogicUri(AdSelectionConfigFixture.DECISION_LOGIC_URI)
+                        .setDecisionLogicUrl(AdSelectionConfigFixture.DECISION_LOGIC_URL)
                         .setCustomAudienceBuyers(AdSelectionConfigFixture.CUSTOM_AUDIENCE_BUYERS)
                         .setAdSelectionSignals(AdSelectionConfigFixture.AD_SELECTION_SIGNALS)
                         .setSellerSignals(AdSelectionConfigFixture.SELLER_SIGNALS)
                         .setPerBuyerSignals(AdSelectionConfigFixture.PER_BUYER_SIGNALS)
                         .setContextualAds(AdSelectionConfigFixture.CONTEXTUAL_ADS)
-                        .setTrustedScoringSignalsUri(
-                                AdSelectionConfigFixture.TRUSTED_SCORING_SIGNALS_URI)
                         .build();
 
         assertEquals(config.getSeller(), AdSelectionConfigFixture.SELLER);
-        assertEquals(config.getDecisionLogicUri(), AdSelectionConfigFixture.DECISION_LOGIC_URI);
+        assertEquals(config.getDecisionLogicUrl(), AdSelectionConfigFixture.DECISION_LOGIC_URL);
         assertEquals(
                 config.getCustomAudienceBuyers(), AdSelectionConfigFixture.CUSTOM_AUDIENCE_BUYERS);
         assertEquals(config.getAdSelectionSignals(), AdSelectionConfigFixture.AD_SELECTION_SIGNALS);
         assertEquals(config.getSellerSignals(), AdSelectionConfigFixture.SELLER_SIGNALS);
         assertEquals(config.getPerBuyerSignals(), AdSelectionConfigFixture.PER_BUYER_SIGNALS);
         assertEquals(config.getContextualAds(), AdSelectionConfigFixture.CONTEXTUAL_ADS);
-        assertEquals(
-                config.getTrustedScoringSignalsUri(),
-                AdSelectionConfigFixture.TRUSTED_SCORING_SIGNALS_URI);
     }
 
     @Test
@@ -63,7 +58,7 @@ public class AdSelectionConfigTest {
         AdSelectionConfig fromParcel = AdSelectionConfig.CREATOR.createFromParcel(p);
 
         assertEquals(config.getSeller(), fromParcel.getSeller());
-        assertEquals(config.getDecisionLogicUri(), fromParcel.getDecisionLogicUri());
+        assertEquals(config.getDecisionLogicUrl(), fromParcel.getDecisionLogicUrl());
         assertEquals(config.getCustomAudienceBuyers(), fromParcel.getCustomAudienceBuyers());
         assertEquals(config.getAdSelectionSignals(), fromParcel.getAdSelectionSignals());
         assertEquals(config.getSellerSignals(), fromParcel.getSellerSignals());
@@ -76,19 +71,14 @@ public class AdSelectionConfigTest {
         AdSelectionConfig config =
                 new AdSelectionConfig.Builder()
                         .setSeller(AdSelectionConfigFixture.SELLER)
-                        .setDecisionLogicUri(AdSelectionConfigFixture.DECISION_LOGIC_URI)
+                        .setDecisionLogicUrl(AdSelectionConfigFixture.DECISION_LOGIC_URL)
                         .setCustomAudienceBuyers(AdSelectionConfigFixture.CUSTOM_AUDIENCE_BUYERS)
-                        .setTrustedScoringSignalsUri(
-                                AdSelectionConfigFixture.TRUSTED_SCORING_SIGNALS_URI)
                         .build();
 
         assertEquals(config.getSeller(), AdSelectionConfigFixture.SELLER);
-        assertEquals(config.getDecisionLogicUri(), AdSelectionConfigFixture.DECISION_LOGIC_URI);
+        assertEquals(config.getDecisionLogicUrl(), AdSelectionConfigFixture.DECISION_LOGIC_URL);
         assertEquals(
                 config.getCustomAudienceBuyers(), AdSelectionConfigFixture.CUSTOM_AUDIENCE_BUYERS);
-        assertEquals(
-                config.getTrustedScoringSignalsUri(),
-                AdSelectionConfigFixture.TRUSTED_SCORING_SIGNALS_URI);
 
         // Populated by default with empty signals, map, and list
         assertEquals(config.getAdSelectionSignals(), AdSelectionConfigFixture.EMPTY_SIGNALS);
@@ -103,7 +93,7 @@ public class AdSelectionConfigTest {
                 NullPointerException.class,
                 () -> {
                     new AdSelectionConfig.Builder()
-                            .setDecisionLogicUri(AdSelectionConfigFixture.DECISION_LOGIC_URI)
+                            .setDecisionLogicUrl(AdSelectionConfigFixture.DECISION_LOGIC_URL)
                             .setCustomAudienceBuyers(
                                     AdSelectionConfigFixture.CUSTOM_AUDIENCE_BUYERS)
                             .build();
@@ -130,7 +120,7 @@ public class AdSelectionConfigTest {
                 () -> {
                     new AdSelectionConfig.Builder()
                             .setSeller(AdSelectionConfigFixture.SELLER)
-                            .setDecisionLogicUri(AdSelectionConfigFixture.DECISION_LOGIC_URI)
+                            .setDecisionLogicUrl(AdSelectionConfigFixture.DECISION_LOGIC_URL)
                             .build();
                 });
     }

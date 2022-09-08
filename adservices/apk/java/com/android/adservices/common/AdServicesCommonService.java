@@ -20,7 +20,6 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdServicesCommonServiceImpl;
 
 import java.util.Objects;
@@ -36,7 +35,7 @@ public class AdServicesCommonService extends Service {
         super.onCreate();
         if (mAdServicesCommonService == null) {
             mAdServicesCommonService =
-                    new AdServicesCommonServiceImpl(this, FlagsFactory.getFlags());
+                    new AdServicesCommonServiceImpl(this);
         }
     }
 

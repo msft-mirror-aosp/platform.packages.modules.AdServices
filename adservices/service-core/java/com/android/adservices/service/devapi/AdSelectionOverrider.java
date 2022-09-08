@@ -76,13 +76,12 @@ public class AdSelectionOverrider {
     public void addOverride(
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJS,
-            @NonNull String trustedScoringSignals,
             @NonNull AdSelectionOverrideCallback callback) {
         // Auto-generated variable name is too long for lint check
         int shortApiName =
                 AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
 
-        callAddOverride(adSelectionConfig, decisionLogicJS, trustedScoringSignals)
+        callAddOverride(adSelectionConfig, decisionLogicJS)
                 .addCallback(
                         new FutureCallback<Void>() {
                             @Override
@@ -160,14 +159,12 @@ public class AdSelectionOverrider {
     }
 
     private FluentFuture<Void> callAddOverride(
-            @NonNull AdSelectionConfig adSelectionConfig,
-            @NonNull String decisionLogicJS,
-            @NonNull String trustedScoringSignals) {
+            @NonNull AdSelectionConfig adSelectionConfig, @NonNull String decisionLogicJS) {
         return FluentFuture.from(
                 mListeningExecutorService.submit(
                         () -> {
-                            mAdSelectionDevOverridesHelper.addAdSelectionSellerOverride(
-                                    adSelectionConfig, decisionLogicJS, trustedScoringSignals);
+                            mAdSelectionDevOverridesHelper.addDecisionLogicOverride(
+                                    adSelectionConfig, decisionLogicJS);
                             return null;
                         }));
     }
@@ -176,7 +173,7 @@ public class AdSelectionOverrider {
         return FluentFuture.from(
                 mListeningExecutorService.submit(
                         () -> {
-                            mAdSelectionDevOverridesHelper.removeAdSelectionSellerOverride(
+                            mAdSelectionDevOverridesHelper.removeDecisionLogicOverride(
                                     adSelectionConfig);
                             return null;
                         }));

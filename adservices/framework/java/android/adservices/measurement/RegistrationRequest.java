@@ -18,6 +18,7 @@ package android.adservices.measurement;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.content.AttributionSource;
 import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -53,23 +54,25 @@ public final class RegistrationRequest implements Parcelable {
     private final Uri mRegistrationUri;
     private final Uri mTopOriginUri;
     private final InputEvent mInputEvent;
-    private final String mPackageName;
+    private final AttributionSource mAttributionSource;
 
-    /** Create a registration request. */
+    /**
+     * Create a registration request.
+     */
     private RegistrationRequest(
             @RegistrationType int registrationType,
             @NonNull Uri registrationUri,
             @NonNull Uri topOriginUri,
             @Nullable InputEvent inputEvent,
-            @NonNull String packageName) {
+            @NonNull AttributionSource attributionSource) {
         Objects.requireNonNull(registrationUri);
         Objects.requireNonNull(topOriginUri);
-        Objects.requireNonNull(packageName);
+        Objects.requireNonNull(attributionSource);
         mRegistrationType = registrationType;
         mRegistrationUri = registrationUri;
         mTopOriginUri = topOriginUri;
         mInputEvent = inputEvent;
-        mPackageName = packageName;
+        mAttributionSource = attributionSource;
     }
 
     /**
@@ -79,7 +82,7 @@ public final class RegistrationRequest implements Parcelable {
         mRegistrationType = in.readInt();
         mRegistrationUri = Uri.CREATOR.createFromParcel(in);
         mTopOriginUri = Uri.CREATOR.createFromParcel(in);
-        mPackageName = in.readString();
+        mAttributionSource = AttributionSource.CREATOR.createFromParcel(in);
         boolean hasInputEvent = in.readBoolean();
         if (hasInputEvent) {
             mInputEvent = InputEvent.CREATOR.createFromParcel(in);
@@ -117,7 +120,7 @@ public final class RegistrationRequest implements Parcelable {
         out.writeInt(mRegistrationType);
         mRegistrationUri.writeToParcel(out, flags);
         mTopOriginUri.writeToParcel(out, flags);
-        out.writeString(mPackageName);
+        mAttributionSource.writeToParcel(out, flags);
         if (mInputEvent != null) {
             out.writeBoolean(true);
             mInputEvent.writeToParcel(out, flags);
@@ -154,9 +157,11 @@ public final class RegistrationRequest implements Parcelable {
         return mInputEvent;
     }
 
-    /** Client's package name used for the registration. */
-    public @NonNull String getPackageName() {
-        return mPackageName;
+    /**
+     * AttributionSource of the registration.
+     */
+    public @NonNull AttributionSource getAttributionSource() {
+        return mAttributionSource;
     }
 
     /**
@@ -167,7 +172,7 @@ public final class RegistrationRequest implements Parcelable {
         private Uri mRegistrationUri;
         private Uri mTopOriginUri;
         private InputEvent mInputEvent;
-        private String mPackageName;
+        private AttributionSource mAttributionSource;
 
         public Builder() {
             mRegistrationType = INVALID;
@@ -213,10 +218,13 @@ public final class RegistrationRequest implements Parcelable {
             return this;
         }
 
-        /** See {@link RegistrationRequest#getPackageName()}. */
-        public @NonNull Builder setPackageName(@NonNull String packageName) {
-            Objects.requireNonNull(packageName);
-            mPackageName = packageName;
+        /**
+         * See {@link RegistrationRequest#getAttributionSource}.
+         */
+        public @NonNull Builder setAttributionSource(
+                @NonNull AttributionSource attributionSource) {
+            Objects.requireNonNull(attributionSource);
+            mAttributionSource = attributionSource;
             return this;
         }
 
@@ -237,20 +245,25 @@ public final class RegistrationRequest implements Parcelable {
                     && mRegistrationType != REGISTER_TRIGGER) {
                 throw new IllegalArgumentException("Invalid registrationType");
             }
-            // Ensure the packageName has been set.
-            // throws IllegalArgumentException if the packageName is null.
-            if (mPackageName == null) {
-                throw new IllegalArgumentException("packageName unset");
+            // Ensure attributionSource has been set.
+            // throws IllegalArgumentException if mAttributionSource
+            // is null.
+            if (mAttributionSource == null) {
+                throw new IllegalArgumentException("attributionSource unset");
             }
 
             // Check if topOrigin has been set.
             // However, if it's not set, caller package is defaulted
             if (mTopOriginUri == null) {
-                mTopOriginUri = Uri.parse("android-app://" + mPackageName);
+                mTopOriginUri = Uri.parse("android-app://" + mAttributionSource.getPackageName());
             }
 
             return new RegistrationRequest(
-                    mRegistrationType, mRegistrationUri, mTopOriginUri, mInputEvent, mPackageName);
+                    mRegistrationType,
+                    mRegistrationUri,
+                    mTopOriginUri,
+                    mInputEvent,
+                    mAttributionSource);
         }
     }
 }

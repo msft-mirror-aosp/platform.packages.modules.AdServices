@@ -37,6 +37,12 @@ import java.util.concurrent.Executor;
 public class CustomAudienceManager {
     public static final String CUSTOM_AUDIENCE_SERVICE = "custom_audience_service";
 
+    // TODO(b/221861041): Remove warning suppression; context needed later for
+    //  authorization/authentication
+    @NonNull
+    @SuppressWarnings("unused")
+    private final Context mContext;
+
     @NonNull
     private final ServiceBinder<ICustomAudienceService> mServiceBinder;
 
@@ -46,6 +52,8 @@ public class CustomAudienceManager {
      * @hide
      */
     public CustomAudienceManager(@NonNull Context context) {
+        Objects.requireNonNull(context);
+        mContext = context;
         mServiceBinder =
                 ServiceBinder.getServiceBinder(
                         context,
@@ -61,24 +69,10 @@ public class CustomAudienceManager {
     }
 
     /**
-     * Adds the user to the given {@link CustomAudience}.
-     *
-     * <p>An attempt to register the user for a custom audience with the same combination of owner,
-     * buyer, and name will cause the existing custom audience's information to be overwritten,
-     * including the list of ads data.
-     *
-     * <p>Note that the ads list can be completely overwritten by the daily background fetch job.
-     *
-     * <p>This call fails with an {@link IllegalArgumentException} if the call comes from an
-     * unauthorized party, if the storage limit has been exceeded by the calling party, or if any
-     * URL parameters in the {@link CustomAudience} given are not authenticated with the {@link
-     * CustomAudience} buyer.
-     *
-     * <p>This call fails with an {@link IllegalStateException} if an internal service error is
-     * encountered.
+     * Adds the current user to a custom audience serving targeted ads during the ad selection
+     * process.
      */
-    public void joinCustomAudience(
-            @NonNull JoinCustomAudienceRequest joinCustomAudienceRequest,
+    public void joinCustomAudience(@NonNull JoinCustomAudienceRequest joinCustomAudienceRequest,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<Void, AdServicesException> receiver) {
         Objects.requireNonNull(joinCustomAudienceRequest);
@@ -117,15 +111,11 @@ public class CustomAudienceManager {
 
     /**
      * Attempts to remove a user from a custom audience by deleting any existing {@link
-     * CustomAudience} data, identified by {@code owner}, {@code buyer}, and {@code name}.
+     * CustomAudience} data.
      *
-     * <p>This call does not communicate errors back to the caller, except for the case of invalid
-     * parameters and remote exceptions. It does not inform the caller whether the custom audience
-     * specified existed in on-device storage and/or whether the caller was authorized to leave the
-     * custom audience.
+     * <p>In case of a non-existent or mis-identified {@link CustomAudience}, no actions are taken.
      */
-    public void leaveCustomAudience(
-            @NonNull LeaveCustomAudienceRequest leaveCustomAudienceRequest,
+    public void leaveCustomAudience(@NonNull LeaveCustomAudienceRequest leaveCustomAudienceRequest,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<Void, AdServicesException> receiver) {
         Objects.requireNonNull(leaveCustomAudienceRequest);

@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.customaudience;
 
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -44,20 +42,19 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.util.concurrent.MoreExecutors;
 
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
 import java.util.concurrent.CountDownLatch;
 
@@ -65,24 +62,24 @@ public class CustomAudienceServiceEndToEndTest {
     protected static final Context CONTEXT = ApplicationProvider.getApplicationContext();
 
     private static final CustomAudience CUSTOM_AUDIENCE_PK1_1 =
-            CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER).build();
+            CustomAudienceFixture.getValidBuilder().build();
 
     private static final CustomAudience CUSTOM_AUDIENCE_PK1_2 =
-            CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+            CustomAudienceFixture.getValidBuilder()
                     .setActivationTime(CustomAudienceFixture.VALID_DELAYED_ACTIVATION_TIME)
                     .setExpirationTime(CustomAudienceFixture.VALID_DELAYED_EXPIRATION_TIME)
                     .build();
 
     private static final CustomAudience CUSTOM_AUDIENCE_PK1_BEYOND_MAX_EXPIRATION_TIME =
-            CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+            CustomAudienceFixture.getValidBuilder()
                     .setExpirationTime(CustomAudienceFixture.INVALID_BEYOND_MAX_EXPIRATION_TIME)
                     .build();
 
     private static final DBCustomAudience DB_CUSTOM_AUDIENCE_PK1_1 =
-            DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER).build();
+            DBCustomAudienceFixture.getValidBuilder().build();
 
     private static final DBCustomAudience DB_CUSTOM_AUDIENCE_PK1_2 =
-            DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER)
+            DBCustomAudienceFixture.getValidBuilder()
                     .setActivationTime(CustomAudienceFixture.VALID_DELAYED_ACTIVATION_TIME)
                     .setExpirationTime(CustomAudienceFixture.VALID_DELAYED_EXPIRATION_TIME)
                     .build();
@@ -99,7 +96,7 @@ public class CustomAudienceServiceEndToEndTest {
 
     private CustomAudienceServiceImpl mService;
 
-    private MockitoSession mStaticMockSession = null;
+    @Rule public MockitoRule mMockitoRule = MockitoJUnit.rule();
 
     // This object access some system APIs
     @Mock private DevContextFilter mDevContextFilter;
@@ -107,51 +104,25 @@ public class CustomAudienceServiceEndToEndTest {
 
     @Before
     public void setup() {
-        // Test applications don't have the required permissions to read config P/H flags, and
-        // injecting mocked flags everywhere is annoying and non-trivial for static methods
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .initMocks(this)
-                        .startMocking();
-
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
                         .build()
                         .customAudienceDao();
 
-        CustomAudienceQuantityChecker customAudienceQuantityChecker =
-                new CustomAudienceQuantityChecker(mCustomAudienceDao, CommonFixture.FLAGS_FOR_TEST);
-
-        CustomAudienceValidator customAudienceValidator =
-                new CustomAudienceValidator(
-                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI, CommonFixture.FLAGS_FOR_TEST);
-
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
         mService =
                 new CustomAudienceServiceImpl(
                         CONTEXT,
                         new CustomAudienceImpl(
-                                mCustomAudienceDao,
-                                customAudienceQuantityChecker,
-                                customAudienceValidator,
-                                CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                CommonFixture.FLAGS_FOR_TEST),
+                                mCustomAudienceDao, CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI),
                         mDevContextFilter,
                         MoreExecutors.newDirectExecutorService(),
                         mAdServicesLogger);
     }
 
-    @After
-    public void teardown() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
-    }
-
     @Test
-    public void testJoinCustomAudience_joinTwice_secondJoinOverrideValues() throws Exception {
-        doReturn(CommonFixture.FLAGS_FOR_TEST).when(FlagsFactory::getFlags);
-
+    public void testJoinCustomAudience_joinTwice_secondJoinOverrideValues() {
         ResultCapturingCallback callback = new ResultCapturingCallback();
         mService.joinCustomAudience(CUSTOM_AUDIENCE_PK1_1, callback);
         assertTrue(callback.isSuccess());
@@ -159,7 +130,7 @@ public class CustomAudienceServiceEndToEndTest {
                 DB_CUSTOM_AUDIENCE_PK1_1,
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CustomAudienceFixture.VALID_BUYER,
                         CustomAudienceFixture.VALID_NAME));
 
         callback = new ResultCapturingCallback();
@@ -169,7 +140,7 @@ public class CustomAudienceServiceEndToEndTest {
                 DB_CUSTOM_AUDIENCE_PK1_2,
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CustomAudienceFixture.VALID_BUYER,
                         CustomAudienceFixture.VALID_NAME));
     }
 
@@ -183,14 +154,12 @@ public class CustomAudienceServiceEndToEndTest {
         assertNull(
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CustomAudienceFixture.VALID_BUYER,
                         CustomAudienceFixture.VALID_NAME));
     }
 
     @Test
     public void testLeaveCustomAudience_leaveJoinedCustomAudience() {
-        doReturn(CommonFixture.FLAGS_FOR_TEST).when(FlagsFactory::getFlags);
-
         ResultCapturingCallback callback = new ResultCapturingCallback();
         mService.joinCustomAudience(CUSTOM_AUDIENCE_PK1_1, callback);
         assertTrue(callback.isSuccess());
@@ -198,20 +167,20 @@ public class CustomAudienceServiceEndToEndTest {
                 DB_CUSTOM_AUDIENCE_PK1_1,
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CustomAudienceFixture.VALID_BUYER,
                         CustomAudienceFixture.VALID_NAME));
 
         callback = new ResultCapturingCallback();
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
-                CommonFixture.VALID_BUYER,
+                CustomAudienceFixture.VALID_BUYER,
                 CustomAudienceFixture.VALID_NAME,
                 callback);
         assertTrue(callback.isSuccess());
         assertNull(
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CustomAudienceFixture.VALID_BUYER,
                         CustomAudienceFixture.VALID_NAME));
     }
 
@@ -220,14 +189,14 @@ public class CustomAudienceServiceEndToEndTest {
         ResultCapturingCallback callback = new ResultCapturingCallback();
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
-                CommonFixture.VALID_BUYER,
+                CustomAudienceFixture.VALID_BUYER,
                 "Not exist name",
                 callback);
         assertTrue(callback.isSuccess());
         assertNull(
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CustomAudienceFixture.VALID_BUYER,
                         CustomAudienceFixture.VALID_NAME));
     }
 
@@ -283,11 +252,9 @@ public class CustomAudienceServiceEndToEndTest {
 
     @Test
     public void testOverrideCustomAudienceRemoteInfoFailsWithDevOptionsDisabled() throws Exception {
-        when(mDevContextFilter.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
 
         assertThrows(
-                SecurityException.class,
+                IllegalStateException.class,
                 () ->
                         callAddOverride(
                                 MY_APP_PACKAGE_NAME,
@@ -374,9 +341,6 @@ public class CustomAudienceServiceEndToEndTest {
     @Test
     public void testRemoveCustomAudienceRemoteInfoOverrideFailsWithDevOptionsDisabled()
             throws Exception {
-        when(mDevContextFilter.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
-
         DBCustomAudienceOverride dbCustomAudienceOverride =
                 DBCustomAudienceOverride.builder()
                         .setOwner(MY_APP_PACKAGE_NAME)
@@ -393,7 +357,7 @@ public class CustomAudienceServiceEndToEndTest {
                         MY_APP_PACKAGE_NAME, BUYER_1, NAME_1));
 
         assertThrows(
-                SecurityException.class,
+                IllegalStateException.class,
                 () -> callRemoveOverride(MY_APP_PACKAGE_NAME, BUYER_1, NAME_1, mService));
 
         assertTrue(
@@ -507,9 +471,6 @@ public class CustomAudienceServiceEndToEndTest {
     @Test
     public void testResetAllCustomAudienceRemoteOverridesFailsWithDevOptionsDisabled()
             throws Exception {
-        when(mDevContextFilter.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
-
         DBCustomAudienceOverride dbCustomAudienceOverride1 =
                 DBCustomAudienceOverride.builder()
                         .setOwner(MY_APP_PACKAGE_NAME)
@@ -540,7 +501,7 @@ public class CustomAudienceServiceEndToEndTest {
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
                         MY_APP_PACKAGE_NAME, BUYER_2, NAME_2));
 
-        assertThrows(SecurityException.class, () -> callResetAllOverrides(mService));
+        assertThrows(IllegalStateException.class, () -> callResetAllOverrides(mService));
 
         assertTrue(
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(

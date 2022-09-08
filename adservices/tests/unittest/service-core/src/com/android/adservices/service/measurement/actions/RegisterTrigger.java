@@ -43,25 +43,31 @@ public final class RegisterTrigger implements Action {
         AttributionSource attributionSource = getAttributionSource(
                 regParamsJson.optString(TestFormatJsonMapping.ATTRIBUTION_SOURCE_KEY));
 
-        mRegistrationRequest =
-                new RegistrationRequest.Builder()
-                        .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
-                        .setTopOriginUri(
-                                Uri.parse(
-                                        regParamsJson.getString(
-                                                TestFormatJsonMapping.TRIGGER_TOP_ORIGIN_URI_KEY)))
-                        .setRegistrationUri(
-                                Uri.parse(
-                                        regParamsJson.getString(
-                                                TestFormatJsonMapping.REGISTRATION_URI_KEY)))
-                        .setPackageName(attributionSource.getPackageName())
-                        .build();
+        RegistrationRequest registrationRequest = new RegistrationRequest.Builder()
+                .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
+                .setTopOriginUri(Uri.parse(regParamsJson.getString(
+                        TestFormatJsonMapping.TRIGGER_TOP_ORIGIN_URI_KEY)))
+                .setRegistrationUri(Uri.parse(regParamsJson.getString(
+                        TestFormatJsonMapping.REGISTRATION_URI_KEY)))
+                .setAttributionSource(attributionSource)
+                .build();
 
-        mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);
-        mTimestamp = obj.getLong(TestFormatJsonMapping.TIMESTAMP_KEY);
+        Map<String, List<Map<String, List<String>>>> uriToResponseHeadersMap =
+                getUriToResponseHeadersMap(obj);
+
+        long timestamp = obj.getLong(TestFormatJsonMapping.TIMESTAMP_KEY);
+
+        mRegistrationRequest = registrationRequest;
+        mUriToResponseHeadersMap = uriToResponseHeadersMap;
+        mTimestamp = timestamp;
     }
 
     public long getComparable() {
         return mTimestamp;
+    }
+
+    public Map<String, List<String>> getNextResponse(String uri) {
+        List<Map<String, List<String>>> responseList = mUriToResponseHeadersMap.get(uri);
+        return responseList.remove(0);
     }
 }

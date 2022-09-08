@@ -122,8 +122,8 @@ public class SdkSandboxTest {
                 mRemoteCode);
         assertThat(latch.await(1, TimeUnit.MINUTES)).isTrue();
         assertThat(mRemoteCode.mSuccessful).isFalse();
-        assertThat(mRemoteCode.mErrorCode)
-                .isEqualTo(ILoadSdkInSandboxCallback.LOAD_SDK_ALREADY_LOADED);
+        assertThat(mRemoteCode.mErrorCode).isEqualTo(
+                ISdkSandboxToSdkSandboxManagerCallback.LOAD_SDK_ALREADY_LOADED);
     }
 
     @Test
@@ -173,16 +173,12 @@ public class SdkSandboxTest {
                 new Bundle(),
                 mRemoteCode);
         assertThat(latch.await(1, TimeUnit.MINUTES)).isTrue();
-
         CountDownLatch surfaceLatch = new CountDownLatch(1);
-        RequestSurfacePackageCallbackImpl callback =
-                new RequestSurfacePackageCallbackImpl(surfaceLatch);
-        mRemoteCode
-                .getCallback()
-                .onSurfacePackageRequested(
-                        new Binder(), mContext.getDisplayId(), 500, 500, new Bundle(), callback);
+        mRemoteCode.setLatch(surfaceLatch);
+        mRemoteCode.getCallback().onSurfacePackageRequested(new Binder(),
+                mContext.getDisplayId(), 500, 500, new Bundle());
         assertThat(surfaceLatch.await(1, TimeUnit.MINUTES)).isTrue();
-        assertThat(callback.mSurfacePackage).isNotNull();
+        assertThat(mRemoteCode.mSurfacePackage).isNotNull();
     }
 
     @Test
@@ -200,19 +196,18 @@ public class SdkSandboxTest {
                 new Bundle(),
                 mRemoteCode);
         assertThat(latch.await(1, TimeUnit.MINUTES)).isTrue();
-
         CountDownLatch surfaceLatch = new CountDownLatch(1);
-        RequestSurfacePackageCallbackImpl callback =
-                new RequestSurfacePackageCallbackImpl(surfaceLatch);
+        mRemoteCode.setLatch(surfaceLatch);
         mRemoteCode
                 .getCallback()
-                .onSurfacePackageRequested(
-                        new Binder(), 111111 /* invalid displayId */, 500, 500, null, callback);
+                .onSurfacePackageRequested(new Binder(), 111111 /* invalid displayId */,
+                        500, 500, null);
         assertThat(surfaceLatch.await(1, TimeUnit.MINUTES)).isTrue();
-        assertThat(callback.mSurfacePackage).isNull();
-        assertThat(callback.mSuccessful).isFalse();
-        assertThat(callback.mErrorCode)
-                .isEqualTo(IRequestSurfacePackageFromSdkCallback.SURFACE_PACKAGE_INTERNAL_ERROR);
+        assertThat(mRemoteCode.mSurfacePackage).isNull();
+        assertThat(mRemoteCode.mSuccessful).isFalse();
+        assertThat(mRemoteCode.mErrorCode)
+                .isEqualTo(
+                        ISdkSandboxToSdkSandboxManagerCallback.SURFACE_PACKAGE_INTERNAL_ERROR);
     }
 
     @Test(expected = SecurityException.class)
@@ -220,9 +215,10 @@ public class SdkSandboxTest {
         mService.dump(new FileDescriptor(), new PrintWriter(new StringWriter()), new String[0]);
     }
 
-    private static class RemoteCode extends ILoadSdkInSandboxCallback.Stub {
+    private static class RemoteCode extends ISdkSandboxToSdkSandboxManagerCallback.Stub {
 
         private CountDownLatch mLatch;
+        private SurfaceControlViewHost.SurfacePackage mSurfacePackage;
         boolean mSuccessful = false;
         int mErrorCode = -1;
 
@@ -247,22 +243,6 @@ public class SdkSandboxTest {
             mSuccessful = false;
         }
 
-        private ISdkSandboxManagerToSdkSandboxCallback getCallback() {
-            return mCallback;
-        }
-    }
-
-    private static class RequestSurfacePackageCallbackImpl
-            extends IRequestSurfacePackageFromSdkCallback.Stub {
-        private CountDownLatch mLatch;
-        private SurfaceControlViewHost.SurfacePackage mSurfacePackage;
-        boolean mSuccessful = false;
-        int mErrorCode = -1;
-
-        RequestSurfacePackageCallbackImpl(CountDownLatch latch) {
-            mLatch = latch;
-        }
-
         @Override
         public void onSurfacePackageReady(
                 SurfaceControlViewHost.SurfacePackage surfacePackage,
@@ -277,6 +257,14 @@ public class SdkSandboxTest {
             mLatch.countDown();
             mErrorCode = errorCode;
             mSuccessful = false;
+        }
+
+        private void setLatch(CountDownLatch latch) {
+            mLatch = latch;
+        }
+
+        private ISdkSandboxManagerToSdkSandboxCallback getCallback() {
+            return mCallback;
         }
     }
 }

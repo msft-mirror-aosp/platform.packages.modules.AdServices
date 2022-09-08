@@ -17,12 +17,13 @@
 package com.android.adservices.service.measurement.attribution;
 
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
-import com.android.adservices.service.measurement.DestinationType;
+import com.android.adservices.service.measurement.AdtechUrl;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventTrigger;
 import com.android.adservices.service.measurement.FilterUtil;
@@ -36,11 +37,12 @@ import com.android.adservices.service.measurement.aggregation.AggregateAttributi
 import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
 import com.android.adservices.service.measurement.aggregation.AggregatePayloadGenerator;
-import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -52,13 +54,43 @@ import java.util.stream.Collectors;
 
 class AttributionJobHandler {
 
-    private static final String API_VERSION = "0.1";
     private static final long MIN_TIME_MS = TimeUnit.MINUTES.toMillis(10L);
     private static final long MAX_TIME_MS = TimeUnit.MINUTES.toMillis(60L);
     private final DatastoreManager mDatastoreManager;
 
     AttributionJobHandler(DatastoreManager datastoreManager) {
         mDatastoreManager = datastoreManager;
+    }
+
+    /**
+     * Finds the {@link AdtechUrl} when given a postback url.
+     *
+     * @param postbackUrl the postback url of the request AdtechUrl
+     * @return the requested AdtechUrl; Null in case of SQL failure
+     */
+    @Nullable
+    synchronized AdtechUrl findAdtechUrl(String postbackUrl) {
+        if (postbackUrl == null) {
+            return null;
+        }
+        return mDatastoreManager
+                .runInTransactionWithResult((dao) -> dao.getAdtechEnrollmentData(postbackUrl))
+                .orElse(null);
+    }
+
+    /**
+     * Queries and returns all the postback urls with the same adtech id as the given postback url.
+     *
+     * @param postbackUrl the postback url of the request AdtechUrl
+     * @return all the postback urls with the same adtech id; Null in case of SQL failure
+     */
+    public List<String> getAllAdtechUrls(String postbackUrl) {
+        if (postbackUrl == null) {
+            return new ArrayList<>();
+        }
+        return mDatastoreManager
+                .runInTransactionWithResult((dao) -> dao.getAllAdtechUrls(postbackUrl))
+                .orElse(null);
     }
 
     /**
@@ -160,23 +192,20 @@ class AttributionJobHandler {
 
                     long randomTime = (long) ((Math.random() * (MAX_TIME_MS - MIN_TIME_MS))
                             + MIN_TIME_MS);
-                    AggregateReport aggregateReport =
-                            new AggregateReport.Builder()
+                    CleartextAggregatePayload aggregateReport =
+                            new CleartextAggregatePayload.Builder()
                                     .setPublisher(source.getRegistrant())
-                                    .setAttributionDestination(source.getAppDestination())
+                                    .setAttributionDestination(source.getAttributionDestination())
                                     .setSourceRegistrationTime(source.getEventTime())
                                     .setScheduledReportTime(trigger.getTriggerTime() + randomTime)
                                     .setReportingOrigin(source.getAdTechDomain())
                                     .setDebugCleartextPayload(
-                                            AggregateReport.generateDebugPayload(
+                                            CleartextAggregatePayload.generateDebugPayload(
                                                     contributions.get()))
                                     .setAggregateAttributionData(
                                             new AggregateAttributionData.Builder()
-                                                    .setContributions(contributions.get())
-                                                    .build())
-                                    .setStatus(AggregateReport.Status.PENDING)
-                                    .setApiVersion(API_VERSION)
-                                    .build();
+                                                    .setContributions(contributions.get()).build())
+                                    .setStatus(CleartextAggregatePayload.Status.PENDING).build();
 
                     measurementDao.updateSourceAggregateContributions(source);
                     measurementDao.insertAggregateReport(aggregateReport);
@@ -255,15 +284,12 @@ class AttributionJobHandler {
         return true;
     }
 
-    private boolean provisionEventReportQuota(
-            Source source, EventReport newEventReport, IMeasurementDao measurementDao)
-            throws DatastoreException {
-        List<EventReport> sourceEventReports = measurementDao.getSourceEventReports(source);
+    private boolean provisionEventReportQuota(Source source,
+            EventReport newEventReport, IMeasurementDao measurementDao) throws DatastoreException {
+        List<EventReport> sourceEventReports =
+                measurementDao.getSourceEventReports(source);
 
-        if (isWithinReportLimit(
-                source,
-                sourceEventReports.size(),
-                DestinationType.getDestinationType(newEventReport.getAttributionDestination()))) {
+        if (isWithinReportLimit(source, sourceEventReports.size())) {
             return true;
         }
 
@@ -326,9 +352,8 @@ class AttributionJobHandler {
         return attributionCount < PrivacyParams.MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
     }
 
-    private boolean isWithinReportLimit(
-            Source source, int existingReportCount, DestinationType destinationType) {
-        return source.getMaxReportCount(destinationType) > existingReportCount;
+    private boolean isWithinReportLimit(Source source, int existingReportCount) {
+        return source.getMaxReportCount() > existingReportCount;
     }
 
     private boolean isWithinInstallCooldownWindow(Source source, Trigger trigger) {

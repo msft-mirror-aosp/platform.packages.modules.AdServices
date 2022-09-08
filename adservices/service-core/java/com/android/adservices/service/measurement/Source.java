@@ -17,8 +17,6 @@
 package com.android.adservices.service.measurement;
 
 import android.annotation.IntDef;
-import android.annotation.NonNull;
-import android.annotation.Nullable;
 import android.net.Uri;
 
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
@@ -58,20 +56,18 @@ public class Source {
     private String mId;
     private long mEventId;
     private Uri mPublisher;
-    private Uri mAppDestination;
-    private Uri mWebDestination;
+    private Uri mAttributionDestination;
     private Uri mAdTechDomain;
     private Uri mRegistrant;
     private SourceType mSourceType;
     private long mPriority;
-    @Status private int mStatus;
+    private @Status int mStatus;
     private long mEventTime;
     private long mExpiryTime;
     private List<Long> mDedupKeys;
-    @AttributionMode private int mAttributionMode;
+    private @AttributionMode int mAttributionMode;
     private long mInstallAttributionWindow;
     private long mInstallCooldownWindow;
-    private @Nullable Long mDebugKey;
     private boolean mIsInstallAttributed;
     private String mAggregateFilterData;
     private String mAggregateSource;
@@ -147,14 +143,14 @@ public class Source {
 
     ImpressionNoiseParams getImpressionNoiseParams() {
         return new ImpressionNoiseParams(
-                getMaxReportCountInternal(isInstallDetectionEnabled()),
+                getMaxReportCountInternal(/* considerAttrState= */ false),
                 getTriggerDataCardinality(),
                 getReportingWindowCountForNoising());
     }
 
-    private ImmutableList<Long> getEarlyReportingWindows(boolean installState) {
+    private ImmutableList<Long> getEarlyReportingWindows(boolean considerAttrState) {
         long[] earlyWindows;
-        if (installState) {
+        if (useInstallAttrParams(considerAttrState)) {
             earlyWindows = mSourceType == SourceType.EVENT
                     ? PrivacyParams.INSTALL_ATTR_EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS
                     : PrivacyParams.INSTALL_ATTR_NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS;
@@ -184,8 +180,7 @@ public class Source {
      */
     @VisibleForTesting
     public long getReportingTimeForNoising(int windowIndex) {
-        // TODO: b/238362250: Needs revisit once web destination noising PrivacyParams are finalized
-        List<Long> windowList = getEarlyReportingWindows(isInstallDetectionEnabled());
+        List<Long> windowList = getEarlyReportingWindows(/* considerAttrState= */ false);
         return windowIndex < windowList.size()
                 ? windowList.get(windowIndex) + ONE_HOUR_IN_MILLIS :
                 mExpiryTime + ONE_HOUR_IN_MILLIS;
@@ -193,9 +188,8 @@ public class Source {
 
     @VisibleForTesting
     int getReportingWindowCountForNoising() {
-        // TODO: b/238362250: Needs revisit once web destination noising PrivacyParams are finalized
         // Early Count + expiry
-        return getEarlyReportingWindows(isInstallDetectionEnabled()).size() + 1;
+        return getEarlyReportingWindows(/* considerAttrState= */ false).size() + 1;
     }
 
     /**
@@ -209,18 +203,14 @@ public class Source {
     }
 
     /**
-     * Max reports count based on conversion destination type and installation state.
-     *
-     * @param destinationType conversion destination type
-     * @return maximum number of reports allowed
+     * @return Maximum number of reports allowed
      */
-    public int getMaxReportCount(@NonNull DestinationType destinationType) {
-        boolean isInstallCase = DestinationType.APP.equals(destinationType) && mIsInstallAttributed;
-        return getMaxReportCountInternal(isInstallCase);
+    public int getMaxReportCount() {
+        return getMaxReportCountInternal(/* considerAttrState= */ true);
     }
 
-    private int getMaxReportCountInternal(boolean isInstallCase) {
-        if (isInstallCase) {
+    private int getMaxReportCountInternal(boolean considerAttrState) {
+        if (useInstallAttrParams(considerAttrState)) {
             return mSourceType == SourceType.EVENT
                     ? PrivacyParams.INSTALL_ATTR_EVENT_SOURCE_MAX_REPORTS
                     : PrivacyParams.INSTALL_ATTR_NAVIGATION_SOURCE_MAX_REPORTS;
@@ -244,8 +234,15 @@ public class Source {
                 PrivacyParams.NAVIGATION_NOISE_PROBABILITY;
     }
 
+    private boolean useInstallAttrParams(boolean considerAttrState) {
+        if (considerAttrState) {
+            return mIsInstallAttributed;
+        }
+        return isInstallDetectionEnabled();
+    }
+
     private boolean isInstallDetectionEnabled() {
-        return mInstallCooldownWindow > 0 && mAppDestination != null;
+        return mInstallCooldownWindow > 0;
     }
 
     @Override
@@ -256,15 +253,13 @@ public class Source {
         Source source = (Source) obj;
         return Objects.equals(mId, source.mId)
                 && Objects.equals(mPublisher, source.mPublisher)
-                && Objects.equals(mAppDestination, source.mAppDestination)
-                && Objects.equals(mWebDestination, source.mWebDestination)
+                && Objects.equals(mAttributionDestination, source.mAttributionDestination)
                 && Objects.equals(mAdTechDomain, source.mAdTechDomain)
                 && mPriority == source.mPriority
                 && mStatus == source.mStatus
                 && mExpiryTime == source.mExpiryTime
                 && mEventTime == source.mEventTime
                 && mEventId == source.mEventId
-                && Objects.equals(mDebugKey, source.mDebugKey)
                 && mSourceType == source.mSourceType
                 && Objects.equals(mDedupKeys, source.mDedupKeys)
                 && Objects.equals(mRegistrant, source.mRegistrant)
@@ -272,48 +267,29 @@ public class Source {
                 && Objects.equals(mAggregateFilterData, source.mAggregateFilterData)
                 && Objects.equals(mAggregateSource, source.mAggregateSource)
                 && mAggregateContributions == source.mAggregateContributions
-                && Objects.equals(
-                        mAggregatableAttributionSource, source.mAggregatableAttributionSource);
+                && Objects.equals(mAggregatableAttributionSource,
+                source.mAggregatableAttributionSource);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(
-                mId,
-                mPublisher,
-                mAppDestination,
-                mWebDestination,
-                mAdTechDomain,
-                mPriority,
-                mStatus,
-                mExpiryTime,
-                mEventTime,
-                mEventId,
-                mSourceType,
-                mDedupKeys,
-                mAggregateFilterData,
-                mAggregateSource,
-                mAggregateContributions,
-                mAggregatableAttributionSource,
-                mDebugKey);
+        return Objects.hash(mId, mPublisher, mAttributionDestination, mAdTechDomain, mPriority,
+                mStatus, mExpiryTime, mEventTime, mEventId, mSourceType, mDedupKeys,
+                mAggregateFilterData, mAggregateSource, mAggregateContributions,
+                mAggregatableAttributionSource);
     }
 
     /**
-     * Calculates the reporting time based on the {@link Trigger} time, {@link Source}'s expiry and
-     * trigger destination type.
+     * Calculates the reporting time based on the {@link Trigger} Time and
+     * {@link Source}'s expiry.
      *
-     * @return the reporting time
+     * @return the report time
      */
-    public long getReportingTime(long triggerTime, @NonNull DestinationType destinationType) {
+    public long getReportingTime(long triggerTime) {
         if (triggerTime < mEventTime) {
             return -1;
         }
-
-        // Cases where source could have both web and app destinations, there if the trigger
-        // destination is an app and it was installed, then installState should be considered true.
-        boolean isAppInstalled =
-                DestinationType.APP.equals(destinationType) && mIsInstallAttributed;
-        List<Long> reportingWindows = getEarlyReportingWindows(isAppInstalled);
+        List<Long> reportingWindows = getEarlyReportingWindows(/* considerAttrState= */ true);
         for (Long window: reportingWindows) {
             if (triggerTime < window) {
                 return window + ONE_HOUR_IN_MILLIS;
@@ -377,21 +353,18 @@ public class Source {
         return mAdTechDomain;
     }
 
-    /** Uri which registered the {@link Source}. */
+    /**
+     * Uri which registered the {@link Source}.
+     */
     public Uri getPublisher() {
         return mPublisher;
     }
 
-    /** Uri for the {@link Trigger}'s app destination. */
-    @Nullable
-    public Uri getAppDestination() {
-        return mAppDestination;
-    }
-
-    /** Uri for the {@link Trigger}'s web destination. */
-    @Nullable
-    public Uri getWebDestination() {
-        return mWebDestination;
+    /**
+     * Uri for the {@link Trigger}'s.
+     */
+    public Uri getAttributionDestination() {
+        return mAttributionDestination;
     }
 
     /**
@@ -401,14 +374,11 @@ public class Source {
         return mSourceType;
     }
 
-    /** Time when {@link Source} will expiry. */
+    /**
+     * Time when {@link Source} will expiry.
+     */
     public long getExpiryTime() {
         return mExpiryTime;
-    }
-
-    /** Debug key of {@link Source}. */
-    public @Nullable Long getDebugKey() {
-        return mDebugKey;
     }
 
     /**
@@ -425,9 +395,10 @@ public class Source {
         return mDedupKeys;
     }
 
-    /** Current status of the {@link Source}. */
-    @Status
-    public int getStatus() {
+    /**
+     * Current status of the {@link Source}.
+     */
+    public @Status int getStatus() {
         return mStatus;
     }
 
@@ -438,9 +409,10 @@ public class Source {
         return mRegistrant;
     }
 
-    /** Selected mode for attribution. Values: Truthfully, Never, Falsely. */
-    @AttributionMode
-    public int getAttributionMode() {
+    /**
+     * Selected mode for attribution. Values: Truthfully, Never, Falsely.
+     */
+    public @AttributionMode int getAttributionMode() {
         return mAttributionMode;
     }
 
@@ -518,7 +490,9 @@ public class Source {
         return mAggregatableAttributionSource;
     }
 
-    /** Set app install attribution to the {@link Source}. */
+    /**
+     * Set app install attribution to the {@link Source}.
+     */
     public void setInstallAttributed(boolean isInstallAttributed) {
         mIsInstallAttributed = isInstallAttributed;
     }
@@ -575,54 +549,53 @@ public class Source {
             mBuilding = new Source();
         }
 
-        /** See {@link Source#getId()}. */
-        @NonNull
-        public Builder setId(@NonNull String id) {
-            Validation.validateNonNull(id);
+        /**
+         * See {@link Source#getId()}.
+         */
+        public Builder setId(String id) {
             mBuilding.mId = id;
             return this;
         }
 
-        /** See {@link Source#getEventId()}. */
-        @NonNull
+        /**
+         * See {@link Source#getEventId()}.
+         */
         public Builder setEventId(long eventId) {
             mBuilding.mEventId = eventId;
             return this;
         }
 
-        /** See {@link Source#getPublisher()}. */
-        @NonNull
-        public Builder setPublisher(@NonNull Uri publisher) {
+        /**
+         * See {@link Source#getPublisher()}.
+         */
+        public Builder setPublisher(Uri publisher) {
             Validation.validateUri(publisher);
             mBuilding.mPublisher = publisher;
             return this;
         }
 
-        /** See {@link Source#getAppDestination()}. */
-        public Builder setAppDestination(Uri appDestination) {
-            Optional.ofNullable(appDestination).ifPresent(Validation::validateUri);
-            mBuilding.mAppDestination = appDestination;
+        /**
+         * See {@link Source#getAttributionDestination()}.
+         */
+
+        public Builder setAttributionDestination(Uri attributionDestination) {
+            Validation.validateUri(attributionDestination);
+            mBuilding.mAttributionDestination = attributionDestination;
             return this;
         }
 
-        /** See {@link Source#getWebDestination()}. */
-        @NonNull
-        public Builder setWebDestination(@Nullable Uri webDestination) {
-            Optional.ofNullable(webDestination).ifPresent(Validation::validateUri);
-            mBuilding.mWebDestination = webDestination;
-            return this;
-        }
-
-        /** See {@link Source#getAdTechDomain()} ()}. */
-        @NonNull
-        public Builder setAdTechDomain(@NonNull Uri adTechDomain) {
+        /**
+         * See {@link Source#getAdTechDomain()} ()}.
+         */
+        public Builder setAdTechDomain(Uri adTechDomain) {
             Validation.validateUri(adTechDomain);
             mBuilding.mAdTechDomain = adTechDomain;
             return this;
         }
 
-        /** See {@link Source#getEventId()}. */
-        @NonNull
+        /**
+         * See {@link Source#getEventId()}.
+         */
         public Builder setEventTime(long eventTime) {
             mBuilding.mEventTime = eventTime;
             return this;
@@ -636,100 +609,108 @@ public class Source {
             return this;
         }
 
-        /** See {@link Source#getPriority()}. */
-        @NonNull
+        /**
+         * See {@link Source#getPriority()}.
+         */
         public Builder setPriority(long priority) {
             mBuilding.mPriority = priority;
             return this;
         }
 
-        /** See {@link Source#getDebugKey()} ()}. */
-        public Builder setDebugKey(@Nullable Long debugKey) {
-            mBuilding.mDebugKey = debugKey;
-            return this;
-        }
-
-        /** See {@link Source#getSourceType()}. */
-        @NonNull
-        public Builder setSourceType(@NonNull SourceType sourceType) {
-            Validation.validateNonNull(sourceType);
+        /**
+         * See {@link Source#getSourceType()}.
+         */
+        public Builder setSourceType(SourceType sourceType) {
             mBuilding.mSourceType = sourceType;
             return this;
         }
 
-        /** See {@link Source#getDedupKeys()}. */
-        @NonNull
-        public Builder setDedupKeys(@Nullable List<Long> dedupKeys) {
+        /**
+         * See {@link Source#getDedupKeys()}.
+         */
+        public Builder setDedupKeys(List<Long> dedupKeys) {
             mBuilding.mDedupKeys = dedupKeys;
             return this;
         }
 
-        /** See {@link Source#getStatus()}. */
-        @NonNull
+        /**
+         * See {@link Source#getStatus()}.
+         */
         public Builder setStatus(@Status int status) {
             mBuilding.mStatus = status;
             return this;
         }
 
-        /** See {@link Source#getRegistrant()} */
-        @NonNull
-        public Builder setRegistrant(@NonNull Uri registrant) {
+        /**
+         * See {@link Source#getRegistrant()}
+         */
+        public Builder setRegistrant(Uri registrant) {
             Validation.validateUri(registrant);
             mBuilding.mRegistrant = registrant;
             return this;
         }
 
-        /** See {@link Source#getAttributionMode()} */
-        @NonNull
+        /**
+         * See {@link Source#getAttributionMode()}
+         */
         public Builder setAttributionMode(@AttributionMode int attributionMode) {
             mBuilding.mAttributionMode = attributionMode;
             return this;
         }
 
-        /** See {@link Source#getInstallAttributionWindow()} */
-        @NonNull
+        /**
+         * See {@link Source#getInstallAttributionWindow()}
+         */
         public Builder setInstallAttributionWindow(long installAttributionWindow) {
             mBuilding.mInstallAttributionWindow = installAttributionWindow;
             return this;
         }
 
-        /** See {@link Source#getInstallCooldownWindow()} */
-        @NonNull
+        /**
+         * See {@link Source#getInstallCooldownWindow()}
+         */
         public Builder setInstallCooldownWindow(long installCooldownWindow) {
             mBuilding.mInstallCooldownWindow = installCooldownWindow;
             return this;
         }
 
-        /** See {@link Source#isInstallAttributed()} */
-        @NonNull
+        /**
+         * See {@link Source#isInstallAttributed()}
+         */
         public Builder setInstallAttributed(boolean installAttributed) {
             mBuilding.mIsInstallAttributed = installAttributed;
             return this;
         }
 
-        /** See {@link Source#getAggregateFilterData()}. */
-        public Builder setAggregateFilterData(@Nullable String aggregateFilterData) {
+        /**
+         * See {@link Source#getAggregateFilterData()}.
+         */
+        public Builder setAggregateFilterData(String aggregateFilterData) {
             mBuilding.mAggregateFilterData = aggregateFilterData;
             return this;
         }
 
-        /** See {@link Source#getAggregateSource()} */
-        public Builder setAggregateSource(@Nullable String aggregateSource) {
+        /**
+         * See {@link Source#getAggregateSource()}
+         */
+        public Builder setAggregateSource(String aggregateSource) {
             mBuilding.mAggregateSource = aggregateSource;
             return this;
         }
 
-        /** See {@link Source#getAggregateContributions()} */
-        @NonNull
+        /**
+         * See {@link Source#getAggregateContributions()}
+         */
         public Builder setAggregateContributions(int aggregateContributions) {
             mBuilding.mAggregateContributions = aggregateContributions;
             return this;
         }
 
-        /** See {@link Source#getAggregatableAttributionSource()} */
-        @NonNull
+        /**
+         * See {@link Source#getAggregatableAttributionSource()}
+         */
         public Builder setAggregatableAttributionSource(
-                @Nullable AggregatableAttributionSource aggregatableAttributionSource) {
+                AggregatableAttributionSource aggregatableAttributionSource) {
             mBuilding.mAggregatableAttributionSource = aggregatableAttributionSource;
             return this;
         }
@@ -740,13 +721,10 @@ public class Source {
         public Source build() {
             Validation.validateNonNull(
                     mBuilding.mPublisher,
+                    mBuilding.mAttributionDestination,
                     mBuilding.mAdTechDomain,
                     mBuilding.mRegistrant,
                     mBuilding.mSourceType);
-
-            if (mBuilding.mAppDestination == null && mBuilding.mWebDestination == null) {
-                throw new IllegalArgumentException("At least one destination is required");
-            }
 
             return mBuilding;
         }

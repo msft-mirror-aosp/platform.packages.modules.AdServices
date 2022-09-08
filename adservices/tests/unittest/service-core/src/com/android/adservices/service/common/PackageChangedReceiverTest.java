@@ -19,8 +19,6 @@ package com.android.adservices.service.common;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -32,141 +30,45 @@ import android.net.Uri;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
-import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.topics.AppUpdateManager;
-import com.android.adservices.service.topics.BlockedTopicsManager;
-import com.android.adservices.service.topics.CacheManager;
-import com.android.adservices.service.topics.EpochManager;
-import com.android.adservices.service.topics.TopicsWorker;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
 
-/** Unit test for {@link com.android.adservices.service.common.PackageChangedReceiver}. */
 @SmallTest
 public class PackageChangedReceiverTest {
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final String SAMPLE_PACKAGE = "com.example.measurement.sampleapp";
     private static final String PACKAGE_SCHEME = "package:";
-    private static final int BACKGROUND_THREAD_TIMEOUT_MS = 5_000;
-
-    @Mock PackageChangedReceiver mMockPackageChangedReceiver;
-    @Mock EpochManager mMockEpochManager;
-    @Mock CacheManager mMockCacheManager;
-    @Mock BlockedTopicsManager mBlockedTopicsManager;
-    @Mock AppUpdateManager mMockAppUpdateManager;
-    @Mock Flags mMockFlags;
-
-    private TopicsWorker mTopicsWorker;
-    private MockitoSession mTopicsWorkerMockedSession;
+    private @Mock PackageChangedReceiver mPackageChangedReceiver = new PackageChangedReceiver();
 
     @Before
     public void before() {
         MockitoAnnotations.initMocks(this);
         doNothing()
-                .when(mMockPackageChangedReceiver)
+                .when(mPackageChangedReceiver)
                 .onPackageFullyRemoved(any(Context.class), any(Uri.class));
         doNothing()
-                .when(mMockPackageChangedReceiver)
+                .when(mPackageChangedReceiver)
                 .onPackageAdded(any(Context.class), any(Uri.class));
-        doNothing()
-                .when(mMockPackageChangedReceiver)
-                .onPackageDataCleared(any(Context.class), any(Uri.class));
         doCallRealMethod()
-                .when(mMockPackageChangedReceiver)
+                .when(mPackageChangedReceiver)
                 .onReceive(any(Context.class), any(Intent.class));
-
-        // Mock TopicsWorker to test app update flow in topics API.
-        // Start a mockitoSession to mock static method
-        mTopicsWorker =
-                new TopicsWorker(
-                        mMockEpochManager,
-                        mMockCacheManager,
-                        mBlockedTopicsManager,
-                        mMockAppUpdateManager,
-                        FlagsFactory.getFlagsForTest());
     }
 
     @Test
-    public void testReceivePackageFullyRemoved_topicsKillSwitchOff() throws InterruptedException {
+    public void testReceivePackageFullyRemoved() {
         Intent intent = new Intent();
         intent.setAction(PackageChangedReceiver.PACKAGE_CHANGED_BROADCAST);
         intent.setData(Uri.parse(PACKAGE_SCHEME + SAMPLE_PACKAGE));
         intent.putExtra(
                 PackageChangedReceiver.ACTION_KEY, PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
 
-        // Start a mockitoSession to mock static method
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(TopicsWorker.class)
-                        .spyStatic(FlagsFactory.class)
-                        .startMocking();
-        try {
-            // Killswitch is off.
-            doReturn(false).when(mMockFlags).getTopicsKillSwitch();
+        mPackageChangedReceiver.onReceive(sContext, intent);
 
-            // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-            ExtendedMockito.doReturn(mMockFlags).when(() -> FlagsFactory.getFlags());
-
-            // Stubbing TopicsWorker.getInstance() to return mocked TopicsWorker instance
-            ExtendedMockito.doReturn(mTopicsWorker)
-                    .when(() -> TopicsWorker.getInstance(eq(sContext)));
-
-            mMockPackageChangedReceiver.onReceive(sContext, intent);
-
-            // Grant some time to allow background thread to execute
-            Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
-
-            verify(mMockPackageChangedReceiver, times(1))
-                    .onPackageFullyRemoved(any(Context.class), any(Uri.class));
-            verify(mMockPackageChangedReceiver, never())
-                    .onPackageAdded(any(Context.class), any(Uri.class));
-            verify(mMockPackageChangedReceiver, never())
-                    .onPackageDataCleared(any(Context.class), any(Uri.class));
-
-            // Verify method in AppUpdateManager is invoked
-            // Note that only package name is passed into following methods.
-            verify(mMockAppUpdateManager).deleteAppDataByUri(eq(Uri.parse(SAMPLE_PACKAGE)));
-        } finally {
-            session.finishMocking();
-        }
-    }
-
-    @Test
-    public void testReceivePackageFullyRemoved_topicsKillSwitchOn() throws InterruptedException {
-        Intent intent = new Intent();
-        intent.setAction(PackageChangedReceiver.PACKAGE_CHANGED_BROADCAST);
-        intent.setData(Uri.parse(PACKAGE_SCHEME + SAMPLE_PACKAGE));
-        intent.putExtra(
-                PackageChangedReceiver.ACTION_KEY, PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
-
-        // Start a mockitoSession to mock static method
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(TopicsWorker.class)
-                        .spyStatic(FlagsFactory.class)
-                        .startMocking();
-        try {
-            // Killswitch is on.
-            doReturn(true).when(mMockFlags).getTopicsKillSwitch();
-
-            // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-            ExtendedMockito.doReturn(mMockFlags).when(() -> FlagsFactory.getFlags());
-
-            mMockPackageChangedReceiver.onReceive(sContext, intent);
-
-            // Grant some time to allow background thread to execute
-            Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
-
-            // When the kill switch is on, there is no Topics related work.
-        } finally {
-            session.finishMocking();
-        }
+        verify(mPackageChangedReceiver, times(1))
+                .onPackageFullyRemoved(any(Context.class), any(Uri.class));
+        verify(mPackageChangedReceiver, never()).onPackageAdded(any(Context.class), any(Uri.class));
     }
 
     @Test
@@ -176,31 +78,11 @@ public class PackageChangedReceiverTest {
         intent.setData(Uri.parse(PACKAGE_SCHEME + SAMPLE_PACKAGE));
         intent.putExtra(PackageChangedReceiver.ACTION_KEY, PackageChangedReceiver.PACKAGE_ADDED);
 
-        mMockPackageChangedReceiver.onReceive(sContext, intent);
+        mPackageChangedReceiver.onReceive(sContext, intent);
 
-        verify(mMockPackageChangedReceiver, times(1))
+        verify(mPackageChangedReceiver, times(1))
                 .onPackageAdded(any(Context.class), any(Uri.class));
-        verify(mMockPackageChangedReceiver, never())
+        verify(mPackageChangedReceiver, never())
                 .onPackageFullyRemoved(any(Context.class), any(Uri.class));
-        verify(mMockPackageChangedReceiver, never())
-                .onPackageDataCleared(any(Context.class), any(Uri.class));
-    }
-
-    @Test
-    public void testReceivePackageDataCleared() {
-        Intent intent = new Intent();
-        intent.setAction(PackageChangedReceiver.PACKAGE_CHANGED_BROADCAST);
-        intent.setData(Uri.parse(PACKAGE_SCHEME + SAMPLE_PACKAGE));
-        intent.putExtra(
-                PackageChangedReceiver.ACTION_KEY, PackageChangedReceiver.PACKAGE_DATA_CLEARED);
-
-        mMockPackageChangedReceiver.onReceive(sContext, intent);
-
-        verify(mMockPackageChangedReceiver, times(1))
-                .onPackageDataCleared(any(Context.class), any(Uri.class));
-        verify(mMockPackageChangedReceiver, never())
-                .onPackageFullyRemoved(any(Context.class), any(Uri.class));
-        verify(mMockPackageChangedReceiver, never())
-                .onPackageAdded(any(Context.class), any(Uri.class));
     }
 }
