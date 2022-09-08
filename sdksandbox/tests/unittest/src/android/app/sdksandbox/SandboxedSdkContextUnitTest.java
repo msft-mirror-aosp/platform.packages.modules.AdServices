@@ -24,8 +24,11 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
+import android.os.Bundle;
 import android.test.mock.MockContext;
+import android.view.View;
 
+import androidx.annotation.NonNull;
 import androidx.test.InstrumentationRegistry;
 
 import org.junit.Before;
@@ -104,6 +107,13 @@ public class SandboxedSdkContextUnitTest {
                 assets.open(TEST_ASSET_FILE)));
         String readAsset = reader.readLine();
         assertThat(readAsset).isEqualTo(TEST_ASSET_VALUE);
+    }
+
+    @Test
+    public void testExposureThroughSandboxedSdkProvider() throws Exception {
+        TestSdkProvider sdkProvider = new TestSdkProvider();
+        sdkProvider.attachContext(mSandboxedSdkContext);
+        assertThat(sdkProvider.getContext()).isSameInstanceAs(mSandboxedSdkContext);
     }
 
     @Test
@@ -241,6 +251,21 @@ public class SandboxedSdkContextUnitTest {
             mInitialized = true;
             mCtx = ctx;
             return this;
+        }
+    }
+
+    private static class TestSdkProvider extends SandboxedSdkProvider {
+        @NonNull
+        @Override
+        public SandboxedSdk onLoadSdk(@NonNull Bundle params) throws LoadSdkException {
+            return null;
+        }
+
+        @NonNull
+        @Override
+        public View getView(
+                @NonNull Context windowContext, @NonNull Bundle params, int width, int height) {
+            return null;
         }
     }
 }

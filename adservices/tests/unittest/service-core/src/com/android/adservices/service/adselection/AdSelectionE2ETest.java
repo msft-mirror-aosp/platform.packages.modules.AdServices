@@ -20,6 +20,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARG
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
+import static com.android.adservices.service.adselection.AdSelectionRunner.AD_SELECTION_THROTTLED;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_AD_SELECTION_FAILURE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_BUYERS_AVAILABLE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_CA_AVAILABLE;
@@ -80,6 +81,7 @@ import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
@@ -109,6 +111,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 
@@ -132,7 +135,7 @@ public class AdSelectionE2ETest {
 
     private static final String SELLER_DECISION_LOGIC_URI_PATH = "/ssp/decision/logic/";
     private static final String SELLER_TRUSTED_SIGNAL_URI_PATH = "/kv/seller/signals/";
-    private static final String SELLER_TRUSTED_SIGNAL_PARAMS = "?renderurls=";
+    private static final String SELLER_TRUSTED_SIGNAL_PARAMS = "?renderuris=";
 
     private static final String READ_BID_FROM_AD_METADATA_JS =
             "function generateBid(ad, auction_signals, per_buyer_signals,"
@@ -161,14 +164,14 @@ public class AdSelectionE2ETest {
     private static final AdTechIdentifier TRUSTED_SCORING_SIGNALS =
             AdTechIdentifier.fromString(
                     "{\n"
-                            + "\t\"render_url_1\": \"signals_for_1\",\n"
-                            + "\t\"render_url_2\": \"signals_for_2\"\n"
+                            + "\t\"render_uri_1\": \"signals_for_1\",\n"
+                            + "\t\"render_uri_2\": \"signals_for_2\"\n"
                             + "}");
 
     private static final AdTechIdentifier SELLER_VALID =
             AdTechIdentifier.fromString("developer.android.com");
     private static final Uri DECISION_LOGIC_URI_INCONSISTENT =
-            Uri.parse("https://developer%$android.com/test/decisions_logic_urls");
+            Uri.parse("https://developer%$android.com/test/decisions_logic_uris");
 
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     @Spy private final AdServicesLogger mAdServicesLoggerSpy = AdServicesLoggerImpl.getInstance();
@@ -277,8 +280,8 @@ public class AdSelectionE2ETest {
                     }
                 };
 
-        // Create an Ad Selection Config with the buyers and decision logic url
-        // the url points to a JS with score generation logic
+        // Create an Ad Selection Config with the buyers and decision logic URI
+        // the URI points to a JS with score generation logic
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setCustomAudienceBuyers(ImmutableList.of(BUYER_1, BUYER_2, BUYER_3))
@@ -687,6 +690,7 @@ public class AdSelectionE2ETest {
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(),
                 String.format(
+                        Locale.ENGLISH,
                         AdSelectionRunner.AD_SELECTION_ERROR_PATTERN,
                         AdSelectionRunner.ERROR_AD_SELECTION_FAILURE,
                         AdSelectionRunner.ERROR_NO_CA_AVAILABLE));
@@ -775,6 +779,7 @@ public class AdSelectionE2ETest {
         assertTrue(
                 resultsCallback.mFledgeErrorResponse != null
                         ? String.format(
+                                Locale.ENGLISH,
                                 "Expected callback to succeed but it failed with status %d and"
                                         + " message '%s'",
                                 resultsCallback.mFledgeErrorResponse.getStatusCode(),
@@ -1222,6 +1227,18 @@ public class AdSelectionE2ETest {
                     public boolean getEnforceIsolateMaxHeapSize() {
                         return false;
                     }
+
+                    @Override
+                    public boolean getDisableFledgeEnrollmentCheck() {
+                        return true;
+                    }
+
+                    @Override
+                    public float getSdkRequestPermitsPerSecond() {
+                        // Unlimited rate for unit tests to avoid flake in tests due to rate
+                        // limiting
+                        return -1;
+                    }
                 };
 
         // Create an instance of AdSelection Service with real dependencies
@@ -1330,6 +1347,18 @@ public class AdSelectionE2ETest {
                     @Override
                     public boolean getEnforceIsolateMaxHeapSize() {
                         return false;
+                    }
+
+                    @Override
+                    public boolean getDisableFledgeEnrollmentCheck() {
+                        return true;
+                    }
+
+                    @Override
+                    public float getSdkRequestPermitsPerSecond() {
+                        // Unlimited rate for unit tests to avoid flake in tests due to rate
+                        // limiting
+                        return -1;
                     }
                 };
 
@@ -1914,6 +1943,141 @@ public class AdSelectionE2ETest {
     }
 
     @Test
+    public void testRunAdSelectionThrottledSubsequentCallFailure() throws Exception {
+        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+
+        class FlagsWithThrottling implements Flags {
+            @Override
+            public boolean getEnforceIsolateMaxHeapSize() {
+                return false;
+            }
+
+            @Override
+            public boolean getEnforceForegroundStatusForFledgeRunAdSelection() {
+                return true;
+            }
+
+            @Override
+            public boolean getEnforceForegroundStatusForFledgeReportImpression() {
+                return true;
+            }
+
+            @Override
+            public boolean getEnforceForegroundStatusForFledgeOverrides() {
+                return true;
+            }
+
+            @Override
+            public boolean getDisableFledgeEnrollmentCheck() {
+                return true;
+            }
+
+            // Testing the default throttling limit
+            @Override
+            public float getSdkRequestPermitsPerSecond() {
+                return 1;
+            }
+        }
+
+        Throttler.destroyExistingThrottler();
+        Flags throttlingFlags = new FlagsWithThrottling();
+        AdSelectionServiceImpl adSelectionServiceWithThrottling =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mAdServicesHttpsClient,
+                        mDevContextFilter,
+                        mAppImportanceFilter,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mContext,
+                        mConsentManagerMock,
+                        mAdServicesLoggerSpy,
+                        throttlingFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAllowListsFilterSpy);
+
+        // Logger calls come after the callback is returned
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerSpy)
+                .logApiCallStats(any());
+
+        mMockWebServerRule.startMockWebServer(mDispatcher);
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+        DBCustomAudience dBCustomAudienceForBuyer1 =
+                createDBCustomAudience(
+                        BUYER_1,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1),
+                        bidsForBuyer1);
+        DBCustomAudience dBCustomAudienceForBuyer2 =
+                createDBCustomAudience(
+                        BUYER_2,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2),
+                        bidsForBuyer2);
+
+        // Populating the Custom Audience DB
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+
+        // First call to Ad Selection should succeed
+        AdSelectionTestCallback resultsCallbackFirstCall =
+                invokeRunAdSelection(
+                        adSelectionServiceWithThrottling, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+
+        // Immediately made subsequent call should fail
+        AdSelectionTestCallback resultsCallbackSecondCall =
+                invokeRunAdSelection(
+                        adSelectionServiceWithThrottling, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+
+        loggerLatch.await();
+        assertCallbackIsSuccessful(resultsCallbackFirstCall);
+        long resultSelectionId = resultsCallbackFirstCall.mAdSelectionResponse.getAdSelectionId();
+        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
+        assertEquals(
+                AD_URI_PREFIX + BUYER_2 + "/ad3",
+                resultsCallbackFirstCall.mAdSelectionResponse.getRenderUri().toString());
+
+        assertCallbackFailed(resultsCallbackSecondCall);
+
+        FledgeErrorResponse response = resultsCallbackSecondCall.mFledgeErrorResponse;
+        assertEquals(
+                "Error response code mismatch",
+                AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED,
+                response.getStatusCode());
+
+        verifyErrorMessageIsCorrect(
+                resultsCallbackSecondCall.mFledgeErrorResponse.getErrorMessage(),
+                String.format(
+                        AdSelectionRunner.AD_SELECTION_ERROR_PATTERN,
+                        AdSelectionRunner.ERROR_AD_SELECTION_FAILURE,
+                        AD_SELECTION_THROTTLED));
+        resetThrottlerToNoRateLimits();
+    }
+
+    /**
+     * Given Throttler is singleton, & shared across tests, this method should be invoked after
+     * tests that impose restrictive rate limits.
+     */
+    private void resetThrottlerToNoRateLimits() {
+        Throttler.destroyExistingThrottler();
+        final double noRateLimit = -1;
+        Throttler.getInstance(noRateLimit);
+    }
+
+    @Test
     public void testRunAdSelectionSucceedsWhenAdTechPassesEnrollmentCheck() throws Exception {
         Flags flagsWithEnrollmentCheckEnabled =
                 new AdSelectionE2ETestFlags() {
@@ -2046,12 +2210,12 @@ public class AdSelectionE2ETest {
                 .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                 .setTrustedBiddingData(
                         new DBTrustedBiddingData.Builder()
-                                .setUrl(
+                                .setUri(
                                         mMockWebServerRule.uriForPath(
                                                 BUYER_TRUSTED_SIGNAL_URI_PATH))
                                 .setKeys(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_KEYS)
                                 .build())
-                .setBiddingLogicUrl(biddingUri)
+                .setBiddingLogicUri(biddingUri)
                 .setAds(ads)
                 .build();
     }
@@ -2078,13 +2242,17 @@ public class AdSelectionE2ETest {
             final String actualErrorMassage, final String expectedErrorReason) {
         assertTrue(
                 String.format(
+                        Locale.ENGLISH,
                         "Actual error [%s] does not begin with [%s]",
-                        actualErrorMassage, ERROR_AD_SELECTION_FAILURE),
+                        actualErrorMassage,
+                        ERROR_AD_SELECTION_FAILURE),
                 actualErrorMassage.startsWith(ERROR_AD_SELECTION_FAILURE));
         assertTrue(
                 String.format(
+                        Locale.ENGLISH,
                         "Actual error [%s] does not contain expected message: [%s]",
-                        actualErrorMassage, expectedErrorReason),
+                        actualErrorMassage,
+                        expectedErrorReason),
                 actualErrorMassage.contains(expectedErrorReason));
     }
 
@@ -2117,7 +2285,7 @@ public class AdSelectionE2ETest {
                 + "         end = new Date().getTime();\n"
                 + "      }\n"
                 + "    }\n"
-                + String.format("    wait(\"%d\");\n", waitTime);
+                + String.format(Locale.ENGLISH, "    wait(\"%d\");\n", waitTime);
     }
 
     static class AdSelectionTestCallback extends AdSelectionCallback.Stub {
@@ -2167,6 +2335,18 @@ public class AdSelectionE2ETest {
         @Override
         public boolean getEnforceForegroundStatusForFledgeOverrides() {
             return true;
+        }
+
+        @Override
+        public boolean getDisableFledgeEnrollmentCheck() {
+            return true;
+        }
+
+        @Override
+        public float getSdkRequestPermitsPerSecond() {
+            // Unlimited rate for unit tests to avoid flake in tests due to rate
+            // limiting
+            return -1;
         }
     }
 }

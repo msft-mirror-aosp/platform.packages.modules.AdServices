@@ -36,6 +36,9 @@ import android.os.OutcomeReceiver;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.compatibility.common.util.ShellUtils;
+
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -62,6 +65,11 @@ public class MeasurementManagerTest {
                     "sdkName",
                     /* sdkCeDataDir = */ null,
                     /* sdkDeDataDir = */ null);
+
+    @After
+    public void tearDown() {
+        resetOverrideConsentManagerDebugMode();
+    }
 
     @Test
     public void testRegisterSource_callingApp_expectedAttributionSource() throws Exception {
@@ -285,6 +293,7 @@ public class MeasurementManagerTest {
     @Test
     public void testGetMeasurementApiStatus() throws Exception {
         MeasurementManager mm = Mockito.spy(sContext.getSystemService(MeasurementManager.class));
+        overrideConsentManagerDebugMode();
 
         CompletableFuture<Integer> future = new CompletableFuture<>();
         OutcomeReceiver<Integer, Exception> callback =
@@ -304,5 +313,14 @@ public class MeasurementManagerTest {
 
         Assert.assertEquals(
                 Integer.valueOf(MeasurementManager.MEASUREMENT_API_STATE_ENABLED), future.get());
+    }
+
+    // Override the Consent Manager behaviour - Consent Given
+    private void overrideConsentManagerDebugMode() {
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
+    }
+
+    private void resetOverrideConsentManagerDebugMode() {
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode null");
     }
 }

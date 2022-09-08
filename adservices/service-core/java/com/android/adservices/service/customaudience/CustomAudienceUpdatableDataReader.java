@@ -36,6 +36,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * A parser and validator for a JSON response that is fetched during the Custom Audience background
@@ -50,11 +51,13 @@ public class CustomAudienceUpdatableDataReader {
     public static final String RENDER_URI_KEY = "render_uri";
     public static final String METADATA_KEY = "metadata";
 
-    private static final String SUCCESS_VALID_LOG_FORMAT = "%s Found valid %s in JSON response";
+    private static final String FIELD_FOUND_LOG_FORMAT = "%s Found %s in JSON response";
+    private static final String VALIDATED_FIELD_LOG_FORMAT =
+            "%s Validated %s found in JSON response";
     private static final String FIELD_NOT_FOUND_LOG_FORMAT = "%s %s not found in JSON response";
     private static final String SKIP_INVALID_JSON_TYPE_LOG_FORMAT =
             "%s Invalid JSON type while parsing a single item in the %s found in JSON response;"
-                    + " ignoring and continuing";
+                    + " ignoring and continuing.  Error message: %s";
 
     private final JSONObject mResponseObject;
     private final String mResponseHash;
@@ -111,6 +114,11 @@ public class CustomAudienceUpdatableDataReader {
     public AdSelectionSignals getUserBiddingSignalsFromJsonObject()
             throws JSONException, NullPointerException, IllegalArgumentException {
         if (mResponseObject.has(USER_BIDDING_SIGNALS_KEY)) {
+            LogUtil.v(FIELD_FOUND_LOG_FORMAT, mResponseHash, USER_BIDDING_SIGNALS_KEY);
+
+            // Note that because the user bidding signals are stored in the response as a full JSON
+            // object already, the signals do not need to be validated further; the JSON must have
+            // been valid to be extracted successfully
             JSONObject signalsJsonObj =
                     Objects.requireNonNull(mResponseObject.getJSONObject(USER_BIDDING_SIGNALS_KEY));
             String signalsString = signalsJsonObj.toString();
@@ -119,7 +127,7 @@ public class CustomAudienceUpdatableDataReader {
                 throw new IllegalArgumentException();
             }
 
-            LogUtil.v(SUCCESS_VALID_LOG_FORMAT, mResponseHash, USER_BIDDING_SIGNALS_KEY);
+            LogUtil.v(VALIDATED_FIELD_LOG_FORMAT, mResponseHash, USER_BIDDING_SIGNALS_KEY);
             return AdSelectionSignals.fromString(signalsString);
         } else {
             LogUtil.v(FIELD_NOT_FOUND_LOG_FORMAT, mResponseHash, USER_BIDDING_SIGNALS_KEY);
@@ -138,10 +146,20 @@ public class CustomAudienceUpdatableDataReader {
     public DBTrustedBiddingData getTrustedBiddingDataFromJsonObject()
             throws JSONException, NullPointerException, IllegalArgumentException {
         if (mResponseObject.has(TRUSTED_BIDDING_DATA_KEY)) {
+            LogUtil.v(FIELD_FOUND_LOG_FORMAT, mResponseHash, TRUSTED_BIDDING_DATA_KEY);
+
             JSONObject dataJsonObj = mResponseObject.getJSONObject(TRUSTED_BIDDING_DATA_KEY);
 
-            String uriString = dataJsonObj.getString(TRUSTED_BIDDING_URI_KEY);
-            Uri parsedUri = Uri.parse(uriString);
+            // Note: getString() coerces values to be strings; use get() instead
+            Object uri = dataJsonObj.get(TRUSTED_BIDDING_URI_KEY);
+            if (!(uri instanceof String)) {
+                throw new JSONException(
+                        "Unexpected format parsing "
+                                + TRUSTED_BIDDING_URI_KEY
+                                + " in "
+                                + TRUSTED_BIDDING_DATA_KEY);
+            }
+            Uri parsedUri = Uri.parse(Objects.requireNonNull((String) uri));
 
             JSONArray keysJsonArray = dataJsonObj.getJSONArray(TRUSTED_BIDDING_KEYS_KEY);
             int keysListLength = keysJsonArray.length();
@@ -153,19 +171,21 @@ public class CustomAudienceUpdatableDataReader {
                     if (key instanceof String) {
                         keysList.add(Objects.requireNonNull((String) key));
                     } else {
-                        LogUtil.v(
-                                SKIP_INVALID_JSON_TYPE_LOG_FORMAT,
-                                mResponseHash,
-                                TRUSTED_BIDDING_KEYS_KEY);
+                        throw new JSONException(
+                                "Unexpected format parsing "
+                                        + TRUSTED_BIDDING_KEYS_KEY
+                                        + " in "
+                                        + TRUSTED_BIDDING_DATA_KEY);
                     }
-                } catch (JSONException | NullPointerException ignoredException) {
+                } catch (JSONException | NullPointerException exception) {
                     // Skip any keys that are malformed and continue to the next in the list; note
                     // that if the entire given list of keys is junk, then any existing trusted
                     // bidding keys are cleared from the custom audience
                     LogUtil.v(
                             SKIP_INVALID_JSON_TYPE_LOG_FORMAT,
                             mResponseHash,
-                            TRUSTED_BIDDING_KEYS_KEY);
+                            TRUSTED_BIDDING_KEYS_KEY,
+                            Optional.ofNullable(exception.getMessage()).orElse("<null>"));
                 }
             }
 
@@ -178,13 +198,13 @@ public class CustomAudienceUpdatableDataReader {
             uriValidator.validate(parsedUri);
 
             DBTrustedBiddingData trustedBiddingData =
-                    new DBTrustedBiddingData.Builder().setUrl(parsedUri).setKeys(keysList).build();
+                    new DBTrustedBiddingData.Builder().setUri(parsedUri).setKeys(keysList).build();
 
             if (trustedBiddingData.size() > mMaxTrustedBiddingDataSizeB) {
                 throw new IllegalArgumentException();
             }
 
-            LogUtil.v(SUCCESS_VALID_LOG_FORMAT, mResponseHash, TRUSTED_BIDDING_DATA_KEY);
+            LogUtil.v(VALIDATED_FIELD_LOG_FORMAT, mResponseHash, TRUSTED_BIDDING_DATA_KEY);
             return trustedBiddingData;
         } else {
             LogUtil.v(FIELD_NOT_FOUND_LOG_FORMAT, mResponseHash, TRUSTED_BIDDING_DATA_KEY);
@@ -203,6 +223,8 @@ public class CustomAudienceUpdatableDataReader {
     public List<DBAdData> getAdsFromJsonObject()
             throws JSONException, NullPointerException, IllegalArgumentException {
         if (mResponseObject.has(ADS_KEY)) {
+            LogUtil.v(FIELD_FOUND_LOG_FORMAT, mResponseHash, ADS_KEY);
+
             JSONArray adsJsonArray = mResponseObject.getJSONArray(ADS_KEY);
             int adsSize = 0;
             int adsListLength = adsJsonArray.length();
@@ -211,10 +233,27 @@ public class CustomAudienceUpdatableDataReader {
                 try {
                     JSONObject adDataJsonObj = adsJsonArray.getJSONObject(i);
 
-                    String uriString = adDataJsonObj.getString(RENDER_URI_KEY);
-                    Uri parsedUri = Uri.parse(uriString);
+                    // Note: getString() coerces values to be strings; use get() instead
+                    Object uri = adDataJsonObj.get(RENDER_URI_KEY);
+                    if (!(uri instanceof String)) {
+                        throw new JSONException(
+                                "Unexpected format parsing " + RENDER_URI_KEY + " in " + ADS_KEY);
+                    }
+                    Uri parsedUri = Uri.parse(Objects.requireNonNull((String) uri));
 
-                    String metadata = Objects.requireNonNull(adDataJsonObj.getString(METADATA_KEY));
+                    // By passing in an empty ad tech identifier string, ad tech identifier host
+                    // matching is skipped
+                    AdTechUriValidator uriValidator =
+                            new AdTechUriValidator(
+                                    ValidatorUtil.AD_TECH_ROLE_BUYER,
+                                    "",
+                                    this.getClass().getSimpleName(),
+                                    RENDER_URI_KEY);
+                    uriValidator.validate(parsedUri);
+
+                    String metadata =
+                            Objects.requireNonNull(adDataJsonObj.getJSONObject(METADATA_KEY))
+                                    .toString();
 
                     DBAdData adData =
                             new DBAdData.Builder()
@@ -223,11 +262,17 @@ public class CustomAudienceUpdatableDataReader {
                                     .build();
                     adsList.add(adData);
                     adsSize += adData.size();
-                } catch (JSONException | NullPointerException ignoredException) {
+                } catch (JSONException
+                        | NullPointerException
+                        | IllegalArgumentException exception) {
                     // Skip any ads that are malformed and continue to the next in the list; note
                     // that if the entire given list of ads is junk, then any existing ads are
                     // cleared from the custom audience
-                    LogUtil.v(SKIP_INVALID_JSON_TYPE_LOG_FORMAT, mResponseHash, ADS_KEY);
+                    LogUtil.v(
+                            SKIP_INVALID_JSON_TYPE_LOG_FORMAT,
+                            mResponseHash,
+                            ADS_KEY,
+                            Optional.ofNullable(exception.getMessage()).orElse("<null>"));
                 }
             }
 
@@ -239,7 +284,7 @@ public class CustomAudienceUpdatableDataReader {
                 throw new IllegalArgumentException();
             }
 
-            LogUtil.v(SUCCESS_VALID_LOG_FORMAT, mResponseHash, ADS_KEY);
+            LogUtil.v(VALIDATED_FIELD_LOG_FORMAT, mResponseHash, ADS_KEY);
             return adsList;
         } else {
             LogUtil.v(FIELD_NOT_FOUND_LOG_FORMAT, mResponseHash, ADS_KEY);

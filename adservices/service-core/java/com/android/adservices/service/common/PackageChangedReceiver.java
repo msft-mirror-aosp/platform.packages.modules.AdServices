@@ -24,12 +24,14 @@ import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.topics.TopicsWorker;
 import com.android.internal.annotations.VisibleForTesting;
 
+import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
@@ -65,11 +67,13 @@ public class PackageChangedReceiver extends BroadcastReceiver {
         switch (intent.getAction()) {
             case PACKAGE_CHANGED_BROADCAST:
                 Uri packageUri = Uri.parse(intent.getData().getSchemeSpecificPart());
+                int packageUid = intent.getIntExtra(Intent.EXTRA_UID, -1);
                 switch (intent.getStringExtra(ACTION_KEY)) {
                     case PACKAGE_FULLY_REMOVED:
                         measurementOnPackageFullyRemoved(context, packageUri);
                         topicsOnPackageFullyRemoved(context, packageUri);
                         fledgeOnPackageFullyRemovedOrDataCleared(context, packageUri);
+                        consentOnPackageFullyRemoved(context, packageUri, packageUid);
                         break;
                     case PACKAGE_ADDED:
                         measurementOnPackageAdded(context, packageUri);
@@ -91,7 +95,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
             return;
         }
 
-        LogUtil.i("Package Fully Removed:" + packageUri);
+        LogUtil.d("Package Fully Removed:" + packageUri);
         sBackgroundExecutor.execute(
                 () -> MeasurementImpl.getInstance(context).deletePackageRecords(packageUri));
     }
@@ -103,7 +107,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
             return;
         }
 
-        LogUtil.i("Package Data Cleared: " + packageUri);
+        LogUtil.d("Package Data Cleared: " + packageUri);
         sBackgroundExecutor.execute(
                 () -> MeasurementImpl.getInstance(context).deletePackageRecords(packageUri));
     }
@@ -115,7 +119,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
             return;
         }
 
-        LogUtil.i("Package Added: " + packageUri);
+        LogUtil.d("Package Added: " + packageUri);
         sBackgroundExecutor.execute(
                 () ->
                         MeasurementImpl.getInstance(context)
@@ -159,6 +163,27 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                         getCustomAudienceDatabase(context)
                                 .customAudienceDao()
                                 .deleteCustomAudienceDataByOwner(packageUri.toString()));
+    }
+
+    /** Deletes a consent setting for the given application and UID. */
+    @VisibleForTesting
+    void consentOnPackageFullyRemoved(
+            @NonNull Context context, @NonNull Uri packageUri, int packageUid) {
+        Objects.requireNonNull(context);
+        Objects.requireNonNull(packageUri);
+
+        LogUtil.d(
+                "Deleting consent data for package %s with UID %d",
+                packageUri.toString(), packageUid);
+        sBackgroundExecutor.execute(
+                () -> {
+                    try {
+                        AppConsentDao.getInstance(context)
+                                .clearConsentForUninstalledApp(packageUri.toString(), packageUid);
+                    } catch (IOException e) {
+                        LogUtil.e("Failed to initialize or write to the app consent datastore");
+                    }
+                });
     }
 
     /**

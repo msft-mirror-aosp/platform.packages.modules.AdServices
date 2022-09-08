@@ -16,7 +16,6 @@
 package com.android.adservices.service.measurement;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
@@ -32,7 +31,6 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REGISTER_WEB_TRIGGER;
 
 import android.adservices.common.AdServicesPermissions;
-import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
 import android.adservices.measurement.DeletionParam;
 import android.adservices.measurement.IMeasurementApiStatusCallback;
@@ -41,11 +39,13 @@ import android.adservices.measurement.IMeasurementService;
 import android.adservices.measurement.MeasurementErrorResponse;
 import android.adservices.measurement.MeasurementManager;
 import android.adservices.measurement.RegistrationRequest;
+import android.adservices.measurement.StatusParam;
 import android.adservices.measurement.WebSourceRegistrationRequestInternal;
 import android.adservices.measurement.WebTriggerRegistrationRequestInternal;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.content.Context;
+import android.os.Binder;
 import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
@@ -53,25 +53,29 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.PermissionHelper;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.measurement.access.AppPackageAccessResolver;
+import com.android.adservices.service.measurement.access.ForegroundEnforcementAccessResolver;
 import com.android.adservices.service.measurement.access.IAccessResolver;
+import com.android.adservices.service.measurement.access.KillSwitchAccessResolver;
 import com.android.adservices.service.measurement.access.ManifestBasedAdtechAccessResolver;
 import com.android.adservices.service.measurement.access.PermissionAccessResolver;
 import com.android.adservices.service.measurement.access.UserConsentAccessResolver;
-import com.android.adservices.service.measurement.access.WebContextByPackageAccessResolver;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
+import com.android.adservices.service.stats.Clock;
 import com.android.internal.annotations.VisibleForTesting;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -83,47 +87,57 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
     private static final String EMPTY_PACKAGE_NAME = "";
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
     private static final Executor sLightExecutor = AdServicesExecutors.getLightWeightExecutor();
+    private final Clock mClock;
     private final MeasurementImpl mMeasurementImpl;
     private final Flags mFlags;
     private final AdServicesLogger mAdServicesLogger;
     private final ConsentManager mConsentManager;
     private final EnrollmentDao mEnrollmentDao;
+    private final AppImportanceFilter mAppImportanceFilter;
     private final Context mContext;
     private final Throttler mThrottler;
     private static final String RATE_LIMIT_REACHED = "Rate limit reached to call this API.";
-    private static final String KILL_SWITCH_ENABLED = "Measurement API is disabled.";
+    private static final String CALLBACK_ERROR = "Unable to send result to the callback";
 
     public MeasurementServiceImpl(
             @NonNull Context context,
+            @NonNull Clock clock,
             @NonNull ConsentManager consentManager,
             @NonNull EnrollmentDao enrollmentDao,
-            @NonNull Flags flags) {
+            @NonNull Flags flags,
+            @NonNull AppImportanceFilter appImportanceFilter) {
         this(
                 MeasurementImpl.getInstance(context),
                 context,
+                clock,
                 consentManager,
                 enrollmentDao,
                 Throttler.getInstance(FlagsFactory.getFlags().getSdkRequestPermitsPerSecond()),
                 flags,
-                AdServicesLoggerImpl.getInstance());
+                AdServicesLoggerImpl.getInstance(),
+                appImportanceFilter);
     }
 
     @VisibleForTesting
     MeasurementServiceImpl(
             @NonNull MeasurementImpl measurementImpl,
             @NonNull Context context,
+            @NonNull Clock clock,
             @NonNull ConsentManager consentManager,
             @NonNull EnrollmentDao enrollmentDao,
             @NonNull Throttler throttler,
             @NonNull Flags flags,
-            @NonNull AdServicesLogger adServicesLogger) {
+            @NonNull AdServicesLogger adServicesLogger,
+            @NonNull AppImportanceFilter appImportanceFilter) {
         mContext = context;
+        mClock = clock;
         mMeasurementImpl = measurementImpl;
         mConsentManager = consentManager;
         mEnrollmentDao = enrollmentDao;
         mThrottler = throttler;
         mFlags = flags;
         mAdServicesLogger = adServicesLogger;
+        mAppImportanceFilter = appImportanceFilter;
     }
 
     @Override
@@ -135,33 +149,36 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         Objects.requireNonNull(request);
         Objects.requireNonNull(callback);
 
-        long startTime = callerMetadata.getBinderElapsedTimestamp();
-        Throttler.ApiKey apiKey =
-                RegistrationRequest.REGISTER_SOURCE == request.getRegistrationType()
-                        ? Throttler.ApiKey.MEASUREMENT_API_REGISTER_SOURCE
-                        : Throttler.ApiKey.MEASUREMENT_API_REGISTER_TRIGGER;
-        final int apiNameId =
-                RegistrationRequest.REGISTER_SOURCE == request.getRegistrationType()
-                        ? AD_SERVICES_API_CALLED__API_NAME__REGISTER_SOURCE
-                        : AD_SERVICES_API_CALLED__API_NAME__REGISTER_TRIGGER;
+        final long serviceStartTime = mClock.elapsedRealtime();
+
+        final Throttler.ApiKey apiKey = getApiKey(request);
+        final int apiNameId = getApiNameId(request);
         if (isThrottled(request.getPackageName(), apiKey, callback)) {
-            long endTime = System.currentTimeMillis();
             logApiStats(
                     apiNameId,
                     request.getPackageName(),
-                    (int) (endTime - startTime),
+                    getLatency(callerMetadata, serviceStartTime),
                     STATUS_RATE_LIMIT_REACHED);
             return;
         }
 
+        final int callerUid = Binder.getCallingUidOrThrow();
         final boolean attributionPermission = PermissionHelper.hasAttributionPermission(mContext);
         sBackgroundExecutor.execute(
                 () -> {
-                    performWorkIfAllowed(
-                            () -> isRegisterDisabled(request),
-                            (mMeasurementImpl) ->
-                                    mMeasurementImpl.register(request, System.currentTimeMillis()),
-                            Arrays.asList(
+                    performRegistration(
+                            (service) -> service.register(request, now()),
+                            List.of(
+                                    new KillSwitchAccessResolver(() -> isRegisterDisabled(request)),
+                                    new ForegroundEnforcementAccessResolver(
+                                            apiNameId,
+                                            callerUid,
+                                            mAppImportanceFilter,
+                                            getRegisterSourceOrTriggerEnforcementForegroundStatus(
+                                                    request, mFlags)),
+                                    new AppPackageAccessResolver(
+                                            mFlags.getPpapiAppAllowList(),
+                                            request.getPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
                                     new ManifestBasedAdtechAccessResolver(
@@ -172,7 +189,8 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                             callback,
                             apiNameId,
                             request.getPackageName(),
-                            startTime);
+                            callerMetadata,
+                            serviceStartTime);
                 });
     }
 
@@ -185,27 +203,38 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         Objects.requireNonNull(request);
         Objects.requireNonNull(callback);
 
-        long startTime = callerMetadata.getBinderElapsedTimestamp();
+        final long serviceStartTime = mClock.elapsedRealtime();
+
         final Throttler.ApiKey apiKey = Throttler.ApiKey.MEASUREMENT_API_REGISTER_WEB_SOURCE;
+        final int apiNameId = AD_SERVICES_API_CALLED__API_NAME__REGISTER_WEB_SOURCE;
         if (isThrottled(request.getPackageName(), apiKey, callback)) {
-            long endTime = System.currentTimeMillis();
             logApiStats(
-                    AD_SERVICES_API_CALLED__API_NAME__REGISTER_WEB_SOURCE,
+                    apiNameId,
                     request.getPackageName(),
-                    (int) (endTime - startTime),
+                    getLatency(callerMetadata, serviceStartTime),
                     STATUS_RATE_LIMIT_REACHED);
             return;
         }
 
+        final int callerUid = Binder.getCallingUidOrThrow();
         final boolean attributionPermission = PermissionHelper.hasAttributionPermission(mContext);
         sBackgroundExecutor.execute(
                 () -> {
-                    performWorkIfAllowed(
-                            mFlags::getMeasurementApiRegisterWebSourceKillSwitch,
-                            (mMeasurementImpl) ->
-                                    mMeasurementImpl.registerWebSource(
-                                            request, System.currentTimeMillis()),
-                            Arrays.asList(
+                    final Supplier<Boolean> enforceForeground =
+                            mFlags::getEnforceForegroundStatusForMeasurementRegisterWebSource;
+                    performRegistration(
+                            (service) -> service.registerWebSource(request, now()),
+                            List.of(
+                                    new KillSwitchAccessResolver(
+                                            mFlags::getMeasurementApiRegisterWebSourceKillSwitch),
+                                    new ForegroundEnforcementAccessResolver(
+                                            apiNameId,
+                                            callerUid,
+                                            mAppImportanceFilter,
+                                            enforceForeground),
+                                    new AppPackageAccessResolver(
+                                            mFlags.getPpapiAppAllowList(),
+                                            request.getPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
                                     new ManifestBasedAdtechAccessResolver(
@@ -216,13 +245,14 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                                     .getSourceParams()
                                                     .get(0)
                                                     .getRegistrationUri()),
-                                    new WebContextByPackageAccessResolver(
+                                    new AppPackageAccessResolver(
                                             mFlags.getWebContextClientAppAllowList(),
                                             request.getPackageName())),
                             callback,
-                            AD_SERVICES_API_CALLED__API_NAME__REGISTER_WEB_SOURCE,
+                            apiNameId,
                             request.getPackageName(),
-                            startTime);
+                            callerMetadata,
+                            serviceStartTime);
                 });
     }
 
@@ -235,27 +265,38 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         Objects.requireNonNull(request);
         Objects.requireNonNull(callback);
 
-        long startTime = callerMetadata.getBinderElapsedTimestamp();
+        final long serviceStartTime = mClock.elapsedRealtime();
+
         final Throttler.ApiKey apiKey = Throttler.ApiKey.MEASUREMENT_API_REGISTER_WEB_TRIGGER;
+        final int apiNameId = AD_SERVICES_API_CALLED__API_NAME__REGISTER_WEB_TRIGGER;
         if (isThrottled(request.getPackageName(), apiKey, callback)) {
-            long endTime = System.currentTimeMillis();
             logApiStats(
-                    AD_SERVICES_API_CALLED__API_NAME__REGISTER_WEB_TRIGGER,
+                    apiNameId,
                     request.getPackageName(),
-                    (int) (endTime - startTime),
+                    getLatency(callerMetadata, serviceStartTime),
                     STATUS_RATE_LIMIT_REACHED);
             return;
         }
 
+        final int callerUid = Binder.getCallingUidOrThrow();
         final boolean attributionPermission = PermissionHelper.hasAttributionPermission(mContext);
         sBackgroundExecutor.execute(
                 () -> {
-                    performWorkIfAllowed(
-                            mFlags::getMeasurementApiRegisterWebTriggerKillSwitch,
-                            (measurementImpl) ->
-                                    measurementImpl.registerWebTrigger(
-                                            request, System.currentTimeMillis()),
-                            Arrays.asList(
+                    final Supplier<Boolean> enforceForeground =
+                            mFlags::getEnforceForegroundStatusForMeasurementRegisterWebTrigger;
+                    performRegistration(
+                            (service) -> service.registerWebTrigger(request, now()),
+                            List.of(
+                                    new KillSwitchAccessResolver(
+                                            mFlags::getMeasurementApiRegisterWebTriggerKillSwitch),
+                                    new ForegroundEnforcementAccessResolver(
+                                            apiNameId,
+                                            callerUid,
+                                            mAppImportanceFilter,
+                                            enforceForeground),
+                                    new AppPackageAccessResolver(
+                                            mFlags.getPpapiAppAllowList(),
+                                            request.getPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
                                     new ManifestBasedAdtechAccessResolver(
@@ -267,9 +308,10 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                                     .get(0)
                                                     .getRegistrationUri())),
                             callback,
-                            AD_SERVICES_API_CALLED__API_NAME__REGISTER_WEB_TRIGGER,
+                            apiNameId,
                             request.getPackageName(),
-                            startTime);
+                            callerMetadata,
+                            serviceStartTime);
                 });
     }
 
@@ -281,156 +323,104 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         Objects.requireNonNull(request);
         Objects.requireNonNull(callback);
 
-        long startTime = callerMetadata.getBinderElapsedTimestamp();
+        final long serviceStartTime = mClock.elapsedRealtime();
+
         final Throttler.ApiKey apiKey = Throttler.ApiKey.MEASUREMENT_API_DELETION_REGISTRATION;
+        final int apiNameId = AD_SERVICES_API_CALLED__API_NAME__DELETE_REGISTRATIONS;
         if (isThrottled(request.getPackageName(), apiKey, callback)) {
-            long endTime = System.currentTimeMillis();
             logApiStats(
-                    AD_SERVICES_API_CALLED__API_NAME__DELETE_REGISTRATIONS,
+                    apiNameId,
                     request.getPackageName(),
-                    (int) (endTime - startTime),
+                    getLatency(callerMetadata, serviceStartTime),
                     STATUS_RATE_LIMIT_REACHED);
             return;
         }
 
+        final int callerUid = Binder.getCallingUidOrThrow();
         sBackgroundExecutor.execute(
                 () -> {
-                    @AdServicesStatusUtils.StatusCode int resultCode = STATUS_UNSET;
-                    try {
-                        if (mFlags.getMeasurementApiDeleteRegistrationsKillSwitch()) {
-                            LogUtil.e("Measurement Delete Registrations API is disabled");
-                            callback.onFailure(
-                                    new MeasurementErrorResponse.Builder()
-                                            .setStatusCode(STATUS_KILLSWITCH_ENABLED)
-                                            .setErrorMessage(KILL_SWITCH_ENABLED)
-                                            .build());
-                            resultCode = STATUS_KILLSWITCH_ENABLED;
-                            return;
-                        }
-
-                        WebContextByPackageAccessResolver webContextAccessResolver =
-                                new WebContextByPackageAccessResolver(
-                                        mFlags.getWebContextClientAppAllowList(),
-                                        request.getPackageName());
-                        if (!webContextAccessResolver.isAllowed(mContext)) {
-                            resultCode = webContextAccessResolver.getErrorStatusCode();
-                            callback.onFailure(
-                                    new MeasurementErrorResponse.Builder()
-                                            .setStatusCode(resultCode)
-                                            .setErrorMessage(
-                                                    webContextAccessResolver.getErrorMessage())
-                                            .build());
-
-                            return;
-                        }
-
-                        resultCode = mMeasurementImpl.deleteRegistrations(request);
-                        if (resultCode == STATUS_SUCCESS) {
-                            callback.onResult();
-                        } else {
-                            callback.onFailure(
-                                    new MeasurementErrorResponse.Builder()
-                                            .setStatusCode(resultCode)
-                                            .setErrorMessage(
-                                                    "Encountered failure during "
-                                                            + "Measurement deletion.")
-                                            .build());
-                        }
-                    } catch (RemoteException e) {
-                        LogUtil.e(e, "Unable to send result to the callback");
-                        resultCode = STATUS_INTERNAL_ERROR;
-                    } finally {
-                        long endTime = System.currentTimeMillis();
-                        logApiStats(
-                                AD_SERVICES_API_CALLED__API_NAME__DELETE_REGISTRATIONS,
-                                request.getPackageName(),
-                                (int) (endTime - startTime),
-                                resultCode);
-                    }
+                    final Supplier<Boolean> enforceForeground =
+                            mFlags::getEnforceForegroundStatusForMeasurementDeleteRegistrations;
+                    final Supplier<Boolean> killSwitchSupplier =
+                            mFlags::getMeasurementApiDeleteRegistrationsKillSwitch;
+                    performDeletion(
+                            (service) -> mMeasurementImpl.deleteRegistrations(request),
+                            List.of(
+                                    new KillSwitchAccessResolver(killSwitchSupplier),
+                                    new ForegroundEnforcementAccessResolver(
+                                            apiNameId,
+                                            callerUid,
+                                            mAppImportanceFilter,
+                                            enforceForeground),
+                                    new AppPackageAccessResolver(
+                                            mFlags.getPpapiAppAllowList(),
+                                            request.getPackageName()),
+                                    new AppPackageAccessResolver(
+                                            mFlags.getWebContextClientAppAllowList(),
+                                            request.getPackageName())),
+                            callback,
+                            apiNameId,
+                            request.getPackageName(),
+                            callerMetadata,
+                            serviceStartTime);
                 });
     }
 
     @Override
     public void getMeasurementApiStatus(
+            @NonNull StatusParam statusParam,
             @NonNull CallerMetadata callerMetadata,
             @NonNull IMeasurementApiStatusCallback callback) {
         Objects.requireNonNull(callback);
-        long startTime = callerMetadata.getBinderElapsedTimestamp();
 
+        final long serviceStartTime = mClock.elapsedRealtime();
+
+        final int apiNameId = AD_SERVICES_API_CALLED__API_NAME__GET_MEASUREMENT_API_STATUS;
+
+        final int callerUid = Binder.getCallingUidOrThrow();
         sLightExecutor.execute(
                 () -> {
                     @StatusCode int statusCode = STATUS_UNSET;
                     try {
-                        if (mFlags.getMeasurementApiStatusKillSwitch()) {
-                            LogUtil.e("Measurement Status API is disabled");
+                        final Supplier<Boolean> enforceForeground =
+                                mFlags::getEnforceForegroundStatusForMeasurementStatus;
+                        List<IAccessResolver> accessResolvers =
+                                List.of(
+                                        new KillSwitchAccessResolver(
+                                                mFlags::getMeasurementApiStatusKillSwitch),
+                                        new ForegroundEnforcementAccessResolver(
+                                                apiNameId,
+                                                callerUid,
+                                                mAppImportanceFilter,
+                                                enforceForeground),
+                                        new AppPackageAccessResolver(
+                                                mFlags.getPpapiAppAllowList(),
+                                                statusParam.getAppPackageName()));
+
+                        final Optional<IAccessResolver> optionalResolver =
+                                getAccessDenied(accessResolvers);
+
+                        if (optionalResolver.isPresent()) {
+                            final IAccessResolver resolver = optionalResolver.get();
+                            LogUtil.e(resolver.getErrorMessage());
                             callback.onResult(MeasurementManager.MEASUREMENT_API_STATE_DISABLED);
-                            statusCode = STATUS_KILLSWITCH_ENABLED;
+                            statusCode = resolver.getErrorStatusCode();
                             return;
                         }
 
                         callback.onResult(mMeasurementImpl.getMeasurementApiStatus());
                         statusCode = STATUS_SUCCESS;
                     } catch (RemoteException e) {
-                        LogUtil.e(e, "Unable to send result to the callback.");
+                        LogUtil.e(e, CALLBACK_ERROR);
                         statusCode = STATUS_INTERNAL_ERROR;
                     } finally {
-                        long endTime = System.currentTimeMillis();
                         logApiStats(
-                                AD_SERVICES_API_CALLED__API_NAME__GET_MEASUREMENT_API_STATUS,
-                                EMPTY_PACKAGE_NAME,
-                                (int) (endTime - startTime),
+                                apiNameId,
+                                statusParam.getAppPackageName(),
+                                getLatency(callerMetadata, serviceStartTime),
                                 statusCode);
                     }
                 });
-    }
-
-    private void performWorkIfAllowed(
-            Supplier<Boolean> isKillSwitchEnabledSupplier,
-            Consumer<MeasurementImpl> execute,
-            List<IAccessResolver> apiAccessResolvers,
-            IMeasurementCallback callback,
-            int apiNameId,
-            String appPackageName,
-            long startTime) {
-        int statusCode = STATUS_UNSET;
-        try {
-            // TODO: Inject isKillSwitchEnabledSupplier as an IAccessResolver
-            if (isKillSwitchEnabledSupplier.get()) {
-                callback.onFailure(
-                        new MeasurementErrorResponse.Builder()
-                                .setStatusCode(STATUS_KILLSWITCH_ENABLED)
-                                .setErrorMessage(KILL_SWITCH_ENABLED)
-                                .build());
-                statusCode = STATUS_KILLSWITCH_ENABLED;
-                return;
-            }
-
-            Optional<IAccessResolver> accessDenierOpt =
-                    apiAccessResolvers.stream()
-                            .filter(accessResolver -> !accessResolver.isAllowed(mContext))
-                            .findFirst();
-
-            if (accessDenierOpt.isPresent()) {
-                IAccessResolver accessDenier = accessDenierOpt.get();
-                callback.onFailure(
-                        new MeasurementErrorResponse.Builder()
-                                .setStatusCode(accessDenier.getErrorStatusCode())
-                                .setErrorMessage(accessDenier.getErrorMessage())
-                                .build());
-                return;
-            }
-
-            execute.accept(mMeasurementImpl);
-            callback.onResult();
-            statusCode = STATUS_SUCCESS;
-
-        } catch (RemoteException e) {
-            LogUtil.e(e, "Unable to send result to the callback");
-            statusCode = STATUS_INTERNAL_ERROR;
-        } finally {
-            long endTime = System.currentTimeMillis();
-            logApiStats(apiNameId, appPackageName, (int) (endTime - startTime), statusCode);
-        }
     }
 
     // Return true if we should throttle (don't allow the API call).
@@ -478,5 +468,132 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                         .setLatencyMillisecond(latency)
                         .setResultCode(resultCode)
                         .build());
+    }
+
+    private void performRegistration(
+            Consumer<MeasurementImpl> execute,
+            List<IAccessResolver> accessResolvers,
+            IMeasurementCallback callback,
+            int apiNameId,
+            String appPackageName,
+            CallerMetadata callerMetadata,
+            long serviceStartTime) {
+
+        int statusCode = STATUS_UNSET;
+        try {
+
+            final Optional<IAccessResolver> optionalResolver = getAccessDenied(accessResolvers);
+            if (optionalResolver.isPresent()) {
+                final IAccessResolver resolver = optionalResolver.get();
+                LogUtil.e(resolver.getErrorMessage());
+                statusCode = resolver.getErrorStatusCode();
+                callback.onFailure(
+                        new MeasurementErrorResponse.Builder()
+                                .setStatusCode(resolver.getErrorStatusCode())
+                                .setErrorMessage(resolver.getErrorMessage())
+                                .build());
+                return;
+            }
+
+            execute.accept(mMeasurementImpl);
+            callback.onResult();
+            statusCode = STATUS_SUCCESS;
+
+        } catch (RemoteException e) {
+            LogUtil.e(e, CALLBACK_ERROR);
+            statusCode = STATUS_INTERNAL_ERROR;
+        } finally {
+            logApiStats(
+                    apiNameId,
+                    appPackageName,
+                    getLatency(callerMetadata, serviceStartTime),
+                    statusCode);
+        }
+    }
+
+    private void performDeletion(
+            Function<MeasurementImpl, Integer> execute,
+            List<IAccessResolver> accessResolvers,
+            IMeasurementCallback callback,
+            int apiNameId,
+            String appPackageName,
+            CallerMetadata callerMetadata,
+            long serviceStartTime) {
+
+        int statusCode = STATUS_UNSET;
+        try {
+
+            final Optional<IAccessResolver> optionalResolver = getAccessDenied(accessResolvers);
+            if (optionalResolver.isPresent()) {
+                final IAccessResolver resolver = optionalResolver.get();
+                LogUtil.e(resolver.getErrorMessage());
+                statusCode = resolver.getErrorStatusCode();
+                callback.onFailure(
+                        new MeasurementErrorResponse.Builder()
+                                .setStatusCode(resolver.getErrorStatusCode())
+                                .setErrorMessage(resolver.getErrorMessage())
+                                .build());
+                return;
+            }
+
+            statusCode = execute.apply(mMeasurementImpl);
+            if (statusCode == STATUS_SUCCESS) {
+                callback.onResult();
+            } else {
+                callback.onFailure(
+                        new MeasurementErrorResponse.Builder()
+                                .setStatusCode(statusCode)
+                                .setErrorMessage("Encountered failure during Measurement deletion.")
+                                .build());
+            }
+
+        } catch (RemoteException e) {
+            LogUtil.e(e, CALLBACK_ERROR);
+            statusCode = STATUS_INTERNAL_ERROR;
+        } finally {
+            logApiStats(
+                    apiNameId,
+                    appPackageName,
+                    getLatency(callerMetadata, serviceStartTime),
+                    statusCode);
+        }
+    }
+
+    private Optional<IAccessResolver> getAccessDenied(List<IAccessResolver> apiAccessResolvers) {
+        return apiAccessResolvers.stream()
+                .filter(accessResolver -> !accessResolver.isAllowed(mContext))
+                .findFirst();
+    }
+
+    private Throttler.ApiKey getApiKey(RegistrationRequest request) {
+        return RegistrationRequest.REGISTER_SOURCE == request.getRegistrationType()
+                ? Throttler.ApiKey.MEASUREMENT_API_REGISTER_SOURCE
+                : Throttler.ApiKey.MEASUREMENT_API_REGISTER_TRIGGER;
+    }
+
+    private int getApiNameId(RegistrationRequest request) {
+        return RegistrationRequest.REGISTER_SOURCE == request.getRegistrationType()
+                ? AD_SERVICES_API_CALLED__API_NAME__REGISTER_SOURCE
+                : AD_SERVICES_API_CALLED__API_NAME__REGISTER_TRIGGER;
+    }
+
+    private int getLatency(CallerMetadata metadata, long serviceStartTime) {
+        long binderCallStartTimeMillis = metadata.getBinderElapsedTimestamp();
+        long serviceLatency = mClock.elapsedRealtime() - serviceStartTime;
+        // Double it to simulate the return binder time is same to call binder time
+        long binderLatency = (serviceStartTime - binderCallStartTimeMillis) * 2;
+
+        return (int) (serviceLatency + binderLatency);
+    }
+
+    private long now() {
+        return System.currentTimeMillis();
+    }
+
+    private Supplier<Boolean> getRegisterSourceOrTriggerEnforcementForegroundStatus(
+            RegistrationRequest request, Flags flags) {
+        return request.getRegistrationType() == RegistrationRequest.REGISTER_SOURCE
+                ? flags::getEnforceForegroundStatusForMeasurementRegisterSource
+                : flags::getEnforceForegroundStatusForMeasurementRegisterTrigger;
     }
 }

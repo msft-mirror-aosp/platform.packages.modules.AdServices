@@ -18,7 +18,10 @@ package {
 
 filegroup {
     name: "sdksandbox_aidl",
-    srcs: ["aidl/**/*.aidl"],
+    srcs: [
+        "aidl/**/*.aidl",
+        "aidl/**/*.java"
+    ],
     path: "aidl",
 }
 
@@ -69,4 +72,10 @@ android_app {
         "sdksandbox-java-defaults",
     ],
     jarjar_rules: "sdksandbox_app_jarjar_rules.txt",
+    jacoco: {
+        exclude_filter: [
+            "android.app.sdksandbox.**",
+            "com.android.server.sdksandbox.**",
+        ],
+    },
 }

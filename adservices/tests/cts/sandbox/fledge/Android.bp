@@ -28,6 +28,7 @@ android_test {
         "truth-prebuilt",
         "SdkSandboxTestUtils",
         "adservices-service-core",
+        "adservices-test-fixtures",
     ],
     libs: [
         "android.test.base",

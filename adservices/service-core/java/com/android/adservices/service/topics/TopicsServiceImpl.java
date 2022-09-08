@@ -16,7 +16,6 @@
 package com.android.adservices.service.topics;
 
 
-import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_TOPICS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
@@ -35,7 +34,6 @@ import android.adservices.topics.GetTopicsParam;
 import android.adservices.topics.IGetTopicsCallback;
 import android.adservices.topics.ITopicsService;
 import android.annotation.NonNull;
-import android.annotation.RequiresPermission;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Binder;
@@ -103,7 +101,6 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
     }
 
     @Override
-    @RequiresPermission(ACCESS_ADSERVICES_TOPICS)
     public void getTopics(
             @NonNull GetTopicsParam topicsParam,
             @NonNull CallerMetadata callerMetadata,
@@ -248,14 +245,14 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
         // This needs to access PhFlag which requires READ_DEVICE_CONFIG which
         // is not granted for binder thread. So we have to check it with one
         // of non-binder thread of the PPAPI.
-        boolean appCanUsePpapi =
-                AllowLists.isPackageAllowListed(
-                        mFlags.getPpapiAppAllowList(), topicsParam.getAppPackageName());
-        if (!appCanUsePpapi) {
+        if (!AllowLists.isSignatureAllowListed(
+                mContext,
+                mFlags.getPpapiAppSignatureAllowList(),
+                topicsParam.getAppPackageName())) {
             invokeCallbackWithStatus(
                     callback,
                     STATUS_CALLER_NOT_ALLOWED,
-                    "Unauthorized caller. Caller is not allowed.");
+                    "Unauthorized caller. Signatures for calling package not allowed.");
             return false;
         }
 

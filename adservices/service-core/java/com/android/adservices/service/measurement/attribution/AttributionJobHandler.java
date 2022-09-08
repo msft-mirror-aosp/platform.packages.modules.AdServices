@@ -121,7 +121,7 @@ class AttributionJobHandler {
                     }
 
                     if (!hasAttributionQuota(source, trigger, measurementDao)
-                            || !isAdTechWithinPrivacyBounds(source, trigger, measurementDao)) {
+                            || !isEnrollmentWithinPrivacyBounds(source, trigger, measurementDao)) {
                         ignoreTrigger(trigger, measurementDao);
                         return;
                     }
@@ -168,12 +168,12 @@ class AttributionJobHandler {
                             + MIN_TIME_MS);
                     AggregateReport aggregateReport =
                             new AggregateReport.Builder()
+                                    // TODO: Unused field, incorrect value; cleanup
                                     .setPublisher(source.getRegistrant())
-                                    .setAttributionDestination(source.getAppDestination())
+                                    .setAttributionDestination(trigger.getAttributionDestination())
                                     .setSourceRegistrationTime(
                                             roundDownToDay(source.getEventTime()))
                                     .setScheduledReportTime(trigger.getTriggerTime() + randomTime)
-                                    .setAdTechDomain(source.getAdTechDomain())
                                     .setEnrollmentId(source.getEnrollmentId())
                                     .setDebugCleartextPayload(
                                             AggregateReport.generateDebugPayload(
@@ -458,24 +458,24 @@ class AttributionJobHandler {
         return Math.floorDiv(timestamp, TimeUnit.DAYS.toMillis(1)) * TimeUnit.DAYS.toMillis(1);
     }
 
-    private static boolean isAdTechWithinPrivacyBounds(Source source, Trigger trigger,
+    private static boolean isEnrollmentWithinPrivacyBounds(Source source, Trigger trigger,
             IMeasurementDao measurementDao) throws DatastoreException {
         Optional<Pair<Uri, Uri>> publisherAndDestination =
                 getPublisherAndDestinationTopPrivateDomains(source, trigger);
         if (publisherAndDestination.isPresent()) {
             Integer count =
-                    measurementDao.countDistinctAdTechsPerPublisherXDestinationInAttribution(
+                    measurementDao.countDistinctEnrollmentsPerPublisherXDestinationInAttribution(
                             publisherAndDestination.get().first,
                             publisherAndDestination.get().second,
-                            trigger.getAdTechDomain(), // TODO: will be replaced with enrollment ID
+                            trigger.getEnrollmentId(),
                             trigger.getTriggerTime()
                                     - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS,
                             trigger.getTriggerTime());
 
             return count < PrivacyParams
-                    .MAX_DISTINCT_AD_TECHS_PER_PUBLISHER_X_DESTINATION_IN_ATTRIBUTION;
+                    .MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_ATTRIBUTION;
         } else {
-            LogUtil.d("isAdTechWithinPrivacyBounds: getPublisherAndDestinationTopPrivateDomains"
+            LogUtil.d("isEnrollmentWithinPrivacyBounds: getPublisherAndDestinationTopPrivateDomains"
                     + " failed. %s %s", source.getPublisher(), trigger.getAttributionDestination());
             return true;
         }
@@ -504,13 +504,14 @@ class AttributionJobHandler {
     }
 
     public Attribution createAttribution(@NonNull Source source, @NonNull Trigger trigger) {
-        Optional<Uri> publisherBaseUri =
-                extractBaseUri(source.getPublisher(), source.getPublisherType());
+        Optional<Uri> publisherTopPrivateDomain =
+                getTopPrivateDomain(source.getPublisher(), source.getPublisherType());
         Uri destination = trigger.getAttributionDestination();
-        Optional<Uri> destinationBaseUri =
-                extractBaseUri(destination, trigger.getDestinationType());
+        Optional<Uri> destinationTopPrivateDomain =
+                getTopPrivateDomain(destination, trigger.getDestinationType());
 
-        if (!publisherBaseUri.isPresent() || !destinationBaseUri.isPresent()) {
+        if (!publisherTopPrivateDomain.isPresent()
+                || !destinationTopPrivateDomain.isPresent()) {
             throw new IllegalArgumentException(
                     String.format(
                             "insertAttributionRateLimit: "
@@ -519,21 +520,19 @@ class AttributionJobHandler {
                             source.getPublisher(), destination));
         }
 
-        String publisherTopPrivateDomain = publisherBaseUri.get().toString();
-        String triggerDestinationTopPrivateDomain = destinationBaseUri.get().toString();
         return new Attribution.Builder()
-                .setSourceSite(publisherTopPrivateDomain)
-                .setSourceOrigin(BaseUriExtractor.getBaseUri(source.getPublisher()).toString())
-                .setDestinationSite(triggerDestinationTopPrivateDomain)
+                .setSourceSite(publisherTopPrivateDomain.get().toString())
+                .setSourceOrigin(source.getPublisher().toString())
+                .setDestinationSite(destinationTopPrivateDomain.get().toString())
                 .setDestinationOrigin(BaseUriExtractor.getBaseUri(destination).toString())
-                .setAdTechDomain(trigger.getAdTechDomain().toString())
                 .setEnrollmentId(trigger.getEnrollmentId())
                 .setTriggerTime(trigger.getTriggerTime())
                 .setRegistrant(trigger.getRegistrant().toString())
                 .build();
     }
 
-    private static Optional<Uri> extractBaseUri(Uri uri, @EventSurfaceType int eventSurfaceType) {
+    private static Optional<Uri> getTopPrivateDomain(
+            Uri uri, @EventSurfaceType int eventSurfaceType) {
         return eventSurfaceType == EventSurfaceType.APP
                 ? Optional.of(BaseUriExtractor.getBaseUri(uri))
                 : Web.topPrivateDomainAndScheme(uri);

@@ -46,6 +46,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Abstract class for parameterized tests that
@@ -98,11 +100,50 @@ public abstract class AbstractDbIntegrationTest {
                 "Report mismatch", areEqual(mOutput.mEventReportList, dbState.mEventReportList));
         Assert.assertTrue("Attribution mismatch",
                 areEqual(mOutput.mAttrRateLimitList, dbState.mAttrRateLimitList));
-        Assert.assertTrue(
-                "AggregateReport mismatch",
-                areEqual(mOutput.mAggregateReportList, dbState.mAggregateReportList));
+        // Custom matching for AggregateReport due to non-deterministic reporting random number
+        // TODO: Remove custom matching using DI for Random class
+        Assert.assertEquals(
+                "AggregateReport size mismatch",
+                mOutput.mAggregateReportList.size(),
+                dbState.mAggregateReportList.size());
+        for (int i = 0; i < mOutput.mAggregateReportList.size(); i++) {
+            Assert.assertTrue(
+                    "AggregateReport Mismatch",
+                    fuzzyCompareAggregateReport(
+                            mOutput.mAggregateReportList.get(i),
+                            dbState.mAggregateReportList.get(i)));
+        }
         Assert.assertTrue("AggregateEncryptionKey mismatch",
                 areEqual(mOutput.mAggregateEncryptionKeyList, dbState.mAggregateEncryptionKeyList));
+    }
+
+    private boolean fuzzyCompareAggregateReport(
+            AggregateReport aggregateReport, AggregateReport aggregateReport1) {
+        return Objects.equals(aggregateReport.getPublisher(), aggregateReport1.getPublisher())
+                && Objects.equals(
+                        aggregateReport.getAttributionDestination(),
+                        aggregateReport1.getAttributionDestination())
+                && aggregateReport.getSourceRegistrationTime()
+                        == aggregateReport1.getSourceRegistrationTime()
+                && Math.abs(
+                                aggregateReport.getScheduledReportTime()
+                                        - aggregateReport1.getScheduledReportTime())
+                        <= TimeUnit.HOURS.toMillis(1)
+                && Objects.equals(
+                        aggregateReport.getEnrollmentId(), aggregateReport1.getEnrollmentId())
+                && Objects.equals(
+                        aggregateReport.getDebugCleartextPayload(),
+                        aggregateReport1.getDebugCleartextPayload())
+                && Objects.equals(
+                        aggregateReport.getAggregateAttributionData(),
+                        aggregateReport1.getAggregateAttributionData())
+                && aggregateReport.getStatus() == aggregateReport1.getStatus()
+                && Objects.equals(aggregateReport.getApiVersion(), aggregateReport1.getApiVersion())
+                && Objects.equals(
+                        aggregateReport.getSourceDebugKey(), aggregateReport1.getSourceDebugKey())
+                && Objects.equals(
+                        aggregateReport.getTriggerDebugKey(),
+                        aggregateReport1.getTriggerDebugKey());
     }
 
     /**
@@ -242,8 +283,10 @@ public abstract class AbstractDbIntegrationTest {
         values.put(
                 MeasurementTables.SourceContract.APP_DESTINATION,
                 source.getAppDestination().toString());
-        values.put(MeasurementTables.SourceContract.AD_TECH_DOMAIN,
-                source.getAdTechDomain().toString());
+        values.put(
+                MeasurementTables.SourceContract.WEB_DESTINATION,
+                source.getWebDestination() == null ? null : source.getWebDestination().toString());
+        values.put(MeasurementTables.SourceContract.AGGREGATE_SOURCE, source.getAggregateSource());
         values.put(MeasurementTables.SourceContract.ENROLLMENT_ID, source.getEnrollmentId());
         values.put(MeasurementTables.SourceContract.STATUS, source.getStatus());
         values.put(MeasurementTables.SourceContract.EVENT_TIME, source.getEventTime());
@@ -257,6 +300,9 @@ public abstract class AbstractDbIntegrationTest {
         values.put(MeasurementTables.SourceContract.IS_INSTALL_ATTRIBUTED,
                 source.isInstallAttributed() ? 1 : 0);
         values.put(MeasurementTables.SourceContract.ATTRIBUTION_MODE, source.getAttributionMode());
+        values.put(
+                MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS,
+                source.getAggregateContributions());
         values.put(MeasurementTables.SourceContract.FILTER_DATA, source.getAggregateFilterData());
         long row = db.insert(MeasurementTables.SourceContract.TABLE, null, values);
         if (row == -1) {
@@ -275,8 +321,11 @@ public abstract class AbstractDbIntegrationTest {
                 trigger.getAttributionDestination().toString());
         values.put(MeasurementTables.TriggerContract.DESTINATION_TYPE,
                 trigger.getDestinationType());
-        values.put(MeasurementTables.TriggerContract.AD_TECH_DOMAIN,
-                trigger.getAdTechDomain().toString());
+        values.put(
+                MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA,
+                trigger.getAggregateTriggerData());
+        values.put(
+                MeasurementTables.TriggerContract.AGGREGATE_VALUES, trigger.getAggregateValues());
         values.put(MeasurementTables.TriggerContract.ENROLLMENT_ID, trigger.getEnrollmentId());
         values.put(MeasurementTables.TriggerContract.STATUS, trigger.getStatus());
         values.put(MeasurementTables.TriggerContract.TRIGGER_TIME, trigger.getTriggerTime());
@@ -298,8 +347,6 @@ public abstract class AbstractDbIntegrationTest {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.EventReportContract.ID, report.getId());
         values.put(MeasurementTables.EventReportContract.SOURCE_ID, report.getSourceId());
-        values.put(MeasurementTables.EventReportContract.AD_TECH_DOMAIN,
-                report.getAdTechDomain().toString());
         values.put(MeasurementTables.EventReportContract.ENROLLMENT_ID, report.getEnrollmentId());
         values.put(MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
                 report.getAttributionDestination().toString());
@@ -335,8 +382,6 @@ public abstract class AbstractDbIntegrationTest {
                 attribution.getDestinationSite());
         values.put(MeasurementTables.AttributionContract.DESTINATION_ORIGIN,
                 attribution.getDestinationOrigin());
-        values.put(MeasurementTables.AttributionContract.AD_TECH_DOMAIN,
-                attribution.getAdTechDomain());
         values.put(MeasurementTables.AttributionContract.ENROLLMENT_ID,
                 attribution.getEnrollmentId());
         values.put(MeasurementTables.AttributionContract.TRIGGER_TIME,
@@ -367,15 +412,13 @@ public abstract class AbstractDbIntegrationTest {
                 MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME,
                 aggregateReport.getScheduledReportTime());
         values.put(
-                MeasurementTables.AggregateReport.AD_TECH_DOMAIN,
-                aggregateReport.getAdTechDomain().toString());
-        values.put(
                 MeasurementTables.AggregateReport.ENROLLMENT_ID,
                 aggregateReport.getEnrollmentId());
         values.put(
                 MeasurementTables.AggregateReport.DEBUG_CLEARTEXT_PAYLOAD,
                 aggregateReport.getDebugCleartextPayload());
         values.put(MeasurementTables.AggregateReport.STATUS, aggregateReport.getStatus());
+        values.put(MeasurementTables.AggregateReport.API_VERSION, aggregateReport.getApiVersion());
         long row = db.insert(MeasurementTables.AggregateReport.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("AggregateReport insertion failed");

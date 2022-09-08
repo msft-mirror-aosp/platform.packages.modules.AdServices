@@ -17,12 +17,18 @@ package com.android.adservices.service.measurement.registration;
 
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
+import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_FILTERS;
+import static com.android.adservices.service.measurement.SystemHealthParams.MAX_VALUES_PER_ATTRIBUTION_FILTER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
@@ -39,6 +45,12 @@ import android.net.Uri;
 
 import androidx.test.filters.SmallTest;
 import androidx.test.platform.app.InstrumentationRegistry;
+
+import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.MeasurementRegistrationResponseStats;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -61,6 +73,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -69,6 +82,10 @@ import javax.net.ssl.HttpsURLConnection;
 @SmallTest
 public final class SourceFetcherTest {
     private static final String DEFAULT_REGISTRATION = "https://foo.com";
+    private static final String ENROLLMENT_ID = "enrollment-id";
+    private static final EnrollmentData ENROLLMENT = new EnrollmentData.Builder()
+            .setEnrollmentId("enrollment-id")
+            .build();
     private static final String DEFAULT_TOP_ORIGIN = "https://baz.com";
     private static final String DEFAULT_DESTINATION = "android-app://com.myapps";
     private static final String DEFAULT_DESTINATION_WITHOUT_SCHEME = "com.myapps";
@@ -91,6 +108,9 @@ public final class SourceFetcherTest {
     private static final Uri WEB_DESTINATION = Uri.parse("https://web-destination.com");
     private static final Uri WEB_DESTINATION_WITH_SUBDOMAIN =
             Uri.parse("https://subdomain.web-destination.com");
+    private static final String LONG_FILTER_STRING = "12345678901234567890123456";
+    private static final String LONG_AGGREGATE_KEY_ID = "12345678901234567890123456";
+    private static final String LONG_AGGREGATE_KEY_PIECE = "0x123456789012345678901234567890123";
     private static final WebSourceParams SOURCE_REGISTRATION_1 =
             new WebSourceParams.Builder(REGISTRATION_URI_1).setDebugKeyAllowed(true).build();
     private static final WebSourceParams SOURCE_REGISTRATION_2 =
@@ -105,11 +125,17 @@ public final class SourceFetcherTest {
     @Mock HttpsURLConnection mUrlConnection1;
     @Mock HttpsURLConnection mUrlConnection2;
     @Mock AdIdPermissionFetcher mAdIdPermissionFetcher;
+    @Mock EnrollmentDao mEnrollmentDao;
+    @Mock Flags mFlags;
+    @Mock AdServicesLogger mLogger;
 
     @Before
     public void setup() {
-        mFetcher = spy(new SourceFetcher(mAdIdPermissionFetcher));
+        mFetcher = spy(new SourceFetcher(mEnrollmentDao, mAdIdPermissionFetcher, mFlags, mLogger));
         when(mAdIdPermissionFetcher.isAdIdPermissionEnabled()).thenReturn(false);
+        // For convenience, return the same enrollment-ID since we're using many arbitrary
+        // registration URIs and not yet enforcing uniqueness of enrollment.
+        when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(any())).thenReturn(ENROLLMENT);
     }
 
     @Test
@@ -117,6 +143,7 @@ public final class SourceFetcherTest {
         when(mAdIdPermissionFetcher.isAdIdPermissionEnabled()).thenReturn(true);
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        doReturn(5000L).when(mFlags).getMaxResponseBasedRegistrationPayloadSizeBytes();
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -146,14 +173,58 @@ public final class SourceFetcherTest {
         List<SourceRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals(DEFAULT_TOP_ORIGIN, result.get(0).getTopOrigin().toString());
-        assertEquals(DEFAULT_REGISTRATION, result.get(0).getRegistrationUri().toString());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
         assertEquals(DEFAULT_DESTINATION, result.get(0).getAppDestination().toString());
         assertEquals(DEFAULT_PRIORITY, result.get(0).getSourcePriority());
         assertEquals(DEFAULT_EXPIRY, result.get(0).getExpiry());
         assertEquals(DEFAULT_EVENT_ID, result.get(0).getSourceEventId());
         assertEquals(DEBUG_KEY, result.get(0).getDebugKey());
+        verify(mLogger)
+                .logMeasurementRegistrationsResponseSize(
+                        eq(
+                                new MeasurementRegistrationResponseStats.Builder(
+                                                AD_SERVICES_MEASUREMENT_REGISTRATIONS,
+                                                AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE,
+                                                190)
+                                        .setAdTechDomain(null)
+                                        .build()));
 
         verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testBasicSourceRequest_failsWhenNotEnrolled() throws Exception {
+        when(mAdIdPermissionFetcher.isAdIdPermissionEnabled()).thenReturn(true);
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
+        when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(any())).thenReturn(null);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "  \"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\n"
+                                                + "  \"priority\": \""
+                                                + DEFAULT_PRIORITY
+                                                + "\",\n"
+                                                + "  \"expiry\": \""
+                                                + DEFAULT_EXPIRY
+                                                + "\",\n"
+                                                + "  \"source_event_id\": \""
+                                                + DEFAULT_EVENT_ID
+                                                + "\",\n"
+                                                + "  \"debug_key\": \""
+                                                + DEBUG_KEY
+                                                + "\"\n"
+                                                + "}\n")));
+
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertFalse(fetch.isPresent());
+        verify(mFetcher, never()).openUrl(any());
     }
 
     @Test
@@ -190,7 +261,7 @@ public final class SourceFetcherTest {
         List<SourceRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals(DEFAULT_TOP_ORIGIN, result.get(0).getTopOrigin().toString());
-        assertEquals(DEFAULT_REGISTRATION, result.get(0).getRegistrationUri().toString());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
         assertEquals(DEFAULT_DESTINATION, result.get(0).getAppDestination().toString());
         assertEquals(DEFAULT_PRIORITY, result.get(0).getSourcePriority());
         assertEquals(DEFAULT_EXPIRY, result.get(0).getExpiry());
@@ -226,7 +297,7 @@ public final class SourceFetcherTest {
         List<SourceRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
-        assertEquals("https://foo.com", result.get(0).getRegistrationUri().toString());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
         assertEquals("android-app://com.myapps", result.get(0).getAppDestination().toString());
         assertEquals(123, result.get(0).getSourcePriority());
         assertEquals(456789, result.get(0).getExpiry());
@@ -266,7 +337,7 @@ public final class SourceFetcherTest {
         List<SourceRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
-        assertEquals("https://foo.com", result.get(0).getRegistrationUri().toString());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
         assertEquals("android-app://com.myapps", result.get(0).getAppDestination().toString());
         assertEquals(123, result.get(0).getSourcePriority());
         assertEquals(456789, result.get(0).getExpiry());
@@ -306,7 +377,7 @@ public final class SourceFetcherTest {
         List<SourceRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
-        assertEquals("https://foo.com", result.get(0).getRegistrationUri().toString());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
         assertEquals("android-app://com.myapps", result.get(0).getAppDestination().toString());
         assertEquals(123, result.get(0).getSourcePriority());
         assertEquals(456789, result.get(0).getExpiry());
@@ -348,6 +419,7 @@ public final class SourceFetcherTest {
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
     }
 
     @Test
@@ -359,6 +431,7 @@ public final class SourceFetcherTest {
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
     }
 
     @Test
@@ -373,6 +446,7 @@ public final class SourceFetcherTest {
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
     }
 
     @Test
@@ -391,7 +465,7 @@ public final class SourceFetcherTest {
         List<SourceRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals(DEFAULT_TOP_ORIGIN, result.get(0).getTopOrigin().toString());
-        assertEquals(DEFAULT_REGISTRATION, result.get(0).getRegistrationUri().toString());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
         assertEquals(DEFAULT_DESTINATION, result.get(0).getAppDestination().toString());
         assertEquals(DEFAULT_EVENT_ID, result.get(0).getSourceEventId());
         assertEquals(0, result.get(0).getSourcePriority());
@@ -424,7 +498,7 @@ public final class SourceFetcherTest {
         List<SourceRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
-        assertEquals("https://foo.com", result.get(0).getRegistrationUri().toString());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
         assertEquals("android-app://com.myapps", result.get(0).getAppDestination().toString());
         assertEquals(123, result.get(0).getSourceEventId());
         assertEquals(0, result.get(0).getSourcePriority());
@@ -450,7 +524,7 @@ public final class SourceFetcherTest {
         List<SourceRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals(DEFAULT_TOP_ORIGIN, result.get(0).getTopOrigin().toString());
-        assertEquals(DEFAULT_REGISTRATION, result.get(0).getRegistrationUri().toString());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
         assertEquals(DEFAULT_DESTINATION, result.get(0).getAppDestination().toString());
         assertEquals(DEFAULT_EVENT_ID, result.get(0).getSourceEventId());
         assertEquals(0, result.get(0).getSourcePriority());
@@ -476,7 +550,7 @@ public final class SourceFetcherTest {
         List<SourceRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals(DEFAULT_TOP_ORIGIN, result.get(0).getTopOrigin().toString());
-        assertEquals(DEFAULT_REGISTRATION, result.get(0).getRegistrationUri().toString());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
         assertEquals(DEFAULT_DESTINATION, result.get(0).getAppDestination().toString());
         assertEquals(DEFAULT_EVENT_ID, result.get(0).getSourceEventId());
         assertEquals(0, result.get(0).getSourcePriority());
@@ -522,7 +596,7 @@ public final class SourceFetcherTest {
         List<SourceRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals(DEFAULT_TOP_ORIGIN, result.get(0).getTopOrigin().toString());
-        assertEquals(DEFAULT_REGISTRATION, result.get(0).getRegistrationUri().toString());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
         assertEquals(DEFAULT_DESTINATION, result.get(0).getAppDestination().toString());
         assertEquals(DEFAULT_EVENT_ID, result.get(0).getSourceEventId());
         assertEquals(0, result.get(0).getSourcePriority());
@@ -553,6 +627,7 @@ public final class SourceFetcherTest {
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
     }
 
     @Test
@@ -586,13 +661,13 @@ public final class SourceFetcherTest {
         List<SourceRegistration> result = fetch.get();
         assertEquals(2, result.size());
         assertEquals(DEFAULT_TOP_ORIGIN, result.get(0).getTopOrigin().toString());
-        assertEquals(DEFAULT_REGISTRATION, result.get(0).getRegistrationUri().toString());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
         assertEquals(DEFAULT_DESTINATION, result.get(0).getAppDestination().toString());
         assertEquals(DEFAULT_EVENT_ID, result.get(0).getSourceEventId());
         assertEquals(DEFAULT_PRIORITY, result.get(0).getSourcePriority());
         assertEquals(DEFAULT_EXPIRY, result.get(0).getExpiry());
         assertEquals(DEFAULT_TOP_ORIGIN, result.get(1).getTopOrigin().toString());
-        assertEquals(ALT_REGISTRATION, result.get(1).getRegistrationUri().toString());
+        assertEquals(ENROLLMENT_ID, result.get(1).getEnrollmentId());
         assertEquals(ALT_DESTINATION, result.get(1).getAppDestination().toString());
         assertEquals(ALT_EVENT_ID, result.get(1).getSourceEventId());
         assertEquals(ALT_PRIORITY, result.get(1).getSourcePriority());
@@ -641,19 +716,19 @@ public final class SourceFetcherTest {
         assertEquals(3, result.size());
         result.sort((o1, o2) -> (int) (o2.getSourcePriority() - o1.getSourcePriority()));
         assertEquals(DEFAULT_TOP_ORIGIN, result.get(0).getTopOrigin().toString());
-        assertEquals(DEFAULT_REGISTRATION, result.get(0).getRegistrationUri().toString());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
         assertEquals(DEFAULT_DESTINATION, result.get(0).getAppDestination().toString());
         assertEquals(DEFAULT_EVENT_ID, result.get(0).getSourceEventId());
         assertEquals(999, result.get(0).getSourcePriority());
         assertEquals(DEFAULT_EXPIRY, result.get(0).getExpiry());
         assertEquals(DEFAULT_TOP_ORIGIN, result.get(1).getTopOrigin().toString());
-        assertEquals(ALT_REGISTRATION, result.get(1).getRegistrationUri().toString());
+        assertEquals(ENROLLMENT_ID, result.get(1).getEnrollmentId());
         assertEquals(DEFAULT_DESTINATION, result.get(1).getAppDestination().toString());
         assertEquals(ALT_EVENT_ID, result.get(1).getSourceEventId());
         assertEquals(888, result.get(1).getSourcePriority());
         assertEquals(ALT_EXPIRY, result.get(1).getExpiry());
         assertEquals(DEFAULT_TOP_ORIGIN, result.get(2).getTopOrigin().toString());
-        assertEquals(ALT_REGISTRATION, result.get(2).getRegistrationUri().toString());
+        assertEquals(ENROLLMENT_ID, result.get(2).getEnrollmentId());
         assertEquals(DEFAULT_DESTINATION, result.get(2).getAppDestination().toString());
         assertEquals(777, result.get(2).getSourceEventId());
         assertEquals(777, result.get(2).getSourcePriority());
@@ -745,7 +820,7 @@ public final class SourceFetcherTest {
         List<SourceRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
-        assertEquals("https://foo.com", result.get(0).getRegistrationUri().toString());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
         assertEquals("android-app://com.myapps", result.get(0).getAppDestination().toString());
         assertEquals(123, result.get(0).getSourcePriority());
         assertEquals(456789, result.get(0).getExpiry());
@@ -753,6 +828,128 @@ public final class SourceFetcherTest {
         assertEquals("{\"product\":[\"1234\",\"2345\"],\"ctid\":[\"id\"]}",
                 result.get(0).getAggregateFilterData());
         verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testSourceRequest_aggregateFilterData_invalidJson() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
+        String filterData =
+                "  \"filter_data\": {\"product\":\"1234\",\"2345\"], \"ctid\":[\"id\"]} \n";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
+                        List.of("{\n"
+                                + "  \"destination\": \"android-app://com.myapps\",\n"
+                                + "  \"priority\": \"123\",\n"
+                                + "  \"expiry\": \"456789\",\n"
+                                + "  \"source_event_id\": \"987654321\",\n"
+                                + filterData
+                                + "}\n")));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testSourceRequest_aggregateFilterData_tooManyFilters() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
+        StringBuilder filters = new StringBuilder("{");
+        filters.append(IntStream.range(0, MAX_ATTRIBUTION_FILTERS + 1)
+                .mapToObj(i -> "\"filter-string-" + i + "\": [\"filter-value\"]")
+                .collect(Collectors.joining(",")));
+        filters.append("}");
+        String filterData = "  \"filter_data\": " + filters + "\n";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
+                        List.of("{\n"
+                                + "  \"destination\": \"android-app://com.myapps\",\n"
+                                + "  \"priority\": \"123\",\n"
+                                + "  \"expiry\": \"456789\",\n"
+                                + "  \"source_event_id\": \"987654321\",\n"
+                                + filterData
+                                + "}\n")));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testSourceRequest_aggregateFilterData_keyTooLong() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
+        String filterData =
+                "  \"filter_data\": {\"product\":[\"1234\",\"2345\"], \"" + LONG_FILTER_STRING
+                + "\":[\"id\"]} \n";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
+                        List.of("{\n"
+                                + "  \"destination\": \"android-app://com.myapps\",\n"
+                                + "  \"priority\": \"123\",\n"
+                                + "  \"expiry\": \"456789\",\n"
+                                + "  \"source_event_id\": \"987654321\",\n"
+                                + filterData
+                                + "}\n")));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testSourceRequest_aggregateFilterData_tooManyValues() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
+        StringBuilder filters = new StringBuilder("{"
+                + "\"filter-string-1\": [\"filter-value-1\"],"
+                + "\"filter-string-2\": [");
+        filters.append(IntStream.range(0, MAX_VALUES_PER_ATTRIBUTION_FILTER + 1)
+                .mapToObj(i -> "\"filter-value-" + i + "\"")
+                .collect(Collectors.joining(",")));
+        filters.append("]}");
+        String filterData = "  \"filter_data\": " + filters + " \n";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
+                        List.of("{\n"
+                                + "  \"destination\": \"android-app://com.myapps\",\n"
+                                + "  \"priority\": \"123\",\n"
+                                + "  \"expiry\": \"456789\",\n"
+                                + "  \"source_event_id\": \"987654321\",\n"
+                                + filterData
+                                + "}\n")));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testSourceRequest_aggregateFilterData_valueTooLong() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
+        String filterData =
+                "  \"filter_data\": {\"product\":[\"1234\",\"" + LONG_FILTER_STRING
+                + "\"], \"ctid\":[\"id\"]} \n";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
+                        List.of("{\n"
+                                + "  \"destination\": \"android-app://com.myapps\",\n"
+                                + "  \"priority\": \"123\",\n"
+                                + "  \"expiry\": \"456789\",\n"
+                                + "  \"source_event_id\": \"987654321\",\n"
+                                + filterData
+                                + "}\n")));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
     }
 
     @Test
@@ -772,6 +969,7 @@ public final class SourceFetcherTest {
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
     }
 
     @Test
@@ -799,7 +997,7 @@ public final class SourceFetcherTest {
         List<SourceRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
-        assertEquals("https://foo.com", result.get(0).getRegistrationUri().toString());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
         assertEquals(
                 new JSONArray(
                                 "[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},{\"id\""
@@ -810,9 +1008,35 @@ public final class SourceFetcherTest {
     }
 
     @Test
-    public void testBasicSourceRequestWithAggregateSource_rejectsTooManyKeys() throws Exception {
+    public void testSourceRequestWithAggregateSource_invalidJson() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                            + "  \"destination\": \"android-app://com.myapps\",\n"
+                                            + "  \"priority\": \"123\",\n"
+                                            + "  \"expiry\": \"456789\",\n"
+                                            + "  \"source_event_id\": \"987654321\",\n"
+                                            + "\"aggregation_keys\": [\"id\" :"
+                                            + " \"campaignCounts\", \"key_piece\" :"
+                                            + " \"0x159\"},{\"id\" : \"geoValue\", \"key_piece\" :"
+                                            + " \"0x5\"}]\n"
+                                            + "}\n")));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testSourceRequestWithAggregateSource_tooManyKeys() throws Exception {
         StringBuilder tooManyKeys = new StringBuilder("[");
-        for (int i = 0; i < 51; i++) {
+        for (int i = 0; i < MAX_AGGREGATE_KEYS_PER_REGISTRATION + 1; i++) {
             tooManyKeys.append(String.format(
                     "{\"id\": \"campaign-%1$s\", \"key_piece\": \"0x15%1$s\"}", i));
         }
@@ -835,6 +1059,113 @@ public final class SourceFetcherTest {
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testSourceRequestWithAggregateSource_keyIsNotAnObject() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                            + "  \"destination\": \"android-app://com.myapps\",\n"
+                                            + "  \"priority\": \"123\",\n"
+                                            + "  \"expiry\": \"456789\",\n"
+                                            + "  \"source_event_id\": \"987654321\",\n"
+                                            + "\"aggregation_keys\": [{\"id\" :"
+                                            + " \"campaignCounts\", \"key_piece\" :"
+                                            + " \"0x159\"},[\"id\", \"geoValue\", \"key_piece\" ,"
+                                            + " \"0x5\"]\n"
+                                            + "}\n")));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testSourceRequestWithAggregateSource_invalidKeyId() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                            + "  \"destination\": \"android-app://com.myapps\",\n"
+                                            + "  \"priority\": \"123\",\n"
+                                            + "  \"expiry\": \"456789\",\n"
+                                            + "  \"source_event_id\": \"987654321\",\n"
+                                            + "\"aggregation_keys\": [{\"id\" :"
+                                            + " \"" + LONG_AGGREGATE_KEY_ID + "\", \"key_piece\" :"
+                                            + " \"0x159\"},{\"id\" : \"geoValue\", \"key_piece\" :"
+                                            + " \"0x5\"}]\n"
+                                            + "}\n")));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testSourceRequestWithAggregateSource_invalidKeyPiece_missingPrefix()
+            throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                            + "  \"destination\": \"android-app://com.myapps\",\n"
+                                            + "  \"priority\": \"123\",\n"
+                                            + "  \"expiry\": \"456789\",\n"
+                                            + "  \"source_event_id\": \"987654321\",\n"
+                                            + "\"aggregation_keys\": [{\"id\" :"
+                                            + " \"campaignCounts\", \"key_piece\" :"
+                                            + " \"0159\"},{\"id\" : \"geoValue\", \"key_piece\" :"
+                                            + " \"0x5\"}]\n"
+                                            + "}\n")));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testSourceRequestWithAggregateSource_invalidKeyPiece_tooLong()
+            throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                            + "  \"destination\": \"android-app://com.myapps\",\n"
+                                            + "  \"priority\": \"123\",\n"
+                                            + "  \"expiry\": \"456789\",\n"
+                                            + "  \"source_event_id\": \"987654321\",\n"
+                                            + "\"aggregation_keys\": [{\"id\" :"
+                                            + " \"campaignCounts\", \"key_piece\" :"
+                                            + " \"0x159\"},{\"id\" : \"geoValue\", \"key_piece\" :"
+                                            + " \"" + LONG_AGGREGATE_KEY_PIECE + "\"}]\n"
+                                            + "}\n")));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
     }
 
     @Test
@@ -845,7 +1176,7 @@ public final class SourceFetcherTest {
                         .setAppDestination(Uri.parse(DEFAULT_DESTINATION))
                         .setExpiry(MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS)
                         .setTopOrigin(Uri.parse(DEFAULT_TOP_ORIGIN))
-                        .setRegistrationUri(REGISTRATION_URI_1)
+                        .setEnrollmentId(ENROLLMENT_ID)
                         .setSourceEventId(EVENT_ID_1)
                         .setSourcePriority(0)
                         .setDebugKey(DEBUG_KEY)
@@ -855,7 +1186,7 @@ public final class SourceFetcherTest {
                         .setAppDestination(Uri.parse(DEFAULT_DESTINATION))
                         .setExpiry(MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS)
                         .setTopOrigin(Uri.parse(DEFAULT_TOP_ORIGIN))
-                        .setRegistrationUri(REGISTRATION_URI_2)
+                        .setEnrollmentId(ENROLLMENT_ID)
                         .setSourceEventId(EVENT_ID_2)
                         .setSourcePriority(0)
                         .build();
@@ -923,7 +1254,7 @@ public final class SourceFetcherTest {
                         .setAppDestination(Uri.parse(DEFAULT_DESTINATION))
                         .setExpiry(MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS)
                         .setTopOrigin(Uri.parse(DEFAULT_TOP_ORIGIN))
-                        .setRegistrationUri(REGISTRATION_URI_2)
+                        .setEnrollmentId(ENROLLMENT_ID)
                         .setSourceEventId(EVENT_ID_2)
                         .setSourcePriority(0)
                         .build();
@@ -1025,7 +1356,7 @@ public final class SourceFetcherTest {
                         .setAggregateFilterData(filterData)
                         .setAggregateSource(new JSONArray(aggregateSource).toString())
                         .setTopOrigin(Uri.parse(DEFAULT_TOP_ORIGIN))
-                        .setRegistrationUri(REGISTRATION_URI_1)
+                        .setEnrollmentId(ENROLLMENT_ID)
                         .build();
 
         // Execution
@@ -1084,7 +1415,7 @@ public final class SourceFetcherTest {
                         .setAggregateFilterData(filterData)
                         .setAggregateSource(new JSONArray(aggregateSource).toString())
                         .setTopOrigin(Uri.parse(DEFAULT_TOP_ORIGIN))
-                        .setRegistrationUri(REGISTRATION_URI_1)
+                        .setEnrollmentId(ENROLLMENT_ID)
                         .build();
 
         // Execution
@@ -1221,7 +1552,7 @@ public final class SourceFetcherTest {
                         .setExpiry(456789)
                         .setSourceEventId(987654321)
                         .setTopOrigin(Uri.parse(DEFAULT_TOP_ORIGIN))
-                        .setRegistrationUri(REGISTRATION_URI_1)
+                        .setEnrollmentId(ENROLLMENT_ID)
                         .build();
 
         // Execution
@@ -1273,7 +1604,7 @@ public final class SourceFetcherTest {
                         .setExpiry(456789)
                         .setSourceEventId(987654321)
                         .setTopOrigin(Uri.parse(DEFAULT_TOP_ORIGIN))
-                        .setRegistrationUri(REGISTRATION_URI_1)
+                        .setEnrollmentId(ENROLLMENT_ID)
                         .build();
 
         // Execution
@@ -1323,7 +1654,7 @@ public final class SourceFetcherTest {
                         .setExpiry(456789)
                         .setSourceEventId(987654321)
                         .setTopOrigin(Uri.parse(DEFAULT_TOP_ORIGIN))
-                        .setRegistrationUri(REGISTRATION_URI_1)
+                        .setEnrollmentId(ENROLLMENT_ID)
                         .build();
 
         // Execution
@@ -1377,7 +1708,7 @@ public final class SourceFetcherTest {
                         .setAppDestination(Uri.parse(DEFAULT_DESTINATION))
                         .setExpiry(MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS)
                         .setTopOrigin(Uri.parse(DEFAULT_TOP_ORIGIN))
-                        .setRegistrationUri(REGISTRATION_URI_1)
+                        .setEnrollmentId(ENROLLMENT_ID)
                         .setSourceEventId(EVENT_ID_1)
                         .setSourcePriority(0)
                         .build();
@@ -1449,6 +1780,39 @@ public final class SourceFetcherTest {
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection1).setRequestMethod("POST");
+    }
+
+    @Test
+    public void basicSourceRequest_headersMoreThanMaxResponseSize_emitsMetricsWithAdTechDomain()
+            throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        doReturn(5L).when(mFlags).getMaxResponseBasedRegistrationPayloadSizeBytes();
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "\"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\n"
+                                                + "\"source_event_id\": \""
+                                                + DEFAULT_EVENT_ID
+                                                + "\"\n"
+                                                + "}\n")));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertTrue(fetch.isPresent());
+        verify(mLogger)
+                .logMeasurementRegistrationsResponseSize(
+                        eq(
+                                new MeasurementRegistrationResponseStats.Builder(
+                                                AD_SERVICES_MEASUREMENT_REGISTRATIONS,
+                                                AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE,
+                                                115)
+                                        .setAdTechDomain(DEFAULT_REGISTRATION)
+                                        .build()));
     }
 
     private RegistrationRequest buildRequest(String registrationUri, String topOrigin) {

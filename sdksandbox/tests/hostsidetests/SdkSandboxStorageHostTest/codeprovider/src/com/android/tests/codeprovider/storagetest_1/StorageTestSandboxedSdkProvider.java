@@ -30,7 +30,7 @@ import java.nio.file.Paths;
 
 
 public class StorageTestSandboxedSdkProvider extends SandboxedSdkProvider {
-    private static final String TAG = "StorageTestSandboxedSdkProvider";
+    private static final String TAG = "SdkSandboxStorageTestProvider";
     private static final String BUNDLE_KEY_PHASE_NAME = "phase-name";
 
     @Override
@@ -48,9 +48,6 @@ public class StorageTestSandboxedSdkProvider extends SandboxedSdkProvider {
         }
         return null;
     }
-
-    @Override
-    public void onDataReceived(Bundle data, DataReceivedCallback callback) {}
 
     private void handlePhase(Bundle params) throws Exception {
         String phaseName = params.getString(BUNDLE_KEY_PHASE_NAME, "");

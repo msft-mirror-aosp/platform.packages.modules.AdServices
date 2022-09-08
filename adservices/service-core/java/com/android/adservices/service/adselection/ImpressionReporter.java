@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
+import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
 
 import android.adservices.adselection.AdSelectionConfig;
@@ -28,6 +29,7 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
 import android.net.Uri;
+import android.os.LimitExceededException;
 import android.os.RemoteException;
 import android.util.Pair;
 
@@ -41,12 +43,14 @@ import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.internal.util.Preconditions;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -61,6 +65,7 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 /** Encapsulates the Impression Reporting logic */
 public class ImpressionReporter {
@@ -68,6 +73,10 @@ public class ImpressionReporter {
             "Unable to find ad selection with given ID";
     public static final String CALLER_PACKAGE_NAME_MISMATCH =
             "Caller package name does not match name used in ad selection";
+
+    @VisibleForTesting
+    static final String REPORT_IMPRESSION_THROTTLED = "Report impression exceeded rate limit";
+
     @NonNull private final Context mContext;
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
@@ -78,6 +87,7 @@ public class ImpressionReporter {
     @NonNull private final AdSelectionDevOverridesHelper mAdSelectionDevOverridesHelper;
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final Flags mFlags;
+    @NonNull private final Supplier<Throttler> mThrottlerSupplier;
     @NonNull private final AppImportanceFilter mAppImportanceFilter;
     private final int mCallerUid;
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
@@ -94,6 +104,7 @@ public class ImpressionReporter {
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull final Flags flags,
+            @NonNull final Supplier<Throttler> throttlerSupplier,
             int callerUid,
             @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter,
             @NonNull final FledgeAllowListsFilter fledgeAllowListsFilter) {
@@ -107,6 +118,7 @@ public class ImpressionReporter {
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(appImportanceFilter);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(throttlerSupplier);
         Objects.requireNonNull(fledgeAuthorizationFilter);
         Objects.requireNonNull(fledgeAllowListsFilter);
 
@@ -125,6 +137,7 @@ public class ImpressionReporter {
                 new AdSelectionDevOverridesHelper(devContext, mAdSelectionEntryDao);
         mAdServicesLogger = adServicesLogger;
         mFlags = flags;
+        mThrottlerSupplier = throttlerSupplier;
         mAppImportanceFilter = appImportanceFilter;
         mCallerUid = callerUid;
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
@@ -173,7 +186,7 @@ public class ImpressionReporter {
      * the buyer's reportWin() in the case of a remarketing ad.
      *
      * <p>After invoking the javascript functions, invokes the onSuccess function of the callback
-     * and reports URLs resulting from the javascript functions.
+     * and reports URIs resulting from the javascript functions.
      *
      * @param requestParams request parameters containing the {@code adSelectionId}, {@code
      *     adSelectionConfig}, and {@code callerPackageName}
@@ -182,6 +195,7 @@ public class ImpressionReporter {
     public void reportImpression(
             @NonNull ReportImpressionInput requestParams,
             @NonNull ReportImpressionCallback callback) {
+        LogUtil.v("Executing reportImpression API");
         // Getting PH flags in a non binder thread
         FluentFuture<Long> timeoutFuture =
                 FluentFuture.from(
@@ -209,7 +223,6 @@ public class ImpressionReporter {
             @NonNull ReportImpressionCallback callback) {
         long adSelectionId = requestParams.getAdSelectionId();
         AdSelectionConfig adSelectionConfig = requestParams.getAdSelectionConfig();
-
         ListenableFuture<Void> validateRequestFuture =
                 Futures.submit(
                         () ->
@@ -220,13 +233,13 @@ public class ImpressionReporter {
         FluentFuture.from(validateRequestFuture)
                 .transformAsync(
                         ignoredVoid ->
-                                computeReportingUrls(
+                                computeReportingUris(
                                         adSelectionId,
                                         adSelectionConfig,
                                         requestParams.getCallerPackageName()),
                         mLightweightExecutorService)
                 .transform(
-                        reportingUrls -> notifySuccessToCaller(callback, reportingUrls),
+                        reportingUris -> notifySuccessToCaller(callback, reportingUris),
                         mLightweightExecutorService)
                 .withTimeout(
                         mFlags.getReportImpressionOverallTimeoutMs(),
@@ -244,7 +257,7 @@ public class ImpressionReporter {
 
                             @Override
                             public void onFailure(Throwable t) {
-                                LogUtil.e(t, "Report Impression failed!");
+                                LogUtil.e(t, "Report Impression invocation failed!");
                                 if (t instanceof ConsentManager.RevokedConsentException) {
                                     invokeSuccess(
                                             callback,
@@ -257,10 +270,10 @@ public class ImpressionReporter {
                         mLightweightExecutorService);
     }
 
-    private ReportingUrls notifySuccessToCaller(
-            @NonNull ReportImpressionCallback callback, @NonNull ReportingUrls reportingUrls) {
+    private ReportingUris notifySuccessToCaller(
+            @NonNull ReportImpressionCallback callback, @NonNull ReportingUris reportingUris) {
         invokeSuccess(callback, AdServicesStatusUtils.STATUS_SUCCESS);
-        return reportingUrls;
+        return reportingUris;
     }
 
     private void notifyFailureToCaller(
@@ -275,19 +288,23 @@ public class ImpressionReporter {
                     callback, AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED, t.getMessage());
         } else if (t instanceof FledgeAuthorizationFilter.CallerMismatchException) {
             invokeFailure(callback, AdServicesStatusUtils.STATUS_UNAUTHORIZED, t.getMessage());
+        } else if (t instanceof LimitExceededException) {
+            invokeFailure(
+                    callback, AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED, t.getMessage());
         } else {
             invokeFailure(callback, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, t.getMessage());
         }
     }
 
     @NonNull
-    private ListenableFuture<List<Void>> doReport(ReportingUrls reportingUrls) {
+    private ListenableFuture<List<Void>> doReport(ReportingUris reportingUris) {
+        LogUtil.v("Reporting URIs");
         ListenableFuture<Void> sellerFuture =
-                mAdServicesHttpsClient.reportUrl(reportingUrls.sellerReportingUri);
+                mAdServicesHttpsClient.reportUri(reportingUris.sellerReportingUri);
         ListenableFuture<Void> buyerFuture;
 
-        if (!Objects.isNull(reportingUrls.buyerReportingUri)) {
-            buyerFuture = mAdServicesHttpsClient.reportUrl(reportingUrls.buyerReportingUri);
+        if (!Objects.isNull(reportingUris.buyerReportingUri)) {
+            buyerFuture = mAdServicesHttpsClient.reportUri(reportingUris.buyerReportingUri);
         } else {
             buyerFuture = Futures.immediateFuture(null);
         }
@@ -295,7 +312,7 @@ public class ImpressionReporter {
         return Futures.allAsList(sellerFuture, buyerFuture);
     }
 
-    private FluentFuture<ReportingUrls> computeReportingUrls(
+    private FluentFuture<ReportingUris> computeReportingUris(
             long adSelectionId, AdSelectionConfig adSelectionConfig, String callerPackageName) {
         return fetchAdSelectionEntry(adSelectionId, callerPackageName)
                 .transformAsync(
@@ -316,11 +333,14 @@ public class ImpressionReporter {
                                 invokeBuyerScript(
                                         sellerResultAndCtx.first, sellerResultAndCtx.second),
                         mLightweightExecutorService)
-                .transform(urlsAndContext -> urlsAndContext.first, mLightweightExecutorService);
+                .transform(urisAndContext -> urisAndContext.first, mLightweightExecutorService);
     }
 
     private FluentFuture<DBAdSelectionEntry> fetchAdSelectionEntry(
             long adSelectionId, String callerPackageName) {
+        LogUtil.v(
+                "Fetching ad selection entry ID %d for caller \"%s\"",
+                adSelectionId, callerPackageName);
         return FluentFuture.from(
                 mBackgroundExecutorService.submit(
                         () -> {
@@ -338,6 +358,7 @@ public class ImpressionReporter {
 
     private FluentFuture<Pair<String, ReportingContext>> fetchSellerDecisionLogic(
             ReportingContext ctx) {
+        LogUtil.v("Fetching Seller decision logic");
         FluentFuture<String> jsOverrideFuture =
                 FluentFuture.from(
                         mBackgroundExecutorService.submit(
@@ -367,6 +388,7 @@ public class ImpressionReporter {
 
     private FluentFuture<Pair<ReportImpressionScriptEngine.SellerReportingResult, ReportingContext>>
             invokeSellerScript(String decisionLogicJs, ReportingContext ctx) {
+        LogUtil.v("Invoking seller script");
         try {
             return FluentFuture.from(
                             mJsEngine.reportResult(
@@ -384,9 +406,10 @@ public class ImpressionReporter {
         }
     }
 
-    private FluentFuture<Pair<ReportingUrls, ReportingContext>> invokeBuyerScript(
+    private FluentFuture<Pair<ReportingUris, ReportingContext>> invokeBuyerScript(
             ReportImpressionScriptEngine.SellerReportingResult sellerReportingResult,
             ReportingContext ctx) {
+        LogUtil.v("Invoking buyer script");
         final boolean isContextual =
                 Objects.isNull(ctx.mDBAdSelectionEntry.getCustomAudienceSignals())
                         && Objects.isNull(ctx.mDBAdSelectionEntry.getBuyerDecisionLogicJs());
@@ -395,8 +418,8 @@ public class ImpressionReporter {
             return FluentFuture.from(
                     Futures.immediateFuture(
                             Pair.create(
-                                    new ReportingUrls(
-                                            null, sellerReportingResult.getReportingUrl()),
+                                    new ReportingUris(
+                                            null, sellerReportingResult.getReportingUri()),
                                     ctx)));
         }
         final CustomAudienceSignals customAudienceSignals =
@@ -416,9 +439,9 @@ public class ImpressionReporter {
                     .transform(
                             resultUri ->
                                     Pair.create(
-                                            new ReportingUrls(
+                                            new ReportingUris(
                                                     resultUri,
-                                                    sellerReportingResult.getReportingUrl()),
+                                                    sellerReportingResult.getReportingUri()),
                                             ctx),
                             mLightweightExecutorService);
         } catch (JSONException e) {
@@ -523,6 +546,28 @@ public class ImpressionReporter {
     }
 
     /**
+     * Ensures that the caller package is not throttled from calling current the API
+     *
+     * @param callerPackageName the package name, which should be verified
+     * @throws LimitExceededException if the provided {@code callerPackageName} exceeds its rate
+     *     limits
+     * @return an ignorable {@code null}
+     */
+    private Void assertCallerNotThrottled(final String callerPackageName)
+            throws LimitExceededException {
+        LogUtil.v("Checking if API is throttled for package: %s ", callerPackageName);
+        Throttler throttler = mThrottlerSupplier.get();
+        boolean isThrottled =
+                !throttler.tryAcquire(FLEDGE_API_REPORT_IMPRESSIONS, callerPackageName);
+
+        if (isThrottled) {
+            LogUtil.e("Rate Limit Reached for API: %s", FLEDGE_API_REPORT_IMPRESSIONS);
+            throw new LimitExceededException(REPORT_IMPRESSION_THROTTLED);
+        }
+        return null;
+    }
+
+    /**
      * Validates the {@code reportImpression} request.
      *
      * @param adSelectionConfig the adSelectionConfig to be validated
@@ -536,11 +581,15 @@ public class ImpressionReporter {
      * @throws ConsentManager.RevokedConsentException if FLEDGE or the Privacy Sandbox do not have
      *     user consent
      * @throws IllegalArgumentException if the provided {@code adSelectionConfig} is not valid
+     * @throws LimitExceededException if the provided {@code callerPackageName} exceeds the rate
+     *     limits
      * @return an ignorable {@code null}
      */
     private Void validateRequest(AdSelectionConfig adSelectionConfig, String callerPackageName) {
+        LogUtil.v("Validating reportImpression Request");
         assertCallerPackageName(callerPackageName);
         maybeAssertForegroundCaller();
+        assertCallerNotThrottled(callerPackageName);
         assertFledgeEnrollment(adSelectionConfig, callerPackageName);
         assertAppInAllowList(callerPackageName);
         assertCallerHasUserConsent();
@@ -554,11 +603,11 @@ public class ImpressionReporter {
         @NonNull DBAdSelectionEntry mDBAdSelectionEntry;
     }
 
-    private static final class ReportingUrls {
+    private static final class ReportingUris {
         @Nullable public final Uri buyerReportingUri;
         @NonNull public final Uri sellerReportingUri;
 
-        private ReportingUrls(@Nullable Uri buyerReportingUri, @NonNull Uri sellerReportingUri) {
+        private ReportingUris(@Nullable Uri buyerReportingUri, @NonNull Uri sellerReportingUri) {
             Objects.requireNonNull(sellerReportingUri);
 
             this.buyerReportingUri = buyerReportingUri;

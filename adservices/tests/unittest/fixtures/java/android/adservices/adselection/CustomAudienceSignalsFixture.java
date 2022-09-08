@@ -22,7 +22,7 @@ import android.adservices.customaudience.CustomAudienceFixture;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 
 public class CustomAudienceSignalsFixture {
-    public static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("buyer");
+    public static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("test.com");
 
     public static CustomAudienceSignals aCustomAudienceSignals() {
         return aCustomAudienceSignalsBuilder().build();

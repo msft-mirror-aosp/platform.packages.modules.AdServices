@@ -51,7 +51,6 @@ public class Trigger {
     private String mId;
     private Uri mAttributionDestination;
     @EventSurfaceType private int mDestinationType;
-    private Uri mAdTechDomain;
     private String mEnrollmentId;
     private long mTriggerTime;
     private String mEventTriggers;
@@ -90,7 +89,6 @@ public class Trigger {
         return Objects.equals(mId, trigger.getId())
                 && Objects.equals(mAttributionDestination, trigger.mAttributionDestination)
                 && mDestinationType == trigger.mDestinationType
-                && Objects.equals(mAdTechDomain, trigger.mAdTechDomain)
                 && Objects.equals(mEnrollmentId, trigger.mEnrollmentId)
                 && mTriggerTime == trigger.mTriggerTime
                 && Objects.equals(mDebugKey, trigger.mDebugKey)
@@ -110,7 +108,6 @@ public class Trigger {
                 mId,
                 mAttributionDestination,
                 mDestinationType,
-                mAdTechDomain,
                 mEnrollmentId,
                 mTriggerTime,
                 mEventTriggers,
@@ -140,13 +137,6 @@ public class Trigger {
     @EventSurfaceType
     public int getDestinationType() {
         return mDestinationType;
-    }
-
-    /**
-     * AdTech report destination domain for generated reports.
-     */
-    public Uri getAdTechDomain() {
-        return mAdTechDomain;
     }
 
     /**
@@ -266,14 +256,8 @@ public class Trigger {
         List<AggregateTriggerData> triggerDataList = new ArrayList<>();
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
-            String hexString = jsonObject.getString("key_piece");
-            if (hexString.startsWith("0x")) {
-                hexString = hexString.substring(2);
-            }
-            // Do not process trigger if a key exceeds 128 bits.
-            if (hexString.length() > 32) {
-                return Optional.empty();
-            }
+            // Remove "0x" prefix.
+            String hexString = jsonObject.getString("key_piece").substring(2);
             BigInteger bigInteger = new BigInteger(hexString, 16);
             JSONArray sourceKeys = jsonObject.getJSONArray("source_keys");
             Set<String> sourceKeySet = new HashSet<>();
@@ -394,14 +378,6 @@ public class Trigger {
             return this;
         }
 
-        /** See {@link Trigger#getAdTechDomain()} ()}. */
-        @NonNull
-        public Builder setAdTechDomain(Uri adTechDomain) {
-            Validation.validateUri(adTechDomain);
-            mBuilding.mAdTechDomain = adTechDomain;
-            return this;
-        }
-
         /** See {@link Trigger#getEnrollmentId()} ()}. */
         @NonNull
         public Builder setEnrollmentId(String enrollmentId) {
@@ -479,9 +455,7 @@ public class Trigger {
         public Trigger build() {
             Validation.validateNonNull(
                     mBuilding.mAttributionDestination,
-                    mBuilding.mAdTechDomain,
-                    // TODO (b/238924528): uncomment when enforcing enrollment
-                    //mBuilding.mEnrollmentId,
+                    mBuilding.mEnrollmentId,
                     mBuilding.mRegistrant);
 
             return mBuilding;

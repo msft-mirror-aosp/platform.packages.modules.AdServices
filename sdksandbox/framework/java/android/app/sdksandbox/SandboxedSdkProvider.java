@@ -23,6 +23,7 @@ import android.os.Bundle;
 import android.view.SurfaceControlViewHost.SurfacePackage;
 import android.view.View;
 
+import java.util.Objects;
 
 /**
  * Encapsulates API which SDK sandbox can use to interact with SDKs loaded into it.
@@ -34,6 +35,7 @@ import android.view.View;
  */
 public abstract class SandboxedSdkProvider {
     private Context mContext;
+    private SdkSandboxController mSdkSandboxController;
 
     /**
      * Sets the SDK {@link Context} which can then be received using {@link
@@ -50,6 +52,7 @@ public abstract class SandboxedSdkProvider {
         if (mContext != null) {
             throw new IllegalStateException("Context already set");
         }
+        Objects.requireNonNull(context, "Context cannot be null");
         mContext = context;
     }
 
@@ -58,7 +61,7 @@ public abstract class SandboxedSdkProvider {
      * This will return null if no context has been previously set.
      */
     @Nullable
-    public Context getContext() {
+    public final Context getContext() {
         return mContext;
     }
 
@@ -67,10 +70,12 @@ public abstract class SandboxedSdkProvider {
      *
      * <p>This function is called by the SDK sandbox after it loads the SDK.
      *
-     * <p>SDK should do any work to be ready to handle upcoming requests. It should not include the
-     * initialization logic that depends on other SDKs being loaded into the SDK sandbox. The SDK
-     * should not do any operations requiring a {@link Context} object before this method has been
-     * called.
+     * <p>SDK should do any work to be ready to handle upcoming requests. It should not do any
+     * long-running tasks here. It should not do initialization logic that depends on other SDKs
+     * being loaded into the SDK sandbox.
+     *
+     * <p>The SDK should not do any operations requiring a {@link Context} object before this method
+     * has been called.
      *
      * @param params list of params passed from the client when it loads the SDK. This can be empty.
      * @return Returns a {@link SandboxedSdk}, passed back to the client. The IBinder used to create
@@ -83,6 +88,8 @@ public abstract class SandboxedSdkProvider {
      * <p>This function is called by the SDK sandbox manager before it unloads the SDK. The SDK
      * should fail any invocations on the Binder previously returned to the client through {@link
      * SandboxedSdk#getInterface}.
+     *
+     * <p>The SDK should not do any long-running tasks here.
      */
     public void beforeUnloadSdk() {}
 
@@ -91,6 +98,8 @@ public abstract class SandboxedSdkProvider {
      *
      * <p>Returns {@link View} will be wrapped into {@link SurfacePackage}. the resulting {@link
      * SurfacePackage} will be sent back to the client application.
+     *
+     * <p>The SDK should not do any long-running tasks here.
      *
      * @param windowContext the {@link Context} of the display which meant to show the view
      * @param params list of params passed from the client application requesting the view
@@ -101,37 +110,4 @@ public abstract class SandboxedSdkProvider {
     @NonNull
     public abstract View getView(
             @NonNull Context windowContext, @NonNull Bundle params, int width, int height);
-
-    /**
-     * Called when data sent from the app is received by an SDK.
-     *
-     * @param data the data sent by the app.
-     * @param callback to notify the app if the data has been successfully received.
-     */
-    public abstract void onDataReceived(
-            @NonNull Bundle data, @NonNull DataReceivedCallback callback);
-
-    /**
-     * Callback for tracking the status of data received from the client application.
-     *
-     * <p>This callback is created by the SDK sandbox. SDKs can use it to notify the SDK sandbox
-     * about the status of processing the data received.
-     */
-    public interface DataReceivedCallback {
-        /**
-         * After the SDK has completed processing the data received, it can call this method on the
-         * callback object and pass back any data if needed.
-         *
-         * @param params list of params to be passed to the client application.
-         */
-        void onDataReceivedSuccess(@NonNull Bundle params);
-
-        /**
-         * If the SDK fails to process the data received from the client application, it can call
-         * this method on the callback object.
-         *
-         * @param errorMessage a String description of the error
-         */
-        void onDataReceivedError(@NonNull String errorMessage);
-    }
 }

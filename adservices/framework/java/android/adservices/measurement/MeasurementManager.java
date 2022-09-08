@@ -69,8 +69,8 @@ public class MeasurementManager {
     })
     public @interface MeasurementApiState {}
 
-    private final Context mContext;
-    private final ServiceBinder<IMeasurementService> mServiceBinder;
+    private Context mContext;
+    private ServiceBinder<IMeasurementService> mServiceBinder;
 
     /**
      * Create MeasurementManager.
@@ -78,11 +78,28 @@ public class MeasurementManager {
      * @hide
      */
     public MeasurementManager(Context context) {
+        // In case the MeasurementManager is initiated from inside a sdk_sandbox process the
+        // fields will be immediately rewritten by the initialize method below.
+        initialize(context);
+    }
+
+    /**
+     * Initializes {@link MeasurementManager} with the given {@code context}.
+     *
+     * <p>This method is called by the {@link SandboxedSdkContext} to propagate the correct context.
+     * For more information check the javadoc on the {@link
+     * android.app.sdksandbox.SdkSandboxSystemServiceRegistry}.
+     *
+     * @hide
+     * @see android.app.sdksandbox.SdkSandboxSystemServiceRegistry
+     */
+    public MeasurementManager initialize(@NonNull Context context) {
         mContext = context;
         mServiceBinder = ServiceBinder.getServiceBinder(
                 context,
                 AdServicesCommon.ACTION_MEASUREMENT_SERVICE,
                 IMeasurementService.Stub::asInterface);
+        return this;
     }
 
     /**
@@ -396,6 +413,7 @@ public class MeasurementManager {
 
         try {
             service.getMeasurementApiStatus(
+                    new StatusParam.Builder(getPackageName()).build(),
                     generateCallerMetadataWithCurrentTime(),
                     new IMeasurementApiStatusCallback.Stub() {
                         @Override
@@ -431,7 +449,7 @@ public class MeasurementManager {
 
     private CallerMetadata generateCallerMetadataWithCurrentTime() {
         return new CallerMetadata.Builder()
-                .setBinderElapsedTimestamp(System.currentTimeMillis())
+                .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
                 .build();
     }
 }

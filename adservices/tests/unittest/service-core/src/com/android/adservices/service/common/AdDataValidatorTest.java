@@ -54,7 +54,7 @@ public class AdDataValidatorTest {
                         AdDataValidator.VIOLATION_FORMAT,
                         adData,
                         String.format(
-                                AdTechUriValidator.IDENTIFIER_AND_URL_ARE_INCONSISTENT,
+                                AdTechUriValidator.IDENTIFIER_AND_URI_ARE_INCONSISTENT,
                                 ValidatorUtil.AD_TECH_ROLE_BUYER,
                                 CommonFixture.VALID_BUYER_1,
                                 ValidatorUtil.AD_TECH_ROLE_BUYER,

@@ -71,7 +71,6 @@ public class Source {
     @EventSurfaceType private int mPublisherType;
     private Uri mAppDestination;
     private Uri mWebDestination;
-    private Uri mAdTechDomain;
     private String mEnrollmentId;
     private Uri mRegistrant;
     private SourceType mSourceType;
@@ -312,7 +311,6 @@ public class Source {
                 && mPublisherType == source.mPublisherType
                 && Objects.equals(mAppDestination, source.mAppDestination)
                 && Objects.equals(mWebDestination, source.mWebDestination)
-                && Objects.equals(mAdTechDomain, source.mAdTechDomain)
                 && Objects.equals(mEnrollmentId, source.mEnrollmentId)
                 && mPriority == source.mPriority
                 && mStatus == source.mStatus
@@ -339,7 +337,6 @@ public class Source {
                 mPublisherType,
                 mAppDestination,
                 mWebDestination,
-                mAdTechDomain,
                 mEnrollmentId,
                 mPriority,
                 mStatus,
@@ -444,14 +441,7 @@ public class Source {
     }
 
     /**
-     * AdTech reporting destination domain for generated reports.
-     */
-    public Uri getAdTechDomain() {
-        return mAdTechDomain;
-    }
-
-    /**
-     * AdTech enrollment ID
+     * Ad Tech enrollment ID
      */
     public String getEnrollmentId() {
         return mEnrollmentId;
@@ -637,22 +627,21 @@ public class Source {
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
             String id = jsonObject.getString("id");
-            String hexString = jsonObject.getString("key_piece");
-            if (hexString.startsWith("0x")) {
-                hexString = hexString.substring(2);
-            }
+            // Remove "0x" prefix.
+            String hexString = jsonObject.getString("key_piece").substring(2);
             BigInteger bigInteger = new BigInteger(hexString, 16);
             aggregateSourceMap.put(id, bigInteger);
         }
-        return Optional.of(
+        AggregatableAttributionSource.Builder asBuilder =
                 new AggregatableAttributionSource.Builder()
-                        .setAggregatableSource(aggregateSourceMap)
-                        .setAggregateFilterData(
-                                new AggregateFilterData.Builder()
-                                        .buildAggregateFilterData(
-                                                new JSONObject(this.mAggregateFilterData))
-                                        .build())
-                        .build());
+                        .setAggregatableSource(aggregateSourceMap);
+        if (this.mAggregateFilterData != null) {
+            asBuilder.setAggregateFilterData(
+                    new AggregateFilterData.Builder()
+                            .buildAggregateFilterData(new JSONObject(this.mAggregateFilterData))
+                            .build());
+        }
+        return Optional.of(asBuilder.build());
     }
 
     private List<FakeReport> generateVtcDualDestinationPostInstallFakeReports() {
@@ -747,14 +736,6 @@ public class Source {
         public Builder setWebDestination(@Nullable Uri webDestination) {
             Optional.ofNullable(webDestination).ifPresent(Validation::validateUri);
             mBuilding.mWebDestination = webDestination;
-            return this;
-        }
-
-        /** See {@link Source#getAdTechDomain()} ()}. */
-        @NonNull
-        public Builder setAdTechDomain(@NonNull Uri adTechDomain) {
-            Validation.validateUri(adTechDomain);
-            mBuilding.mAdTechDomain = adTechDomain;
             return this;
         }
 
@@ -884,9 +865,7 @@ public class Source {
         public Source build() {
             Validation.validateNonNull(
                     mBuilding.mPublisher,
-                    mBuilding.mAdTechDomain,
-                    // TODO (b/238924528): uncomment when enforcing enrollment.
-                    //mBuilding.mEnrollmentId,
+                    mBuilding.mEnrollmentId,
                     mBuilding.mRegistrant,
                     mBuilding.mSourceType);
 
