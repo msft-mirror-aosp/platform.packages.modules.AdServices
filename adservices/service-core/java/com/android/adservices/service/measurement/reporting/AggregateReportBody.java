@@ -93,12 +93,10 @@ public class AggregateReportBody {
                 aggregationServicePayloadsToJson(sharedInfo, key));
 
         if (mSourceDebugKey != null) {
-            aggregateBodyJson.put(
-                    PayloadBodyKeys.SOURCE_DEBUG_KEY, Long.toUnsignedString(mSourceDebugKey));
+            aggregateBodyJson.put(PayloadBodyKeys.SOURCE_DEBUG_KEY, mSourceDebugKey);
         }
         if (mTriggerDebugKey != null) {
-            aggregateBodyJson.put(
-                    PayloadBodyKeys.TRIGGER_DEBUG_KEY, Long.toUnsignedString(mTriggerDebugKey));
+            aggregateBodyJson.put(PayloadBodyKeys.TRIGGER_DEBUG_KEY, mTriggerDebugKey);
         }
 
         return aggregateBodyJson;
