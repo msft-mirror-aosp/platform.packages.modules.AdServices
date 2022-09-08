@@ -89,8 +89,7 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
         assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
 
         killApp(APP_PACKAGE);
-        // Wait a bit to allow sandbox death
-        Thread.sleep(2000);
+        waitForSandboxDeath(SANDBOX_1_PROCESS_NAME);
         processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
         assertThat(processDump).doesNotContain(APP_PACKAGE);
         assertThat(processDump).doesNotContain(SANDBOX_1_PROCESS_NAME);
@@ -112,7 +111,7 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
 
         killApp(APP_2_PACKAGE);
         // Wait a bit to allow sandbox death
-        Thread.sleep(2000);
+        waitForSandboxDeath(SANDBOX_2_PROCESS_NAME);
         processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
         assertThat(processDump).doesNotContain(APP_2_PROCESS_NAME);
         assertThat(processDump).doesNotContain(SANDBOX_2_PROCESS_NAME);
@@ -132,6 +131,7 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
 
         // Update package loaded by app
         installPackage(CODE_APK, "-d");
+        waitForSandboxDeath(SANDBOX_1_PROCESS_NAME);
 
         // Should no longer see app/sdk sandbox running
         processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
@@ -151,6 +151,7 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
 
         // Update package consumed by the app, but not loaded into the sandbox.
         installPackage(CODE_APK_2, "-d");
+        waitForSandboxDeath(SANDBOX_1_PROCESS_NAME);
 
         // Should no longer see app/sdk sandbox running
         processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
@@ -175,6 +176,8 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
             String processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
             assertThat(processDump).contains(APP_PACKAGE);
             assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
+
+            waitForSandboxDeath(SANDBOX_1_PROCESS_NAME);
 
             getDevice().executeShellCommand(
                     "device_config put sdk_sandbox disable_sdk_sandbox true");
@@ -218,5 +221,18 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
         String oomScoreAdj =
                 getDevice().executeShellCommand("cat /proc/" + pid + "/oom_score_adj").trim();
         return Integer.parseInt(oomScoreAdj);
+    }
+
+    private void waitForSandboxDeath(String sandboxProcessName) throws Exception {
+        int timeElapsed = 0;
+        while (timeElapsed <= 30000) {
+            final String processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
+            if (processDump.contains(sandboxProcessName)) {
+                Thread.sleep(1000);
+                timeElapsed += 1000;
+                continue;
+            }
+            return;
+        }
     }
 }
