@@ -46,12 +46,12 @@ public class AdSelectionConfigValidatorTest {
             AdTechIdentifier.fromString("developer%$android.com");
     private static final AdTechIdentifier SELLER_NO_HOST = AdTechIdentifier.fromString("test@");
     private static final Uri DECISION_LOGIC_URI_CONSISTENT =
-            Uri.parse("https://developer.android.com/test/decisions_logic_urls");
+            Uri.parse("https://developer.android.com/test/decisions_logic_uris");
     private static final Uri DECISION_LOGIC_URI_CONSISTENT_WITH_PREFIX =
-            Uri.parse("https://www.developer.android.com/test/decisions_logic_urls");
-    private static final Uri DECISION_LOGIC_URI_NO_HOST = Uri.parse("test/decisions_logic_urls");
+            Uri.parse("https://www.developer.android.com/test/decisions_logic_uris");
+    private static final Uri DECISION_LOGIC_URI_NO_HOST = Uri.parse("test/decisions_logic_uris");
     private static final Uri DECISION_LOGIC_URI_INCONSISTENT =
-            Uri.parse("https://developer%$android.com/test/decisions_logic_urls");
+            Uri.parse("https://developer%$android.com/test/decisions_logic_uris");
     private static final Uri TRUSTED_SIGNALS_URI_CONSISTENT =
             Uri.parse("https://developer.android.com/test/trusted_signals_uri");
     private static final Uri TRUSTED_SIGNALS_URI_CONSISTENT_WITH_PREFIX =

@@ -126,7 +126,7 @@ public class AdSelectionRunnerTest {
     private static final AdTechIdentifier SELLER_VALID =
             AdTechIdentifier.fromString("developer.android.com");
     private static final Uri DECISION_LOGIC_URI =
-            Uri.parse("https://developer.android.com/test/decisions_logic_urls");
+            Uri.parse("https://developer.android.com/test/decisions_logic_uris");
     private static final Uri TRUSTED_SIGNALS_URI =
             Uri.parse("https://developer.android.com/test/trusted_signals_uri");
 

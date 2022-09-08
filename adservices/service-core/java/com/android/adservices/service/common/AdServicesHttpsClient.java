@@ -46,7 +46,7 @@ import javax.net.ssl.HttpsURLConnection;
 
 /**
  * This is an HTTPS client to be used by the PP API services. The primary uses of this client
- * include fetching payloads from ad tech-provided URLs and reporting on generated reporting URLs
+ * include fetching payloads from ad tech-provided URIs and reporting on generated reporting URLs
  * through GET calls.
  */
 public class AdServicesHttpsClient {
@@ -206,13 +206,13 @@ public class AdServicesHttpsClient {
      * @param uri Provided as a result of invoking buyer or seller javascript.
      * @return an int that represents the HTTP response code in a successful case
      */
-    public ListenableFuture<Void> reportUrl(@NonNull Uri uri) {
+    public ListenableFuture<Void> reportUri(@NonNull Uri uri) {
         Objects.requireNonNull(uri);
 
-        return mExecutorService.submit(() -> doReportUrl(uri));
+        return mExecutorService.submit(() -> doReportUri(uri));
     }
 
-    private Void doReportUrl(@NonNull Uri uri) throws IOException {
+    private Void doReportUri(@NonNull Uri uri) throws IOException {
         LogUtil.v("Reporting to \"%s\"", uri.toString());
         URL url = toUrl(uri);
         HttpsURLConnection urlConnection;

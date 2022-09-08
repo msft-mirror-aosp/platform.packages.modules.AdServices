@@ -162,8 +162,8 @@ public class AdBidGeneratorImplTest {
         mBuyerDecisionLogicJs =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
                         + " contextual_signals, custom_audience_signals) { \n"
-                        + " return {'status': 0, 'results': {'reporting_url': '"
-                        + " buyerReportingUrl "
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
+                        + " buyerReportingUri "
                         + "' } };\n"
                         + "}";
 

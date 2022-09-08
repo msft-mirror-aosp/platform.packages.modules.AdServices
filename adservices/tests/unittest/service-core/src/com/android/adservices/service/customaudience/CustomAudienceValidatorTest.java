@@ -155,7 +155,7 @@ public class CustomAudienceValidatorTest {
                                         CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
                                                 ANOTHER_BUYER))
                                 .setBiddingLogicUri(
-                                        CustomAudienceFixture.getValidBiddingLogicUrlByBuyer(
+                                        CustomAudienceFixture.getValidBiddingLogicUriByBuyer(
                                                 ANOTHER_BUYER))
                                 .build()),
                 String.format(
@@ -260,20 +260,20 @@ public class CustomAudienceValidatorTest {
     public void testInvalidAdData() {
         AdData invalidAdDataWithAnotherBuyer =
                 new AdData.Builder()
-                        .setRenderUri(AdDataFixture.getValidRenderUrlByBuyer(ANOTHER_BUYER, 1))
+                        .setRenderUri(AdDataFixture.getValidRenderUriByBuyer(ANOTHER_BUYER, 1))
                         .setMetadata("{\"a\":1}")
                         .build();
         AdData invalidAdDataWithInvalidMetadata =
                 new AdData.Builder()
                         .setRenderUri(
-                                AdDataFixture.getValidRenderUrlByBuyer(
+                                AdDataFixture.getValidRenderUriByBuyer(
                                         CommonFixture.VALID_BUYER_1, 2))
                         .setMetadata("not[valid]json")
                         .build();
         AdData validAdData =
                 new AdData.Builder()
                         .setRenderUri(
-                                AdDataFixture.getValidRenderUrlByBuyer(
+                                AdDataFixture.getValidRenderUriByBuyer(
                                         CommonFixture.VALID_BUYER_1, 3))
                         .setMetadata("{\"a\":1}")
                         .build();

@@ -220,6 +220,6 @@ public class AdServicesHttpsClientTest {
     }
 
     private Void reportUrl(Uri uri) throws Exception {
-        return mClient.reportUrl(uri).get();
+        return mClient.reportUri(uri).get();
     }
 }
