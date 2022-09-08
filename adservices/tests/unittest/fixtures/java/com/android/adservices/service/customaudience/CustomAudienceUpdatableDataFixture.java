@@ -208,7 +208,7 @@ public class CustomAudienceUpdatableDataFixture {
             }
 
             trustedBiddingDataJson.put(
-                    TRUSTED_BIDDING_URI_KEY, trustedBiddingData.getUrl().toString());
+                    TRUSTED_BIDDING_URI_KEY, trustedBiddingData.getUri().toString());
             JSONArray trustedBiddingKeysJson = new JSONArray(trustedBiddingData.getKeys());
             if (shouldAddHarmlessJunk) {
                 JsonFixture.addHarmlessJunkValues(trustedBiddingKeysJson);

@@ -19,34 +19,52 @@ package com.android.adservices.data.customaudience;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
+import androidx.room.AutoMigration;
 import androidx.room.Database;
+import androidx.room.RenameColumn;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
+import androidx.room.migration.AutoMigrationSpec;
 
 import com.android.adservices.data.common.FledgeRoomConverters;
 import com.android.internal.annotations.GuardedBy;
+
 
 import java.util.Objects;
 
 /** Room based database for custom audience. */
 @Database(
-        // Set exportSchema to true to see generated schema file.
-        // File location is defined in Android.bp -Aroom.schemaLocation.
-        exportSchema = false,
         entities = {
             DBCustomAudience.class,
             DBCustomAudienceBackgroundFetchData.class,
             DBCustomAudienceOverride.class
         },
-        version = CustomAudienceDatabase.DATABASE_VERSION)
+        version = CustomAudienceDatabase.DATABASE_VERSION,
+        autoMigrations = {
+            @AutoMigration(from = 1, to = 2, spec = CustomAudienceDatabase.AutoMigration1To2.class)
+        })
 @TypeConverters({FledgeRoomConverters.class})
 public abstract class CustomAudienceDatabase extends RoomDatabase {
     private static final Object SINGLETON_LOCK = new Object();
 
-    public static final int DATABASE_VERSION = 1;
+    public static final int DATABASE_VERSION = 2;
     // TODO(b/230653780): Should we separate the DB.
     public static final String DATABASE_NAME = "customaudience.db";
+
+    @RenameColumn(
+            tableName = DBCustomAudience.TABLE_NAME,
+            fromColumnName = "bidding_logic_url",
+            toColumnName = "bidding_logic_uri")
+    @RenameColumn(
+            tableName = DBCustomAudience.TABLE_NAME,
+            fromColumnName = "trusted_bidding_data_url",
+            toColumnName = "trusted_bidding_data_uri")
+    @RenameColumn(
+            tableName = DBCustomAudienceBackgroundFetchData.TABLE_NAME,
+            fromColumnName = "daily_update_url",
+            toColumnName = "daily_update_uri")
+    static class AutoMigration1To2 implements AutoMigrationSpec {}
 
     @GuardedBy("SINGLETON_LOCK")
     private static CustomAudienceDatabase sSingleton;

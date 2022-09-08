@@ -128,7 +128,7 @@ import java.util.concurrent.TimeUnit;
 public class AdSelectionServiceImplTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final Clock CLOCK = Clock.fixed(Instant.now(), ZoneOffset.UTC);
-    private static final Uri RENDER_URL = Uri.parse("https://test.com/advert/");
+    private static final Uri RENDER_URI = Uri.parse("https://test.com/advert/");
     private static final Instant ACTIVATION_TIME = CLOCK.instant().truncatedTo(ChronoUnit.MILLIS);
     private static final Uri BUYER_BIDDING_LOGIC_URI = Uri.parse("https://test.com");
     private static final long AD_SELECTION_ID = 1;
@@ -231,15 +231,15 @@ public class AdSelectionServiceImplTest {
     public void testReportImpressionSuccess() throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
-        Uri sellerReportingUrl = mMockWebServerRule.uriForPath(mSellerReportingPath);
-        Uri buyerReportingUrl = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
         String sellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_url, bid, contextual_signals) {"
                         + " \n"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
                         + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
-                        + sellerReportingUrl
+                        + sellerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -247,7 +247,7 @@ public class AdSelectionServiceImplTest {
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
                         + " contextual_signals, custom_audience_signals) { \n"
                         + " return {'status': 0, 'results': {'reporting_url': '"
-                        + buyerReportingUrl
+                        + buyerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -273,7 +273,7 @@ public class AdSelectionServiceImplTest {
                         .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
-                        .setWinningAdRenderUri(RENDER_URL)
+                        .setWinningAdRenderUri(RENDER_URI)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
@@ -335,13 +335,13 @@ public class AdSelectionServiceImplTest {
     public void testReportImpressionWithRevokedUserConsentSuccess() throws Exception {
         doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent(any());
 
-        Uri buyerReportingUrl = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
         String buyerDecisionLogicJs =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
                         + " contextual_signals, custom_audience_signals) { \n"
                         + " return {'status': 0, 'results': {'reporting_url': '"
-                        + buyerReportingUrl
+                        + buyerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -370,7 +370,7 @@ public class AdSelectionServiceImplTest {
                         .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
-                        .setWinningAdRenderUri(RENDER_URL)
+                        .setWinningAdRenderUri(RENDER_URI)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .setCallerPackageName(TEST_PACKAGE_NAME)
@@ -427,8 +427,8 @@ public class AdSelectionServiceImplTest {
     public void testReportImpressionFailsWhenReportResultTakesTooLong() throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
-        Uri sellerReportingUrl = mMockWebServerRule.uriForPath(mSellerReportingPath);
-        Uri buyerReportingUrl = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
         String jsWaitMoreThanAllowed =
                 insertJsWait(2 * mFlags.getReportImpressionOverallTimeoutMs());
@@ -439,7 +439,7 @@ public class AdSelectionServiceImplTest {
                         + jsWaitMoreThanAllowed
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
                         + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
-                        + sellerReportingUrl
+                        + sellerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -447,7 +447,7 @@ public class AdSelectionServiceImplTest {
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
                         + " contextual_signals, custom_audience_signals) { \n"
                         + " return {'status': 0, 'results': {'reporting_url': '"
-                        + buyerReportingUrl
+                        + buyerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -472,7 +472,7 @@ public class AdSelectionServiceImplTest {
                         .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
-                        .setWinningAdRenderUri(RENDER_URL)
+                        .setWinningAdRenderUri(RENDER_URI)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .setCallerPackageName(TEST_PACKAGE_NAME)
@@ -529,8 +529,8 @@ public class AdSelectionServiceImplTest {
     public void testReportImpressionFailsWhenReportWinTakesTooLong() throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
-        Uri sellerReportingUrl = mMockWebServerRule.uriForPath(mSellerReportingPath);
-        Uri buyerReportingUrl = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
         String jsWaitMoreThanAllowed =
                 insertJsWait(2 * mFlags.getReportImpressionOverallTimeoutMs());
@@ -540,7 +540,7 @@ public class AdSelectionServiceImplTest {
                         + " \n"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
                         + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
-                        + sellerReportingUrl
+                        + sellerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -549,7 +549,7 @@ public class AdSelectionServiceImplTest {
                         + " contextual_signals, custom_audience_signals) { \n"
                         + jsWaitMoreThanAllowed
                         + " return {'status': 0, 'results': {'reporting_url': '"
-                        + buyerReportingUrl
+                        + buyerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -574,7 +574,7 @@ public class AdSelectionServiceImplTest {
                         .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
-                        .setWinningAdRenderUri(RENDER_URL)
+                        .setWinningAdRenderUri(RENDER_URI)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .setCallerPackageName(TEST_PACKAGE_NAME)
@@ -631,8 +631,8 @@ public class AdSelectionServiceImplTest {
     public void testReportImpressionFailsWhenOverallJSTimesOut() throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
-        Uri sellerReportingUrl = mMockWebServerRule.uriForPath(mSellerReportingPath);
-        Uri buyerReportingUrl = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
         String jsWaitMoreThanAllowed =
                 insertJsWait((long) (.25 * mFlags.getReportImpressionOverallTimeoutMs()));
@@ -643,7 +643,7 @@ public class AdSelectionServiceImplTest {
                         + jsWaitMoreThanAllowed
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
                         + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
-                        + sellerReportingUrl
+                        + sellerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -652,7 +652,7 @@ public class AdSelectionServiceImplTest {
                         + " contextual_signals, custom_audience_signals) { \n"
                         + jsWaitMoreThanAllowed
                         + " return {'status': 0, 'results': {'reporting_url': '"
-                        + buyerReportingUrl
+                        + buyerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -682,7 +682,7 @@ public class AdSelectionServiceImplTest {
                         .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
-                        .setWinningAdRenderUri(RENDER_URL)
+                        .setWinningAdRenderUri(RENDER_URI)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .setCallerPackageName(TEST_PACKAGE_NAME)
@@ -739,15 +739,15 @@ public class AdSelectionServiceImplTest {
     public void testReportImpressionFailsWhenJSFetchTakesTooLong() throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
-        Uri sellerReportingUrl = mMockWebServerRule.uriForPath(mSellerReportingPath);
-        Uri buyerReportingUrl = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
         String sellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_url, bid, contextual_signals) {"
                         + " \n"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
                         + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
-                        + sellerReportingUrl
+                        + sellerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -755,7 +755,7 @@ public class AdSelectionServiceImplTest {
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
                         + " contextual_signals, custom_audience_signals) { \n"
                         + " return {'status': 0, 'results': {'reporting_url': '"
-                        + buyerReportingUrl
+                        + buyerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -785,7 +785,7 @@ public class AdSelectionServiceImplTest {
                         .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
-                        .setWinningAdRenderUri(RENDER_URL)
+                        .setWinningAdRenderUri(RENDER_URI)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .setCallerPackageName(TEST_PACKAGE_NAME)
@@ -842,15 +842,15 @@ public class AdSelectionServiceImplTest {
     public void testReportImpressionFailsWithInvalidAdSelectionId() throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
-        Uri sellerReportingUrl = mMockWebServerRule.uriForPath(mSellerReportingPath);
-        Uri buyerReportingUrl = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
         String sellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_url, bid, contextual_signals) {"
                         + " \n"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
                         + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
-                        + sellerReportingUrl
+                        + sellerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -858,7 +858,7 @@ public class AdSelectionServiceImplTest {
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
                         + " contextual_signals, custom_audience_signals) { \n"
                         + " return {'status': 0, 'results': {'reporting_url': '"
-                        + buyerReportingUrl
+                        + buyerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -883,7 +883,7 @@ public class AdSelectionServiceImplTest {
                         .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
-                        .setWinningAdRenderUri(RENDER_URL)
+                        .setWinningAdRenderUri(RENDER_URI)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .setCallerPackageName(TEST_PACKAGE_NAME)
@@ -941,15 +941,15 @@ public class AdSelectionServiceImplTest {
     public void testReportImpressionBadSellerJavascriptFailsWithInternalError() throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
-        Uri sellerReportingUrl = mMockWebServerRule.uriForPath(mSellerReportingPath);
-        Uri buyerReportingUrl = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
         String invalidSellerDecisionLogicJsMissingCurlyBracket =
                 "function reportResult(ad_selection_config, render_url, bid, contextual_signals) {"
                         + " \n"
                         + " return {'status': 0, 'results': 'signals_for_buyer':"
                         + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
-                        + sellerReportingUrl
+                        + sellerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -957,7 +957,7 @@ public class AdSelectionServiceImplTest {
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
                         + " contextual_signals, custom_audience_signals) { \n"
                         + " return {'status': 0, 'results': {'reporting_url': '"
-                        + buyerReportingUrl
+                        + buyerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -982,7 +982,7 @@ public class AdSelectionServiceImplTest {
                         .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
-                        .setWinningAdRenderUri(RENDER_URL)
+                        .setWinningAdRenderUri(RENDER_URI)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .setCallerPackageName(TEST_PACKAGE_NAME)
@@ -1038,15 +1038,15 @@ public class AdSelectionServiceImplTest {
     public void testReportImpressionBadBuyerJavascriptFailsWithInternalError() throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
-        Uri sellerReportingUrl = mMockWebServerRule.uriForPath(mSellerReportingPath);
-        Uri buyerReportingUrl = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
         String sellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_url, bid, contextual_signals) {"
                         + " \n"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
                         + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
-                        + sellerReportingUrl
+                        + sellerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -1054,7 +1054,7 @@ public class AdSelectionServiceImplTest {
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
                         + " contextual_signals, custom_audience_signals) { \n"
                         + " return {'status': 0, 'results': 'reporting_url': '"
-                        + buyerReportingUrl
+                        + buyerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -1079,7 +1079,7 @@ public class AdSelectionServiceImplTest {
                         .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
-                        .setWinningAdRenderUri(RENDER_URL)
+                        .setWinningAdRenderUri(RENDER_URI)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .setCallerPackageName(TEST_PACKAGE_NAME)
@@ -1136,15 +1136,15 @@ public class AdSelectionServiceImplTest {
     public void testReportImpressionUseDevOverrideForSellerJS() throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
-        Uri sellerReportingUrl = mMockWebServerRule.uriForPath(mSellerReportingPath);
-        Uri buyerReportingUrl = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
         String sellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_url, bid, contextual_signals) {"
                         + " \n"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
                         + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
-                        + sellerReportingUrl
+                        + sellerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -1152,7 +1152,7 @@ public class AdSelectionServiceImplTest {
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
                         + " contextual_signals, custom_audience_signals) { \n"
                         + " return {'status': 0, 'results': {'reporting_url': '"
-                        + buyerReportingUrl
+                        + buyerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -1177,7 +1177,7 @@ public class AdSelectionServiceImplTest {
                         .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
-                        .setWinningAdRenderUri(RENDER_URL)
+                        .setWinningAdRenderUri(RENDER_URI)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .setCallerPackageName(TEST_PACKAGE_NAME)
@@ -2491,15 +2491,15 @@ public class AdSelectionServiceImplTest {
 
         String otherPackageName = CommonFixture.TEST_PACKAGE_NAME + "incorrectPackage";
 
-        Uri sellerReportingUrl = mMockWebServerRule.uriForPath(mSellerReportingPath);
-        Uri buyerReportingUrl = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
         String sellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_url, bid, contextual_signals) {"
                         + " \n"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
                         + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
-                        + sellerReportingUrl
+                        + sellerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -2507,7 +2507,7 @@ public class AdSelectionServiceImplTest {
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
                         + " contextual_signals, custom_audience_signals) { \n"
                         + " return {'status': 0, 'results': {'reporting_url': '"
-                        + buyerReportingUrl
+                        + buyerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -2532,7 +2532,7 @@ public class AdSelectionServiceImplTest {
                         .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
-                        .setWinningAdRenderUri(RENDER_URL)
+                        .setWinningAdRenderUri(RENDER_URI)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
@@ -2588,15 +2588,15 @@ public class AdSelectionServiceImplTest {
                 .assertAppCanUsePpapi(
                         TEST_PACKAGE_NAME, AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION);
 
-        Uri sellerReportingUrl = mMockWebServerRule.uriForPath(mSellerReportingPath);
-        Uri buyerReportingUrl = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
         String sellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_url, bid, contextual_signals) {"
                         + " \n"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
                         + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
-                        + sellerReportingUrl
+                        + sellerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -2604,7 +2604,7 @@ public class AdSelectionServiceImplTest {
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
                         + " contextual_signals, custom_audience_signals) { \n"
                         + " return {'status': 0, 'results': {'reporting_url': '"
-                        + buyerReportingUrl
+                        + buyerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -2630,7 +2630,7 @@ public class AdSelectionServiceImplTest {
                         .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
-                        .setWinningAdRenderUri(RENDER_URL)
+                        .setWinningAdRenderUri(RENDER_URI)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
@@ -2694,15 +2694,15 @@ public class AdSelectionServiceImplTest {
         // Reset flags to perform enrollment check
         mFlags = new FlagsWithEnrollmentCheckEnabledSwitch(true);
 
-        Uri sellerReportingUrl = mMockWebServerRule.uriForPath(mSellerReportingPath);
-        Uri buyerReportingUrl = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
         String sellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_url, bid, contextual_signals) {"
                         + " \n"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
                         + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
-                        + sellerReportingUrl
+                        + sellerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -2710,7 +2710,7 @@ public class AdSelectionServiceImplTest {
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
                         + " contextual_signals, custom_audience_signals) { \n"
                         + " return {'status': 0, 'results': {'reporting_url': '"
-                        + buyerReportingUrl
+                        + buyerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -2736,7 +2736,7 @@ public class AdSelectionServiceImplTest {
                         .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
-                        .setWinningAdRenderUri(RENDER_URL)
+                        .setWinningAdRenderUri(RENDER_URI)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
@@ -2800,15 +2800,15 @@ public class AdSelectionServiceImplTest {
         // Reset flags to perform enrollment check
         mFlags = new FlagsWithEnrollmentCheckEnabledSwitch(true);
 
-        Uri sellerReportingUrl = mMockWebServerRule.uriForPath(mSellerReportingPath);
-        Uri buyerReportingUrl = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
         String sellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_url, bid, contextual_signals) {"
                         + " \n"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
                         + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
-                        + sellerReportingUrl
+                        + sellerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -2816,7 +2816,7 @@ public class AdSelectionServiceImplTest {
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
                         + " contextual_signals, custom_audience_signals) { \n"
                         + " return {'status': 0, 'results': {'reporting_url': '"
-                        + buyerReportingUrl
+                        + buyerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -2842,7 +2842,7 @@ public class AdSelectionServiceImplTest {
                         .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
-                        .setWinningAdRenderUri(RENDER_URL)
+                        .setWinningAdRenderUri(RENDER_URI)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
@@ -2953,18 +2953,18 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    public void testAdSelectionConfigInvalidSellerAndSellerUrls() throws Exception {
+    public void testAdSelectionConfigInvalidSellerAndSellerUris() throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
-        Uri sellerReportingUrl = mMockWebServerRule.uriForPath(mSellerReportingPath);
-        Uri buyerReportingUrl = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
         String sellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_url, bid, contextual_signals) {"
                         + " \n"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
                         + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
-                        + sellerReportingUrl
+                        + sellerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -2972,7 +2972,7 @@ public class AdSelectionServiceImplTest {
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
                         + " contextual_signals, custom_audience_signals) { \n"
                         + " return {'status': 0, 'results': {'reporting_url': '"
-                        + buyerReportingUrl
+                        + buyerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -2991,7 +2991,7 @@ public class AdSelectionServiceImplTest {
                         .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
-                        .setWinningAdRenderUri(RENDER_URL)
+                        .setWinningAdRenderUri(RENDER_URI)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .setCallerPackageName(TEST_PACKAGE_NAME)
@@ -3053,15 +3053,15 @@ public class AdSelectionServiceImplTest {
     public void testReportImpressionSuccessThrottledSubsequentCallFailure() throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
 
-        Uri sellerReportingUrl = mMockWebServerRule.uriForPath(mSellerReportingPath);
-        Uri buyerReportingUrl = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
         String sellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_url, bid, contextual_signals) {"
                         + " \n"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
                         + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
-                        + sellerReportingUrl
+                        + sellerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -3069,7 +3069,7 @@ public class AdSelectionServiceImplTest {
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
                         + " contextual_signals, custom_audience_signals) { \n"
                         + " return {'status': 0, 'results': {'reporting_url': '"
-                        + buyerReportingUrl
+                        + buyerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -3095,7 +3095,7 @@ public class AdSelectionServiceImplTest {
                         .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
-                        .setWinningAdRenderUri(RENDER_URL)
+                        .setWinningAdRenderUri(RENDER_URI)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
