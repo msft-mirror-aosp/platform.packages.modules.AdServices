@@ -81,7 +81,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     private static final AdTechIdentifier BUYER_1 = AdSelectionConfigFixture.BUYER_1;
     private static final AdTechIdentifier BUYER_2 = AdSelectionConfigFixture.BUYER_2;
 
-    private static final String AD_URL_PREFIX = "/adverts/123/";
+    private static final String AD_URI_PREFIX = "/adverts/123/";
 
     private static final String SELLER_DECISION_LOGIC_URI_PATH = "/ssp/decision/logic/";
     private static final String BUYER_BIDDING_LOGIC_URI_PATH = "/buyer/bidding/logic/";
@@ -96,18 +96,18 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                     + " custom_audience_signal) { \n"
                     + "  return {'status': 0, 'score': bid };\n"
                     + "}\n"
-                    + "function reportResult(ad_selection_config, render_url, bid,"
+                    + "function reportResult(ad_selection_config, render_uri, bid,"
                     + " contextual_signals) { \n"
                     + " return {'status': 0, 'results': {'signals_for_buyer':"
-                    + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
+                    + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
                     + SELLER_REPORTING_PATH
                     + "' } };\n"
                     + "}";
     private static final AdSelectionSignals TRUSTED_SCORING_SIGNALS =
             AdSelectionSignals.fromString(
                     "{\n"
-                            + "\t\"render_url_1\": \"signals_for_1\",\n"
-                            + "\t\"render_url_2\": \"signals_for_2\"\n"
+                            + "\t\"render_uri_1\": \"signals_for_1\",\n"
+                            + "\t\"render_uri_2\": \"signals_for_2\"\n"
                             + "}");
     private static final AdSelectionSignals TRUSTED_BIDDING_SIGNALS =
             AdSelectionSignals.fromString(
@@ -144,7 +144,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                     + "}\n"
                     + "function reportWin(ad_selection_signals, per_buyer_signals,"
                     + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
-                    + " return {'status': 0, 'results': {'reporting_url': '"
+                    + " return {'status': 0, 'results': {'reporting_uri': '"
                     + BUYER_REPORTING_PATH
                     + "' } };\n"
                     + "}";
@@ -283,7 +283,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Assert that the ad3 from buyer 2 is rendered, since it had the highest bid and score
         Assert.assertEquals(
-                CommonFixture.getUri(BUYER_2, AD_URL_PREFIX + "/ad3"), outcome.getRenderUri());
+                CommonFixture.getUri(BUYER_2, AD_URI_PREFIX + "/ad3"), outcome.getRenderUri());
 
         ReportImpressionRequest reportImpressionRequest =
                 new ReportImpressionRequest(outcome.getAdSelectionId(), AD_SELECTION_CONFIG);
@@ -352,7 +352,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Assert that the ad3 from buyer 1 is rendered, since it had the highest bid and score
         // This verifies that the custom audience was updated, since it originally only had two ads
         Assert.assertEquals(
-                CommonFixture.getUri(BUYER_1, AD_URL_PREFIX + "/ad3"), outcome.getRenderUri());
+                CommonFixture.getUri(BUYER_1, AD_URI_PREFIX + "/ad3"), outcome.getRenderUri());
 
         ReportImpressionRequest reportImpressionRequest =
                 new ReportImpressionRequest(outcome.getAdSelectionId(), AD_SELECTION_CONFIG);
@@ -437,7 +437,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         // Running ad selection and asserting that exception is thrown when decision and signals
-        // urls are not etld+1 compliant
+        // URIs are not etld+1 compliant
         Exception selectAdsException =
                 assertThrows(
                         ExecutionException.class,
@@ -527,14 +527,14 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Assert that the ad3 from buyer 2 is rendered, since it had the highest bid and score
         Assert.assertEquals(
-                CommonFixture.getUri(BUYER_2, AD_URL_PREFIX + "/ad3"), outcome.getRenderUri());
+                CommonFixture.getUri(BUYER_2, AD_URI_PREFIX + "/ad3"), outcome.getRenderUri());
 
         ReportImpressionRequest reportImpressionRequest =
                 new ReportImpressionRequest(
                         outcome.getAdSelectionId(), adSelectionConfigWithEtldViolations);
 
         // Running report Impression and asserting that exception is thrown when decision and
-        // signals urls are not etld+1 compliant
+        // signals URIs are not etld+1 compliant
         Exception selectAdsException =
                 assertThrows(
                         ExecutionException.class,
@@ -611,7 +611,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // malformed bidding logic
         // The winner should come from buyer1 with the highest bid i.e. ad2
         Assert.assertEquals(
-                CommonFixture.getUri(BUYER_1, AD_URL_PREFIX + "/ad2"), outcome.getRenderUri());
+                CommonFixture.getUri(BUYER_1, AD_URI_PREFIX + "/ad2"), outcome.getRenderUri());
 
         ReportImpressionRequest reportImpressionRequest =
                 new ReportImpressionRequest(outcome.getAdSelectionId(), AD_SELECTION_CONFIG);
@@ -745,7 +745,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // missing bidding logic
         // The winner should come from buyer1 with the highest bid i.e. ad2
         Assert.assertEquals(
-                CommonFixture.getUri(BUYER_1, AD_URL_PREFIX + "/ad2"), outcome.getRenderUri());
+                CommonFixture.getUri(BUYER_1, AD_URI_PREFIX + "/ad2"), outcome.getRenderUri());
 
         ReportImpressionRequest reportImpressionRequest =
                 new ReportImpressionRequest(outcome.getAdSelectionId(), AD_SELECTION_CONFIG);
@@ -803,7 +803,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest2)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        // Ad Selection will fail due to scoring logic not found, because the URL that is used to
+        // Ad Selection will fail due to scoring logic not found, because the URI that is used to
         // fetch scoring logic does not exist
         Exception selectAdsException =
                 assertThrows(
@@ -891,7 +891,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // not activated yet
         // The winner should come from buyer1 with the highest bid i.e. ad2
         Assert.assertEquals(
-                CommonFixture.getUri(BUYER_1, AD_URL_PREFIX + "/ad2"), outcome.getRenderUri());
+                CommonFixture.getUri(BUYER_1, AD_URI_PREFIX + "/ad2"), outcome.getRenderUri());
 
         ReportImpressionRequest reportImpressionRequest =
                 new ReportImpressionRequest(outcome.getAdSelectionId(), AD_SELECTION_CONFIG);
@@ -978,7 +978,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // expired
         // The winner should come from buyer1 with the highest bid i.e. ad2
         Assert.assertEquals(
-                CommonFixture.getUri(BUYER_1, AD_URL_PREFIX + "/ad2"), outcome.getRenderUri());
+                CommonFixture.getUri(BUYER_1, AD_URI_PREFIX + "/ad2"), outcome.getRenderUri());
 
         ReportImpressionRequest reportImpressionRequest =
                 new ReportImpressionRequest(outcome.getAdSelectionId(), AD_SELECTION_CONFIG);
@@ -1061,7 +1061,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // timed out
         // The winner should come from buyer1 with the highest bid i.e. ad2
         Assert.assertEquals(
-                CommonFixture.getUri(BUYER_1, AD_URL_PREFIX + "/ad2"), outcome.getRenderUri());
+                CommonFixture.getUri(BUYER_1, AD_URI_PREFIX + "/ad2"), outcome.getRenderUri());
 
         ReportImpressionRequest reportImpressionRequest =
                 new ReportImpressionRequest(outcome.getAdSelectionId(), AD_SELECTION_CONFIG);
@@ -1177,13 +1177,13 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Generate ads for with bids provided
         List<AdData> ads = new ArrayList<>();
 
-        // Create ads with the buyer name and bid number as the ad URL
+        // Create ads with the buyer name and bid number as the ad URI
         // Add the bid value to the metadata
         for (int i = 0; i < bids.size(); i++) {
             ads.add(
                     new AdData.Builder()
                             .setRenderUri(
-                                    CommonFixture.getUri(buyer, AD_URL_PREFIX + "/ad" + (i + 1)))
+                                    CommonFixture.getUri(buyer, AD_URI_PREFIX + "/ad" + (i + 1)))
                             .setMetadata("{\"result\":" + bids.get(i) + "}")
                             .build());
         }

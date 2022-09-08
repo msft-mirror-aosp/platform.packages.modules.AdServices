@@ -49,7 +49,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.util.function.Supplier;
 
@@ -85,7 +84,6 @@ public class TopicsServiceTest {
                         .spyStatic(MddJobService.class)
                         .spyStatic(EnrollmentDao.class)
                         .spyStatic(AppImportanceFilter.class)
-                        .strictness(Strictness.LENIENT)
                         .startMocking();
 
         try {
