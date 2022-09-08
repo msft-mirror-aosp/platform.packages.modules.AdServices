@@ -71,7 +71,7 @@ public class DBAdSelectionTest {
     }
 
     @Test
-    public void testFailsToBuildContextualAdWithNonNullBiddingLogicUrl() {
+    public void testFailsToBuildContextualAdWithNonNullBiddingLogicUri() {
 
         assertThrows(
                 IllegalArgumentException.class,

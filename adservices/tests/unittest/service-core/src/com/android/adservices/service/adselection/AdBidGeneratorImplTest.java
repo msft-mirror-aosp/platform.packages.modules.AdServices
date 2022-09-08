@@ -174,12 +174,12 @@ public class AdBidGeneratorImplTest {
         mTrustedBiddingData =
                 new DBTrustedBiddingData.Builder()
                         .setKeys(mTrustedBiddingKeys)
-                        .setUrl(mTrustedBiddingUri)
+                        .setUri(mTrustedBiddingUri)
                         .build();
 
         mCustomAudienceWithAds =
                 DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
-                        .setBiddingLogicUrl(mDecisionLogicUri)
+                        .setBiddingLogicUri(mDecisionLogicUri)
                         .setTrustedBiddingData(mTrustedBiddingData)
                         .build();
 
@@ -566,12 +566,12 @@ public class AdBidGeneratorImplTest {
         DBTrustedBiddingData trustedBiddingData =
                 new DBTrustedBiddingData.Builder()
                         .setKeys(emptyTrustedBiddingKeys)
-                        .setUrl(mTrustedBiddingUri)
+                        .setUri(mTrustedBiddingUri)
                         .build();
 
         DBCustomAudience customAudienceWithAds =
                 DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
-                        .setBiddingLogicUrl(mDecisionLogicUri)
+                        .setBiddingLogicUri(mDecisionLogicUri)
                         .setTrustedBiddingData(trustedBiddingData)
                         .build();
 

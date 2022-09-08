@@ -188,7 +188,7 @@ public class CustomAudienceSignals {
         }
 
         /**
-         * Sets the buyer domain URL.
+         * Sets the buyer domain.
          *
          * <p>See {@link #getBuyer()} for more information.
          */
