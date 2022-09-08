@@ -23,6 +23,7 @@ import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -51,6 +52,8 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
      */
     private static final String SANDBOX_1_PROCESS_NAME = APP_PACKAGE + "_sdk_sandbox";
 
+    private boolean mWasRoot;
+
     private void clearProcess(String pkg) throws Exception {
         getDevice().executeShellCommand(String.format("pm clear %s", pkg));
     }
@@ -68,6 +71,9 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
         assertThat(getBuild()).isNotNull();
         assertThat(getDevice()).isNotNull();
 
+        mWasRoot = getDevice().isAdbRoot();
+        getDevice().enableAdbRoot();
+
         // Ensure neither app is currently running
         for (String pkg : new String[]{APP_PACKAGE, APP_2_PACKAGE}) {
             clearProcess(pkg);
@@ -78,6 +84,13 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
             if (!isPackageInstalled(apk)) {
                 installPackage(apk, "-d");
             }
+        }
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        if (!mWasRoot) {
+            getDevice().disableAdbRoot();
         }
     }
 
@@ -194,6 +207,46 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
         String processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
         assertThat(processDump).contains(APP_PACKAGE);
         assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
+
+        int initialSandboxOomScoreAdj = getOomScoreAdj(SANDBOX_1_PROCESS_NAME);
+
+        // Navigate to home screen to send both apps to the background.
+        getDevice().executeShellCommand("input keyevent KEYCODE_HOME");
+
+        // Wait for app to be backgrounded and unbinding of sandbox to complete.
+        Thread.sleep(2000);
+
+        // Should see app/sdk sandbox running
+        processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
+        assertThat(processDump).contains(APP_PACKAGE);
+        assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
+
+        int finalSandboxOomScoreAdj = getOomScoreAdj(SANDBOX_1_PROCESS_NAME);
+        // The higher the oom adj score, the lower the priority of the process.
+        assertThat(finalSandboxOomScoreAdj).isGreaterThan(initialSandboxOomScoreAdj);
+    }
+
+    @Test
+    public void testSandboxReconnectsAfterDeath() throws Exception {
+        startActivity(APP_PACKAGE, APP_ACTIVITY);
+
+        // Should see app/sdk sandbox running
+        String processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
+        assertThat(processDump).contains(APP_PACKAGE);
+        assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
+
+        String initialSandboxPid = getDevice().getProcessPid(SANDBOX_1_PROCESS_NAME);
+        getDevice().executeShellCommand("kill -9 " + initialSandboxPid);
+
+        Thread.sleep(5000);
+
+        // The sandbox gets restarted, so it should still be running
+        processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
+        assertThat(processDump).contains(APP_PACKAGE);
+        assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
+
+        String finalSandboxPid = getDevice().getProcessPid(SANDBOX_1_PROCESS_NAME);
+        assertThat(initialSandboxPid).isNotEqualTo(finalSandboxPid);
 
         int initialSandboxOomScoreAdj = getOomScoreAdj(SANDBOX_1_PROCESS_NAME);
 
