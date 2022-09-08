@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement.registration;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATABLE_TRIGGER_DATA;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_EVENT_TRIGGER_DATA;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__TRIGGER;
 
 import android.adservices.measurement.RegistrationRequest;
 import android.adservices.measurement.WebTriggerParams;
@@ -29,8 +30,12 @@ import android.net.Uri;
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
 import com.android.adservices.service.measurement.util.Enrollment;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONArray;
@@ -61,17 +66,27 @@ public class TriggerFetcher {
     private final AdIdPermissionFetcher mAdIdPermissionFetcher;
     private final MeasurementHttpClient mNetworkConnection = new MeasurementHttpClient();
     private final EnrollmentDao mEnrollmentDao;
+    private final Flags mFlags;
+    private final AdServicesLogger mLogger;
 
     public TriggerFetcher(Context context) {
-        mEnrollmentDao = EnrollmentDao.getInstance(context);
-        mAdIdPermissionFetcher = new AdIdPermissionFetcher();
+        this(
+                EnrollmentDao.getInstance(context),
+                new AdIdPermissionFetcher(),
+                FlagsFactory.getFlags(),
+                AdServicesLoggerImpl.getInstance());
     }
 
     @VisibleForTesting
-    public TriggerFetcher(EnrollmentDao enrollmentDao,
-            AdIdPermissionFetcher adIdPermissionFetcher) {
+    public TriggerFetcher(
+            EnrollmentDao enrollmentDao,
+            AdIdPermissionFetcher adIdPermissionFetcher,
+            Flags flags,
+            AdServicesLogger logger) {
         mEnrollmentDao = enrollmentDao;
         mAdIdPermissionFetcher = adIdPermissionFetcher;
+        mFlags = flags;
+        mLogger = logger;
     }
 
     private boolean parseTrigger(
@@ -177,6 +192,13 @@ public class TriggerFetcher {
             urlConnection.setRequestMethod("POST");
             urlConnection.setInstanceFollowRedirects(false);
             Map<String, List<String>> headers = urlConnection.getHeaderFields();
+
+            FetcherUtil.emitHeaderMetrics(
+                    mFlags,
+                    mLogger,
+                    AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__TRIGGER,
+                    headers,
+                    registrationUri);
 
             int responseCode = urlConnection.getResponseCode();
             LogUtil.d("Response code = " + responseCode);

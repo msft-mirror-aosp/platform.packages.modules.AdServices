@@ -30,7 +30,8 @@ final class PreEnrolledAdTechForTest {
                 ONE_SDK_MULTIPLE_URLS,
                 SECOND_ENROLLMENT,
                 TOPICS_SAMPLE_APPS,
-                MSMT_SYS_HEALTH_TEST_ENROLLMENT);
+                MSMT_SYS_HEALTH_TEST_ENROLLMENT,
+                LOCAL_SERVER_FOR_MSMT_REMARKETING);
     }
 
     private static final EnrollmentData SIMPLE_ENROLLMENT =
@@ -96,5 +97,18 @@ final class PreEnrolledAdTechForTest {
                     .setAttributionTriggerRegistrationUrl(
                             Arrays.asList("https://localhost:38383/mockServer"))
                     .setAttributionReportingUrl(Arrays.asList("https://localhost:38383/mockServer"))
+                    .build();
+
+    private static final EnrollmentData LOCAL_SERVER_FOR_MSMT_REMARKETING =
+            new EnrollmentData.Builder()
+                    .setEnrollmentId("E6")
+                    .setCompanyId("1004")
+                    .setAttributionSourceRegistrationUrl(
+                            Arrays.asList("https://localhost:8080/source"))
+                    .setAttributionTriggerRegistrationUrl(
+                            Arrays.asList("https://localhost:8080/trigger"))
+                    .setAttributionReportingUrl(Arrays.asList("https://localhost:8080"))
+                    .setRemarketingResponseBasedRegistrationUrl(
+                            Arrays.asList("https://localhost:8080"))
                     .build();
 }

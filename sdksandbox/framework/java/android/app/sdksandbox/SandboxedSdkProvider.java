@@ -23,6 +23,8 @@ import android.os.Bundle;
 import android.view.SurfaceControlViewHost.SurfacePackage;
 import android.view.View;
 
+import java.util.Objects;
+
 /**
  * Encapsulates API which SDK sandbox can use to interact with SDKs loaded into it.
  *
@@ -50,6 +52,7 @@ public abstract class SandboxedSdkProvider {
         if (mContext != null) {
             throw new IllegalStateException("Context already set");
         }
+        Objects.requireNonNull(context, "Context cannot be null");
         mContext = context;
     }
 

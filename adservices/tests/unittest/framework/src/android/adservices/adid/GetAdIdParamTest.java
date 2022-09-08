@@ -43,7 +43,7 @@ public final class GetAdIdParamTest {
         assertThat(request.getSdkPackageName()).isEqualTo(SOME_SDK_PACKAGE_NAME);
         assertThat(request.getAppPackageName()).isEqualTo(SOME_PACKAGE_NAME);
 
-        // no file descriptor masharlling.
+        // no file descriptor marshalling.
         assertThat(request.describeContents()).isEqualTo(0);
 
         Parcel parcel = Parcel.obtain();

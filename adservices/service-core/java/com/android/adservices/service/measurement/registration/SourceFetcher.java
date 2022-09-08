@@ -23,6 +23,7 @@ import static com.android.adservices.service.measurement.PrivacyParams.MIN_POST_
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.util.BaseUriExtractor.getBaseUri;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE;
 
 import android.adservices.measurement.RegistrationRequest;
 import android.adservices.measurement.WebSourceParams;
@@ -35,9 +36,13 @@ import android.net.Uri;
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.Web;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONArray;
@@ -71,16 +76,27 @@ public class SourceFetcher {
     private final String mDefaultAndroidAppUriPrefix = mDefaultAndroidAppScheme + "://";
     private final MeasurementHttpClient mNetworkConnection = new MeasurementHttpClient();
     private final EnrollmentDao mEnrollmentDao;
+    private final Flags mFlags;
+    private final AdServicesLogger mLogger;
 
     public SourceFetcher(Context context) {
-        mEnrollmentDao = EnrollmentDao.getInstance(context);
-        mAdIdPermissionFetcher = new AdIdPermissionFetcher();
+        this(
+                EnrollmentDao.getInstance(context),
+                new AdIdPermissionFetcher(),
+                FlagsFactory.getFlags(),
+                AdServicesLoggerImpl.getInstance());
     }
 
     @VisibleForTesting
-    public SourceFetcher(EnrollmentDao enrollmentDao, AdIdPermissionFetcher adIdPermissionFetcher) {
+    public SourceFetcher(
+            EnrollmentDao enrollmentDao,
+            AdIdPermissionFetcher adIdPermissionFetcher,
+            Flags flags,
+            AdServicesLogger logger) {
         mEnrollmentDao = enrollmentDao;
         mAdIdPermissionFetcher = adIdPermissionFetcher;
+        mFlags = flags;
+        mLogger = logger;
     }
 
     private boolean parseCommonSourceParams(
@@ -320,6 +336,13 @@ public class SourceFetcher {
             urlConnection.setRequestProperty("Attribution-Reporting-Source-Info", sourceType);
             urlConnection.setInstanceFollowRedirects(false);
             Map<String, List<String>> headers = urlConnection.getHeaderFields();
+
+            FetcherUtil.emitHeaderMetrics(
+                    mFlags,
+                    mLogger,
+                    AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE,
+                    headers,
+                    registrationUri);
 
             int responseCode = urlConnection.getResponseCode();
             if (!FetcherUtil.isRedirect(responseCode)
