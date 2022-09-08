@@ -79,16 +79,19 @@ public class TopicsService extends Service {
                             appImportanceFilter);
             mTopicsService.init();
         }
-
-        schedulePeriodicJobs();
+        if (hasUserConsent()) {
+            schedulePeriodicJobs();
+        }
     }
 
     private void schedulePeriodicJobs() {
         MaintenanceJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
         EpochJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
+        MddJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
+    }
 
-        // TODO(b/238674236): Schedule this after the boot complete.
-        MddJobService.schedule(this);
+    private boolean hasUserConsent() {
+        return ConsentManager.getInstance(this).getConsent(this.getPackageManager()).isGiven();
     }
 
     @Override

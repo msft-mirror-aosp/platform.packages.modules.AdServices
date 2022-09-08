@@ -63,7 +63,7 @@ public class ManifestBasedAdtechAccessResolver implements IAccessResolver {
         if (mUrl == null || TextUtils.isEmpty(mUrl.toString())) {
             return false;
         }
-        String uriWithoutParams = mUrl.toString().split("\\?")[0];
+        String uriWithoutParams = mUrl.buildUpon().clearQuery().fragment(null).build().toString();
         EnrollmentData enrollment =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(uriWithoutParams);
         boolean enrollmentKnown = (enrollment != null) && (enrollment.getEnrollmentId() != null);

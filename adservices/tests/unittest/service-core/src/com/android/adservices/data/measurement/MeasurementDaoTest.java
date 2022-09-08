@@ -920,27 +920,50 @@ public class MeasurementDaoTest {
     @Test
     public void testGetSourceEventReports() {
         List<Source> sourceList = new ArrayList<>();
-        sourceList.add(SourceFixture.getValidSourceBuilder()
-                .setId("1").setEventId(3).build());
-        sourceList.add(SourceFixture.getValidSourceBuilder()
-                .setId("2").setEventId(4).build());
+        sourceList.add(
+                SourceFixture.getValidSourceBuilder()
+                        .setId("1")
+                        .setEventId(3)
+                        .setEnrollmentId("1")
+                        .build());
+        sourceList.add(
+                SourceFixture.getValidSourceBuilder()
+                        .setId("2")
+                        .setEventId(4)
+                        .setEnrollmentId("1")
+                        .build());
+        // Should always be ignored
+        sourceList.add(
+                SourceFixture.getValidSourceBuilder()
+                        .setId("3")
+                        .setEventId(4)
+                        .setEnrollmentId("2")
+                        .build());
 
         // Should match with source 1
         List<EventReport> reportList1 = new ArrayList<>();
-        reportList1.add(new EventReport.Builder().setId("1").setSourceId(3).build());
-        reportList1.add(new EventReport.Builder().setId("7").setSourceId(3).build());
+        reportList1.add(
+                new EventReport.Builder().setId("1").setSourceId(3).setEnrollmentId("1").build());
+        reportList1.add(
+                new EventReport.Builder().setId("7").setSourceId(3).setEnrollmentId("1").build());
 
         // Should match with source 2
         List<EventReport> reportList2 = new ArrayList<>();
-        reportList2.add(new EventReport.Builder().setId("3").setSourceId(4).build());
-        reportList2.add(new EventReport.Builder().setId("8").setSourceId(4).build());
+        reportList2.add(
+                new EventReport.Builder().setId("3").setSourceId(4).setEnrollmentId("1").build());
+        reportList2.add(
+                new EventReport.Builder().setId("8").setSourceId(4).setEnrollmentId("1").build());
 
         List<EventReport> reportList3 = new ArrayList<>();
         // Should not match with any source
-        reportList3.add(new EventReport.Builder().setId("2").setSourceId(5).build());
-        reportList3.add(new EventReport.Builder().setId("4").setSourceId(6).build());
-        reportList3.add(new EventReport.Builder().setId("5").setSourceId(1).build());
-        reportList3.add(new EventReport.Builder().setId("6").setSourceId(2).build());
+        reportList3.add(
+                new EventReport.Builder().setId("2").setSourceId(5).setEnrollmentId("1").build());
+        reportList3.add(
+                new EventReport.Builder().setId("4").setSourceId(6).setEnrollmentId("1").build());
+        reportList3.add(
+                new EventReport.Builder().setId("5").setSourceId(1).setEnrollmentId("1").build());
+        reportList3.add(
+                new EventReport.Builder().setId("6").setSourceId(2).setEnrollmentId("1").build());
 
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         Objects.requireNonNull(db);
@@ -949,6 +972,7 @@ public class MeasurementDaoTest {
                     ContentValues values = new ContentValues();
                     values.put(SourceContract.ID, source.getId());
                     values.put(SourceContract.EVENT_ID, source.getEventId());
+                    values.put(SourceContract.ENROLLMENT_ID, source.getEnrollmentId());
                     db.insert(SourceContract.TABLE, null, values);
                 });
         Stream.of(reportList1, reportList2, reportList3)
@@ -958,6 +982,9 @@ public class MeasurementDaoTest {
                             ContentValues values = new ContentValues();
                             values.put(EventReportContract.ID, eventReport.getId());
                             values.put(EventReportContract.SOURCE_ID, eventReport.getSourceId());
+                            values.put(
+                                    EventReportContract.ENROLLMENT_ID,
+                                    eventReport.getEnrollmentId());
                             db.insert(EventReportContract.TABLE, null, values);
                         });
 

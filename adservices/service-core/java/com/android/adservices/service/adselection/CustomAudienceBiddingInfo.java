@@ -32,10 +32,8 @@ import java.util.Objects;
 @AutoValue
 public abstract class CustomAudienceBiddingInfo {
 
-    /**
-     * @return Uri that is used for getting Bidding logic
-     */
-    public abstract Uri getBiddingLogicUrl();
+    /** @return Uri that is used for getting Bidding logic */
+    public abstract Uri getBiddingLogicUri();
 
     /**
      * @return logic for buyer decision used in bidding
@@ -56,20 +54,22 @@ public abstract class CustomAudienceBiddingInfo {
 
     /**
      * Creates an object of CustomAudienceBiddingInfo
-     * @param biddingLogicUrl url that fetches bidding logic
+     *
+     * @param biddingLogicUri URI that fetches bidding logic
      * @param buyerDecisionLogicJs JS that helps in making bidding decision
      * @param customAudienceSignals signals for CA
      * @return an instance of CustomAudienceBiddingInfo
      */
     public static CustomAudienceBiddingInfo create(
-            @NonNull Uri biddingLogicUrl,
+            @NonNull Uri biddingLogicUri,
             @NonNull String buyerDecisionLogicJs,
             @NonNull CustomAudienceSignals customAudienceSignals) {
-        Objects.requireNonNull(biddingLogicUrl);
+        Objects.requireNonNull(biddingLogicUri);
         Objects.requireNonNull(buyerDecisionLogicJs);
         Objects.requireNonNull(customAudienceSignals);
 
-        return builder().setBiddingLogicUrl(biddingLogicUrl)
+        return builder()
+                .setBiddingLogicUri(biddingLogicUri)
                 .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                 .setCustomAudienceSignals(customAudienceSignals)
                 .build();
@@ -86,7 +86,7 @@ public abstract class CustomAudienceBiddingInfo {
         Objects.requireNonNull(customAudience);
         Objects.requireNonNull(buyerDecisionLogicJs);
 
-        Uri biddingLogicUrl = customAudience.getBiddingLogicUrl();
+        Uri biddingLogicUri = customAudience.getBiddingLogicUri();
         CustomAudienceSignals customAudienceSignals =
                 new CustomAudienceSignals(
                         customAudience.getOwner(),
@@ -96,7 +96,8 @@ public abstract class CustomAudienceBiddingInfo {
                         customAudience.getExpirationTime(),
                         customAudience.getUserBiddingSignals());
 
-        return builder().setBiddingLogicUrl(biddingLogicUrl)
+        return builder()
+                .setBiddingLogicUri(biddingLogicUri)
                 .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                 .setCustomAudienceSignals(customAudienceSignals)
                 .build();
@@ -105,8 +106,8 @@ public abstract class CustomAudienceBiddingInfo {
     /** Builder for {@link CustomAudienceBiddingInfo} */
     @AutoValue.Builder
     public abstract static class Builder {
-        /** Sets the BiddingLogicUrl. */
-        public abstract Builder setBiddingLogicUrl(Uri biddingUri);
+        /** Sets the BiddingLogicUri. */
+        public abstract Builder setBiddingLogicUri(Uri biddingUri);
 
         /** Sets the BuyerDecisionLogicJs. */
         public abstract Builder setBuyerDecisionLogicJs(String buyerDecisionLogicJs);

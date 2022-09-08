@@ -87,8 +87,12 @@ public class AdServicesFrameworkInitializer {
 
         LogUtil.d("Registering AdServices's MeasurementManager.");
         SystemServiceRegistry.registerContextAwareService(
-                MEASUREMENT_SERVICE, MeasurementManager.class,
-                (c) -> new MeasurementManager(c));
+                MEASUREMENT_SERVICE, MeasurementManager.class, MeasurementManager::new);
+        // TODO(b/242889021): don't use this workaround on devices that have proper fix
+        SdkSandboxSystemServiceRegistry.getInstance()
+                .registerServiceMutator(
+                        MEASUREMENT_SERVICE,
+                        (service, ctx) -> ((MeasurementManager) service).initialize(ctx));
 
         LogUtil.d("Registering AdServices's AdIdManager.");
         SystemServiceRegistry.registerContextAwareService(

@@ -15,6 +15,8 @@
  */
 package android.adservices.adid;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
@@ -36,9 +38,22 @@ public final class GetAdIdResultTest {
         p.setDataPosition(0);
 
         GetAdIdResult fromParcel = GetAdIdResult.CREATOR.createFromParcel(p);
+        assertEquals(GetAdIdResult.CREATOR.newArray(1).length, 1);
 
         assertEquals(fromParcel.getAdId(), "UNITTEST_ADID");
         assertEquals(fromParcel.isLatEnabled(), true);
+
+        assertEquals(fromParcel.equals(response), true);
+        assertEquals(fromParcel.equals(fromParcel), true);
+        assertEquals(fromParcel.equals("UNITTEST_ADID"), false);
+
+        assertEquals(fromParcel.hashCode(), response.hashCode());
+
+        assertEquals(response.getErrorMessage(), null);
+
+        assertEquals(response.describeContents(), 0);
+
+        assertThat(response.toString()).isNotNull();
     }
 
     @Test

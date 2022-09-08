@@ -18,6 +18,8 @@ package com.android.tests.sandbox.topics;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import android.adservices.clients.topics.AdvertisingTopicsClient;
+import android.adservices.topics.GetTopicsResponse;
 import android.annotation.NonNull;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
@@ -58,10 +60,7 @@ public class SandboxedTopicsManagerTest {
     private static final int EPOCH_JOB_ID = 2;
 
     // Override the Epoch Job Period to this value to speed up the epoch computation.
-    private static final long TEST_EPOCH_JOB_PERIOD_MS = 6000;
-
-    // Allow SDK to start as it takes longer after enabling more checks.
-    private static final long EXECUTION_WAITING_TIME = 500;
+    private static final long TEST_EPOCH_JOB_PERIOD_MS = 3000;
 
     // Default Epoch Period.
     private static final long TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000; // 7 days.
@@ -74,18 +73,63 @@ public class SandboxedTopicsManagerTest {
             InstrumentationRegistry.getInstrumentation().getContext();
 
     @Before
-    public void setup() throws TimeoutException {
+    public void setup() throws TimeoutException, InterruptedException {
+        // We need to skip 3 epochs so that if there is any usage from other test runs, it will
+        // not be used for epoch retrieval.
+        Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
+
         // Start a foreground activity
         SimpleActivity.startAndWaitForSimpleActivity(sContext, Duration.ofMillis(1000));
+        overridingBeforeTest();
     }
 
     @After
     public void shutDown() {
+        overridingAfterTest();
         SimpleActivity.stopSimpleActivity(sContext);
     }
 
     @Test
     public void loadSdkAndRunTopicsApi() throws Exception {
+        final SdkSandboxManager sdkSandboxManager =
+                sContext.getSystemService(SdkSandboxManager.class);
+
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+
+        // Let EpochJobService finish onStart() when first getting scheduled.
+        Thread.sleep(TEST_EPOCH_JOB_PERIOD_MS);
+
+        // Call Topics API once to record usage for epoch computation, so that SDK can get topics
+        // when calling Topics API.
+        // Note this invocation mocks SDK calling Topics API by setting SdkName. This way avoids
+        // the async problem between epoch computation and Topics API invocation from SDK.
+        AdvertisingTopicsClient advertisingTopicsClient =
+                new AdvertisingTopicsClient.Builder()
+                        .setContext(sContext)
+                        .setSdkName(SDK_NAME)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+        GetTopicsResponse response = advertisingTopicsClient.getTopics().get();
+        assertThat(response.getTopics()).isEmpty();
+
+        // Now force the Epoch Computation Job. This should be done in the same epoch for
+        // callersCanLearnMap to have the entry for processing.
+        forceEpochComputationJob();
+
+        // Wait to the next epoch.
+        Thread.sleep(TEST_EPOCH_JOB_PERIOD_MS);
+
+        sdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), CALLBACK_EXECUTOR, callback);
+
+        // This verifies that the Sdk1 in the Sandbox gets back the correct topic.
+        // If the Sdk1 did not get correct topic, it will trigger the callback.onLoadSdkError
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+    }
+
+    private void overridingBeforeTest() {
+        overridingAdservicesLoggingLevel("VERBOSE");
+        // Turn off MDD to avoid model mismatching
+        disableMddBackgroundTasks(true);
         overrideDisableTopicsEnrollmentCheck("1");
         // The setup for this test:
         // SandboxedTopicsManagerTest is the test app. It will load the Sdk1 into the Sandbox.
@@ -103,35 +147,15 @@ public class SandboxedTopicsManagerTest {
 
         // We need to turn off random topic so that we can verify the returned topic.
         overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+    }
 
-        // Turn off MDD to avoid model mismatching
-        switchOnAndOffMDD(true);
-
-        final SdkSandboxManager sdkSandboxManager =
-                sContext.getSystemService(SdkSandboxManager.class);
-
-        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
-
-        sdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), CALLBACK_EXECUTOR, callback);
-
-        Thread.sleep(EXECUTION_WAITING_TIME);
-
-        // Now force the Epoch Computation Job. This should be done in the same epoch for
-        // callersCanLearnMap to have the entry for processing.
-        forceEpochComputationJob();
-
-        // Wait to the next epoch.
-        Thread.sleep(TEST_EPOCH_JOB_PERIOD_MS);
-
-        // This verifies that the Sdk1 in the Sandbox gets back the correct topic.
-        // If the Sdk1 did not get correct topic, it will trigger the callback.onLoadSdkError
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
-
-        // Reset back the original values.
+    // Reset back the original values.
+    private void overridingAfterTest() {
         overrideDisableTopicsEnrollmentCheck("0");
         overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
         overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
-        switchOnAndOffMDD(false);
+        disableMddBackgroundTasks(false);
+        overridingAdservicesLoggingLevel("INFO");
     }
 
     // Override the flag to disable Topics enrollment check.
@@ -160,7 +184,7 @@ public class SandboxedTopicsManagerTest {
     }
 
     // Switch on/off for MDD service. Default value is false, which means MDD is enabled.
-    private void switchOnAndOffMDD(boolean isSwitchedOff) {
+    private void disableMddBackgroundTasks(boolean isSwitchedOff) {
         ShellUtils.runShellCommand(
                 "setprop debug.adservices.mdd_background_task_kill_switch " + isSwitchedOff);
     }
@@ -169,6 +193,10 @@ public class SandboxedTopicsManagerTest {
     private void forceEpochComputationJob() {
         ShellUtils.runShellCommand(
                 "cmd jobscheduler run -f" + " " + getAdServicesPackageName() + " " + EPOCH_JOB_ID);
+    }
+
+    private void overridingAdservicesLoggingLevel(String loggingLevel) {
+        ShellUtils.runShellCommand("setprop log.tag.adservices %s", loggingLevel);
     }
 
     // Used to get the package name. Copied over from com.android.adservices.AndroidServiceBinder

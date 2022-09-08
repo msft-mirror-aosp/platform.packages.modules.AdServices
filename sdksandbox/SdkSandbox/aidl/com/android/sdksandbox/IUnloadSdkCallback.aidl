@@ -16,19 +16,9 @@
 
 package com.android.sdksandbox;
 
-import android.annotation.NonNull;
-import android.app.sdksandbox.ISdkToServiceCallback;
-import android.app.sdksandbox.SdkSandboxController;
+import com.android.sdksandbox.SandboxLatencyInfo;
 
-final class SdkSandboxControllerImpl implements SdkSandboxController {
-
-    private final String mClientPackageName;
-    private final ISdkToServiceCallback mManagerService;
-
-    // TODO(b/240671642): Add a CTS test setup for sdk-sandbox link
-    SdkSandboxControllerImpl(
-            @NonNull String clientPackageName, @NonNull ISdkToServiceCallback callback) {
-        mClientPackageName = clientPackageName;
-        mManagerService = callback;
-    }
+/** @hide */
+oneway interface IUnloadSdkCallback {
+    void onUnloadSdk(in SandboxLatencyInfo sandboxLatencyInfo);
 }

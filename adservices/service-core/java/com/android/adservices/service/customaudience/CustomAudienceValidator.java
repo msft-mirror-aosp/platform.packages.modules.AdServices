@@ -127,13 +127,13 @@ public class CustomAudienceValidator implements Validator<CustomAudience> {
                         buyer,
                         CUSTOM_AUDIENCE_CLASS_NAME,
                         DAILY_UPDATE_URI_FIELD_NAME)
-                .addValidation(customAudience.getDailyUpdateUrl(), violations);
+                .addValidation(customAudience.getDailyUpdateUri(), violations);
         new AdTechUriValidator(
                         ValidatorUtil.AD_TECH_ROLE_BUYER,
                         buyer,
                         CUSTOM_AUDIENCE_CLASS_NAME,
                         BIDDING_LOGIC_URI_FIELD_NAME)
-                .addValidation(customAudience.getBiddingLogicUrl(), violations);
+                .addValidation(customAudience.getBiddingLogicUri(), violations);
         if (customAudience.getUserBiddingSignals() != null) {
             mUserBiddingSignalsValidator.addValidation(
                     customAudience.getUserBiddingSignals().toString(), violations);

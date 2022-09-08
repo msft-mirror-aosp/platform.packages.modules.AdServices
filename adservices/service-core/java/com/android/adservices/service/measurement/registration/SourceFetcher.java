@@ -15,14 +15,15 @@
  */
 package com.android.adservices.service.measurement.registration;
 
-import static com.android.adservices.service.measurement.PrivacyParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_INSTALL_ATTRIBUTION_WINDOW;
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_POST_INSTALL_EXCLUSIVITY_WINDOW;
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_INSTALL_ATTRIBUTION_WINDOW;
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_POST_INSTALL_EXCLUSIVITY_WINDOW;
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.util.BaseUriExtractor.getBaseUri;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE;
 
 import android.adservices.measurement.RegistrationRequest;
 import android.adservices.measurement.WebSourceParams;
@@ -35,9 +36,13 @@ import android.net.Uri;
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.Web;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONArray;
@@ -66,21 +71,28 @@ import java.util.function.Function;
  */
 public class SourceFetcher {
     private final ExecutorService mIoExecutor = AdServicesExecutors.getBlockingExecutor();
-    private final AdIdPermissionFetcher mAdIdPermissionFetcher;
     private final String mDefaultAndroidAppScheme = "android-app";
     private final String mDefaultAndroidAppUriPrefix = mDefaultAndroidAppScheme + "://";
     private final MeasurementHttpClient mNetworkConnection = new MeasurementHttpClient();
     private final EnrollmentDao mEnrollmentDao;
+    private final Flags mFlags;
+    private final AdServicesLogger mLogger;
 
     public SourceFetcher(Context context) {
-        mEnrollmentDao = EnrollmentDao.getInstance(context);
-        mAdIdPermissionFetcher = new AdIdPermissionFetcher();
+        this(
+                EnrollmentDao.getInstance(context),
+                FlagsFactory.getFlags(),
+                AdServicesLoggerImpl.getInstance());
     }
 
     @VisibleForTesting
-    public SourceFetcher(EnrollmentDao enrollmentDao, AdIdPermissionFetcher adIdPermissionFetcher) {
+    public SourceFetcher(
+            EnrollmentDao enrollmentDao,
+            Flags flags,
+            AdServicesLogger logger) {
         mEnrollmentDao = enrollmentDao;
-        mAdIdPermissionFetcher = adIdPermissionFetcher;
+        mFlags = flags;
+        mLogger = logger;
     }
 
     private boolean parseCommonSourceParams(
@@ -90,7 +102,8 @@ public class SourceFetcher {
             boolean shouldValidateDestination,
             SourceRegistration.Builder result,
             boolean isWebSource,
-            boolean isAllowDebugKey)
+            boolean isAllowDebugKey,
+            boolean isAdIdPermissionGranted)
             throws JSONException {
         final boolean hasRequiredParams = hasRequiredParams(json, shouldValidateDestination);
         if (!hasRequiredParams) {
@@ -102,7 +115,7 @@ public class SourceFetcher {
         result.setSourceEventId(json.getLong(SourceHeaderContract.SOURCE_EVENT_ID));
         if (!json.isNull(SourceHeaderContract.EXPIRY)) {
             long expiry =
-                    extractValidValue(
+                    extractValidNumberInRange(
                             json.getLong(SourceHeaderContract.EXPIRY),
                             MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
                             MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
@@ -111,14 +124,19 @@ public class SourceFetcher {
         if (!json.isNull(SourceHeaderContract.PRIORITY)) {
             result.setSourcePriority(json.getLong(SourceHeaderContract.PRIORITY));
         }
-        boolean isWebAllow = isWebSource && isAllowDebugKey;
-        boolean isAppAllow = !isWebSource && mAdIdPermissionFetcher.isAdIdPermissionEnabled();
+        boolean isWebAllow = isWebSource && isAllowDebugKey && isAdIdPermissionGranted;
+        boolean isAppAllow = !isWebSource && isAdIdPermissionGranted;
         if (!json.isNull(SourceHeaderContract.DEBUG_KEY) && (isWebAllow || isAppAllow)) {
-            result.setDebugKey(json.getLong(SourceHeaderContract.DEBUG_KEY));
+            try {
+                result.setDebugKey(
+                        Long.parseUnsignedLong(json.getString(SourceHeaderContract.DEBUG_KEY)));
+            } catch (NumberFormatException e) {
+                LogUtil.e(e, "Parsing source debug key failed");
+            }
         }
         if (!json.isNull(SourceHeaderContract.INSTALL_ATTRIBUTION_WINDOW_KEY)) {
             long installAttributionWindow =
-                    extractValidValue(
+                    extractValidNumberInRange(
                             json.getLong(SourceHeaderContract.INSTALL_ATTRIBUTION_WINDOW_KEY),
                             MIN_INSTALL_ATTRIBUTION_WINDOW,
                             MAX_INSTALL_ATTRIBUTION_WINDOW);
@@ -126,7 +144,7 @@ public class SourceFetcher {
         }
         if (!json.isNull(SourceHeaderContract.POST_INSTALL_EXCLUSIVITY_WINDOW_KEY)) {
             long installCooldownWindow =
-                    extractValidValue(
+                    extractValidNumberInRange(
                             json.getLong(SourceHeaderContract.POST_INSTALL_EXCLUSIVITY_WINDOW_KEY),
                             MIN_POST_INSTALL_EXCLUSIVITY_WINDOW,
                             MAX_POST_INSTALL_EXCLUSIVITY_WINDOW);
@@ -135,6 +153,11 @@ public class SourceFetcher {
 
         // This "filter_data" field is used to generate reports.
         if (!json.isNull(SourceHeaderContract.FILTER_DATA)) {
+            if (!FetcherUtil.areValidAttributionFilters(
+                    json.optJSONObject(SourceHeaderContract.FILTER_DATA))) {
+                LogUtil.d("Source filter-data is invalid.");
+                return false;
+            }
             result.setAggregateFilterData(
                     json.getJSONObject(SourceHeaderContract.FILTER_DATA).toString());
         }
@@ -208,7 +231,7 @@ public class SourceFetcher {
                 && Objects.equals(expectedValue, Uri.parse(json.getString(fieldName)));
     }
 
-    private long extractValidValue(long value, long lowerLimit, long upperLimit) {
+    private long extractValidNumberInRange(long value, long lowerLimit, long upperLimit) {
         if (value < lowerLimit) {
             return lowerLimit;
         } else if (value > upperLimit) {
@@ -227,7 +250,8 @@ public class SourceFetcher {
             @NonNull Map<String, List<String>> headers,
             @NonNull List<SourceRegistration> addToResults,
             boolean isWebSource,
-            boolean isAllowDebugKey) {
+            boolean isAllowDebugKey,
+            boolean isAdIdPermissionGranted) {
         SourceRegistration.Builder result = new SourceRegistration.Builder();
         result.setTopOrigin(topOrigin);
         result.setEnrollmentId(enrollmentId);
@@ -246,12 +270,13 @@ public class SourceFetcher {
                             shouldValidateDestination,
                             result,
                             isWebSource,
-                            isAllowDebugKey);
+                            isAllowDebugKey,
+                            isAdIdPermissionGranted);
             if (!isValid) {
                 return false;
             }
             if (!json.isNull(SourceHeaderContract.AGGREGATION_KEYS)) {
-                if (!isValidAggregateSource(
+                if (!areValidAggregationKeys(
                         json.getJSONArray(SourceHeaderContract.AGGREGATION_KEYS))) {
                     return false;
                 }
@@ -284,7 +309,8 @@ public class SourceFetcher {
             boolean shouldProcessRedirects,
             @NonNull List<SourceRegistration> registrationsOut,
             boolean isWebSource,
-            boolean isAllowDebugKey) {
+            boolean isAllowDebugKey,
+            boolean isAdIdPermissionGranted) {
         // Require https.
         if (!registrationUri.getScheme().equals("https")) {
             return;
@@ -316,9 +342,16 @@ public class SourceFetcher {
             urlConnection.setInstanceFollowRedirects(false);
             Map<String, List<String>> headers = urlConnection.getHeaderFields();
 
+            FetcherUtil.emitHeaderMetrics(
+                    mFlags,
+                    mLogger,
+                    AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE,
+                    headers,
+                    registrationUri);
+
             int responseCode = urlConnection.getResponseCode();
-            if (!ResponseBasedFetcher.isRedirect(responseCode)
-                    && !ResponseBasedFetcher.isSuccess(responseCode)) {
+            if (!FetcherUtil.isRedirect(responseCode)
+                    && !FetcherUtil.isSuccess(responseCode)) {
                 return;
             }
 
@@ -332,14 +365,15 @@ public class SourceFetcher {
                             headers,
                             registrationsOut,
                             isWebSource,
-                            isAllowDebugKey);
+                            isAllowDebugKey,
+                            isAdIdPermissionGranted);
             if (!parsed) {
                 LogUtil.d("Failed to parse");
                 return;
             }
 
             if (shouldProcessRedirects) {
-                List<Uri> redirects = ResponseBasedFetcher.parseRedirects(headers);
+                List<Uri> redirects = FetcherUtil.parseRedirects(headers);
                 if (!redirects.isEmpty()) {
                     processAsyncRedirects(
                             redirects,
@@ -347,7 +381,8 @@ public class SourceFetcher {
                             sourceType,
                             registrationsOut,
                             isWebSource,
-                            isAllowDebugKey);
+                            isAllowDebugKey,
+                            isAdIdPermissionGranted);
                 }
             }
         } catch (IOException e) {
@@ -363,7 +398,8 @@ public class SourceFetcher {
             String sourceInfo,
             List<SourceRegistration> registrationsOut,
             boolean isWebSource,
-            boolean isAllowDebugKey) {
+            boolean isAllowDebugKey,
+            boolean isAdIdPermissionGranted) {
         try {
             Function<Uri, CompletableFuture<Void>> fetchSourceFromRedirectFuture =
                     redirect ->
@@ -379,7 +415,8 @@ public class SourceFetcher {
                                                     /*shouldProcessRedirects*/ false,
                                                     registrationsOut,
                                                     isWebSource,
-                                                    isAllowDebugKey),
+                                                    isAllowDebugKey,
+                                                    isAdIdPermissionGranted),
                                     mIoExecutor);
             CompletableFuture.allOf(
                             redirects.stream()
@@ -408,7 +445,8 @@ public class SourceFetcher {
                 true,
                 out,
                 false,
-                false);
+                false,
+                request.isAdIdPermissionGranted());
         if (out.isEmpty()) {
             return Optional.empty();
         } else {
@@ -418,7 +456,7 @@ public class SourceFetcher {
 
     /** Fetch an attribution source type registration. */
     public Optional<List<SourceRegistration>> fetchWebSources(
-            @NonNull WebSourceRegistrationRequest request) {
+            @NonNull WebSourceRegistrationRequest request, boolean isAdIdPermissionGranted) {
         List<SourceRegistration> out = new ArrayList<>();
         processWebSourcesFetch(
                 request.getTopOriginUri(),
@@ -426,7 +464,8 @@ public class SourceFetcher {
                 request.getAppDestination(),
                 request.getWebDestination(),
                 request.getInputEvent() == null ? "event" : "navigation",
-                out);
+                out,
+                isAdIdPermissionGranted);
         if (out.isEmpty()) {
             return Optional.empty();
         } else {
@@ -440,7 +479,8 @@ public class SourceFetcher {
             Uri appDestination,
             Uri webDestination,
             String sourceType,
-            List<SourceRegistration> registrationsOut) {
+            List<SourceRegistration> registrationsOut,
+            boolean isAdIdPermissionGranted) {
         try {
             CompletableFuture.allOf(
                             sourceParamsList.stream()
@@ -452,7 +492,8 @@ public class SourceFetcher {
                                                             webDestination,
                                                             sourceType,
                                                             registrationsOut,
-                                                            sourceParams))
+                                                            sourceParams,
+                                                            isAdIdPermissionGranted))
                                     .toArray(CompletableFuture<?>[]::new))
                     .get();
         } catch (InterruptedException | ExecutionException e) {
@@ -466,7 +507,8 @@ public class SourceFetcher {
             Uri webDestination,
             String sourceType,
             List<SourceRegistration> registrationsOut,
-            WebSourceParams sourceParams) {
+            WebSourceParams sourceParams,
+            boolean isAdIdPermissionGranted) {
         return CompletableFuture.runAsync(
                 () ->
                         fetchSource(
@@ -479,15 +521,33 @@ public class SourceFetcher {
                                 /* shouldProcessRedirects*/ false,
                                 registrationsOut,
                                 true,
-                                sourceParams.isDebugKeyAllowed()),
+                                sourceParams.isDebugKeyAllowed(),
+                                isAdIdPermissionGranted),
                 mIoExecutor);
     }
 
-    private boolean isValidAggregateSource(JSONArray aggregationKeys) {
+    private static boolean areValidAggregationKeys(JSONArray aggregationKeys) {
         if (aggregationKeys.length() > MAX_AGGREGATE_KEYS_PER_REGISTRATION) {
-            LogUtil.d(
-                    "Aggregate source has more keys than permitted. %s", aggregationKeys.length());
+            LogUtil.d("Aggregation-keys have more entries than permitted. %s",
+                    aggregationKeys.length());
             return false;
+        }
+        for (int i = 0; i < aggregationKeys.length(); i++) {
+            JSONObject keyObj = aggregationKeys.optJSONObject(i);
+            if (keyObj == null) {
+                LogUtil.d("SourceFetcher: aggregation key failed to parse.");
+                return false;
+            }
+            String id = keyObj.optString("id");
+            if (!FetcherUtil.isValidAggregateKeyId(id)) {
+                LogUtil.d("SourceFetcher: aggregation key ID is invalid. %s", id);
+                return false;
+            }
+            String keyPiece = keyObj.optString("key_piece");
+            if (!FetcherUtil.isValidAggregateKeyPiece(keyPiece)) {
+                LogUtil.d("SourceFetcher: aggregation key-piece is invalid. %s", keyPiece);
+                return false;
+            }
         }
         return true;
     }

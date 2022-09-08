@@ -172,7 +172,7 @@ public final class AdSelectionConfig implements Parcelable {
     }
 
     /**
-     * @return the URL used to retrieve the JS code containing the seller/SSP scoreAd function used
+     * @return the URI used to retrieve the JS code containing the seller/SSP scoreAd function used
      *     during the ad selection and reporting processes
      */
     @NonNull
@@ -222,7 +222,7 @@ public final class AdSelectionConfig implements Parcelable {
     }
 
     /**
-     * @return URL endpoint of sell-side trusted signal from which creative specific realtime
+     * @return URI endpoint of sell-side trusted signal from which creative specific realtime
      *     information can be fetched from.
      */
     @NonNull
@@ -331,7 +331,7 @@ public final class AdSelectionConfig implements Parcelable {
         }
 
         /**
-         * Sets the URL endpoint of sell-side trusted signal from which creative specific realtime
+         * Sets the URI endpoint of sell-side trusted signal from which creative specific realtime
          * information can be fetched from.
          *
          * <p>See {@link #getTrustedScoringSignalsUri()} for more details.

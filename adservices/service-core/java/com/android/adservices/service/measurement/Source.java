@@ -627,22 +627,21 @@ public class Source {
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
             String id = jsonObject.getString("id");
-            String hexString = jsonObject.getString("key_piece");
-            if (hexString.startsWith("0x")) {
-                hexString = hexString.substring(2);
-            }
+            // Remove "0x" prefix.
+            String hexString = jsonObject.getString("key_piece").substring(2);
             BigInteger bigInteger = new BigInteger(hexString, 16);
             aggregateSourceMap.put(id, bigInteger);
         }
-        return Optional.of(
+        AggregatableAttributionSource.Builder asBuilder =
                 new AggregatableAttributionSource.Builder()
-                        .setAggregatableSource(aggregateSourceMap)
-                        .setAggregateFilterData(
-                                new AggregateFilterData.Builder()
-                                        .buildAggregateFilterData(
-                                                new JSONObject(this.mAggregateFilterData))
-                                        .build())
-                        .build());
+                        .setAggregatableSource(aggregateSourceMap);
+        if (this.mAggregateFilterData != null) {
+            asBuilder.setAggregateFilterData(
+                    new AggregateFilterData.Builder()
+                            .buildAggregateFilterData(new JSONObject(this.mAggregateFilterData))
+                            .build());
+        }
+        return Optional.of(asBuilder.build());
     }
 
     private List<FakeReport> generateVtcDualDestinationPostInstallFakeReports() {

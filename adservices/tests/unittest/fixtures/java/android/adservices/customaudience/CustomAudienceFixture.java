@@ -74,7 +74,7 @@ public final class CustomAudienceFixture {
         return CommonFixture.getUri(buyer, "/update");
     }
 
-    public static Uri getValidBiddingLogicUrlByBuyer(AdTechIdentifier buyer) {
+    public static Uri getValidBiddingLogicUriByBuyer(AdTechIdentifier buyer) {
         return CommonFixture.getUri(buyer, "/bidding/logic/here/");
     }
 
@@ -84,11 +84,11 @@ public final class CustomAudienceFixture {
                 .setName(CustomAudienceFixture.VALID_NAME)
                 .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
                 .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
-                .setDailyUpdateUrl(CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyer))
+                .setDailyUpdateUri(CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyer))
                 .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                 .setTrustedBiddingData(
                         TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(buyer))
-                .setBiddingLogicUrl(CustomAudienceFixture.getValidBiddingLogicUrlByBuyer(buyer))
+                .setBiddingLogicUri(CustomAudienceFixture.getValidBiddingLogicUriByBuyer(buyer))
                 .setAds(AdDataFixture.getValidAdsByBuyer(buyer));
     }
 }

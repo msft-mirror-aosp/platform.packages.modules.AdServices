@@ -30,10 +30,10 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
+import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.LogUtil;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
@@ -151,28 +151,14 @@ public class AppUpdateTest {
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
 
-        overrideDisableTopicsEnrollmentCheck("1");
-        overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
-
-        // We need to turn off random topic so that we can verify the returned topic.
-        overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
-
-        // We need to turn the Consent Manager into debug mode
-        overrideConsentManagerDebugMode();
-
-        // Turn off MDD to avoid model mismatching
-        switchOnAndOffMDD(true);
+        overridingBeforeTest();
 
         registerTopicResponseReceiver();
     }
 
     @After
     public void tearDown() {
-        // Reset back the original values.
-        overrideDisableTopicsEnrollmentCheck("0");
-        overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
-        overridePercentageForRandomTopic(DEFAULT_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
-        switchOnAndOffMDD(false);
+        overridingAfterTest();
     }
 
     @Test
@@ -291,8 +277,33 @@ public class AppUpdateTest {
         sContext.registerReceiver(mTopicsResponseReceiver, topicResponseIntentFilter);
     }
 
+    private void overridingBeforeTest() {
+        overridingAdservicesLoggingLevel("VERBOSE");
+
+        overrideDisableTopicsEnrollmentCheck("1");
+        overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
+
+        // We need to turn off random topic so that we can verify the returned topic.
+        overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+
+        // We need to turn the Consent Manager into debug mode
+        overrideConsentManagerDebugMode();
+
+        // Turn off MDD to avoid model mismatching
+        disableMddBackgroundTasks(true);
+    }
+
+    // Reset back the original values.
+    private void overridingAfterTest() {
+        overrideDisableTopicsEnrollmentCheck("0");
+        overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
+        overridePercentageForRandomTopic(DEFAULT_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+        disableMddBackgroundTasks(false);
+        overridingAdservicesLoggingLevel("INFO");
+    }
+
     // Switch on/off for MDD service. Default value is false, which means MDD is enabled.
-    private void switchOnAndOffMDD(boolean isSwitchedOff) {
+    private void disableMddBackgroundTasks(boolean isSwitchedOff) {
         ShellUtils.runShellCommand(
                 "setprop debug.adservices.mdd_background_task_kill_switch " + isSwitchedOff);
     }
@@ -349,6 +360,10 @@ public class AppUpdateTest {
                         + MAINTENANCE_JOB_ID);
     }
 
+    private void overridingAdservicesLoggingLevel(String loggingLevel) {
+        ShellUtils.runShellCommand("setprop log.tag.adservices %s", loggingLevel);
+    }
+
     // Used to get the package name. Copied over from com.android.adservices.AndroidServiceBinder
     private static String getAdServicesPackageName() {
         final Intent intent = new Intent(TOPICS_SERVICE_NAME);
@@ -357,22 +372,25 @@ public class AppUpdateTest {
                         .queryIntentServices(intent, PackageManager.MATCH_SYSTEM_ONLY);
 
         if (resolveInfos == null || resolveInfos.isEmpty()) {
-            LogUtil.e(
+            Log.e(
+                    TAG,
                     "Failed to find resolveInfo for adServices service. Intent action: "
                             + TOPICS_SERVICE_NAME);
             return null;
         }
 
         if (resolveInfos.size() > 1) {
-            LogUtil.e(
-                    "Found multiple services (%1$s) for the same intent action (%2$s)",
-                    TOPICS_SERVICE_NAME, resolveInfos.toString());
+            Log.e(
+                    TAG,
+                    String.format(
+                            "Found multiple services (%1$s) for the same intent action (%2$s)",
+                            TOPICS_SERVICE_NAME, resolveInfos));
             return null;
         }
 
         final ServiceInfo serviceInfo = resolveInfos.get(0).serviceInfo;
         if (serviceInfo == null) {
-            LogUtil.e("Failed to find serviceInfo for adServices service");
+            Log.e(TAG, "Failed to find serviceInfo for adServices service");
             return null;
         }
 

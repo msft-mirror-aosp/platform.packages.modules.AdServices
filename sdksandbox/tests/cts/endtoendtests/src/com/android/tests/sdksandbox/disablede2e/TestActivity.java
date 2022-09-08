@@ -14,15 +14,8 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.measurement.registration;
+package com.android.tests.sdksandbox.disablede2e;
 
-/** A wrapper class to get Ad ID consent permission info */
-public class AdIdPermissionFetcher {
+import android.app.Activity;
 
-    // TODO : replace with stub ag/19194826
-    private static final long PLATFORM_AD_ID = 0L;
-
-    public boolean isAdIdPermissionEnabled() {
-        return PLATFORM_AD_ID > 0;
-    }
-}
+public class TestActivity extends Activity {}

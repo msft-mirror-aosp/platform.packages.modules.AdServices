@@ -62,7 +62,7 @@ public class DBCustomAudienceBackgroundFetchDataTest {
         assertEquals(CustomAudienceFixture.VALID_NAME, fetchData.getName());
         assertEquals(
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(CommonFixture.VALID_BUYER_1),
-                fetchData.getDailyUpdateUrl());
+                fetchData.getDailyUpdateUri());
         assertEquals(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI, fetchData.getEligibleUpdateTime());
         assertEquals(NUM_VALIDATION_FAILURES_POSITIVE, fetchData.getNumValidationFailures());
         assertEquals(NUM_TIMEOUT_FAILURES_POSITIVE, fetchData.getNumTimeoutFailures());
@@ -75,7 +75,7 @@ public class DBCustomAudienceBackgroundFetchDataTest {
                         .setOwner(CustomAudienceFixture.VALID_OWNER)
                         .setBuyer(CommonFixture.VALID_BUYER_1)
                         .setName(CustomAudienceFixture.VALID_NAME)
-                        .setDailyUpdateUrl(
+                        .setDailyUpdateUri(
                                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
                                         CommonFixture.VALID_BUYER_1))
                         .setEligibleUpdateTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
@@ -86,7 +86,7 @@ public class DBCustomAudienceBackgroundFetchDataTest {
         assertEquals(CustomAudienceFixture.VALID_NAME, fetchData.getName());
         assertEquals(
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(CommonFixture.VALID_BUYER_1),
-                fetchData.getDailyUpdateUrl());
+                fetchData.getDailyUpdateUri());
         assertEquals(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI, fetchData.getEligibleUpdateTime());
         assertEquals(0, fetchData.getNumValidationFailures());
         assertEquals(0, fetchData.getNumTimeoutFailures());
@@ -128,7 +128,7 @@ public class DBCustomAudienceBackgroundFetchDataTest {
         assertEquals(CustomAudienceFixture.VALID_NAME, fetchData.getName());
         assertEquals(
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(CommonFixture.VALID_BUYER_1),
-                fetchData.getDailyUpdateUrl());
+                fetchData.getDailyUpdateUri());
         assertEquals(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI, fetchData.getEligibleUpdateTime());
         assertEquals(NUM_VALIDATION_FAILURES_POSITIVE, fetchData.getNumValidationFailures());
         assertEquals(NUM_TIMEOUT_FAILURES_POSITIVE, fetchData.getNumTimeoutFailures());

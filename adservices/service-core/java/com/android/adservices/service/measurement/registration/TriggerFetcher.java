@@ -15,7 +15,10 @@
  */
 package com.android.adservices.service.measurement.registration;
 
-import static com.android.adservices.service.measurement.PrivacyParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
+import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATABLE_TRIGGER_DATA;
+import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
+import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_EVENT_TRIGGER_DATA;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__TRIGGER;
 
 import android.adservices.measurement.RegistrationRequest;
 import android.adservices.measurement.WebTriggerParams;
@@ -27,8 +30,12 @@ import android.net.Uri;
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
 import com.android.adservices.service.measurement.util.Enrollment;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONArray;
@@ -41,6 +48,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -55,20 +63,26 @@ import java.util.concurrent.ExecutorService;
  */
 public class TriggerFetcher {
     private final ExecutorService mIoExecutor = AdServicesExecutors.getBlockingExecutor();
-    private final AdIdPermissionFetcher mAdIdPermissionFetcher;
     private final MeasurementHttpClient mNetworkConnection = new MeasurementHttpClient();
     private final EnrollmentDao mEnrollmentDao;
+    private final Flags mFlags;
+    private final AdServicesLogger mLogger;
 
     public TriggerFetcher(Context context) {
-        mEnrollmentDao = EnrollmentDao.getInstance(context);
-        mAdIdPermissionFetcher = new AdIdPermissionFetcher();
+        this(
+                EnrollmentDao.getInstance(context),
+                FlagsFactory.getFlags(),
+                AdServicesLoggerImpl.getInstance());
     }
 
     @VisibleForTesting
-    public TriggerFetcher(EnrollmentDao enrollmentDao,
-            AdIdPermissionFetcher adIdPermissionFetcher) {
+    public TriggerFetcher(
+            EnrollmentDao enrollmentDao,
+            Flags flags,
+            AdServicesLogger logger) {
         mEnrollmentDao = enrollmentDao;
-        mAdIdPermissionFetcher = adIdPermissionFetcher;
+        mFlags = flags;
+        mLogger = logger;
     }
 
     private boolean parseTrigger(
@@ -77,7 +91,8 @@ public class TriggerFetcher {
             @NonNull Map<String, List<String>> headers,
             @NonNull List<TriggerRegistration> addToResults,
             boolean isWebSource,
-            boolean isAllowDebugKey) {
+            boolean isAllowDebugKey,
+            boolean isAdIdPermissionGranted) {
         TriggerRegistration.Builder result = new TriggerRegistration.Builder();
         result.setTopOrigin(topOrigin);
         result.setEnrollmentId(enrollmentId);
@@ -89,6 +104,10 @@ public class TriggerFetcher {
         try {
             JSONObject json = new JSONObject(field.get(0));
             if (!json.isNull(TriggerHeaderContract.EVENT_TRIGGER_DATA)) {
+                if (!isValidEventTriggerData(
+                        json.getJSONArray(TriggerHeaderContract.EVENT_TRIGGER_DATA))) {
+                    return false;
+                }
                 result.setEventTriggers(json.getString(TriggerHeaderContract.EVENT_TRIGGER_DATA));
             }
             if (!json.isNull(TriggerHeaderContract.AGGREGATABLE_TRIGGER_DATA)) {
@@ -110,14 +129,15 @@ public class TriggerFetcher {
             if (!json.isNull(TriggerHeaderContract.FILTERS)) {
                 result.setFilters(json.getString(TriggerHeaderContract.FILTERS));
             }
-            boolean isWebAllow = isWebSource && isAllowDebugKey;
-            boolean isAppAllow = !isWebSource && mAdIdPermissionFetcher.isAdIdPermissionEnabled();
+            boolean isWebAllow = isWebSource && isAllowDebugKey && isAdIdPermissionGranted;
+            boolean isAppAllow = !isWebSource && isAdIdPermissionGranted;
             if (!json.isNull(TriggerHeaderContract.DEBUG_KEY) && (isWebAllow || isAppAllow)) {
                 try {
                     result.setDebugKey(
-                            Long.parseLong(json.getString(TriggerHeaderContract.DEBUG_KEY)));
+                            Long.parseUnsignedLong(
+                                    json.getString(TriggerHeaderContract.DEBUG_KEY)));
                 } catch (NumberFormatException e) {
-                    LogUtil.e(e, "Parsing debug key failed");
+                    LogUtil.e(e, "Parsing trigger debug key failed");
                 }
             }
             addToResults.add(result.build());
@@ -140,7 +160,8 @@ public class TriggerFetcher {
             boolean shouldProcessRedirects,
             @NonNull List<TriggerRegistration> registrationsOut,
             boolean isWebSource,
-            boolean isAllowDebugKey) {
+            boolean isAllowDebugKey,
+            boolean isAdIdPermissionGranted) {
         // Require https.
         if (!registrationUri.getScheme().equals("https")) {
             return;
@@ -171,11 +192,18 @@ public class TriggerFetcher {
             urlConnection.setInstanceFollowRedirects(false);
             Map<String, List<String>> headers = urlConnection.getHeaderFields();
 
+            FetcherUtil.emitHeaderMetrics(
+                    mFlags,
+                    mLogger,
+                    AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__TRIGGER,
+                    headers,
+                    registrationUri);
+
             int responseCode = urlConnection.getResponseCode();
             LogUtil.d("Response code = " + responseCode);
 
-            if (!ResponseBasedFetcher.isRedirect(responseCode)
-                    && !ResponseBasedFetcher.isSuccess(responseCode)) {
+            if (!FetcherUtil.isRedirect(responseCode)
+                    && !FetcherUtil.isSuccess(responseCode)) {
                 return;
             }
 
@@ -186,14 +214,15 @@ public class TriggerFetcher {
                             headers,
                             registrationsOut,
                             isWebSource,
-                            isAllowDebugKey);
+                            isAllowDebugKey,
+                            isAdIdPermissionGranted);
             if (!parsed) {
                 LogUtil.d("Failed to parse.");
                 return;
             }
 
             if (shouldProcessRedirects) {
-                List<Uri> redirects = ResponseBasedFetcher.parseRedirects(headers);
+                List<Uri> redirects = FetcherUtil.parseRedirects(headers);
                 for (Uri redirect : redirects) {
                     fetchTrigger(
                             topOrigin,
@@ -201,7 +230,8 @@ public class TriggerFetcher {
                             false,
                             registrationsOut,
                             isWebSource,
-                            isAllowDebugKey);
+                            isAllowDebugKey,
+                            isAdIdPermissionGranted);
                 }
             }
         } catch (IOException e) {
@@ -222,7 +252,13 @@ public class TriggerFetcher {
         }
         List<TriggerRegistration> out = new ArrayList<>();
         fetchTrigger(
-                request.getTopOriginUri(), request.getRegistrationUri(), true, out, false, false);
+                request.getTopOriginUri(),
+                request.getRegistrationUri(),
+                true,
+                out,
+                false,
+                false,
+                request.isAdIdPermissionGranted());
         if (out.isEmpty()) {
             return Optional.empty();
         } else {
@@ -232,9 +268,10 @@ public class TriggerFetcher {
 
     /** Fetch a trigger type registration without redirects. */
     public Optional<List<TriggerRegistration>> fetchWebTriggers(
-            WebTriggerRegistrationRequest request) {
+            WebTriggerRegistrationRequest request, boolean isAdIdPermissionGranted) {
         List<TriggerRegistration> out = new ArrayList<>();
-        processWebTriggersFetch(request.getDestination(), request.getTriggerParams(), out);
+        processWebTriggersFetch(
+                request.getDestination(), request.getTriggerParams(), out, isAdIdPermissionGranted);
 
         if (out.isEmpty()) {
             return Optional.empty();
@@ -246,7 +283,8 @@ public class TriggerFetcher {
     private void processWebTriggersFetch(
             Uri topOrigin,
             List<WebTriggerParams> triggerParamsList,
-            List<TriggerRegistration> registrationsOut) {
+            List<TriggerRegistration> registrationsOut,
+            boolean isAdIdPermissionGranted) {
         try {
             CompletableFuture.allOf(
                             triggerParamsList.stream()
@@ -255,7 +293,8 @@ public class TriggerFetcher {
                                                     createFutureToFetchWebTrigger(
                                                             topOrigin,
                                                             registrationsOut,
-                                                            triggerParams))
+                                                            triggerParams,
+                                                            isAdIdPermissionGranted))
                                     .toArray(CompletableFuture<?>[]::new))
                     .get();
         } catch (InterruptedException | ExecutionException e) {
@@ -266,7 +305,8 @@ public class TriggerFetcher {
     private CompletableFuture<Void> createFutureToFetchWebTrigger(
             Uri topOrigin,
             List<TriggerRegistration> registrationsOut,
-            WebTriggerParams triggerParams) {
+            WebTriggerParams triggerParams,
+            boolean isAdIdPermissionGranted) {
         return CompletableFuture.runAsync(
                 () ->
                         fetchTrigger(
@@ -275,25 +315,70 @@ public class TriggerFetcher {
                                 /* should process redirects*/ false,
                                 registrationsOut,
                                 true,
-                                triggerParams.isDebugKeyAllowed()),
+                                triggerParams.isDebugKeyAllowed(),
+                                isAdIdPermissionGranted),
                 mIoExecutor);
     }
 
-    private boolean isValidAggregateTriggerData(JSONArray aggregateTriggerData) {
-        if (aggregateTriggerData.length() > MAX_AGGREGATE_KEYS_PER_REGISTRATION) {
-            LogUtil.d(
-                    "Aggregate trigger data has more keys than permitted. %s",
-                    aggregateTriggerData.length());
+    private boolean isValidEventTriggerData(JSONArray eventTriggerDataArr) {
+        return eventTriggerDataArr.length() <= MAX_ATTRIBUTION_EVENT_TRIGGER_DATA;
+    }
+
+    private boolean isValidAggregateTriggerData(JSONArray aggregateTriggerDataArr)
+            throws JSONException {
+        if (aggregateTriggerDataArr.length() > MAX_AGGREGATABLE_TRIGGER_DATA) {
+            LogUtil.d("Aggregate trigger data list has more entries than permitted. %s",
+                    aggregateTriggerDataArr.length());
             return false;
+        }
+        for (int i = 0; i < aggregateTriggerDataArr.length(); i++) {
+            JSONObject aggregateTriggerData = aggregateTriggerDataArr.getJSONObject(i);
+            String keyPiece = aggregateTriggerData.optString("key_piece");
+            if (!FetcherUtil.isValidAggregateKeyPiece(keyPiece)) {
+                LogUtil.d("Aggregate trigger data key-piece is invalid. %s", keyPiece);
+                return false;
+            }
+            JSONArray sourceKeys = aggregateTriggerData.optJSONArray("source_keys");
+            if (sourceKeys == null || sourceKeys.length() > MAX_AGGREGATE_KEYS_PER_REGISTRATION) {
+                LogUtil.d("Aggregate trigger data source-keys list failed to parse or has more"
+                        + " entries than permitted.");
+                return false;
+            }
+            for (int j = 0; j < sourceKeys.length(); j++) {
+                String key = sourceKeys.optString(j);
+                if (!FetcherUtil.isValidAggregateKeyId(key)) {
+                    LogUtil.d("Aggregate trigger data source-key is invalid. %s", key);
+                    return false;
+                }
+            }
+            if (!aggregateTriggerData.isNull("filters") && !FetcherUtil.areValidAttributionFilters(
+                    aggregateTriggerData.optJSONObject("filters"))) {
+                LogUtil.d("Aggregate trigger data filters are invalid.");
+                return false;
+            }
+            if (!aggregateTriggerData.isNull("not_filters")
+                    && !FetcherUtil.areValidAttributionFilters(
+                            aggregateTriggerData.optJSONObject("not_filters"))) {
+                LogUtil.d("Aggregate trigger data not-filters are invalid.");
+                return false;
+            }
         }
         return true;
     }
 
     private boolean isValidAggregateValues(JSONObject aggregateValues) {
         if (aggregateValues.length() > MAX_AGGREGATE_KEYS_PER_REGISTRATION) {
-            LogUtil.d(
-                    "Aggregate values have more keys than permitted. %s", aggregateValues.length());
+            LogUtil.d("Aggregate values have more keys than permitted. %s",
+                    aggregateValues.length());
             return false;
+        }
+        Iterator<String> ids = aggregateValues.keys();
+        while (ids.hasNext()) {
+            String id = ids.next();
+            if (!FetcherUtil.isValidAggregateKeyId(id)) {
+                LogUtil.d("Aggregate values key ID is invalid. %s", id);
+                return false;
+            }
         }
         return true;
     }

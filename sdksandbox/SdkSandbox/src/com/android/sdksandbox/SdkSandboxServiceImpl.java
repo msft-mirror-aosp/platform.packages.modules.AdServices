@@ -138,13 +138,22 @@ public class SdkSandboxServiceImpl extends Service {
     }
 
     /** Unloads SDK. */
-    public void unloadSdk(IBinder sdkToken) {
+    public void unloadSdk(
+            IBinder sdkToken, IUnloadSdkCallback callback, SandboxLatencyInfo sandboxLatencyInfo) {
         enforceCallerIsSystemServer();
         final long token = Binder.clearCallingIdentity();
         try {
+            sandboxLatencyInfo.setTimeSandboxCalledSdk(mInjector.getCurrentTime());
             unloadSdkInternal(sdkToken);
+            sandboxLatencyInfo.setTimeSdkCallCompleted(mInjector.getCurrentTime());
         } finally {
             Binder.restoreCallingIdentity(token);
+        }
+        sandboxLatencyInfo.setTimeSandboxCalledSystemServer(mInjector.getCurrentTime());
+        try {
+            callback.onUnloadSdk(sandboxLatencyInfo);
+        } catch (RemoteException ignore) {
+            Log.e(TAG, "Could not send onUnloadSdk");
         }
     }
 
@@ -429,9 +438,16 @@ public class SdkSandboxServiceImpl extends Service {
         }
 
         @Override
-        public void unloadSdk(@NonNull IBinder sdkToken) {
+        public void unloadSdk(
+                @NonNull IBinder sdkToken,
+                @NonNull IUnloadSdkCallback callback,
+                @NonNull SandboxLatencyInfo sandboxLatencyInfo) {
+            Objects.requireNonNull(sandboxLatencyInfo, "sandboxLatencyInfo should not be null");
+            sandboxLatencyInfo.setTimeSandboxReceivedCallFromSystemServer(
+                    mInjector.getCurrentTime());
             Objects.requireNonNull(sdkToken, "sdkToken should not be null");
-            SdkSandboxServiceImpl.this.unloadSdk(sdkToken);
+            Objects.requireNonNull(callback, "callback should not be null");
+            SdkSandboxServiceImpl.this.unloadSdk(sdkToken, callback, sandboxLatencyInfo);
         }
 
         @Override

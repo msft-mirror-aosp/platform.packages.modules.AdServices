@@ -41,6 +41,10 @@ import android.net.Uri;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
+import com.android.compatibility.common.util.ShellUtils;
+
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -57,6 +61,17 @@ public class PermissionsNoPermTest {
     private static final String CALLER_NOT_AUTHORIZED =
             "java.lang.SecurityException: Caller is not authorized to call this API. "
                     + "Permission was not requested.";
+
+    @Before
+    public void setup() {
+        overrideConsentManagerDebugMode(true);
+        overridingAdservicesLoggingLevel("VERBOSE");
+    }
+
+    @After
+    public void teardown() {
+        overrideConsentManagerDebugMode(false);
+    }
 
     @Test
     public void testNoPerm_topics() throws Exception {
@@ -85,8 +100,8 @@ public class PermissionsNoPermTest {
                 new CustomAudience.Builder()
                         .setBuyer(AdTechIdentifier.fromString("buyer.example.com"))
                         .setName("exampleCustomAudience")
-                        .setDailyUpdateUrl(Uri.parse("https://buyer.example.com/daily-update"))
-                        .setBiddingLogicUrl(Uri.parse("https://buyer.example.com/bidding-logic"))
+                        .setDailyUpdateUri(Uri.parse("https://buyer.example.com/daily-update"))
+                        .setBiddingLogicUri(Uri.parse("https://buyer.example.com/bidding-logic"))
                         .build();
 
         ExecutionException exception =
@@ -232,8 +247,8 @@ public class PermissionsNoPermTest {
         AdSelectionSignals trustedScoringSignals =
                 AdSelectionSignals.fromString(
                         "{\n"
-                                + "\t\"render_url_1\": \"signals_for_1\",\n"
-                                + "\t\"render_url_2\": \"signals_for_2\"\n"
+                                + "\t\"render_uri_1\": \"signals_for_1\",\n"
+                                + "\t\"render_uri_2\": \"signals_for_2\"\n"
                                 + "}");
 
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
@@ -292,5 +307,15 @@ public class PermissionsNoPermTest {
                             testAdSelectionClient.resetAllAdSelectionConfigRemoteOverrides().get();
                         });
         assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+    }
+
+    private void overridingAdservicesLoggingLevel(String loggingLevel) {
+        ShellUtils.runShellCommand("setprop log.tag.adservices %s", loggingLevel);
+    }
+
+    // Override the Consent Manager behaviour - Consent Given
+    private void overrideConsentManagerDebugMode(boolean isGiven) {
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.consent_manager_debug_mode " + isGiven);
     }
 }

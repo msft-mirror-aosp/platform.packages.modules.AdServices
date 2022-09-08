@@ -355,12 +355,24 @@ class MeasurementDao implements IMeasurementDao {
     @Nullable
     public List<EventReport> getSourceEventReports(Source source) throws DatastoreException {
         List<EventReport> eventReports = new ArrayList<>();
-        try (Cursor cursor = mSQLTransaction.getDatabase().query(
-                MeasurementTables.EventReportContract.TABLE,
-                /*columns=*/null,
-                MeasurementTables.EventReportContract.SOURCE_ID + " = ? ",
-                new String[]{String.valueOf(source.getEventId())},
-                /*groupBy=*/null, /*having=*/null, /*orderBy=*/null, /*limit=*/null)) {
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                MeasurementTables.EventReportContract.TABLE,
+                                /*columns=*/ null,
+                                MeasurementTables.EventReportContract.SOURCE_ID
+                                        + " = ? "
+                                        + " AND "
+                                        + MeasurementTables.EventReportContract.ENROLLMENT_ID
+                                        + " = ?",
+                                new String[] {
+                                    String.valueOf(source.getEventId()), source.getEnrollmentId()
+                                },
+                                /*groupBy=*/ null,
+                                /*having=*/ null,
+                                /*orderBy=*/ null,
+                                /*limit=*/ null)) {
             while (cursor.moveToNext()) {
                 eventReports.add(SqliteObjectMapper.constructEventReportFromCursor(cursor));
             }
@@ -459,6 +471,12 @@ class MeasurementDao implements IMeasurementDao {
                 eventReport.getSourceType().toString());
         values.put(MeasurementTables.EventReportContract.RANDOMIZED_TRIGGER_RATE,
                 eventReport.getRandomizedTriggerRate());
+        values.put(
+                MeasurementTables.EventReportContract.SOURCE_DEBUG_KEY,
+                eventReport.getSourceDebugKey());
+        values.put(
+                MeasurementTables.EventReportContract.TRIGGER_DEBUG_KEY,
+                eventReport.getTriggerDebugKey());
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.EventReportContract.TABLE,
                         /*nullColumnHack=*/null, values);
@@ -695,6 +713,15 @@ class MeasurementDao implements IMeasurementDao {
         db.delete(MeasurementTables.EventReportContract.TABLE,
                 MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION + " = ?",
                 new String[]{uriStr});
+        // AggregateReport table
+        db.delete(
+                MeasurementTables.AggregateReport.TABLE,
+                MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION
+                        + " = ? "
+                        + " OR "
+                        + MeasurementTables.AggregateReport.PUBLISHER
+                        + " = ? ",
+                new String[] {uriStr, uriStr});
         // Source table
         db.delete(
                 MeasurementTables.SourceContract.TABLE,
@@ -739,6 +766,16 @@ class MeasurementDao implements IMeasurementDao {
                 new String[]{
                         String.valueOf(EventReport.Status.DELIVERED),
                         earliestValidInsertionStr});
+        // AggregateReport table
+        db.delete(
+                MeasurementTables.AggregateReport.TABLE,
+                MeasurementTables.AggregateReport.STATUS
+                        + " = ? OR "
+                        + MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME
+                        + " < ?",
+                new String[] {
+                    String.valueOf(AggregateReport.Status.DELIVERED), earliestValidInsertionStr
+                });
         // Attribution table
         db.delete(MeasurementTables.AttributionContract.TABLE,
                 MeasurementTables.AttributionContract.TRIGGER_TIME + " < ?",
@@ -1170,6 +1207,12 @@ class MeasurementDao implements IMeasurementDao {
                 aggregateReport.getStatus());
         values.put(MeasurementTables.AggregateReport.API_VERSION,
                 aggregateReport.getApiVersion());
+        values.put(
+                MeasurementTables.AggregateReport.SOURCE_DEBUG_KEY,
+                aggregateReport.getSourceDebugKey());
+        values.put(
+                MeasurementTables.AggregateReport.TRIGGER_DEBUG_KEY,
+                aggregateReport.getTriggerDebugKey());
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.AggregateReport.TABLE,
                         /*nullColumnHack=*/null, values);

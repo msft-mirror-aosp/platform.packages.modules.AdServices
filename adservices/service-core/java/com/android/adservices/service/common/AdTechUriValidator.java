@@ -26,7 +26,12 @@ import com.google.common.collect.ImmutableCollection;
 
 import java.util.Objects;
 
-/** Validates an ad tech uri against an ad tech identifier. */
+/**
+ * Validates an ad tech uri against an ad tech identifier.
+ *
+ * <p>If the ad tech identifier is built from an empty string, ad tech identifier host matching is
+ * skipped.
+ */
 // TODO(b/239729221): Apply this to AdSelection
 public class AdTechUriValidator implements Validator<Uri> {
 
@@ -41,7 +46,7 @@ public class AdTechUriValidator implements Validator<Uri> {
     public static final String URI_SHOULD_USE_HTTPS = "The %s's %s should use HTTPS.";
 
     @VisibleForTesting
-    public static final String IDENTIFIER_AND_URL_ARE_INCONSISTENT =
+    public static final String IDENTIFIER_AND_URI_ARE_INCONSISTENT =
             "The %s host name %s and the %s-provided %s's host name %s are not consistent.";
 
     @NonNull public final String mAdTechRole;
@@ -68,6 +73,9 @@ public class AdTechUriValidator implements Validator<Uri> {
     /**
      * Validate an uri uses HTTPS and under the ad tech identifier domain.
      *
+     * <p>If the ad tech identifier used to build the {@link AdTechUriValidator} object is empty,
+     * then ad tech identifier host matching is skipped.
+     *
      * @param uri the uri to be validated.
      */
     @Override
@@ -86,7 +94,7 @@ public class AdTechUriValidator implements Validator<Uri> {
                     && !mAdTechIdentifier.equalsIgnoreCase(uriHost)) {
                 violations.add(
                         String.format(
-                                IDENTIFIER_AND_URL_ARE_INCONSISTENT,
+                                IDENTIFIER_AND_URI_ARE_INCONSISTENT,
                                 mAdTechRole,
                                 mAdTechIdentifier,
                                 mAdTechRole,

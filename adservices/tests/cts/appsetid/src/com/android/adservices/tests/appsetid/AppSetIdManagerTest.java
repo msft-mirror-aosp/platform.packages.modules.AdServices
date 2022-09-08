@@ -55,5 +55,6 @@ public class AppSetIdManagerTest {
         appSetIdManager.getAppSetId(CALLBACK_EXECUTOR, callback);
         AppSetId resultAppSetId = future.get();
         Assert.assertNotNull(resultAppSetId.getId());
+        Assert.assertEquals(0, resultAppSetId.getScope());
     }
 }
