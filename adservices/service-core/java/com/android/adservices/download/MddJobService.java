@@ -16,7 +16,6 @@
 
 package com.android.adservices.download;
 
-import static com.android.adservices.download.MddTaskScheduler.KEY_MDD_TASK_TAG;
 import static com.android.adservices.service.AdServicesConfig.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID;
 import static com.android.adservices.service.AdServicesConfig.MDD_CHARGING_PERIODIC_TASK_JOB_ID;
 import static com.android.adservices.service.AdServicesConfig.MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID;
@@ -47,6 +46,8 @@ import java.util.concurrent.Executor;
 
 /** MDD JobService. This will download MDD files in background tasks. */
 public class MddJobService extends JobService {
+    static final String KEY_MDD_TASK_TAG = "mdd_task_tag";
+
     /**
      * Tag for daily mdd maintenance task, that *should* be run once and only once every 24 hours.
      *
@@ -172,6 +173,11 @@ public class MddJobService extends JobService {
             long jobPeriodMs,
             @NonNull String mddTag,
             @NonNull NetworkState networkState) {
+
+        // We use Extra to pass the MDD Task Tag.
+        PersistableBundle extras = new PersistableBundle();
+        extras.putString(KEY_MDD_TASK_TAG, mddTag);
+
         final JobInfo job =
                 new JobInfo.Builder(
                                 getMddTaskJobId(mddTag),
@@ -180,6 +186,7 @@ public class MddJobService extends JobService {
                         .setPersisted(true)
                         .setPeriodic(jobPeriodMs)
                         .setRequiredNetworkType(getNetworkConstraints(networkState))
+                        .setExtras(extras)
                         .build();
 
         jobScheduler.schedule(job);
