@@ -47,20 +47,16 @@ public class WebTriggerRegistrationRequestInternal implements Parcelable {
     @NonNull private final WebTriggerRegistrationRequest mTriggerRegistrationRequest;
     /** Holds package info of where the request is coming from. */
     @NonNull private final String mPackageName;
-    /** AD ID Permission Granted. */
-    private final boolean mIsAdIdPermissionGranted;
 
     private WebTriggerRegistrationRequestInternal(@NonNull Builder builder) {
         mTriggerRegistrationRequest = builder.mTriggerRegistrationRequest;
         mPackageName = builder.mPackageName;
-        mIsAdIdPermissionGranted = builder.mIsAdIdPermissionGranted;
     }
 
     private WebTriggerRegistrationRequestInternal(Parcel in) {
         Objects.requireNonNull(in);
         mTriggerRegistrationRequest = WebTriggerRegistrationRequest.CREATOR.createFromParcel(in);
         mPackageName = in.readString();
-        mIsAdIdPermissionGranted = in.readBoolean();
     }
 
     /** Getter for {@link #mTriggerRegistrationRequest}. */
@@ -73,24 +69,18 @@ public class WebTriggerRegistrationRequestInternal implements Parcelable {
         return mPackageName;
     }
 
-    /** Getter for {@link #mIsAdIdPermissionGranted}. */
-    public boolean isAdIdPermissionGranted() {
-        return mIsAdIdPermissionGranted;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof WebTriggerRegistrationRequestInternal)) return false;
         WebTriggerRegistrationRequestInternal that = (WebTriggerRegistrationRequestInternal) o;
         return Objects.equals(mTriggerRegistrationRequest, that.mTriggerRegistrationRequest)
-                && Objects.equals(mPackageName, that.mPackageName)
-                && Objects.equals(mIsAdIdPermissionGranted, that.mIsAdIdPermissionGranted);
+                && Objects.equals(mPackageName, that.mPackageName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mTriggerRegistrationRequest, mPackageName, mIsAdIdPermissionGranted);
+        return Objects.hash(mTriggerRegistrationRequest, mPackageName);
     }
 
     @Override
@@ -103,7 +93,6 @@ public class WebTriggerRegistrationRequestInternal implements Parcelable {
         Objects.requireNonNull(out);
         mTriggerRegistrationRequest.writeToParcel(out, flags);
         out.writeString(mPackageName);
-        out.writeBoolean(mIsAdIdPermissionGranted);
     }
 
     /** Builder for {@link WebTriggerRegistrationRequestInternal}. */
@@ -112,8 +101,6 @@ public class WebTriggerRegistrationRequestInternal implements Parcelable {
         @NonNull private final WebTriggerRegistrationRequest mTriggerRegistrationRequest;
         /** Package name used for the registration. Used to determine the registrant. */
         @NonNull private final String mPackageName;
-        /** AD ID Permission Granted. */
-        private boolean mIsAdIdPermissionGranted;
 
         /**
          * Builder constructor for {@link WebTriggerRegistrationRequestInternal}.
@@ -134,13 +121,6 @@ public class WebTriggerRegistrationRequestInternal implements Parcelable {
         @NonNull
         public WebTriggerRegistrationRequestInternal build() {
             return new WebTriggerRegistrationRequestInternal(this);
-        }
-
-        /** See {@link WebTriggerRegistrationRequestInternal#isAdIdPermissionGranted()}. */
-        public WebTriggerRegistrationRequestInternal.Builder setAdIdPermissionGranted(
-                boolean isAdIdPermissionGranted) {
-            mIsAdIdPermissionGranted = isAdIdPermissionGranted;
-            return this;
         }
     }
 }

@@ -26,7 +26,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -47,7 +46,6 @@ public final class RegistrationRequestTest {
                 .setRegistrationUri(Uri.parse("http://baz.com"))
                 .setPackageName(sContext.getAttributionSource().getPackageName())
                 .setRequestTime(1000L)
-                .setAdIdPermissionGranted(true)
                 .build();
     }
 
@@ -59,7 +57,6 @@ public final class RegistrationRequestTest {
         assertNull(request.getInputEvent());
         assertNotNull(request.getPackageName());
         assertEquals(1000L, request.getRequestTime());
-        assertTrue(request.isAdIdPermissionGranted());
     }
 
     @Test

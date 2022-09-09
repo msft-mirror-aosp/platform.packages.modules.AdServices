@@ -48,14 +48,11 @@ public class WebSourceRegistrationRequestInternal implements Parcelable {
     @NonNull private final String mPackageName;
     /** Time the request was created, as millis since boot excluding time in deep sleep. */
     private final long mRequestTime;
-    /** AD ID Permission Granted. */
-    private final boolean mIsAdIdPermissionGranted;
 
     private WebSourceRegistrationRequestInternal(@NonNull Builder builder) {
         mSourceRegistrationRequest = builder.mSourceRegistrationRequest;
         mPackageName = builder.mPackageName;
         mRequestTime = builder.mRequestTime;
-        mIsAdIdPermissionGranted = builder.mIsAdIdPermissionGranted;
     }
 
     private WebSourceRegistrationRequestInternal(Parcel in) {
@@ -63,7 +60,6 @@ public class WebSourceRegistrationRequestInternal implements Parcelable {
         mSourceRegistrationRequest = WebSourceRegistrationRequest.CREATOR.createFromParcel(in);
         mPackageName = in.readString();
         mRequestTime = in.readLong();
-        mIsAdIdPermissionGranted = in.readBoolean();
     }
 
     /** Getter for {@link #mSourceRegistrationRequest}. */
@@ -81,11 +77,6 @@ public class WebSourceRegistrationRequestInternal implements Parcelable {
         return mRequestTime;
     }
 
-    /** Getter for {@link #mIsAdIdPermissionGranted}. */
-    public boolean isAdIdPermissionGranted() {
-        return mIsAdIdPermissionGranted;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -93,13 +84,12 @@ public class WebSourceRegistrationRequestInternal implements Parcelable {
         WebSourceRegistrationRequestInternal that = (WebSourceRegistrationRequestInternal) o;
         return Objects.equals(mSourceRegistrationRequest, that.mSourceRegistrationRequest)
                 && Objects.equals(mPackageName, that.mPackageName)
-                && mRequestTime == that.mRequestTime
-                && mIsAdIdPermissionGranted == that.mIsAdIdPermissionGranted;
+                && mRequestTime == that.mRequestTime;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mSourceRegistrationRequest, mPackageName, mIsAdIdPermissionGranted);
+        return Objects.hash(mSourceRegistrationRequest, mPackageName);
     }
 
     @Override
@@ -113,7 +103,6 @@ public class WebSourceRegistrationRequestInternal implements Parcelable {
         mSourceRegistrationRequest.writeToParcel(out, flags);
         out.writeString(mPackageName);
         out.writeLong(mRequestTime);
-        out.writeBoolean(mIsAdIdPermissionGranted);
     }
 
     /** Builder for {@link WebSourceRegistrationRequestInternal}. */
@@ -124,8 +113,7 @@ public class WebSourceRegistrationRequestInternal implements Parcelable {
         @NonNull private final String mPackageName;
         /** Time the request was created, as millis since boot excluding time in deep sleep. */
         private final long mRequestTime;
-        /** AD ID Permission Granted. */
-        private boolean mIsAdIdPermissionGranted;
+
         /**
          * Builder constructor for {@link WebSourceRegistrationRequestInternal}.
          *
@@ -148,13 +136,6 @@ public class WebSourceRegistrationRequestInternal implements Parcelable {
         @NonNull
         public WebSourceRegistrationRequestInternal build() {
             return new WebSourceRegistrationRequestInternal(this);
-        }
-
-        /** See {@link WebSourceRegistrationRequestInternal#isAdIdPermissionGranted()}. */
-        public WebSourceRegistrationRequestInternal.Builder setAdIdPermissionGranted(
-                boolean isAdIdPermissionGranted) {
-            mIsAdIdPermissionGranted = isAdIdPermissionGranted;
-            return this;
         }
     }
 }

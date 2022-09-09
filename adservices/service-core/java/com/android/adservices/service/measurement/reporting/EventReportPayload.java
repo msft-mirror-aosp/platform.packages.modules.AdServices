@@ -63,10 +63,10 @@ public final class EventReportPayload {
         eventPayloadJson.put("source_type", this.mSourceType);
         eventPayloadJson.put("randomized_trigger_rate", this.mRandomizedTriggerRate);
         if (mSourceDebugKey != null) {
-            eventPayloadJson.put("source_debug_key", Long.toUnsignedString(this.mSourceDebugKey));
+            eventPayloadJson.put("source_debug_key", this.mSourceDebugKey);
         }
         if (mTriggerDebugKey != null) {
-            eventPayloadJson.put("trigger_debug_key", Long.toUnsignedString(this.mTriggerDebugKey));
+            eventPayloadJson.put("trigger_debug_key", this.mTriggerDebugKey);
         }
 
         return eventPayloadJson;

@@ -63,6 +63,7 @@ import java.util.concurrent.ExecutorService;
  */
 public class TriggerFetcher {
     private final ExecutorService mIoExecutor = AdServicesExecutors.getBlockingExecutor();
+    private final AdIdPermissionFetcher mAdIdPermissionFetcher;
     private final MeasurementHttpClient mNetworkConnection = new MeasurementHttpClient();
     private final EnrollmentDao mEnrollmentDao;
     private final Flags mFlags;
@@ -71,6 +72,7 @@ public class TriggerFetcher {
     public TriggerFetcher(Context context) {
         this(
                 EnrollmentDao.getInstance(context),
+                new AdIdPermissionFetcher(),
                 FlagsFactory.getFlags(),
                 AdServicesLoggerImpl.getInstance());
     }
@@ -78,9 +80,11 @@ public class TriggerFetcher {
     @VisibleForTesting
     public TriggerFetcher(
             EnrollmentDao enrollmentDao,
+            AdIdPermissionFetcher adIdPermissionFetcher,
             Flags flags,
             AdServicesLogger logger) {
         mEnrollmentDao = enrollmentDao;
+        mAdIdPermissionFetcher = adIdPermissionFetcher;
         mFlags = flags;
         mLogger = logger;
     }
@@ -91,8 +95,7 @@ public class TriggerFetcher {
             @NonNull Map<String, List<String>> headers,
             @NonNull List<TriggerRegistration> addToResults,
             boolean isWebSource,
-            boolean isAllowDebugKey,
-            boolean isAdIdPermissionGranted) {
+            boolean isAllowDebugKey) {
         TriggerRegistration.Builder result = new TriggerRegistration.Builder();
         result.setTopOrigin(topOrigin);
         result.setEnrollmentId(enrollmentId);
@@ -129,15 +132,14 @@ public class TriggerFetcher {
             if (!json.isNull(TriggerHeaderContract.FILTERS)) {
                 result.setFilters(json.getString(TriggerHeaderContract.FILTERS));
             }
-            boolean isWebAllow = isWebSource && isAllowDebugKey && isAdIdPermissionGranted;
-            boolean isAppAllow = !isWebSource && isAdIdPermissionGranted;
+            boolean isWebAllow = isWebSource && isAllowDebugKey;
+            boolean isAppAllow = !isWebSource && mAdIdPermissionFetcher.isAdIdPermissionEnabled();
             if (!json.isNull(TriggerHeaderContract.DEBUG_KEY) && (isWebAllow || isAppAllow)) {
                 try {
                     result.setDebugKey(
-                            Long.parseUnsignedLong(
-                                    json.getString(TriggerHeaderContract.DEBUG_KEY)));
+                            Long.parseLong(json.getString(TriggerHeaderContract.DEBUG_KEY)));
                 } catch (NumberFormatException e) {
-                    LogUtil.e(e, "Parsing trigger debug key failed");
+                    LogUtil.e(e, "Parsing debug key failed");
                 }
             }
             addToResults.add(result.build());
@@ -160,8 +162,7 @@ public class TriggerFetcher {
             boolean shouldProcessRedirects,
             @NonNull List<TriggerRegistration> registrationsOut,
             boolean isWebSource,
-            boolean isAllowDebugKey,
-            boolean isAdIdPermissionGranted) {
+            boolean isAllowDebugKey) {
         // Require https.
         if (!registrationUri.getScheme().equals("https")) {
             return;
@@ -214,8 +215,7 @@ public class TriggerFetcher {
                             headers,
                             registrationsOut,
                             isWebSource,
-                            isAllowDebugKey,
-                            isAdIdPermissionGranted);
+                            isAllowDebugKey);
             if (!parsed) {
                 LogUtil.d("Failed to parse.");
                 return;
@@ -230,8 +230,7 @@ public class TriggerFetcher {
                             false,
                             registrationsOut,
                             isWebSource,
-                            isAllowDebugKey,
-                            isAdIdPermissionGranted);
+                            isAllowDebugKey);
                 }
             }
         } catch (IOException e) {
@@ -252,13 +251,7 @@ public class TriggerFetcher {
         }
         List<TriggerRegistration> out = new ArrayList<>();
         fetchTrigger(
-                request.getTopOriginUri(),
-                request.getRegistrationUri(),
-                true,
-                out,
-                false,
-                false,
-                request.isAdIdPermissionGranted());
+                request.getTopOriginUri(), request.getRegistrationUri(), true, out, false, false);
         if (out.isEmpty()) {
             return Optional.empty();
         } else {
@@ -268,10 +261,9 @@ public class TriggerFetcher {
 
     /** Fetch a trigger type registration without redirects. */
     public Optional<List<TriggerRegistration>> fetchWebTriggers(
-            WebTriggerRegistrationRequest request, boolean isAdIdPermissionGranted) {
+            WebTriggerRegistrationRequest request) {
         List<TriggerRegistration> out = new ArrayList<>();
-        processWebTriggersFetch(
-                request.getDestination(), request.getTriggerParams(), out, isAdIdPermissionGranted);
+        processWebTriggersFetch(request.getDestination(), request.getTriggerParams(), out);
 
         if (out.isEmpty()) {
             return Optional.empty();
@@ -283,8 +275,7 @@ public class TriggerFetcher {
     private void processWebTriggersFetch(
             Uri topOrigin,
             List<WebTriggerParams> triggerParamsList,
-            List<TriggerRegistration> registrationsOut,
-            boolean isAdIdPermissionGranted) {
+            List<TriggerRegistration> registrationsOut) {
         try {
             CompletableFuture.allOf(
                             triggerParamsList.stream()
@@ -293,8 +284,7 @@ public class TriggerFetcher {
                                                     createFutureToFetchWebTrigger(
                                                             topOrigin,
                                                             registrationsOut,
-                                                            triggerParams,
-                                                            isAdIdPermissionGranted))
+                                                            triggerParams))
                                     .toArray(CompletableFuture<?>[]::new))
                     .get();
         } catch (InterruptedException | ExecutionException e) {
@@ -305,8 +295,7 @@ public class TriggerFetcher {
     private CompletableFuture<Void> createFutureToFetchWebTrigger(
             Uri topOrigin,
             List<TriggerRegistration> registrationsOut,
-            WebTriggerParams triggerParams,
-            boolean isAdIdPermissionGranted) {
+            WebTriggerParams triggerParams) {
         return CompletableFuture.runAsync(
                 () ->
                         fetchTrigger(
@@ -315,8 +304,7 @@ public class TriggerFetcher {
                                 /* should process redirects*/ false,
                                 registrationsOut,
                                 true,
-                                triggerParams.isDebugKeyAllowed(),
-                                isAdIdPermissionGranted),
+                                triggerParams.isDebugKeyAllowed()),
                 mIoExecutor);
     }
 
