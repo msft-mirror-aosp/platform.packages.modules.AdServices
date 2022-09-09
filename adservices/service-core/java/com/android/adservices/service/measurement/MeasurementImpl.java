@@ -187,7 +187,8 @@ public final class MeasurementImpl {
         mReadWriteLock.readLock().lock();
         try {
             Optional<List<SourceRegistration>> fetch =
-                    mSourceFetcher.fetchWebSources(sourceRegistrationRequest);
+                    mSourceFetcher.fetchWebSources(
+                            sourceRegistrationRequest, request.isAdIdPermissionGranted());
             LogUtil.d("MeasurementImpl: registerWebSource: success=" + fetch.isPresent());
             if (fetch.isPresent()) {
                 insertSources(
@@ -223,7 +224,8 @@ public final class MeasurementImpl {
         mReadWriteLock.readLock().lock();
         try {
             Optional<List<TriggerRegistration>> fetch =
-                    mTriggerFetcher.fetchWebTriggers(triggerRegistrationRequest);
+                    mTriggerFetcher.fetchWebTriggers(
+                            triggerRegistrationRequest, request.isAdIdPermissionGranted());
             LogUtil.d("MeasurementImpl: registerWebTrigger: success=" + fetch.isPresent());
             if (fetch.isPresent()) {
                 insertTriggers(
