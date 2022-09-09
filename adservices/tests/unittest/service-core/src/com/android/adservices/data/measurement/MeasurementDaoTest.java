@@ -49,6 +49,7 @@ import com.android.adservices.service.measurement.TriggerFixture;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.aggregation.AggregateReportFixture;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
@@ -923,47 +924,79 @@ public class MeasurementDaoTest {
         sourceList.add(
                 SourceFixture.getValidSourceBuilder()
                         .setId("1")
-                        .setEventId(3)
+                        .setEventId(new UnsignedLong(3L))
                         .setEnrollmentId("1")
                         .build());
         sourceList.add(
                 SourceFixture.getValidSourceBuilder()
                         .setId("2")
-                        .setEventId(4)
+                        .setEventId(new UnsignedLong(4L))
                         .setEnrollmentId("1")
                         .build());
         // Should always be ignored
         sourceList.add(
                 SourceFixture.getValidSourceBuilder()
                         .setId("3")
-                        .setEventId(4)
+                        .setEventId(new UnsignedLong(4L))
                         .setEnrollmentId("2")
                         .build());
 
         // Should match with source 1
         List<EventReport> reportList1 = new ArrayList<>();
         reportList1.add(
-                new EventReport.Builder().setId("1").setSourceId(3).setEnrollmentId("1").build());
+                new EventReport.Builder()
+                        .setId("1")
+                        .setSourceId(new UnsignedLong(3L))
+                        .setEnrollmentId("1")
+                        .build());
         reportList1.add(
-                new EventReport.Builder().setId("7").setSourceId(3).setEnrollmentId("1").build());
+                new EventReport.Builder()
+                        .setId("7")
+                        .setSourceId(new UnsignedLong(3L))
+                        .setEnrollmentId("1")
+                        .build());
 
         // Should match with source 2
         List<EventReport> reportList2 = new ArrayList<>();
         reportList2.add(
-                new EventReport.Builder().setId("3").setSourceId(4).setEnrollmentId("1").build());
+                new EventReport.Builder()
+                        .setId("3")
+                        .setSourceId(new UnsignedLong(4L))
+                        .setEnrollmentId("1")
+                        .build());
         reportList2.add(
-                new EventReport.Builder().setId("8").setSourceId(4).setEnrollmentId("1").build());
+                new EventReport.Builder()
+                        .setId("8")
+                        .setSourceId(new UnsignedLong(4L))
+                        .setEnrollmentId("1")
+                        .build());
 
         List<EventReport> reportList3 = new ArrayList<>();
         // Should not match with any source
         reportList3.add(
-                new EventReport.Builder().setId("2").setSourceId(5).setEnrollmentId("1").build());
+                new EventReport.Builder()
+                        .setId("2")
+                        .setSourceId(new UnsignedLong(5L))
+                        .setEnrollmentId("1")
+                        .build());
         reportList3.add(
-                new EventReport.Builder().setId("4").setSourceId(6).setEnrollmentId("1").build());
+                new EventReport.Builder()
+                        .setId("4")
+                        .setSourceId(new UnsignedLong(6L))
+                        .setEnrollmentId("1")
+                        .build());
         reportList3.add(
-                new EventReport.Builder().setId("5").setSourceId(1).setEnrollmentId("1").build());
+                new EventReport.Builder()
+                        .setId("5")
+                        .setSourceId(new UnsignedLong(1L))
+                        .setEnrollmentId("1")
+                        .build());
         reportList3.add(
-                new EventReport.Builder().setId("6").setSourceId(2).setEnrollmentId("1").build());
+                new EventReport.Builder()
+                        .setId("6")
+                        .setSourceId(new UnsignedLong(2L))
+                        .setEnrollmentId("1")
+                        .build());
 
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         Objects.requireNonNull(db);
@@ -971,7 +1004,7 @@ public class MeasurementDaoTest {
                 source -> {
                     ContentValues values = new ContentValues();
                     values.put(SourceContract.ID, source.getId());
-                    values.put(SourceContract.EVENT_ID, source.getEventId());
+                    values.put(SourceContract.EVENT_ID, source.getEventId().getValue());
                     values.put(SourceContract.ENROLLMENT_ID, source.getEnrollmentId());
                     db.insert(SourceContract.TABLE, null, values);
                 });
@@ -981,7 +1014,8 @@ public class MeasurementDaoTest {
                         eventReport -> {
                             ContentValues values = new ContentValues();
                             values.put(EventReportContract.ID, eventReport.getId());
-                            values.put(EventReportContract.SOURCE_ID, eventReport.getSourceId());
+                            values.put(EventReportContract.SOURCE_ID,
+                                    eventReport.getSourceId().getValue());
                             values.put(
                                     EventReportContract.ENROLLMENT_ID,
                                     eventReport.getEnrollmentId());
@@ -1553,6 +1587,7 @@ public class MeasurementDaoTest {
         List<Source> sources = new ArrayList<>();
         for (int i = 0; i < numSources; i++) {
             Source.Builder sourceBuilder = new Source.Builder()
+                    .setEventId(new UnsignedLong(0L))
                     .setEventTime(eventTime)
                     .setPublisher(publisher)
                     .setEnrollmentId(enrollmentId)
@@ -1581,6 +1616,7 @@ public class MeasurementDaoTest {
         List<Source> sources = new ArrayList<>();
         for (int i = 0; i < numSources; i++) {
             Source.Builder sourceBuilder = new Source.Builder()
+                    .setEventId(new UnsignedLong(0L))
                     .setEventTime(eventTime)
                     .setPublisher(publisher)
                     .setRegistrant(SourceFixture.ValidSourceParams.REGISTRANT)
@@ -1632,7 +1668,7 @@ public class MeasurementDaoTest {
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(SourceContract.ID, UUID.randomUUID().toString());
-        values.put(SourceContract.EVENT_ID, source.getEventId());
+        values.put(SourceContract.EVENT_ID, source.getEventId().getValue());
         values.put(SourceContract.PUBLISHER, source.getPublisher().toString());
         values.put(SourceContract.PUBLISHER_TYPE, source.getPublisherType());
         values.put(
@@ -1652,7 +1688,6 @@ public class MeasurementDaoTest {
         values.put(SourceContract.AGGREGATE_SOURCE, source.getAggregateSource());
         values.put(SourceContract.FILTER_DATA, source.getAggregateFilterData());
         values.put(SourceContract.AGGREGATE_CONTRIBUTIONS, 0);
-        values.put(SourceContract.DEBUG_KEY, source.getDebugKey());
         long row = db.insert("msmt_source", null, values);
         Assert.assertNotEquals("Source insertion failed", -1, row);
     }

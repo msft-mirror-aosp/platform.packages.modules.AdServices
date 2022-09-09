@@ -40,6 +40,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
 import com.android.adservices.service.measurement.util.Enrollment;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Web;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -112,7 +113,7 @@ public class SourceFetcher {
                             "Expected %s and a destination", SourceHeaderContract.SOURCE_EVENT_ID));
         }
 
-        result.setSourceEventId(Long.parseUnsignedLong(
+        result.setSourceEventId(new UnsignedLong(
                 json.getString(SourceHeaderContract.SOURCE_EVENT_ID)));
         if (!json.isNull(SourceHeaderContract.EXPIRY)) {
             long expiry =
@@ -129,7 +130,7 @@ public class SourceFetcher {
         boolean isAppAllow = !isWebSource && isAdIdPermissionGranted;
         if (!json.isNull(SourceHeaderContract.DEBUG_KEY) && (isWebAllow || isAppAllow)) {
             try {
-                result.setDebugKey(Long.parseUnsignedLong(
+                result.setDebugKey(new UnsignedLong(
                         json.getString(SourceHeaderContract.DEBUG_KEY)));
             } catch (NumberFormatException e) {
                 LogUtil.e(e, "parseCommonSourceParams: parsing debug key failed");

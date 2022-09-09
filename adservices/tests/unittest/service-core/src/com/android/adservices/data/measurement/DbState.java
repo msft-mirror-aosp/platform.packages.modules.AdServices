@@ -26,6 +26,7 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -219,7 +220,7 @@ public class DbState {
     private Source getSourceFrom(JSONObject sJSON) throws JSONException {
         return new Source.Builder()
                 .setId(sJSON.getString("id"))
-                .setEventId(sJSON.getLong("eventId"))
+                .setEventId(new UnsignedLong(sJSON.getString("eventId")))
                 .setSourceType(
                         Source.SourceType.valueOf(
                                 sJSON.getString("sourceType").toUpperCase(Locale.ENGLISH)))
@@ -264,10 +265,10 @@ public class DbState {
     private EventReport getEventReportFrom(JSONObject rJSON) throws JSONException {
         return new EventReport.Builder()
                 .setId(rJSON.getString("id"))
-                .setSourceId(rJSON.getLong("sourceId"))
+                .setSourceId(new UnsignedLong(rJSON.getString("sourceId")))
                 .setAttributionDestination(Uri.parse(rJSON.getString("attributionDestination")))
                 .setEnrollmentId(rJSON.getString("enrollmentId"))
-                .setTriggerData(rJSON.getLong("triggerData"))
+                .setTriggerData(new UnsignedLong(rJSON.getString("triggerData")))
                 .setTriggerTime(rJSON.getLong("triggerTime"))
                 .setReportTime(rJSON.getLong("reportTime"))
                 .setTriggerPriority(rJSON.getLong("triggerPriority"))
