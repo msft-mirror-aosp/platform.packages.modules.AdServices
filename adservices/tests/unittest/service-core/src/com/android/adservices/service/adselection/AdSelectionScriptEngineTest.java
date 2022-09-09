@@ -49,7 +49,6 @@ import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.net.MalformedURLException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -95,7 +94,7 @@ public class AdSelectionScriptEngineTest {
         assertFalse(
                 callJsValidation(
                         "function helloAdvert(ad) { return {'status': 0, 'greeting': 'hello ' +"
-                                + " ad.render_url }; }",
+                                + " ad.render_uri }; }",
                         ImmutableList.of("helloAdvertWrongName")));
     }
 
@@ -104,7 +103,7 @@ public class AdSelectionScriptEngineTest {
         assertFalse(
                 callJsValidation(
                         "function helloAdvert(ad) { return {'status': 0, 'greeting': 'hello ' +"
-                                + " ad.render_url }; }",
+                                + " ad.render_uri }; }",
                         ImmutableList.of("helloAdvert", "helloAdvertWrongName")));
     }
 
@@ -114,7 +113,7 @@ public class AdSelectionScriptEngineTest {
         final AuctionScriptResult result =
                 callAuctionEngine(
                         "function helloAdvert(ad) { return {'status': 0, 'greeting': 'hello ' +"
-                                + " ad.render_url }; }",
+                                + " ad.render_uri }; }",
                         "helloAdvert(ad)",
                         advert,
                         ImmutableList.of());
@@ -132,7 +131,7 @@ public class AdSelectionScriptEngineTest {
                         () ->
                                 callAuctionEngine(
                                         "function helloAdvert(ad) { return {'status': 0,"
-                                                + " 'greeting': 'hello ' + ad.render_url }; }",
+                                                + " 'greeting': 'hello ' + ad.render_uri }; }",
                                         "helloAdvertWrongName",
                                         advert,
                                         ImmutableList.of()));
@@ -145,7 +144,7 @@ public class AdSelectionScriptEngineTest {
         AdData advert = new AdData(Uri.parse("http://www.domain.com/adverts/123"), "{}");
         final AuctionScriptResult result =
                 callAuctionEngine(
-                        "function helloAdvert(ad) { return 'hello ' + ad.render_url; }",
+                        "function helloAdvert(ad) { return 'hello ' + ad.render_uri; }",
                         "helloAdvert(ad)",
                         advert,
                         ImmutableList.of());
@@ -163,7 +162,7 @@ public class AdSelectionScriptEngineTest {
         final AuctionScriptResult result =
                 callAuctionEngine(
                         "function injectFailure(ad) { return {'status': ad.metadata.result,"
-                                + " 'value': ad.render_url }; }",
+                                + " 'value': ad.render_uri }; }",
                         "injectFailure(ad)",
                         ImmutableList.of(processedSuccessfully, failToProcess, willNotBeProcessed),
                         ImmutableList.of());
@@ -303,14 +302,14 @@ public class AdSelectionScriptEngineTest {
         final AuctionScriptResult result =
                 callAuctionEngine(
                         "function helloAdvert(ad) { return {'status': 0, 'greeting': '%shello ' +"
-                                + " ad.render_url }; }",
+                                + " ad.render_uri }; }",
                         "helloAdvert(ad)", advert, ImmutableList.of());
         assertThat(result.status).isEqualTo(0);
         assertThat(((JSONObject) result.results.get(0)).getString("greeting"))
                 .isEqualTo("%shello http://www.domain.com/adverts/123");
     }
 
-    private AdSelectionConfig anAdSelectionConfig() throws MalformedURLException {
+    private AdSelectionConfig anAdSelectionConfig() {
         return new AdSelectionConfig.Builder()
                 .setSeller(AdTechIdentifier.fromString("www.mydomain.com"))
                 .setPerBuyerSignals(ImmutableMap.of())

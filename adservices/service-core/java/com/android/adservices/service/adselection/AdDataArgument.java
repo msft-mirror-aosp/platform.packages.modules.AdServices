@@ -34,7 +34,7 @@ import org.json.JSONObject;
  * parse JS result string into {@link AdData}.
  */
 public class AdDataArgument {
-    @VisibleForTesting static final String RENDER_URL_FIELD_NAME = "render_url";
+    @VisibleForTesting static final String RENDER_URI_FIELD_NAME = "render_uri";
     @VisibleForTesting static final String METADATA_FIELD_NAME = "metadata";
 
     // No instance of this class is supposed to be created
@@ -42,17 +42,22 @@ public class AdDataArgument {
 
     /**
      * @return An {@link AdData} instance built reading the content of the provided JSON object.
-     * @throws IllegalArgumentException If the provided JSON doesn't contain a `render_url` and a
+     * @throws IllegalArgumentException If the provided JSON doesn't contain a `render_uri` and a
      *     `metadata` field with valid content.
      */
     public static AdData parseJsonResponse(JSONObject jsonObject) throws IllegalArgumentException {
         try {
             return new AdData(
-                    Uri.parse(jsonObject.getString(RENDER_URL_FIELD_NAME)),
+                    Uri.parse(jsonObject.getString(RENDER_URI_FIELD_NAME)),
                     jsonObject.getJSONObject(METADATA_FIELD_NAME).toString());
         } catch (JSONException e) {
             throw new IllegalArgumentException(
-                    "Invalid content for 'render_url' or 'metadata' fields", e);
+                    "Invalid content for '"
+                            + RENDER_URI_FIELD_NAME
+                            + "' or '"
+                            + METADATA_FIELD_NAME
+                            + "' fields",
+                    e);
         }
     }
 
@@ -66,7 +71,7 @@ public class AdDataArgument {
             throws JSONException {
         return recordArg(
                 name,
-                stringArg(RENDER_URL_FIELD_NAME, adData.getRenderUri().toString()),
+                stringArg(RENDER_URI_FIELD_NAME, adData.getRenderUri().toString()),
                 jsonArg(METADATA_FIELD_NAME, adData.getMetadata()));
     }
 }

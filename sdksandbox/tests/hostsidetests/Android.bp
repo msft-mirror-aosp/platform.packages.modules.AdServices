@@ -36,6 +36,7 @@ java_test_host {
         ":SdkSandboxTestSharedApp1",
         ":SdkSandboxTestSharedApp2",
     ],
+    compile_multilib: "both",
 }
 
 java_test_host {
