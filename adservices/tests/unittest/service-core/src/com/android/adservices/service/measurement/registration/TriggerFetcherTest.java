@@ -20,12 +20,15 @@ import static com.android.adservices.service.measurement.SystemHealthParams.MAX_
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_EVENT_TRIGGER_DATA;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_FILTERS;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_VALUES_PER_ATTRIBUTION_FILTER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__TRIGGER;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
@@ -44,7 +47,10 @@ import androidx.test.filters.SmallTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.MeasurementRegistrationResponseStats;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -135,13 +141,13 @@ public final class TriggerFetcherTest {
     @Mock HttpsURLConnection mUrlConnection;
     @Mock HttpsURLConnection mUrlConnection1;
     @Mock HttpsURLConnection mUrlConnection2;
-    @Mock AdIdPermissionFetcher mAdIdPermissionFetcher;
     @Mock EnrollmentDao mEnrollmentDao;
+    @Mock Flags mFlags;
+    @Mock AdServicesLogger mLogger;
 
     @Before
     public void setup() {
-        mFetcher = spy(new TriggerFetcher(mEnrollmentDao, mAdIdPermissionFetcher));
-        when(mAdIdPermissionFetcher.isAdIdPermissionEnabled()).thenReturn(false);
+        mFetcher = spy(new TriggerFetcher(mEnrollmentDao, mFlags, mLogger));
         // For convenience, return the same enrollment-ID since we're using many arbitrary
         // registration URIs and not yet enforcing uniqueness of enrollment.
         when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(any())).thenReturn(ENROLLMENT);
@@ -150,6 +156,13 @@ public final class TriggerFetcherTest {
     @Test
     public void testBasicTriggerRequest() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        MeasurementRegistrationResponseStats expectedStats =
+                new MeasurementRegistrationResponseStats.Builder(
+                                AD_SERVICES_MEASUREMENT_REGISTRATIONS,
+                                AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__TRIGGER,
+                                221)
+                        .setAdTechDomain(null)
+                        .build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
@@ -157,6 +170,7 @@ public final class TriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{" + "'event_trigger_data':" + EVENT_TRIGGERS_1 + "}")));
+        doReturn(5000L).when(mFlags).getMaxResponseBasedRegistrationPayloadSizeBytes();
         Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
         assertTrue(fetch.isPresent());
         List<TriggerRegistration> result = fetch.get();
@@ -165,6 +179,7 @@ public final class TriggerFetcherTest {
         assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
         assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.get(0).getEventTriggers());
         verify(mUrlConnection).setRequestMethod("POST");
+        verify(mLogger).logMeasurementRegistrationsResponseSize(eq(expectedStats));
     }
 
     @Test
@@ -223,7 +238,6 @@ public final class TriggerFetcherTest {
                                 + "}"));
 
         when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
-        when(mAdIdPermissionFetcher.isAdIdPermissionEnabled()).thenReturn(true);
 
         Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
         assertTrue(fetch.isPresent());
@@ -232,14 +246,14 @@ public final class TriggerFetcherTest {
         assertEquals(TOP_ORIGIN, result.get(0).getTopOrigin().toString());
         assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
         assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.get(0).getEventTriggers());
-        assertEquals(DEBUG_KEY, result.get(0).getDebugKey()); // todo
+        assertEquals(DEBUG_KEY, result.get(0).getDebugKey());
 
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
     @Test
     public void testBasicTriggerRequestWithoutAdIdPermission() throws Exception {
-        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        RegistrationRequest request = buildRequestWithoutAdIdPermission(TRIGGER_URI, TOP_ORIGIN);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
 
@@ -256,7 +270,6 @@ public final class TriggerFetcherTest {
                                 + "}"));
 
         when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
-        when(mAdIdPermissionFetcher.isAdIdPermissionEnabled()).thenReturn(false);
 
         Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
         assertTrue(fetch.isPresent());
@@ -999,7 +1012,63 @@ public final class TriggerFetcherTest {
                                 List.of("{" + "'event_trigger_data': " + EVENT_TRIGGERS_2 + "}")));
 
         // Execution
-        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchWebTriggers(request);
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchWebTriggers(request, true);
+
+        // Assertion
+        assertTrue(fetch.isPresent());
+        List<TriggerRegistration> result = fetch.get();
+        assertEquals(2, result.size());
+        assertEquals(
+                new HashSet<>(Arrays.asList(expectedResult1, expectedResult2)),
+                new HashSet<>(result));
+        verify(mUrlConnection1).setRequestMethod("POST");
+        verify(mUrlConnection2).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchWebTriggerSuccessWithoutAdIdPermission() throws IOException, JSONException {
+        // Setup
+        TriggerRegistration expectedResult1 =
+                new TriggerRegistration.Builder()
+                        .setTopOrigin(Uri.parse(TOP_ORIGIN))
+                        .setEventTriggers(new JSONArray(EVENT_TRIGGERS_1).toString())
+                        .setEnrollmentId(ENROLLMENT_ID)
+                        .build();
+        TriggerRegistration expectedResult2 =
+                new TriggerRegistration.Builder()
+                        .setTopOrigin(Uri.parse(TOP_ORIGIN))
+                        .setEventTriggers(new JSONArray(EVENT_TRIGGERS_2).toString())
+                        .setEnrollmentId(ENROLLMENT_ID)
+                        .build();
+
+        WebTriggerRegistrationRequest request =
+                buildWebTriggerRegistrationRequest(
+                        Arrays.asList(TRIGGER_REGISTRATION_1, TRIGGER_REGISTRATION_2), TOP_ORIGIN);
+        doReturn(mUrlConnection1).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        doReturn(mUrlConnection2).when(mFetcher).openUrl(new URL(REGISTRATION_URI_2.toString()));
+        when(mUrlConnection1.getResponseCode()).thenReturn(200);
+        when(mUrlConnection2.getResponseCode()).thenReturn(200);
+
+        Map<String, List<String>> headersRequest = new HashMap<>();
+        headersRequest.put(
+                "Attribution-Reporting-Register-Trigger",
+                List.of(
+                        "{"
+                                + "'event_trigger_data': "
+                                + EVENT_TRIGGERS_1
+                                + ", 'debug_key': '"
+                                + DEBUG_KEY
+                                + "'"
+                                + "}"));
+        when(mUrlConnection1.getHeaderFields()).thenReturn(headersRequest);
+        when(mUrlConnection2.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{" + "'event_trigger_data': " + EVENT_TRIGGERS_2 + "}")));
+
+        // Execution
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchWebTriggers(request, false);
 
         // Assertion
         assertTrue(fetch.isPresent());
@@ -1058,7 +1127,7 @@ public final class TriggerFetcherTest {
                         .build();
 
         // Execution
-        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchWebTriggers(request);
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchWebTriggers(request, true);
 
         // Assertion
         assertTrue(fetch.isPresent());
@@ -1092,7 +1161,7 @@ public final class TriggerFetcherTest {
                         .build();
 
         // Execution
-        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchWebTriggers(request);
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchWebTriggers(request, true);
 
         // Assertion
         assertTrue(fetch.isPresent());
@@ -1103,12 +1172,54 @@ public final class TriggerFetcherTest {
         verify(mFetcher, times(1)).openUrl(any());
     }
 
+    @Test
+    public void basicTriggerRequest_headersMoreThanMaxResponseSize_emitsMetricsWithAdTechDomain()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        MeasurementRegistrationResponseStats expectedStats =
+                new MeasurementRegistrationResponseStats.Builder(
+                                AD_SERVICES_MEASUREMENT_REGISTRATIONS,
+                                AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__TRIGGER,
+                                221)
+                        .setAdTechDomain(TRIGGER_URI)
+                        .build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{" + "'event_trigger_data':" + EVENT_TRIGGERS_1 + "}")));
+        doReturn(5L).when(mFlags).getMaxResponseBasedRegistrationPayloadSizeBytes();
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertTrue(fetch.isPresent());
+        List<TriggerRegistration> result = fetch.get();
+        assertEquals(1, result.size());
+        assertEquals(TOP_ORIGIN, result.get(0).getTopOrigin().toString());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
+        assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.get(0).getEventTriggers());
+        verify(mUrlConnection).setRequestMethod("POST");
+        verify(mLogger).logMeasurementRegistrationsResponseSize(eq(expectedStats));
+    }
+
     private RegistrationRequest buildRequest(String triggerUri, String topOriginUri) {
         return new RegistrationRequest.Builder()
                 .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
                 .setRegistrationUri(Uri.parse(triggerUri))
                 .setTopOriginUri(Uri.parse(topOriginUri))
                 .setPackageName(CONTEXT.getAttributionSource().getPackageName())
+                .setAdIdPermissionGranted(true)
+                .build();
+    }
+
+    private RegistrationRequest buildRequestWithoutAdIdPermission(
+            String triggerUri, String topOriginUri) {
+        return new RegistrationRequest.Builder()
+                .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
+                .setRegistrationUri(Uri.parse(triggerUri))
+                .setTopOriginUri(Uri.parse(topOriginUri))
+                .setPackageName(CONTEXT.getAttributionSource().getPackageName())
+                .setAdIdPermissionGranted(false)
                 .build();
     }
 

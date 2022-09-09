@@ -19,9 +19,15 @@ import static com.android.adservices.service.measurement.SystemHealthParams.MAX_
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_BYTES_PER_ATTRIBUTION_AGGREGATE_KEY_ID;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_BYTES_PER_ATTRIBUTION_FILTER_STRING;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_VALUES_PER_ATTRIBUTION_FILTER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS;
 
 import android.annotation.NonNull;
 import android.net.Uri;
+
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.measurement.util.Web;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.MeasurementRegistrationResponseStats;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -127,5 +133,44 @@ class FetcherUtil {
             }
         }
         return true;
+    }
+
+    static void emitHeaderMetrics(
+            Flags flags,
+            AdServicesLogger logger,
+            int registrationType,
+            Map<String, List<String>> headers,
+            Uri registrationUri) {
+        long headerSize = calculateHeadersCharactersLength(headers);
+        long maxSize = flags.getMaxResponseBasedRegistrationPayloadSizeBytes();
+        String adTechDomain = null;
+
+        if (headerSize > maxSize) {
+            adTechDomain =
+                    Web.topPrivateDomainAndScheme(registrationUri).map(Uri::toString).orElse(null);
+        }
+
+        logger.logMeasurementRegistrationsResponseSize(
+                new MeasurementRegistrationResponseStats.Builder(
+                                AD_SERVICES_MEASUREMENT_REGISTRATIONS, registrationType, headerSize)
+                        .setAdTechDomain(adTechDomain)
+                        .build());
+    }
+
+    private static long calculateHeadersCharactersLength(Map<String, List<String>> headers) {
+        long size = 0;
+        for (String headerKey : headers.keySet()) {
+            if (headerKey != null) {
+                size = size + headerKey.length();
+                List<String> headerValues = headers.get(headerKey);
+                if (headerValues != null) {
+                    for (String headerValue : headerValues) {
+                        size = size + headerValue.length();
+                    }
+                }
+            }
+        }
+
+        return size;
     }
 }

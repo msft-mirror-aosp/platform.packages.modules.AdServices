@@ -20,13 +20,15 @@ import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPOR
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_FILTERS;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_VALUES_PER_ATTRIBUTION_FILTER;
-
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
@@ -45,7 +47,10 @@ import androidx.test.filters.SmallTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.MeasurementRegistrationResponseStats;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -54,7 +59,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.io.IOException;
@@ -119,13 +123,13 @@ public final class SourceFetcherTest {
 
     @Mock HttpsURLConnection mUrlConnection1;
     @Mock HttpsURLConnection mUrlConnection2;
-    @Mock AdIdPermissionFetcher mAdIdPermissionFetcher;
     @Mock EnrollmentDao mEnrollmentDao;
+    @Mock Flags mFlags;
+    @Mock AdServicesLogger mLogger;
 
     @Before
     public void setup() {
-        mFetcher = spy(new SourceFetcher(mEnrollmentDao, mAdIdPermissionFetcher));
-        when(mAdIdPermissionFetcher.isAdIdPermissionEnabled()).thenReturn(false);
+        mFetcher = spy(new SourceFetcher(mEnrollmentDao, mFlags, mLogger));
         // For convenience, return the same enrollment-ID since we're using many arbitrary
         // registration URIs and not yet enforcing uniqueness of enrollment.
         when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(any())).thenReturn(ENROLLMENT);
@@ -133,9 +137,9 @@ public final class SourceFetcherTest {
 
     @Test
     public void testBasicSourceRequest() throws Exception {
-        when(mAdIdPermissionFetcher.isAdIdPermissionEnabled()).thenReturn(true);
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        doReturn(5000L).when(mFlags).getMaxResponseBasedRegistrationPayloadSizeBytes();
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -171,13 +175,21 @@ public final class SourceFetcherTest {
         assertEquals(DEFAULT_EXPIRY, result.get(0).getExpiry());
         assertEquals(DEFAULT_EVENT_ID, result.get(0).getSourceEventId());
         assertEquals(DEBUG_KEY, result.get(0).getDebugKey());
+        verify(mLogger)
+                .logMeasurementRegistrationsResponseSize(
+                        eq(
+                                new MeasurementRegistrationResponseStats.Builder(
+                                                AD_SERVICES_MEASUREMENT_REGISTRATIONS,
+                                                AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE,
+                                                190)
+                                        .setAdTechDomain(null)
+                                        .build()));
 
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
     @Test
     public void testBasicSourceRequest_failsWhenNotEnrolled() throws Exception {
-        when(mAdIdPermissionFetcher.isAdIdPermissionEnabled()).thenReturn(true);
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
         when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(any())).thenReturn(null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
@@ -212,8 +224,8 @@ public final class SourceFetcherTest {
 
     @Test
     public void testBasicSourceRequestWithoutAdIdPermission() throws Exception {
-        Mockito.when(mAdIdPermissionFetcher.isAdIdPermissionEnabled()).thenReturn(false);
-        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
+        RegistrationRequest request =
+                buildRequestWithoutAdIdPermission(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
@@ -1215,7 +1227,83 @@ public final class SourceFetcherTest {
                                                 + "}\n")));
 
         // Execution
-        Optional<List<SourceRegistration>> fetch = mFetcher.fetchWebSources(request);
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchWebSources(request, true);
+
+        // Assertion
+        assertTrue(fetch.isPresent());
+        List<SourceRegistration> result = fetch.get();
+        assertEquals(2, result.size());
+        assertEquals(
+                new HashSet<>(Arrays.asList(expectedResult1, expectedResult2)),
+                new HashSet<>(result));
+        verify(mUrlConnection1).setRequestMethod("POST");
+        verify(mUrlConnection2).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchWebSourcesSuccessWithoutAdIdPermission() throws IOException {
+        // Setup
+        SourceRegistration expectedResult1 =
+                new SourceRegistration.Builder()
+                        .setAppDestination(Uri.parse(DEFAULT_DESTINATION))
+                        .setExpiry(MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS)
+                        .setTopOrigin(Uri.parse(DEFAULT_TOP_ORIGIN))
+                        .setEnrollmentId(ENROLLMENT_ID)
+                        .setSourceEventId(EVENT_ID_1)
+                        .setSourcePriority(0)
+                        .build();
+        SourceRegistration expectedResult2 =
+                new SourceRegistration.Builder()
+                        .setAppDestination(Uri.parse(DEFAULT_DESTINATION))
+                        .setExpiry(MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS)
+                        .setTopOrigin(Uri.parse(DEFAULT_TOP_ORIGIN))
+                        .setEnrollmentId(ENROLLMENT_ID)
+                        .setSourceEventId(EVENT_ID_2)
+                        .setSourcePriority(0)
+                        .build();
+
+        WebSourceRegistrationRequest request =
+                buildWebSourceRegistrationRequest(
+                        Arrays.asList(SOURCE_REGISTRATION_1, SOURCE_REGISTRATION_2),
+                        DEFAULT_TOP_ORIGIN,
+                        Uri.parse(DEFAULT_DESTINATION),
+                        null);
+        doReturn(mUrlConnection1).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        doReturn(mUrlConnection2).when(mFetcher).openUrl(new URL(REGISTRATION_URI_2.toString()));
+        when(mUrlConnection1.getResponseCode()).thenReturn(200);
+        when(mUrlConnection2.getResponseCode()).thenReturn(200);
+        when(mUrlConnection1.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "\"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\n"
+                                                + "\"source_event_id\": \""
+                                                + EVENT_ID_1
+                                                + "\",\n"
+                                                + "  \"debug_key\": \""
+                                                + DEBUG_KEY
+                                                + "\"\n"
+                                                + "}\n")));
+        when(mUrlConnection2.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "\"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\n"
+                                                + "\"source_event_id\": \""
+                                                + EVENT_ID_2
+                                                + "\"\n"
+                                                + "}\n")));
+
+        // Execution
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchWebSources(request, false);
 
         // Assertion
         assertTrue(fetch.isPresent());
@@ -1286,7 +1374,7 @@ public final class SourceFetcherTest {
                                                 + "}\n")));
 
         // Execution
-        Optional<List<SourceRegistration>> fetch = mFetcher.fetchWebSources(request);
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchWebSources(request, true);
 
         // Assertion
         assertTrue(fetch.isPresent());
@@ -1343,7 +1431,7 @@ public final class SourceFetcherTest {
                         .build();
 
         // Execution
-        Optional<List<SourceRegistration>> fetch = mFetcher.fetchWebSources(request);
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchWebSources(request, true);
 
         // Assertion
         assertTrue(fetch.isPresent());
@@ -1402,7 +1490,7 @@ public final class SourceFetcherTest {
                         .build();
 
         // Execution
-        Optional<List<SourceRegistration>> fetch = mFetcher.fetchWebSources(request);
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchWebSources(request, true);
 
         // Assertion
         assertTrue(fetch.isPresent());
@@ -1447,7 +1535,7 @@ public final class SourceFetcherTest {
                                                 + "}")));
 
         // Execution
-        Optional<List<SourceRegistration>> fetch = mFetcher.fetchWebSources(request);
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchWebSources(request, true);
 
         // Assertion
         assertFalse(fetch.isPresent());
@@ -1489,7 +1577,7 @@ public final class SourceFetcherTest {
                                                 + "}")));
 
         // Execution
-        Optional<List<SourceRegistration>> fetch = mFetcher.fetchWebSources(request);
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchWebSources(request, true);
 
         // Assertion
         assertFalse(fetch.isPresent());
@@ -1539,7 +1627,7 @@ public final class SourceFetcherTest {
                         .build();
 
         // Execution
-        Optional<List<SourceRegistration>> fetch = mFetcher.fetchWebSources(request);
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchWebSources(request, true);
 
         // Assertion
         assertTrue(fetch.isPresent());
@@ -1591,7 +1679,7 @@ public final class SourceFetcherTest {
                         .build();
 
         // Execution
-        Optional<List<SourceRegistration>> fetch = mFetcher.fetchWebSources(request);
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchWebSources(request, true);
 
         // Assertion
         assertTrue(fetch.isPresent());
@@ -1641,7 +1729,7 @@ public final class SourceFetcherTest {
                         .build();
 
         // Execution
-        Optional<List<SourceRegistration>> fetch = mFetcher.fetchWebSources(request);
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchWebSources(request, true);
 
         // Assertion
         assertTrue(fetch.isPresent());
@@ -1675,7 +1763,7 @@ public final class SourceFetcherTest {
                                                 + "}\n")));
 
         // Execution
-        Optional<List<SourceRegistration>> fetch = mFetcher.fetchWebSources(request);
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchWebSources(request, true);
 
         // Assertion
         assertFalse(fetch.isPresent());
@@ -1719,7 +1807,7 @@ public final class SourceFetcherTest {
                                                 + "}\n")));
 
         // Execution
-        Optional<List<SourceRegistration>> fetch = mFetcher.fetchWebSources(request);
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchWebSources(request, true);
 
         // Assertion
         assertTrue(fetch.isPresent());
@@ -1758,11 +1846,44 @@ public final class SourceFetcherTest {
                                                 + "}\n")));
 
         // Execution
-        Optional<List<SourceRegistration>> fetch = mFetcher.fetchWebSources(request);
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchWebSources(request, true);
 
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection1).setRequestMethod("POST");
+    }
+
+    @Test
+    public void basicSourceRequest_headersMoreThanMaxResponseSize_emitsMetricsWithAdTechDomain()
+            throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        doReturn(5L).when(mFlags).getMaxResponseBasedRegistrationPayloadSizeBytes();
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "\"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\n"
+                                                + "\"source_event_id\": \""
+                                                + DEFAULT_EVENT_ID
+                                                + "\"\n"
+                                                + "}\n")));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertTrue(fetch.isPresent());
+        verify(mLogger)
+                .logMeasurementRegistrationsResponseSize(
+                        eq(
+                                new MeasurementRegistrationResponseStats.Builder(
+                                                AD_SERVICES_MEASUREMENT_REGISTRATIONS,
+                                                AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE,
+                                                115)
+                                        .setAdTechDomain(DEFAULT_REGISTRATION)
+                                        .build()));
     }
 
     private RegistrationRequest buildRequest(String registrationUri, String topOrigin) {
@@ -1771,6 +1892,18 @@ public final class SourceFetcherTest {
                 .setRegistrationUri(Uri.parse(registrationUri))
                 .setTopOriginUri(Uri.parse(topOrigin))
                 .setPackageName(sContext.getAttributionSource().getPackageName())
+                .setAdIdPermissionGranted(true)
+                .build();
+    }
+
+    private RegistrationRequest buildRequestWithoutAdIdPermission(
+            String registrationUri, String topOrigin) {
+        return new RegistrationRequest.Builder()
+                .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
+                .setRegistrationUri(Uri.parse(registrationUri))
+                .setTopOriginUri(Uri.parse(topOrigin))
+                .setPackageName(sContext.getAttributionSource().getPackageName())
+                .setAdIdPermissionGranted(false)
                 .build();
     }
 

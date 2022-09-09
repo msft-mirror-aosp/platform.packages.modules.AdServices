@@ -613,7 +613,7 @@ public final class AdSelectionRunner {
                 .setWinningAdRenderUri(
                         scoringWinner.getAdWithScore().getAdWithBid().getAdData().getRenderUri())
                 .setBiddingLogicUri(
-                        scoringWinner.getCustomAudienceBiddingInfo().getBiddingLogicUrl())
+                        scoringWinner.getCustomAudienceBiddingInfo().getBiddingLogicUri())
                 .setContextualSignals("{}");
         // TODO(b/230569187): get the contextualSignal securely = "invoking app name"
         return Pair.create(

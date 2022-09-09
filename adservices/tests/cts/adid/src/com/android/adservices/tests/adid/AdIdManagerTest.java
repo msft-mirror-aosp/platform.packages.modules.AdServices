@@ -55,6 +55,6 @@ public class AdIdManagerTest {
         adIdManager.getAdId(CALLBACK_EXECUTOR, callback);
         AdId resultAdId = future.get();
         Assert.assertNotNull(resultAdId.getAdId());
-        Assert.assertNotNull(resultAdId.isLimitAdTrackingEnabled());
+        Assert.assertEquals(false, resultAdId.isLimitAdTrackingEnabled());
     }
 }

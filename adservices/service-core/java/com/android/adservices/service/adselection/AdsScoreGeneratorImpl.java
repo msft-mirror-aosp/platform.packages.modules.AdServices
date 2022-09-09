@@ -49,12 +49,13 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 /**
- * Generates score for Remarketing Ads based on Seller provided scoring logic A new instance is
- * assumed to be created for every call
+ * Generates score for Remarketing Ads based on Seller provided scoring logic.
+ *
+ * <p>A new instance is assumed to be created for every call.
  */
 public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
 
-    @VisibleForTesting static final String QUERY_PARAM_RENDER_URLS = "renderurls";
+    @VisibleForTesting static final String QUERY_PARAM_RENDER_URIS = "renderuris";
 
     @VisibleForTesting
     static final String MISSING_TRUSTED_SCORING_SIGNALS = "Error fetching trusted scoring signals";
@@ -221,17 +222,17 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
     private FluentFuture<AdSelectionSignals> getTrustedScoringSignals(
             @NonNull final AdSelectionConfig adSelectionConfig,
             @NonNull final List<AdBiddingOutcome> adBiddingOutcomes) {
-        final List<String> adRenderUrls =
+        final List<String> adRenderUris =
                 adBiddingOutcomes.stream()
                         .map(a -> a.getAdWithBid().getAdData().getRenderUri().toString())
                         .collect(Collectors.toList());
-        final String queryParams = String.join(",", adRenderUrls);
+        final String queryParams = String.join(",", adRenderUris);
         final Uri trustedScoringSignalUri = adSelectionConfig.getTrustedScoringSignalsUri();
 
         Uri trustedScoringSignalsUri =
                 Uri.parse(trustedScoringSignalUri.toString())
                         .buildUpon()
-                        .appendQueryParameter(QUERY_PARAM_RENDER_URLS, queryParams)
+                        .appendQueryParameter(QUERY_PARAM_RENDER_URIS, queryParams)
                         .build();
 
         FluentFuture<AdSelectionSignals> jsOverrideFuture =

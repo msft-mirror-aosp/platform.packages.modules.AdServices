@@ -169,7 +169,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
 
         FluentFuture<String> buyerDecisionLogic =
                 getBuyerDecisionLogic(
-                        customAudience.getBiddingLogicUrl(),
+                        customAudience.getBiddingLogicUri(),
                         customAudience.getOwner(),
                         customAudience.getBuyer(),
                         customAudience.getName());
@@ -249,7 +249,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             @NonNull AdTechIdentifier buyer,
             @NonNull String name) {
         Objects.requireNonNull(trustedBiddingData);
-        final Uri trustedBiddingUri = trustedBiddingData.getUrl();
+        final Uri trustedBiddingUri = trustedBiddingData.getUri();
         final List<String> trustedBiddingKeys = trustedBiddingData.getKeys();
         final String keysQueryParams = String.join(",", trustedBiddingKeys);
         final Uri trustedBiddingUriWithKeys =

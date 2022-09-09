@@ -44,8 +44,8 @@ import java.util.concurrent.Executors;
 public class SdkMeasurement extends SandboxedSdkProvider {
     private static final String TAG = "SdkMeasurement";
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
-    private static final Uri SOURCE_REGISTRATION_URI = Uri.parse("https://source-registration");
-    private static final Uri TRIGGER_REGISTRATION_URI = Uri.parse("https://trigger-registration");
+    private static final Uri SOURCE_REGISTRATION_URI = Uri.parse("https://test.com/source");
+    private static final Uri TRIGGER_REGISTRATION_URI = Uri.parse("https://test.com/trigger");
     private static final Uri DESTINATION = Uri.parse("http://destination.com");
     private static final Uri OS_DESTINATION = Uri.parse("android-app://os.destination");
     private static final Uri WEB_DESTINATION = Uri.parse("http://web-destination.com");

@@ -132,7 +132,9 @@ public class FledgeAuthorizationFilter {
                 mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(adTechIdentifier);
 
         if (enrollmentData == null) {
-            LogUtil.v("Enrollment data load error in API %d", apiNameLoggingId);
+            LogUtil.v(
+                    "Enrollment data match not found for ad tech \"%s\" while calling API %d",
+                    adTechIdentifier.toString(), apiNameLoggingId);
             mAdServicesLogger.logFledgeApiCallStats(
                     apiNameLoggingId, AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED);
             throw new AdTechNotAllowedException();

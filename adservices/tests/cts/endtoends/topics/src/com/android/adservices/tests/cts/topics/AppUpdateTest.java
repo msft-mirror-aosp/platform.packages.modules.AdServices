@@ -30,10 +30,10 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
+import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.LogUtil;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
@@ -372,22 +372,25 @@ public class AppUpdateTest {
                         .queryIntentServices(intent, PackageManager.MATCH_SYSTEM_ONLY);
 
         if (resolveInfos == null || resolveInfos.isEmpty()) {
-            LogUtil.e(
+            Log.e(
+                    TAG,
                     "Failed to find resolveInfo for adServices service. Intent action: "
                             + TOPICS_SERVICE_NAME);
             return null;
         }
 
         if (resolveInfos.size() > 1) {
-            LogUtil.e(
-                    "Found multiple services (%1$s) for the same intent action (%2$s)",
-                    TOPICS_SERVICE_NAME, resolveInfos.toString());
+            Log.e(
+                    TAG,
+                    String.format(
+                            "Found multiple services (%1$s) for the same intent action (%2$s)",
+                            TOPICS_SERVICE_NAME, resolveInfos));
             return null;
         }
 
         final ServiceInfo serviceInfo = resolveInfos.get(0).serviceInfo;
         if (serviceInfo == null) {
-            LogUtil.e("Failed to find serviceInfo for adServices service");
+            Log.e(TAG, "Failed to find serviceInfo for adServices service");
             return null;
         }
 
