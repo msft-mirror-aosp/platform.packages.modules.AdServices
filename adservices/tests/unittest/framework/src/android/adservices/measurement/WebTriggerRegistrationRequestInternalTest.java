@@ -19,7 +19,6 @@ package android.adservices.measurement;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 
 import android.content.Context;
 import android.net.Uri;
@@ -119,14 +118,12 @@ public class WebTriggerRegistrationRequestInternalTest {
         return new WebTriggerRegistrationRequestInternal.Builder(
                         EXAMPLE_EXTERNAL_TRIGGER_REG_REQUEST,
                         CONTEXT.getAttributionSource().getPackageName())
-                .setAdIdPermissionGranted(true)
                 .build();
     }
 
     private void verifyExampleRegistrationInternal(WebTriggerRegistrationRequestInternal request) {
         verifyExampleRegistration(request.getTriggerRegistrationRequest());
         assertEquals(CONTEXT.getAttributionSource().getPackageName(), request.getPackageName());
-        assertTrue(request.isAdIdPermissionGranted());
     }
 
     private void verifyExampleRegistration(WebTriggerRegistrationRequest request) {
