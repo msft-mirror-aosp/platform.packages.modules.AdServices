@@ -55,6 +55,13 @@ import java.util.stream.Collectors;
 
 /** Topic Classifier Test {@link OnDeviceClassifier}. */
 public class OnDeviceClassifierTest {
+    private static final String TEST_LABELS_FILE_PATH = "classifier/labels_test_topics.txt";
+    private static final String TEST_PRECOMPUTED_FILE_PATH =
+            "classifier/precomputed_test_app_list.csv";
+    private static final String TEST_CLASSIFIER_ASSETS_METADATA_PATH =
+            "classifier/classifier_test_assets_metadata.json";
+    private static final String TEST_CLASSIFIER_MODEL_PATH = "classifier/test_model.tflite";
+
     // (b/244313803): Refactor tests to remove DeviceConfig and use Flags.
     @Rule
     public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
@@ -75,10 +82,10 @@ public class OnDeviceClassifierTest {
         mModelManager =
                 new ModelManager(
                         sContext,
-                        ModelManager.BUNDLED_LABELS_FILE_PATH,
-                        ModelManager.BUNDLED_TOP_APP_FILE_PATH,
-                        ModelManager.BUNDLED_CLASSIFIER_ASSETS_METADATA_PATH,
-                        ModelManager.BUNDLED_MODEL_FILE_PATH,
+                        TEST_LABELS_FILE_PATH,
+                        TEST_PRECOMPUTED_FILE_PATH,
+                        TEST_CLASSIFIER_ASSETS_METADATA_PATH,
+                        TEST_CLASSIFIER_MODEL_PATH,
                         mMockFileStorage,
                         mMockDownloadedFiles);
 
@@ -89,8 +96,33 @@ public class OnDeviceClassifierTest {
     }
 
     @Test
-    public void testClassify_packageManagerError_returnsDefaultClassifications()
-            throws IOException {
+    public void testClassify_earlyReturnIfNoModelAvailable() {
+        mModelManager =
+                new ModelManager(
+                        sContext,
+                        TEST_LABELS_FILE_PATH,
+                        TEST_PRECOMPUTED_FILE_PATH,
+                        TEST_CLASSIFIER_ASSETS_METADATA_PATH,
+                        "ModelWrongPath",
+                        mMockFileStorage,
+                        null /*No downloaded files.*/);
+        sPreprocessor = new Preprocessor(sContext);
+        mOnDeviceClassifier =
+                new OnDeviceClassifier(
+                        sPreprocessor, mPackageManagerUtil, new Random(), mModelManager);
+
+        String appPackage1 = "com.example.adservices.samples.topics.sampleapp1";
+        ImmutableSet<String> appPackages = ImmutableSet.of(appPackage1);
+
+        ImmutableMap<String, List<Topic>> classifications =
+                mOnDeviceClassifier.classify(appPackages);
+
+        // Result is empty due to no bundled model available.
+        assertThat(classifications).isEmpty();
+    }
+
+    @Test
+    public void testClassify_packageManagerError_returnsDefaultClassifications() {
         String appPackage1 = "com.example.adservices.samples.topics.sampleapp1";
         ImmutableSet<String> appPackages = ImmutableSet.of(appPackage1);
         // If fetch from PackageManagerUtil fails, we will use empty strings as descriptions.
