@@ -33,6 +33,9 @@ import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
+import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
 
@@ -52,11 +55,13 @@ public class AdIdWorker {
     private static volatile AdIdWorker sAdIdWorker;
 
     private final Context mContext;
+    private final Flags mFlags;
     private final ServiceBinder<IAdIdProviderService> mServiceBinder;
 
     // @VisibleForTesting(visibility = VisibleForTesting.Visibility.PROTECTED)
-    public AdIdWorker(Context context) {
+    public AdIdWorker(Context context, Flags flags) {
         mContext = context;
+        mFlags = flags;
         mServiceBinder =
                 ServiceBinder.getServiceBinder(
                         context,
@@ -75,7 +80,7 @@ public class AdIdWorker {
         if (sAdIdWorker == null) {
             synchronized (AdIdWorker.class) {
                 if (sAdIdWorker == null) {
-                    sAdIdWorker = new AdIdWorker(context);
+                    sAdIdWorker = new AdIdWorker(context, FlagsFactory.getFlags());
                 }
             }
         }
@@ -83,7 +88,8 @@ public class AdIdWorker {
     }
 
     @NonNull
-    private IAdIdProviderService getService() {
+    @VisibleForTesting
+    IAdIdProviderService getService() {
         return mServiceBinder.getService();
     }
 

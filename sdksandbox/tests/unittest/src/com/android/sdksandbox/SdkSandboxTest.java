@@ -491,8 +491,6 @@ public class SdkSandboxTest {
 
     @Test
     public void testLatencyMetrics_unloadSdk_success() throws Exception {
-        final CountDownLatch latch = new CountDownLatch(1);
-        final UnloadSdkCallbackImpl mUnloadSdkCallback = new UnloadSdkCallbackImpl(latch);
         SANDBOX_LATENCY_INFO.setTimeSandboxReceivedCallFromSystemServer(
                 TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER);
 
@@ -507,8 +505,9 @@ public class SdkSandboxTest {
                         TIME_SDK_CALL_COMPLETED,
                         TIME_SANDBOX_CALLED_SYSTEM_SERVER);
 
-        IBinder sdkToken = new Binder();
+        final IBinder sdkToken = new Binder();
 
+        final CountDownLatch latch = new CountDownLatch(1);
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
                 sdkToken,
@@ -521,10 +520,12 @@ public class SdkSandboxTest {
                 new RemoteCode(latch),
                 SANDBOX_LATENCY_INFO,
                 new StubSdkToServiceLink());
+        assertThat(latch.await(1, TimeUnit.MINUTES)).isTrue();
 
-        mService.unloadSdk(sdkToken, mUnloadSdkCallback, SANDBOX_LATENCY_INFO);
+        final UnloadSdkCallbackImpl unloadSdkCallback = new UnloadSdkCallbackImpl();
+        mService.unloadSdk(sdkToken, unloadSdkCallback, SANDBOX_LATENCY_INFO);
 
-        final SandboxLatencyInfo sandboxLatencyInfo = mUnloadSdkCallback.mSandboxLatencyInfo;
+        final SandboxLatencyInfo sandboxLatencyInfo = unloadSdkCallback.getSandboxLatencyInfo();
 
         assertThat(sandboxLatencyInfo.getSdkLatency())
                 .isEqualTo((int) (TIME_SDK_CALL_COMPLETED - TIME_SANDBOX_CALLED_SDK));
@@ -642,17 +643,15 @@ public class SdkSandboxTest {
     }
 
     private static class UnloadSdkCallbackImpl extends IUnloadSdkCallback.Stub {
-        private CountDownLatch mLatch;
         private SandboxLatencyInfo mSandboxLatencyInfo;
-
-        UnloadSdkCallbackImpl(CountDownLatch latch) {
-            mLatch = latch;
-        }
 
         @Override
         public void onUnloadSdk(SandboxLatencyInfo sandboxLatencyInfo) {
             mSandboxLatencyInfo = sandboxLatencyInfo;
-            mLatch.countDown();
+        }
+
+        public SandboxLatencyInfo getSandboxLatencyInfo() {
+            return mSandboxLatencyInfo;
         }
     }
 

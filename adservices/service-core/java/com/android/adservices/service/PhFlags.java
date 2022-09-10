@@ -164,12 +164,21 @@ public final class PhFlags implements Flags {
     static final String KEY_FOREGROUND_STATUS_LEVEL = "foreground_validation_status_level";
     static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE =
             "fledge_ad_selection_enforce_foreground_status_custom_audience";
+
+    // Topics invoking app status key.
     static final String KEY_ENFORCE_FOREGROUND_STATUS_TOPICS = "topics_enforce_foreground_status";
+
+    // AdId invoking app status key.
+    static final String KEY_ENFORCE_FOREGROUND_STATUS_ADID = "adid_enforce_foreground_status";
 
     // Fledge JS isolate setting keys
     static final String KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE =
             "fledge_js_isolate_enforce_max_heap_size";
     static final String KEY_ISOLATE_MAX_HEAP_SIZE_BYTES = "fledge_js_isolate_max_heap_size_bytes";
+
+    // AppSetId invoking app status key.
+    static final String KEY_ENFORCE_FOREGROUND_STATUS_APPSETID =
+            "appsetid_enforce_foreground_status";
 
     // MDD keys.
     static final String KEY_DOWNLOADER_CONNECTION_TIMEOUT_MS = "downloader_connection_timeout_ms";
@@ -247,6 +256,10 @@ public final class PhFlags implements Flags {
 
     // App/SDK AllowList/DenyList keys that have access to the web registration APIs
     static final String KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST = "web_context_client_allow_list";
+
+    // Max response payload size allowed per source/trigger registration
+    static final String KEY_MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES =
+            "max_response_based_registration_size_bytes";
 
     // Maximum possible percentage for percentage variables
     static final int MAX_PERCENTAGE = 100;
@@ -1243,6 +1256,10 @@ public final class PhFlags implements Flags {
 
     @Override
     public boolean getAdServicesEnabled() {
+        // if the global kill switch is enabled, feature should be disabled.
+        if (getGlobalKillSwitch()) {
+            return false;
+        }
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getBoolean(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -1303,6 +1320,26 @@ public final class PhFlags implements Flags {
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_ENFORCE_FOREGROUND_STATUS_TOPICS,
                         /* defaultValue */ ENFORCE_FOREGROUND_STATUS_TOPICS));
+    }
+
+    @Override
+    public boolean getEnforceForegroundStatusForAdId() {
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(KEY_ENFORCE_FOREGROUND_STATUS_ADID),
+                /* defaultValue */ DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_ENFORCE_FOREGROUND_STATUS_ADID,
+                        /* defaultValue */ ENFORCE_FOREGROUND_STATUS_ADID));
+    }
+
+    @Override
+    public boolean getEnforceForegroundStatusForAppSetId() {
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(KEY_ENFORCE_FOREGROUND_STATUS_APPSETID),
+                /* defaultValue */ DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_ENFORCE_FOREGROUND_STATUS_APPSETID,
+                        /* defaultValue */ ENFORCE_FOREGROUND_STATUS_APPSETID));
     }
 
     @Override
@@ -1435,6 +1472,14 @@ public final class PhFlags implements Flags {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_CONSENT_MANAGER_DEBUG_MODE),
                 /* defaultValue */ CONSENT_MANAGER_DEBUG_MODE);
+    }
+
+    @Override
+    public long getMaxResponseBasedRegistrationPayloadSizeBytes() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES,
+                /* defaultValue */ MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES);
     }
 
     @Override
@@ -1615,6 +1660,16 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER
                         + " = "
                         + getEnforceForegroundStatusForMeasurementRegisterWebTrigger());
+        writer.println(
+                "\t"
+                        + KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST
+                        + " = "
+                        + getWebContextClientAppAllowList());
+        writer.println(
+                "\t"
+                        + KEY_MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES
+                        + " = "
+                        + getMaxResponseBasedRegistrationPayloadSizeBytes());
 
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(

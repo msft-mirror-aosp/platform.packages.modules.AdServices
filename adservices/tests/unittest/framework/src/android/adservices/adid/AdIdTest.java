@@ -32,6 +32,8 @@ public final class AdIdTest {
         assertEquals("TEST_ADID", response.getAdId());
         assertEquals(true, response.isLimitAdTrackingEnabled());
 
+        AdId mirrorResponse = response;
+        assertEquals(true, response.equals(mirrorResponse));
         assertEquals(true, response.equals(new AdId("TEST_ADID", true)));
         assertEquals(false, response.equals(new AdId("TEST_ADID", false)));
         assertEquals(false, response.equals("TEST_ADID"));

@@ -226,6 +226,9 @@ public class DbState {
                 .setPublisher(Uri.parse(sJSON.getString("publisher")))
                 .setPublisherType(sJSON.optInt("publisherType"))
                 .setAppDestination(Uri.parse(sJSON.getString("appDestination")))
+                .setWebDestination(parseIfNonNull(sJSON.optString("webDestination", null)))
+                .setAggregateSource(sJSON.optString("aggregationKeys", null))
+                .setAggregateContributions(sJSON.optInt("aggregateContributions"))
                 .setEnrollmentId(sJSON.getString("enrollmentId"))
                 .setEventTime(sJSON.getLong("eventTime"))
                 .setExpiryTime(sJSON.getLong("expiryTime"))
@@ -249,6 +252,8 @@ public class DbState {
                 .setDestinationType(tJSON.optInt("destinationType"))
                 .setEnrollmentId(tJSON.getString("enrollmentId"))
                 .setEventTriggers(tJSON.getString("eventTriggers"))
+                .setAggregateTriggerData(tJSON.optString("aggregatableTriggerData", null))
+                .setAggregateValues(tJSON.optString("aggregatableValues", null))
                 .setTriggerTime(tJSON.getLong("triggerTime"))
                 .setStatus(tJSON.getInt("status"))
                 .setRegistrant(Uri.parse(tJSON.getString("registrant")))
@@ -345,6 +350,14 @@ public class DbState {
                 .setEnrollmentId(rJSON.getString("enrollmentId"))
                 .setDebugCleartextPayload(rJSON.getString("debugCleartextPayload"))
                 .setStatus(rJSON.getInt("status"))
+                .setApiVersion(rJSON.optString("apiVersion", null))
                 .build();
+    }
+
+    private Uri parseIfNonNull(String s) {
+        if (s == null) {
+            return null;
+        }
+        return Uri.parse(s);
     }
 }

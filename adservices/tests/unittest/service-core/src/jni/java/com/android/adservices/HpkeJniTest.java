@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-package android.adservices.cts;
-
-import com.android.adservices.HpkeJni;
+package com.android.adservices;
 
 import org.junit.Assert;
 import org.junit.Test;

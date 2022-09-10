@@ -38,10 +38,12 @@ import java.util.Objects;
 @AutoValue
 @AutoValue.CopyAnnotations
 @Entity(
-        tableName = "custom_audience_background_fetch_data",
+        tableName = DBCustomAudienceBackgroundFetchData.TABLE_NAME,
         primaryKeys = {"owner", "buyer", "name"},
         inheritSuperIndices = true)
 public abstract class DBCustomAudienceBackgroundFetchData {
+    public static final String TABLE_NAME = "custom_audience_background_fetch_data";
+
     /** @return the owner package name of the custom audience */
     @AutoValue.CopyAnnotations
     @ColumnInfo(name = "owner", index = true)
@@ -60,11 +62,11 @@ public abstract class DBCustomAudienceBackgroundFetchData {
     @NonNull
     public abstract String getName();
 
-    /** @return the daily update URL for the custom audience */
+    /** @return the daily update URI for the custom audience */
     @AutoValue.CopyAnnotations
-    @ColumnInfo(name = "daily_update_url")
+    @ColumnInfo(name = "daily_update_uri")
     @NonNull
-    public abstract Uri getDailyUpdateUrl();
+    public abstract Uri getDailyUpdateUri();
 
     /** @return the time after which the specified custom audience is eligible to be updated */
     @AutoValue.CopyAnnotations
@@ -102,7 +104,7 @@ public abstract class DBCustomAudienceBackgroundFetchData {
             @NonNull String owner,
             @NonNull AdTechIdentifier buyer,
             @NonNull String name,
-            @NonNull Uri dailyUpdateUrl,
+            @NonNull Uri dailyUpdateUri,
             @NonNull Instant eligibleUpdateTime,
             long numValidationFailures,
             long numTimeoutFailures) {
@@ -110,7 +112,7 @@ public abstract class DBCustomAudienceBackgroundFetchData {
                 .setOwner(owner)
                 .setBuyer(buyer)
                 .setName(name)
-                .setDailyUpdateUrl(dailyUpdateUrl)
+                .setDailyUpdateUri(dailyUpdateUri)
                 .setEligibleUpdateTime(eligibleUpdateTime)
                 .setNumValidationFailures(numValidationFailures)
                 .setNumTimeoutFailures(numTimeoutFailures)
@@ -158,7 +160,7 @@ public abstract class DBCustomAudienceBackgroundFetchData {
                         .setOwner(getOwner())
                         .setBuyer(getBuyer())
                         .setName(getName())
-                        .setDailyUpdateUrl(getDailyUpdateUrl())
+                        .setDailyUpdateUri(getDailyUpdateUri())
                         .setEligibleUpdateTime(getEligibleUpdateTime())
                         .setNumValidationFailures(getNumValidationFailures())
                         .setNumTimeoutFailures(getNumTimeoutFailures());
@@ -221,9 +223,9 @@ public abstract class DBCustomAudienceBackgroundFetchData {
         @NonNull
         public abstract Builder setName(@NonNull String value);
 
-        /** Sets the daily update URL for the custom audience. */
+        /** Sets the daily update URI for the custom audience. */
         @NonNull
-        public abstract Builder setDailyUpdateUrl(@NonNull Uri value);
+        public abstract Builder setDailyUpdateUri(@NonNull Uri value);
 
         /** Sets the time after which the custom audience will be eligible for update. */
         @NonNull
