@@ -97,12 +97,8 @@ public class EventReportPayloadTest {
         assertEquals(SOURCE_TYPE, eventPayloadReportJson.get("source_type"));
         assertEquals(RANDOMIZED_TRIGGER_RATE,
                 eventPayloadReportJson.get("randomized_trigger_rate"));
-        assertEquals(
-                Long.toUnsignedString(SOURCE_DEBUG_KEY),
-                eventPayloadReportJson.get("source_debug_key"));
-        assertEquals(
-                Long.toUnsignedString(TRIGGER_DEBUG_KEY),
-                eventPayloadReportJson.get("trigger_debug_key"));
+        assertEquals(SOURCE_DEBUG_KEY, eventPayloadReportJson.get("source_debug_key"));
+        assertEquals(TRIGGER_DEBUG_KEY, eventPayloadReportJson.get("trigger_debug_key"));
     }
 
     @Test
@@ -136,9 +132,7 @@ public class EventReportPayloadTest {
         assertEquals(
                 RANDOMIZED_TRIGGER_RATE, eventPayloadReportJson.get("randomized_trigger_rate"));
         assertNull(eventPayloadReportJson.opt("source_debug_key"));
-        assertEquals(
-                Long.toUnsignedString(TRIGGER_DEBUG_KEY),
-                eventPayloadReportJson.get("trigger_debug_key"));
+        assertEquals(TRIGGER_DEBUG_KEY, eventPayloadReportJson.get("trigger_debug_key"));
     }
 
     @Test
@@ -155,8 +149,6 @@ public class EventReportPayloadTest {
         assertEquals(
                 RANDOMIZED_TRIGGER_RATE, eventPayloadReportJson.get("randomized_trigger_rate"));
         assertNull(eventPayloadReportJson.opt("trigger_debug_key"));
-        assertEquals(
-                Long.toUnsignedString(SOURCE_DEBUG_KEY),
-                eventPayloadReportJson.get("source_debug_key"));
+        assertEquals(SOURCE_DEBUG_KEY, eventPayloadReportJson.get("source_debug_key"));
     }
 }

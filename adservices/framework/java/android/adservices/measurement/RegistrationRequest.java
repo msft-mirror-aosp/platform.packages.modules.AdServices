@@ -55,7 +55,6 @@ public final class RegistrationRequest implements Parcelable {
     private final InputEvent mInputEvent;
     private final String mPackageName;
     private final long mRequestTime;
-    private final boolean mIsAdIdPermissionGranted;
 
     private RegistrationRequest(@NonNull Builder builder) {
         mRegistrationType = builder.mRegistrationType;
@@ -64,7 +63,6 @@ public final class RegistrationRequest implements Parcelable {
         mInputEvent = builder.mInputEvent;
         mPackageName = builder.mPackageName;
         mRequestTime = builder.mRequestTime;
-        mIsAdIdPermissionGranted = builder.mIsAdIdPermissionGranted;
     }
 
     /**
@@ -82,7 +80,6 @@ public final class RegistrationRequest implements Parcelable {
             mInputEvent = null;
         }
         mRequestTime = in.readLong();
-        mIsAdIdPermissionGranted = in.readBoolean();
     }
 
     /**
@@ -122,7 +119,6 @@ public final class RegistrationRequest implements Parcelable {
             out.writeBoolean(false);
         }
         out.writeLong(mRequestTime);
-        out.writeBoolean(mIsAdIdPermissionGranted);
     }
 
     /**
@@ -162,10 +158,6 @@ public final class RegistrationRequest implements Parcelable {
     public @NonNull long getRequestTime() {
         return mRequestTime;
     }
-    /** Ad ID Permission */
-    public @NonNull boolean isAdIdPermissionGranted() {
-        return mIsAdIdPermissionGranted;
-    }
 
     /**
      * A builder for {@link RegistrationRequest}.
@@ -177,7 +169,6 @@ public final class RegistrationRequest implements Parcelable {
         private InputEvent mInputEvent;
         private String mPackageName;
         private long mRequestTime;
-        private boolean mIsAdIdPermissionGranted;
 
         public Builder() {
             mRegistrationType = INVALID;
@@ -233,12 +224,6 @@ public final class RegistrationRequest implements Parcelable {
         /** See {@link RegistrationRequest#getRequestTime}. */
         public @NonNull Builder setRequestTime(long requestTime) {
             mRequestTime = requestTime;
-            return this;
-        }
-
-        /** See {@link RegistrationRequest#isAdIdPermissionGranted()}. */
-        public @NonNull Builder setAdIdPermissionGranted(boolean adIdPermissionGranted) {
-            mIsAdIdPermissionGranted = adIdPermissionGranted;
             return this;
         }
 
