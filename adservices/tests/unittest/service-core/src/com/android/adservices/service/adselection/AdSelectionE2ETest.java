@@ -135,7 +135,7 @@ public class AdSelectionE2ETest {
 
     private static final String SELLER_DECISION_LOGIC_URI_PATH = "/ssp/decision/logic/";
     private static final String SELLER_TRUSTED_SIGNAL_URI_PATH = "/kv/seller/signals/";
-    private static final String SELLER_TRUSTED_SIGNAL_PARAMS = "?renderurls=";
+    private static final String SELLER_TRUSTED_SIGNAL_PARAMS = "?renderuris=";
 
     private static final String READ_BID_FROM_AD_METADATA_JS =
             "function generateBid(ad, auction_signals, per_buyer_signals,"
@@ -164,14 +164,14 @@ public class AdSelectionE2ETest {
     private static final AdTechIdentifier TRUSTED_SCORING_SIGNALS =
             AdTechIdentifier.fromString(
                     "{\n"
-                            + "\t\"render_url_1\": \"signals_for_1\",\n"
-                            + "\t\"render_url_2\": \"signals_for_2\"\n"
+                            + "\t\"render_uri_1\": \"signals_for_1\",\n"
+                            + "\t\"render_uri_2\": \"signals_for_2\"\n"
                             + "}");
 
     private static final AdTechIdentifier SELLER_VALID =
             AdTechIdentifier.fromString("developer.android.com");
     private static final Uri DECISION_LOGIC_URI_INCONSISTENT =
-            Uri.parse("https://developer%$android.com/test/decisions_logic_urls");
+            Uri.parse("https://developer%$android.com/test/decisions_logic_uris");
 
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     @Spy private final AdServicesLogger mAdServicesLoggerSpy = AdServicesLoggerImpl.getInstance();
@@ -280,8 +280,8 @@ public class AdSelectionE2ETest {
                     }
                 };
 
-        // Create an Ad Selection Config with the buyers and decision logic url
-        // the url points to a JS with score generation logic
+        // Create an Ad Selection Config with the buyers and decision logic URI
+        // the URI points to a JS with score generation logic
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setCustomAudienceBuyers(ImmutableList.of(BUYER_1, BUYER_2, BUYER_3))
@@ -1229,6 +1229,11 @@ public class AdSelectionE2ETest {
                     }
 
                     @Override
+                    public boolean getDisableFledgeEnrollmentCheck() {
+                        return true;
+                    }
+
+                    @Override
                     public float getSdkRequestPermitsPerSecond() {
                         // Unlimited rate for unit tests to avoid flake in tests due to rate
                         // limiting
@@ -1342,6 +1347,11 @@ public class AdSelectionE2ETest {
                     @Override
                     public boolean getEnforceIsolateMaxHeapSize() {
                         return false;
+                    }
+
+                    @Override
+                    public boolean getDisableFledgeEnrollmentCheck() {
+                        return true;
                     }
 
                     @Override
@@ -1958,6 +1968,11 @@ public class AdSelectionE2ETest {
                 return true;
             }
 
+            @Override
+            public boolean getDisableFledgeEnrollmentCheck() {
+                return true;
+            }
+
             // Testing the default throttling limit
             @Override
             public float getSdkRequestPermitsPerSecond() {
@@ -2195,12 +2210,12 @@ public class AdSelectionE2ETest {
                 .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                 .setTrustedBiddingData(
                         new DBTrustedBiddingData.Builder()
-                                .setUrl(
+                                .setUri(
                                         mMockWebServerRule.uriForPath(
                                                 BUYER_TRUSTED_SIGNAL_URI_PATH))
                                 .setKeys(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_KEYS)
                                 .build())
-                .setBiddingLogicUrl(biddingUri)
+                .setBiddingLogicUri(biddingUri)
                 .setAds(ads)
                 .build();
     }
@@ -2319,6 +2334,11 @@ public class AdSelectionE2ETest {
 
         @Override
         public boolean getEnforceForegroundStatusForFledgeOverrides() {
+            return true;
+        }
+
+        @Override
+        public boolean getDisableFledgeEnrollmentCheck() {
             return true;
         }
 

@@ -30,17 +30,17 @@ public class DBBuyerDecisionLogicTest {
 
     private static final String BUYER_DECISION_LOGIC_JS =
             "function test() { return \"hello world\"; }";
-    private static final Uri BIDDING_LOGIC_URL = Uri.parse("http://www.domain.com/logic/1");
+    private static final Uri BIDDING_LOGIC_URI = Uri.parse("http://www.domain.com/logic/1");
 
     @Test
     public void testBuildDBBuyerDecisionLogic() {
         DBBuyerDecisionLogic dbBuyerDecisionLogic =
                 new DBBuyerDecisionLogic.Builder()
-                        .setBiddingLogicUri(BIDDING_LOGIC_URL)
+                        .setBiddingLogicUri(BIDDING_LOGIC_URI)
                         .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS)
                         .build();
 
-        assertEquals(dbBuyerDecisionLogic.getBiddingLogicUri(), BIDDING_LOGIC_URL);
+        assertEquals(dbBuyerDecisionLogic.getBiddingLogicUri(), BIDDING_LOGIC_URI);
         assertEquals(dbBuyerDecisionLogic.getBuyerDecisionLogicJs(), BUYER_DECISION_LOGIC_JS);
     }
 
@@ -48,13 +48,13 @@ public class DBBuyerDecisionLogicTest {
     public void testBuyerDecisionLogicsWithSameValuesAreEqual() {
         DBBuyerDecisionLogic obj1 =
                 new DBBuyerDecisionLogic.Builder()
-                        .setBiddingLogicUri(BIDDING_LOGIC_URL)
+                        .setBiddingLogicUri(BIDDING_LOGIC_URI)
                         .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS)
                         .build();
 
         DBBuyerDecisionLogic obj2 =
                 new DBBuyerDecisionLogic.Builder()
-                        .setBiddingLogicUri(BIDDING_LOGIC_URL)
+                        .setBiddingLogicUri(BIDDING_LOGIC_URI)
                         .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS)
                         .build();
 
@@ -65,7 +65,7 @@ public class DBBuyerDecisionLogicTest {
     public void testBuyerDecisionLogicsWithDifferentValuesAreNotEqual() {
         DBBuyerDecisionLogic obj1 =
                 new DBBuyerDecisionLogic.Builder()
-                        .setBiddingLogicUri(BIDDING_LOGIC_URL)
+                        .setBiddingLogicUri(BIDDING_LOGIC_URI)
                         .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS)
                         .build();
 
@@ -82,12 +82,12 @@ public class DBBuyerDecisionLogicTest {
     public void testEqualBuyerDecisionLogicObjectsHaveSameHashCode() {
         DBBuyerDecisionLogic obj1 =
                 new DBBuyerDecisionLogic.Builder()
-                        .setBiddingLogicUri(BIDDING_LOGIC_URL)
+                        .setBiddingLogicUri(BIDDING_LOGIC_URI)
                         .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS)
                         .build();
         DBBuyerDecisionLogic obj2 =
                 new DBBuyerDecisionLogic.Builder()
-                        .setBiddingLogicUri(BIDDING_LOGIC_URL)
+                        .setBiddingLogicUri(BIDDING_LOGIC_URI)
                         .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS)
                         .build();
 
@@ -98,7 +98,7 @@ public class DBBuyerDecisionLogicTest {
     public void testNotEqualBuyerDecisionLogicObjectsHaveDifferentHashCode() {
         DBBuyerDecisionLogic obj1 =
                 new DBBuyerDecisionLogic.Builder()
-                        .setBiddingLogicUri(BIDDING_LOGIC_URL)
+                        .setBiddingLogicUri(BIDDING_LOGIC_URI)
                         .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS)
                         .build();
         DBBuyerDecisionLogic obj2 =
@@ -108,7 +108,7 @@ public class DBBuyerDecisionLogicTest {
                         .build();
         DBBuyerDecisionLogic obj3 =
                 new DBBuyerDecisionLogic.Builder()
-                        .setBiddingLogicUri(BIDDING_LOGIC_URL)
+                        .setBiddingLogicUri(BIDDING_LOGIC_URI)
                         .setBuyerDecisionLogicJs("function test() { return \"different world\"; }")
                         .build();
 

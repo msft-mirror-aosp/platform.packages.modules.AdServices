@@ -53,24 +53,6 @@ public class Sdk1 extends SandboxedSdkProvider {
     @Override
     public SandboxedSdk onLoadSdk(Bundle params) throws LoadSdkException {
         try {
-            // The first call to the Topics API. This will record the usage of the test app to
-            // the Topics API.
-            GetTopicsResponse unUsedResponse = callTopicsApi();
-        } catch (Exception e) {
-            Log.e(TAG, e.getMessage());
-
-            // Trigger the error callback to tell the Test App that the first Topics API call
-            // finished with an error.
-            throw new LoadSdkException(e, new Bundle());
-        }
-
-        try {
-            // Wait until the next epoch.
-            Thread.sleep(TEST_EPOCH_JOB_PERIOD_MS);
-        } catch (InterruptedException e) {
-            Log.e(TAG, e.getMessage());
-        }
-        try {
             // Make the second call to the Topics API. Since we called the Topics API in the
             // previous epoch, we should have some returned topic now.
             GetTopicsResponse response = callTopicsApi();

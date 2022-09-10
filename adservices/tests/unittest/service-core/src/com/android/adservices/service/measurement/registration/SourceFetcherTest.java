@@ -20,13 +20,15 @@ import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPOR
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_FILTERS;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_VALUES_PER_ATTRIBUTION_FILTER;
-
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
@@ -45,7 +47,10 @@ import androidx.test.filters.SmallTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.MeasurementRegistrationResponseStats;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -121,10 +126,12 @@ public final class SourceFetcherTest {
     @Mock HttpsURLConnection mUrlConnection2;
     @Mock AdIdPermissionFetcher mAdIdPermissionFetcher;
     @Mock EnrollmentDao mEnrollmentDao;
+    @Mock Flags mFlags;
+    @Mock AdServicesLogger mLogger;
 
     @Before
     public void setup() {
-        mFetcher = spy(new SourceFetcher(mEnrollmentDao, mAdIdPermissionFetcher));
+        mFetcher = spy(new SourceFetcher(mEnrollmentDao, mAdIdPermissionFetcher, mFlags, mLogger));
         when(mAdIdPermissionFetcher.isAdIdPermissionEnabled()).thenReturn(false);
         // For convenience, return the same enrollment-ID since we're using many arbitrary
         // registration URIs and not yet enforcing uniqueness of enrollment.
@@ -136,6 +143,7 @@ public final class SourceFetcherTest {
         when(mAdIdPermissionFetcher.isAdIdPermissionEnabled()).thenReturn(true);
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        doReturn(5000L).when(mFlags).getMaxResponseBasedRegistrationPayloadSizeBytes();
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -171,6 +179,15 @@ public final class SourceFetcherTest {
         assertEquals(DEFAULT_EXPIRY, result.get(0).getExpiry());
         assertEquals(DEFAULT_EVENT_ID, result.get(0).getSourceEventId());
         assertEquals(DEBUG_KEY, result.get(0).getDebugKey());
+        verify(mLogger)
+                .logMeasurementRegistrationsResponseSize(
+                        eq(
+                                new MeasurementRegistrationResponseStats.Builder(
+                                                AD_SERVICES_MEASUREMENT_REGISTRATIONS,
+                                                AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE,
+                                                190)
+                                        .setAdTechDomain(null)
+                                        .build()));
 
         verify(mUrlConnection).setRequestMethod("POST");
     }
@@ -1763,6 +1780,39 @@ public final class SourceFetcherTest {
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection1).setRequestMethod("POST");
+    }
+
+    @Test
+    public void basicSourceRequest_headersMoreThanMaxResponseSize_emitsMetricsWithAdTechDomain()
+            throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        doReturn(5L).when(mFlags).getMaxResponseBasedRegistrationPayloadSizeBytes();
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "\"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\n"
+                                                + "\"source_event_id\": \""
+                                                + DEFAULT_EVENT_ID
+                                                + "\"\n"
+                                                + "}\n")));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertTrue(fetch.isPresent());
+        verify(mLogger)
+                .logMeasurementRegistrationsResponseSize(
+                        eq(
+                                new MeasurementRegistrationResponseStats.Builder(
+                                                AD_SERVICES_MEASUREMENT_REGISTRATIONS,
+                                                AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE,
+                                                115)
+                                        .setAdTechDomain(DEFAULT_REGISTRATION)
+                                        .build()));
     }
 
     private RegistrationRequest buildRequest(String registrationUri, String topOrigin) {

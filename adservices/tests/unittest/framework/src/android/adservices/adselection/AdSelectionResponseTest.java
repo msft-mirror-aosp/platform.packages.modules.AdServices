@@ -32,7 +32,7 @@ import org.junit.Test;
 
 @SmallTest
 public class AdSelectionResponseTest {
-    private static final Uri VALID_RENDER_URL =
+    private static final Uri VALID_RENDER_URI =
             new Uri.Builder().path("valid.example.com/testing/hello").build();
     private static final long TEST_AD_SELECTION_ID = 12345;
 
@@ -41,11 +41,11 @@ public class AdSelectionResponseTest {
         AdSelectionResponse adSelectionResponse =
                 new AdSelectionResponse.Builder()
                         .setAdSelectionId(TEST_AD_SELECTION_ID)
-                        .setRenderUri(VALID_RENDER_URL)
+                        .setRenderUri(VALID_RENDER_URI)
                         .build();
 
         assertThat(adSelectionResponse.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
-        assertThat(adSelectionResponse.getRenderUri()).isEqualTo(VALID_RENDER_URL);
+        assertThat(adSelectionResponse.getRenderUri()).isEqualTo(VALID_RENDER_URI);
     }
 
     @Test
@@ -53,7 +53,7 @@ public class AdSelectionResponseTest {
         AdSelectionResponse adSelectionResponse =
                 new AdSelectionResponse.Builder()
                         .setAdSelectionId(TEST_AD_SELECTION_ID)
-                        .setRenderUri(VALID_RENDER_URL)
+                        .setRenderUri(VALID_RENDER_URI)
                         .build();
 
         Parcel p = Parcel.obtain();
@@ -62,7 +62,7 @@ public class AdSelectionResponseTest {
         AdSelectionResponse fromParcel = AdSelectionResponse.CREATOR.createFromParcel(p);
 
         assertThat(fromParcel.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
-        assertThat(fromParcel.getRenderUri()).isEqualTo(VALID_RENDER_URL);
+        assertThat(fromParcel.getRenderUri()).isEqualTo(VALID_RENDER_URI);
     }
 
     @Test
@@ -72,7 +72,7 @@ public class AdSelectionResponseTest {
                 () -> {
                     new AdSelectionResponse.Builder()
                             // Not setting AdSelectionId making it null.
-                            .setRenderUri(VALID_RENDER_URL)
+                            .setRenderUri(VALID_RENDER_URI)
                             .build();
                 });
     }
@@ -94,13 +94,13 @@ public class AdSelectionResponseTest {
         AdSelectionResponse obj1 =
                 new AdSelectionResponse.Builder()
                         .setAdSelectionId(TEST_AD_SELECTION_ID)
-                        .setRenderUri(VALID_RENDER_URL)
+                        .setRenderUri(VALID_RENDER_URI)
                         .build();
 
         AdSelectionResponse obj2 =
                 new AdSelectionResponse.Builder()
                         .setAdSelectionId(TEST_AD_SELECTION_ID)
-                        .setRenderUri(VALID_RENDER_URL)
+                        .setRenderUri(VALID_RENDER_URI)
                         .build();
 
         assertThat(obj1).isEqualTo(obj2);
@@ -111,7 +111,7 @@ public class AdSelectionResponseTest {
         AdSelectionResponse obj1 =
                 new AdSelectionResponse.Builder()
                         .setAdSelectionId(TEST_AD_SELECTION_ID)
-                        .setRenderUri(VALID_RENDER_URL)
+                        .setRenderUri(VALID_RENDER_URI)
                         .build();
 
         AdSelectionResponse obj2 =
@@ -129,7 +129,7 @@ public class AdSelectionResponseTest {
         AdSelectionResponse obj =
                 new AdSelectionResponse.Builder()
                         .setAdSelectionId(TEST_AD_SELECTION_ID)
-                        .setRenderUri(VALID_RENDER_URL)
+                        .setRenderUri(VALID_RENDER_URI)
                         .build();
 
         assertEquals(0, obj.describeContents());
@@ -140,12 +140,12 @@ public class AdSelectionResponseTest {
         AdSelectionResponse obj1 =
                 new AdSelectionResponse.Builder()
                         .setAdSelectionId(TEST_AD_SELECTION_ID)
-                        .setRenderUri(VALID_RENDER_URL)
+                        .setRenderUri(VALID_RENDER_URI)
                         .build();
         AdSelectionResponse obj2 =
                 new AdSelectionResponse.Builder()
                         .setAdSelectionId(TEST_AD_SELECTION_ID)
-                        .setRenderUri(VALID_RENDER_URL)
+                        .setRenderUri(VALID_RENDER_URI)
                         .build();
 
         CommonFixture.assertHaveSameHashCode(obj1, obj2);
@@ -156,7 +156,7 @@ public class AdSelectionResponseTest {
         AdSelectionResponse obj1 =
                 new AdSelectionResponse.Builder()
                         .setAdSelectionId(TEST_AD_SELECTION_ID)
-                        .setRenderUri(VALID_RENDER_URL)
+                        .setRenderUri(VALID_RENDER_URI)
                         .build();
         AdSelectionResponse obj2 =
                 new AdSelectionResponse.Builder()
@@ -167,7 +167,7 @@ public class AdSelectionResponseTest {
         AdSelectionResponse obj3 =
                 new AdSelectionResponse.Builder()
                         .setAdSelectionId(13579)
-                        .setRenderUri(VALID_RENDER_URL)
+                        .setRenderUri(VALID_RENDER_URI)
                         .build();
 
         CommonFixture.assertDifferentHashCode(obj1, obj2, obj3);

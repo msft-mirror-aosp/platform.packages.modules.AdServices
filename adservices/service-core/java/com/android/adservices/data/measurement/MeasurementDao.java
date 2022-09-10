@@ -355,12 +355,24 @@ class MeasurementDao implements IMeasurementDao {
     @Nullable
     public List<EventReport> getSourceEventReports(Source source) throws DatastoreException {
         List<EventReport> eventReports = new ArrayList<>();
-        try (Cursor cursor = mSQLTransaction.getDatabase().query(
-                MeasurementTables.EventReportContract.TABLE,
-                /*columns=*/null,
-                MeasurementTables.EventReportContract.SOURCE_ID + " = ? ",
-                new String[]{String.valueOf(source.getEventId())},
-                /*groupBy=*/null, /*having=*/null, /*orderBy=*/null, /*limit=*/null)) {
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                MeasurementTables.EventReportContract.TABLE,
+                                /*columns=*/ null,
+                                MeasurementTables.EventReportContract.SOURCE_ID
+                                        + " = ? "
+                                        + " AND "
+                                        + MeasurementTables.EventReportContract.ENROLLMENT_ID
+                                        + " = ?",
+                                new String[] {
+                                    String.valueOf(source.getEventId()), source.getEnrollmentId()
+                                },
+                                /*groupBy=*/ null,
+                                /*having=*/ null,
+                                /*orderBy=*/ null,
+                                /*limit=*/ null)) {
             while (cursor.moveToNext()) {
                 eventReports.add(SqliteObjectMapper.constructEventReportFromCursor(cursor));
             }
@@ -701,6 +713,15 @@ class MeasurementDao implements IMeasurementDao {
         db.delete(MeasurementTables.EventReportContract.TABLE,
                 MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION + " = ?",
                 new String[]{uriStr});
+        // AggregateReport table
+        db.delete(
+                MeasurementTables.AggregateReport.TABLE,
+                MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION
+                        + " = ? "
+                        + " OR "
+                        + MeasurementTables.AggregateReport.PUBLISHER
+                        + " = ? ",
+                new String[] {uriStr, uriStr});
         // Source table
         db.delete(
                 MeasurementTables.SourceContract.TABLE,
@@ -745,6 +766,16 @@ class MeasurementDao implements IMeasurementDao {
                 new String[]{
                         String.valueOf(EventReport.Status.DELIVERED),
                         earliestValidInsertionStr});
+        // AggregateReport table
+        db.delete(
+                MeasurementTables.AggregateReport.TABLE,
+                MeasurementTables.AggregateReport.STATUS
+                        + " = ? OR "
+                        + MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME
+                        + " < ?",
+                new String[] {
+                    String.valueOf(AggregateReport.Status.DELIVERED), earliestValidInsertionStr
+                });
         // Attribution table
         db.delete(MeasurementTables.AttributionContract.TABLE,
                 MeasurementTables.AttributionContract.TRIGGER_TIME + " < ?",
