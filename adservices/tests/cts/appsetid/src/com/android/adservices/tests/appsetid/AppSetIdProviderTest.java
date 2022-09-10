@@ -17,7 +17,12 @@ package com.android.adservices.tests.appsetid;
 
 import android.adservices.appsetid.AppSetId;
 import android.adservices.appsetid.AppSetIdProviderService;
+import android.adservices.appsetid.GetAppSetIdResult;
+import android.adservices.appsetid.IAppSetIdProviderService;
+import android.adservices.appsetid.IGetAppSetIdProviderCallback;
 import android.content.Intent;
+import android.os.IBinder;
+import android.os.OutcomeReceiver;
 
 import androidx.test.runner.AndroidJUnit4;
 
@@ -26,6 +31,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.io.IOException;
+import java.util.concurrent.CompletableFuture;
 
 @RunWith(AndroidJUnit4.class)
 public class AppSetIdProviderTest {
@@ -42,12 +48,47 @@ public class AppSetIdProviderTest {
     }
 
     @Test
-    public void testAppSetIdProvider() {
+    public void testAppSetIdProvider() throws Exception {
         AppSetIdProviderServiceProxy proxy = new AppSetIdProviderServiceProxy();
 
         Intent intent = new Intent();
         intent.setAction(AppSetIdProviderService.SERVICE_INTERFACE);
+        IBinder remoteObject = proxy.onBind(intent);
+        Assert.assertNotNull(remoteObject);
 
-        Assert.assertNotNull(proxy.onBind(intent));
+        IAppSetIdProviderService service = IAppSetIdProviderService.Stub.asInterface(remoteObject);
+        Assert.assertNotNull(service);
+
+        CompletableFuture<AppSetId> future = new CompletableFuture<>();
+        OutcomeReceiver<AppSetId, Exception> callback =
+                new OutcomeReceiver<AppSetId, Exception>() {
+                    @Override
+                    public void onResult(AppSetId appSetId) {
+                        future.complete(appSetId);
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        Assert.fail();
+                    }
+                };
+        service.getAppSetId(
+                /* testAppUId */ 0,
+                "testPackageName",
+                new IGetAppSetIdProviderCallback.Stub() {
+                    @Override
+                    public void onResult(GetAppSetIdResult result) {
+                        callback.onResult(
+                                new AppSetId(result.getAppSetId(), result.getAppSetIdScope()));
+                    }
+
+                    @Override
+                    public void onError(String errorMessage) {
+                        Assert.fail();
+                    }
+                });
+        AppSetId resultAppSetId = future.get();
+        Assert.assertEquals(DEFAULT_APP_SET_ID, resultAppSetId.getId());
+        Assert.assertEquals(DEFAULT_SCOPE, resultAppSetId.getScope());
     }
 }
