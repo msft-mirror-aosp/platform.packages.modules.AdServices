@@ -24,6 +24,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 
 import androidx.annotation.Nullable;
 
@@ -69,7 +70,8 @@ public class EnrollmentDao implements IEnrollmentDao {
         return prefs.getBoolean(IS_SEEDED, false);
     }
 
-    private void seed() {
+    @VisibleForTesting
+    void seed() {
         if (!isSeeded()) {
             boolean success = true;
             for (EnrollmentData enrollment : PreEnrolledAdTechForTest.getList()) {
@@ -112,6 +114,7 @@ public class EnrollmentDao implements IEnrollmentDao {
                         /*orderBy=*/ null,
                         /*limit=*/ null)) {
             if (cursor == null || cursor.getCount() == 0) {
+                LogUtil.d("Failed to match enrollment for enrollment ID \"%s\"", enrollmentId);
                 return null;
             }
             cursor.moveToNext();
@@ -145,6 +148,7 @@ public class EnrollmentDao implements IEnrollmentDao {
                         /*orderBy=*/ null,
                         /*limit=*/ null)) {
             if (cursor == null || cursor.getCount() == 0) {
+                LogUtil.d("Failed to match enrollment for url \"%s\"", url);
                 return null;
             }
             cursor.moveToNext();
@@ -175,11 +179,43 @@ public class EnrollmentDao implements IEnrollmentDao {
                         /*having=*/ null,
                         /*orderBy=*/ null,
                         /*limit=*/ null)) {
-            if (cursor == null || cursor.getCount() != 1) {
+            if (cursor == null || cursor.getCount() <= 0) {
+                LogUtil.d(
+                        "Failed to match enrollment for ad tech identifier \"%s\"",
+                        adTechIdentifierString);
                 return null;
             }
-            cursor.moveToNext();
-            return SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
+
+            LogUtil.v(
+                    "Found %d rows potentially matching ad tech identifier \"%s\"",
+                    cursor.getCount(), adTechIdentifierString);
+
+            while (cursor.moveToNext()) {
+                EnrollmentData potentialMatch =
+                        SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
+                for (String rbrUriString :
+                        potentialMatch.getRemarketingResponseBasedRegistrationUrl()) {
+                    try {
+                        // Make sure the URI can be parsed and the parsed host matches the ad tech
+                        if (adTechIdentifierString.equalsIgnoreCase(
+                                Uri.parse(rbrUriString).getHost())) {
+                            LogUtil.v(
+                                    "Found positive match RBR URL \"%s\" for ad tech identifier"
+                                            + " \"%s\"",
+                                    rbrUriString, adTechIdentifierString);
+
+                            return potentialMatch;
+                        }
+                    } catch (IllegalArgumentException exception) {
+                        LogUtil.v(
+                                "Error while matching ad tech %s to FLEDGE RBR URI %s; skipping"
+                                        + " URI. Error message: %s",
+                                adTechIdentifierString, rbrUriString, exception.getMessage());
+                    }
+                }
+            }
+
+            return null;
         }
     }
 
@@ -207,6 +243,7 @@ public class EnrollmentDao implements IEnrollmentDao {
                         /*orderBy=*/ null,
                         /*limit=*/ null)) {
             if (cursor == null || cursor.getCount() == 0) {
+                LogUtil.d("Failed to match enrollment for sdk \"%s\"", sdkName);
                 return null;
             }
             cursor.moveToNext();
@@ -246,10 +283,11 @@ public class EnrollmentDao implements IEnrollmentDao {
                 EnrollmentTables.EnrollmentDataContract.ENCRYPTION_KEY_URL,
                 String.join(" ", enrollmentData.getEncryptionKeyUrl()));
         try {
-            db.insert(
+            db.insertWithOnConflict(
                     EnrollmentTables.EnrollmentDataContract.TABLE,
                     /*nullColumnHack=*/ null,
-                    values);
+                    values,
+                    SQLiteDatabase.CONFLICT_REPLACE);
         } catch (SQLException e) {
             LogUtil.e("Failed to insert EnrollmentData. Exception : " + e.getMessage());
             return false;

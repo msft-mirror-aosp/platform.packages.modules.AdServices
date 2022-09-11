@@ -19,6 +19,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
+import android.os.Parcel;
+
 import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
@@ -39,6 +41,17 @@ public final class GetAppSetIdParamTest {
 
         assertThat(request.getSdkPackageName()).isEqualTo(SOME_SDK_PACKAGE_NAME);
         assertThat(request.getAppPackageName()).isEqualTo(SOME_PACKAGE_NAME);
+
+        // no file descriptor marshalling.
+        assertThat(request.describeContents()).isEqualTo(0);
+
+        Parcel parcel = Parcel.obtain();
+        request.writeToParcel(parcel, 0);
+        parcel.setDataPosition(0);
+
+        GetAppSetIdParam createdRequest = GetAppSetIdParam.CREATOR.createFromParcel(parcel);
+        assertThat(createdRequest).isNotEqualTo(request);
+        assertThat(GetAppSetIdParam.CREATOR.newArray(1)).hasLength(1);
     }
 
     @Test

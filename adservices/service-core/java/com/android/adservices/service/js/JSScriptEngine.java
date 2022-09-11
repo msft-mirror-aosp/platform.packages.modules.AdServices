@@ -65,6 +65,8 @@ public class JSScriptEngine {
 
     public static final String NON_SUPPORTED_MAX_HEAP_SIZE_ERROR =
             "JS isolate does not support Max heap size";
+    public static final String JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_ERROR_MSG =
+            "Unable to create isolate";
 
     @SuppressLint("StaticFieldLeak")
     private static JSScriptEngine sSingleton;
@@ -163,16 +165,6 @@ public class JSScriptEngine {
                 }
             }
         }
-    }
-
-    @VisibleForTesting
-    @SuppressLint("SetJavaScriptEnabled")
-    public JSScriptEngine(@NonNull Context context) {
-        this(
-                context,
-                new JavaScriptSandboxProvider(Profiler.createNoOpInstance(TAG)),
-                Profiler.createNoOpInstance(TAG),
-                AdServicesExecutors.getLightWeightExecutor());
     }
 
     /** @return JSScriptEngine instance */
@@ -493,7 +485,7 @@ public class JSScriptEngine {
                     "JavaScriptIsolate does not support setting max heap size, cannot create an"
                             + " isolate to run JS code into.");
             throw new JSScriptEngineConnectionException(
-                    "Unable to create isolate", isolateMemoryLimitUnsupported);
+                    JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_ERROR_MSG, isolateMemoryLimitUnsupported);
         } catch (RuntimeException jsSandboxIsDisconnected) {
             LogUtil.e(
                     "JavaScriptSandboxProcess is disconnected, cannot create an isolate to run JS"
@@ -501,7 +493,7 @@ public class JSScriptEngine {
                             + " future calls.");
             mJsSandboxProvider.destroyCurrentInstance();
             throw new JSScriptEngineConnectionException(
-                    "Unable to create isolate", jsSandboxIsDisconnected);
+                    JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_ERROR_MSG, jsSandboxIsDisconnected);
         } finally {
             isolateStopWatch.stop();
         }

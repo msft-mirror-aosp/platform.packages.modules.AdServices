@@ -49,6 +49,11 @@ public class FlagsFactory {
             public boolean getEnforceIsolateMaxHeapSize() {
                 return false;
             }
+
+            @Override
+            public boolean getDisableFledgeEnrollmentCheck() {
+                return true;
+            }
         };
     }
 }

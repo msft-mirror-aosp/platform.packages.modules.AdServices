@@ -64,7 +64,7 @@ public final class CustomAudienceTest {
                         CommonFixture.VALID_BUYER_1),
                 validCustomAudience.getTrustedBiddingData());
         assertEquals(
-                CustomAudienceFixture.getValidBiddingLogicUrlByBuyer(CommonFixture.VALID_BUYER_1),
+                CustomAudienceFixture.getValidBiddingLogicUriByBuyer(CommonFixture.VALID_BUYER_1),
                 validCustomAudience.getBiddingLogicUri());
         assertEquals(
                 AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER_1),
@@ -99,7 +99,7 @@ public final class CustomAudienceTest {
                                 CommonFixture.VALID_BUYER_1));
         assertThat(validDelayedActivationCustomAudience.getBiddingLogicUri())
                 .isEqualTo(
-                        CustomAudienceFixture.getValidBiddingLogicUrlByBuyer(
+                        CustomAudienceFixture.getValidBiddingLogicUriByBuyer(
                                 CommonFixture.VALID_BUYER_1));
         assertThat(validDelayedActivationCustomAudience.getAds())
                 .isEqualTo(AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER_1));
@@ -152,7 +152,7 @@ public final class CustomAudienceTest {
                                     TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(
                                             CommonFixture.VALID_BUYER_1))
                             .setBiddingLogicUri(
-                                    CustomAudienceFixture.getValidBiddingLogicUrlByBuyer(
+                                    CustomAudienceFixture.getValidBiddingLogicUriByBuyer(
                                             CommonFixture.VALID_BUYER_1))
                             .setAds(AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER_1))
                             .build();
@@ -197,7 +197,7 @@ public final class CustomAudienceTest {
                                 CommonFixture.VALID_BUYER_1));
         assertThat(nullAdsCustomAudience.getBiddingLogicUri())
                 .isEqualTo(
-                        CustomAudienceFixture.getValidBiddingLogicUrlByBuyer(
+                        CustomAudienceFixture.getValidBiddingLogicUriByBuyer(
                                 CommonFixture.VALID_BUYER_1));
         assertThat(nullAdsCustomAudience.getAds()).isEqualTo(Collections.emptyList());
     }
@@ -230,7 +230,7 @@ public final class CustomAudienceTest {
                                 CommonFixture.VALID_BUYER_1));
         assertThat(emptyAdsCustomAudience.getBiddingLogicUri())
                 .isEqualTo(
-                        CustomAudienceFixture.getValidBiddingLogicUrlByBuyer(
+                        CustomAudienceFixture.getValidBiddingLogicUriByBuyer(
                                 CommonFixture.VALID_BUYER_1));
         assertThat(emptyAdsCustomAudience.getAds()).isEqualTo(emptyAds);
     }
