@@ -104,6 +104,7 @@ public class TopicsService extends Service {
         return Objects.requireNonNull(mTopicsService);
     }
 
+    // TODO(b/246316128): Add dump() in Consent Manager.
     @Override
     public void dump(FileDescriptor fd, PrintWriter writer, String[] args) {
         super.dump(fd, writer, args);
@@ -113,6 +114,8 @@ public class TopicsService extends Service {
             EpochManager.getInstance(this).dump(writer, args);
             CacheManager.getInstance(this).dump(writer, args);
             MobileDataDownloadFactory.dump(this, writer);
+            writer.println("=== User Consent State For Topics Service ===");
+            writer.println("User Consent is given: " + hasUserConsent());
         } else {
             writer.println("Build is not Debuggable");
         }
