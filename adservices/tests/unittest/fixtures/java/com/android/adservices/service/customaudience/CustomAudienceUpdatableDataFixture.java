@@ -28,7 +28,9 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.common.DBAdDataFixture;
+import com.android.adservices.common.JsonFixture;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
@@ -47,9 +49,9 @@ public class CustomAudienceUpdatableDataFixture {
     public static String getFullSuccessfulJsonResponseString() throws JSONException {
         return toJsonResponseString(
                 CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString(),
-                DBTrustedBiddingDataFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER)
+                DBTrustedBiddingDataFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
                         .build(),
-                DBAdDataFixture.getValidDbAdDataListByBuyer(CommonFixture.VALID_BUYER));
+                DBAdDataFixture.getValidDbAdDataListByBuyer(CommonFixture.VALID_BUYER_1));
     }
 
     /**
@@ -82,6 +84,34 @@ public class CustomAudienceUpdatableDataFixture {
                 "user bidding signals but as a string and not a JSON object");
         jsonResponse.put(TRUSTED_BIDDING_DATA_KEY, 0);
         jsonResponse.put(ADS_KEY, "mismatched schema");
+
+        return jsonResponse;
+    }
+
+    /**
+     * Gets a valid JSON object with keys for user bidding signals, trusted bidding data, and a list
+     * of ads, malforms the expected schema at a deeper level, and returns it.
+     */
+    public static JSONObject getDeeperMalformedJsonObject() throws JSONException {
+        JSONObject jsonResponse = new JSONObject();
+
+        jsonResponse.put(USER_BIDDING_SIGNALS_KEY, 0);
+
+        JSONObject trustedBiddingDataObject = new JSONObject();
+        trustedBiddingDataObject.put(TRUSTED_BIDDING_URI_KEY, 0);
+        trustedBiddingDataObject.put(TRUSTED_BIDDING_KEYS_KEY, 0);
+        jsonResponse.put(TRUSTED_BIDDING_DATA_KEY, trustedBiddingDataObject);
+
+        JSONArray adsArray = new JSONArray();
+        JSONObject adObject0 = new JSONObject();
+        adObject0.put(RENDER_URI_KEY, 0);
+        adObject0.put(METADATA_KEY, 0);
+        adsArray.put(adObject0);
+        JSONObject adObject1 = new JSONObject();
+        adObject1.put(RENDER_URI_KEY, 1);
+        adObject1.put(METADATA_KEY, 1);
+        adsArray.put(adObject1);
+        jsonResponse.put(ADS_KEY, adsArray);
 
         return jsonResponse;
     }
@@ -145,7 +175,7 @@ public class CustomAudienceUpdatableDataFixture {
         }
 
         if (shouldAddHarmlessJunk) {
-            addHarmlessJunkValues(jsonResponse);
+            JsonFixture.addHarmlessJunkValues(jsonResponse);
         }
 
         if (userBiddingSignals != null) {
@@ -174,14 +204,14 @@ public class CustomAudienceUpdatableDataFixture {
         if (trustedBiddingData != null) {
             JSONObject trustedBiddingDataJson = new JSONObject();
             if (shouldAddHarmlessJunk) {
-                addHarmlessJunkValues(trustedBiddingDataJson);
+                JsonFixture.addHarmlessJunkValues(trustedBiddingDataJson);
             }
 
             trustedBiddingDataJson.put(
-                    TRUSTED_BIDDING_URI_KEY, trustedBiddingData.getUrl().toString());
+                    TRUSTED_BIDDING_URI_KEY, trustedBiddingData.getUri().toString());
             JSONArray trustedBiddingKeysJson = new JSONArray(trustedBiddingData.getKeys());
             if (shouldAddHarmlessJunk) {
-                addHarmlessJunkValues(trustedBiddingKeysJson);
+                JsonFixture.addHarmlessJunkValues(trustedBiddingKeysJson);
             }
             trustedBiddingDataJson.put(TRUSTED_BIDDING_KEYS_KEY, trustedBiddingKeysJson);
 
@@ -206,17 +236,25 @@ public class CustomAudienceUpdatableDataFixture {
         if (ads != null) {
             JSONArray adsJson = new JSONArray();
             if (shouldAddHarmlessJunk) {
-                addHarmlessJunkValues(adsJson);
+                JsonFixture.addHarmlessJunkValues(adsJson);
             }
 
             for (DBAdData ad : ads) {
                 JSONObject adJson = new JSONObject();
                 if (shouldAddHarmlessJunk) {
-                    addHarmlessJunkValues(adJson);
+                    JsonFixture.addHarmlessJunkValues(adJson);
                 }
 
                 adJson.put(RENDER_URI_KEY, ad.getRenderUri().toString());
-                adJson.put(METADATA_KEY, ad.getMetadata());
+                try {
+                    adJson.put(METADATA_KEY, new JSONObject(ad.getMetadata()));
+                } catch (JSONException exception) {
+                    LogUtil.v(
+                            "Trying to add invalid JSON to test object (%s); inserting as String"
+                                    + " instead",
+                            exception.getMessage());
+                    adJson.put(METADATA_KEY, ad.getMetadata());
+                }
 
                 adsJson.put(adJson);
             }
@@ -227,47 +265,19 @@ public class CustomAudienceUpdatableDataFixture {
         return jsonResponse;
     }
 
-    /** Modifies the target JSONObject in-place to add harmless junk values. */
-    private static void addHarmlessJunkValues(JSONObject target) throws JSONException {
-        target.put("junk_int", 1);
-        target.put("junk_boolean", true);
-        target.put("junk_string", "harmless junk");
-        target.put("junk_null", JSONObject.NULL);
-        target.put("junk_object", new JSONObject("{'harmless':true,'object':1}"));
-    }
-
-    /** Modifies the target JSONArray in-place to add harmless junk values. */
-    private static void addHarmlessJunkValues(JSONArray target) throws JSONException {
-        target.put(1);
-        target.put(true);
-        target.put(JSONObject.NULL);
-        target.put(new JSONObject("{'harmless':true,'object':1}"));
-    }
-
-    /**
-     * Returns an org.json.JSONObject representation of a valid JSON object serialized as a string.
-     *
-     * <p>This helps verify that when comparing strings before and after conversion to JSONObject,
-     * equality from an org.json.JSONObject perspective is guaranteed.
-     */
-    public static String formatAsOrgJsonJSONObjectString(String inputJsonString)
-            throws JSONException {
-        return new JSONObject(inputJsonString).toString();
-    }
-
     public static CustomAudienceUpdatableData.Builder getValidBuilderFullSuccessfulResponse()
             throws JSONException {
         return CustomAudienceUpdatableData.builder()
                 .setUserBiddingSignals(
                         AdSelectionSignals.fromString(
-                                formatAsOrgJsonJSONObjectString(
+                                JsonFixture.formatAsOrgJsonJSONObjectString(
                                         CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS
                                                 .toString())))
                 .setTrustedBiddingData(
                         DBTrustedBiddingDataFixture.getValidBuilderByBuyer(
-                                        CommonFixture.VALID_BUYER)
+                                        CommonFixture.VALID_BUYER_1)
                                 .build())
-                .setAds(DBAdDataFixture.getValidDbAdDataListByBuyer(CommonFixture.VALID_BUYER))
+                .setAds(DBAdDataFixture.getValidDbAdDataListByBuyer(CommonFixture.VALID_BUYER_1))
                 .setAttemptedUpdateTime(CommonFixture.FIXED_NOW)
                 .setInitialUpdateResult(BackgroundFetchRunner.UpdateResultType.SUCCESS)
                 .setContainsSuccessfulUpdate(true);

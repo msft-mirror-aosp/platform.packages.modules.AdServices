@@ -34,26 +34,25 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * An ad-tech can define what data needs to be fetched from a trusted
- * server (trusted_bidding_keys) and where it should be fetched from
- * (trusted_bidding_url).
+ * An ad-tech can define what data needs to be fetched from a trusted server (trusted_bidding_keys)
+ * and where it should be fetched from (trusted_bidding_uri).
  */
 @TypeConverters(DBTrustedBiddingData.Converters.class)
 public class DBTrustedBiddingData {
 
-    @ColumnInfo(name = "url")
+    @ColumnInfo(name = "uri")
     @NonNull
-    private final Uri mUrl;
+    private final Uri mUri;
 
     @ColumnInfo(name = "keys")
     @NonNull
     private final List<String> mKeys;
 
-    public DBTrustedBiddingData(@NonNull Uri url, @NonNull List<String> keys) {
-        Objects.requireNonNull(url, "Url must be provided.");
+    public DBTrustedBiddingData(@NonNull Uri uri, @NonNull List<String> keys) {
+        Objects.requireNonNull(uri, "Uri must be provided.");
         Objects.requireNonNull(keys, "Keys must be provided.");
 
-        this.mUrl = url;
+        this.mUri = uri;
         this.mKeys = keys;
     }
 
@@ -69,14 +68,14 @@ public class DBTrustedBiddingData {
             return null;
         }
         return new DBTrustedBiddingData.Builder()
-                .setUrl(parcelable.getTrustedBiddingUrl())
+                .setUri(parcelable.getTrustedBiddingUri())
                 .setKeys(parcelable.getTrustedBiddingKeys())
                 .build();
     }
 
     /** Returns the estimated size, in bytes, of the strings contained in this object. */
     public int size() {
-        int totalSize = mUrl.toString().getBytes().length;
+        int totalSize = mUri.toString().getBytes().length;
         for (String key : mKeys) {
             totalSize += key.getBytes().length;
         }
@@ -84,12 +83,10 @@ public class DBTrustedBiddingData {
         return totalSize;
     }
 
-    /**
-     * The URL to use to request the data.
-     */
+    /** The URI to use to request the data. */
     @NonNull
-    public Uri getUrl() {
-        return mUrl;
+    public Uri getUri() {
+        return mUri;
     }
 
     /**
@@ -107,27 +104,24 @@ public class DBTrustedBiddingData {
         if (this == o) return true;
         if (!(o instanceof DBTrustedBiddingData)) return false;
         DBTrustedBiddingData that = (DBTrustedBiddingData) o;
-        return mUrl.equals(that.mUrl) && mKeys.equals(that.mKeys);
+        return mUri.equals(that.mUri) && mKeys.equals(that.mKeys);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mUrl, mKeys);
+        return Objects.hash(mUri, mKeys);
     }
 
     @Override
     public String toString() {
-        return "DBTrustedBiddingData{"
-                + "mUrl=" + mUrl
-                + ", mKeys=" + mKeys
-                + '}';
+        return "DBTrustedBiddingData{" + "mUri=" + mUri + ", mKeys=" + mKeys + '}';
     }
 
     /**
      * Builder to construct a {@link DBTrustedBiddingData}.
      */
     public static class Builder {
-        private Uri mUrl;
+        private Uri mUri;
         private List<String> mKeys;
 
         public Builder() {
@@ -135,15 +129,13 @@ public class DBTrustedBiddingData {
 
         public Builder(@NonNull DBTrustedBiddingData trustedBiddingData) {
             Objects.requireNonNull(trustedBiddingData, "trust bidding data must be provided.");
-            mUrl = trustedBiddingData.getUrl();
+            mUri = trustedBiddingData.getUri();
             mKeys = trustedBiddingData.getKeys();
         }
 
-        /**
-         * See {@link #getUrl()} for detail.
-         */
-        public Builder setUrl(@NonNull Uri url) {
-            this.mUrl = url;
+        /** See {@link #getUri()} for detail. */
+        public Builder setUri(@NonNull Uri uri) {
+            this.mUri = uri;
             return this;
         }
 
@@ -161,7 +153,7 @@ public class DBTrustedBiddingData {
          * @return the built {@link DBTrustedBiddingData}.
          */
         public DBTrustedBiddingData build() {
-            return new DBTrustedBiddingData(mUrl, mKeys);
+            return new DBTrustedBiddingData(mUri, mKeys);
         }
     }
 

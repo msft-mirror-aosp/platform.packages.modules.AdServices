@@ -32,72 +32,63 @@
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"აპლიკაციას აძლევს წვდომას App Set ID API-ზე."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service API-ზე წვდომა"</string>
     <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"აპლიკაციას აძლევს წვდომას Consent Service API-ზე."</string>
+    <string name="permlab_modifyAdServicesState" msgid="3594653261299518914">"წვდომა AdService-ის ჩართვის მდგომარეობის მოდიფიკაციის API-ზე"</string>
+    <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"აპლიკაციას აძლევს წვდომას AdService-ის ჩართვის მდგომარეობის მოდიფიკაციის API-ზე"</string>
+    <string name="permlab_accessAdServicesState" msgid="482058883975394398">"AdService-ის ჩართვის მდგომარეობის API-ზე წვდომა"</string>
+    <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"აპლიკაციას აძლევს წვდომას AdService-ის ჩართვის მდგომარეობის API-ზე."</string>
     <string name="app_label" msgid="5985320129629013968">"Android-ის სისტემა"</string>
-    <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"Privacy Sandbox ბეტა"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"Privacy Sandbox ბეტა"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"გადართეთ Privacy Sandbox ბეტა"</string>
-    <string name="settingsUI_main_view_title" msgid="255982490790282252">"Android რეკლამების კონფიდენციალურობა (ბეტა-ვერსია)"</string>
-    <string name="settingsUI_main_view_subtitle" msgid="3380585883687237827">"შეამოწმეთ ახალი Privacy Sandbox, რომელიც ზღუდავს აპლიკაციებში თვალყურის დევნებას"</string>
-    <string name="settingsUI_main_view_info_text1" msgid="8353580266621706164">"როგორ მუშაობს Privacy Sandbox"</string>
-    <string name="settingsUI_main_view_info_text2" msgid="5144888171043725329">"მონაცემები გროვდება Privacy Sandbox-ში, რათა გაჩვენოთ თქვენთვის სასურველი რეკლამა, მაგრამ ზიარდება თქვენი ან თქვენი მოწყობილობის იდენტიფიკაციის გარეშე."</string>
-    <string name="settingsUI_main_view_info_text3" msgid="9106658161862318732">"რა სახის მონაცემები ინახება Privacy Sandbox-ში?"</string>
-    <string name="settingsUI_main_view_info_text4" msgid="5819359066240454954">"•  ზოგადი ინტერესები"</string>
-    <string name="settingsUI_main_view_info_text5" msgid="6064832868440367397">"Android აგენერირებს ამ მონაცემებს თქვენს მიერ გამოყენებული აპების საფუძველზე და ამატებს მას Privacy Sandbox-ში. მაგალითად, თქვენი რომელიმე ზოგადი ინტერესი შეიძლება იყოს „სპორტი“. \n\nშეგიძლიათ, თქვენი ინტერესების სია იხილოთ კონფიდენციალურობის პარამეტრებში და დაბლოკოთ არასასურველი მათგანი."</string>
-    <string name="settingsUI_main_view_info_text6" msgid="3406976290919982143">"•  კონკრეტული ინტერესები"</string>
-    <string name="settingsUI_main_view_info_text7" msgid="210269084665708892">"თქვენი აპები აგენერირებს ამ მონაცემებს იმის მიხედვით, თუ როგორ იყენებთ მათ და ამატებს მას Privacy Sandbox-ში. მაგალითად, აპს, რომელსაც იყენებთ სარბენი ფეხსაცმლის საყიდლად, შეიძლება დაემატოს ლეიბლი „sport_running“.\n\nშეგიძლიათ, თქვენს კონფიდენციალურობის პარამეტრებში იხილოთ აპების სია, რომლებიც ამას აკეთებს და შეუზღუდოთ ნებისმიერ აპს Privacy Sandbox-ში მონაცემების შეტანის შესაძლებლობა."</string>
-    <string name="settingsUI_topics_view_title" msgid="7437641813424176118">"ინტერესების მართვა"</string>
-    <string name="settingsUI_topics_view_subtitle" msgid="5347912133908026725">"Android-ის Privacy Sandbox ზღუდავს აპებისთვის თვალის დევნებას, ხოლო აპებს საშუალებას აძლევს, გაჩვენოთ თქვენთვის საინტერესო რეკლამა. Android უზიარებს ამ მონაცემებს რეკლამის განმთავსებლებს თქვენი ან თქვენი მოწყობილობის იდენტიფიკაციის გარეშე.\n\nთქვენ მიერ გამოყენებულ აპებზე დაყრდნობით, Android დააგენერირებს და განაახლებს რეკლამასთან დაკავშირებული თქვენი ზოგადი ინტერესების სიას. თუ თქვენ დაბლოკავთ ინტერესს, ის აღარ დაემატება სიას მის განბლოკვამდე. თქვენ შეიძლება ისევ ნახოთ მსგავსი რეკლამები."</string>
-    <string name="settingsUI_topics_view_info_text1" msgid="6729245512525985403">"ზოგადი რეკლამის ინტერესები"</string>
-    <string name="settingsUI_topics_view_info_text2" msgid="8355913397424818046">"Android აგენერირებს ამ ინტერესებს თქვენს მიერ გამოყენებული აპების საფუძველზე.\n\nმაგალითად, თუ თქვენს მოწყობილობაზე გაქვთ რამდენიმე სპორტული აპი, Android-მა შესაძლოა დაამატოს ინტერესი „სპორტი“ Privacy Sandbox-ში.\n\nმოგვიანებით ეს მონაცემები გაუზიარდება რეკლამის განმთავსებლებს თქვენი ან თქვენი მოწყობილობის იდენტიფიკაციის გარეშე."</string>
-    <string name="settingsUI_apps_key" msgid="5279102708260885695">"apps_preference"</string>
-    <string name="settingsUI_apps_title" msgid="2177966577556486280">"თქვენი აპები, რომლებიც კონკრეტულ ინტერესებს აგენერირებს"</string>
-    <string name="settingsUI_apps_summary" msgid="2382082513059909726">"მართეთ თქვენი აპები, რომლებიც კონკრეტულ ინტერესებს აგენერირებს"</string>
-    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"თქვენ მიერ დაბლოკილი აპები"</string>
-    <string name="settingsUI_apps_view_title" msgid="3615627092403761282">"აპების მართვა"</string>
-    <string name="settingsUI_apps_view_subtitle" msgid="5257332567222983503">"ზოგიერთი აპი რეკლამასთან დაკავშირებული თქვენი კონკრეტული ინტერესების შესახებ აგენერირებს მონაცემებს Privacy Sandbox-ისთვის იმის მიხედვით, თუ როგორ იყენებთ ამ აპებს. Android განაახლებს აპების ამ სიას, რომ შეძლოთ მისი ნახვა და რედაქტირება.\n\nთუ აპს დაბლოკავთ, ის აღარ დაამატებს სხვა კონკრეტულ ინტერესს. თუ მას არ განბლოკავთ, სიას არ დაემატება. აპის მიერ უკვე გენერირებული ინტერესები ამოიშლება, მაგრამ მსგავსი რეკლამები, შესაძლოა, მაინც ნახოთ."</string>
-    <string name="settingsUI_apps_view_no_apps_text" msgid="1056905761942948495">"ამჟამად საჩვენებელი აპები არ არის"</string>
-    <string name="settingsUI_reset_apps_title" msgid="3308597019425923552">"აპების მიერ გენერირებული მონაცემების გადაყენება"</string>
-    <string name="settingsUI_apps_view_info_text1" msgid="503353133396835755">"კონკრეტული ინტერესების რეკლამები"</string>
-    <string name="settingsUI_apps_view_info_text2" msgid="6562781312486257254">"ზოგიერთი აპი, რომელსაც თქვენ იყენებთ, აგენერირებს მონაცემებს თქვენი კონკრეტული ინტერესების შესახებ და ამატებს მას Privacy Sandbox-ში.\n\nმაგალითად, აპს, რომელსაც იყენებთ სარბენი ფეხსაცმლის საყიდლად, შეიძლება დაემატოს ლეიბლი sport_running.\n\nმოგვიანებით, Privacy Sandbox-ში შეგროვებული მონაცემები გაუზიარდება რეკლამის განმთავსებლებს თქვენი ან თქვენი მოწყობილობის იდენტიფიკაციის გარეშე. ანუ თქვენ კვლავ ხედავთ სასურველ რეკლამებს, მაგრამ კონფიდენციალურობის უკეთ დაცვით."</string>
-    <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="5700261138344146462">"ამჟამად დაბლოკილი აპები არ არის"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"ამჟამად საჩვენებელი ინტერესები არ არის"</string>
-    <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
-    <string name="settingsUI_topics_title" msgid="4024683469932819788">"თქვენი ზოგადი ინტერესები"</string>
-    <string name="settingsUI_topics_summary" msgid="3146101472984434355">"მართეთ თქვენი ზოგადი ინტერესები"</string>
-    <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"მართეთ თქვენი ზოგადი ინტერესები რეკლამებთან დაკავშირებით"</string>
+    <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"შეუერთდით Android-ის რეკლამების კონფიდენციალურობას (ბეტა)"</string>
+    <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android ეძებს უფრო დაცულ გზებს თქვენთვის რეკლამების საჩვენებლად"</string>
+    <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"შეიტყვეთ მეტი"</string>
+    <string name="notificationUI_header_title_eu" msgid="4955298263079910371">"Android რეკლამების კონფიდენციალურობა (ბეტა)"</string>
+    <string name="notificationUI_container1_title_eu" msgid="8315199862119660570">"რა არის ახალი"</string>
+    <string name="notificationUI_container1_body_text_eu" msgid="1700290522706948241">"Privacy Sandbox-ის კონფიდენციალურობის ახალი ფუნქციები საშუალებას აძლევს აპებს, გაჩვენოს შესაფერისი რეკლამები, მაგრამ ზღუდავს ვებსაიტებსა და აპებში თქვენი აქტივობის ინფორმაციის სხვა დეველოპერებისთვის მიწოდებას."</string>
+    <string name="notificationUI_container1_control_text_eu" msgid="3158258148321255153">"მუშაობის პრინციპი"</string>
+    <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"მონაწილეობის წესი"</string>
+    <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"ბეტას ჩართვით აპებს შეუძლია თქვენთვის რეკლამების ჩვენების უფრო მეტი გზების გამოცდა. ბეტას გამორთვა ნებისმიერ დროს შეგიძლიათ კონფიდენციალურობის პარამეტრებში."</string>
+    <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"არა, გმადლობთ"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"დიახ, შევუერთდები"</string>
+    <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"გმადლობთ მონაწილეობისათვის"</string>
+    <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"თქვენ Android რეკლამების კონფიდენციალურობის (ბეტა) წევრი ხართ. Privacy Sandbox ჩართულია თქვენს მოწყობილობაზე.\n\nშეიტყვეთ მეტი ან გამორთეთ ბეტა ნებისმიერ დროს კონფიდენციალურობის პარამეტრებიდან."</string>
+    <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"თქვენ გადაწყვიტეთ, რომ არ მიიღოთ მონაწილეობა"</string>
+    <string name="notificationUI_confirmation_decline_subtitle" msgid="4194388733937808440">"გმადლობთ პასუხისთვის. Privacy Sandbox გამორთულია თქვენს მოწყობილობაზე.\n\nთუ გადაიფიქრებთ ან მეტის გაგებას მოისურვებთ, გადადით კონფიდენციალურობის პარამეტრებში."</string>
+    <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"კონფიდენციალურობის პარამეტრები"</string>
+    <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"გასაგებია"</string>
+    <string name="notificationUI_container2_title" msgid="3844342008598264655">"თქვენ ბეტას მონაწილე ხართ"</string>
+    <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Privacy Sandbox ჩართულია თქვენს მოწყობილობაზე და აპებს შეუძლია თქვენთვის რეკლამების ჩვენების უფრო მეტი გზების გამოცდა. ბეტას გამორთვა ნებისმიერ დროს შეგიძლიათ კონფიდენციალურობის პარამეტრებში."</string>
+    <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"კონფიდენციალურობის პარამეტრების მართვა"</string>
+    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"გასაგებია"</string>
+    <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Android-ის Privacy Sandbox უზრუნველყოფს ისეთ ახალ ფუნქციებს, რომლებსაც აპები იყენებს თქვენთვის საინტერესო რეკლამების საჩვენებლად. ეს ტექნოლოგია არ იყენებს მოწყობილობის იდენტიფიკატორებს.\n\nAndroid და თქვენი აპები აფასებს, როგორი რეკლამები გაინტერესებთ და ამ ინფორმაციას დროებით თქვენს მოწყობილობაში ინახავს. ეს აპებს საშუალებას აძლევს, გაჩვენოს თქვენთვის საინტერესო რეკლამები ვებსა და აპებში თქვენი აქტივობის თვალყურის დევნების გარეშე."</string>
+    <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"რეკლამის პერსონალიზება და Privacy Sandbox"</string>
+    <string name="notificationUI_how_it_works_expanded_text3" msgid="603165966360369018">"•  Android-ის მიერ შეფასებული ინტერესები"</string>
+    <string name="notificationUI_how_it_works_expanded_text4" msgid="3910573920883580609">"Android პერიოდულად აფასებს თქვენს საუკეთესო ინტერესებს თქვენ მიერ აპების გამოყენების საფუძველზე; მაგალითად: „სპორტი“ ან „მოგზაურობა“.\n\nმოგვიანებით აპი Android-ისგან იღებს ამ ინტერესების გამოყენების ნებართვას თქვენთვის უფრო შესაფერისი რეკლამების საჩვენებლად.\n\nშეგიძლიათ, თქვენი ამჟამინდელი ინტერესები კონფიდენციალურობის პარამეტრებში ნახოთ და არასასურველი მათგანი დაბლოკოთ."</string>
+    <string name="notificationUI_how_it_works_expanded_text5" msgid="7257714040472055781">"•  აპების მიერ შეფასებული ინტერესები"</string>
+    <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"აპებს შეუძლია თქვენი ინტერესების შეფასება და დროებით მათი Android-ში შენახვა. მაგალითად, აპი, რომელსაც სარბენი ფეხსაცმლის საყიდლად იყენებთ, თქვენს ინტერესს შეაფასებს, როგორც „მარათონზე სირბილი“.\n\nმოგვიანებით, ამ ინტერესის საფუძველზე, სხვა აპი გაჩვენებთ მარათონთან დაკავშირებულ რეკლამებს.\n\nთქვენ კონფიდენციალურობის პარამეტრებში შეგიძლიათ იმ აპების სიის მართვა, რომლებიც თქვენს ინტერესებს ინახავს."</string>
+    <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
+    <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"მიიღეთ მონაწილეობა Android-ის რეკლამების კონფიდენციალურობაში (ბეტა)"</string>
+    <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Privacy Sandbox"</string>
+    <string name="settingsUI_topics_title" msgid="5996189869721397937">"Android-ის მიერ შეფასებული ინტერესების გადაყენება"</string>
+    <string name="settingsUI_apps_title" msgid="2772289096915264175">"აპები, რომლებიც აფასებს ინტერესებს"</string>
+    <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"რეკლამის ეფექტურობის გაზომვა"</string>
+    <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"აპები გამოიყენებს Privacy Sandbox-ს რეკლამების ეფექტურობის გასაზომად. ამისათვის რეკლამის განმთავსებლებმა შესაძლოა რეკლამებთან და აპებთან თქვენი ინტერაქციის მონაცემები დროებით შეინახონ Android-თან. მონაცემების მოცულობა, რომელსაც ისინი შეინახავენ, შეზღუდულია და რეგულარულად წაიშლება.\n\nამ მონაცემების წაშლა თქვენც შეგიძლიათ ნებისმიერ დროს Privacy Sandbox-ის გამორთვით."</string>
+    <string name="settingsUI_topics_view_subtitle" msgid="6608135144119617292">"Android პერიოდულად აფასებს თქვენს ინტერესებს თქვენ მიერ გამოყენებული აპების საფუძველზე. აპებს შეუძლია ამ ინტერესების გამოყენების ნებართვის Android-ისგან აღება, რომ თქვენ უფრო შესაფერისი რეკლამები გაჩვენოს.\n\nთუ ინტერესს დაბლოკავთ, ის ვეღარ დაემატება სიაში, სანამ არ განბლოკავთ. თქვენ შეიძლება ისევ ნახოთ მსგავსი რეკლამები."</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"დაბლოკვა"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"განბლოკვა"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"თქვენ მიერ დაბლოკილი ინტერესები"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"ყველა ინტერესის გადაყენება"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="5717377146633882375">"ამჟამად საჩვენებელი დაბლოკილი ინტერესები არ არის"</string>
-    <string name="notificationUI_notification_content_eu" msgid="7419441022808120101">"გამოცადეთ ახალი ფუნქციები, რომლებიც ზღუდავს სხვადასხვა აპისთვის თვალის დევნებას"</string>
-    <string name="notificationUI_header_title_eu" msgid="6822288197367284058">"გაწევრიანდით რეკლამების კონფიდენციალურობის ბეტაში"</string>
-    <string name="notificationUI_container3_title_eu" msgid="3157854074121291065">"რისი გაკეთება შეგიძლიათ"</string>
-    <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"არა, გმადლობთ"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="7294736040084958697">"დიახ, ვცდი"</string>
-    <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"გმადლობთ მონაწილეობისათვის"</string>
-    <string name="notificationUI_confirmation_accept_subtitle" msgid="722290263168711051">"თქვენ ახლა უკვე Privacy Sandbox ბეტას ნაწილი ხართ. \n\nშეგიძლიათ, შეიტყოთ მეტი ან ნებისმიერ დროს უარი თქვათ ბეტა-ვერსიაზე თქვენი კონფიდენციალურობის პარამეტრებიდან."</string>
-    <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"თქვენ გადაწყვიტეთ, რომ არ მიიღოთ მონაწილეობა"</string>
-    <string name="notificationUI_confirmation_decline_subtitle" msgid="1869322730722065768">"გმადლობთ პასუხისთვის. თქვენ არ ხართ დამატებული Privacy Sandbox ბეტა-ვერსიაში.\n\nთუ გადაიფიქრებთ ან მოინდომებთ მეტის გაგებას, გადადით თქვენს კონფიდენციალურობის პარამეტრებში."</string>
-    <string name="notificationUI_notification_content" msgid="2096372976024736172">"თქვენ გამოცდით ახალ ფუნქციებს, რომლებიც ზღუდავს სხვადასხვა აპისთვის თვალის დევნებას"</string>
-    <string name="notificationUI_header_title" msgid="857744302422337933">"თქვენ ეხმარებით Android-ს სხვადასხვა აპისთვის თვალის დევნების შეზღუდვაში"</string>
-    <string name="notificationUI_header_subtitle" msgid="522289584167376388">"Android გამოცდის ახალ ფუნქციას, რომელიც რეკლამის განმთავსებლებს შეუზღუდავს სხვადასხვა აპებში თვალის დევნებას"</string>
-    <string name="notificationUI_container1_title" msgid="3837529978480615552">"რას ნიშნავს სხვადასხვა აპებში თვალის დევნება?"</string>
-    <string name="notificationUI_container1_body_text" msgid="2564452110982505130">"აპების გამოყენების თქვენი მონაცემები შესაძლოა მარტივად ასოცირდეს თქვენს მოწყობილობასთან, შემდეგ კი გაუზიარდეს აპებს სარეკლამო მიზნებისთვის."</string>
-    <string name="notificationUI_container2_title" msgid="4796199061758878885">"როგორ მუშაობს Android"</string>
-    <string name="notificationUI_container2_body_text" msgid="7717896223210525953">"Android გამოცდის ახალ Privacy Sandbox-ს, რომელიც უსაფრთხოდ ინახავს და აზიარებს სარეკლამო მონაცემებს თქვენი და თქვენი მოწყობილობის იდენტიფიცირების გარეშე. \n\nეს ახალი სისტემა ხელს უშლის აპებს მონაცემების პირდაპირ სხვა აპებისთვის გადაცემაში, მაგრამ მაინც უშვებს თქვენთვის რეკლამების ჩვენებას."</string>
-    <string name="notificationUI_container2_control_text" msgid="3031227311095645064">"მუშაობის პრინციპი"</string>
-    <string name="notificationUI_container3_title" msgid="1283794406634157611">"როგორ გვეხმარებით"</string>
-    <string name="notificationUI_container3_body_text" msgid="2636703086913037594">"როცა თქვენ მიერ ნანახ რეკლამებში ცვლილებებს ვერ შეამჩნევთ, ბეტაში მონაწილეობა დაეხმარება Android-ს აპებში თვალყურის დევნების პერიოდულად შეზღუდვაში. ბეტას დატოვება ნებისმიერ დროს შეგიძლიათ კონფიდენციალურობის პარამეტრებიდან."</string>
-    <string name="notificationUI_left_control_button_text" msgid="6459461402253858770">"კონფიდენციალურობის პარამეტრები"</string>
-    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"გასაგებია"</string>
-    <string name="notificationUI_how_it_works_expanded_text1" msgid="1753701052925879129">"როგორ მუშაობს Privacy Sandbox"</string>
-    <string name="notificationUI_how_it_works_expanded_text2" msgid="3117263986288195274">"მონაცემები გროვდება Privacy Sandbox-ში, რათა გაჩვენოთ თქვენთვის სასურველი რეკლამა, მაგრამ ზიარდება თქვენი ან თქვენი მოწყობილობის იდენტიფიკაციის გარეშე."</string>
-    <string name="notificationUI_how_it_works_expanded_text3" msgid="7270822532577167752">"რა სახის მონაცემები შეინახება Privacy Sandbox-ში?"</string>
-    <string name="notificationUI_how_it_works_expanded_text4" msgid="5609475052636889205">"•  ზოგადი ინტერესები"</string>
-    <string name="notificationUI_how_it_works_expanded_text5" msgid="6757375506547548599">"Android აგენერირებს ამ მონაცემებს თქვენ მიერ გამოყენებული აპების საფუძველზე და ამატებს მას Privacy Sandbox-ში. მაგალითად, თქვენი რომელიმე ზოგადი ინტერესი შეიძლება იყოს „სპორტი“. \n\nშეგიძლიათ, თქვენი ინტერესების სია იხილოთ კონფიდენციალურობის პარამეტრებში და დაბლოკოთ არასასურველი მათგანი."</string>
-    <string name="notificationUI_how_it_works_expanded_text6" msgid="2863877874268072458">"•  კონკრეტული ინტერესები"</string>
-    <string name="notificationUI_how_it_works_expanded_text7" msgid="2140515900209351523">"თქვენი აპები აგენერირებს ამ მონაცემებს იმის მიხედვით, თუ როგორ იყენებთ მათ და ამატებს მას Privacy Sandbox-ში. მაგალითად, აპს, რომელსაც იყენებთ სარბენი ფეხსაცმლის საყიდლად, შეიძლება დაემატოს ლეიბლი sport_running.\n\nშეგიძლიათ, თქვენს კონფიდენციალურობის პარამეტრებში იხილოთ აპების სია, რომლებიც ამას აკეთებს და შეუზღუდოთ ნებისმიერ აპს ტესტირების გარემოში მონაცემების შეტანის შესაძლებლობა."</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"ამჟამად საჩვენებელი ინტერესები არ არის"</string>
+    <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
+    <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android-ის რეკლამების კონფიდენციალურობა (ბეტა) უზრუნველყოფს ისეთ ახალ ფუნქციებს, რომლებსაც აპები იყენებს თქვენთვის საინტერესო რეკლამების საჩვენებლად. ეს ტექნოლოგია არ იყენებს მოწყობილობის იდენტიფიკატორებს.\n\nAndroid აფასებს, როგორი რეკლამები გაინტერესებთ და ამ ინფორმაციას დროებით თქვენს მოწყობილობაში ინახავს. ეს აპებს საშუალებას აძლევს, გაჩვენოს თქვენთვის საინტერესო რეკლამები ვებსა და აპებში თქვენი აქტივობის თვალყურის დევნების გარეშე."</string>
+    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
+    <skip />
+    <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"აპებს შეუძლია თქვენი ინტერესების შეფასება და დროებით მათი Android-ში შენახვა. მოგვიანებით, ამ ინტერესების საფუძველზე, სხვა აპი გაჩვენებთ რეკლამებს.\n\nთუ აპს დაბლოკავთ, ის თქვენს ინტერესებს ვეღარ შეაფასებს. ის აღარ დაემატა ამ სიას, სანამ არ განბლოკავთ. აპის მიერ უკვე შეფასებული ინტერესები ამოიშლება, მაგრამ მსგავსი რეკლამები, შესაძლოა, მაინც ნახოთ."</string>
+    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"თქვენ მიერ დაბლოკილი აპები"</string>
+    <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"აპების მიერ შეფასებული ინტერესების გადაყენება"</string>
+    <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"ახლა არცერთი აპი არ აგენერირებს ინტერესებს თქვენთვის"</string>
+    <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
+    <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android-ის რეკლამების კონფიდენციალურობა (ბეტა) უზრუნველყოფს ისეთ ახალ ფუნქციებს, რომლებსაც აპები იყენებს თქვენთვის საინტერესო რეკლამების საჩვენებლად. ეს ტექნოლოგია არ იყენებს მოწყობილობის იდენტიფიკატორებს.\n\nთქვენი აპები აფასებს, როგორი რეკლამები გაინტერესებთ და ამ ინფორმაციას დროებით თქვენს მოწყობილობაში ინახავს. ეს აპებს საშუალებას აძლევს, გაჩვენოს თქვენთვის საინტერესო რეკლამები ვებსა და აპებში თქვენი აქტივობის თვალყურის დევნების გარეშე."</string>
+    <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"დაბლოკილი აპები არ გაქვთ"</string>
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"დაბლოკილი ინტერესები არ გაქვთ"</string>
     <string name="topic10001" msgid="1636806320891333775">"ხელოვნება და გართობა"</string>
     <string name="topic10002" msgid="1226367977754287428">"სამსახიობო ოსტატობა და თეატრი"</string>
     <string name="topic10003" msgid="6949890838957814881">"ანიმე და მანგა"</string>

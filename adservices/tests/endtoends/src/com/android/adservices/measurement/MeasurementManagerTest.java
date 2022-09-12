@@ -15,7 +15,13 @@
  */
 package com.android.adservices.measurement;
 
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 import android.adservices.measurement.DeletionParam;
 import android.adservices.measurement.DeletionRequest;
@@ -36,21 +42,27 @@ import android.os.OutcomeReceiver;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.compatibility.common.util.ShellUtils;
+
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
+import org.mockito.stubbing.Answer;
 
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class MeasurementManagerTest {
     // TODO: Add register tests with non-null callback and executor
     private static final String TAG = "MeasurementManagerTest";
     private static final String SERVICE_APK_NAME = "com.android.adservices.api";
     private static final String CLIENT_PACKAGE_NAME = "com.android.adservices.endtoendtest";
+    private static final long AWAIT_GET_ADID_TIMEOUT = 5000L;
 
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
@@ -63,14 +75,25 @@ public class MeasurementManagerTest {
                     /* sdkCeDataDir = */ null,
                     /* sdkDeDataDir = */ null);
 
+    @After
+    public void tearDown() {
+        resetOverrideConsentManagerDebugMode();
+    }
+
     @Test
     public void testRegisterSource_callingApp_expectedAttributionSource() throws Exception {
-        MeasurementManager mm = Mockito.spy(sContext.getSystemService(MeasurementManager.class));
-        IMeasurementService mockService = Mockito.mock(IMeasurementService.class);
-        Mockito.when(mm.getService()).thenReturn(mockService);
+        MeasurementManager mm = spy(sContext.getSystemService(MeasurementManager.class));
+        IMeasurementService mockService = mock(IMeasurementService.class);
+        when(mm.getService()).thenReturn(mockService);
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
-        Mockito.doNothing().when(mockService).register(captor.capture(), any(), any());
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        Answer answer =
+                (invocation) -> {
+                    countDownLatch.countDown();
+                    return null;
+                };
+        doAnswer(answer).when(mockService).register(captor.capture(), any(), any());
 
         mm.registerSource(
                 Uri.parse("https://example.com"),
@@ -78,6 +101,7 @@ public class MeasurementManagerTest {
                 /* executor = */ null,
                 /* callback = */ null);
 
+        assertTrue(countDownLatch.await(AWAIT_GET_ADID_TIMEOUT, TimeUnit.SECONDS));
         Assert.assertNotNull(captor.getValue().getPackageName());
         Assert.assertEquals(CLIENT_PACKAGE_NAME, captor.getValue().getPackageName());
     }
@@ -85,12 +109,18 @@ public class MeasurementManagerTest {
     @Test
     public void testRegisterSource_callingSdk_expectedAttributionSource() throws Exception {
         MeasurementManager mm =
-                Mockito.spy(sSandboxedSdkContext.getSystemService(MeasurementManager.class));
-        IMeasurementService mockService = Mockito.mock(IMeasurementService.class);
-        Mockito.when(mm.getService()).thenReturn(mockService);
+                spy(sSandboxedSdkContext.getSystemService(MeasurementManager.class));
+        IMeasurementService mockService = mock(IMeasurementService.class);
+        when(mm.getService()).thenReturn(mockService);
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
-        Mockito.doNothing().when(mockService).register(captor.capture(), any(), any());
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        Answer answer =
+                (invocation) -> {
+                    countDownLatch.countDown();
+                    return null;
+                };
+        doAnswer(answer).when(mockService).register(captor.capture(), any(), any());
 
         mm.registerSource(
                 Uri.parse("https://example.com"),
@@ -98,18 +128,25 @@ public class MeasurementManagerTest {
                 /* executor = */ null,
                 /* callback = */ null);
 
+        assertTrue(countDownLatch.await(AWAIT_GET_ADID_TIMEOUT, TimeUnit.SECONDS));
         Assert.assertNotNull(captor.getValue().getPackageName());
         Assert.assertEquals(CLIENT_PACKAGE_NAME, captor.getValue().getPackageName());
     }
 
     @Test
     public void testRegisterWebSource_callingApp_expectedAttributionSource() throws Exception {
-        MeasurementManager mm = Mockito.spy(sContext.getSystemService(MeasurementManager.class));
-        IMeasurementService mockService = Mockito.mock(IMeasurementService.class);
-        Mockito.when(mm.getService()).thenReturn(mockService);
+        MeasurementManager mm = spy(sContext.getSystemService(MeasurementManager.class));
+        IMeasurementService mockService = mock(IMeasurementService.class);
+        when(mm.getService()).thenReturn(mockService);
         ArgumentCaptor<WebSourceRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebSourceRegistrationRequestInternal.class);
-        Mockito.doNothing().when(mockService).registerWebSource(captor.capture(), any(), any());
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        Answer answer =
+                (invocation) -> {
+                    countDownLatch.countDown();
+                    return null;
+                };
+        doAnswer(answer).when(mockService).registerWebSource(captor.capture(), any(), any());
 
         WebSourceParams webSourceParams =
                 new WebSourceParams.Builder(Uri.parse("https://example.com"))
@@ -128,6 +165,7 @@ public class MeasurementManagerTest {
         mm.registerWebSource(
                 webSourceRegistrationRequest, /* executor = */ null, /* callback = */ null);
 
+        assertTrue(countDownLatch.await(AWAIT_GET_ADID_TIMEOUT, TimeUnit.SECONDS));
         Assert.assertNotNull(captor.getValue().getPackageName());
         Assert.assertEquals(CLIENT_PACKAGE_NAME, captor.getValue().getPackageName());
     }
@@ -135,12 +173,18 @@ public class MeasurementManagerTest {
     @Test
     public void testRegisterWebSource_callingSdk_expectedAttributionSource() throws Exception {
         MeasurementManager mm =
-                Mockito.spy(sSandboxedSdkContext.getSystemService(MeasurementManager.class));
-        IMeasurementService mockService = Mockito.mock(IMeasurementService.class);
-        Mockito.when(mm.getService()).thenReturn(mockService);
+                spy(sSandboxedSdkContext.getSystemService(MeasurementManager.class));
+        IMeasurementService mockService = mock(IMeasurementService.class);
+        when(mm.getService()).thenReturn(mockService);
         ArgumentCaptor<WebSourceRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebSourceRegistrationRequestInternal.class);
-        Mockito.doNothing().when(mockService).registerWebSource(captor.capture(), any(), any());
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        Answer answer =
+                (invocation) -> {
+                    countDownLatch.countDown();
+                    return null;
+                };
+        doAnswer(answer).when(mockService).registerWebSource(captor.capture(), any(), any());
 
         WebSourceParams webSourceParams =
                 new WebSourceParams.Builder(Uri.parse("https://example.com"))
@@ -159,18 +203,25 @@ public class MeasurementManagerTest {
         mm.registerWebSource(
                 webSourceRegistrationRequest, /* executor = */ null, /* callback = */ null);
 
+        assertTrue(countDownLatch.await(AWAIT_GET_ADID_TIMEOUT, TimeUnit.SECONDS));
         Assert.assertNotNull(captor.getValue().getPackageName());
         Assert.assertEquals(CLIENT_PACKAGE_NAME, captor.getValue().getPackageName());
     }
 
     @Test
     public void testRegisterWebTrigger_callingApp_expectedAttributionSource() throws Exception {
-        MeasurementManager mm = Mockito.spy(sContext.getSystemService(MeasurementManager.class));
-        IMeasurementService mockService = Mockito.mock(IMeasurementService.class);
-        Mockito.when(mm.getService()).thenReturn(mockService);
+        MeasurementManager mm = spy(sContext.getSystemService(MeasurementManager.class));
+        IMeasurementService mockService = mock(IMeasurementService.class);
+        when(mm.getService()).thenReturn(mockService);
         ArgumentCaptor<WebTriggerRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebTriggerRegistrationRequestInternal.class);
-        Mockito.doNothing().when(mockService).registerWebTrigger(captor.capture(), any(), any());
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        Answer answer =
+                (invocation) -> {
+                    countDownLatch.countDown();
+                    return null;
+                };
+        doAnswer(answer).when(mockService).registerWebTrigger(captor.capture(), any(), any());
 
         WebTriggerParams webTriggerParams =
                 new WebTriggerParams.Builder(Uri.parse("https://example.com"))
@@ -184,6 +235,7 @@ public class MeasurementManagerTest {
         mm.registerWebTrigger(
                 webTriggerRegistrationRequest, /* executor = */ null, /* callback = */ null);
 
+        assertTrue(countDownLatch.await(AWAIT_GET_ADID_TIMEOUT, TimeUnit.SECONDS));
         Assert.assertNotNull(captor.getValue().getPackageName());
         Assert.assertEquals(CLIENT_PACKAGE_NAME, captor.getValue().getPackageName());
     }
@@ -191,12 +243,18 @@ public class MeasurementManagerTest {
     @Test
     public void testRegisterWebTrigger_callingSdk_expectedAttributionSource() throws Exception {
         MeasurementManager mm =
-                Mockito.spy(sSandboxedSdkContext.getSystemService(MeasurementManager.class));
-        IMeasurementService mockService = Mockito.mock(IMeasurementService.class);
-        Mockito.when(mm.getService()).thenReturn(mockService);
+                spy(sSandboxedSdkContext.getSystemService(MeasurementManager.class));
+        IMeasurementService mockService = mock(IMeasurementService.class);
+        when(mm.getService()).thenReturn(mockService);
         ArgumentCaptor<WebTriggerRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebTriggerRegistrationRequestInternal.class);
-        Mockito.doNothing().when(mockService).registerWebTrigger(captor.capture(), any(), any());
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        Answer answer =
+                (invocation) -> {
+                    countDownLatch.countDown();
+                    return null;
+                };
+        doAnswer(answer).when(mockService).registerWebTrigger(captor.capture(), any(), any());
 
         WebTriggerParams webTriggerParams =
                 new WebTriggerParams.Builder(Uri.parse("https://example.com"))
@@ -210,22 +268,30 @@ public class MeasurementManagerTest {
         mm.registerWebTrigger(
                 webTriggerRegistrationRequest, /* executor = */ null, /* callback = */ null);
 
+        assertTrue(countDownLatch.await(AWAIT_GET_ADID_TIMEOUT, TimeUnit.SECONDS));
         Assert.assertNotNull(captor.getValue().getPackageName());
         Assert.assertEquals(CLIENT_PACKAGE_NAME, captor.getValue().getPackageName());
     }
 
     @Test
     public void testRegisterTrigger_callingApp_expectedAttributionSource() throws Exception {
-        MeasurementManager mm = Mockito.spy(sContext.getSystemService(MeasurementManager.class));
-        IMeasurementService mockService = Mockito.mock(IMeasurementService.class);
-        Mockito.when(mm.getService()).thenReturn(mockService);
+        MeasurementManager mm = spy(sContext.getSystemService(MeasurementManager.class));
+        IMeasurementService mockService = mock(IMeasurementService.class);
+        when(mm.getService()).thenReturn(mockService);
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
-        Mockito.doNothing().when(mockService).register(captor.capture(), any(), any());
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        Answer answer =
+                (invocation) -> {
+                    countDownLatch.countDown();
+                    return null;
+                };
+        doAnswer(answer).when(mockService).register(captor.capture(), any(), any());
 
         mm.registerTrigger(
                 Uri.parse("https://example.com"), /* executor = */ null, /* callback = */ null);
 
+        assertTrue(countDownLatch.await(AWAIT_GET_ADID_TIMEOUT, TimeUnit.SECONDS));
         Assert.assertNotNull(captor.getValue().getPackageName());
         Assert.assertEquals(CLIENT_PACKAGE_NAME, captor.getValue().getPackageName());
     }
@@ -233,27 +299,34 @@ public class MeasurementManagerTest {
     @Test
     public void testRegisterTrigger_callingSdk_expectedAttributionSource() throws Exception {
         MeasurementManager mm =
-                Mockito.spy(sSandboxedSdkContext.getSystemService(MeasurementManager.class));
-        IMeasurementService mockService = Mockito.mock(IMeasurementService.class);
-        Mockito.when(mm.getService()).thenReturn(mockService);
+                spy(sSandboxedSdkContext.getSystemService(MeasurementManager.class));
+        IMeasurementService mockService = mock(IMeasurementService.class);
+        when(mm.getService()).thenReturn(mockService);
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
-        Mockito.doNothing().when(mockService).register(captor.capture(), any(), any());
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        Answer answer =
+                (invocation) -> {
+                    countDownLatch.countDown();
+                    return null;
+                };
+        doAnswer(answer).when(mockService).register(captor.capture(), any(), any());
 
         mm.registerTrigger(
                 Uri.parse("https://example.com"), /* executor = */ null, /* callback = */ null);
 
+        assertTrue(countDownLatch.await(AWAIT_GET_ADID_TIMEOUT, TimeUnit.SECONDS));
         Assert.assertNotNull(captor.getValue().getPackageName());
         Assert.assertEquals(CLIENT_PACKAGE_NAME, captor.getValue().getPackageName());
     }
 
     @Test
     public void testDeleteRegistrations_callingApp_expectedAttributionSource() throws Exception {
-        MeasurementManager mm = Mockito.spy(sContext.getSystemService(MeasurementManager.class));
-        IMeasurementService mockService = Mockito.mock(IMeasurementService.class);
-        Mockito.when(mm.getService()).thenReturn(mockService);
+        MeasurementManager mm = spy(sContext.getSystemService(MeasurementManager.class));
+        IMeasurementService mockService = mock(IMeasurementService.class);
+        when(mm.getService()).thenReturn(mockService);
         ArgumentCaptor<DeletionParam> captor = ArgumentCaptor.forClass(DeletionParam.class);
-        Mockito.doNothing().when(mockService).deleteRegistrations(captor.capture(), any(), any());
+        doNothing().when(mockService).deleteRegistrations(captor.capture(), any(), any());
 
         mm.deleteRegistrations(
                 new DeletionRequest.Builder().build(),
@@ -267,11 +340,11 @@ public class MeasurementManagerTest {
     @Test
     public void testDeleteRegistrations_callingSdk_expectedAttributionSource() throws Exception {
         MeasurementManager mm =
-                Mockito.spy(sSandboxedSdkContext.getSystemService(MeasurementManager.class));
-        IMeasurementService mockService = Mockito.mock(IMeasurementService.class);
-        Mockito.when(mm.getService()).thenReturn(mockService);
+                spy(sSandboxedSdkContext.getSystemService(MeasurementManager.class));
+        IMeasurementService mockService = mock(IMeasurementService.class);
+        when(mm.getService()).thenReturn(mockService);
         ArgumentCaptor<DeletionParam> captor = ArgumentCaptor.forClass(DeletionParam.class);
-        Mockito.doNothing().when(mockService).deleteRegistrations(captor.capture(), any(), any());
+        doNothing().when(mockService).deleteRegistrations(captor.capture(), any(), any());
 
         mm.deleteRegistrations(
                 new DeletionRequest.Builder().build(),
@@ -284,7 +357,8 @@ public class MeasurementManagerTest {
 
     @Test
     public void testGetMeasurementApiStatus() throws Exception {
-        MeasurementManager mm = Mockito.spy(sContext.getSystemService(MeasurementManager.class));
+        MeasurementManager mm = spy(sContext.getSystemService(MeasurementManager.class));
+        overrideConsentManagerDebugMode();
 
         CompletableFuture<Integer> future = new CompletableFuture<>();
         OutcomeReceiver<Integer, Exception> callback =
@@ -304,5 +378,14 @@ public class MeasurementManagerTest {
 
         Assert.assertEquals(
                 Integer.valueOf(MeasurementManager.MEASUREMENT_API_STATE_ENABLED), future.get());
+    }
+
+    // Override the Consent Manager behaviour - Consent Given
+    private void overrideConsentManagerDebugMode() {
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
+    }
+
+    private void resetOverrideConsentManagerDebugMode() {
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode null");
     }
 }

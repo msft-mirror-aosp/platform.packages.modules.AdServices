@@ -115,6 +115,38 @@ public interface Flags extends Dumpable {
         return DEFAULT_CLASSIFIER_TYPE;
     }
 
+    /** Number of top labels allowed for every app. */
+    int CLASSIFIER_NUMBER_OF_TOP_LABELS = 3;
+
+    /** Returns the number of top labels allowed for every app after the classification process. */
+    default int getClassifierNumberOfTopLabels() {
+        return CLASSIFIER_NUMBER_OF_TOP_LABELS;
+    }
+
+    /** Threshold value for classification values. */
+    float CLASSIFIER_THRESHOLD = 0.1f;
+
+    /** Returns the threshold value for classification values. */
+    default float getClassifierThreshold() {
+        return CLASSIFIER_THRESHOLD;
+    }
+
+    /** Number of max words allowed in the description for topics classifier. */
+    int CLASSIFIER_DESCRIPTION_MAX_WORDS = 500;
+
+    /** Returns the number of max words allowed in the description for topics classifier. */
+    default int getClassifierDescriptionMaxWords() {
+        return CLASSIFIER_DESCRIPTION_MAX_WORDS;
+    }
+
+    /** Number of max characters allowed in the description for topics classifier. */
+    int CLASSIFIER_DESCRIPTION_MAX_LENGTH = 2500;
+
+    /** Returns the number of max characters allowed in the description for topics classifier. */
+    default int getClassifierDescriptionMaxLength() {
+        return CLASSIFIER_DESCRIPTION_MAX_LENGTH;
+    }
+
     /* The default period for the Maintenance job. */
     long MAINTENANCE_JOB_PERIOD_MS = 86_400_000; // 1 day.
 
@@ -188,8 +220,7 @@ public interface Flags extends Dumpable {
         return MEASUREMENT_NETWORK_READ_TIMEOUT_MS;
     }
 
-    /* The default measurement app name. */
-    String MEASUREMENT_APP_NAME = "";
+    long MEASUREMENT_DB_SIZE_LIMIT = (1024 * 1024) * 10; // 10 MBs
     int MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(5);
     int MEASUREMENT_NETWORK_READ_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(30);
 
@@ -210,9 +241,9 @@ public interface Flags extends Dumpable {
         return MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED;
     }
 
-    /** Returns the app name. */
-    default String getMeasurementAppName() {
-        return MEASUREMENT_APP_NAME;
+    /** Returns the DB size limit for measurement. */
+    default long getMeasurementDbSizeLimit() {
+        return MEASUREMENT_DB_SIZE_LIMIT;
     }
 
     /** Measurement manifest file url, used for MDD download. */
@@ -465,10 +496,10 @@ public interface Flags extends Dumpable {
         return FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
     }
 
-    boolean ADSERVICES_ENABLE_STATUS = false;
+    boolean ADSERVICES_ENABLED = false;
 
-    default boolean getAdservicesEnableStatus() {
-        return ADSERVICES_ENABLE_STATUS;
+    default boolean getAdServicesEnabled() {
+        return ADSERVICES_ENABLED;
     }
 
     /** Dump some debug info for the flags */
@@ -521,8 +552,8 @@ public interface Flags extends Dumpable {
     // TODO(b/236761740): We use this for now for testing. We need to update to the correct one
     // when we actually upload the models.
     String MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL =
-            "https://dl.google.com/mdi-serving/adservices/topics_classifier/manifest_configs/1"
-                    + "/manifest_config_1657744589741.binaryproto";
+            "https://dl.google.com/mdi-serving/adservices/topics_classifier/manifest_configs/2"
+                    + "/manifest_config_1661376643699.binaryproto";
 
     default String getMddTopicsClassifierManifestFileUrl() {
         return MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
@@ -553,6 +584,12 @@ public interface Flags extends Dumpable {
 
     default boolean getConsentNotificationDebugMode() {
         return CONSENT_NOTIFICATION_DEBUG_MODE;
+    }
+
+    boolean CONSENT_MANAGER_DEBUG_MODE = false;
+
+    default boolean getConsentManagerDebugMode() {
+        return CONSENT_MANAGER_DEBUG_MODE;
     }
 
     // Group of All Killswitches
@@ -880,9 +917,35 @@ public interface Flags extends Dumpable {
      */
     boolean TOPICS_KILL_SWITCH = false; // By default, the Topics API is enabled.
 
+    /** @return value of Topics API kill switch */
     default boolean getTopicsKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
         return getGlobalKillSwitch() || TOPICS_KILL_SWITCH;
+    }
+
+    // MDD Killswitches
+
+    /**
+     * MDD Background Task Kill Switch. The default value is false which means the MDD background
+     * task is enabled. This flag is used for emergency turning off the MDD background tasks.
+     */
+    boolean MDD_BACKGROUND_TASK_KILL_SWITCH = false;
+
+    /** @return value of Mdd Background Task kill switch */
+    default boolean getMddBackgroundTaskKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        return getGlobalKillSwitch() || MDD_BACKGROUND_TASK_KILL_SWITCH;
+    }
+
+    /**
+     * MDD Logger Kill Switch. The default value is false which means the MDD Logger is enabled.
+     * This flag is used for emergency turning off the MDD Logger.
+     */
+    boolean MDD_LOGGER_KILL_SWITCH = false;
+
+    /** @return value of MDD Logger Kill Switch */
+    default boolean getMddLoggerKillSwitch() {
+        return getGlobalKillSwitch() || MDD_LOGGER_KILL_SWITCH;
     }
 
     // FLEDGE Kill switches
@@ -922,34 +985,67 @@ public interface Flags extends Dumpable {
     String PPAPI_APP_ALLOW_LIST =
             "android.platform.test.scenario,"
                     + "android.adservices.crystalball,"
-                    + "com.android.tests.sandbox.topics,"
-                    + "com.android.adservices.tests.cts.endtoendtest,"
-                    + "com.android.adservices.tests.cts.topics.testapp1," // CTS test sample app
+                    + "android.adservices.cts,"
+                    + "android.adservices.debuggablects,"
+                    + "com.android.adservices.endtoendtest,"
+                    + "com.android.adservices.servicecoretest,"
                     + "com.android.adservices.tests.permissions.appoptout,"
-                    + "com.android.adservices.tests.permissions.noperm,"
                     + "com.android.adservices.tests.permissions.valid,"
-                    + "com.example.adservices.samples.topics.sampleapp1,"
-                    + "com.example.adservices.samples.topics.sampleapp2,"
-                    + "com.example.adservices.samples.topics.sampleapp3,"
-                    + "com.example.adservices.samples.topics.sampleapp4,"
-                    + "com.example.adservices.samples.topics.sampleapp5,"
-                    + "com.example.adservices.samples.topics.sampleapp6";
+                    + "com.android.adservices.tests.adid,"
+                    + "com.android.adservices.tests.appsetid,"
+                    + "com.android.tests.sandbox.fledge,"
+                    + "com.android.tests.sandbox.measurement,"
+                    + "com.example.adservices.samples.adid.app,"
+                    + "com.example.adservices.samples.appsetid.app,"
+                    + "com.example.adservices.samples.fledge.sampleapp,"
+                    + "com.example.adservices.samples.fledge.sampleapp1,"
+                    + "com.example.adservices.samples.fledge.sampleapp2,"
+                    + "com.example.adservices.samples.fledge.sampleapp3,"
+                    + "com.example.adservices.samples.fledge.sampleapp4,"
+                    + "com.android.adservices.tests.cts.endtoendtest.measurement";
 
     /**
-     * The client app packages that are allowed to invoke web context registration APIs, i.e. {@link
-     * android.adservices.measurement.MeasurementManager#registerWebSource} and {@link
-     * android.adservices.measurement.MeasurementManager#registerWebTrigger}. App packages that do
-     * not belong to the list will be responded back with an error response.
-     */
-    String WEB_CONTEXT_REGISTRATION_CLIENT_ALLOW_LIST = "";
-
-    /**
-     * Returns the The Allow List for PP APIs. Only App Package Name belongs to this Allow List can
-     * use PP APIs.
+     * Returns bypass List for PPAPI app signature check. Apps with package name on this list will
+     * bypass the signature check
      */
     default String getPpapiAppAllowList() {
         return PPAPI_APP_ALLOW_LIST;
     }
+
+    /*
+     * The allow-list for PP APIs. This list has the list of app signatures that we allow
+     * using PP APIs. App Package signatures that do not belong to this allow-list will not be
+     * able to use PP APIs, unless the package name of this app is in the bypass list.
+     *
+     * If this list has special value "*", then all package signatures are allowed.
+     *
+     * There must be not any empty space between comma.
+     */
+    String PPAPI_APP_SIGNATURE_ALLOW_LIST =
+            // com.android.adservices.tests.cts.endtoendtest
+            "6cecc50e34ae31bfb5678986d6d6d3736c571ded2f2459527793e1f054eb0c9b,"
+                    // com.android.tests.sandbox.topics
+                    + "a40da80a59d170caa950cf15c18c454d47a39b26989d8b640ecd745ba71bf5dc,"
+                    // Topics Sample Apps
+                    // For example, com.example.adservices.samples.topics.sampleapp1
+                    + "301aa3cb081134501c45f1422abc66c24224fd5ded5fdc8f17e697176fd866aa,"
+                    // com.android.adservices.tests.cts.topics.testapp1
+                    // android.platform.test.scenario.adservices.GetTopicsApiCall
+                    // Both have [certificate: "platform"] in .bp file
+                    + "c8a2e9bccf597c2fb6dc66bee293fc13f2fc47ec77bc6b2b0d52c11f51192ab8";
+
+    /** Only App signatures belonging to this Allow List can use PP APIs. */
+    default String getPpapiAppSignatureAllowList() {
+        return PPAPI_APP_SIGNATURE_ALLOW_LIST;
+    }
+
+    /**
+     * The client app packages that are allowed to invoke web context APIs, i.e. {@link
+     * android.adservices.measurement.MeasurementManager#registerWebSource} and {@link
+     * android.adservices.measurement.MeasurementManager#deleteRegistrations}. App packages that do
+     * not belong to the list will be responded back with an error response.
+     */
+    String WEB_CONTEXT_CLIENT_ALLOW_LIST = "";
 
     // Rate Limit Flags.
 
@@ -964,20 +1060,29 @@ public interface Flags extends Dumpable {
         return SDK_REQUEST_PERMITS_PER_SECOND;
     }
 
-    // TODO(b/238924460): Remove after MDD download service is available and can be invoked from CTS
-    // tests.
-    /**
-     * Disable enrollment check for Topics API. This is done only to allow CTS test to pass since
-     * there is currently no way to write the enrollment data from test in the same db that can be
-     * read from the service. Note: This should not be enabled in production, unless there's a
-     * problem with enrollment.
-     */
-    boolean DISABLE_TOPICS_ENROLLMENT_CHECK = false; // By default, enrollment check is enabled.
+    // Flags for ad tech enrollment enforcement
 
+    boolean DISABLE_TOPICS_ENROLLMENT_CHECK = false;
+    boolean DISABLE_FLEDGE_ENROLLMENT_CHECK = false;
+    boolean DISABLE_MEASUREMENT_ENROLLMENT_CHECK = false;
+
+    /** @return {@code true} if the Topics API should disable the ad tech enrollment check */
     default boolean isDisableTopicsEnrollmentCheck() {
         return DISABLE_TOPICS_ENROLLMENT_CHECK;
     }
 
+    /** @return {@code true} if the FLEDGE APIs should disable the ad tech enrollment check */
+    default boolean getDisableFledgeEnrollmentCheck() {
+        return DISABLE_FLEDGE_ENROLLMENT_CHECK;
+    }
+
+    /** @return {@code true} if the Measurement APIs should disable the ad tech enrollment check */
+    default boolean isDisableMeasurementEnrollmentCheck() {
+        return DISABLE_MEASUREMENT_ENROLLMENT_CHECK;
+    }
+
+    boolean ENFORCE_FOREGROUND_STATUS_ADID = true;
+    boolean ENFORCE_FOREGROUND_STATUS_APPSETID = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES = true;
@@ -1016,24 +1121,92 @@ public interface Flags extends Dumpable {
         return ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE;
     }
 
+    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS = true;
+    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCE = true;
+    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_TRIGGER = true;
+    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_SOURCE = true;
+    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER = true;
+    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS = true;
+
+    /**
+     * @return true if Measurement Delete Registrations API should require that the calling API is
+     *     running in foreground.
+     */
+    default boolean getEnforceForegroundStatusForMeasurementDeleteRegistrations() {
+        return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS;
+    }
+
+    /**
+     * @return true if Measurement Register Source API should require that the calling API is
+     *     running in foreground.
+     */
+    default boolean getEnforceForegroundStatusForMeasurementRegisterSource() {
+        return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCE;
+    }
+
+    /**
+     * @return true if Measurement Register Trigger API should require that the calling API is
+     *     running in foreground.
+     */
+    default boolean getEnforceForegroundStatusForMeasurementRegisterTrigger() {
+        return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_TRIGGER;
+    }
+
+    /**
+     * @return true if Measurement Register Web Source API should require that the calling API is
+     *     running in foreground.
+     */
+    default boolean getEnforceForegroundStatusForMeasurementRegisterWebSource() {
+        return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_SOURCE;
+    }
+
+    /**
+     * @return true if Measurement Register Web Trigger API should require that the calling API is
+     *     running in foreground.
+     */
+    default boolean getEnforceForegroundStatusForMeasurementRegisterWebTrigger() {
+        return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER;
+    }
+
+    /**
+     * @return true if Measurement Get Status API should require that the calling API is running in
+     *     foreground.
+     */
+    default boolean getEnforceForegroundStatusForMeasurementStatus() {
+        return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS;
+    }
+
     /** @return true if Topics API should require that the calling API is running in foreground. */
     default boolean getEnforceForegroundStatusForTopics() {
         return ENFORCE_FOREGROUND_STATUS_TOPICS;
     }
 
+    /** @return true if AdId API should require that the calling API is running in foreground. */
+    default boolean getEnforceForegroundStatusForAdId() {
+        return ENFORCE_FOREGROUND_STATUS_ADID;
+    }
+
     int FOREGROUND_STATUS_LEVEL = IMPORTANCE_FOREGROUND_SERVICE;
+
+    /**
+     * @return true if AppSetId API should require that the calling API is running in foreground.
+     */
+    default boolean getEnforceForegroundStatusForAppSetId() {
+        return ENFORCE_FOREGROUND_STATUS_APPSETID;
+    }
 
     /** @return the importance level to use to check if an application is in foreground. */
     default int getForegroundStatuslLevelForValidation() {
         return FOREGROUND_STATUS_LEVEL;
     }
 
-    default String getWebContextRegistrationClientAppAllowList() {
-        return WEB_CONTEXT_REGISTRATION_CLIENT_ALLOW_LIST;
+    default String getWebContextClientAppAllowList() {
+        return WEB_CONTEXT_CLIENT_ALLOW_LIST;
     }
 
     boolean ENFORCE_ISOLATE_MAX_HEAP_SIZE = true;
-    long ISOLATE_MAX_HEAP_SIZE_BYTES = 2 * 1024 * 1024L; // 2 MB
+    long ISOLATE_MAX_HEAP_SIZE_BYTES = 10 * 1024 * 1024L; // 10 MB
+    long MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES = 16 * 1024; // 16 kB
 
     /**
      * @return true if we enforce to check that JavaScriptIsolate supports limiting the max heap
@@ -1046,5 +1219,13 @@ public interface Flags extends Dumpable {
     /** @return size in bytes we bound the heap memory for JavaScript isolate */
     default long getIsolateMaxHeapSizeBytes() {
         return ISOLATE_MAX_HEAP_SIZE_BYTES;
+    }
+
+    /**
+     * @return max allowed size in bytes for response based registrations payload of an individual
+     *     source/trigger registration.
+     */
+    default long getMaxResponseBasedRegistrationPayloadSizeBytes() {
+        return MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES;
     }
 }

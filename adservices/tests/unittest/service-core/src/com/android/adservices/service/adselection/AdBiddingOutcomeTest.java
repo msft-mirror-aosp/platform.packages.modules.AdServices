@@ -35,13 +35,13 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 
 public class AdBiddingOutcomeTest {
-    private static final String RENDER_URL = "http://test.com/fetch";
+    private static final String RENDER_URI = "http://test.com/fetch";
     private static final String METADATA = "{\"field1\":1}";
-    private static final AdData AD_DATA = new AdData(Uri.parse(RENDER_URL), METADATA);
+    private static final AdData AD_DATA = new AdData(Uri.parse(RENDER_URI), METADATA);
     private static final Double BID = 0.1;
     private static final AdWithBid AD_WITH_BID = new AdWithBid(AD_DATA, BID);
 
-    private static final Uri BIDDING_LOGIC_URL = Uri.parse("https://www.example.com/test");
+    private static final Uri BIDDING_LOGIC_URI = Uri.parse("https://www.example.com/test");
     private static final String BUYER_DECISION_LOGIC_JS = "buyer_decisoin_logic_javascript";
     private static final String NAME = "name";
     private static final Clock CLOCK = Clock.fixed(Instant.now(), ZoneOffset.UTC);
@@ -51,7 +51,7 @@ public class AdBiddingOutcomeTest {
     private static final CustomAudienceSignals CUSTOM_AUDIENCE_SIGNALS =
             new CustomAudienceSignals.Builder()
                     .setOwner(CustomAudienceFixture.VALID_OWNER)
-                    .setBuyer(CommonFixture.VALID_BUYER)
+                    .setBuyer(CommonFixture.VALID_BUYER_1)
                     .setName(NAME)
                     .setActivationTime(ACTIVATION_TIME)
                     .setExpirationTime(EXPIRATION_TIME)
@@ -59,7 +59,7 @@ public class AdBiddingOutcomeTest {
                     .build();
     private static final CustomAudienceBiddingInfo CUSTOM_AUDIENCE_BIDDING_INFO =
             CustomAudienceBiddingInfo.create(
-                    BIDDING_LOGIC_URL, BUYER_DECISION_LOGIC_JS, CUSTOM_AUDIENCE_SIGNALS);
+                    BIDDING_LOGIC_URI, BUYER_DECISION_LOGIC_JS, CUSTOM_AUDIENCE_SIGNALS);
 
     @Test
     public void testAdSelectionBiddingOutcomeBuilder() {

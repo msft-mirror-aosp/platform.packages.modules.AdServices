@@ -7,6 +7,7 @@
     <style name="MainStyle">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
+        <item name="android:textDirection">locale</item>
     </style>
 
     <style name="MainStyle.SettingsControlButton" parent="android:Widget.DeviceDefault.Button">
@@ -47,6 +48,10 @@
     <style name="MainStyle.H1">
         <item name="android:layout_marginTop">24dp</item>
         <item name="android:textAppearance">@style/TextAppearance.H1</item>
+    </style>
+
+    <style name="MainStyle.H4">
+        <item name="android:textAppearance">@style/TextAppearance.H4</item>
     </style>
 
     <style name="MainStyle.H5">

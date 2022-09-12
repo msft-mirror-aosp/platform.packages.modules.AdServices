@@ -24,8 +24,10 @@ import android.content.Context;
 import android.os.Bundle;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.ext.junit.rules.ActivityScenarioRule;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -37,6 +39,10 @@ public class SdkSandboxTestSharedApp2  {
 
     private SdkSandboxManager mSdkSandboxManager;
 
+    @Rule
+    public final ActivityScenarioRule<SdkSandboxEmptyActivity> mRule =
+            new ActivityScenarioRule<>(SdkSandboxEmptyActivity.class);
+
     @Before
     public void setup() {
         Context sContext = ApplicationProvider.getApplicationContext();
@@ -47,10 +53,11 @@ public class SdkSandboxTestSharedApp2  {
 
     @Test
     public void testLoadSdkIsSuccessful() {
+        mRule.getScenario();
+
         Bundle params = new Bundle();
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
-        mSdkSandboxManager.loadSdk(SDK_PACKAGE_NAME, params,
-                Runnable::run, callback);
+        mSdkSandboxManager.loadSdk(SDK_PACKAGE_NAME, params, Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
     }
 }

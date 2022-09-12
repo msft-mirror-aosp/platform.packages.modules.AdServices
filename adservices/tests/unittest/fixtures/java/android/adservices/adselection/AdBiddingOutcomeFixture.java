@@ -40,8 +40,8 @@ public class AdBiddingOutcomeFixture {
                 .setAdWithBid(new AdWithBid(adData, testBid))
                 .setCustomAudienceBiddingInfo(
                         CustomAudienceBiddingInfo.builder()
-                                .setBiddingLogicUrl(
-                                        CustomAudienceBiddingInfoFixture.VALID_BIDDING_LOGIC_URL)
+                                .setBiddingLogicUri(
+                                        CustomAudienceBiddingInfoFixture.VALID_BIDDING_LOGIC_URI)
                                 .setBuyerDecisionLogicJs(
                                         CustomAudienceBiddingInfoFixture.BUYER_DECISION_LOGIC_JS)
                                 .setCustomAudienceSignals(

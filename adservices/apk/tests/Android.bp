@@ -30,7 +30,6 @@ android_test {
         "adservices-service-core",
         "adservices-assets",
         "androidx.fragment_fragment",
-        "androidx.preference_preference",
         "androidx.test.espresso.contrib",
         "androidx.test.ext.junit",
         "androidx.test.rules",

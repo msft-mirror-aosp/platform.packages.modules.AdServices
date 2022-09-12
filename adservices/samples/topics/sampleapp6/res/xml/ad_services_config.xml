@@ -15,5 +15,6 @@
   ~ limitations under the License.
   -->
 <ad-services-config>
-    <topics allowAllToAccess="true" />
+  <includes-sdk-library name="E4" />
+  <topics allowAllToAccess="false" allowAdPartnersToAccess="E4" />
 </ad-services-config>

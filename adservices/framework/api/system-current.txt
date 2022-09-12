@@ -15,7 +15,7 @@ package android.adservices.appsetid {
   public abstract class AppSetIdProviderService extends android.app.Service {
     ctor public AppSetIdProviderService();
     method @Nullable public final android.os.IBinder onBind(@Nullable android.content.Intent);
-    method @NonNull public abstract android.adservices.appsetid.AppSetId onGetAppSetIdProvider(int, @NonNull String) throws java.io.IOException;
+    method @NonNull public abstract android.adservices.appsetid.AppSetId onGetAppSetId(int, @NonNull String) throws java.io.IOException;
     field public static final String SERVICE_INTERFACE = "android.adservices.appsetid.AppSetIdProviderService";
   }
 
@@ -24,15 +24,15 @@ package android.adservices.appsetid {
 package android.adservices.common {
 
   public class AdServicesCommonManager {
-    method public void isAdServicesEnabled(@NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Boolean,android.adservices.exceptions.AdServicesException>);
-    method public void setAdServicesNotificationConditions(boolean, boolean);
+    method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_STATE) public void isAdServicesEnabled(@NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Boolean,java.lang.Exception>);
+    method @RequiresPermission(android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE) public void setAdServicesEnabled(boolean, boolean);
   }
 
   public class AdServicesPermissions {
-    field public static final String ACCESS_ADSERVICES_CONSENT = "android.permission.ACCESS_ADSERVICES_CONSENT";
-    field public static final String ADSERVICES_ACCESS_AD_ID = "android.permission.ADSERVICES_ACCESS_AD_ID";
-    field public static final String ADSERVICES_ACCESS_APP_SET_ID = "android.permission.ADSERVICES_ACCESS_APP_SET_ID";
-    field public static final String ADSERVICES_ACCESS_CONSENT_SERVICE = "android.permission.ADSERVICES_ACCESS_CONSENT_SERVICE";
+    field public static final String ACCESS_ADSERVICES_STATE = "android.permission.ACCESS_ADSERVICES_STATE";
+    field public static final String ACCESS_PRIVILEGED_AD_ID = "android.permission.ACCESS_PRIVILEGED_AD_ID";
+    field public static final String ACCESS_PRIVILEGED_APP_SET_ID = "android.permission.ACCESS_PRIVILEGED_APP_SET_ID";
+    field public static final String MODIFY_ADSERVICES_STATE = "android.permission.MODIFY_ADSERVICES_STATE";
   }
 
 }

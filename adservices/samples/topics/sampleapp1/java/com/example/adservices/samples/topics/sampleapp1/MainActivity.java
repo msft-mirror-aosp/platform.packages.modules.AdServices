@@ -23,6 +23,7 @@ import android.adservices.topics.Topic;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -34,6 +35,8 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import java.io.StringWriter;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -57,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView mResultTextView;
     private Button mSettingsAppButton;
     private AdvertisingTopicsClient mAdvertisingTopicsClient;
+    private Handler mHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +71,7 @@ public class MainActivity extends AppCompatActivity {
         mResultTextView = findViewById(R.id.textView);
         registerGetTopicsButton();
         registerLauchSettingsAppButton();
+        mHandler = new Handler();
     }
 
     private void registerGetTopicsButton() {
@@ -90,12 +95,17 @@ public class MainActivity extends AppCompatActivity {
                                     public void onSuccess(GetTopicsResponse result) {
                                         Log.d(TAG, "GetTopics for sdk " + sdkName + " succeeded!");
                                         String topics = getTopics(result.getTopics());
-                                        mResultTextView.append(
+                                        mHandler.post(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                              mResultTextView.append(
                                                 sdkName
                                                         + "'s topics: "
                                                         + NEWLINE
                                                         + topics
                                                         + NEWLINE);
+                                            }
+                                        });
                                         Log.d(
                                                 TAG,
                                                 sdkName
@@ -107,18 +117,26 @@ public class MainActivity extends AppCompatActivity {
 
                                     @Override
                                     public void onFailure(Throwable t) {
+                                        StringWriter sw = new StringWriter();
+                                        PrintWriter pw = new PrintWriter(sw);
+                                        t.printStackTrace(pw);
                                         Log.e(
                                                 TAG,
                                                 "Failed to getTopics for sdk "
                                                         + sdkName
                                                         + ": "
                                                         + t.getMessage());
-                                        mResultTextView.append(
+                                        mHandler.post(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                              mResultTextView.append(
                                                 "Failed to getTopics for sdk "
                                                         + sdkName
                                                         + ": "
-                                                        + t.getMessage()
+                                                        + t.toString()
                                                         + NEWLINE);
+                                            }
+                                        });
                                     }
                                 },
                                 directExecutor());

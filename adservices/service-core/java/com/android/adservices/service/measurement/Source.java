@@ -71,7 +71,7 @@ public class Source {
     @EventSurfaceType private int mPublisherType;
     private Uri mAppDestination;
     private Uri mWebDestination;
-    private Uri mAdTechDomain;
+    private String mEnrollmentId;
     private Uri mRegistrant;
     private SourceType mSourceType;
     private long mPriority;
@@ -311,7 +311,7 @@ public class Source {
                 && mPublisherType == source.mPublisherType
                 && Objects.equals(mAppDestination, source.mAppDestination)
                 && Objects.equals(mWebDestination, source.mWebDestination)
-                && Objects.equals(mAdTechDomain, source.mAdTechDomain)
+                && Objects.equals(mEnrollmentId, source.mEnrollmentId)
                 && mPriority == source.mPriority
                 && mStatus == source.mStatus
                 && mExpiryTime == source.mExpiryTime
@@ -337,7 +337,7 @@ public class Source {
                 mPublisherType,
                 mAppDestination,
                 mWebDestination,
-                mAdTechDomain,
+                mEnrollmentId,
                 mPriority,
                 mStatus,
                 mExpiryTime,
@@ -441,10 +441,10 @@ public class Source {
     }
 
     /**
-     * AdTech reporting destination domain for generated reports.
+     * Ad Tech enrollment ID
      */
-    public Uri getAdTechDomain() {
-        return mAdTechDomain;
+    public String getEnrollmentId() {
+        return mEnrollmentId;
     }
 
     /** Uri which registered the {@link Source}. */
@@ -627,22 +627,21 @@ public class Source {
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
             String id = jsonObject.getString("id");
-            String hexString = jsonObject.getString("key_piece");
-            if (hexString.startsWith("0x")) {
-                hexString = hexString.substring(2);
-            }
+            // Remove "0x" prefix.
+            String hexString = jsonObject.getString("key_piece").substring(2);
             BigInteger bigInteger = new BigInteger(hexString, 16);
             aggregateSourceMap.put(id, bigInteger);
         }
-        return Optional.of(
+        AggregatableAttributionSource.Builder asBuilder =
                 new AggregatableAttributionSource.Builder()
-                        .setAggregatableSource(aggregateSourceMap)
-                        .setAggregateFilterData(
-                                new AggregateFilterData.Builder()
-                                        .buildAggregateFilterData(
-                                                new JSONObject(this.mAggregateFilterData))
-                                        .build())
-                        .build());
+                        .setAggregatableSource(aggregateSourceMap);
+        if (this.mAggregateFilterData != null) {
+            asBuilder.setAggregateFilterData(
+                    new AggregateFilterData.Builder()
+                            .buildAggregateFilterData(new JSONObject(this.mAggregateFilterData))
+                            .build());
+        }
+        return Optional.of(asBuilder.build());
     }
 
     private List<FakeReport> generateVtcDualDestinationPostInstallFakeReports() {
@@ -740,11 +739,10 @@ public class Source {
             return this;
         }
 
-        /** See {@link Source#getAdTechDomain()} ()}. */
+        /** See {@link Source#getEnrollmentId()} ()}. */
         @NonNull
-        public Builder setAdTechDomain(@NonNull Uri adTechDomain) {
-            Validation.validateUri(adTechDomain);
-            mBuilding.mAdTechDomain = adTechDomain;
+        public Builder setEnrollmentId(@NonNull String enrollmentId) {
+            mBuilding.mEnrollmentId = enrollmentId;
             return this;
         }
 
@@ -867,7 +865,7 @@ public class Source {
         public Source build() {
             Validation.validateNonNull(
                     mBuilding.mPublisher,
-                    mBuilding.mAdTechDomain,
+                    mBuilding.mEnrollmentId,
                     mBuilding.mRegistrant,
                     mBuilding.mSourceType);
 

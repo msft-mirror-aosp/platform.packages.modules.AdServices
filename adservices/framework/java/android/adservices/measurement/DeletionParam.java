@@ -16,7 +16,6 @@
 package android.adservices.measurement;
 
 import android.annotation.NonNull;
-import android.annotation.Nullable;
 import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -63,14 +62,14 @@ public final class DeletionParam implements Parcelable {
 
         boolean hasStart = in.readBoolean();
         if (hasStart) {
-            mStart = Instant.ofEpochMilli(in.readLong());
+            mStart = Instant.parse(in.readString());
         } else {
             mStart = null;
         }
 
         boolean hasEnd = in.readBoolean();
         if (hasEnd) {
-            mEnd = Instant.ofEpochMilli(in.readLong());
+            mEnd = Instant.parse(in.readString());
         } else {
             mEnd = null;
         }
@@ -110,14 +109,14 @@ public final class DeletionParam implements Parcelable {
 
         if (mStart != null) {
             out.writeBoolean(true);
-            out.writeLong(mStart.toEpochMilli());
+            out.writeString(mStart.toString());
         } else {
             out.writeBoolean(false);
         }
 
         if (mEnd != null) {
             out.writeBoolean(true);
-            out.writeLong(mEnd.toEpochMilli());
+            out.writeString(mEnd.toString());
         } else {
             out.writeBoolean(false);
         }
@@ -156,14 +155,20 @@ public final class DeletionParam implements Parcelable {
         return mMatchBehavior;
     }
 
-    /** Instant in time the deletion starts, or null if none. */
-    @Nullable
+    /**
+     * Instant in time the deletion starts, or {@link java.time.Instant#MIN} if starting at the
+     * oldest possible time.
+     */
+    @NonNull
     public Instant getStart() {
         return mStart;
     }
 
-    /** Instant in time the deletion ends, or null if none. */
-    @Nullable
+    /**
+     * Instant in time the deletion ends, or {@link java.time.Instant#MAX} if ending at the most
+     * recent time.
+     */
+    @NonNull
     public Instant getEnd() {
         return mEnd;
     }
@@ -216,14 +221,14 @@ public final class DeletionParam implements Parcelable {
 
         /** See {@link DeletionParam#getStart}. */
         @NonNull
-        public Builder setStart(@Nullable Instant start) {
+        public Builder setStart(@NonNull Instant start) {
             mStart = start;
             return this;
         }
 
         /** See {@link DeletionParam#getEnd}. */
         @NonNull
-        public Builder setEnd(@Nullable Instant end) {
+        public Builder setEnd(@NonNull Instant end) {
             mEnd = end;
             return this;
         }
@@ -239,9 +244,13 @@ public final class DeletionParam implements Parcelable {
         /** Build the DeletionRequest. */
         @NonNull
         public DeletionParam build() {
-            if (mPackageName == null || mOriginUris == null || mDomainUris == null) {
+            if (mPackageName == null
+                    || mOriginUris == null
+                    || mDomainUris == null
+                    || mStart == null
+                    || mEnd == null) {
                 throw new IllegalArgumentException(
-                        "PackageName, OriginUris, or DomainUris is null");
+                        "PackageName, OriginUris, DomainUris, Start, or End is null");
             }
             return new DeletionParam(this);
         }
