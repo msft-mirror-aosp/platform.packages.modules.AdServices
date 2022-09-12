@@ -66,6 +66,7 @@ import java.util.concurrent.TimeUnit;
 /** Unit tests for {@link com.android.adservices.download.MddJobService} */
 public class MddJobServiceTest {
     private static final int BACKGROUND_TASK_TIMEOUT_MS = 5_000;
+    private static final int JOB_SCHEDULED_WAIT_TIME_MS = 1_000;
 
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final JobScheduler JOB_SCHEDULER = CONTEXT.getSystemService(JobScheduler.class);
@@ -141,7 +142,7 @@ public class MddJobServiceTest {
     }
 
     @Test
-    public void testOnStartJob_killswitchIsOn() throws InterruptedException {
+    public void testOnStartJob_killswitchIsOn() {
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         // Killswitch is on.
@@ -179,10 +180,16 @@ public class MddJobServiceTest {
         doReturn(false).when(mMockFlags).getMddBackgroundTaskKillSwitch();
 
         assertThat(MddJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isTrue();
+        // We schedule the job in this test and cancel it in the teardown. There could be a race
+        // condition between when the job starts and when we try to cancel it. If the job already
+        // started and we exited this test method, the flag would not be mocked anymore and hence
+        // the READ_DEVICE_CONFIG exception.
+        // We wait here so that the scheduled job can finish.
+        Thread.sleep(JOB_SCHEDULED_WAIT_TIME_MS);
     }
 
     @Test
-    public void testSchedule_killswitchOn() {
+    public void testSchedule_killswitchOn() throws InterruptedException {
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         // Killswitch is off.
@@ -192,6 +199,12 @@ public class MddJobServiceTest {
 
         verifyZeroInteractions(staticMockMarker(MobileDataDownloadFactory.class));
         assertThat(MddJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isFalse();
+        // We schedule the job in this test and cancel it in the teardown. There could be a race
+        // condition between when the job starts and when we try to cancel it. If the job already
+        // started and we exited this test method, the flag would not be mocked anymore and hence
+        // the READ_DEVICE_CONFIG exception.
+        // We wait here so that the scheduled job can finish.
+        Thread.sleep(JOB_SCHEDULED_WAIT_TIME_MS);
     }
 
     @Test
@@ -201,7 +214,7 @@ public class MddJobServiceTest {
     }
 
     @Test
-    public void testScheduleIfNeeded_Success() {
+    public void testScheduleIfNeeded_Success() throws InterruptedException {
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
@@ -213,10 +226,16 @@ public class MddJobServiceTest {
         assertThat(JOB_SCHEDULER.getPendingJob(MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID))
                 .isNotNull();
         assertThat(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID)).isNotNull();
+        // We schedule the job in this test and cancel it in the teardown. There could be a race
+        // condition between when the job starts and when we try to cancel it. If the job already
+        // started and we exited this test method, the flag would not be mocked anymore and hence
+        // the READ_DEVICE_CONFIG exception.
+        // We wait here so that the scheduled job can finish.
+        Thread.sleep(JOB_SCHEDULED_WAIT_TIME_MS);
     }
 
     @Test
-    public void testScheduleIfNeeded_ScheduledWithSameParameters() {
+    public void testScheduleIfNeeded_ScheduledWithSameParameters() throws InterruptedException {
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
@@ -231,10 +250,17 @@ public class MddJobServiceTest {
 
         // The second invocation of scheduleIfNeeded() with same parameters skips the scheduling.
         assertThat(MddJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isFalse();
+        // We schedule the job in this test and cancel it in the teardown. There could be a race
+        // condition between when the job starts and when we try to cancel it. If the job already
+        // started and we exited this test method, the flag would not be mocked anymore and hence
+        // the READ_DEVICE_CONFIG exception.
+        // We wait here so that the scheduled job can finish.
+        Thread.sleep(JOB_SCHEDULED_WAIT_TIME_MS);
     }
 
     @Test
-    public void testScheduleIfNeeded_ScheduledWithDifferentParameters() {
+    public void testScheduleIfNeeded_ScheduledWithDifferentParameters()
+            throws InterruptedException {
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
@@ -252,10 +278,16 @@ public class MddJobServiceTest {
                 .maintenanceGcmTaskPeriod();
         // The second invocation of scheduleIfNeeded() with same parameters skips the scheduling.
         assertThat(MddJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isTrue();
+        // We schedule the job in this test and cancel it in the teardown. There could be a race
+        // condition between when the job starts and when we try to cancel it. If the job already
+        // started and we exited this test method, the flag would not be mocked anymore and hence
+        // the READ_DEVICE_CONFIG exception.
+        // We wait here so that the scheduled job can finish.
+        Thread.sleep(JOB_SCHEDULED_WAIT_TIME_MS);
     }
 
     @Test
-    public void testScheduleIfNeeded_forceRun() {
+    public void testScheduleIfNeeded_forceRun() throws InterruptedException {
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
         // Mock static method FlagsFactory.getFlags() to return test Flags.
@@ -277,10 +309,17 @@ public class MddJobServiceTest {
 
         // The third invocation of scheduleIfNeeded() is forced and re-schedules the job.
         assertThat(MddJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ true)).isTrue();
+        // We schedule the job in this test and cancel it in the teardown. There could be a race
+        // condition between when the job starts and when we try to cancel it. If the job already
+        // started and we exited this test method, the flag would not be mocked anymore and hence
+        // the READ_DEVICE_CONFIG exception.
+        // We wait here so that the scheduled job can finish.
+        Thread.sleep(JOB_SCHEDULED_WAIT_TIME_MS);
     }
 
     @Test
-    public void testScheduleIfNeededMddSingleTask_mddMaintenancePeriodicTask() {
+    public void testScheduleIfNeededMddSingleTask_mddMaintenancePeriodicTask()
+            throws InterruptedException {
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
         // Mock static method FlagsFactory.getFlags() to return test Flags.
@@ -290,10 +329,17 @@ public class MddJobServiceTest {
                 .maintenanceGcmTaskPeriod();
         assertThat(MddJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isTrue();
         assertThat(JOB_SCHEDULER.getPendingJob(MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID)).isNotNull();
+        // We schedule the job in this test and cancel it in the teardown. There could be a race
+        // condition between when the job starts and when we try to cancel it. If the job already
+        // started and we exited this test method, the flag would not be mocked anymore and hence
+        // the READ_DEVICE_CONFIG exception.
+        // We wait here so that the scheduled job can finish.
+        Thread.sleep(JOB_SCHEDULED_WAIT_TIME_MS);
     }
 
     @Test
-    public void testScheduleIfNeededMddSingleTask_mddChargingPeriodicTask() {
+    public void testScheduleIfNeededMddSingleTask_mddChargingPeriodicTask()
+            throws InterruptedException {
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
         // Mock static method FlagsFactory.getFlags() to return test Flags.
@@ -303,10 +349,17 @@ public class MddJobServiceTest {
                 .chargingGcmTaskPeriod();
         assertThat(MddJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isTrue();
         assertThat(JOB_SCHEDULER.getPendingJob(MDD_CHARGING_PERIODIC_TASK_JOB_ID)).isNotNull();
+        // We schedule the job in this test and cancel it in the teardown. There could be a race
+        // condition between when the job starts and when we try to cancel it. If the job already
+        // started and we exited this test method, the flag would not be mocked anymore and hence
+        // the READ_DEVICE_CONFIG exception.
+        // We wait here so that the scheduled job can finish.
+        Thread.sleep(JOB_SCHEDULED_WAIT_TIME_MS);
     }
 
     @Test
-    public void testScheduleIfNeededMddSingleTask_mddCellularChargingPeriodicTask() {
+    public void testScheduleIfNeededMddSingleTask_mddCellularChargingPeriodicTask()
+            throws InterruptedException {
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
         // Mock static method FlagsFactory.getFlags() to return test Flags.
@@ -317,10 +370,17 @@ public class MddJobServiceTest {
         assertThat(MddJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isTrue();
         assertThat(JOB_SCHEDULER.getPendingJob(MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID))
                 .isNotNull();
+        // We schedule the job in this test and cancel it in the teardown. There could be a race
+        // condition between when the job starts and when we try to cancel it. If the job already
+        // started and we exited this test method, the flag would not be mocked anymore and hence
+        // the READ_DEVICE_CONFIG exception.
+        // We wait here so that the scheduled job can finish.
+        Thread.sleep(JOB_SCHEDULED_WAIT_TIME_MS);
     }
 
     @Test
-    public void testScheduleIfNeededMddSingleTask_mddWifiChargingPeriodicTask() {
+    public void testScheduleIfNeededMddSingleTask_mddWifiChargingPeriodicTask()
+            throws InterruptedException {
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
         // Mock static method FlagsFactory.getFlags() to return test Flags.
@@ -330,5 +390,11 @@ public class MddJobServiceTest {
                 .wifiChargingGcmTaskPeriod();
         assertThat(MddJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isTrue();
         assertThat(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID)).isNotNull();
+        // We schedule the job in this test and cancel it in the teardown. There could be a race
+        // condition between when the job starts and when we try to cancel it. If the job already
+        // started and we exited this test method, the flag would not be mocked anymore and hence
+        // the READ_DEVICE_CONFIG exception.
+        // We wait here so that the scheduled job can finish.
+        Thread.sleep(JOB_SCHEDULED_WAIT_TIME_MS);
     }
 }

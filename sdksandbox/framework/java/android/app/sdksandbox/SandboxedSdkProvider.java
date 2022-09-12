@@ -71,8 +71,9 @@ public abstract class SandboxedSdkProvider {
      * <p>This function is called by the SDK sandbox after it loads the SDK.
      *
      * <p>SDK should do any work to be ready to handle upcoming requests. It should not do any
-     * long-running tasks here. It should not do initialization logic that depends on other SDKs
-     * being loaded into the SDK sandbox.
+     * long-running tasks here, like I/O and network calls. Doing so can prevent the SDK from
+     * receiving requests from the client. Additionally, it should not do initialization that
+     * depends on other SDKs being loaded into the SDK sandbox.
      *
      * <p>The SDK should not do any operations requiring a {@link Context} object before this method
      * has been called.
@@ -89,7 +90,7 @@ public abstract class SandboxedSdkProvider {
      * should fail any invocations on the Binder previously returned to the client through {@link
      * SandboxedSdk#getInterface}.
      *
-     * <p>The SDK should not do any long-running tasks here.
+     * <p>The SDK should not do any long-running tasks here, like I/O and network calls.
      */
     public void beforeUnloadSdk() {}
 
@@ -99,7 +100,8 @@ public abstract class SandboxedSdkProvider {
      * <p>Returns {@link View} will be wrapped into {@link SurfacePackage}. the resulting {@link
      * SurfacePackage} will be sent back to the client application.
      *
-     * <p>The SDK should not do any long-running tasks here.
+     * <p>The SDK should not do any long-running tasks here, like I/O and network calls. Doing so
+     * can prevent the SDK from receiving requests from the client.
      *
      * @param windowContext the {@link Context} of the display which meant to show the view
      * @param params list of params passed from the client application requesting the view
