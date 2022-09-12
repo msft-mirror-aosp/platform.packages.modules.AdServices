@@ -37,7 +37,7 @@ public class AdServicesVersion {
     public static final int API_VERSION;
 
     static {
-        API_VERSION = 1;
+        API_VERSION = 2;
     }
 }
 
