@@ -470,6 +470,174 @@ public final class SourceFetcherTest {
     }
 
     @Test
+    public void testBasicSourceRequest_sourceEventId_negative() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
+                        List.of("{\"destination\":\"" + DEFAULT_DESTINATION + "\","
+                                + "\"source_event_id\":\"-35\"}")));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testBasicSourceRequest_sourceEventId_tooLarge() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
+                        List.of("{\"destination\":\"" + DEFAULT_DESTINATION + "\","
+                                + "\"source_event_id\":\"18446744073709551616\"}")));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testBasicSourceRequest_sourceEventId_notAnInt() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
+                        List.of("{\"destination\":\"" + DEFAULT_DESTINATION + "\","
+                                + "\"source_event_id\":\"8l2\"}")));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testBasicSourceRequest_sourceEventId_uses64thBit() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
+                        List.of("{\"destination\":\"" + DEFAULT_DESTINATION + "\","
+                                + "\"source_event_id\":\"18446744073709551615\"}")));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertTrue(fetch.isPresent());
+        List<SourceRegistration> result = fetch.get();
+        assertEquals(1, result.size());
+        assertEquals(DEFAULT_TOP_ORIGIN, result.get(0).getTopOrigin().toString());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
+        assertEquals(DEFAULT_DESTINATION, result.get(0).getAppDestination().toString());
+        assertEquals(-1, result.get(0).getSourceEventId());
+        assertEquals(0, result.get(0).getSourcePriority());
+        assertEquals(
+                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS, result.get(0).getExpiry());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testBasicSourceRequest_debugKey_negative() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
+                        List.of("{\"destination\":\"" + DEFAULT_DESTINATION + "\","
+                                + "\"source_event_id\":\"" + DEFAULT_EVENT_ID + "\","
+                                + "\"debug_key\":\"-18\"}")));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertTrue(fetch.isPresent());
+        List<SourceRegistration> result = fetch.get();
+        assertEquals(1, result.size());
+        assertEquals(DEFAULT_TOP_ORIGIN, result.get(0).getTopOrigin().toString());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
+        assertEquals(DEFAULT_DESTINATION, result.get(0).getAppDestination().toString());
+        assertEquals(DEFAULT_EVENT_ID, result.get(0).getSourceEventId());
+        assertEquals(0, result.get(0).getSourcePriority());
+        assertNull(result.get(0).getDebugKey());
+        assertEquals(
+                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS, result.get(0).getExpiry());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testBasicSourceRequest_debugKey_tooLarge() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
+                        List.of("{\"destination\":\"" + DEFAULT_DESTINATION + "\","
+                                + "\"source_event_id\":\"" + DEFAULT_EVENT_ID + "\","
+                                + "\"debug_key\":\"18446744073709551616\"}")));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertTrue(fetch.isPresent());
+        List<SourceRegistration> result = fetch.get();
+        assertEquals(1, result.size());
+        assertEquals(DEFAULT_TOP_ORIGIN, result.get(0).getTopOrigin().toString());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
+        assertEquals(DEFAULT_DESTINATION, result.get(0).getAppDestination().toString());
+        assertEquals(DEFAULT_EVENT_ID, result.get(0).getSourceEventId());
+        assertEquals(0, result.get(0).getSourcePriority());
+        assertNull(result.get(0).getDebugKey());
+        assertEquals(
+                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS, result.get(0).getExpiry());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testBasicSourceRequest_debugKey_notAnInt() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
+                        List.of("{\"destination\":\"" + DEFAULT_DESTINATION + "\","
+                                + "\"source_event_id\":\"" + DEFAULT_EVENT_ID + "\","
+                                + "\"debug_key\":\"987fs\"}")));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertTrue(fetch.isPresent());
+        List<SourceRegistration> result = fetch.get();
+        assertEquals(1, result.size());
+        assertEquals(DEFAULT_TOP_ORIGIN, result.get(0).getTopOrigin().toString());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
+        assertEquals(DEFAULT_DESTINATION, result.get(0).getAppDestination().toString());
+        assertEquals(DEFAULT_EVENT_ID, result.get(0).getSourceEventId());
+        assertEquals(0, result.get(0).getSourcePriority());
+        assertNull(result.get(0).getDebugKey());
+        assertEquals(
+                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS, result.get(0).getExpiry());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testBasicSourceRequest_debugKey_uses64thBit() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
+                        List.of("{\"destination\":\"" + DEFAULT_DESTINATION + "\","
+                                + "\"source_event_id\":\"" + DEFAULT_EVENT_ID + "\","
+                                + "\"debug_key\":\"18446744073709551615\"}")));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertTrue(fetch.isPresent());
+        List<SourceRegistration> result = fetch.get();
+        assertEquals(1, result.size());
+        assertEquals(DEFAULT_TOP_ORIGIN, result.get(0).getTopOrigin().toString());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
+        assertEquals(DEFAULT_DESTINATION, result.get(0).getAppDestination().toString());
+        assertEquals(DEFAULT_EVENT_ID, result.get(0).getSourceEventId());
+        assertEquals(0, result.get(0).getSourcePriority());
+        assertEquals(Long.valueOf(-1), result.get(0).getDebugKey());
+        assertEquals(
+                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS, result.get(0).getExpiry());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
     public void testBasicSourceRequestMinimumFieldsAndRestNull() throws Exception {
         RegistrationRequest request =
                 new RegistrationRequest.Builder()

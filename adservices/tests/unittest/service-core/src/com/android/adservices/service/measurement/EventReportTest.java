@@ -25,6 +25,8 @@ import static com.android.adservices.service.measurement.PrivacyParams.NAVIGATIO
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 import android.net.Uri;
 
@@ -168,6 +170,73 @@ public final class EventReportTest {
         assertEquals(source.getExpiryTime() + ONE_HOUR_IN_MILLIS, report.getReportTime());
         assertEquals(source.getSourceType(), report.getSourceType());
         assertEquals(EVENT_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
+    }
+
+    @Test
+    public void testPopulateFromSourceAndTrigger_shouldSetTriggerData0WhenNull()
+            throws JSONException {
+        long baseTime = System.currentTimeMillis();
+        Source source =
+                createSourceForTest(
+                        baseTime, Source.SourceType.EVENT, false, APP_DESTINATION, null);
+        Trigger trigger =
+                createTriggerForTest(baseTime + TimeUnit.SECONDS.toMillis(10), APP_DESTINATION);
+
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
+        EventTrigger eventTrigger = spy(eventTriggers.get(0));
+        when(eventTrigger.getTriggerData()).thenReturn(null);
+        EventReport report =
+                new EventReport.Builder()
+                        .populateFromSourceAndTrigger(source, trigger, eventTrigger)
+                        .build();
+
+        assertEquals(TRIGGER_PRIORITY, report.getTriggerPriority());
+        assertEquals(TRIGGER_DEDUP_KEY, report.getTriggerDedupKey());
+        assertEquals(0, report.getTriggerData());
+        assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
+        assertEquals(source.getEventId(), report.getSourceId());
+        assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
+        assertEquals(trigger.getAttributionDestination(), report.getAttributionDestination());
+        assertEquals(source.getExpiryTime() + ONE_HOUR_IN_MILLIS, report.getReportTime());
+        assertEquals(source.getSourceType(), report.getSourceType());
+        assertEquals(EVENT_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
+    }
+
+    @Test
+    public void testPopulateFromSourceAndTrigger_shouldTruncateTriggerDataWith64thBit()
+            throws JSONException {
+        long baseTime = System.currentTimeMillis();
+        Source source =
+                createSourceForTest(
+                        baseTime, Source.SourceType.NAVIGATION, false, APP_DESTINATION, null);
+        Trigger trigger =
+                createTriggerForTest(baseTime + TimeUnit.SECONDS.toMillis(10), APP_DESTINATION);
+
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
+        EventTrigger eventTrigger = spy(eventTriggers.get(0));
+        when(eventTrigger.getTriggerData()).thenReturn(Long.valueOf(-50003L));
+        EventReport report =
+                new EventReport.Builder()
+                        .populateFromSourceAndTrigger(source, trigger, eventTrigger)
+                        .build();
+
+        assertEquals(TRIGGER_PRIORITY, report.getTriggerPriority());
+        assertEquals(TRIGGER_DEDUP_KEY, report.getTriggerDedupKey());
+        assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
+        // uint64 18446744073709501613 = long -50003
+        // Truncated data 18446744073709501613 % 8 = 5
+        assertEquals(5, report.getTriggerData());
+        assertEquals(source.getEventId(), report.getSourceId());
+        assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
+        assertEquals(APP_DESTINATION, report.getAttributionDestination());
+        assertEquals(
+                source.getEventTime()
+                        + NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS[0]
+                        + ONE_HOUR_IN_MILLIS,
+                report.getReportTime());
+        assertEquals(Source.SourceType.NAVIGATION, report.getSourceType());
+        assertEquals(
+                NAVIGATION_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
     }
 
     @Test
