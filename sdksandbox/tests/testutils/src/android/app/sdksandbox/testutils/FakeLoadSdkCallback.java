@@ -23,6 +23,8 @@ import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.os.OutcomeReceiver;
 
+import com.google.common.base.Preconditions;
+
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -31,22 +33,30 @@ public class FakeLoadSdkCallback implements OutcomeReceiver<SandboxedSdk, LoadSd
 
     private boolean mLoadSdkSuccess;
 
-    private int mErrorCode;
-    private String mErrorMsg;
     private SandboxedSdk mSandboxedSdk;
+    private LoadSdkException mLoadSdkException = null;
+    private final int mWaitTimeSec;
+
+    public FakeLoadSdkCallback() {
+        mWaitTimeSec = 5;
+    }
+
+    public FakeLoadSdkCallback(int waitTimeSec) {
+        Preconditions.checkArgument(waitTimeSec > 0, "Callback should use a positive wait time");
+        mWaitTimeSec = waitTimeSec;
+    }
 
     @Override
     public void onResult(SandboxedSdk sandboxedSdk) {
         mLoadSdkSuccess = true;
-        mLoadSdkLatch.countDown();
         mSandboxedSdk = sandboxedSdk;
+        mLoadSdkLatch.countDown();
     }
 
     @Override
     public void onError(LoadSdkException exception) {
         mLoadSdkSuccess = false;
-        mErrorCode = exception.getLoadSdkErrorCode();
-        mErrorMsg = exception.getMessage();
+        mLoadSdkException = exception;
         mLoadSdkLatch.countDown();
     }
 
@@ -57,7 +67,9 @@ public class FakeLoadSdkCallback implements OutcomeReceiver<SandboxedSdk, LoadSd
     public boolean isLoadSdkSuccessful(boolean ignoreSdkAlreadyLoadedError) {
         waitForLatch(mLoadSdkLatch);
         if (ignoreSdkAlreadyLoadedError
-                && mErrorCode == SdkSandboxManager.LOAD_SDK_ALREADY_LOADED) {
+                && ((mLoadSdkException == null)
+                        || (mLoadSdkException.getLoadSdkErrorCode()
+                                == SdkSandboxManager.LOAD_SDK_ALREADY_LOADED))) {
             mLoadSdkSuccess = true;
         }
         return mLoadSdkSuccess;
@@ -66,12 +78,13 @@ public class FakeLoadSdkCallback implements OutcomeReceiver<SandboxedSdk, LoadSd
     public int getLoadSdkErrorCode() {
         waitForLatch(mLoadSdkLatch);
         assertThat(mLoadSdkSuccess).isFalse();
-        return mErrorCode;
+        return mLoadSdkException.getLoadSdkErrorCode();
     }
 
     public String getLoadSdkErrorMsg() {
         waitForLatch(mLoadSdkLatch);
-        return mErrorMsg;
+        assertThat(mLoadSdkSuccess).isFalse();
+        return mLoadSdkException.getMessage();
     }
 
     public SandboxedSdk getSandboxedSdk() {
@@ -79,13 +92,17 @@ public class FakeLoadSdkCallback implements OutcomeReceiver<SandboxedSdk, LoadSd
         return mSandboxedSdk;
     }
 
+    public LoadSdkException getLoadSdkException() {
+        waitForLatch(mLoadSdkLatch);
+        return mLoadSdkException;
+    }
+
     private void waitForLatch(CountDownLatch latch) {
         try {
             // Wait for callback to be called
-            final int waitTime = 5;
-            if (!latch.await(waitTime, TimeUnit.SECONDS)) {
+            if (!latch.await(mWaitTimeSec, TimeUnit.SECONDS)) {
                 throw new IllegalStateException(
-                        "Callback not called within " + waitTime + " seconds");
+                        "Callback not called within " + mWaitTimeSec + " seconds");
             }
         } catch (InterruptedException e) {
             throw new IllegalStateException(

@@ -16,6 +16,7 @@
 
 package com.android.adservices.download;
 
+import android.annotation.NonNull;
 import android.provider.DeviceConfig;
 
 import com.google.android.libraries.mobiledatadownload.Flags;
@@ -53,6 +54,14 @@ public class MddFlags implements Flags {
             "mdd_mobstore_file_service_stats_sample_interval";
     static final String KEY_MDD_ANDROID_SHARING_SAMPLE_INTERVAL =
             "mdd_android_sharing_sample_interval";
+
+    private static final MddFlags sSingleton = new MddFlags();
+
+    /** Returns the singleton instance of the MddFlags. */
+    @NonNull
+    public static MddFlags getInstance() {
+        return sSingleton;
+    }
 
     // PeriodTaskFlags
     @Override

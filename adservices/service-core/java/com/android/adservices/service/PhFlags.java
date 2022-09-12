@@ -77,6 +77,18 @@ public final class PhFlags implements Flags {
             "measurement_registration_input_event_valid_window_ms";
     static final String KEY_MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED =
             "measurement_is_click_verification_enabled";
+    static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCE =
+            "measurement_enforce_foreground_status_register_source";
+    static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_TRIGGER =
+            "measurement_enforce_foreground_status_register_trigger";
+    static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_SOURCE =
+            "measurement_enforce_foreground_status_register_web_source";
+    static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER =
+            "measurement_enforce_foreground_status_register_web_trigger";
+    static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS =
+            "measurement_enforce_foreground_status_delete_registrations";
+    static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS =
+            "measurement_enforce_foreground_status_get_status";
 
     // FLEDGE Custom Audience keys
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = "fledge_custom_audience_max_count";
@@ -152,12 +164,21 @@ public final class PhFlags implements Flags {
     static final String KEY_FOREGROUND_STATUS_LEVEL = "foreground_validation_status_level";
     static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE =
             "fledge_ad_selection_enforce_foreground_status_custom_audience";
+
+    // Topics invoking app status key.
     static final String KEY_ENFORCE_FOREGROUND_STATUS_TOPICS = "topics_enforce_foreground_status";
+
+    // AdId invoking app status key.
+    static final String KEY_ENFORCE_FOREGROUND_STATUS_ADID = "adid_enforce_foreground_status";
 
     // Fledge JS isolate setting keys
     static final String KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE =
             "fledge_js_isolate_enforce_max_heap_size";
     static final String KEY_ISOLATE_MAX_HEAP_SIZE_BYTES = "fledge_js_isolate_max_heap_size_bytes";
+
+    // AppSetId invoking app status key.
+    static final String KEY_ENFORCE_FOREGROUND_STATUS_APPSETID =
+            "appsetid_enforce_foreground_status";
 
     // MDD keys.
     static final String KEY_DOWNLOADER_CONNECTION_TIMEOUT_MS = "downloader_connection_timeout_ms";
@@ -235,6 +256,10 @@ public final class PhFlags implements Flags {
 
     // App/SDK AllowList/DenyList keys that have access to the web registration APIs
     static final String KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST = "web_context_client_allow_list";
+
+    // Max response payload size allowed per source/trigger registration
+    static final String KEY_MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES =
+            "max_response_based_registration_size_bytes";
 
     // Maximum possible percentage for percentage variables
     static final int MAX_PERCENTAGE = 100;
@@ -1231,6 +1256,10 @@ public final class PhFlags implements Flags {
 
     @Override
     public boolean getAdServicesEnabled() {
+        // if the global kill switch is enabled, feature should be disabled.
+        if (getGlobalKillSwitch()) {
+            return false;
+        }
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getBoolean(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -1294,6 +1323,26 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getEnforceForegroundStatusForAdId() {
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(KEY_ENFORCE_FOREGROUND_STATUS_ADID),
+                /* defaultValue */ DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_ENFORCE_FOREGROUND_STATUS_ADID,
+                        /* defaultValue */ ENFORCE_FOREGROUND_STATUS_ADID));
+    }
+
+    @Override
+    public boolean getEnforceForegroundStatusForAppSetId() {
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(KEY_ENFORCE_FOREGROUND_STATUS_APPSETID),
+                /* defaultValue */ DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_ENFORCE_FOREGROUND_STATUS_APPSETID,
+                        /* defaultValue */ ENFORCE_FOREGROUND_STATUS_APPSETID));
+    }
+
+    @Override
     public boolean getEnforceForegroundStatusForFledgeRunAdSelection() {
         return DeviceConfig.getBoolean(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -1331,6 +1380,54 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE,
                 /* defaultValue */ ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE);
+    }
+
+    @Override
+    public boolean getEnforceForegroundStatusForMeasurementDeleteRegistrations() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS,
+                /* defaultValue */ MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS);
+    }
+
+    @Override
+    public boolean getEnforceForegroundStatusForMeasurementRegisterSource() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCE,
+                /* defaultValue */ MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCE);
+    }
+
+    @Override
+    public boolean getEnforceForegroundStatusForMeasurementRegisterTrigger() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_TRIGGER,
+                /* defaultValue */ MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_TRIGGER);
+    }
+
+    @Override
+    public boolean getEnforceForegroundStatusForMeasurementRegisterWebSource() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_SOURCE,
+                /* defaultValue */ MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_SOURCE);
+    }
+
+    @Override
+    public boolean getEnforceForegroundStatusForMeasurementRegisterWebTrigger() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER,
+                /* defaultValue */ MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER);
+    }
+
+    @Override
+    public boolean getEnforceForegroundStatusForMeasurementStatus() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS,
+                /* defaultValue */ MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS);
     }
 
     @Override
@@ -1375,6 +1472,14 @@ public final class PhFlags implements Flags {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_CONSENT_MANAGER_DEBUG_MODE),
                 /* defaultValue */ CONSENT_MANAGER_DEBUG_MODE);
+    }
+
+    @Override
+    public long getMaxResponseBasedRegistrationPayloadSizeBytes() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES,
+                /* defaultValue */ MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES);
     }
 
     @Override
@@ -1525,6 +1630,46 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS
                         + " = "
                         + getMeasurementRegistrationInputEventValidWindowMs());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS
+                        + " = "
+                        + getEnforceForegroundStatusForMeasurementDeleteRegistrations());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS
+                        + " = "
+                        + getEnforceForegroundStatusForMeasurementStatus());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCE
+                        + " = "
+                        + getEnforceForegroundStatusForMeasurementRegisterSource());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_TRIGGER
+                        + " = "
+                        + getEnforceForegroundStatusForMeasurementRegisterTrigger());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_SOURCE
+                        + " = "
+                        + getEnforceForegroundStatusForMeasurementRegisterWebSource());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER
+                        + " = "
+                        + getEnforceForegroundStatusForMeasurementRegisterWebTrigger());
+        writer.println(
+                "\t"
+                        + KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST
+                        + " = "
+                        + getWebContextClientAppAllowList());
+        writer.println(
+                "\t"
+                        + KEY_MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES
+                        + " = "
+                        + getMaxResponseBasedRegistrationPayloadSizeBytes());
 
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(

@@ -17,6 +17,7 @@
 package com.android.server.sdksandbox;
 
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND;
+import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE;
 import static android.app.sdksandbox.SdkSandboxManager.LOAD_SDK_SDK_SANDBOX_DISABLED;
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE;
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_SERVICE;
@@ -148,6 +149,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     @GuardedBy("mLock")
     private final ArrayMap<CallingInfo, ISharedPreferencesSyncCallback> mSyncDataCallbacks =
             new ArrayMap<>();
+
+    @GuardedBy("mLock")
+    private final UidImportanceListener mUidImportanceListener = new UidImportanceListener();
 
     private final SdkSandboxManagerLocal mLocalManager;
 
@@ -427,6 +431,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 if (!mCallingInfosWithDeathRecipients.contains(callingInfo)) {
                     callback.asBinder().linkToDeath(() -> onAppDeath(callingInfo), 0);
                     mCallingInfosWithDeathRecipients.add(callingInfo);
+                    mUidImportanceListener.startListening();
                 }
             }
         } catch (RemoteException re) {
@@ -550,6 +555,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             mSandboxLifecycleCallbacks.remove(callingInfo);
             mPendingCallbacks.remove(callingInfo);
             mCallingInfosWithDeathRecipients.remove(callingInfo);
+            if (mCallingInfosWithDeathRecipients.size() == 0) {
+                mUidImportanceListener.stopListening();
+            }
             mSyncDataCallbacks.remove(callingInfo);
             removeAllSdkTokensAndLinks(callingInfo);
             stopSdkSandboxService(callingInfo, "Caller " + callingInfo + " has died");
@@ -673,7 +681,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             if (mCheckedVisibilityPatch) {
                 writer.println("Build contains Webview visibility patch: " + mHasVisibilityPatch);
             }
-            writer.print(
+            writer.println(
                     "Killswitch enabled: " + mSdkSandboxSettingsListener.isKillSwitchEnabled());
             writer.println("mAppAndRemoteSdkLinks size: " + mAppAndRemoteSdkLinks.size());
         }
@@ -825,7 +833,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         @Override
         public void onBindingDied(ComponentName name) {
             mServiceProvider.setBoundServiceForApp(mCallingInfo, null);
-            mServiceProvider.unbindService(mCallingInfo);
+            mServiceProvider.unbindService(mCallingInfo, true);
             mServiceProvider.bindService(mCallingInfo, this);
         }
 
@@ -1070,6 +1078,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         PROPERTY_DISABLE_SDK_SANDBOX,
                         "false",
                         false);
+                mIsKillSwitchEnabled = false;
                 mKillSwitchBecameEnabled = false;
             }
         }
@@ -1134,7 +1143,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             return;
         }
 
-        mServiceProvider.unbindService(callingInfo);
+        mServiceProvider.unbindService(callingInfo, true);
+        mServiceProvider.cleanup(callingInfo);
         final int sdkSandboxUid = Process.toSdkSandboxUid(callingInfo.getUid());
         Log.i(TAG, "Killing sdk sandbox/s with uid " + sdkSandboxUid);
         // TODO(b/230839879): Avoid killing by uid
@@ -1922,7 +1932,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         Log.d(TAG, "notifyInstrumentationStarted: clientApp = " + callingInfo.getPackageName()
                 + " clientAppUid = " + callingInfo.getUid());
         synchronized (mLock) {
-            mServiceProvider.unbindService(callingInfo);
+            mServiceProvider.unbindService(callingInfo, true);
             int sdkSandboxUid = Process.toSdkSandboxUid(callingInfo.getUid());
             mActivityManager.killUid(sdkSandboxUid, "instrumentation started");
             mRunningInstrumentations.add(callingInfo);
@@ -2006,6 +2016,51 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         public void onUserUnlocking(TargetUser user) {
             final int userId = user.getUserHandle().getIdentifier();
             mService.onUserUnlocking(userId);
+        }
+    }
+
+    private class UidImportanceListener implements ActivityManager.OnUidImportanceListener {
+
+        private static final int IMPORTANCE_CUTPOINT = IMPORTANCE_VISIBLE;
+
+        public boolean isListening = false;
+
+        public void startListening() {
+            synchronized (mLock) {
+                if (isListening) {
+                    return;
+                }
+                mActivityManager.addOnUidImportanceListener(this, IMPORTANCE_CUTPOINT);
+                isListening = true;
+            }
+        }
+
+        public void stopListening() {
+            synchronized (mLock) {
+                if (!isListening) {
+                    return;
+                }
+                mActivityManager.removeOnUidImportanceListener(this);
+                isListening = false;
+            }
+        }
+
+        @Override
+        public void onUidImportance(int uid, int importance) {
+            if (importance <= IMPORTANCE_CUTPOINT) {
+                // The lower the importance value, the more "important" the process is. We
+                // are only interested when the process is no longer in the foreground.
+                return;
+            }
+            synchronized (mLock) {
+                for (int i = 0; i < mCallingInfosWithDeathRecipients.size(); i++) {
+                    final CallingInfo callingInfo = mCallingInfosWithDeathRecipients.valueAt(i);
+                    if (callingInfo.getUid() == uid) {
+                        // Stop the sandbox when the app goes to the background.
+                        mServiceProvider.unbindService(callingInfo, false);
+                    }
+                }
+            }
         }
     }
 

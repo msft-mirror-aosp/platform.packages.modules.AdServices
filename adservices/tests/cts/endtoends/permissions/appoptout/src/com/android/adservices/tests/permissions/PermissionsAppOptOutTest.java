@@ -39,6 +39,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.compatibility.common.util.ShellUtils;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -47,7 +48,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-/** In the ad_services_config.xml file, API access is revoked for all, for this test. */
+/** In the ad_services_config.xml file, API access is revoked for all but a few, for this test. */
 @RunWith(AndroidJUnit4.class)
 // TODO: Add tests for measurement (b/238194122).
 public class PermissionsAppOptOutTest {
@@ -57,11 +58,24 @@ public class PermissionsAppOptOutTest {
             "java.lang.SecurityException: Caller is not authorized to call this API. "
                     + "Caller is not allowed.";
 
+    private static final int TEST_API_REQUEST_PER_SECOND = 2;
+    private static final int DEFAULT_API_REQUEST_PER_SECOND = 1;
+
     @Before
     public void setup() {
+        overrideConsentManagerDebugMode(true);
+        overridingAdservicesLoggingLevel("VERBOSE");
+        overrideAPIRateLimit(TEST_API_REQUEST_PER_SECOND);
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+        PhFlagsFixture.overrideSdkRequestPermitsPerSecond(Integer.MAX_VALUE);
+    }
+
+    @After
+    public void teardown() {
+        overrideConsentManagerDebugMode(false);
+        overrideAPIRateLimit(DEFAULT_API_REQUEST_PER_SECOND);
     }
 
     @Test
@@ -107,6 +121,30 @@ public class PermissionsAppOptOutTest {
     }
 
     @Test
+    public void testWithEnrollment_fledgeJoinCustomAudience()
+            throws ExecutionException, InterruptedException {
+        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
+        AdvertisingCustomAudienceClient customAudienceClient =
+                new AdvertisingCustomAudienceClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        // The "test.com" buyer is a pre-seeded enrolled ad tech
+        CustomAudience customAudience =
+                new CustomAudience.Builder()
+                        .setBuyer(AdTechIdentifier.fromString("test.com"))
+                        .setName("exampleCustomAudience")
+                        .setDailyUpdateUri(Uri.parse("https://test.com/daily-update"))
+                        .setBiddingLogicUri(Uri.parse("https://test.com/bidding-logic"))
+                        .build();
+
+        // When the ad tech is properly enrolled, just verify that no error is thrown
+        customAudienceClient.joinCustomAudience(customAudience).get();
+        PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
+    }
+
+    @Test
     public void testNoEnrollment_fledgeLeaveCustomAudience() {
         PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
         AdvertisingCustomAudienceClient customAudienceClient =
@@ -129,10 +167,31 @@ public class PermissionsAppOptOutTest {
     }
 
     @Test
+    public void testWithEnrollment_fledgeLeaveCustomAudience()
+            throws ExecutionException, InterruptedException {
+        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
+        AdvertisingCustomAudienceClient customAudienceClient =
+                new AdvertisingCustomAudienceClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        // The "test.com" buyer is a pre-seeded enrolled ad tech
+        // When the ad tech is properly enrolled, just verify that no error is thrown
+        customAudienceClient
+                .leaveCustomAudience(
+                        AdTechIdentifier.fromString("test.com"), "exampleCustomAudience")
+                .get();
+        PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
+    }
+
+    @Test
     public void testNoEnrollment_selectAds() {
         PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
 
-        AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
+        AdSelectionConfig adSelectionConfig =
+                AdSelectionConfigFixture.anAdSelectionConfig(
+                        AdTechIdentifier.fromString("seller.example.com"));
 
         AdSelectionClient mAdSelectionClient =
                 new AdSelectionClient.Builder()
@@ -149,10 +208,37 @@ public class PermissionsAppOptOutTest {
     }
 
     @Test
+    public void testWithEnrollment_selectAds() {
+        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
+
+        // The "test.com" buyer is a pre-seeded enrolled ad tech
+        AdSelectionConfig adSelectionConfig =
+                AdSelectionConfigFixture.anAdSelectionConfig(
+                        AdTechIdentifier.fromString("test.com"));
+
+        AdSelectionClient mAdSelectionClient =
+                new AdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        // When the ad tech is properly enrolled, just verify that the error thrown is not due to
+        // enrollment
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> mAdSelectionClient.selectAds(adSelectionConfig).get());
+        assertThat(exception.getMessage()).isNotEqualTo(CALLER_NOT_AUTHORIZED);
+        PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
+    }
+
+    @Test
     public void testNoEnrollment_reportImpression() {
         PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
 
-        AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
+        AdSelectionConfig adSelectionConfig =
+                AdSelectionConfigFixture.anAdSelectionConfig(
+                        AdTechIdentifier.fromString("seller.example.com"));
 
         long adSelectionId = 1;
 
@@ -173,10 +259,55 @@ public class PermissionsAppOptOutTest {
         PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
     }
 
+    @Test
+    public void testWithEnrollment_reportImpression() {
+        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
+
+        // The "test.com" buyer is a pre-seeded enrolled ad tech
+        AdSelectionConfig adSelectionConfig =
+                AdSelectionConfigFixture.anAdSelectionConfig(
+                        AdTechIdentifier.fromString("test.com"));
+
+        long adSelectionId = 1;
+
+        AdSelectionClient mAdSelectionClient =
+                new AdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        ReportImpressionRequest request =
+                new ReportImpressionRequest(adSelectionId, adSelectionConfig);
+
+        // When the ad tech is properly enrolled, just verify that the error thrown is not due to
+        // enrollment
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> mAdSelectionClient.reportImpression(request).get());
+        assertThat(exception.getMessage()).isNotEqualTo(CALLER_NOT_AUTHORIZED);
+        PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
+    }
+
     // Override the flag to disable Topics enrollment check.
     private void overrideDisableTopicsEnrollmentCheck(String val) {
         // Setting it to 1 here disables the Topics enrollment check.
         ShellUtils.runShellCommand(
                 "setprop debug.adservices.disable_topics_enrollment_check " + val);
+    }
+
+    private void overridingAdservicesLoggingLevel(String loggingLevel) {
+        ShellUtils.runShellCommand("setprop log.tag.adservices %s", loggingLevel);
+    }
+
+    // Override the Consent Manager behaviour - Consent Given
+    private void overrideConsentManagerDebugMode(boolean isGiven) {
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.consent_manager_debug_mode " + isGiven);
+    }
+
+    private void overrideAPIRateLimit(int requestPerSecond) {
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.sdk_request_permits_per_second " + requestPerSecond);
     }
 }

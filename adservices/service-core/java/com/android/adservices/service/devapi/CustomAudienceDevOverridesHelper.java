@@ -75,7 +75,7 @@ public class CustomAudienceDevOverridesHelper {
         String appPackageName = mDevContext.getCallingAppPackageName();
 
         String result =
-                mCustomAudienceDao.getBiddingLogicUrlOverride(owner, buyer, name, appPackageName);
+                mCustomAudienceDao.getBiddingLogicUriOverride(owner, buyer, name, appPackageName);
 
         LogUtil.v(
                 "Override for app '%s' and key (%s,%s,%s): is %s",

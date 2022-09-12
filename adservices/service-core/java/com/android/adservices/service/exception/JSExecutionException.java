@@ -20,7 +20,6 @@ package com.android.adservices.service.exception;
  *
  */
 public class JSExecutionException extends RuntimeException {
-    public JSExecutionException() {}
 
     public JSExecutionException(String message) {
         super(message);

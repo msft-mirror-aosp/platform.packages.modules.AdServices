@@ -26,11 +26,12 @@ final class PreEnrolledAdTechForTest {
 
     static List<EnrollmentData> getList() {
         return Arrays.asList(
-              SIMPLE_ENROLLMENT,
-              ONE_SDK_MULTIPLE_URLS,
-              SECOND_ENROLLMENT,
-              TOPICS_SAMPLE_APPS
-            );
+                SIMPLE_ENROLLMENT,
+                ONE_SDK_MULTIPLE_URLS,
+                SECOND_ENROLLMENT,
+                TOPICS_SAMPLE_APPS,
+                MSMT_SYS_HEALTH_TEST_ENROLLMENT,
+                LOCAL_SERVER_FOR_MSMT_REMARKETING);
     }
 
     private static final EnrollmentData SIMPLE_ENROLLMENT =
@@ -79,17 +80,35 @@ final class PreEnrolledAdTechForTest {
                     .setCompanyId("1001")
                     .setSdkNames(
                             Arrays.asList(
-                                    "SdkName1",
-                                    "SdkName2",
-                                    "SdkName3",
-                                    "SdkName4",
-                                    "SdkName5"
-                            )
-                     )
+                                    "SdkName1", "SdkName2", "SdkName3", "SdkName4", "SdkName5"))
                     .setAttributionSourceRegistrationUrl(Arrays.asList("https://test.com/source"))
                     .setAttributionTriggerRegistrationUrl(Arrays.asList("https://test.com/trigger"))
                     .setAttributionReportingUrl(Arrays.asList("https://test.com"))
                     .setRemarketingResponseBasedRegistrationUrl(Arrays.asList("https://test.com"))
                     .setEncryptionKeyUrl(Arrays.asList("https://test.com/keys"))
+                    .build();
+
+    private static final EnrollmentData MSMT_SYS_HEALTH_TEST_ENROLLMENT =
+            new EnrollmentData.Builder()
+                    .setEnrollmentId("E5")
+                    .setCompanyId("1003")
+                    .setAttributionSourceRegistrationUrl(
+                            Arrays.asList("https://localhost:38383/mockServer"))
+                    .setAttributionTriggerRegistrationUrl(
+                            Arrays.asList("https://localhost:38383/mockServer"))
+                    .setAttributionReportingUrl(Arrays.asList("https://localhost:38383/mockServer"))
+                    .build();
+
+    private static final EnrollmentData LOCAL_SERVER_FOR_MSMT_REMARKETING =
+            new EnrollmentData.Builder()
+                    .setEnrollmentId("E6")
+                    .setCompanyId("1004")
+                    .setAttributionSourceRegistrationUrl(
+                            Arrays.asList("https://localhost:8080/source"))
+                    .setAttributionTriggerRegistrationUrl(
+                            Arrays.asList("https://localhost:8080/trigger"))
+                    .setAttributionReportingUrl(Arrays.asList("https://localhost:8080"))
+                    .setRemarketingResponseBasedRegistrationUrl(
+                            Arrays.asList("https://localhost:8080"))
                     .build();
 }

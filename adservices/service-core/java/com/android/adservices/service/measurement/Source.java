@@ -632,15 +632,16 @@ public class Source {
             BigInteger bigInteger = new BigInteger(hexString, 16);
             aggregateSourceMap.put(id, bigInteger);
         }
-        return Optional.of(
+        AggregatableAttributionSource.Builder asBuilder =
                 new AggregatableAttributionSource.Builder()
-                        .setAggregatableSource(aggregateSourceMap)
-                        .setAggregateFilterData(
-                                new AggregateFilterData.Builder()
-                                        .buildAggregateFilterData(
-                                                new JSONObject(this.mAggregateFilterData))
-                                        .build())
-                        .build());
+                        .setAggregatableSource(aggregateSourceMap);
+        if (this.mAggregateFilterData != null) {
+            asBuilder.setAggregateFilterData(
+                    new AggregateFilterData.Builder()
+                            .buildAggregateFilterData(new JSONObject(this.mAggregateFilterData))
+                            .build());
+        }
+        return Optional.of(asBuilder.build());
     }
 
     private List<FakeReport> generateVtcDualDestinationPostInstallFakeReports() {

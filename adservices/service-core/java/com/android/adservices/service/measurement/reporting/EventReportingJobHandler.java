@@ -138,6 +138,8 @@ public class EventReportingJobHandler {
                 .setTriggerData(String.valueOf(eventReport.getTriggerData()))
                 .setSourceType(eventReport.getSourceType().getValue())
                 .setRandomizedTriggerRate(eventReport.getRandomizedTriggerRate())
+                .setSourceDebugKey(eventReport.getSourceDebugKey())
+                .setTriggerDebugKey(eventReport.getTriggerDebugKey())
                 .build()
                 .toJson();
     }

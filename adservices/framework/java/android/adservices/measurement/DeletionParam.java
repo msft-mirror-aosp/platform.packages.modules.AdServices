@@ -155,13 +155,19 @@ public final class DeletionParam implements Parcelable {
         return mMatchBehavior;
     }
 
-    /** Instant in time the deletion starts, or null if none. */
+    /**
+     * Instant in time the deletion starts, or {@link java.time.Instant#MIN} if starting at the
+     * oldest possible time.
+     */
     @NonNull
     public Instant getStart() {
         return mStart;
     }
 
-    /** Instant in time the deletion ends, or null if none. */
+    /**
+     * Instant in time the deletion ends, or {@link java.time.Instant#MAX} if ending at the most
+     * recent time.
+     */
     @NonNull
     public Instant getEnd() {
         return mEnd;

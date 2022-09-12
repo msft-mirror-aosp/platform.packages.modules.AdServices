@@ -25,19 +25,19 @@ import java.util.Arrays;
 
 /** Utility class supporting custom audience API unit tests */
 public class TrustedBiddingDataFixture {
-    public static final String VALID_TRUSTED_BIDDING_URL_PATH = "/trusted/bidding/";
+    public static final String VALID_TRUSTED_BIDDING_URI_PATH = "/trusted/bidding/";
 
     public static final ArrayList<String> VALID_TRUSTED_BIDDING_KEYS = new ArrayList<String>(
             Arrays.asList("example", "valid", "list", "of", "keys"));
 
-    public static Uri getValidTrustedBiddingUrlByBuyer(AdTechIdentifier buyer) {
-        return CommonFixture.getUri(buyer, VALID_TRUSTED_BIDDING_URL_PATH);
+    public static Uri getValidTrustedBiddingUriByBuyer(AdTechIdentifier buyer) {
+        return CommonFixture.getUri(buyer, VALID_TRUSTED_BIDDING_URI_PATH);
     }
 
     public static TrustedBiddingData getValidTrustedBiddingDataByBuyer(AdTechIdentifier buyer) {
         return new TrustedBiddingData.Builder()
                 .setTrustedBiddingKeys(VALID_TRUSTED_BIDDING_KEYS)
-                .setTrustedBiddingUri(getValidTrustedBiddingUrlByBuyer(buyer))
+                .setTrustedBiddingUri(getValidTrustedBiddingUriByBuyer(buyer))
                 .build();
     }
 }
