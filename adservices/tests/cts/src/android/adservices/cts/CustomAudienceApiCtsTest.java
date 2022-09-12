@@ -146,13 +146,13 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
     }
 
     @Test
-    public void testJoinCustomAudience_invalidAdsRenderUrls_fail() {
-        CustomAudience customAudienceWithInvalidAdDataRenderUrls =
+    public void testJoinCustomAudience_invalidAdsRenderUris_fail() {
+        CustomAudience customAudienceWithInvalidAdDataRenderUris =
                 CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                         .setAds(
                                 AdDataFixture.getInvalidAdsByBuyer(
                                         AdTechIdentifier.fromString(
-                                                "!\\@#\"$#@NOTAREALURL$%487\\")))
+                                                "!\\@#\"$#@NOTAREALURI$%487\\")))
                         .build();
 
         Exception exception =
@@ -160,7 +160,7 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
                         ExecutionException.class,
                         () ->
                                 mClient.joinCustomAudience(
-                                                customAudienceWithInvalidAdDataRenderUrls)
+                                                customAudienceWithInvalidAdDataRenderUris)
                                         .get());
         assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
         assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
@@ -197,7 +197,7 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
 
     @Test
     public void testJoinCustomAudience_mismatchDailyFetchUriDomain_fail() {
-        CustomAudience customAudienceWithMismatchedDailyFetchUrlDomain =
+        CustomAudience customAudienceWithMismatchedDailyFetchUriDomain =
                 CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                         .setDailyUpdateUri(
                                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
@@ -209,7 +209,7 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
                         ExecutionException.class,
                         () ->
                                 mClient.joinCustomAudience(
-                                                customAudienceWithMismatchedDailyFetchUrlDomain)
+                                                customAudienceWithMismatchedDailyFetchUriDomain)
                                         .get());
         assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
         assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);

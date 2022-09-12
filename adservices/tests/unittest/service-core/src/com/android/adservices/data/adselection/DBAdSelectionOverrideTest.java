@@ -27,8 +27,8 @@ public class DBAdSelectionOverrideTest {
     private static final String DECISION_LOGIC_JS = "function test() { return \"hello world\"; }";
     private static final String TRUSTED_SCORING_SIGNALS =
             "{\n"
-                    + "\t\"render_url_1\": \"signals_for_1\",\n"
-                    + "\t\"render_url_2\": \"signals_for_2\"\n"
+                    + "\t\"render_uri_1\": \"signals_for_1\",\n"
+                    + "\t\"render_uri_2\": \"signals_for_2\"\n"
                     + "}";
 
     @Test

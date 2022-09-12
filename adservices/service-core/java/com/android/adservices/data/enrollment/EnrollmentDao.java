@@ -70,7 +70,8 @@ public class EnrollmentDao implements IEnrollmentDao {
         return prefs.getBoolean(IS_SEEDED, false);
     }
 
-    private void seed() {
+    @VisibleForTesting
+    void seed() {
         if (!isSeeded()) {
             boolean success = true;
             for (EnrollmentData enrollment : PreEnrolledAdTechForTest.getList()) {
@@ -282,10 +283,11 @@ public class EnrollmentDao implements IEnrollmentDao {
                 EnrollmentTables.EnrollmentDataContract.ENCRYPTION_KEY_URL,
                 String.join(" ", enrollmentData.getEncryptionKeyUrl()));
         try {
-            db.insert(
+            db.insertWithOnConflict(
                     EnrollmentTables.EnrollmentDataContract.TABLE,
                     /*nullColumnHack=*/ null,
-                    values);
+                    values,
+                    SQLiteDatabase.CONFLICT_REPLACE);
         } catch (SQLException e) {
             LogUtil.e("Failed to insert EnrollmentData. Exception : " + e.getMessage());
             return false;
