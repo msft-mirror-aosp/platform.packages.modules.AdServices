@@ -23,11 +23,14 @@ import static com.android.adservices.service.js.JSScriptArgument.stringArg;
 import static com.google.common.util.concurrent.Futures.transform;
 
 import android.adservices.adselection.AdSelectionConfig;
+import android.adservices.common.AdSelectionSignals;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.net.Uri;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
+import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.internal.util.Preconditions;
@@ -42,6 +45,7 @@ import org.json.JSONObject;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executor;
+import java.util.function.Supplier;
 
 /**
  * Utility class to execute a reporting script. Current implementation is thread safe but relies on
@@ -66,18 +70,25 @@ public class ReportImpressionScriptEngine {
     public static final String CUSTOM_AUDIENCE_SIGNALS_ARG_NAME = "custom_audience_signals";
     public static final String AD_SELECTION_CONFIG_ARG_NAME = "ad_selection_config";
     public static final String BID_ARG_NAME = "bid";
-    public static final String RENDER_URL_ARG_NAME = "render_url";
+    public static final String RENDER_URI_ARG_NAME = "render_uri";
     public static final String SIGNALS_FOR_BUYER_RESPONSE_NAME = "signals_for_buyer";
-    public static final String REPORTING_URL_RESPONSE_NAME = "reporting_url";
+    public static final String REPORTING_URI_RESPONSE_NAME = "reporting_uri";
     public static final String REPORT_RESULT_FUNC_NAME = "reportResult";
     public static final String REPORT_WIN_FUNC_NAME = "reportWin";
 
     private final JSScriptEngine mJsEngine;
     // Used for the Futures.transform calls to compose futures.
     private final Executor mExecutor = MoreExecutors.directExecutor();
+    private final Supplier<Boolean> mEnforceMaxHeapSizeFeatureSupplier;
+    private final Supplier<Long> mMaxHeapSizeBytesSupplier;
 
-    public ReportImpressionScriptEngine(Context context) {
-        mJsEngine = new JSScriptEngine(context);
+    public ReportImpressionScriptEngine(
+            Context context,
+            Supplier<Boolean> enforceMaxHeapSizeFeatureSupplier,
+            Supplier<Long> maxHeapSizeBytesSupplier) {
+        mJsEngine = JSScriptEngine.getInstance(context);
+        mEnforceMaxHeapSizeFeatureSupplier = enforceMaxHeapSizeFeatureSupplier;
+        mMaxHeapSizeBytesSupplier = maxHeapSizeBytesSupplier;
     }
 
     /**
@@ -87,7 +98,7 @@ public class ReportImpressionScriptEngine {
      * @param decisionLogicJS Javascript containing the reportResult() function
      * @param adSelectionConfig Configuration object passed by the SDK containing various signals to
      *     be used in ad selection and reporting. See {@link AdSelectionConfig} for more details
-     * @param renderUrl Url to render the advert, is an input to the reportResult() function
+     * @param renderUri URI to render the advert, is an input to the reportResult() function
      * @param bid Bid for the winning ad, is an input to the reportResult() function
      * @param contextualSignals another input to reportResult(), contains fields such as appName
      * @throws JSONException If any of the signals are not a valid JSON object.
@@ -95,23 +106,24 @@ public class ReportImpressionScriptEngine {
     public ListenableFuture<SellerReportingResult> reportResult(
             @NonNull String decisionLogicJS,
             @NonNull AdSelectionConfig adSelectionConfig,
-            @NonNull Uri renderUrl,
+            @NonNull Uri renderUri,
             @NonNull double bid,
-            @NonNull String contextualSignals)
+            @NonNull AdSelectionSignals contextualSignals)
             throws JSONException, IllegalStateException {
         Objects.requireNonNull(decisionLogicJS);
         Objects.requireNonNull(adSelectionConfig);
-        Objects.requireNonNull(renderUrl);
+        Objects.requireNonNull(renderUri);
         Objects.requireNonNull(contextualSignals);
 
+        LogUtil.v("Reporting result");
         ImmutableList<JSScriptArgument> arguments =
                 ImmutableList.<JSScriptArgument>builder()
                         .add(
                                 AdSelectionConfigArgument.asScriptArgument(
                                         adSelectionConfig, AD_SELECTION_CONFIG_ARG_NAME))
-                        .add(stringArg(RENDER_URL_ARG_NAME, renderUrl.toString()))
+                        .add(stringArg(RENDER_URI_ARG_NAME, renderUri.toString()))
                         .add(numericArg(BID_ARG_NAME, bid))
-                        .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals))
+                        .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals.toString()))
                         .build();
 
         return transform(
@@ -138,10 +150,10 @@ public class ReportImpressionScriptEngine {
      */
     public ListenableFuture<Uri> reportWin(
             @NonNull String biddingLogicJS,
-            @NonNull String adSelectionSignals,
-            @NonNull String perBuyerSignals,
-            @NonNull String signalsForBuyer,
-            @NonNull String contextualSignals,
+            @NonNull AdSelectionSignals adSelectionSignals,
+            @NonNull AdSelectionSignals perBuyerSignals,
+            @NonNull AdSelectionSignals signalsForBuyer,
+            @NonNull AdSelectionSignals contextualSignals,
             @NonNull CustomAudienceSignals customAudienceSignals)
             throws JSONException, IllegalStateException {
         Objects.requireNonNull(biddingLogicJS);
@@ -150,16 +162,17 @@ public class ReportImpressionScriptEngine {
         Objects.requireNonNull(signalsForBuyer);
         Objects.requireNonNull(contextualSignals);
         Objects.requireNonNull(customAudienceSignals);
+        LogUtil.v("Reporting win");
 
         ImmutableList<JSScriptArgument> arguments =
                 ImmutableList.<JSScriptArgument>builder()
-                        .add(jsonArg(AD_SELECTION_SIGNALS_ARG_NAME, adSelectionSignals))
-                        .add(jsonArg(PER_BUYER_SIGNALS_ARG_NAME, perBuyerSignals))
-                        .add(jsonArg(SIGNALS_FOR_BUYER_ARG_NAME, signalsForBuyer))
-                        .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals))
+                        .add(jsonArg(AD_SELECTION_SIGNALS_ARG_NAME, adSelectionSignals.toString()))
+                        .add(jsonArg(PER_BUYER_SIGNALS_ARG_NAME, perBuyerSignals.toString()))
+                        .add(jsonArg(SIGNALS_FOR_BUYER_ARG_NAME, signalsForBuyer.toString()))
+                        .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals.toString()))
                         .add(
-                                CustomAudienceSignalsArgument.asScriptArgument(
-                                        customAudienceSignals, CUSTOM_AUDIENCE_SIGNALS_ARG_NAME))
+                                CustomAudienceBiddingSignalsArgument.asScriptArgument(
+                                        CUSTOM_AUDIENCE_SIGNALS_ARG_NAME, customAudienceSignals))
                         .build();
 
         return transform(
@@ -170,6 +183,7 @@ public class ReportImpressionScriptEngine {
 
     ListenableFuture<ReportingScriptResult> runReportingScript(
             String jsScript, String functionName, List<JSScriptArgument> args) {
+        LogUtil.v("Executing reporting script");
         try {
             return transform(
                     callReportingScript(jsScript, functionName, args),
@@ -195,16 +209,20 @@ public class ReportImpressionScriptEngine {
     private ListenableFuture<String> callReportingScript(
             String jsScript, String functionName, List<JSScriptArgument> args)
             throws JSONException {
-
-        return mJsEngine.evaluate(jsScript, args, functionName);
+        IsolateSettings isolateSettings =
+                mEnforceMaxHeapSizeFeatureSupplier.get()
+                        ? IsolateSettings.forMaxHeapSizeEnforcementEnabled(
+                                mMaxHeapSizeBytesSupplier.get())
+                        : IsolateSettings.forMaxHeapSizeEnforcementDisabled();
+        return mJsEngine.evaluate(jsScript, args, functionName, isolateSettings);
     }
 
     /**
      * Parses the output from the invocation of the {@code reportResult} JS function and convert it
-     * to a {@code reportingUrl}. The script output has been pre-parsed into an {@link
+     * to a {@code reportingUri}. The script output has been pre-parsed into an {@link
      * ReportingScriptResult} object that will contain the script status code and JSONObject that
-     * holds the reportingUrl. The method will throw an exception if the status code is not {@link
-     * #JS_SCRIPT_STATUS_SUCCESS} or if there has been any problem parsing the JS response.
+     * holds the {@code reportingUri}. The method will throw an exception if the status code is not
+     * {@link #JS_SCRIPT_STATUS_SUCCESS} or if there has been any problem parsing the JS response.
      *
      * @throws IllegalStateException If the result is unsuccessful or doesn't match the expected
      *     structure.
@@ -213,15 +231,16 @@ public class ReportImpressionScriptEngine {
     private SellerReportingResult handleReportResultOutput(
             @NonNull ReportingScriptResult reportResult) {
         Objects.requireNonNull(reportResult);
-
+        LogUtil.v("Handling reporting result output");
         Preconditions.checkState(
                 reportResult.status == JS_SCRIPT_STATUS_SUCCESS, "Report Result script failed!");
         Preconditions.checkState(
                 reportResult.results.length() == 2, "Result does not match expected structure!");
         try {
             return new SellerReportingResult(
-                    reportResult.results.getString(SIGNALS_FOR_BUYER_RESPONSE_NAME),
-                    Uri.parse(reportResult.results.getString(REPORTING_URL_RESPONSE_NAME)));
+                    AdSelectionSignals.fromString(
+                            reportResult.results.getString(SIGNALS_FOR_BUYER_RESPONSE_NAME)),
+                    Uri.parse(reportResult.results.getString(REPORTING_URI_RESPONSE_NAME)));
         } catch (Exception e) {
             throw new IllegalStateException("Result does not match expected structure!");
         }
@@ -231,9 +250,9 @@ public class ReportImpressionScriptEngine {
      * Parses the output from the invocation of the {@code reportWin} JS function and convert it to
      * a {@link SellerReportingResult}. The script output has been pre-parsed into an {@link
      * ReportingScriptResult} object that will contain the script status code and JSONObject that
-     * holds both signalsForBuyer and reportingUrl. The method will throw an exception if the status
-     * code is not {@link #JS_SCRIPT_STATUS_SUCCESS} or if there has been any problem parsing the JS
-     * response.
+     * holds both signalsForBuyer and {@code reportingUri}. The method will throw an exception if
+     * the status code is not {@link #JS_SCRIPT_STATUS_SUCCESS} or if there has been any problem
+     * parsing the JS response.
      *
      * @throws IllegalStateException If the result is unsuccessful or doesn't match the expected
      *     structure.
@@ -241,13 +260,14 @@ public class ReportImpressionScriptEngine {
     @NonNull
     private Uri handleReportWinOutput(@NonNull ReportingScriptResult reportResult) {
         Objects.requireNonNull(reportResult);
+        LogUtil.v("Handling report win output");
 
         Preconditions.checkState(
                 reportResult.status == JS_SCRIPT_STATUS_SUCCESS, "Report Result script failed!");
         Preconditions.checkState(
                 reportResult.results.length() == 1, "Result does not match expected structure!");
         try {
-            return Uri.parse(reportResult.results.getString(REPORTING_URL_RESPONSE_NAME));
+            return Uri.parse(reportResult.results.getString(REPORTING_URI_RESPONSE_NAME));
         } catch (Exception e) {
             throw new IllegalStateException("Result does not match expected structure!");
         }
@@ -256,6 +276,7 @@ public class ReportImpressionScriptEngine {
     @NonNull
     private ReportingScriptResult parseReportingOutput(@NonNull String reportScriptResult) {
         Objects.requireNonNull(reportScriptResult);
+        LogUtil.v("Parsing Reporting output");
         try {
             Preconditions.checkState(
                     !reportScriptResult.equals("null"),
@@ -284,23 +305,24 @@ public class ReportImpressionScriptEngine {
     }
 
     static class SellerReportingResult {
-        @NonNull private final String mSignalsForBuyer;
-        @NonNull private final Uri mReportingUrl;
+        @NonNull private final AdSelectionSignals mSignalsForBuyer;
+        @NonNull private final Uri mReportingUri;
 
-        SellerReportingResult(@NonNull String signalsForBuyer, @NonNull Uri reportingUrl) {
+        SellerReportingResult(
+                @NonNull AdSelectionSignals signalsForBuyer, @NonNull Uri reportingUri) {
             Objects.requireNonNull(signalsForBuyer);
-            Objects.requireNonNull(reportingUrl);
+            Objects.requireNonNull(reportingUri);
 
             this.mSignalsForBuyer = signalsForBuyer;
-            this.mReportingUrl = reportingUrl;
+            this.mReportingUri = reportingUri;
         }
 
-        public String getSignalsForBuyer() {
+        public AdSelectionSignals getSignalsForBuyer() {
             return mSignalsForBuyer;
         }
 
-        public Uri getReportingUrl() {
-            return mReportingUrl;
+        public Uri getReportingUri() {
+            return mReportingUri;
         }
     }
 }

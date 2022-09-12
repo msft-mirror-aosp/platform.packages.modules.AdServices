@@ -17,6 +17,7 @@
 package com.android.adservices.service.measurement.aggregation;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 
 import androidx.test.filters.SmallTest;
@@ -25,6 +26,7 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 /** Unit tests for {@link AggregatePayload} */
 @SmallTest
@@ -42,9 +44,10 @@ public final class AggregatePayloadTest {
                 .setAggregationServicePayload(
                         Arrays.asList(
                                 createPayload(Arrays.asList(1, 2), "1"),
-                                createPayload(Arrays.asList(3, 4), "2"))
-                )
-                .setSharedInfo("share_info").build();
+                                createPayload(Arrays.asList(3), "2"),
+                                createPayload(Arrays.asList(1, 2), "1")))
+                .setSharedInfo("share_info")
+                .build();
     }
 
     @Test
@@ -53,9 +56,11 @@ public final class AggregatePayloadTest {
         assertEquals("share_info", aggregateReport.getSharedInfo());
         List<AggregatePayload.AggregationServicePayload> payloads =
                 aggregateReport.getPayloads();
-        assertEquals(payloads.size(), 2);
+        assertEquals(payloads.size(), 3);
         assertEquals("1", payloads.get(0).getKeyId());
         assertEquals("2", payloads.get(1).getKeyId());
+        assertEquals(2, payloads.get(0).getPayload().size());
+        assertEquals(1, payloads.get(1).getPayload().size());
     }
 
     @Test
@@ -63,5 +68,62 @@ public final class AggregatePayloadTest {
         AggregatePayload aggregateReport = new AggregatePayload.Builder().build();
         assertEquals(0, aggregateReport.getPayloads().size());
         assertNull(aggregateReport.getSharedInfo());
+    }
+
+    @Test
+    public void testHashCode_equals() throws Exception {
+        final AggregatePayload aggregatePayload1 = createAggregateReport();
+        final AggregatePayload aggregatePayload2 = createAggregateReport();
+        final Set<AggregatePayload> aggregatePayloadSet1 = Set.of(aggregatePayload1);
+        final Set<AggregatePayload> aggregatePayloadSet2 = Set.of(aggregatePayload2);
+        assertEquals(aggregatePayload1.hashCode(), aggregatePayload2.hashCode());
+        assertEquals(aggregatePayload1, aggregatePayload2);
+        assertEquals(aggregatePayloadSet1, aggregatePayloadSet2);
+    }
+
+    @Test
+    public void testHashCode_notEquals() throws Exception {
+        final AggregatePayload aggregatePayload1 = createAggregateReport();
+        final AggregatePayload aggregatePayload2 =
+                new AggregatePayload.Builder()
+                        .setAggregationServicePayload(
+                                Arrays.asList(createPayload(Arrays.asList(1, 2), "1")))
+                        .setSharedInfo("share_info")
+                        .build();
+        final Set<AggregatePayload> aggregatePayloadSet1 = Set.of(aggregatePayload1);
+        final Set<AggregatePayload> aggregatePayloadSet2 = Set.of(aggregatePayload2);
+        assertNotEquals(aggregatePayload1.hashCode(), aggregatePayload2.hashCode());
+        assertNotEquals(aggregatePayload1, aggregatePayload2);
+        assertNotEquals(aggregatePayloadSet1, aggregatePayloadSet2);
+    }
+
+    @Test
+    public void testHashCodeAggregationServicePayload_equals() throws Exception {
+        final AggregatePayload.AggregationServicePayload aggregatePayload1 =
+                createPayload(Arrays.asList(1, 2), "1");
+        final AggregatePayload.AggregationServicePayload aggregatePayload2 =
+                createPayload(Arrays.asList(1, 2), "1");
+        final Set<AggregatePayload.AggregationServicePayload> aggregatePayloadSet1 =
+                Set.of(aggregatePayload1);
+        final Set<AggregatePayload.AggregationServicePayload> aggregatePayloadSet2 =
+                Set.of(aggregatePayload2);
+        assertEquals(aggregatePayload1.hashCode(), aggregatePayload2.hashCode());
+        assertEquals(aggregatePayload1, aggregatePayload2);
+        assertEquals(aggregatePayloadSet1, aggregatePayloadSet2);
+    }
+
+    @Test
+    public void testHashCodeAggregationServicePayload_notEquals() throws Exception {
+        final AggregatePayload.AggregationServicePayload aggregatePayload1 =
+                createPayload(Arrays.asList(1, 2), "1");
+        final AggregatePayload.AggregationServicePayload aggregatePayload2 =
+                createPayload(Arrays.asList(1), "1");
+        final Set<AggregatePayload.AggregationServicePayload> aggregatePayloadSet1 =
+                Set.of(aggregatePayload1);
+        final Set<AggregatePayload.AggregationServicePayload> aggregatePayloadSet2 =
+                Set.of(aggregatePayload2);
+        assertNotEquals(aggregatePayload1.hashCode(), aggregatePayload2.hashCode());
+        assertNotEquals(aggregatePayload1, aggregatePayload2);
+        assertNotEquals(aggregatePayloadSet1, aggregatePayloadSet2);
     }
 }

@@ -20,16 +20,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Represent the result from the getTopics API.
- */
-public class GetTopicsResponse {
+/** Represent the result from the getTopics API. */
+public final class GetTopicsResponse {
+    /** List of Topic objects returned by getTopics API. */
     private final List<Topic> mTopics;
 
     private GetTopicsResponse(@NonNull List<Topic> topics) {
         mTopics = topics;
     }
 
+    /** Returns a {@link List} of {@link Topic} objects returned by getTopics API. */
     @NonNull
     public List<Topic> getTopics() {
         return mTopics;
@@ -53,18 +53,19 @@ public class GetTopicsResponse {
     }
 
     /**
-     * Builder for {@link GetTopicsResponse} objects.
-     * This class is unhidden so that developers can write tests.
+     * Builder for {@link GetTopicsResponse} objects. This class should be used in test
+     * implementation as expected response from Topics API
      */
     public static final class Builder {
         private List<Topic> mTopics = new ArrayList<>();
 
-        public Builder() {}
-
-        /** Set the list of the returned Topics */
-        public @NonNull Builder setTopics(@NonNull List<Topic> topics) {
-            mTopics = topics;
-            return this;
+        /**
+         * Creates a {@link Builder} for {@link GetTopicsResponse} objects.
+         *
+         * @param topics The list of the returned Topics.
+         */
+        public Builder(@NonNull List<Topic> topics) {
+            mTopics = Objects.requireNonNull(topics);
         }
 
         /**
@@ -75,8 +76,7 @@ public class GetTopicsResponse {
          */
         public @NonNull GetTopicsResponse build() {
             if (mTopics == null) {
-                throw new IllegalArgumentException(
-                        "Topics or TaxonomyVersion or ModelVersion is null");
+                throw new IllegalArgumentException("Topics is null");
             }
             return new GetTopicsResponse(mTopics);
         }

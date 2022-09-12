@@ -15,15 +15,15 @@
  */
 package android.adservices.topics;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
-
 
 import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -33,34 +33,56 @@ import java.util.List;
 public final class GetTopicsResponseTest {
 
     @Test
-    public void testGetTopicsResponseBuilder_nullableThrows() throws Exception {
+    public void testGetTopicsResponseBuilder_nullableThrows() {
         assertThrows(
-            IllegalArgumentException.class,
-            () -> {
-                GetTopicsResponse unusedResponse =
-                    new GetTopicsResponse.Builder().setTopics(null).build();
-            });
-
-
-        // This should not throw.
-        GetTopicsResponse unusedResponse =
-            new GetTopicsResponse.Builder()
-                // Not setting anything default to empty.
-                .build();
+                NullPointerException.class,
+                () -> {
+                    GetTopicsResponse unusedResponse = new GetTopicsResponse.Builder(null).build();
+                });
     }
 
     @Test
-    public void testGetTopicsResponseBuilder() throws Exception {
-        Topic topic =
-                new Topic(/* mTaxonomyVersion */ 1L, /* mModelVersion */ 1L, /* mTopicId */ 0);
-        List<Topic> topicList = new ArrayList<>();
-        topicList.add(topic);
+    public void testGetTopicsResponseBuilder() {
+        List<Topic> topics =
+                List.of(
+                        new Topic(
+                                /* mTaxonomyVersion */ 1L, /* mModelVersion */
+                                1L, /* mTopicId */
+                                0));
 
         // Build GetTopicsResponse using topicList
-        GetTopicsResponse response = new GetTopicsResponse.Builder().setTopics(topicList).build();
+        GetTopicsResponse response = new GetTopicsResponse.Builder(topics).build();
 
         // Validate the topicList is same to what we created
-        assertEquals(topicList, response.getTopics());
+        assertEquals(topics, response.getTopics());
+    }
+
+    @Test
+    public void testEquals() {
+        List<Topic> topics =
+                List.of(
+                        new Topic(
+                                /* mTaxonomyVersion */ 1L, /* mModelVersion */
+                                1L, /* mTopicId */
+                                0));
+        GetTopicsResponse getTopicsResponse1 = new GetTopicsResponse.Builder(topics).build();
+        GetTopicsResponse getTopicsResponse2 = new GetTopicsResponse.Builder(topics).build();
+
+        assertThat(getTopicsResponse1.equals(getTopicsResponse2)).isTrue();
+    }
+
+    @Test
+    public void testHashCode() {
+        List<Topic> topics =
+                List.of(
+                        new Topic(
+                                /* mTaxonomyVersion */ 1L, /* mModelVersion */
+                                1L, /* mTopicId */
+                                0));
+        GetTopicsResponse getTopicsResponse1 = new GetTopicsResponse.Builder(topics).build();
+        GetTopicsResponse getTopicsResponse2 = new GetTopicsResponse.Builder(topics).build();
+
+        assertThat(getTopicsResponse1.hashCode()).isEqualTo(getTopicsResponse2.hashCode());
     }
 }
 

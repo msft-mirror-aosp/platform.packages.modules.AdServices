@@ -35,13 +35,13 @@ import org.junit.Test;
 
 @SmallTest
 public class AdDataArgumentTest {
-    public static final String RENDER_URL = "http://test.com/fetch";
+    public static final String RENDER_URI = "http://test.com/fetch";
     public static final String METADATA = "{\"field1\":1}";
-    public static final AdData AD_DATA = new AdData(Uri.parse(RENDER_URL), METADATA);
+    public static final AdData AD_DATA = new AdData(Uri.parse(RENDER_URI), METADATA);
 
     public static JSONObject aValidAdDataJson() throws JSONException {
         return new JSONObject()
-                .put(AdDataArgument.RENDER_URL_FIELD_NAME, RENDER_URL)
+                .put(AdDataArgument.RENDER_URI_FIELD_NAME, RENDER_URI)
                 .put(AdDataArgument.METADATA_FIELD_NAME, new JSONObject(METADATA));
     }
 
@@ -69,12 +69,12 @@ public class AdDataArgumentTest {
     }
 
     @Test
-    public void testShouldFailIfAdDataIsMissingRenderUrl() throws JSONException {
-        JSONObject adDataWithoutRenderUrl = aValidAdDataJson();
-        adDataWithoutRenderUrl.remove(AdDataArgument.RENDER_URL_FIELD_NAME);
+    public void testShouldFailIfAdDataIsMissingRenderUri() throws JSONException {
+        JSONObject adDataWithoutRenderUri = aValidAdDataJson();
+        adDataWithoutRenderUri.remove(AdDataArgument.RENDER_URI_FIELD_NAME);
         assertThrows(
                 IllegalArgumentException.class,
-                () -> AdDataArgument.parseJsonResponse(adDataWithoutRenderUrl));
+                () -> AdDataArgument.parseJsonResponse(adDataWithoutRenderUri));
     }
 
     @Test
@@ -84,8 +84,8 @@ public class AdDataArgumentTest {
                         recordArg(
                                 "name",
                                 stringArg(
-                                        AdDataArgument.RENDER_URL_FIELD_NAME,
-                                        AD_DATA.getRenderUrl().toString()),
+                                        AdDataArgument.RENDER_URI_FIELD_NAME,
+                                        AD_DATA.getRenderUri().toString()),
                                 jsonArg(
                                         AdDataArgument.METADATA_FIELD_NAME,
                                         AD_DATA.getMetadata())));

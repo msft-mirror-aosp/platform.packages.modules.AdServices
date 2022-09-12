@@ -281,6 +281,33 @@ public final class TopicsTables {
                     + " INTEGER NOT NULL"
                     + ")";
 
+    /**
+     * Table to store the original timestamp when the user calls Topics API. This table should have
+     * only 1 row that stores the origin.
+     */
+    public interface EpochOriginContract {
+        String TABLE = TOPICS_TABLE_PREFIX + "epoch_origin";
+        String ONE_ROW_CHECK = "one_row_check"; // to constrain 1 origin
+        String ORIGIN = "origin";
+    }
+
+    // At the first time inserting a record, it won't persist one_row_check field so that this first
+    // entry will have one_row_check = 1. Therefore, further persisting is not allowed as primary
+    // key cannot be duplicated value and one_row_check is constrained to only equal to 1 to forbid
+    // any increment.
+    private static final String CREATE_TABLE_EPOCH_ORIGIN =
+            "CREATE TABLE "
+                    + EpochOriginContract.TABLE
+                    + "("
+                    + EpochOriginContract.ONE_ROW_CHECK
+                    + " INTEGER PRIMARY KEY DEFAULT 1, "
+                    + EpochOriginContract.ORIGIN
+                    + " INTEGER NOT NULL, "
+                    + "CONSTRAINT one_row_constraint CHECK ("
+                    + EpochOriginContract.ONE_ROW_CHECK
+                    + " = 1) "
+                    + ")";
+
     // Consolidated list of create statements for all tables.
     public static final List<String> CREATE_STATEMENTS =
             Collections.unmodifiableList(
@@ -292,7 +319,8 @@ public final class TopicsTables {
                             CREATE_TABLE_USAGE_HISTORY,
                             CREATE_TABLE_APP_USAGE_HISTORY,
                             CREATE_TABLE_CALLER_CAN_LEARN_TOPICS,
-                            CREATE_TABLE_BLOCKED_TOPICS));
+                            CREATE_TABLE_BLOCKED_TOPICS,
+                            CREATE_TABLE_EPOCH_ORIGIN));
 
     // Private constructor to prevent instantiation.
     private TopicsTables() {}

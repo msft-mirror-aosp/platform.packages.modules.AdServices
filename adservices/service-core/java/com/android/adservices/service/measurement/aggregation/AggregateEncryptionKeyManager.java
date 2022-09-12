@@ -28,29 +28,37 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 
-/**
- * A public key used to encrypt aggregatable reports.
- */
-final class AggregateEncryptionKeyManager {
+/** A public key used to encrypt aggregatable reports. */
+public final class AggregateEncryptionKeyManager {
     private final DatastoreManager mDatastoreManager;
     private final AggregateEncryptionKeyFetcher mAggregateEncryptionKeyFetcher;
     private final Clock mClock;
+    private final Uri mAggregateEncryptionKeyCoordinatorUrl;
 
-    AggregateEncryptionKeyManager(DatastoreManager datastoreManager) {
+    public AggregateEncryptionKeyManager(DatastoreManager datastoreManager) {
         mDatastoreManager = datastoreManager;
         mAggregateEncryptionKeyFetcher = new AggregateEncryptionKeyFetcher();
         mClock = Clock.systemUTC();
+        mAggregateEncryptionKeyCoordinatorUrl =
+                Uri.parse(AdServicesConfig.getMeasurementAggregateEncryptionKeyCoordinatorUrl());
     }
 
     @VisibleForTesting
     AggregateEncryptionKeyManager(DatastoreManager datastoreManager,
-            AggregateEncryptionKeyFetcher aggregateEncryptionKeyFetcher, Clock clock) {
+            AggregateEncryptionKeyFetcher aggregateEncryptionKeyFetcher,
+            Clock clock,
+            Uri aggregateEncryptionKeyCoordinatorUrl) {
         mDatastoreManager = datastoreManager;
         mAggregateEncryptionKeyFetcher = aggregateEncryptionKeyFetcher;
         mClock = clock;
+        mAggregateEncryptionKeyCoordinatorUrl = aggregateEncryptionKeyCoordinatorUrl;
     }
 
-    List<AggregateEncryptionKey> getAggregateEncryptionKeys(int numKeys) {
+    /**
+     * Retrieves a {@link List<AggregateEncryptionKey>} in which the size of the collection matches
+     * the numKeys specified in the parameters. If no keys are found, the collection would be empty.
+     */
+    public List<AggregateEncryptionKey> getAggregateEncryptionKeys(int numKeys) {
         long eventTime = mClock.millis();
 
         Optional<List<AggregateEncryptionKey>> aggregateEncryptionKeysOptional =
@@ -63,10 +71,9 @@ final class AggregateEncryptionKeyManager {
         // If no non-expired keys are available (or the datastore retrieval failed), fetch them
         // over the network, insert them in the datastore and delete expired keys.
         if (aggregateEncryptionKeys.size() == 0) {
-            Uri target = Uri.parse(
-                    AdServicesConfig.getMeasurementAggregateEncryptionKeyCoordinatorUrl());
             Optional<List<AggregateEncryptionKey>> fetchResult =
-                    mAggregateEncryptionKeyFetcher.fetch(target, eventTime);
+                    mAggregateEncryptionKeyFetcher.fetch(
+                            mAggregateEncryptionKeyCoordinatorUrl, eventTime);
             if (fetchResult.isPresent()) {
                 aggregateEncryptionKeys = fetchResult.get();
                 for (AggregateEncryptionKey aggregateEncryptionKey : aggregateEncryptionKeys) {

@@ -16,17 +16,19 @@
 
 package com.android.adservices.data.measurement;
 
+import android.adservices.measurement.DeletionRequest;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.android.adservices.service.measurement.AdtechUrl;
+import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
+import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
-import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
+import com.android.adservices.service.measurement.aggregation.AggregateReport;
 
 import java.time.Instant;
 import java.util.List;
@@ -59,17 +61,42 @@ public interface IMeasurementDao {
     /**
      * Gets the number of sources a registrant has registered.
      */
-    long getNumTriggersPerRegistrant(Uri registrant) throws DatastoreException;
-
-    /**
-     * Updates the {@link Trigger.Status} value for the provided {@link Trigger}.
-     */
-    void updateTriggerStatus(Trigger trigger) throws DatastoreException;
+    long getNumSourcesPerRegistrant(Uri registrant) throws DatastoreException;
 
     /**
      * Gets the number of triggers a registrant has registered.
      */
-    long getNumSourcesPerRegistrant(Uri registrant) throws DatastoreException;
+    long getNumTriggersPerRegistrant(Uri registrant) throws DatastoreException;
+
+    /**
+     * Gets the count of distinct IDs of enrollments in the Attribution table in a time window
+     * with matching publisher and destination, excluding a given enrollment ID.
+     */
+    Integer countDistinctEnrollmentsPerPublisherXDestinationInAttribution(Uri sourceSite,
+            Uri destination, String excludedEnrollmentId, long windowStartTime, long windowEndTime)
+            throws DatastoreException;
+
+    /**
+     * Gets the count of distinct Uri's of destinations in the Source table in a time window with
+     * matching publisher, enrollment, and ACTIVE status, excluding a given destination.
+     */
+    Integer countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(Uri publisher,
+            @EventSurfaceType int publisherType, String enrollmentId, Uri excludedDestination,
+            @EventSurfaceType int destinationType, long windowStartTime, long windowEndTime)
+            throws DatastoreException;
+
+    /**
+     * Gets the count of distinct IDs of enrollments in the Source table in a time window with
+     * matching publisher and destination, excluding a given enrollment ID.
+     */
+    Integer countDistinctEnrollmentsPerPublisherXDestinationInSource(Uri publisher,
+            @EventSurfaceType int publisherType, Uri destination, String enrollmentId,
+            long windowStartTime, long windowEndTime) throws DatastoreException;
+
+     /**
+     * Updates the {@link Trigger.Status} value for the provided {@link Trigger}.
+     */
+    void updateTriggerStatus(Trigger trigger) throws DatastoreException;
 
     /**
      * Add an entry to the Source datastore.
@@ -124,12 +151,12 @@ public interface IMeasurementDao {
     EventReport getEventReport(String eventReportId) throws DatastoreException;
 
     /**
-     * Queries and returns the {@link CleartextAggregatePayload}
+     * Queries and returns the {@link AggregateReport}
      * @param aggregateReportId Id of the request Aggregate Report
      * @return the request Aggregate Report; Null in case of SQL failure
      */
     @Nullable
-    CleartextAggregatePayload getAggregateReport(String aggregateReportId)
+    AggregateReport getAggregateReport(String aggregateReportId)
             throws DatastoreException;
 
     /**
@@ -168,47 +195,16 @@ public interface IMeasurementDao {
     List<String> getPendingEventReportIdsForGivenApp(Uri appName) throws DatastoreException;
 
     /**
-     * Find the number of entries for a rate limit window using the {@link Source} and
-     * {@link Trigger}.
-     * Rate-Limit Window: (Source Site, Destination Site, Window) from triggerTime.
+     * Find the number of entries for a rate limit window using the {@link Source} and {@link
+     * Trigger}. Rate-Limit Window: (Source Site, Destination Site, Window) from triggerTime.
      *
      * @return the number of entries for the window.
      */
-    long getAttributionsPerRateLimitWindow(Source source, Trigger trigger)
+    long getAttributionsPerRateLimitWindow(@NonNull Source source, @NonNull Trigger trigger)
             throws DatastoreException;
 
-    /**
-     * Add an entry in AttributionRateLimit datastore for the provided {@link Source} and
-     * {@link Trigger}
-     */
-    void insertAttributionRateLimit(Source source, Trigger trigger) throws DatastoreException;
-
-    /**
-     * Given one postback urls, queries and returns all the postback urls with the same adtech id.
-     *
-     * @param postbackUrl the postback url of the request AdtechUrl
-     * @return all the postback urls with the same adtech id; Null in case of SQL failure
-     */
-    List<String> getAllAdtechUrls(String postbackUrl) throws DatastoreException;
-
-    /**
-     * Queries and returns the {@link AdtechUrl}.
-     *
-     * @param postbackUrl the postback Url of the request AdtechUrl
-     * @return the requested AdtechUrl; Null in case of SQL failure
-     */
-    @Nullable
-    AdtechUrl getAdtechEnrollmentData(String postbackUrl) throws DatastoreException;
-
-    /**
-     * Saves the {@link AdtechUrl} to datastore.
-     */
-    void insertAdtechUrl(AdtechUrl adtechUrl) throws DatastoreException;
-
-    /**
-     * Deletes the {@link AdtechUrl} from datastore using the given postback url.
-     */
-    void deleteAdtechUrl(String postbackUrl) throws DatastoreException;
+    /** Add an entry in Attribution datastore. */
+    void insertAttribution(@NonNull Attribution attribution) throws DatastoreException;
 
     /**
      * Deletes all records in measurement tables that correspond with the provided Uri.
@@ -227,15 +223,22 @@ public interface IMeasurementDao {
      * and/or a range of dates.
      *
      * @param registrant who owns the data
-     * @param origin uri for deletion. May be null
-     * @param start time for deletion range. May be null. If null, end must be null as well
-     * @param end time for deletion range. May be null. If null, start must be null as well
+     * @param start time for deletion range. Set to Instant.MIN to delete everything up to the end
+     * @param end time for deletion range. Set to Instant.MAX to delete everything after the start
+     * @param origins list of origins which should be used for matching
+     * @param domains list of domains which should be used for matching
+     * @param matchBehavior {@link DeletionRequest.MatchBehavior} to be used for matching
+     * @param deletionMode {@link DeletionRequest.DeletionMode} for selecting data to be deleted
      */
     void deleteMeasurementData(
             @NonNull Uri registrant,
-            @Nullable Uri origin,
-            @Nullable Instant start,
-            @Nullable Instant end) throws DatastoreException;
+            @NonNull Instant start,
+            @NonNull Instant end,
+            @NonNull List<Uri> origins,
+            @NonNull List<Uri> domains,
+            @DeletionRequest.MatchBehavior int matchBehavior,
+            @DeletionRequest.DeletionMode int deletionMode)
+            throws DatastoreException;
 
     /**
      * Mark relevant source as install attributed.
@@ -273,12 +276,7 @@ public interface IMeasurementDao {
     /**
      * Save unencrypted aggregate payload to datastore.
      */
-    void insertAggregateReport(CleartextAggregatePayload payload) throws DatastoreException;
-
-    /**
-     * Get CleartextAggregatePayload using unique Id.
-     */
-    List<CleartextAggregatePayload> getAllCleartextAggregatePayload() throws DatastoreException;
+    void insertAggregateReport(AggregateReport payload) throws DatastoreException;
 
     /**
      * Returns list of all aggregate reports that have a scheduled reporting time in the given
@@ -291,4 +289,12 @@ public interface IMeasurementDao {
      * Returns list of all pending aggregate reports for a given app right away.
      */
     List<String> getPendingAggregateReportIdsForGivenApp(Uri appName) throws DatastoreException;
+
+    /**
+     * Delete all data generated by Measurement API, except for tables in the exclusion list.
+     *
+     * @param tablesToExclude a {@link List} of tables that won't be deleted. An empty list will
+     *     delete every table.
+     */
+    void deleteAllMeasurementData(List<String> tablesToExclude) throws DatastoreException;
 }

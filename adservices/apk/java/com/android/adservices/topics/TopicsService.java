@@ -15,13 +15,21 @@
  */
 package com.android.adservices.topics;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
+
 import android.app.Service;
 import android.content.Intent;
 import android.os.Build;
 import android.os.IBinder;
 
+import com.android.adservices.LogUtil;
+import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.download.MddJobService;
+import com.android.adservices.download.MobileDataDownloadFactory;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
+import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.Clock;
@@ -44,6 +52,18 @@ public class TopicsService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
+            LogUtil.e("Topics API is disabled");
+            return;
+        }
+
+        AppImportanceFilter appImportanceFilter =
+                AppImportanceFilter.create(
+                        this,
+                        AD_SERVICES_API_CALLED__API_CLASS__TARGETING,
+                        () -> FlagsFactory.getFlags().getForegroundStatuslLevelForValidation());
+
         if (mTopicsService == null) {
             mTopicsService =
                     new TopicsServiceImpl(
@@ -51,20 +71,36 @@ public class TopicsService extends Service {
                             TopicsWorker.getInstance(this),
                             ConsentManager.getInstance(this),
                             AdServicesLoggerImpl.getInstance(),
-                            Clock.SYSTEM_CLOCK);
+                            Clock.SYSTEM_CLOCK,
+                            FlagsFactory.getFlags(),
+                            Throttler.getInstance(
+                                    FlagsFactory.getFlags().getSdkRequestPermitsPerSecond()),
+                            EnrollmentDao.getInstance(this),
+                            appImportanceFilter);
             mTopicsService.init();
         }
-
-        schedulePeriodicJobs();
+        if (hasUserConsent()) {
+            schedulePeriodicJobs();
+        }
     }
 
     private void schedulePeriodicJobs() {
-        MaintenanceJobService.schedule(this);
-        EpochJobService.schedule(this);
+        MaintenanceJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
+        EpochJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
+        MddJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
+    }
+
+    private boolean hasUserConsent() {
+        return ConsentManager.getInstance(this).getConsent(this.getPackageManager()).isGiven();
     }
 
     @Override
     public IBinder onBind(Intent intent) {
+        if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
+            LogUtil.e("Topics API is disabled");
+            // Return null so that clients can not bind to the service.
+            return null;
+        }
         return Objects.requireNonNull(mTopicsService);
     }
 
@@ -76,6 +112,7 @@ public class TopicsService extends Service {
             writer.println("Build is Debuggable, dumping information for TopicsService");
             EpochManager.getInstance(this).dump(writer, args);
             CacheManager.getInstance(this).dump(writer, args);
+            MobileDataDownloadFactory.dump(this, writer);
         } else {
             writer.println("Build is not Debuggable");
         }

@@ -19,13 +19,15 @@ package com.android.sdksandbox.shared.app2;
 import static com.google.common.truth.Truth.assertThat;
 
 import android.app.sdksandbox.SdkSandboxManager;
-import android.app.sdksandbox.testutils.FakeRemoteSdkCallback;
+import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.content.Context;
 import android.os.Bundle;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.ext.junit.rules.ActivityScenarioRule;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -37,6 +39,10 @@ public class SdkSandboxTestSharedApp2  {
 
     private SdkSandboxManager mSdkSandboxManager;
 
+    @Rule
+    public final ActivityScenarioRule<SdkSandboxEmptyActivity> mRule =
+            new ActivityScenarioRule<>(SdkSandboxEmptyActivity.class);
+
     @Before
     public void setup() {
         Context sContext = ApplicationProvider.getApplicationContext();
@@ -47,10 +53,11 @@ public class SdkSandboxTestSharedApp2  {
 
     @Test
     public void testLoadSdkIsSuccessful() {
+        mRule.getScenario();
+
         Bundle params = new Bundle();
-        FakeRemoteSdkCallback callback = new FakeRemoteSdkCallback();
-        mSdkSandboxManager.loadSdk(SDK_PACKAGE_NAME, params,
-                Runnable::run, callback);
+        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(SDK_PACKAGE_NAME, params, Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
     }
 }
