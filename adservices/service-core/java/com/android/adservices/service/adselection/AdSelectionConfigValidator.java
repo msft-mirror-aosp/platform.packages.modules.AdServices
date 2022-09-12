@@ -79,7 +79,7 @@ public class AdSelectionConfigValidator implements Validator<AdSelectionConfig> 
         }
         violations.addAll(validateSeller(adSelectionConfig.getSeller()));
         violations.addAll(
-                validateSellerDecisionUrls(
+                validateSellerDecisionUris(
                         adSelectionConfig.getSeller(), adSelectionConfig.getDecisionLogicUri()));
         violations.addAll(
                 validateTrustedSignalsUri(
@@ -88,21 +88,21 @@ public class AdSelectionConfigValidator implements Validator<AdSelectionConfig> 
     }
 
     /**
-     * Validate the seller and seller-provided decision_logic_url in the {@link AdSelectionConfig}.
+     * Validate the seller and seller-provided decision_logic_uri in the {@link AdSelectionConfig}.
      *
      * <p>TODO(b/238849930) Replace seller validation with validation in AdTechIdentifier
      *
      * @param seller is the string name of the ssp.
-     * @param decisionLogicUri is the seller provided decision logic url.
+     * @param decisionLogicUri is the seller provided decision logic uri.
      * @return a list of strings of messages from each violation.
      */
-    private ImmutableList<String> validateSellerDecisionUrls(
+    private ImmutableList<String> validateSellerDecisionUris(
             @NonNull AdTechIdentifier seller, @NonNull Uri decisionLogicUri) {
         return validateUriAndSellerHost(DECISION_LOGIC_URI_TYPE, decisionLogicUri, seller);
     }
 
     /**
-     * Validate the seller and seller-provided decision_logic_url in the {@link AdSelectionConfig}.
+     * Validate the seller and seller-provided decision_logic_uri in the {@link AdSelectionConfig}.
      *
      * @param seller is the string name of the ssp.
      * @param trustedSignalsUri is the seller provided URI to fetch trusted scoring signals.

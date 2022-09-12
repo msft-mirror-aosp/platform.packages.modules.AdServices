@@ -810,12 +810,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             mServiceProvider.setBoundServiceForApp(mCallingInfo, mService);
 
             try {
-                service.linkToDeath(
-                        () -> {
-                            removeAllSdkTokensAndLinks(mCallingInfo);
-                            mServiceProvider.cleanup(mCallingInfo);
-                        },
-                        0);
+                service.linkToDeath(() -> removeAllSdkTokensAndLinks(mCallingInfo), 0);
             } catch (RemoteException re) {
                 // Sandbox had already died, cleanup sdk tokens and links.
                 removeAllSdkTokensAndLinks(mCallingInfo);
@@ -1149,6 +1144,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
 
         mServiceProvider.unbindService(callingInfo, true);
+        mServiceProvider.cleanup(callingInfo);
         final int sdkSandboxUid = Process.toSdkSandboxUid(callingInfo.getUid());
         Log.i(TAG, "Killing sdk sandbox/s with uid " + sdkSandboxUid);
         // TODO(b/230839879): Avoid killing by uid

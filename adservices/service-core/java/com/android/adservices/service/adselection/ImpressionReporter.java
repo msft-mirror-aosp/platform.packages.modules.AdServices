@@ -186,7 +186,7 @@ public class ImpressionReporter {
      * the buyer's reportWin() in the case of a remarketing ad.
      *
      * <p>After invoking the javascript functions, invokes the onSuccess function of the callback
-     * and reports URLs resulting from the javascript functions.
+     * and reports URIs resulting from the javascript functions.
      *
      * @param requestParams request parameters containing the {@code adSelectionId}, {@code
      *     adSelectionConfig}, and {@code callerPackageName}
@@ -233,13 +233,13 @@ public class ImpressionReporter {
         FluentFuture.from(validateRequestFuture)
                 .transformAsync(
                         ignoredVoid ->
-                                computeReportingUrls(
+                                computeReportingUris(
                                         adSelectionId,
                                         adSelectionConfig,
                                         requestParams.getCallerPackageName()),
                         mLightweightExecutorService)
                 .transform(
-                        reportingUrls -> notifySuccessToCaller(callback, reportingUrls),
+                        reportingUris -> notifySuccessToCaller(callback, reportingUris),
                         mLightweightExecutorService)
                 .withTimeout(
                         mFlags.getReportImpressionOverallTimeoutMs(),
@@ -270,10 +270,10 @@ public class ImpressionReporter {
                         mLightweightExecutorService);
     }
 
-    private ReportingUrls notifySuccessToCaller(
-            @NonNull ReportImpressionCallback callback, @NonNull ReportingUrls reportingUrls) {
+    private ReportingUris notifySuccessToCaller(
+            @NonNull ReportImpressionCallback callback, @NonNull ReportingUris reportingUris) {
         invokeSuccess(callback, AdServicesStatusUtils.STATUS_SUCCESS);
-        return reportingUrls;
+        return reportingUris;
     }
 
     private void notifyFailureToCaller(
@@ -297,14 +297,14 @@ public class ImpressionReporter {
     }
 
     @NonNull
-    private ListenableFuture<List<Void>> doReport(ReportingUrls reportingUrls) {
-        LogUtil.v("Reporting URLs");
+    private ListenableFuture<List<Void>> doReport(ReportingUris reportingUris) {
+        LogUtil.v("Reporting URIs");
         ListenableFuture<Void> sellerFuture =
-                mAdServicesHttpsClient.reportUrl(reportingUrls.sellerReportingUri);
+                mAdServicesHttpsClient.reportUri(reportingUris.sellerReportingUri);
         ListenableFuture<Void> buyerFuture;
 
-        if (!Objects.isNull(reportingUrls.buyerReportingUri)) {
-            buyerFuture = mAdServicesHttpsClient.reportUrl(reportingUrls.buyerReportingUri);
+        if (!Objects.isNull(reportingUris.buyerReportingUri)) {
+            buyerFuture = mAdServicesHttpsClient.reportUri(reportingUris.buyerReportingUri);
         } else {
             buyerFuture = Futures.immediateFuture(null);
         }
@@ -312,7 +312,7 @@ public class ImpressionReporter {
         return Futures.allAsList(sellerFuture, buyerFuture);
     }
 
-    private FluentFuture<ReportingUrls> computeReportingUrls(
+    private FluentFuture<ReportingUris> computeReportingUris(
             long adSelectionId, AdSelectionConfig adSelectionConfig, String callerPackageName) {
         return fetchAdSelectionEntry(adSelectionId, callerPackageName)
                 .transformAsync(
@@ -333,7 +333,7 @@ public class ImpressionReporter {
                                 invokeBuyerScript(
                                         sellerResultAndCtx.first, sellerResultAndCtx.second),
                         mLightweightExecutorService)
-                .transform(urlsAndContext -> urlsAndContext.first, mLightweightExecutorService);
+                .transform(urisAndContext -> urisAndContext.first, mLightweightExecutorService);
     }
 
     private FluentFuture<DBAdSelectionEntry> fetchAdSelectionEntry(
@@ -406,7 +406,7 @@ public class ImpressionReporter {
         }
     }
 
-    private FluentFuture<Pair<ReportingUrls, ReportingContext>> invokeBuyerScript(
+    private FluentFuture<Pair<ReportingUris, ReportingContext>> invokeBuyerScript(
             ReportImpressionScriptEngine.SellerReportingResult sellerReportingResult,
             ReportingContext ctx) {
         LogUtil.v("Invoking buyer script");
@@ -418,8 +418,8 @@ public class ImpressionReporter {
             return FluentFuture.from(
                     Futures.immediateFuture(
                             Pair.create(
-                                    new ReportingUrls(
-                                            null, sellerReportingResult.getReportingUrl()),
+                                    new ReportingUris(
+                                            null, sellerReportingResult.getReportingUri()),
                                     ctx)));
         }
         final CustomAudienceSignals customAudienceSignals =
@@ -439,9 +439,9 @@ public class ImpressionReporter {
                     .transform(
                             resultUri ->
                                     Pair.create(
-                                            new ReportingUrls(
+                                            new ReportingUris(
                                                     resultUri,
-                                                    sellerReportingResult.getReportingUrl()),
+                                                    sellerReportingResult.getReportingUri()),
                                             ctx),
                             mLightweightExecutorService);
         } catch (JSONException e) {
@@ -603,11 +603,11 @@ public class ImpressionReporter {
         @NonNull DBAdSelectionEntry mDBAdSelectionEntry;
     }
 
-    private static final class ReportingUrls {
+    private static final class ReportingUris {
         @Nullable public final Uri buyerReportingUri;
         @NonNull public final Uri sellerReportingUri;
 
-        private ReportingUrls(@Nullable Uri buyerReportingUri, @NonNull Uri sellerReportingUri) {
+        private ReportingUris(@Nullable Uri buyerReportingUri, @NonNull Uri sellerReportingUri) {
             Objects.requireNonNull(sellerReportingUri);
 
             this.buyerReportingUri = buyerReportingUri;

@@ -95,9 +95,9 @@ public class DBCustomAudience {
     @Nullable
     private final DBTrustedBiddingData mTrustedBiddingData;
 
-    @ColumnInfo(name = "bidding_logic_url")
+    @ColumnInfo(name = "bidding_logic_uri")
     @NonNull
-    private final Uri mBiddingLogicUrl;
+    private final Uri mBiddingLogicUri;
 
     @ColumnInfo(name = "ads")
     @Nullable
@@ -113,7 +113,7 @@ public class DBCustomAudience {
             @NonNull Instant lastAdsAndBiddingDataUpdatedTime,
             @Nullable AdSelectionSignals userBiddingSignals,
             @Nullable DBTrustedBiddingData trustedBiddingData,
-            @NonNull Uri biddingLogicUrl,
+            @NonNull Uri biddingLogicUri,
             @Nullable List<DBAdData> ads) {
         Preconditions.checkStringNotEmpty(owner, "Owner must be provided");
         Objects.requireNonNull(buyer, "Buyer must be provided.");
@@ -122,7 +122,7 @@ public class DBCustomAudience {
         Objects.requireNonNull(creationTime, "Creation time must be provided.");
         Objects.requireNonNull(lastAdsAndBiddingDataUpdatedTime,
                 "Last ads and bidding data updated time must be provided.");
-        Objects.requireNonNull(biddingLogicUrl, "Bidding logic url must be provided.");
+        Objects.requireNonNull(biddingLogicUri, "Bidding logic uri must be provided.");
 
         mOwner = owner;
         mBuyer = buyer;
@@ -133,7 +133,7 @@ public class DBCustomAudience {
         mLastAdsAndBiddingDataUpdatedTime = lastAdsAndBiddingDataUpdatedTime;
         mUserBiddingSignals = userBiddingSignals;
         mTrustedBiddingData = trustedBiddingData;
-        mBiddingLogicUrl = biddingLogicUrl;
+        mBiddingLogicUri = biddingLogicUri;
         mAds = ads;
     }
 
@@ -183,7 +183,7 @@ public class DBCustomAudience {
                 .setCreationTime(currentTime)
                 .setLastAdsAndBiddingDataUpdatedTime(lastAdsAndBiddingDataUpdatedTime)
                 .setExpirationTime(expirationTime)
-                .setBiddingLogicUrl(parcelable.getBiddingLogicUri())
+                .setBiddingLogicUri(parcelable.getBiddingLogicUri())
                 .setTrustedBiddingData(
                         DBTrustedBiddingData.fromServiceObject(parcelable.getTrustedBiddingData()))
                 .setAds(
@@ -237,8 +237,8 @@ public class DBCustomAudience {
 
     /**
      * The ad-tech who can read this custom audience information and return back relevant ad
-     * information. This is expected to be the domain’s name used in biddingLogicUrl and
-     * dailyUpdateUrl.
+     * information. This is expected to be the domain’s name used in biddingLogicUri and
+     * dailyUpdateUri.
      *
      * <p>Max length: 200 bytes
      */
@@ -307,19 +307,17 @@ public class DBCustomAudience {
 
     /**
      * An ad-tech can define what data needs to be fetched from a trusted server
-     * (trusted_bidding_keys) and where it should be fetched from (trusted_bidding_url).
+     * (trusted_bidding_keys) and where it should be fetched from (trusted_bidding_uri).
      */
     @Nullable
     public DBTrustedBiddingData getTrustedBiddingData() {
         return mTrustedBiddingData;
     }
 
-    /**
-     * Returns the URL to fetch bidding logic js.
-     */
+    /** Returns the URI to fetch bidding logic js. */
     @NonNull
-    public Uri getBiddingLogicUrl() {
-        return mBiddingLogicUrl;
+    public Uri getBiddingLogicUri() {
+        return mBiddingLogicUri;
     }
 
     /**
@@ -344,7 +342,7 @@ public class DBCustomAudience {
                 && mLastAdsAndBiddingDataUpdatedTime.equals(that.mLastAdsAndBiddingDataUpdatedTime)
                 && Objects.equals(mUserBiddingSignals, that.mUserBiddingSignals)
                 && Objects.equals(mTrustedBiddingData, that.mTrustedBiddingData)
-                && mBiddingLogicUrl.equals(that.mBiddingLogicUrl)
+                && mBiddingLogicUri.equals(that.mBiddingLogicUri)
                 && Objects.equals(mAds, that.mAds);
     }
 
@@ -360,24 +358,37 @@ public class DBCustomAudience {
                 mLastAdsAndBiddingDataUpdatedTime,
                 mUserBiddingSignals,
                 mTrustedBiddingData,
-                mBiddingLogicUrl,
+                mBiddingLogicUri,
                 mAds);
     }
 
     @Override
     public String toString() {
         return "DBCustomAudience{"
-                + "mOwner='" + mOwner + '\''
-                + ", mBuyer='" + mBuyer + '\''
-                + ", mName='" + mName + '\''
-                + ", mExpirationTime=" + mExpirationTime
-                + ", mActivationTime=" + mActivationTime
-                + ", mCreationTime=" + mCreationTime
-                + ", mLastAdsAndBiddingDataUpdatedTime=" + mLastAdsAndBiddingDataUpdatedTime
-                + ", mUserBiddingSignals='" + mUserBiddingSignals + '\''
-                + ", mTrustedBiddingData=" + mTrustedBiddingData
-                + ", mBiddingLogicUrl=" + mBiddingLogicUrl
-                + ", mAds='" + mAds + '\''
+                + "mOwner='"
+                + mOwner
+                + '\''
+                + ", mBuyer="
+                + mBuyer
+                + ", mName='"
+                + mName
+                + '\''
+                + ", mExpirationTime="
+                + mExpirationTime
+                + ", mActivationTime="
+                + mActivationTime
+                + ", mCreationTime="
+                + mCreationTime
+                + ", mLastAdsAndBiddingDataUpdatedTime="
+                + mLastAdsAndBiddingDataUpdatedTime
+                + ", mUserBiddingSignals="
+                + mUserBiddingSignals
+                + ", mTrustedBiddingData="
+                + mTrustedBiddingData
+                + ", mBiddingLogicUri="
+                + mBiddingLogicUri
+                + ", mAds="
+                + mAds
                 + '}';
     }
 
@@ -394,7 +405,7 @@ public class DBCustomAudience {
         private Instant mLastAdsAndBiddingDataUpdatedTime;
         private AdSelectionSignals mUserBiddingSignals;
         private DBTrustedBiddingData mTrustedBiddingData;
-        private Uri mBiddingLogicUrl;
+        private Uri mBiddingLogicUri;
         private List<DBAdData> mAds;
 
         public Builder() {
@@ -413,7 +424,7 @@ public class DBCustomAudience {
                     customAudience.getLastAdsAndBiddingDataUpdatedTime();
             mUserBiddingSignals = customAudience.getUserBiddingSignals();
             mTrustedBiddingData = customAudience.getTrustedBiddingData();
-            mBiddingLogicUrl = customAudience.getBiddingLogicUrl();
+            mBiddingLogicUri = customAudience.getBiddingLogicUri();
             mAds = customAudience.getAds();
         }
 
@@ -484,9 +495,9 @@ public class DBCustomAudience {
             return this;
         }
 
-        /** See {@link #getBiddingLogicUrl()} for detail. */
-        public Builder setBiddingLogicUrl(Uri biddingLogicUrl) {
-            mBiddingLogicUrl = biddingLogicUrl;
+        /** See {@link #getBiddingLogicUri()} for detail. */
+        public Builder setBiddingLogicUri(Uri biddingLogicUri) {
+            mBiddingLogicUri = biddingLogicUri;
             return this;
         }
 
@@ -514,7 +525,7 @@ public class DBCustomAudience {
                     mLastAdsAndBiddingDataUpdatedTime,
                     mUserBiddingSignals,
                     mTrustedBiddingData,
-                    mBiddingLogicUrl,
+                    mBiddingLogicUri,
                     mAds);
         }
     }
@@ -527,7 +538,7 @@ public class DBCustomAudience {
      */
     public static class Converters {
 
-        private static final String RENDER_URL_FIELD_NAME = "renderUrl";
+        private static final String RENDER_URI_FIELD_NAME = "renderUri";
         private static final String METADATA_FIELD_NAME = "metadata";
 
         private Converters() {
@@ -583,8 +594,8 @@ public class DBCustomAudience {
         private static JSONObject toJson(DBAdData adData) throws JSONException {
             return new org.json.JSONObject()
                     .put(
-                            RENDER_URL_FIELD_NAME,
-                            FledgeRoomConverters.serializeUrl(adData.getRenderUri()))
+                            RENDER_URI_FIELD_NAME,
+                            FledgeRoomConverters.serializeUri(adData.getRenderUri()))
                     .put(METADATA_FIELD_NAME, adData.getMetadata());
         }
 
@@ -592,10 +603,10 @@ public class DBCustomAudience {
          * Deserialize {@link DBAdData} from {@link JSONObject}.
          */
         private static DBAdData fromJson(JSONObject json) throws JSONException {
-            String renderUrlString = json.getString(RENDER_URL_FIELD_NAME);
+            String renderUriString = json.getString(RENDER_URI_FIELD_NAME);
             String metadata = json.getString(METADATA_FIELD_NAME);
-            Uri renderUrl = FledgeRoomConverters.deserializeUrl(renderUrlString);
-            return new DBAdData(renderUrl, metadata);
+            Uri renderUri = FledgeRoomConverters.deserializeUri(renderUriString);
+            return new DBAdData(renderUri, metadata);
         }
     }
 }
