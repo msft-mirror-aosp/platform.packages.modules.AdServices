@@ -16,24 +16,34 @@
 
 package com.android.adservices.adselection;
 
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyBoolean;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.spyOn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
+
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.mockito.Mockito.any;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.IBinder;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.AdSelectionServiceImpl;
+import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
 
 /** Unit test for {@link AdSelectionService} */
@@ -43,10 +53,25 @@ public class AdSelectionServiceTest {
     private final Flags mFlagsWithAdSelectionSwitchOff = new FlagsWithKillSwitchOff();
 
     @Mock private AdSelectionServiceImpl mMockAdSelectionServiceImpl;
+    @Mock private ConsentManager mConsentManagerMock;
+    @Mock private PackageManager mPackageManagerMock;
+
+    private MockitoSession mStaticMockSession;
 
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .mockStatic(ConsentManager.class)
+                        .spyStatic(AdSelectionServiceImpl.class)
+                        .mockStatic(MddJobService.class)
+                        .initMocks(this)
+                        .startMocking();
+    }
+
+    @After
+    public void teardown() {
+        mStaticMockSession.finishMocking();
     }
 
     @Test
@@ -56,25 +81,31 @@ public class AdSelectionServiceTest {
         adSelectionService.onCreate();
         IBinder binder = adSelectionService.onBind(getIntentForAdSelectionService());
         assertNull(binder);
+
+        verify(mConsentManagerMock, never()).getConsent(any());
+        verify(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()), never());
     }
 
     @Test
     public void testBindableAdSelectionServiceKillSwitchOff() {
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(AdSelectionServiceImpl.class)
-                        .startMocking();
-
-        ExtendedMockito.doReturn(mMockAdSelectionServiceImpl)
+        doReturn(mMockAdSelectionServiceImpl)
                 .when(() -> AdSelectionServiceImpl.create(any(Context.class)));
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any(Context.class)));
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(true).when(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        AdSelectionService adSelectionService =
+        AdSelectionService adSelectionServiceSpy =
                 new AdSelectionService(mFlagsWithAdSelectionSwitchOff);
-        adSelectionService.onCreate();
-        IBinder binder = adSelectionService.onBind(getIntentForAdSelectionService());
+
+        spyOn(adSelectionServiceSpy);
+        doReturn(mPackageManagerMock).when(adSelectionServiceSpy).getPackageManager();
+
+        adSelectionServiceSpy.onCreate();
+        IBinder binder = adSelectionServiceSpy.onBind(getIntentForAdSelectionService());
         assertNotNull(binder);
 
-        session.finishMocking();
+        verify(mConsentManagerMock).getConsent(any());
+        verify(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
     }
 
     private Intent getIntentForAdSelectionService() {
