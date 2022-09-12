@@ -34,11 +34,7 @@ import java.util.Objects;
 import java.util.concurrent.Executor;
 
 /**
- * AppSetId Manager provides APIs for app and ad-SDKs to access advertising ID. The appsetId is a
- * unique, user-resettable ID for non-monetizing advertising usecases. The scope of the ID can be
- * per app or per deveoper account on play store. AppSetId is used for analytics or fraud prevention
- * use cases, on a given device that one may need to correlate usage or actions across a set of apps
- * owned by an organization.
+ * AppSetIdManager provides APIs for app and ad-SDKs to access appSetId for non-monetizing purpose.
  */
 public class AppSetIdManager {
     /**
@@ -51,8 +47,8 @@ public class AppSetIdManager {
     /* When an app calls the AppSetId API directly, it sets the SDK name to empty string. */
     static final String EMPTY_SDK = "";
 
-    private final Context mContext;
-    private final ServiceBinder<IAppSetIdService> mServiceBinder;
+    private Context mContext;
+    private ServiceBinder<IAppSetIdService> mServiceBinder;
 
     /**
      * Create AppSetIdManager
@@ -60,12 +56,29 @@ public class AppSetIdManager {
      * @hide
      */
     public AppSetIdManager(Context context) {
+        // In case the AppSetIdManager is initiated from inside a sdk_sandbox process the fields
+        // will be immediately rewritten by the initialize method below.
+        initialize(context);
+    }
+
+    /**
+     * Initializes {@link AppSetIdManager} with the given {@code context}.
+     *
+     * <p>This method is called by the {@link SandboxedSdkContext} to propagate the correct context.
+     * For more information check the javadoc on the {@link
+     * android.app.sdksandbox.SdkSandboxSystemServiceRegistry}.
+     *
+     * @hide
+     * @see android.app.sdksandbox.SdkSandboxSystemServiceRegistry
+     */
+    public AppSetIdManager initialize(Context context) {
         mContext = context;
         mServiceBinder =
                 ServiceBinder.getServiceBinder(
                         context,
                         AdServicesCommon.ACTION_APPSETID_SERVICE,
                         IAppSetIdService.Stub::asInterface);
+        return this;
     }
 
     @NonNull

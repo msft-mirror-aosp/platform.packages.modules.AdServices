@@ -200,6 +200,9 @@ public final class GetAppSetIdResult extends AdServicesResponse {
 
         /** Builds a {@link GetAppSetIdResult} instance. */
         public @NonNull GetAppSetIdResult build() {
+            if (mAppSetId == null) {
+                throw new IllegalArgumentException("appSetId is null");
+            }
 
             return new GetAppSetIdResult(mStatusCode, mErrorMessage, mAppSetId, mAppSetIdScope);
         }

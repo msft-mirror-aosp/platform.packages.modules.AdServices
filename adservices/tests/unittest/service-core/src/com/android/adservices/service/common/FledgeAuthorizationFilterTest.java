@@ -158,7 +158,7 @@ public class FledgeAuthorizationFilterTest {
     public void testAssertAppHasPermission_appHasPermission() {
         when(PermissionHelper.hasCustomAudiencesPermission(CONTEXT)).thenReturn(true);
 
-        mChecker.assertAppHasPermission(CONTEXT, API_NAME_LOGGING_ID);
+        mChecker.assertAppDeclaredPermission(CONTEXT, API_NAME_LOGGING_ID);
 
         verifyZeroInteractions(mPackageManager, mEnrollmentDao, mAdServicesLoggerSpy);
     }
@@ -170,7 +170,7 @@ public class FledgeAuthorizationFilterTest {
         SecurityException exception =
                 assertThrows(
                         SecurityException.class,
-                        () -> mChecker.assertAppHasPermission(CONTEXT, API_NAME_LOGGING_ID));
+                        () -> mChecker.assertAppDeclaredPermission(CONTEXT, API_NAME_LOGGING_ID));
 
         assertEquals(
                 AdServicesStatusUtils.SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE,
@@ -191,47 +191,49 @@ public class FledgeAuthorizationFilterTest {
     public void testAssertAppHasPermission_nullContext_throwNpe() {
         assertThrows(
                 NullPointerException.class,
-                () -> mChecker.assertAppHasPermission(null, API_NAME_LOGGING_ID));
+                () -> mChecker.assertAppDeclaredPermission(null, API_NAME_LOGGING_ID));
 
         verifyZeroInteractions(mPackageManager, mEnrollmentDao, mAdServicesLoggerSpy);
     }
 
     @Test
     public void testAssertAdTechHasPermission_hasPermission() {
-        when(mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(CommonFixture.VALID_BUYER))
+        when(mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(
+                        CommonFixture.VALID_BUYER_1))
                 .thenReturn(ENROLLMENT_DATA);
         when(AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
                         CONTEXT, PACKAGE_NAME, ENROLLMENT_ID))
                 .thenReturn(true);
 
-        mChecker.assertAdTechHasPermission(
-                CONTEXT, PACKAGE_NAME, CommonFixture.VALID_BUYER, API_NAME_LOGGING_ID);
+        mChecker.assertAdTechAllowed(
+                CONTEXT, PACKAGE_NAME, CommonFixture.VALID_BUYER_1, API_NAME_LOGGING_ID);
         verify(mEnrollmentDao)
-                .getEnrollmentDataForFledgeByAdTechIdentifier(CommonFixture.VALID_BUYER);
+                .getEnrollmentDataForFledgeByAdTechIdentifier(CommonFixture.VALID_BUYER_1);
         verifyNoMoreInteractions(mEnrollmentDao);
         verifyZeroInteractions(mPackageManager, mAdServicesLoggerSpy);
     }
 
     @Test
     public void testAssertAdTechHasPermission_noEnrollmentForAdTech_throwSecurityException() {
-        when(mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(CommonFixture.VALID_BUYER))
+        when(mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(
+                        CommonFixture.VALID_BUYER_1))
                 .thenReturn(null);
 
         SecurityException exception =
                 assertThrows(
                         SecurityException.class,
                         () ->
-                                mChecker.assertAdTechHasPermission(
+                                mChecker.assertAdTechAllowed(
                                         CONTEXT,
                                         PACKAGE_NAME,
-                                        CommonFixture.VALID_BUYER,
+                                        CommonFixture.VALID_BUYER_1,
                                         API_NAME_LOGGING_ID));
 
         assertEquals(
                 AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE,
                 exception.getMessage());
         verify(mEnrollmentDao)
-                .getEnrollmentDataForFledgeByAdTechIdentifier(CommonFixture.VALID_BUYER);
+                .getEnrollmentDataForFledgeByAdTechIdentifier(CommonFixture.VALID_BUYER_1);
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
                         API_NAME_LOGGING_ID, AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED);
@@ -246,7 +248,8 @@ public class FledgeAuthorizationFilterTest {
 
     @Test
     public void testAssertAdTechHasPermission_appManifestNoPermission_throwSecurityException() {
-        when(mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(CommonFixture.VALID_BUYER))
+        when(mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(
+                        CommonFixture.VALID_BUYER_1))
                 .thenReturn(ENROLLMENT_DATA);
         when(AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
                         CONTEXT, PACKAGE_NAME, ENROLLMENT_ID))
@@ -256,17 +259,17 @@ public class FledgeAuthorizationFilterTest {
                 assertThrows(
                         SecurityException.class,
                         () ->
-                                mChecker.assertAdTechHasPermission(
+                                mChecker.assertAdTechAllowed(
                                         CONTEXT,
                                         PACKAGE_NAME,
-                                        CommonFixture.VALID_BUYER,
+                                        CommonFixture.VALID_BUYER_1,
                                         API_NAME_LOGGING_ID));
 
         assertEquals(
                 AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE,
                 exception.getMessage());
         verify(mEnrollmentDao)
-                .getEnrollmentDataForFledgeByAdTechIdentifier(CommonFixture.VALID_BUYER);
+                .getEnrollmentDataForFledgeByAdTechIdentifier(CommonFixture.VALID_BUYER_1);
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
                         API_NAME_LOGGING_ID, AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED);
@@ -284,10 +287,10 @@ public class FledgeAuthorizationFilterTest {
         assertThrows(
                 NullPointerException.class,
                 () ->
-                        mChecker.assertAdTechHasPermission(
+                        mChecker.assertAdTechAllowed(
                                 null,
                                 PACKAGE_NAME,
-                                CommonFixture.VALID_BUYER,
+                                CommonFixture.VALID_BUYER_1,
                                 API_NAME_LOGGING_ID));
 
         verifyZeroInteractions(mPackageManager, mEnrollmentDao, mAdServicesLoggerSpy);
@@ -298,8 +301,8 @@ public class FledgeAuthorizationFilterTest {
         assertThrows(
                 NullPointerException.class,
                 () ->
-                        mChecker.assertAdTechHasPermission(
-                                CONTEXT, null, CommonFixture.VALID_BUYER, API_NAME_LOGGING_ID));
+                        mChecker.assertAdTechAllowed(
+                                CONTEXT, null, CommonFixture.VALID_BUYER_1, API_NAME_LOGGING_ID));
 
         verifyZeroInteractions(mPackageManager, mEnrollmentDao, mAdServicesLoggerSpy);
     }
@@ -309,7 +312,7 @@ public class FledgeAuthorizationFilterTest {
         assertThrows(
                 NullPointerException.class,
                 () ->
-                        mChecker.assertAdTechHasPermission(
+                        mChecker.assertAdTechAllowed(
                                 CONTEXT, PACKAGE_NAME, null, API_NAME_LOGGING_ID));
 
         verifyZeroInteractions(mPackageManager, mEnrollmentDao, mAdServicesLoggerSpy);

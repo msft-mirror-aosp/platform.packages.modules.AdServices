@@ -44,7 +44,7 @@ public class CustomAudienceConvertersTest {
     @Test
     public void testSerializeAndDeserialize_runNormally() {
         List<DBAdData> input =
-                AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER).stream()
+                AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER_1).stream()
                         .map(DBAdData::fromServiceObject)
                         .collect(Collectors.toList());
         String serializedString = DBCustomAudience.Converters.toJson(input);

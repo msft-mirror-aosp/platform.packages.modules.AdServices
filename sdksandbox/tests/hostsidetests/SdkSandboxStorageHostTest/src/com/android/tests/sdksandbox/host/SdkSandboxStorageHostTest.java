@@ -61,7 +61,8 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
     private static final long SWITCH_USER_COMPLETED_NUMBER_OF_POLLS = 60;
     private static final long SWITCH_USER_COMPLETED_POLL_INTERVAL_IN_MILLIS = 1000;
-    private static final long WAIT_FOR_RECONCILE_MS = 20000;
+    // Needs to be at least 20s since that's how long we delay reconcile on SdkSandboxManagerService
+    private static final long WAIT_FOR_RECONCILE_MS = 30000;
 
     private final AdoptableStorageUtils mAdoptableUtils = new AdoptableStorageUtils(this);
     private final DeviceLockUtils mDeviceLockUtils = new DeviceLockUtils(this);
@@ -143,6 +144,22 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
             assertThat(getDevice().isDirectory(dePath)).isTrue();
             assertThat(getDevice().isDirectory(cePath)).isTrue();
         }
+    }
+
+    @Test
+    public void testSdkDataRootDirectory_IsDestroyedOnUserDeletion() throws Exception {
+        // Create new user
+        mSecondaryUserId = createAndStartSecondaryUser();
+
+        // delete the new user
+        final int newUser = mSecondaryUserId;
+        removeSecondaryUserIfNecessary();
+
+        // Sdk Sandbox root directories should not exist as the user was removed
+        final String ceSdkSandboxDataRootPath = getSdkDataRootPath(newUser, true);
+        final String deSdkSandboxDataRootPath = getSdkDataRootPath(newUser, false);
+        assertThat(getDevice().isDirectory(ceSdkSandboxDataRootPath)).isFalse();
+        assertThat(getDevice().isDirectory(deSdkSandboxDataRootPath)).isFalse();
     }
 
     /**
@@ -249,7 +266,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
         // Once device is unlocked, the uninstallation during locked state should take effect.
         // Allow some time for background task to run.
-        Thread.sleep(10000);
+        Thread.sleep(WAIT_FOR_RECONCILE_MS);
 
         final String cePath = getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, true);
         assertDirectoryDoesNotExist(cePath);
@@ -292,6 +309,8 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     @LargeTest
     public void testSdkDataPackageDirectory_IsReconciled_IncludesDifferentVolumes()
             throws Exception {
+        assumeTrue(mAdoptableUtils.isAdoptableStorageSupported());
+
         try {
             installPackage(TEST_APP_STORAGE_APK);
 
@@ -344,6 +363,8 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     @LargeTest
     public void testSdkDataPackageDirectory_IsReconciled_ChecksForPackageOnWrongVolume()
             throws Exception {
+        assumeTrue(mAdoptableUtils.isAdoptableStorageSupported());
+
         try {
             installPackage(TEST_APP_STORAGE_APK);
 
@@ -424,6 +445,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     @LargeTest
     public void testSdkDataPackageDirectory_IsReconciled_DeleteKeepNewVolumeData()
             throws Exception {
+        assumeTrue(mAdoptableUtils.isAdoptableStorageSupported());
 
         try {
             installPackage(TEST_APP_STORAGE_APK);
@@ -568,24 +590,6 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
             final String[] cacheChildren = getDevice().getChildren(dataPath + "/cache");
             assertWithMessage(dataPath + " is not empty").that(cacheChildren).asList().isEmpty();
         }
-    }
-
-    @Test
-    public void testSdkDataPackageDirectory_IsDestroyedOnUserDeletion() throws Exception {
-        // Create new user
-        mSecondaryUserId = createAndStartSecondaryUser();
-
-        // Install the app
-        installPackage(TEST_APP_STORAGE_APK);
-
-        // delete the new user
-        removeSecondaryUserIfNecessary();
-
-        // Sdk Sandbox root directories should not exist as the user was removed
-        final String ceSdkSandboxDataRootPath = getSdkDataRootPath(mSecondaryUserId, true);
-        final String deSdkSandboxDataRootPath = getSdkDataRootPath(mSecondaryUserId, false);
-        assertThat(getDevice().isDirectory(ceSdkSandboxDataRootPath)).isFalse();
-        assertThat(getDevice().isDirectory(deSdkSandboxDataRootPath)).isFalse();
     }
 
     @Test
@@ -814,6 +818,9 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     public void testSdkDataSubDirectory_PerSdkStorageIsUsable() throws Exception {
         installPackage(TEST_APP_STORAGE_APK);
 
+        // LoadSdk to ensure per-sdk storage is available. This also reduces flakiness
+        runPhase("loadSdk");
+
         // Verify that per-sdk storage exist
         final String perSdkStorage =
                 getSdkDataPerSdkPath(0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, true);
@@ -838,6 +845,8 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
     @Test
     public void testSdkDataSubDirectory_PerSdkStorageIsUsable_DifferentVolume() throws Exception {
+        assumeTrue(mAdoptableUtils.isAdoptableStorageSupported());
+
         installPackage(TEST_APP_STORAGE_APK);
 
         try {
@@ -1109,6 +1118,8 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     }
 
     private int createAndStartSecondaryUser() throws Exception {
+        assertWithMessage("Secondary user already created: " + mSecondaryUserId)
+                .that(mSecondaryUserId).isEqualTo(-1);
         String name = "SdkSandboxStorageHostTest_User" + System.currentTimeMillis();
         int newId = getDevice().createUser(name);
         getDevice().startUser(newId);
@@ -1133,9 +1144,23 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         if (mSecondaryUserId != -1) {
             // Can't remove the 2nd user without switching out of it
             assertThat(getDevice().switchUser(mOriginalUserId)).isTrue();
-            getDevice().removeUser(mSecondaryUserId);
+            getDevice().executeShellCommand("pm remove-user -w " + mSecondaryUserId);
+            waitForUserDataDeletion(mSecondaryUserId);
             mSecondaryUserId = -1;
         }
+    }
+
+    private void waitForUserDataDeletion(int userId) throws Exception {
+        int timeElapsed = 0;
+        final String deSdkSandboxDataRootPath = getSdkDataRootPath(userId, false);
+        while (timeElapsed <= 30000) {
+            if (!getDevice().isDirectory(deSdkSandboxDataRootPath)) {
+                return;
+            }
+            Thread.sleep(1000);
+            timeElapsed += 1000;
+        }
+        throw new AssertionError("User data was not deleted for UserId " + userId);
     }
 
     private static void assertSuccess(String str) {

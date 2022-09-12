@@ -88,7 +88,7 @@ public class BackgroundFetchRunner {
 
         CustomAudienceUpdatableData updatableData =
                 fetchAndValidateCustomAudienceUpdatableData(
-                        jobStartTime, fetchData.getBuyer(), fetchData.getDailyUpdateUrl());
+                        jobStartTime, fetchData.getBuyer(), fetchData.getDailyUpdateUri());
         fetchData = fetchData.copyWithUpdatableData(updatableData);
 
         if (updatableData.getContainsSuccessfulUpdate()) {

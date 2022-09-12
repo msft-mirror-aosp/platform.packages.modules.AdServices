@@ -21,10 +21,15 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID" />
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_TOPICS" />
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE" />
 
     <!-- Needed to resolve Intent to ComponentName for measurement verifiedDestination -->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
+
+    <!-- Needed to schedule MDD jobs to persist across device reboots  -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
     <!-- android:debuggable="true is needed. See b/228384531 -->
     <application
@@ -55,6 +60,11 @@
         <service android:name=
                      "com.android.adservices.service.MaintenanceJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+        <!-- MDD Service Job. Must be defined here in order to schedule them in Tests. -->
+        <service android:name=
+            "com.android.adservices.download.MddJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
     </application>
     <instrumentation

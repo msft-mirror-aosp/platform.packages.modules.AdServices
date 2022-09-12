@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
+import android.Manifest;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AdSelectionOutcome;
@@ -30,17 +31,16 @@ import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.adselection.TestAdSelectionClient;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
-import android.content.Context;
 import android.net.Uri;
 import android.os.Process;
 
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.compatibility.common.util.ShellUtils;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -54,25 +54,21 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class TestAdSelectionManagerTest {
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
-    private static final String WRITE_DEVICE_CONFIG_PERMISSION =
-            "android.permission.WRITE_DEVICE_CONFIG";
+public class TestAdSelectionManagerTest extends ForegroundCtsTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private static final String DECISION_LOGIC_JS = "function test() { return \"hello world\"; }";
     private static final long AD_SELECTION_ID = 1;
-    private static final AdTechIdentifier SELLER =
-            AdTechIdentifier.fromString("developer.android.com");
+    private static final AdTechIdentifier SELLER = AdTechIdentifier.fromString("test.com");
     private static final Uri DECISION_LOGIC_URI =
-            Uri.parse("https://developer.android.com/test/decisions_logic_urls");
+            Uri.parse("https://test.com/test/decisions_logic_uris");
     private static final Uri TRUSTED_SCORING_SIGNALS_URI =
-            Uri.parse("https://developer.android.com/test/decisions_logic_urls");
+            Uri.parse("https://test.com/test/decisions_logic_uris");
     private static final AdSelectionSignals TRUSTED_SCORING_SIGNALS =
             AdSelectionSignals.fromString(
                     "{\n"
-                            + "\t\"render_url_1\": \"signals_for_1\",\n"
-                            + "\t\"render_url_2\": \"signals_for_2\"\n"
+                            + "\t\"render_uri_1\": \"signals_for_1\",\n"
+                            + "\t\"render_uri_2\": \"signals_for_2\"\n"
                             + "}");
     private static final AdSelectionConfig AD_SELECTION_CONFIG =
             AdSelectionConfigFixture.anAdSelectionConfigBuilder()
@@ -86,6 +82,8 @@ public class TestAdSelectionManagerTest {
 
     @Before
     public void setup() {
+        assertForegroundActivityStarted();
+
         mTestAdSelectionClient =
                 new TestAdSelectionClient.Builder()
                         .setContext(sContext)
@@ -96,9 +94,16 @@ public class TestAdSelectionManagerTest {
 
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
-                .adoptShellPermissionIdentity(WRITE_DEVICE_CONFIG_PERMISSION);
+                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
         PhFlagsFixture.overrideEnforceIsolateMaxHeapSize(false);
         PhFlagsFixture.overrideIsolateMaxHeapSizeBytes(0);
+        // We need to turn the Consent Manager into debug mode
+        overrideConsentManagerDebugMode();
+    }
+
+    // Override the Consent Manager behaviour - Consent Given
+    private void overrideConsentManagerDebugMode() {
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
     }
 
     @Test
@@ -114,8 +119,7 @@ public class TestAdSelectionManagerTest {
         ReportImpressionRequest input =
                 new ReportImpressionRequest(AD_SELECTION_ID, AD_SELECTION_CONFIG);
 
-        ListenableFuture<Void> result =
-                adSelectionClient.reportImpression(input);
+        ListenableFuture<Void> result = adSelectionClient.reportImpression(input);
 
         Exception exception =
                 assertThrows(
@@ -212,6 +216,6 @@ public class TestAdSelectionManagerTest {
                         () -> {
                             result.get(10, TimeUnit.SECONDS);
                         });
-        assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
+        assertThat(exception.getCause()).isInstanceOf(IllegalArgumentException.class);
     }
 }

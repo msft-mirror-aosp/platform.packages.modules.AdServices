@@ -16,12 +16,17 @@
 
 package android.adservices.customaudience;
 
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
+
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
+import android.annotation.RequiresPermission;
+import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
+import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 
@@ -44,8 +49,8 @@ public class CustomAudienceManager {
      */
     public static final String CUSTOM_AUDIENCE_SERVICE = "custom_audience_service";
 
-    @NonNull
-    private final ServiceBinder<ICustomAudienceService> mServiceBinder;
+    @NonNull private Context mContext;
+    @NonNull private ServiceBinder<ICustomAudienceService> mServiceBinder;
 
     /**
      * Create a service binder CustomAudienceManager
@@ -53,17 +58,39 @@ public class CustomAudienceManager {
      * @hide
      */
     public CustomAudienceManager(@NonNull Context context) {
+        Objects.requireNonNull(context);
+
+        // In case the CustomAudienceManager is initiated from inside a sdk_sandbox process the
+        // fields will be immediately rewritten by the initialize method below.
+        initialize(context);
+    }
+
+    /**
+     * Initializes {@link CustomAudienceManager} with the given {@code context}.
+     *
+     * <p>This method is called by the {@link SandboxedSdkContext} to propagate the correct context.
+     * For more information check the javadoc on the {@link
+     * android.app.sdksandbox.SdkSandboxSystemServiceRegistry}.
+     *
+     * @hide
+     * @see android.app.sdksandbox.SdkSandboxSystemServiceRegistry
+     */
+    public CustomAudienceManager initialize(@NonNull Context context) {
+        Objects.requireNonNull(context);
+
+        mContext = context;
         mServiceBinder =
                 ServiceBinder.getServiceBinder(
                         context,
                         AdServicesCommon.ACTION_CUSTOM_AUDIENCE_SERVICE,
                         ICustomAudienceService.Stub::asInterface);
+        return this;
     }
 
     /** Create a service with test-enabling APIs */
     @NonNull
     public TestCustomAudienceManager getTestCustomAudienceManager() {
-        return new TestCustomAudienceManager(this);
+        return new TestCustomAudienceManager(this, getCallerPackageName());
     }
 
     @NonNull
@@ -93,13 +120,17 @@ public class CustomAudienceManager {
      *
      * <ol>
      *   <li>the storage limit has been exceeded by the calling application and/or
-     *   <li>any URL parameters in the {@link CustomAudience} given are not authenticated with the
+     *   <li>any URI parameters in the {@link CustomAudience} given are not authenticated with the
      *       {@link CustomAudience} buyer.
      * </ol>
+     *
+     * <p>This call fails with {@link LimitExceededException} if the calling package exceeds the
+     * allowed rate limits and is throttled.
      *
      * <p>This call fails with an {@link IllegalStateException} if an internal service error is
      * encountered.
      */
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void joinCustomAudience(
             @NonNull JoinCustomAudienceRequest joinCustomAudienceRequest,
             @NonNull @CallbackExecutor Executor executor,
@@ -115,6 +146,7 @@ public class CustomAudienceManager {
 
             service.joinCustomAudience(
                     customAudience,
+                    getCallerPackageName(),
                     new ICustomAudienceCallback.Stub() {
                         @Override
                         public void onSuccess() {
@@ -148,10 +180,14 @@ public class CustomAudienceManager {
      *   <li>the buyer is not authorized to use the API.
      * </ol>
      *
+     * <p>This call fails with {@link LimitExceededException} if the calling package exceeds the
+     * allowed rate limits and is throttled.
+     *
      * <p>This call does not inform the caller whether the custom audience specified existed in
      * on-device storage. In other words, it will fail silently when a buyer attempts to leave a
      * custom audience that was not joined.
      */
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void leaveCustomAudience(
             @NonNull LeaveCustomAudienceRequest leaveCustomAudienceRequest,
             @NonNull @CallbackExecutor Executor executor,
@@ -160,7 +196,6 @@ public class CustomAudienceManager {
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
 
-        final String ownerPackageName = leaveCustomAudienceRequest.getOwnerPackageName();
         final AdTechIdentifier buyer = leaveCustomAudienceRequest.getBuyer();
         final String name = leaveCustomAudienceRequest.getName();
 
@@ -168,7 +203,7 @@ public class CustomAudienceManager {
             final ICustomAudienceService service = getService();
 
             service.leaveCustomAudience(
-                    ownerPackageName,
+                    getCallerPackageName(),
                     buyer,
                     name,
                     new ICustomAudienceCallback.Stub() {
@@ -179,14 +214,24 @@ public class CustomAudienceManager {
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            // leaveCustomAudience() does not throw errors or exceptions in the
-                            // course of expected operation
-                            executor.execute(() -> receiver.onResult(new Object()));
+                            executor.execute(
+                                    () ->
+                                            receiver.onError(
+                                                    AdServicesStatusUtils.asException(
+                                                            failureParcel)));
                         }
                     });
         } catch (RemoteException e) {
             LogUtil.e(e, "Exception");
             receiver.onError(new IllegalStateException("Internal Error!", e));
+        }
+    }
+
+    private String getCallerPackageName() {
+        if (mContext instanceof SandboxedSdkContext) {
+            return ((SandboxedSdkContext) mContext).getClientPackageName();
+        } else {
+            return mContext.getPackageName();
         }
     }
 }
