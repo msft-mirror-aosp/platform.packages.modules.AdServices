@@ -18,7 +18,7 @@ package {
 
 android_test_helper_app {
     name: "LoadSdkSuccessfullySdkProvider",
-    defaults: ["platform_app_defaults"],
+    defaults: ["platform_app_defaults",],
     certificate: ":sdksandbox-test",
     srcs: [
        "src/**/*.java",

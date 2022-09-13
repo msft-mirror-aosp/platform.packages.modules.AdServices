@@ -18,11 +18,13 @@ package com.android.sdksandbox;
 
 import android.os.Bundle;
 import android.view.SurfaceControlViewHost.SurfacePackage;
+import com.android.sdksandbox.SandboxLatencyInfo;
 
 /** @hide */
 oneway interface IRequestSurfacePackageFromSdkCallback {
     const int SURFACE_PACKAGE_INTERNAL_ERROR = 1;
 
-    void onSurfacePackageReady(in SurfacePackage surfacePackage, int surfacePackageId, in Bundle params);
-    void onSurfacePackageError(int errorCode, String errorMessage);
+    // TODO(b/242571399): Convert sandboxLatencies to Parcelable Class
+    void onSurfacePackageReady(in SurfacePackage surfacePackage, int surfacePackageId, in Bundle params, in SandboxLatencyInfo sandboxLatencyInfo);
+    void onSurfacePackageError(int errorCode, String errorMessage, in SandboxLatencyInfo sandboxLatencyInfo);
 }

@@ -27,7 +27,7 @@ import java.net.URL;
 public class EventReportSender extends MeasurementReportSender {
 
     private static final String EVENT_ATTRIBUTION_REPORT_URI_PATH =
-            ".well-known/attribution-reporting/report-attribution";
+            ".well-known/attribution-reporting/report-event-attribution";
 
     /**
      * Creates URL to send the POST request to.

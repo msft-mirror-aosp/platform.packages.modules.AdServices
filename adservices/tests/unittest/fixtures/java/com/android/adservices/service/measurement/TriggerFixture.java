@@ -35,7 +35,7 @@ public final class TriggerFixture {
     public static Trigger.Builder getValidTriggerBuilder() {
         return new Trigger.Builder()
             .setAttributionDestination(ValidTriggerParams.ATTRIBUTION_DESTINATION)
-            .setAdTechDomain(ValidTriggerParams.AD_TECH_DOMAIN)
+            .setEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
             .setRegistrant(ValidTriggerParams.REGISTRANT);
     }
 
@@ -44,7 +44,7 @@ public final class TriggerFixture {
     public static Trigger getValidTrigger() {
         return new Trigger.Builder()
                 .setAttributionDestination(ValidTriggerParams.ATTRIBUTION_DESTINATION)
-                .setAdTechDomain(ValidTriggerParams.AD_TECH_DOMAIN)
+                .setEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
                 .setRegistrant(ValidTriggerParams.REGISTRANT)
                 .setTriggerTime(ValidTriggerParams.TRIGGER_TIME)
                 .setEventTriggers(ValidTriggerParams.EVENT_TRIGGERS)
@@ -59,7 +59,7 @@ public final class TriggerFixture {
         public static final Uri ATTRIBUTION_DESTINATION =
                 Uri.parse("android-app://com.destination");
         public static final Uri REGISTRANT = Uri.parse("android-app://com.registrant");
-        public static final Uri AD_TECH_DOMAIN = Uri.parse("https://com.example");
+        public static final String ENROLLMENT_ID = "enrollment-id";
         public static final String TOP_LEVEL_FILTERS_JSON_STRING =
                 "{\n"
                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"

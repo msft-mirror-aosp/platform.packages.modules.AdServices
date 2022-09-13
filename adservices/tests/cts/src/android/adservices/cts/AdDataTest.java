@@ -32,33 +32,33 @@ import org.junit.Test;
 /** Unit tests for {@link AdData} */
 @SmallTest
 public final class AdDataTest {
-    private static final Uri VALID_RENDER_URL =
+    private static final Uri VALID_RENDER_URI =
             new Uri.Builder().path("valid.example.com/testing/hello").build();
     private static final String VALID_METADATA = "{'example': 'metadata', 'valid': true}";
 
     @Test
     public void testBuildValidAdDataSuccess() {
-        AdData validAdData = new AdData(VALID_RENDER_URL, VALID_METADATA);
+        AdData validAdData = new AdData(VALID_RENDER_URI, VALID_METADATA);
 
-        assertThat(validAdData.getRenderUri()).isEqualTo(VALID_RENDER_URL);
+        assertThat(validAdData.getRenderUri()).isEqualTo(VALID_RENDER_URI);
         assertThat(validAdData.getMetadata()).isEqualTo(VALID_METADATA);
     }
 
     @Test
     public void testParcelValidAdDataSuccess() {
-        AdData validAdData = new AdData(VALID_RENDER_URL, VALID_METADATA);
+        AdData validAdData = new AdData(VALID_RENDER_URI, VALID_METADATA);
 
         Parcel p = Parcel.obtain();
         validAdData.writeToParcel(p, 0);
         p.setDataPosition(0);
         AdData fromParcel = AdData.CREATOR.createFromParcel(p);
 
-        assertThat(fromParcel.getRenderUri()).isEqualTo(VALID_RENDER_URL);
+        assertThat(fromParcel.getRenderUri()).isEqualTo(VALID_RENDER_URI);
         assertThat(fromParcel.getMetadata()).isEqualTo(VALID_METADATA);
     }
 
     @Test
-    public void testBuildNullUrlAdDataFails() {
+    public void testBuildNullUriAdDataFails() {
         assertThrows(NullPointerException.class, () -> {
             new AdData(null, VALID_METADATA);
         });
@@ -66,22 +66,24 @@ public final class AdDataTest {
 
     @Test
     public void testBuildNullMetadataAdDataFails() {
-        assertThrows(NullPointerException.class, () -> {
-            new AdData(VALID_RENDER_URL, null);
-        });
+        assertThrows(
+                NullPointerException.class,
+                () -> {
+                    new AdData(VALID_RENDER_URI, null);
+                });
     }
 
     @Test
     public void testAdDataToString() {
         AdData obj =
                 new AdData.Builder()
-                        .setRenderUri(VALID_RENDER_URL)
+                        .setRenderUri(VALID_RENDER_URI)
                         .setMetadata(VALID_METADATA)
                         .build();
 
         assertEquals(
                 String.format(
-                        "AdData{mRenderUri=%s, mMetadata='%s'}", VALID_RENDER_URL, VALID_METADATA),
+                        "AdData{mRenderUri=%s, mMetadata='%s'}", VALID_RENDER_URI, VALID_METADATA),
                 obj.toString());
     }
 
@@ -89,7 +91,7 @@ public final class AdDataTest {
     public void testAdDataDescribeContent() {
         AdData obj =
                 new AdData.Builder()
-                        .setRenderUri(VALID_RENDER_URL)
+                        .setRenderUri(VALID_RENDER_URI)
                         .setMetadata(VALID_METADATA)
                         .build();
 

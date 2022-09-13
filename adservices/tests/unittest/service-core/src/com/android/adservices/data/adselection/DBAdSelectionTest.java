@@ -35,7 +35,7 @@ public class DBAdSelectionTest {
     private static final Uri BIDDING_LOGIC_URI = Uri.parse("http://www.domain.com/logic");
     private static final Uri RENDER_URI = Uri.parse("http://www.domain.com/advert");
     private static final Instant ACTIVATION_TIME = CLOCK.instant().truncatedTo(ChronoUnit.MILLIS);
-    ;
+
     private static final long AD_SELECTION_ID = 1;
     private static final String CONTEXTUAL_SIGNALS = "contextual_signals";
 
@@ -71,7 +71,7 @@ public class DBAdSelectionTest {
     }
 
     @Test
-    public void testFailsToBuildContextualAdWithNonNullBiddingLogicUrl() {
+    public void testFailsToBuildContextualAdWithNonNullBiddingLogicUri() {
 
         assertThrows(
                 IllegalArgumentException.class,

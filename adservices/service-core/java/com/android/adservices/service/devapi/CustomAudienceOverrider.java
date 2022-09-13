@@ -309,7 +309,7 @@ public class CustomAudienceOverrider {
         } catch (RemoteException e) {
             LogUtil.e(e, "Unable to send failed result to the callback");
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
-            throw e.rethrowFromSystemServer();
+            throw e.rethrowAsRuntimeException();
         } finally {
             mAdServicesLogger.logFledgeApiCallStats(apiName, resultCode);
         }
@@ -327,7 +327,7 @@ public class CustomAudienceOverrider {
         } catch (RemoteException e) {
             LogUtil.e(e, "Unable to send successful result to the callback");
             resultCodeInt = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
-            throw e.rethrowFromSystemServer();
+            throw e.rethrowAsRuntimeException();
         } finally {
             mAdServicesLogger.logFledgeApiCallStats(apiName, resultCodeInt);
         }
@@ -335,27 +335,18 @@ public class CustomAudienceOverrider {
 
     private void notifyFailureToCaller(
             @NonNull CustomAudienceOverrideCallback callback, @NonNull Throwable t, int apiName) {
+        int resultCode;
         if (t instanceof IllegalArgumentException) {
-            invokeFailure(
-                    callback,
-                    AdServicesStatusUtils.STATUS_INVALID_ARGUMENT,
-                    t.getMessage(),
-                    apiName);
+            resultCode = AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
         } else if (t instanceof WrongCallingApplicationStateException) {
-            invokeFailure(
-                    callback,
-                    AdServicesStatusUtils.STATUS_BACKGROUND_CALLER,
-                    t.getMessage(),
-                    apiName);
+            resultCode = AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
         } else if (t instanceof IllegalStateException) {
-            invokeFailure(
-                    callback, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, t.getMessage(), apiName);
+            resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
         } else if (t instanceof SecurityException) {
-            invokeFailure(
-                    callback, AdServicesStatusUtils.STATUS_UNAUTHORIZED, t.getMessage(), apiName);
+            resultCode = AdServicesStatusUtils.STATUS_UNAUTHORIZED;
         } else {
-            invokeFailure(
-                    callback, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, t.getMessage(), apiName);
+            resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
         }
+        invokeFailure(callback, resultCode, t.getMessage(), apiName);
     }
 }

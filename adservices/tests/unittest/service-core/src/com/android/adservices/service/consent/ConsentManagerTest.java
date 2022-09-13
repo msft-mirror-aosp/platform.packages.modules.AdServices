@@ -16,10 +16,9 @@
 
 package com.android.adservices.service.consent;
 
-import static com.android.adservices.service.consent.ConsentManager.EEA_DEVICE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_IN_SELECTED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -27,6 +26,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -35,7 +35,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
 
 import android.app.job.JobScheduler;
 import android.content.Context;
@@ -51,16 +50,28 @@ import com.android.adservices.data.consent.AppConsentDaoFixture;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
+import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.MaintenanceJobService;
+import com.android.adservices.service.common.BackgroundJobsManager;
+import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.MeasurementImpl;
+import com.android.adservices.service.measurement.attribution.AttributionJobService;
+import com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService;
+import com.android.adservices.service.measurement.reporting.AggregateReportingJobService;
+import com.android.adservices.service.measurement.reporting.EventFallbackReportingJobService;
+import com.android.adservices.service.measurement.reporting.EventReportingJobService;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.UIStats;
 import com.android.adservices.service.topics.AppUpdateManager;
 import com.android.adservices.service.topics.BlockedTopicsManager;
 import com.android.adservices.service.topics.CacheManager;
+import com.android.adservices.service.topics.EpochJobService;
 import com.android.adservices.service.topics.EpochManager;
 import com.android.adservices.service.topics.TopicsWorker;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
 
@@ -69,7 +80,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.MockitoSession;
 import org.mockito.Spy;
+import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 import java.util.List;
@@ -95,10 +108,28 @@ public class ConsentManagerTest {
     @Mock private EpochManager mMockEpochManager;
     @Mock private Flags mMockFlags;
     @Mock private JobScheduler mJobSchedulerMock;
+    private MockitoSession mStaticMockSession = null;
 
     @Before
     public void setup() throws IOException {
         MockitoAnnotations.initMocks(this);
+
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(AggregateReportingJobService.class)
+                        .spyStatic(AggregateFallbackReportingJobService.class)
+                        .spyStatic(AttributionJobService.class)
+                        .spyStatic(BackgroundJobsManager.class)
+                        .spyStatic(EpochJobService.class)
+                        .spyStatic(EventReportingJobService.class)
+                        .spyStatic(EventFallbackReportingJobService.class)
+                        .spyStatic(DeleteExpiredJobService.class)
+                        .spyStatic(FlagsFactory.class)
+                        .spyStatic(MaintenanceJobService.class)
+                        .spyStatic(MddJobService.class)
+                        .strictness(Strictness.WARN)
+                        .initMocks(this)
+                        .startMocking();
 
         mDatastore =
                 new BooleanFileDatastore(mContextSpy, AppConsentDaoFixture.TEST_DATASTORE_NAME, 1);
@@ -111,18 +142,50 @@ public class ConsentManagerTest {
                         mAppConsentDao,
                         mMeasurementImpl,
                         mAdServicesLoggerImpl,
-                        mCustomAudienceDaoMock);
+                        mCustomAudienceDaoMock,
+                        mMockFlags);
+
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        ExtendedMockito.doReturn(true)
+                .when(() -> EpochJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+        ExtendedMockito.doReturn(true)
+                .when(() -> MaintenanceJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+        ExtendedMockito.doReturn(true)
+                .when(() -> MddJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+        ExtendedMockito.doNothing()
+                .when(() -> AggregateReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+        ExtendedMockito.doNothing()
+                .when(
+                        () ->
+                                AggregateFallbackReportingJobService.scheduleIfNeeded(
+                                        any(), anyBoolean()));
+        ExtendedMockito.doNothing()
+                .when(() -> AttributionJobService.scheduleIfNeeded(any(), anyBoolean()));
+        ExtendedMockito.doReturn(true)
+                .when(() -> EpochJobService.scheduleIfNeeded(any(), anyBoolean()));
+        ExtendedMockito.doReturn(true)
+                .when(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
+        ExtendedMockito.doNothing()
+                .when(() -> EventReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+        ExtendedMockito.doNothing()
+                .when(() -> EventFallbackReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+        ExtendedMockito.doNothing()
+                .when(() -> DeleteExpiredJobService.scheduleIfNeeded(any(), anyBoolean()));
+        ExtendedMockito.doReturn(true)
+                .when(() -> MaintenanceJobService.scheduleIfNeeded(any(), anyBoolean()));
     }
 
     @After
     public void teardown() throws IOException {
         mDatastore.clear();
+        if (mStaticMockSession != null) {
+            mStaticMockSession.finishMocking();
+        }
     }
 
     @Test
     public void testConsentIsGivenAfterEnabling() {
-        when(mPackageManagerMock.hasSystemFeature(EEA_DEVICE)).thenReturn(true);
-        mConsentManager.enable(mPackageManagerMock);
+        mConsentManager.enable(mContextSpy);
 
         assertTrue(mConsentManager.getConsent(mPackageManagerMock).isGiven());
     }
@@ -130,17 +193,93 @@ public class ConsentManagerTest {
     @Test
     public void testConsentIsRevokedAfterDisabling() {
         doReturn(mPackageManagerMock).when(mContextSpy).getPackageManager();
-        when(mPackageManagerMock.hasSystemFeature(EEA_DEVICE)).thenReturn(true);
         mConsentManager.disable(mContextSpy);
 
         assertFalse(mConsentManager.getConsent(mPackageManagerMock).isGiven());
     }
 
     @Test
+    public void testJobsAreScheduledAfterEnablingKillSwitchOff() {
+        doReturn(mPackageManagerMock).when(mContextSpy).getPackageManager();
+        doReturn(false).when(mMockFlags).getTopicsKillSwitch();
+        doReturn(false).when(mMockFlags).getMeasurementKillSwitch();
+        doReturn(false).when(mMockFlags).getMddBackgroundTaskKillSwitch();
+
+        mConsentManager.enable(mContextSpy);
+
+        ExtendedMockito.verify(
+                () -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
+        ExtendedMockito.verify(
+                () -> EpochJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+        ExtendedMockito.verify(() -> MddJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+        ExtendedMockito.verify(
+                () -> MaintenanceJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+        ExtendedMockito.verify(
+                () -> AggregateReportingJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+        ExtendedMockito.verify(
+                () ->
+                        AggregateFallbackReportingJobService.scheduleIfNeeded(
+                                any(Context.class), eq(false)));
+        ExtendedMockito.verify(
+                () -> AttributionJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+        ExtendedMockito.verify(
+                () -> EventReportingJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+        ExtendedMockito.verify(
+                () ->
+                        EventFallbackReportingJobService.scheduleIfNeeded(
+                                any(Context.class), eq(false)));
+        ExtendedMockito.verify(
+                () -> DeleteExpiredJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+    }
+
+    @Test
+    public void testJobsAreNotScheduledAfterEnablingKillSwitchOn() {
+        doReturn(mPackageManagerMock).when(mContextSpy).getPackageManager();
+        doReturn(true).when(mMockFlags).getTopicsKillSwitch();
+        doReturn(true).when(mMockFlags).getMeasurementKillSwitch();
+        doReturn(true).when(mMockFlags).getMddBackgroundTaskKillSwitch();
+
+        mConsentManager.enable(mContextSpy);
+
+        ExtendedMockito.verify(
+                () -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
+        ExtendedMockito.verify(
+                () -> EpochJobService.scheduleIfNeeded(any(Context.class), eq(false)),
+                ExtendedMockito.never());
+        ExtendedMockito.verify(
+                () -> MaintenanceJobService.scheduleIfNeeded(any(Context.class), eq(false)),
+                ExtendedMockito.never());
+        ExtendedMockito.verify(
+                () -> MddJobService.scheduleIfNeeded(any(Context.class), eq(false)),
+                ExtendedMockito.never());
+        ExtendedMockito.verify(
+                () -> AggregateReportingJobService.scheduleIfNeeded(any(Context.class), eq(false)),
+                ExtendedMockito.never());
+        ExtendedMockito.verify(
+                () ->
+                        AggregateFallbackReportingJobService.scheduleIfNeeded(
+                                any(Context.class), eq(false)),
+                ExtendedMockito.never());
+        ExtendedMockito.verify(
+                () -> AttributionJobService.scheduleIfNeeded(any(Context.class), eq(false)),
+                ExtendedMockito.never());
+        ExtendedMockito.verify(
+                () -> EventReportingJobService.scheduleIfNeeded(any(Context.class), eq(false)),
+                ExtendedMockito.never());
+        ExtendedMockito.verify(
+                () ->
+                        EventFallbackReportingJobService.scheduleIfNeeded(
+                                any(Context.class), eq(false)),
+                ExtendedMockito.never());
+        ExtendedMockito.verify(
+                () -> DeleteExpiredJobService.scheduleIfNeeded(any(Context.class), eq(false)),
+                ExtendedMockito.never());
+    }
+
+    @Test
     public void testJobsAreUnscheduledAfterDisabling() {
         doReturn(mPackageManagerMock).when(mContextSpy).getPackageManager();
         doReturn(mJobSchedulerMock).when(mContextSpy).getSystemService(JobScheduler.class);
-        when(mPackageManagerMock.hasSystemFeature(EEA_DEVICE)).thenReturn(true);
         mConsentManager.disable(mContextSpy);
 
         verify(mJobSchedulerMock).cancel(AdServicesConfig.MAINTENANCE_JOB_ID);
@@ -168,7 +307,6 @@ public class ConsentManagerTest {
     @Test
     public void testDataIsResetAfterConsentIsRevoked() throws IOException {
         doReturn(mPackageManagerMock).when(mContextSpy).getPackageManager();
-        when(mPackageManagerMock.hasSystemFeature(EEA_DEVICE)).thenReturn(true);
         mConsentManager.disable(mContextSpy);
 
         SystemClock.sleep(1000);
@@ -180,24 +318,9 @@ public class ConsentManagerTest {
     }
 
     @Test
-    public void testConsentIsEnabledForEuConfig() {
-        when(mPackageManagerMock.hasSystemFeature(EEA_DEVICE)).thenReturn(true);
-
-        assertFalse(mConsentManager.getInitialConsent(mPackageManagerMock));
-    }
-
-    @Test
-    public void testConsentIsEnabledForNonEuConfig() {
-        when(mPackageManagerMock.hasSystemFeature(EEA_DEVICE)).thenReturn(false);
-
-        assertTrue(mConsentManager.getInitialConsent(mPackageManagerMock));
-    }
-
-    @Test
     public void testIsFledgeConsentRevokedForAppWithFullApiConsent()
             throws IOException, PackageManager.NameNotFoundException {
-        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
-        mConsentManager.enable(mPackageManagerMock);
+        mConsentManager.enable(mContextSpy);
         assertTrue(mConsentManager.getConsent(mPackageManagerMock).isGiven());
 
         doReturn(AppConsentDaoFixture.APP10_UID)
@@ -228,7 +351,6 @@ public class ConsentManagerTest {
     public void testIsFledgeConsentRevokedForAppWithoutPrivacySandboxConsent()
             throws PackageManager.NameNotFoundException {
         doReturn(mPackageManagerMock).when(mContextSpy).getPackageManager();
-        doReturn(true).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
         mConsentManager.disable(mContextSpy);
         assertFalse(mConsentManager.getConsent(mPackageManagerMock).isGiven());
 
@@ -250,8 +372,7 @@ public class ConsentManagerTest {
     @Test
     public void testIsFledgeConsentRevokedForNotFoundAppThrows()
             throws PackageManager.NameNotFoundException {
-        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
-        mConsentManager.enable(mPackageManagerMock);
+        mConsentManager.enable(mContextSpy);
         assertTrue(mConsentManager.getConsent(mPackageManagerMock).isGiven());
 
         doThrow(PackageManager.NameNotFoundException.class)
@@ -269,8 +390,7 @@ public class ConsentManagerTest {
     @Test
     public void testIsFledgeConsentRevokedForAppAfterSettingFledgeUseWithFullApiConsent()
             throws IOException, PackageManager.NameNotFoundException {
-        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
-        mConsentManager.enable(mPackageManagerMock);
+        mConsentManager.enable(mContextSpy);
         assertTrue(mConsentManager.getConsent(mPackageManagerMock).isGiven());
 
         doReturn(AppConsentDaoFixture.APP10_UID)
@@ -301,7 +421,6 @@ public class ConsentManagerTest {
     public void testIsFledgeConsentRevokedForAppAfterSettingFledgeUseWithoutPrivacySandboxConsent()
             throws PackageManager.NameNotFoundException {
         doReturn(mPackageManagerMock).when(mContextSpy).getPackageManager();
-        doReturn(true).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
         mConsentManager.disable(mContextSpy);
         assertFalse(mConsentManager.getConsent(mPackageManagerMock).isGiven());
 
@@ -323,8 +442,7 @@ public class ConsentManagerTest {
     @Test
     public void testIsFledgeConsentRevokedForAppAfterSettingFledgeUseThrows()
             throws PackageManager.NameNotFoundException {
-        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
-        mConsentManager.enable(mPackageManagerMock);
+        mConsentManager.enable(mContextSpy);
         assertTrue(mConsentManager.getConsent(mPackageManagerMock).isGiven());
 
         doThrow(PackageManager.NameNotFoundException.class)
@@ -342,8 +460,7 @@ public class ConsentManagerTest {
     @Test
     public void testGetKnownAppsWithConsent()
             throws IOException, PackageManager.NameNotFoundException {
-        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
-        mConsentManager.enable(mPackageManagerMock);
+        mConsentManager.enable(mContextSpy);
         assertTrue(mConsentManager.getConsent(mPackageManagerMock).isGiven());
         doReturn(AppConsentDaoFixture.APP10_UID)
                 .when(mPackageManagerMock)
@@ -369,10 +486,9 @@ public class ConsentManagerTest {
     @Test
     public void testGetKnownAppsWithConsentAfterConsentForOneOfThemWasRevoked()
             throws IOException, PackageManager.NameNotFoundException, InterruptedException {
-        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
         doNothing().when(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any());
 
-        mConsentManager.enable(mPackageManagerMock);
+        mConsentManager.enable(mContextSpy);
         assertTrue(mConsentManager.getConsent(mPackageManagerMock).isGiven());
         doReturn(AppConsentDaoFixture.APP10_UID)
                 .when(mPackageManagerMock)
@@ -406,10 +522,9 @@ public class ConsentManagerTest {
     @Test
     public void testGetKnownAppsWithConsentAfterConsentForOneOfThemWasRevokedAndRestored()
             throws IOException, PackageManager.NameNotFoundException, InterruptedException {
-        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
         doNothing().when(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any());
 
-        mConsentManager.enable(mPackageManagerMock);
+        mConsentManager.enable(mContextSpy);
         assertTrue(mConsentManager.getConsent(mPackageManagerMock).isGiven());
         doReturn(AppConsentDaoFixture.APP10_UID)
                 .when(mPackageManagerMock)
@@ -456,7 +571,6 @@ public class ConsentManagerTest {
         Topic topic1 = Topic.create(1, taxonomyVersion, modelVersion);
         Topic topic2 = Topic.create(2, taxonomyVersion, modelVersion);
         ImmutableList<Topic> expectedKnownTopicsWithConsent = ImmutableList.of(topic1, topic2);
-        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
         doReturn(expectedKnownTopicsWithConsent).when(mTopicsWorker).getKnownTopicsWithConsent();
 
         ImmutableList<Topic> knownTopicsWithConsent = mConsentManager.getKnownTopicsWithConsent();
@@ -472,7 +586,6 @@ public class ConsentManagerTest {
         Topic topic1 = Topic.create(1, taxonomyVersion, modelVersion);
         Topic topic2 = Topic.create(2, taxonomyVersion, modelVersion);
         ImmutableList<Topic> expectedTopicsWithRevokedConsent = ImmutableList.of(topic1, topic2);
-        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
         doReturn(expectedTopicsWithRevokedConsent)
                 .when(mTopicsWorker)
                 .getTopicsWithRevokedConsent();
@@ -487,11 +600,10 @@ public class ConsentManagerTest {
     @Test
     public void testResetAllAppConsentAndAppData()
             throws IOException, PackageManager.NameNotFoundException {
-        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
         doNothing().when(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
 
         // Prepopulate with consent data for some apps
-        mConsentManager.enable(mPackageManagerMock);
+        mConsentManager.enable(mContextSpy);
         assertTrue(mConsentManager.getConsent(mPackageManagerMock).isGiven());
         doReturn(AppConsentDaoFixture.APP10_UID)
                 .when(mPackageManagerMock)
@@ -527,11 +639,10 @@ public class ConsentManagerTest {
     @Test
     public void testResetAllowedAppConsentAndAppData()
             throws IOException, PackageManager.NameNotFoundException {
-        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
         doNothing().when(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
 
         // Prepopulate with consent data for some apps
-        mConsentManager.enable(mPackageManagerMock);
+        mConsentManager.enable(mContextSpy);
         assertTrue(mConsentManager.getConsent(mPackageManagerMock).isGiven());
         doReturn(AppConsentDaoFixture.APP10_UID)
                 .when(mPackageManagerMock)
@@ -577,7 +688,6 @@ public class ConsentManagerTest {
 
     @Test
     public void testNotificationDisplayedRecorded() {
-        doReturn(false).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
         Boolean wasNotificationDisplayed =
                 mConsentManager.wasNotificationDisplayed(mPackageManagerMock);
 
@@ -605,7 +715,8 @@ public class ConsentManagerTest {
                         mAppConsentDao,
                         mMeasurementImpl,
                         mAdServicesLoggerImpl,
-                        mCustomAudienceDaoMock);
+                        mCustomAudienceDaoMock,
+                        mMockFlags);
         doNothing().when(mBlockedTopicsManager).blockTopic(any());
         doNothing().when(mBlockedTopicsManager).unblockTopic(any());
         doNothing().when(mCacheManager).clearAllTopicsData(any());
@@ -621,15 +732,15 @@ public class ConsentManagerTest {
 
     @Test
     public void testLoggingSettingsUsageReportedOptInSelected() throws IOException {
-        when(mPackageManagerMock.hasSystemFeature(EEA_DEVICE)).thenReturn(true);
         mConsentManager.init(mPackageManagerMock);
-        mConsentManager.enable(mPackageManagerMock);
+        mConsentManager.enable(mContextSpy);
 
-        UIStats expectedUIStats = new UIStats.Builder()
-                .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
-                .setRegion(AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU)
-                .setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_IN_SELECTED)
-                .build();
+        UIStats expectedUIStats =
+                new UIStats.Builder()
+                        .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
+                        .setRegion(AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW)
+                        .setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_IN_SELECTED)
+                        .build();
 
         verify(mAdServicesLoggerImpl, times(1)).logUIStats(any());
         verify(mAdServicesLoggerImpl, times(1)).logUIStats(expectedUIStats);

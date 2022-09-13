@@ -69,28 +69,28 @@ public interface IMeasurementDao {
     long getNumTriggersPerRegistrant(Uri registrant) throws DatastoreException;
 
     /**
-     * Gets the count of distinct Uri's of ad-techs in the Attribution table in a time window with
-     * matching publisher and destination, excluding a given ad-tech.
+     * Gets the count of distinct IDs of enrollments in the Attribution table in a time window
+     * with matching publisher and destination, excluding a given enrollment ID.
      */
-    Integer countDistinctAdTechsPerPublisherXDestinationInAttribution(Uri sourceSite,
-            Uri destination, Uri excludedAdTech, long windowStartTime, long windowEndTime)
+    Integer countDistinctEnrollmentsPerPublisherXDestinationInAttribution(Uri sourceSite,
+            Uri destination, String excludedEnrollmentId, long windowStartTime, long windowEndTime)
             throws DatastoreException;
 
     /**
      * Gets the count of distinct Uri's of destinations in the Source table in a time window with
-     * matching publisher and ACTIVE status, excluding a given destination.
+     * matching publisher, enrollment, and ACTIVE status, excluding a given destination.
      */
-    Integer countDistinctDestinationsPerPublisherXAdTechInActiveSource(Uri publisher,
-            @EventSurfaceType int publisherType, Uri adTechDomain, Uri excludedDestination,
+    Integer countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(Uri publisher,
+            @EventSurfaceType int publisherType, String enrollmentId, Uri excludedDestination,
             @EventSurfaceType int destinationType, long windowStartTime, long windowEndTime)
             throws DatastoreException;
 
     /**
-     * Gets the count of distinct Uri's of ad-techs in the Source table in a time window with
-     * matching publisher and destination, excluding a given ad-tech.
+     * Gets the count of distinct IDs of enrollments in the Source table in a time window with
+     * matching publisher and destination, excluding a given enrollment ID.
      */
-    Integer countDistinctAdTechsPerPublisherXDestinationInSource(Uri publisher,
-            @EventSurfaceType int publisherType, Uri destination, Uri excludedAdTech,
+    Integer countDistinctEnrollmentsPerPublisherXDestinationInSource(Uri publisher,
+            @EventSurfaceType int publisherType, Uri destination, String enrollmentId,
             long windowStartTime, long windowEndTime) throws DatastoreException;
 
      /**
@@ -223,8 +223,8 @@ public interface IMeasurementDao {
      * and/or a range of dates.
      *
      * @param registrant who owns the data
-     * @param start time for deletion range. May be null. If null, end must be null as well
-     * @param end time for deletion range. May be null. If null, start must be null as well
+     * @param start time for deletion range. Set to Instant.MIN to delete everything up to the end
+     * @param end time for deletion range. Set to Instant.MAX to delete everything after the start
      * @param origins list of origins which should be used for matching
      * @param domains list of domains which should be used for matching
      * @param matchBehavior {@link DeletionRequest.MatchBehavior} to be used for matching
@@ -232,8 +232,8 @@ public interface IMeasurementDao {
      */
     void deleteMeasurementData(
             @NonNull Uri registrant,
-            @Nullable Instant start,
-            @Nullable Instant end,
+            @NonNull Instant start,
+            @NonNull Instant end,
             @NonNull List<Uri> origins,
             @NonNull List<Uri> domains,
             @DeletionRequest.MatchBehavior int matchBehavior,

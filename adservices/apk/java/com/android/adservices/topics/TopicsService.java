@@ -25,6 +25,7 @@ import android.os.IBinder;
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.download.MddJobService;
+import com.android.adservices.download.MobileDataDownloadFactory;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -78,16 +79,19 @@ public class TopicsService extends Service {
                             appImportanceFilter);
             mTopicsService.init();
         }
-
-        schedulePeriodicJobs();
+        if (hasUserConsent()) {
+            schedulePeriodicJobs();
+        }
     }
 
     private void schedulePeriodicJobs() {
         MaintenanceJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
         EpochJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
+        MddJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
+    }
 
-        // TODO(b/238674236): Schedule this after the boot complete.
-        MddJobService.schedule(this);
+    private boolean hasUserConsent() {
+        return ConsentManager.getInstance(this).getConsent(this.getPackageManager()).isGiven();
     }
 
     @Override
@@ -100,6 +104,7 @@ public class TopicsService extends Service {
         return Objects.requireNonNull(mTopicsService);
     }
 
+    // TODO(b/246316128): Add dump() in Consent Manager.
     @Override
     public void dump(FileDescriptor fd, PrintWriter writer, String[] args) {
         super.dump(fd, writer, args);
@@ -108,6 +113,9 @@ public class TopicsService extends Service {
             writer.println("Build is Debuggable, dumping information for TopicsService");
             EpochManager.getInstance(this).dump(writer, args);
             CacheManager.getInstance(this).dump(writer, args);
+            MobileDataDownloadFactory.dump(this, writer);
+            writer.println("=== User Consent State For Topics Service ===");
+            writer.println("User Consent is given: " + hasUserConsent());
         } else {
             writer.println("Build is not Debuggable");
         }

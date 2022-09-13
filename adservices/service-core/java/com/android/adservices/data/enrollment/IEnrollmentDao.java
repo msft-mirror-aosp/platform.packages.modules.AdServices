@@ -40,10 +40,14 @@ public interface IEnrollmentDao {
     EnrollmentData getEnrollmentDataFromMeasurementUrl(String url);
 
     /**
-     * Returns the {@link EnrollmentData} by given {@link AdTechIdentifier}.
+     * Returns the {@link EnrollmentData} with FLEDGE response-based registration URLs that match
+     * the given {@link AdTechIdentifier}.
      *
-     * @param adTechIdentifier the ad tech identifier to be search against.
-     * @return the enrollment data or null if not exist.
+     * <p>Upon enrollment, the server will validate that ad techs' RBR URLs do not share the same
+     * domain. If this does happen, only return the first match in the database.
+     *
+     * @param adTechIdentifier the {@link AdTechIdentifier} to search against
+     * @return a matching {@link EnrollmentData} or {@code null} if no matches were found
      */
     EnrollmentData getEnrollmentDataForFledgeByAdTechIdentifier(AdTechIdentifier adTechIdentifier);
 

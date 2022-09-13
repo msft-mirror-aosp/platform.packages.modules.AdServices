@@ -29,7 +29,7 @@ import org.junit.Test;
 
 public class TrustedBiddingDataValidatorTest {
     private final TrustedBiddingDataValidator mValidator =
-            new TrustedBiddingDataValidator(CommonFixture.VALID_BUYER.toString());
+            new TrustedBiddingDataValidator(CommonFixture.VALID_BUYER_1.toString());
 
     @Test
     public void testValidTrustedBiddingData() {
@@ -37,7 +37,7 @@ public class TrustedBiddingDataValidatorTest {
                 mValidator
                         .getValidationViolations(
                                 TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(
-                                        CommonFixture.VALID_BUYER))
+                                        CommonFixture.VALID_BUYER_1))
                         .isEmpty());
     }
 
@@ -48,9 +48,9 @@ public class TrustedBiddingDataValidatorTest {
                 mValidator.getValidationViolations(
                         TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(buyer)),
                 String.format(
-                        AdTechUriValidator.IDENTIFIER_AND_URL_ARE_INCONSISTENT,
+                        AdTechUriValidator.IDENTIFIER_AND_URI_ARE_INCONSISTENT,
                         ValidatorUtil.AD_TECH_ROLE_BUYER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER_1,
                         ValidatorUtil.AD_TECH_ROLE_BUYER,
                         TrustedBiddingDataValidator.TRUSTED_BIDDING_URI_FIELD_NAME,
                         buyer));

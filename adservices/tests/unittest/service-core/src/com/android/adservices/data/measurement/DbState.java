@@ -226,7 +226,10 @@ public class DbState {
                 .setPublisher(Uri.parse(sJSON.getString("publisher")))
                 .setPublisherType(sJSON.optInt("publisherType"))
                 .setAppDestination(Uri.parse(sJSON.getString("appDestination")))
-                .setAdTechDomain(Uri.parse(sJSON.getString("adTechDomain")))
+                .setWebDestination(parseIfNonNull(sJSON.optString("webDestination", null)))
+                .setAggregateSource(sJSON.optString("aggregationKeys", null))
+                .setAggregateContributions(sJSON.optInt("aggregateContributions"))
+                .setEnrollmentId(sJSON.getString("enrollmentId"))
                 .setEventTime(sJSON.getLong("eventTime"))
                 .setExpiryTime(sJSON.getLong("expiryTime"))
                 .setPriority(sJSON.getLong("priority"))
@@ -247,8 +250,10 @@ public class DbState {
                 .setId(tJSON.getString("id"))
                 .setAttributionDestination(Uri.parse(tJSON.getString("attributionDestination")))
                 .setDestinationType(tJSON.optInt("destinationType"))
-                .setAdTechDomain(Uri.parse(tJSON.getString("adTechDomain")))
+                .setEnrollmentId(tJSON.getString("enrollmentId"))
                 .setEventTriggers(tJSON.getString("eventTriggers"))
+                .setAggregateTriggerData(tJSON.optString("aggregatableTriggerData", null))
+                .setAggregateValues(tJSON.optString("aggregatableValues", null))
                 .setTriggerTime(tJSON.getLong("triggerTime"))
                 .setStatus(tJSON.getInt("status"))
                 .setRegistrant(Uri.parse(tJSON.getString("registrant")))
@@ -261,7 +266,7 @@ public class DbState {
                 .setId(rJSON.getString("id"))
                 .setSourceId(rJSON.getLong("sourceId"))
                 .setAttributionDestination(Uri.parse(rJSON.getString("attributionDestination")))
-                .setAdTechDomain(Uri.parse(rJSON.getString("adTechDomain")))
+                .setEnrollmentId(rJSON.getString("enrollmentId"))
                 .setTriggerData(rJSON.getLong("triggerData"))
                 .setTriggerTime(rJSON.getLong("triggerTime"))
                 .setReportTime(rJSON.getLong("reportTime"))
@@ -282,7 +287,7 @@ public class DbState {
                 .setSourceOrigin(attrJSON.getString("sourceOrigin"))
                 .setDestinationSite(attrJSON.getString("destinationSite"))
                 .setDestinationOrigin(attrJSON.getString("destinationOrigin"))
-                .setAdTechDomain(attrJSON.getString("adTechDomain"))
+                .setEnrollmentId(attrJSON.getString("enrollmentId"))
                 .setTriggerTime(attrJSON.getLong("triggerTime"))
                 .setRegistrant(attrJSON.getString("registrant"))
                 .build();
@@ -319,10 +324,10 @@ public class DbState {
                         cursor.getString(
                                 cursor.getColumnIndex(
                                         MeasurementTables.AttributionContract.DESTINATION_ORIGIN)))
-                .setAdTechDomain(
+                .setEnrollmentId(
                         cursor.getString(
                                 cursor.getColumnIndex(
-                                        MeasurementTables.AttributionContract.AD_TECH_DOMAIN)))
+                                        MeasurementTables.AttributionContract.ENROLLMENT_ID)))
                 .setTriggerTime(
                         cursor.getLong(
                                 cursor.getColumnIndex(
@@ -342,9 +347,17 @@ public class DbState {
                 .setAttributionDestination(Uri.parse(rJSON.getString("attributionDestination")))
                 .setSourceRegistrationTime(rJSON.getLong("sourceRegistrationTime"))
                 .setScheduledReportTime(rJSON.getLong("scheduledReportTime"))
-                .setReportingOrigin(Uri.parse(rJSON.getString("reportingOrigin")))
+                .setEnrollmentId(rJSON.getString("enrollmentId"))
                 .setDebugCleartextPayload(rJSON.getString("debugCleartextPayload"))
                 .setStatus(rJSON.getInt("status"))
+                .setApiVersion(rJSON.optString("apiVersion", null))
                 .build();
+    }
+
+    private Uri parseIfNonNull(String s) {
+        if (s == null) {
+            return null;
+        }
+        return Uri.parse(s);
     }
 }

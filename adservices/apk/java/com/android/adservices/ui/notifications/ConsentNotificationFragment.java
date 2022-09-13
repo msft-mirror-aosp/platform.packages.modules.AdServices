@@ -123,8 +123,7 @@ public class ConsentNotificationFragment extends Fragment {
                 view -> {
                     if (isEUDevice) {
                         // opt-in confirmation activity
-                        ConsentManager.getInstance(requireContext())
-                                .enable(requireContext().getPackageManager());
+                        ConsentManager.getInstance(requireContext()).enable(requireContext());
                         Bundle args = new Bundle();
                         args.putBoolean(IS_CONSENT_GIVEN_ARGUMENT_KEY, true);
                         startConfirmationFragment(args);

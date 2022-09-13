@@ -16,6 +16,7 @@
 
 package com.android.sdksandboxcode_1;
 
+import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
 import android.content.Intent;
@@ -28,16 +29,17 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.android.apiimplementation.SdkApi;
+
 import java.util.Random;
-import java.util.concurrent.Executor;
 
 public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
 
     private static final String TAG = "SampleSandboxedSdkProvider";
 
     @Override
-    public void onLoadSdk(Bundle params, Executor executor, OnLoadSdkCallback callback) {
-        callback.onLoadSdkFinished(null);
+    public SandboxedSdk onLoadSdk(Bundle params) {
+        return new SandboxedSdk(new SdkApi(getContext()));
     }
 
     @Override
@@ -49,9 +51,6 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
     public View getView(Context windowContext, Bundle params, int width, int height) {
         return new TestView(windowContext, getContext(), width, height);
     }
-
-    @Override
-    public void onDataReceived(Bundle data, DataReceivedCallback callback) {}
 
     private static class TestView extends View {
 
