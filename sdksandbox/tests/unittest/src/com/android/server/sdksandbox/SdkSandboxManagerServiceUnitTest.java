@@ -2143,11 +2143,6 @@ public class SdkSandboxManagerServiceUnitTest {
             }
         }
 
-        @Override
-        public void cleanup(CallingInfo callingInfo) {
-            mService.remove(callingInfo);
-        }
-
         @Nullable
         @Override
         public ISdkSandboxService getBoundServiceForApp(CallingInfo callingInfo) {
