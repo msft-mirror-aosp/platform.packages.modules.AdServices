@@ -983,9 +983,7 @@ public interface Flags extends Dumpable {
      * There must be not any empty space between comma.
      */
     String PPAPI_APP_ALLOW_LIST =
-            "android.platform.test.scenario,"
-                    + "android.adservices.crystalball,"
-                    + "android.adservices.cts,"
+            "android.adservices.cts,"
                     + "android.adservices.debuggablects,"
                     + "com.android.adservices.endtoendtest,"
                     + "com.android.adservices.servicecoretest,"
@@ -1001,8 +999,7 @@ public interface Flags extends Dumpable {
                     + "com.example.adservices.samples.fledge.sampleapp1,"
                     + "com.example.adservices.samples.fledge.sampleapp2,"
                     + "com.example.adservices.samples.fledge.sampleapp3,"
-                    + "com.example.adservices.samples.fledge.sampleapp4,"
-                    + "com.android.adservices.tests.cts.endtoendtest.measurement";
+                    + "com.example.adservices.samples.fledge.sampleapp4";
 
     /**
      * Returns bypass List for PPAPI app signature check. Apps with package name on this list will

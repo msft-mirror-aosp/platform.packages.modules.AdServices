@@ -71,6 +71,7 @@ import java.util.function.Function;
  */
 public class SourceFetcher {
     private final ExecutorService mIoExecutor = AdServicesExecutors.getBlockingExecutor();
+    private final AdIdPermissionFetcher mAdIdPermissionFetcher;
     private final String mDefaultAndroidAppScheme = "android-app";
     private final String mDefaultAndroidAppUriPrefix = mDefaultAndroidAppScheme + "://";
     private final MeasurementHttpClient mNetworkConnection = new MeasurementHttpClient();
@@ -81,6 +82,7 @@ public class SourceFetcher {
     public SourceFetcher(Context context) {
         this(
                 EnrollmentDao.getInstance(context),
+                new AdIdPermissionFetcher(),
                 FlagsFactory.getFlags(),
                 AdServicesLoggerImpl.getInstance());
     }
@@ -88,9 +90,11 @@ public class SourceFetcher {
     @VisibleForTesting
     public SourceFetcher(
             EnrollmentDao enrollmentDao,
+            AdIdPermissionFetcher adIdPermissionFetcher,
             Flags flags,
             AdServicesLogger logger) {
         mEnrollmentDao = enrollmentDao;
+        mAdIdPermissionFetcher = adIdPermissionFetcher;
         mFlags = flags;
         mLogger = logger;
     }
@@ -102,8 +106,7 @@ public class SourceFetcher {
             boolean shouldValidateDestination,
             SourceRegistration.Builder result,
             boolean isWebSource,
-            boolean isAllowDebugKey,
-            boolean isAdIdPermissionGranted)
+            boolean isAllowDebugKey)
             throws JSONException {
         final boolean hasRequiredParams = hasRequiredParams(json, shouldValidateDestination);
         if (!hasRequiredParams) {
@@ -124,15 +127,10 @@ public class SourceFetcher {
         if (!json.isNull(SourceHeaderContract.PRIORITY)) {
             result.setSourcePriority(json.getLong(SourceHeaderContract.PRIORITY));
         }
-        boolean isWebAllow = isWebSource && isAllowDebugKey && isAdIdPermissionGranted;
-        boolean isAppAllow = !isWebSource && isAdIdPermissionGranted;
+        boolean isWebAllow = isWebSource && isAllowDebugKey;
+        boolean isAppAllow = !isWebSource && mAdIdPermissionFetcher.isAdIdPermissionEnabled();
         if (!json.isNull(SourceHeaderContract.DEBUG_KEY) && (isWebAllow || isAppAllow)) {
-            try {
-                result.setDebugKey(
-                        Long.parseUnsignedLong(json.getString(SourceHeaderContract.DEBUG_KEY)));
-            } catch (NumberFormatException e) {
-                LogUtil.e(e, "Parsing source debug key failed");
-            }
+            result.setDebugKey(json.getLong(SourceHeaderContract.DEBUG_KEY));
         }
         if (!json.isNull(SourceHeaderContract.INSTALL_ATTRIBUTION_WINDOW_KEY)) {
             long installAttributionWindow =
@@ -250,8 +248,7 @@ public class SourceFetcher {
             @NonNull Map<String, List<String>> headers,
             @NonNull List<SourceRegistration> addToResults,
             boolean isWebSource,
-            boolean isAllowDebugKey,
-            boolean isAdIdPermissionGranted) {
+            boolean isAllowDebugKey) {
         SourceRegistration.Builder result = new SourceRegistration.Builder();
         result.setTopOrigin(topOrigin);
         result.setEnrollmentId(enrollmentId);
@@ -270,8 +267,7 @@ public class SourceFetcher {
                             shouldValidateDestination,
                             result,
                             isWebSource,
-                            isAllowDebugKey,
-                            isAdIdPermissionGranted);
+                            isAllowDebugKey);
             if (!isValid) {
                 return false;
             }
@@ -309,8 +305,7 @@ public class SourceFetcher {
             boolean shouldProcessRedirects,
             @NonNull List<SourceRegistration> registrationsOut,
             boolean isWebSource,
-            boolean isAllowDebugKey,
-            boolean isAdIdPermissionGranted) {
+            boolean isAllowDebugKey) {
         // Require https.
         if (!registrationUri.getScheme().equals("https")) {
             return;
@@ -365,8 +360,7 @@ public class SourceFetcher {
                             headers,
                             registrationsOut,
                             isWebSource,
-                            isAllowDebugKey,
-                            isAdIdPermissionGranted);
+                            isAllowDebugKey);
             if (!parsed) {
                 LogUtil.d("Failed to parse");
                 return;
@@ -381,8 +375,7 @@ public class SourceFetcher {
                             sourceType,
                             registrationsOut,
                             isWebSource,
-                            isAllowDebugKey,
-                            isAdIdPermissionGranted);
+                            isAllowDebugKey);
                 }
             }
         } catch (IOException e) {
@@ -398,8 +391,7 @@ public class SourceFetcher {
             String sourceInfo,
             List<SourceRegistration> registrationsOut,
             boolean isWebSource,
-            boolean isAllowDebugKey,
-            boolean isAdIdPermissionGranted) {
+            boolean isAllowDebugKey) {
         try {
             Function<Uri, CompletableFuture<Void>> fetchSourceFromRedirectFuture =
                     redirect ->
@@ -415,8 +407,7 @@ public class SourceFetcher {
                                                     /*shouldProcessRedirects*/ false,
                                                     registrationsOut,
                                                     isWebSource,
-                                                    isAllowDebugKey,
-                                                    isAdIdPermissionGranted),
+                                                    isAllowDebugKey),
                                     mIoExecutor);
             CompletableFuture.allOf(
                             redirects.stream()
@@ -445,8 +436,7 @@ public class SourceFetcher {
                 true,
                 out,
                 false,
-                false,
-                request.isAdIdPermissionGranted());
+                false);
         if (out.isEmpty()) {
             return Optional.empty();
         } else {
@@ -456,7 +446,7 @@ public class SourceFetcher {
 
     /** Fetch an attribution source type registration. */
     public Optional<List<SourceRegistration>> fetchWebSources(
-            @NonNull WebSourceRegistrationRequest request, boolean isAdIdPermissionGranted) {
+            @NonNull WebSourceRegistrationRequest request) {
         List<SourceRegistration> out = new ArrayList<>();
         processWebSourcesFetch(
                 request.getTopOriginUri(),
@@ -464,8 +454,7 @@ public class SourceFetcher {
                 request.getAppDestination(),
                 request.getWebDestination(),
                 request.getInputEvent() == null ? "event" : "navigation",
-                out,
-                isAdIdPermissionGranted);
+                out);
         if (out.isEmpty()) {
             return Optional.empty();
         } else {
@@ -479,8 +468,7 @@ public class SourceFetcher {
             Uri appDestination,
             Uri webDestination,
             String sourceType,
-            List<SourceRegistration> registrationsOut,
-            boolean isAdIdPermissionGranted) {
+            List<SourceRegistration> registrationsOut) {
         try {
             CompletableFuture.allOf(
                             sourceParamsList.stream()
@@ -492,8 +480,7 @@ public class SourceFetcher {
                                                             webDestination,
                                                             sourceType,
                                                             registrationsOut,
-                                                            sourceParams,
-                                                            isAdIdPermissionGranted))
+                                                            sourceParams))
                                     .toArray(CompletableFuture<?>[]::new))
                     .get();
         } catch (InterruptedException | ExecutionException e) {
@@ -507,8 +494,7 @@ public class SourceFetcher {
             Uri webDestination,
             String sourceType,
             List<SourceRegistration> registrationsOut,
-            WebSourceParams sourceParams,
-            boolean isAdIdPermissionGranted) {
+            WebSourceParams sourceParams) {
         return CompletableFuture.runAsync(
                 () ->
                         fetchSource(
@@ -521,8 +507,7 @@ public class SourceFetcher {
                                 /* shouldProcessRedirects*/ false,
                                 registrationsOut,
                                 true,
-                                sourceParams.isDebugKeyAllowed(),
-                                isAdIdPermissionGranted),
+                                sourceParams.isDebugKeyAllowed()),
                 mIoExecutor);
     }
 

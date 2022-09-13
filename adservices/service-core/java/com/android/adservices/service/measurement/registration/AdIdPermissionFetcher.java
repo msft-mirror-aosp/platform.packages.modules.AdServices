@@ -14,30 +14,15 @@
  * limitations under the License.
  */
 
-package android.adservices;
+package com.android.adservices.service.measurement.registration;
 
-import android.annotation.SuppressLint;
+/** A wrapper class to get Ad ID consent permission info */
+public class AdIdPermissionFetcher {
 
-/**
- * Information about the current AdServices API version.
- */
-public class AdServicesVersion {
+    // TODO : replace with stub ag/19194826
+    private static final long PLATFORM_AD_ID = 0L;
 
-    /**
-     * @hide
-     */
-    public AdServicesVersion() {}
-
-    /**
-     * The API version of this AdServices API.
-     * This vaviable need to be initialized in  static {} , otherwise javac
-     * would inline these constants and they won't be updatable.
-     */
-    @SuppressLint("CompileTimeConstant")
-    public static final int API_VERSION;
-
-    static {
-        API_VERSION = 1;
+    public boolean isAdIdPermissionEnabled() {
+        return PLATFORM_AD_ID > 0;
     }
 }
-

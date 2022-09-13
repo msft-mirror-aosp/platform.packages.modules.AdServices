@@ -156,6 +156,13 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
     }
 
     @Override
+    public void cleanup(CallingInfo callingInfo) {
+        synchronized (mLock) {
+            mAppSdkSandboxConnections.remove(callingInfo);
+        }
+    }
+
+    @Override
     @Nullable
     public ISdkSandboxService getBoundServiceForApp(CallingInfo callingInfo) {
         synchronized (mLock) {

@@ -146,22 +146,6 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         }
     }
 
-    @Test
-    public void testSdkDataRootDirectory_IsDestroyedOnUserDeletion() throws Exception {
-        // Create new user
-        mSecondaryUserId = createAndStartSecondaryUser();
-
-        // delete the new user
-        final int newUser = mSecondaryUserId;
-        removeSecondaryUserIfNecessary();
-
-        // Sdk Sandbox root directories should not exist as the user was removed
-        final String ceSdkSandboxDataRootPath = getSdkDataRootPath(newUser, true);
-        final String deSdkSandboxDataRootPath = getSdkDataRootPath(newUser, false);
-        assertThat(getDevice().isDirectory(ceSdkSandboxDataRootPath)).isFalse();
-        assertThat(getDevice().isDirectory(deSdkSandboxDataRootPath)).isFalse();
-    }
-
     /**
      * Verify that {@code /data/misc_{ce,de}/<user-id>/sdksandbox} is not accessible by apps
      */
@@ -593,6 +577,24 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
+    public void testSdkDataPackageDirectory_IsDestroyedOnUserDeletion() throws Exception {
+        // Create new user
+        mSecondaryUserId = createAndStartSecondaryUser();
+
+        // Install the app
+        installPackage(TEST_APP_STORAGE_APK);
+
+        // delete the new user
+        removeSecondaryUserIfNecessary();
+
+        // Sdk Sandbox root directories should not exist as the user was removed
+        final String ceSdkSandboxDataRootPath = getSdkDataRootPath(mSecondaryUserId, true);
+        final String deSdkSandboxDataRootPath = getSdkDataRootPath(mSecondaryUserId, false);
+        assertThat(getDevice().isDirectory(ceSdkSandboxDataRootPath)).isFalse();
+        assertThat(getDevice().isDirectory(deSdkSandboxDataRootPath)).isFalse();
+    }
+
+    @Test
     public void testSdkDataPackageDirectory_IsUserSpecific() throws Exception {
         // Install first before creating the user
         installPackage(TEST_APP_STORAGE_APK, "--user all");
@@ -1002,24 +1004,6 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         runPhase("testSdkDataIsAttributedToApp");
     }
 
-    @Test
-    public void testSharedPreferences_IsSyncedFromAppToSandbox() throws Exception {
-        installPackage(TEST_APP_STORAGE_APK);
-        runPhase("testSharedPreferences_IsSyncedFromAppToSandbox");
-    }
-
-    @Test
-    public void testSharedPreferences_SyncPropagatesUpdates() throws Exception {
-        installPackage(TEST_APP_STORAGE_APK);
-        runPhase("testSharedPreferences_SyncPropagatesUpdates");
-    }
-
-    @Test
-    public void testSharedPreferences_SyncStartedBeforeLoadingSdk() throws Exception {
-        installPackage(TEST_APP_STORAGE_APK);
-        runPhase("testSharedPreferences_SyncStartedBeforeLoadingSdk");
-    }
-
     private String getAppDataPath(int userId, String packageName, boolean isCeData) {
         return getAppDataPath(/*volumeUuid=*/ null, userId, packageName, isCeData);
     }
@@ -1162,23 +1146,9 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         if (mSecondaryUserId != -1) {
             // Can't remove the 2nd user without switching out of it
             assertThat(getDevice().switchUser(mOriginalUserId)).isTrue();
-            getDevice().executeShellCommand("pm remove-user -w " + mSecondaryUserId);
-            waitForUserDataDeletion(mSecondaryUserId);
+            getDevice().removeUser(mSecondaryUserId);
             mSecondaryUserId = -1;
         }
-    }
-
-    private void waitForUserDataDeletion(int userId) throws Exception {
-        int timeElapsed = 0;
-        final String deSdkSandboxDataRootPath = getSdkDataRootPath(userId, false);
-        while (timeElapsed <= 30000) {
-            if (!getDevice().isDirectory(deSdkSandboxDataRootPath)) {
-                return;
-            }
-            Thread.sleep(1000);
-            timeElapsed += 1000;
-        }
-        throw new AssertionError("User data was not deleted for UserId " + userId);
     }
 
     private static void assertSuccess(String str) {

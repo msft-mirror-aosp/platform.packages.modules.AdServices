@@ -17,12 +17,7 @@ package com.android.adservices.tests.adid;
 
 import android.adservices.adid.AdId;
 import android.adservices.adid.AdIdProviderService;
-import android.adservices.adid.GetAdIdResult;
-import android.adservices.adid.IAdIdProviderService;
-import android.adservices.adid.IGetAdIdProviderCallback;
 import android.content.Intent;
-import android.os.IBinder;
-import android.os.OutcomeReceiver;
 
 import androidx.test.runner.AndroidJUnit4;
 
@@ -31,7 +26,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.io.IOException;
-import java.util.concurrent.CompletableFuture;
 
 @RunWith(AndroidJUnit4.class)
 public class AdIdProviderTest {
@@ -48,47 +42,12 @@ public class AdIdProviderTest {
     }
 
     @Test
-    public void testAdIdProvider() throws Exception {
+    public void testAdIdProvider() {
         AdIdProviderServiceProxy proxy = new AdIdProviderServiceProxy();
 
         Intent intent = new Intent();
         intent.setAction(AdIdProviderService.SERVICE_INTERFACE);
-        IBinder remoteObject = proxy.onBind(intent);
-        Assert.assertNotNull(remoteObject);
 
-        IAdIdProviderService service = IAdIdProviderService.Stub.asInterface(remoteObject);
-        Assert.assertNotNull(service);
-
-        CompletableFuture<AdId> future = new CompletableFuture<>();
-        OutcomeReceiver<AdId, Exception> callback =
-                new OutcomeReceiver<AdId, Exception>() {
-                    @Override
-                    public void onResult(AdId adId) {
-                        future.complete(adId);
-                    }
-
-                    @Override
-                    public void onError(Exception error) {
-                        Assert.fail();
-                    }
-                };
-        service.getAdIdProvider(
-                /* testAppUId */ 0,
-                "testPackageName",
-                new IGetAdIdProviderCallback.Stub() {
-                    @Override
-                    public void onResult(GetAdIdResult result) {
-                        callback.onResult(new AdId(result.getAdId(), result.isLatEnabled()));
-                    }
-
-                    @Override
-                    public void onError(String errorMessage) {
-                        Assert.fail();
-                    }
-                });
-        AdId resultAdId = future.get();
-        Assert.assertEquals(ZEROED_OUT_AD_ID, resultAdId.getAdId());
-        Assert.assertEquals(
-                DEFAULT_IS_LIMIT_AD_TRACKING_ENABLED, resultAdId.isLimitAdTrackingEnabled());
+        Assert.assertNotNull(proxy.onBind(intent));
     }
 }

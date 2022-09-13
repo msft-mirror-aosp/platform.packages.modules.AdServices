@@ -44,7 +44,7 @@ import java.util.Set;
  */
 public class SharedPreferencesSyncManager {
 
-    private static final String TAG = "SdkSandboxSyncManager";
+    private static final String TAG = "SdkSandboxManager";
 
     private static SharedPreferencesSyncManager sInstance = null;
 
@@ -80,10 +80,20 @@ public class SharedPreferencesSyncManager {
         return sInstance;
     }
 
+    // TODO(b/237410689): Update links to getClientSharedPreferences when cl is merged.
     /**
      * Adds keys for syncing from app's default {@link SharedPreferences} to SdkSandbox.
      *
-     * @see SdkSandboxManager#addSyncedSharedPreferencesKeys(Set)
+     * <p>Synced data will be available for sdks to read using the {@code
+     * getClientSharedPreferences} api.
+     *
+     * <p>To stop syncing any key that has been added using this API, use {@link
+     * #removeSharedPreferencesSyncKeys(Set)}.
+     *
+     * <p>The sync breaks if the app restarts and user must call this API to rebuild the pool of
+     * keys for syncing.
+     *
+     * @param keyNames set of keys that will be synced to Sandbox.
      */
     public void addSharedPreferencesSyncKeys(@NonNull Set<String> keyNames) {
         // TODO(b/239403323): Validate the parameters in SdkSandboxManager
@@ -94,15 +104,18 @@ public class SharedPreferencesSyncManager {
                 mListener = new ChangeListener();
                 getDefaultSharedPreferences().registerOnSharedPreferenceChangeListener(mListener);
             }
+
             syncData();
         }
     }
 
     /**
-     * Removes keys from set of keys that have been added using {@link
+     * Removes keys from set of {@link SharedPreferencesKey}s that have been added using {@link
      * #addSharedPreferencesSyncKeys(Set)}
      *
-     * @see SdkSandboxManager#removeSyncedSharedPreferencesKeys(Set)
+     * <p>Removed keys will be erased from SdkSandbox if they have been synced already.
+     *
+     * @param keys set of key names that should no longer be synced to Sandbox.
      */
     public void removeSharedPreferencesSyncKeys(@NonNull Set<String> keys) {
         synchronized (mLock) {

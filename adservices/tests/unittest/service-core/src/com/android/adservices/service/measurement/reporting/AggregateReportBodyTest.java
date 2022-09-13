@@ -123,10 +123,8 @@ public class AggregateReportBodyTest {
         assertEquals(REPORTING_ORIGIN, sharedInfoJson.get("reporting_origin"));
         assertEquals(ATTRIBUTION_DESTINATION, sharedInfoJson.get("attribution_destination"));
         assertEquals(SOURCE_REGISTRATION_TIME, sharedInfoJson.get("source_registration_time"));
-        assertEquals(
-                Long.toUnsignedString(SOURCE_DEBUG_KEY), aggregateJson.get("source_debug_key"));
-        assertEquals(
-                Long.toUnsignedString(TRIGGER_DEBUG_KEY), aggregateJson.get("trigger_debug_key"));
+        assertEquals(SOURCE_DEBUG_KEY, aggregateJson.get("source_debug_key"));
+        assertEquals(TRIGGER_DEBUG_KEY, aggregateJson.get("trigger_debug_key"));
     }
 
     @Test
@@ -158,8 +156,7 @@ public class AggregateReportBodyTest {
         assertEquals(REPORTING_ORIGIN, sharedInfoJson.get("reporting_origin"));
         assertEquals(ATTRIBUTION_DESTINATION, sharedInfoJson.get("attribution_destination"));
         assertEquals(SOURCE_REGISTRATION_TIME, sharedInfoJson.get("source_registration_time"));
-        assertEquals(
-                Long.toUnsignedString(SOURCE_DEBUG_KEY), aggregateJson.get("source_debug_key"));
+        assertEquals(SOURCE_DEBUG_KEY, aggregateJson.get("source_debug_key"));
         assertNull(aggregateJson.opt("trigger_debug_key"));
     }
 
@@ -177,8 +174,7 @@ public class AggregateReportBodyTest {
         assertEquals(ATTRIBUTION_DESTINATION, sharedInfoJson.get("attribution_destination"));
         assertEquals(SOURCE_REGISTRATION_TIME, sharedInfoJson.get("source_registration_time"));
         assertNull(aggregateJson.opt("source_debug_key"));
-        assertEquals(
-                Long.toUnsignedString(TRIGGER_DEBUG_KEY), aggregateJson.get("trigger_debug_key"));
+        assertEquals(TRIGGER_DEBUG_KEY, aggregateJson.get("trigger_debug_key"));
     }
 
     @Test

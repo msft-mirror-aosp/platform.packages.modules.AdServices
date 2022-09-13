@@ -52,8 +52,7 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
     private static final String SANDBOX_1_PROCESS_NAME = APP_PACKAGE + "_sdk_sandbox";
 
     private static final String SANDBOX_SHARED_1_PROCESS_NAME = APP_SHARED_PACKAGE + "_sdk_sandbox";
-    private static final String SANDBOX_SHARED_2_PROCESS_NAME =
-            APP_SHARED_2_PACKAGE + "_sdk_sandbox";
+    private static final String SANDBOX_SHARED_2_PROCESS_NAME = APP_SHARED_PACKAGE + "_sdk_sandbox";
 
     private boolean mWasRoot;
 
@@ -63,7 +62,7 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
 
     private void killApp(String pkg) throws Exception {
         getDevice().executeShellCommand(String.format("am force-stop %s", pkg));
-        waitForProcessDeath(pkg + '\n');
+        waitForProcessDeath(pkg);
     }
 
     @Before
@@ -167,24 +166,6 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
         assertThat(runDeviceTests(APP_SHARED_2_PACKAGE,
                 "com.android.sdksandbox.shared.app2.SdkSandboxTestSharedApp2",
                 "testLoadSdkIsSuccessful")).isTrue();
-    }
-
-    @Test
-    public void testAppsWithSharedUid_AllSandboxesDieWhenOneAppDies() throws Exception {
-        startActivity(APP_SHARED_PACKAGE, APP_SHARED_ACTIVITY);
-        assertThat(runDeviceTests(APP_SHARED_2_PACKAGE,
-                "com.android.sdksandbox.shared.app2.SdkSandboxTestSharedApp2",
-                "testLoadSdkIsSuccessful")).isTrue();
-
-        // APP_SHARED_2_PACKAGE dies after running device-side tests, and sandbox for
-        // APP_SHARED_PACKAGE should also die since they share the same uid
-        waitForProcessDeath(SANDBOX_SHARED_1_PROCESS_NAME);
-        waitForProcessDeath(SANDBOX_SHARED_2_PROCESS_NAME);
-
-        // Neither of the sandboxes should be respawned later
-        Thread.sleep(5000);
-        waitForProcessDeath(SANDBOX_SHARED_1_PROCESS_NAME);
-        waitForProcessDeath(SANDBOX_SHARED_2_PROCESS_NAME);
     }
 
     @Test

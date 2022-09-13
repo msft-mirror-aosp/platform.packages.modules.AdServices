@@ -47,6 +47,13 @@ public interface SdkSandboxServiceProvider {
     void unbindService(CallingInfo callingInfo, boolean shouldForgetConnection);
 
     /**
+     * Clean up the state of the ServiceProvider, for example if the sandbox has died.
+     *
+     * @param callingInfo represents the app for which the cleanup should occur.
+     */
+    void cleanup(CallingInfo callingInfo);
+
+    /**
      * Return bound {@link ISdkSandboxService} connected for {@code callingInfo} or otherwise
      * {@code null}.
     */
