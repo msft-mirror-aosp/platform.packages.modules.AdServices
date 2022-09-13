@@ -111,7 +111,7 @@ public abstract class CustomAudienceUpdatableData {
 
     /**
      * Creates a {@link CustomAudienceUpdatableData} object based on the response of a GET request
-     * to a custom audience's daily fetch URL.
+     * to a custom audience's daily fetch URI.
      *
      * <p>Note that if a response contains extra fields in its JSON, the extra information will be
      * ignored, and the validation of the response will continue as if the extra data had not been
@@ -128,7 +128,7 @@ public abstract class CustomAudienceUpdatableData {
      * @param initialUpdateResult the result type of the fetch attempt prior to parsing the {@code
      *     response}
      * @param response the String response returned from querying the custom audience's daily fetch
-     *     URL
+     *     URI
      * @param flags the {@link Flags} used to get configurable limits for validating the {@code
      *     response}
      */

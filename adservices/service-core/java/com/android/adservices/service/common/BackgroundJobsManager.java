@@ -45,6 +45,9 @@ public class BackgroundJobsManager {
         if (!FlagsFactory.getFlags().getTopicsKillSwitch()) {
             EpochJobService.scheduleIfNeeded(context, false);
             MaintenanceJobService.scheduleIfNeeded(context, false);
+        }
+
+        if (!FlagsFactory.getFlags().getMddBackgroundTaskKillSwitch()) {
             MddJobService.scheduleIfNeeded(context, /* forceSchedule */ false);
         }
 
