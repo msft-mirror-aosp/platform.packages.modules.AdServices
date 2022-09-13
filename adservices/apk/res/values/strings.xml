@@ -99,7 +99,7 @@
     <!-- Text for button to decline joining the Privacy Sandbox. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_left_control_button_text_eu">No thanks</string>
     <!-- Text for button to accept joining the Privacy Sandbox. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_right_control_button_text_eu">Yes, I’ll join</string>
+    <string name="notificationUI_right_control_button_text_eu">Turn On</string>
 
     <!-- EU Detailed Notification Activity Confirmation Pages UI strings ************************-->
     <!-- Text for the title of the confirmation screen for accepting to be part of the Privacy Sandbox Beta. [CHAR LIMIT=NONE] -->
