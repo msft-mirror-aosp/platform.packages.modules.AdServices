@@ -42,7 +42,6 @@ import android.os.Process;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.service.PhFlagsFixture;
-import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.compatibility.common.util.ShellUtils;
@@ -182,7 +181,6 @@ public class FledgeCtsTest extends ForegroundCtsTest {
 
         CustomAudience customAudience2 = createCustomAudience(BUYER_2, bidsForBuyer2);
 
-        Throttler.destroyExistingThrottler();
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
         Thread.sleep(DELAY_TO_AVOID_THROTTLE_MS);

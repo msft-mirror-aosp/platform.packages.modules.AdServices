@@ -40,10 +40,10 @@ import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.TrustedBiddingDataFixture;
 import android.net.Uri;
 import android.os.Process;
+import android.util.Log;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.adservices.LogUtil;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
@@ -69,6 +69,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
+    public static final String TAG = "adservices";
     // Time allowed by current test setup for APIs to respond
     private static final int API_RESPONSE_TIMEOUT_SECONDS = 5;
 
@@ -269,9 +270,11 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest2)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        LogUtil.i(
+        Log.i(
+                TAG,
                 "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
-        LogUtil.i(
+        Log.i(
+                TAG,
                 "Decision logic URI domain is "
                         + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
 
@@ -337,9 +340,11 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        LogUtil.i(
+        Log.i(
+                TAG,
                 "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
-        LogUtil.i(
+        Log.i(
+                TAG,
                 "Decision logic URI domain is "
                         + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
 
@@ -1125,9 +1130,11 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        LogUtil.i(
+        Log.i(
+                TAG,
                 "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
-        LogUtil.i(
+        Log.i(
+                TAG,
                 "Decision logic URI domain is "
                         + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
 
