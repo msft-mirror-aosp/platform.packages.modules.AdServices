@@ -75,8 +75,8 @@ public class FledgeCtsTest extends ForegroundCtsTest {
     private static final AdSelectionSignals TRUSTED_SCORING_SIGNALS =
             AdSelectionSignals.fromString(
                     "{\n"
-                            + "\t\"render_url_1\": \"signals_for_1\",\n"
-                            + "\t\"render_url_2\": \"signals_for_2\"\n"
+                            + "\t\"render_uri_1\": \"signals_for_1\",\n"
+                            + "\t\"render_uri_2\": \"signals_for_2\"\n"
                             + "}");
 
     private static final AdTechIdentifier SELLER = AdTechIdentifier.fromString("test.com");
@@ -154,10 +154,10 @@ public class FledgeCtsTest extends ForegroundCtsTest {
                         + " custom_audience_signal) { \n"
                         + "  return {'status': 0, 'score': bid };\n"
                         + "}\n"
-                        + "function reportResult(ad_selection_config, render_url, bid,"
+                        + "function reportResult(ad_selection_config, render_uri, bid,"
                         + " contextual_signals) { \n"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
                         + SELLER_REPORTING_PATH
                         + "' } };\n"
                         + "}";
@@ -170,7 +170,7 @@ public class FledgeCtsTest extends ForegroundCtsTest {
                         + "}\n"
                         + "function reportWin(ad_selection_signals, per_buyer_signals,"
                         + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
-                        + " return {'status': 0, 'results': {'reporting_url': '"
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
                         + BUYER_REPORTING_PATH
                         + "' } };\n"
                         + "}";
@@ -249,7 +249,7 @@ public class FledgeCtsTest extends ForegroundCtsTest {
         // Generate ads for with bids provided
         List<AdData> ads = new ArrayList<>();
 
-        // Create ads with the buyer name and bid number as the ad URL
+        // Create ads with the buyer name and bid number as the ad URI
         // Add the bid value to the metadata
         for (int i = 0; i < bids.size(); i++) {
             ads.add(

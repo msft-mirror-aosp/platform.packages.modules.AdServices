@@ -25,10 +25,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Objects;
 
-// TODO(b/237994030): Unhide and update the java doc links to correct public APIs
-// TODO(b/237994030): Rename to SharedPreferencesKey, which sounds more specific
 /**
- * Key with its type to be synced using {@link SharedPreferencesSyncManager#syncData()}
+ * Key with its type to be synced using {@link
+ * SdkSandboxManager#addSyncedSharedPreferencesKeys(java.util.Set)}
  *
  * @hide
  */
@@ -49,49 +48,31 @@ public final class SharedPreferencesKey implements Parcelable {
 
     /**
      * Key type {@code Boolean}.
-     *
-     * <p>To be used for syncing keys from default {@link SharedPreferences} using {@link
-     * SharedPreferencesSyncManager#setKeysToSync(java.util.Set)}.
      */
     public static final int KEY_TYPE_BOOLEAN = 1;
 
     /**
      * Key type {@code Float}.
-     *
-     * <p>To be used for syncing keys from default {@link SharedPreferences} using {@link
-     * SharedPreferencesSyncManager#setKeysToSync(java.util.Set)}.
      */
     public static final int KEY_TYPE_FLOAT = 2;
 
     /**
      * Key type {@code Integer}.
-     *
-     * <p>To be used for syncing keys from default {@link SharedPreferences} using {@link
-     * SharedPreferencesSyncManager#setKeysToSync(java.util.Set)}.
      */
     public static final int KEY_TYPE_INTEGER = 3;
 
     /**
      * Key type {@code Long}.
-     *
-     * <p>To be used for syncing keys from default {@link SharedPreferences} using {@link
-     * SharedPreferencesSyncManager#setKeysToSync(java.util.Set)}.
      */
     public static final int KEY_TYPE_LONG = 4;
 
     /**
      * Key type {@code String}.
-     *
-     * <p>To be used for syncing keys from default {@link SharedPreferences} using {@link
-     * SharedPreferencesSyncManager#setKeysToSync(java.util.Set)}.
      */
     public static final int KEY_TYPE_STRING = 5;
 
     /**
      * Key type {@code Set<String>}.
-     *
-     * <p>To be used for syncing keys from default {@link SharedPreferences} using {@link
-     * SharedPreferencesSyncManager#setKeysToSync(java.util.Set)}.
      */
     public static final int KEY_TYPE_STRING_SET = 6;
 
@@ -149,6 +130,7 @@ public final class SharedPreferencesKey implements Parcelable {
     }
 
     /** Get name of the key. */
+    @NonNull
     public String getName() {
         return mKeyName;
     }

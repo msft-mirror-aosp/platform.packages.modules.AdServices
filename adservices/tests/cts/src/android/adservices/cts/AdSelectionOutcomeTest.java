@@ -29,7 +29,7 @@ import org.junit.Test;
 
 @SmallTest
 public class AdSelectionOutcomeTest {
-    private static final Uri VALID_RENDER_URL =
+    private static final Uri VALID_RENDER_URI =
             new Uri.Builder().path("valid.example.com/testing/hello").build();
     private static final int TEST_AD_SELECTION_ID = 12345;
 
@@ -38,11 +38,11 @@ public class AdSelectionOutcomeTest {
         AdSelectionOutcome adSelectionOutcome =
                 new AdSelectionOutcome.Builder()
                         .setAdSelectionId(TEST_AD_SELECTION_ID)
-                        .setRenderUri(VALID_RENDER_URL)
+                        .setRenderUri(VALID_RENDER_URI)
                         .build();
 
         assertThat(adSelectionOutcome.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
-        assertThat(adSelectionOutcome.getRenderUri()).isEqualTo(VALID_RENDER_URL);
+        assertThat(adSelectionOutcome.getRenderUri()).isEqualTo(VALID_RENDER_URI);
     }
 
     @Test
@@ -50,13 +50,13 @@ public class AdSelectionOutcomeTest {
         AdSelectionOutcome obj1 =
                 new AdSelectionOutcome.Builder()
                         .setAdSelectionId(TEST_AD_SELECTION_ID)
-                        .setRenderUri(VALID_RENDER_URL)
+                        .setRenderUri(VALID_RENDER_URI)
                         .build();
 
         AdSelectionOutcome obj2 =
                 new AdSelectionOutcome.Builder()
                         .setAdSelectionId(TEST_AD_SELECTION_ID)
-                        .setRenderUri(VALID_RENDER_URL)
+                        .setRenderUri(VALID_RENDER_URI)
                         .build();
 
         assertThat(obj1).isEqualTo(obj2);
@@ -67,7 +67,7 @@ public class AdSelectionOutcomeTest {
         AdSelectionOutcome obj1 =
                 new AdSelectionOutcome.Builder()
                         .setAdSelectionId(TEST_AD_SELECTION_ID)
-                        .setRenderUri(VALID_RENDER_URL)
+                        .setRenderUri(VALID_RENDER_URI)
                         .build();
 
         AdSelectionOutcome obj2 =
@@ -84,12 +84,12 @@ public class AdSelectionOutcomeTest {
         AdSelectionOutcome obj1 =
                 new AdSelectionOutcome.Builder()
                         .setAdSelectionId(TEST_AD_SELECTION_ID)
-                        .setRenderUri(VALID_RENDER_URL)
+                        .setRenderUri(VALID_RENDER_URI)
                         .build();
         AdSelectionOutcome obj2 =
                 new AdSelectionOutcome.Builder()
                         .setAdSelectionId(TEST_AD_SELECTION_ID)
-                        .setRenderUri(VALID_RENDER_URL)
+                        .setRenderUri(VALID_RENDER_URI)
                         .build();
 
         CommonFixture.assertHaveSameHashCode(obj1, obj2);
@@ -100,7 +100,7 @@ public class AdSelectionOutcomeTest {
         AdSelectionOutcome obj1 =
                 new AdSelectionOutcome.Builder()
                         .setAdSelectionId(TEST_AD_SELECTION_ID)
-                        .setRenderUri(VALID_RENDER_URL)
+                        .setRenderUri(VALID_RENDER_URI)
                         .build();
         AdSelectionOutcome obj2 =
                 new AdSelectionOutcome.Builder()
@@ -111,7 +111,7 @@ public class AdSelectionOutcomeTest {
         AdSelectionOutcome obj3 =
                 new AdSelectionOutcome.Builder()
                         .setAdSelectionId(13579)
-                        .setRenderUri(VALID_RENDER_URL)
+                        .setRenderUri(VALID_RENDER_URI)
                         .build();
 
         CommonFixture.assertDifferentHashCode(obj1, obj2, obj3);

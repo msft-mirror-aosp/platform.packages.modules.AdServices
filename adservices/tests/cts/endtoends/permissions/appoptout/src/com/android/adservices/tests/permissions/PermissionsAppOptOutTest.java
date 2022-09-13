@@ -39,6 +39,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.compatibility.common.util.ShellUtils;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -57,12 +58,24 @@ public class PermissionsAppOptOutTest {
             "java.lang.SecurityException: Caller is not authorized to call this API. "
                     + "Caller is not allowed.";
 
+    private static final int TEST_API_REQUEST_PER_SECOND = 2;
+    private static final int DEFAULT_API_REQUEST_PER_SECOND = 1;
+
     @Before
     public void setup() {
+        overrideConsentManagerDebugMode(true);
+        overridingAdservicesLoggingLevel("VERBOSE");
+        overrideAPIRateLimit(TEST_API_REQUEST_PER_SECOND);
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
         PhFlagsFixture.overrideSdkRequestPermitsPerSecond(Integer.MAX_VALUE);
+    }
+
+    @After
+    public void teardown() {
+        overrideConsentManagerDebugMode(false);
+        overrideAPIRateLimit(DEFAULT_API_REQUEST_PER_SECOND);
     }
 
     @Test
@@ -281,5 +294,20 @@ public class PermissionsAppOptOutTest {
         // Setting it to 1 here disables the Topics enrollment check.
         ShellUtils.runShellCommand(
                 "setprop debug.adservices.disable_topics_enrollment_check " + val);
+    }
+
+    private void overridingAdservicesLoggingLevel(String loggingLevel) {
+        ShellUtils.runShellCommand("setprop log.tag.adservices %s", loggingLevel);
+    }
+
+    // Override the Consent Manager behaviour - Consent Given
+    private void overrideConsentManagerDebugMode(boolean isGiven) {
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.consent_manager_debug_mode " + isGiven);
+    }
+
+    private void overrideAPIRateLimit(int requestPerSecond) {
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.sdk_request_permits_per_second " + requestPerSecond);
     }
 }
