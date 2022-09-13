@@ -23,6 +23,7 @@ import android.os.IBinder;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -96,5 +97,6 @@ public class MeasurementService extends Service {
         EventReportingJobService.scheduleIfNeeded(this, false);
         EventFallbackReportingJobService.scheduleIfNeeded(this, false);
         DeleteExpiredJobService.scheduleIfNeeded(this, false);
+        MddJobService.scheduleIfNeeded(this, false);
     }
 }
