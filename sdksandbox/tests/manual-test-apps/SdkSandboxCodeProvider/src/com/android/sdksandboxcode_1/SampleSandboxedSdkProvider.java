@@ -24,11 +24,12 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.net.Uri;
-import android.os.Binder;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
+
+import com.android.apiimplementation.SdkApi;
 
 import java.util.Random;
 
@@ -38,7 +39,7 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
 
     @Override
     public SandboxedSdk onLoadSdk(Bundle params) {
-        return new SandboxedSdk(new Binder());
+        return new SandboxedSdk(new SdkApi(getContext()));
     }
 
     @Override

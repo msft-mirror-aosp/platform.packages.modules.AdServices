@@ -23,19 +23,25 @@ import static android.app.sdksandbox.SdkSandboxManager.EXTRA_SURFACE_PACKAGE;
 import static android.app.sdksandbox.SdkSandboxManager.EXTRA_WIDTH_IN_PIXELS;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.RequestSurfacePackageException;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
+import android.app.sdksandbox.interfaces.ISdkApi;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Looper;
 import android.os.OutcomeReceiver;
+import android.os.RemoteException;
+import android.text.InputType;
 import android.util.Log;
 import android.view.SurfaceControlViewHost.SurfacePackage;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -49,7 +55,11 @@ public class MainActivity extends Activity {
 
     private Button mLoadButton;
     private Button mRenderButton;
+    private Button mCreateFileButton;
+
     private SurfaceView mRenderedView;
+
+    private SandboxedSdk mSandboxedSdk;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -64,20 +74,30 @@ public class MainActivity extends Activity {
 
         mLoadButton = findViewById(R.id.load_code_button);
         mRenderButton = findViewById(R.id.request_surface_button);
+        mCreateFileButton = findViewById(R.id.create_file_button);
+
         registerLoadSdkProviderButton();
         registerLoadSurfacePackageButton();
+        registerCreateFileButton();
     }
 
     private void registerLoadSdkProviderButton() {
         mLoadButton.setOnClickListener(
                 v -> {
                     if (!mSdkLoaded) {
+                        // Register for sandbox death event.
+                        mSdkSandboxManager.addSdkSandboxProcessDeathCallback(
+                                Runnable::run, () -> makeToast("Sdk Sandbox process died"));
+
                         Bundle params = new Bundle();
                         OutcomeReceiver<SandboxedSdk, LoadSdkException> receiver =
                                 new OutcomeReceiver<SandboxedSdk, LoadSdkException>() {
                                     @Override
                                     public void onResult(SandboxedSdk sandboxedSdk) {
                                         mSdkLoaded = true;
+
+                                        mSandboxedSdk = sandboxedSdk;
+
                                         makeToast("Loaded successfully!");
                                         mLoadButton.setText("Unload SDK");
                                     }
@@ -116,7 +136,7 @@ public class MainActivity extends Activity {
 
                     @Override
                     public void onError(@NonNull RequestSurfacePackageException error) {
-                        makeToast("Failed: " + error);
+                        makeToast("Failed: " + error.getMessage());
                         Log.e(TAG, error.getMessage(), error);
                     }
                 };
@@ -143,6 +163,44 @@ public class MainActivity extends Activity {
                     } else {
                         makeToast("Sdk is not loaded");
                     }
+                });
+    }
+
+    private void registerCreateFileButton() {
+        mCreateFileButton.setOnClickListener(
+                v -> {
+                    if (!mSdkLoaded) {
+                        makeToast("Sdk is not loaded");
+                        return;
+                    }
+                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                    builder.setTitle("Set size in MB");
+                    final EditText input = new EditText(this);
+                    input.setInputType(InputType.TYPE_CLASS_NUMBER);
+                    builder.setView(input);
+                    builder.setPositiveButton(
+                            "Create",
+                            (dialog, which) -> {
+                                int sizeInMb = -1;
+                                try {
+                                    sizeInMb = Integer.parseInt(input.getText().toString());
+                                } catch (Exception ignore) {
+                                }
+                                if (sizeInMb <= 0) {
+                                    makeToast("Please provide positive integer value");
+                                    return;
+                                }
+                                IBinder binder = mSandboxedSdk.getInterface();
+                                ISdkApi sdkApi = ISdkApi.Stub.asInterface(binder);
+                                try {
+                                    String response = sdkApi.createFile(sizeInMb);
+                                    makeToast(response);
+                                } catch (RemoteException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            });
+                    builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+                    builder.show();
                 });
     }
 
