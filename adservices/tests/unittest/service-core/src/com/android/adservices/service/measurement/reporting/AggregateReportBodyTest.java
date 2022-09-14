@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.android.adservices.HpkeJni;
+import com.android.adservices.service.measurement.aggregation.AggregateCryptoConverter;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 
@@ -196,13 +197,50 @@ public class AggregateReportBodyTest {
         assertEncryptedPayload(aggregateServicePayloads);
     }
 
-    private void assertEncodedDebugPayload(JSONObject aggregateServicePayloads) throws Exception {
-        final String encodedPayloadBase64 =
-                (String) aggregateServicePayloads.get("debug_cleartext_payload");
-        assertNotNull(encodedPayloadBase64);
+    @Test
+    public void testAggregationServicePayloadsJsonSerializationWithDebugKey() throws Exception {
+        AggregateReportBody aggregateReport =
+                createAggregateReportBodyExampleWithSingleTriggerDebugKey();
 
-        final byte[] cborEncodedPayload = Base64.getDecoder().decode(encodedPayloadBase64);
-        assertCborEncoded(cborEncodedPayload);
+        AggregateEncryptionKey key = AggregateCryptoFixture.getKey();
+        JSONArray aggregationServicePayloadsJson =
+                aggregateReport.aggregationServicePayloadsToJson(/* sharedInfo = */ null, key);
+
+        JSONObject aggregateServicePayloads = aggregationServicePayloadsJson.getJSONObject(0);
+
+        assertEquals(key.getKeyId(), aggregateServicePayloads.get("key_id"));
+        assertEquals(
+                AggregateCryptoConverter.encode(DEBUG_CLEARTEXT_PAYLOAD),
+                aggregateServicePayloads.opt("debug_cleartext_payload"));
+        assertEncodedDebugPayload(aggregateServicePayloads);
+        assertEncryptedPayload(aggregateServicePayloads);
+    }
+
+    @Test
+    public void testAggregationServicePayloadsJsonSerializationWithoutDebugKey() throws Exception {
+        AggregateReportBody aggregateReport = createAggregateReportBodyExampleWithNullDebugKeys();
+
+        AggregateEncryptionKey key = AggregateCryptoFixture.getKey();
+        JSONArray aggregationServicePayloadsJson =
+                aggregateReport.aggregationServicePayloadsToJson(/* sharedInfo = */ null, key);
+
+        JSONObject aggregateServicePayloads = aggregationServicePayloadsJson.getJSONObject(0);
+
+        assertEquals(key.getKeyId(), aggregateServicePayloads.get("key_id"));
+        assertNull(aggregateServicePayloads.opt("debug_cleartext_payload"));
+        assertEncodedDebugPayload(aggregateServicePayloads);
+        assertEncryptedPayload(aggregateServicePayloads);
+    }
+
+    private void assertEncodedDebugPayload(JSONObject aggregateServicePayloads) throws Exception {
+        if (!aggregateServicePayloads.isNull("debug_cleartext_payload")) {
+            final String encodedPayloadBase64 =
+                    (String) aggregateServicePayloads.get("debug_cleartext_payload");
+            assertNotNull(encodedPayloadBase64);
+
+            final byte[] cborEncodedPayload = Base64.getDecoder().decode(encodedPayloadBase64);
+            assertCborEncoded(cborEncodedPayload);
+        }
     }
 
     private void assertEncryptedPayload(JSONObject aggregateServicePayloads) throws Exception {
