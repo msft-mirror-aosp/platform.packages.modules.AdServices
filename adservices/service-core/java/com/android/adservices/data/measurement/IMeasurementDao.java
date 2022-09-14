@@ -60,9 +60,14 @@ public interface IMeasurementDao {
     Trigger getTrigger(String triggerId) throws DatastoreException;
 
     /**
-     * Gets the number of sources a registrant has registered.
+     * Gets the number of sources associated to a publisher.
+     *
+     * @param publisherUri Uri for the publisher
+     * @param publisherType PublisherType App/Web
+     * @return Number of sources registered for the given publisher
      */
-    long getNumSourcesPerRegistrant(Uri registrant) throws DatastoreException;
+    long getNumSourcesPerPublisher(Uri publisherUri, @EventSurfaceType int publisherType)
+            throws DatastoreException;
 
     /**
      * Gets the number of triggers a registrant has registered.
