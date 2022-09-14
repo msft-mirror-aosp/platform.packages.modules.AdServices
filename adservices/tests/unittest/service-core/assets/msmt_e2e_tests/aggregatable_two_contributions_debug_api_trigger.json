@@ -1,5 +1,5 @@
 {
-  "description": "Given three entries in the \"Attribution-Reporting-Register-Aggregatable-Source\" header, generate an aggregate report with two contributions. One entry doesn't generate a contribution because it doesn't exist in the \"Attribution-Reporting-Register-Aggregatable-Trigger-Data\" header.",
+  "description": "Given two entries in the \"Attribution-Reporting-Register-Aggregatable-Source\" header, generate an aggregate report with two contributions, with trigger debug key",
   "input": {
     "sources": [{
       "registration_request": {
@@ -16,7 +16,6 @@
             "destination": "android-app://example.2d1.com",
             "priority": "100",
             "expiry": "172801",
-            "debug_key": "347982378",
             "filter_data": {
               "conversion_subdomain": [
                 "electronics.megastore"
@@ -37,10 +36,6 @@
               {
                 "id": "geoValue",
                 "key_piece": "0x5"
-              },
-              {
-                "id": "thirdSource",
-                "key_piece": "0x100"
               }
             ]
           },
@@ -66,6 +61,7 @@
                 "priority": "101"
               }
             ],
+            "debug_key": "8971346783",
             "aggregatable_trigger_data": [
               {
                 "key_piece": "0x400",
@@ -90,14 +86,13 @@
                 "key_piece": "0xA80",
                 "source_keys": [
                   "geoValue",
-                  "notMatch"
+                  "nonMatch"
                 ]
               }
             ],
             "aggregatable_values": {
               "campaignCounts": 32768,
-              "geoValue": 1664,
-              "thirdSource": 100
+              "geoValue": 1664
             }
           },
           "Location": null,
@@ -117,7 +112,7 @@
         "trigger_data": "2",
         "source_type": "navigation",
         "randomized_trigger_rate": 0.0024263,
-        "source_debug_key" : "347982378"
+        "trigger_debug_key" : "8971346783"
       }
     }],
     "aggregatable_results": [{
@@ -130,7 +125,7 @@
           {"key": "1369", "value": 32768},
           {"key": "2693", "value": 1664}
         ],
-        "source_debug_key" : "347982378"
+        "trigger_debug_key" : "8971346783"
       }
     }]
   }
