@@ -15,28 +15,9 @@
 package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
-
 java_library {
-    name: "SdkSandboxTestUtils",
+    name: "SdkInterfaces",
     srcs: [
-        "src/**/testutils/*.java",
+        "src/**/*.aidl",
     ],
-    libs: [
-        "framework-sdksandbox.impl",
-    ],
-    static_libs: [
-        "truth-prebuilt",
-    ],
-    visibility: [
-        // TODO(b/222118402): adjust once code is moved
-        "//packages/modules/AdServices:__subpackages__",
-    ],
-}
-
-java_library_host {
-    name: "SdkSandboxHostTestUtils",
-    srcs: [
-        "src/**/hosttestutils/*.java",
-    ],
-    libs: ["tradefed"],
 }

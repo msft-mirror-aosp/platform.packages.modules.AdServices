@@ -14,30 +14,8 @@
  * limitations under the License.
  */
 
-package android.adservices;
+package com.android.sdksandbox.cts.app;
 
-import android.annotation.SuppressLint;
+import android.app.Activity;
 
-/**
- * Information about the current AdServices API version.
- */
-public class AdServicesVersion {
-
-    /**
-     * @hide
-     */
-    public AdServicesVersion() {}
-
-    /**
-     * The API version of this AdServices API.
-     */
-    @SuppressLint("CompileTimeConstant")
-    public static final int API_VERSION;
-
-    // This variable needs to be initialized in static {} , otherwise javac
-    // would inline these constants and they won't be updatable.
-    static {
-        API_VERSION = 2;
-    }
-}
-
+public class TestActivity extends Activity {}
