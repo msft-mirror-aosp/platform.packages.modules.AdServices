@@ -264,6 +264,9 @@ public final class PhFlags implements Flags {
     // Maximum possible percentage for percentage variables
     static final int MAX_PERCENTAGE = 100;
 
+    // Whether to call trusted servers for off device ad selection.
+    static final String KEY_OFF_DEVICE_AD_SELECTION_ENABLED = "enable_off_device_ad_selection";
+
     private static final PhFlags sSingleton = new PhFlags();
 
     /** Returns the singleton instance of the PhFlags. */
@@ -1454,11 +1457,6 @@ public final class PhFlags implements Flags {
                 /* defaultValue */ WEB_CONTEXT_CLIENT_ALLOW_LIST);
     }
 
-    @VisibleForTesting
-    static String getSystemPropertyName(String key) {
-        return SYSTEM_PROPERTY_PREFIX + key;
-    }
-
     @Override
     public boolean getConsentNotificationDebugMode() {
         return DeviceConfig.getBoolean(
@@ -1480,6 +1478,18 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES,
                 /* defaultValue */ MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES);
+    }
+
+    public boolean getOffDeviceAdSelectionEnabled() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_OFF_DEVICE_AD_SELECTION_ENABLED,
+                OFF_DEVICE_AD_SELECTION_ENABLED);
+    }
+
+    @VisibleForTesting
+    static String getSystemPropertyName(String key) {
+        return SYSTEM_PROPERTY_PREFIX + key;
     }
 
     @Override
@@ -1819,36 +1829,36 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS
                         + " = "
                         + getReportImpressionOverallTimeoutMs());
-
         writer.println(
                 "\t"
                         + KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE
                         + " = "
                         + getEnforceForegroundStatusForFledgeOverrides());
-
         writer.println(
                 "\t"
                         + KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION
                         + " = "
                         + getEnforceForegroundStatusForFledgeReportImpression());
-
         writer.println(
                 "\t"
                         + KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION
                         + " = "
                         + getEnforceForegroundStatusForFledgeRunAdSelection());
-
         writer.println(
                 "\t"
                         + KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE
                         + " = "
                         + getEnforceForegroundStatusForFledgeCustomAudience());
-
         writer.println(
                 "\t"
                         + KEY_FOREGROUND_STATUS_LEVEL
                         + " = "
                         + getForegroundStatuslLevelForValidation());
+        writer.println(
+                "\t"
+                        + KEY_OFF_DEVICE_AD_SELECTION_ENABLED
+                        + " = "
+                        + getOffDeviceAdSelectionEnabled());
 
         writer.println(
                 "\t" + KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE + " = " + getEnforceIsolateMaxHeapSize());
