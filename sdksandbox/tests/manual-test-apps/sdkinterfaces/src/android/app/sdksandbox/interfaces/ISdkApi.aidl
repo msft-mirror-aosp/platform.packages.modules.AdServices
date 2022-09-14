@@ -12,31 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package {
-    default_applicable_licenses: ["Android-Apache-2.0"],
-}
+package android.app.sdksandbox.interfaces;
 
-java_library {
-    name: "SdkSandboxTestUtils",
-    srcs: [
-        "src/**/testutils/*.java",
-    ],
-    libs: [
-        "framework-sdksandbox.impl",
-    ],
-    static_libs: [
-        "truth-prebuilt",
-    ],
-    visibility: [
-        // TODO(b/222118402): adjust once code is moved
-        "//packages/modules/AdServices:__subpackages__",
-    ],
-}
-
-java_library_host {
-    name: "SdkSandboxHostTestUtils",
-    srcs: [
-        "src/**/hosttestutils/*.java",
-    ],
-    libs: ["tradefed"],
+interface ISdkApi {
+    String createFile(int sizeInMb);
 }

@@ -28,10 +28,12 @@ import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallback;
 import android.app.usage.StorageStats;
 import android.app.usage.StorageStatsManager;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.Process;
 import android.os.UserHandle;
+import android.preference.PreferenceManager;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
@@ -48,12 +50,14 @@ import org.junit.runners.JUnit4;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.util.Set;
 
 @RunWith(JUnit4.class)
 public class SdkSandboxStorageTestApp {
 
-    private static final String SDK_NAME = "com.android.tests.codeprovider.storagetest";
+    private static final String TAG = "SdkSandboxStorageTestApp";
 
+    private static final String SDK_NAME = "com.android.tests.codeprovider.storagetest";
     private static final String BUNDLE_KEY_PHASE_NAME = "phase-name";
 
     private static final String JAVA_FILE_PERMISSION_DENIED_MSG =
@@ -62,6 +66,10 @@ public class SdkSandboxStorageTestApp {
             "open failed: ENOENT (No such file or directory)";
 
     @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(TestActivity.class);
+
+    private static final String KEY_TO_SYNC = "hello";
+    private static final String BULK_SYNC_VALUE = "bulksync";
+    private static final String UPDATE_VALUE = "update";
 
     private Context mContext;
     private SdkSandboxManager mSdkSandboxManager;
@@ -115,6 +123,7 @@ public class SdkSandboxStorageTestApp {
     public void testSdkDataSubDirectory_PerSdkStorageIsUsable() throws Exception {
         loadSdk();
 
+        // Run phase inside the SDK
         runPhaseInsideCode("testSdkDataSubDirectory_PerSdkStorageIsUsable");
     }
 
@@ -152,6 +161,52 @@ public class SdkSandboxStorageTestApp {
         assertMostlyEquals(deltaCacheSize,
                     finalUserStats.getCacheBytes() - initialUserStats.getCacheBytes(),
                            errorMarginSize);
+    }
+
+    @Test
+    public void testSharedPreferences_IsSyncedFromAppToSandbox() throws Exception {
+        loadSdk();
+
+        // Write to default shared preference
+        final SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(mContext);
+        pref.edit().putString(KEY_TO_SYNC, BULK_SYNC_VALUE).commit();
+
+        // Start syncing keys
+        mSdkSandboxManager.addSyncedSharedPreferencesKeys(Set.of(KEY_TO_SYNC));
+
+        // Verify same key can be read from the sandbox
+        runPhaseInsideCode("testSharedPreferences_VerifyBulkSyncReceived");
+    }
+
+    @Test
+    public void testSharedPreferences_SyncPropagatesUpdates() throws Exception {
+        loadSdk();
+
+        // Start syncing keys
+        mSdkSandboxManager.addSyncedSharedPreferencesKeys(Set.of(KEY_TO_SYNC));
+
+        // Update the default SharedPreferences
+        final SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(mContext);
+        pref.edit().putString(KEY_TO_SYNC, UPDATE_VALUE).commit();
+
+        // Verify update was propagated
+        runPhaseInsideCode("testSharedPreferences_VerifyUpdateReceived");
+    }
+
+    @Test
+    public void testSharedPreferences_SyncStartedBeforeLoadingSdk() throws Exception {
+        // Write to default shared preference
+        final SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(mContext);
+        pref.edit().putString(KEY_TO_SYNC, BULK_SYNC_VALUE).commit();
+
+        // Start syncing keys
+        mSdkSandboxManager.addSyncedSharedPreferencesKeys(Set.of(KEY_TO_SYNC));
+
+        // Load Sdk so that sandbox is started
+        loadSdk();
+
+        // Verify same key can be read from the sandbox
+        runPhaseInsideCode("testSharedPreferences_VerifyBulkSyncReceived");
     }
 
     private static void assertDirIsNotAccessible(String path) {

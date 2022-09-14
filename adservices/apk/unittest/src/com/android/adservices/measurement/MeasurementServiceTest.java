@@ -34,6 +34,7 @@ import android.os.IBinder;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -162,6 +163,7 @@ public class MeasurementServiceTest {
                         .spyStatic(EventReportingJobService.class)
                         .spyStatic(EventFallbackReportingJobService.class)
                         .spyStatic(DeleteExpiredJobService.class)
+                        .spyStatic(MddJobService.class)
                         .spyStatic(FlagsFactory.class)
                         .spyStatic(MeasurementImpl.class)
                         .strictness(Strictness.LENIENT)
@@ -209,6 +211,8 @@ public class MeasurementServiceTest {
                                             any(), anyBoolean()));
             ExtendedMockito.doNothing()
                     .when(() -> DeleteExpiredJobService.scheduleIfNeeded(any(), anyBoolean()));
+            ExtendedMockito.doReturn(true)
+                    .when(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
 
             // Execute
             execute.run();
@@ -236,5 +240,7 @@ public class MeasurementServiceTest {
         ExtendedMockito.verify(
                 () -> DeleteExpiredJobService.scheduleIfNeeded(any(), anyBoolean()),
                 times(timesCalled));
+        ExtendedMockito.verify(
+                () -> MddJobService.scheduleIfNeeded(any(), anyBoolean()), times(timesCalled));
     }
 }

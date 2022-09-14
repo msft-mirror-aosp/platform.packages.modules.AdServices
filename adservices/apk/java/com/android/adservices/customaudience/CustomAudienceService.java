@@ -21,8 +21,10 @@ import android.content.Intent;
 import android.os.IBinder;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.customaudience.CustomAudienceServiceImpl;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -53,8 +55,13 @@ public class CustomAudienceService extends Service {
             LogUtil.e("Custom Audience API is disabled");
             return;
         }
+
         if (mCustomAudienceService == null) {
             mCustomAudienceService = CustomAudienceServiceImpl.create(this);
+        }
+
+        if (hasUserConsent()) {
+            MddJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
         }
     }
 
@@ -66,5 +73,10 @@ public class CustomAudienceService extends Service {
             return null;
         }
         return Objects.requireNonNull(mCustomAudienceService);
+    }
+
+    /** @return {@code true} if the Privacy Sandbox has user consent */
+    private boolean hasUserConsent() {
+        return ConsentManager.getInstance(this).getConsent(getPackageManager()).isGiven();
     }
 }
