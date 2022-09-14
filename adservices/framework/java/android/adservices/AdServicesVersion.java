@@ -37,7 +37,7 @@ public class AdServicesVersion {
     // This variable needs to be initialized in static {} , otherwise javac
     // would inline these constants and they won't be updatable.
     static {
-        API_VERSION = 1;
+        API_VERSION = 2;
     }
 }
 

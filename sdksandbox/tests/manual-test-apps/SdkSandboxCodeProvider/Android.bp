@@ -22,9 +22,10 @@ android_test_helper_app {
     certificate: ":sdksandbox-test",
     srcs: [
        "src/**/sdksandboxcode_1/*.java",
+       "src/**/apiimplementation/*.java",
     ],
+    static_libs: ["SdkInterfaces"],
     resource_dirs: ["res"],
-    platform_apis: true,
     manifest: "AndroidManifest.xml",
 }
 
@@ -34,8 +35,9 @@ android_test_helper_app {
     certificate: ":sdksandbox-test",
     srcs: [
        "src/**/sdksandboxcode_webview/*.java",
+       "src/**/apiimplementation/*.java"
     ],
+    static_libs: ["SdkInterfaces"],
     resource_dirs: ["res"],
-    platform_apis: true,
     manifest: "AndroidManifest_WebViewProvider.xml",
 }

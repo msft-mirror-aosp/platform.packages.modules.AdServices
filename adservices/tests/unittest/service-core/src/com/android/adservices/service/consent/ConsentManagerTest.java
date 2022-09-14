@@ -203,6 +203,7 @@ public class ConsentManagerTest {
         doReturn(mPackageManagerMock).when(mContextSpy).getPackageManager();
         doReturn(false).when(mMockFlags).getTopicsKillSwitch();
         doReturn(false).when(mMockFlags).getMeasurementKillSwitch();
+        doReturn(false).when(mMockFlags).getMddBackgroundTaskKillSwitch();
 
         mConsentManager.enable(mContextSpy);
 
@@ -236,6 +237,7 @@ public class ConsentManagerTest {
         doReturn(mPackageManagerMock).when(mContextSpy).getPackageManager();
         doReturn(true).when(mMockFlags).getTopicsKillSwitch();
         doReturn(true).when(mMockFlags).getMeasurementKillSwitch();
+        doReturn(true).when(mMockFlags).getMddBackgroundTaskKillSwitch();
 
         mConsentManager.enable(mContextSpy);
 
