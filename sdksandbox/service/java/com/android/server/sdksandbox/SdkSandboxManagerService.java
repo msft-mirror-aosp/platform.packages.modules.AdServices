@@ -27,7 +27,7 @@ import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_AP
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_SANDBOX_TO_APP;
-import static com.android.server.sdksandbox.SdkSandboxStorageManager.SdkDataDirInfo;
+import static com.android.server.sdksandbox.SdkSandboxStorageManager.StorageDirInfo;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -1207,8 +1207,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             return;
         }
         // Gather sdk storage information
-        SdkDataDirInfo sdkDataInfo =
-                mSdkSandboxStorageManager.getSdkDataDirInfo(
+        final StorageDirInfo sdkDataInfo =
+                mSdkSandboxStorageManager.getSdkStorageDirInfo(
                         callingInfo, sdkProviderInfo.getSdkInfo().getName());
 
         synchronized (mLock) {
