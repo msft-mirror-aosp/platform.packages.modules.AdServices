@@ -1228,4 +1228,11 @@ public interface Flags extends Dumpable {
     default long getMaxResponseBasedRegistrationPayloadSizeBytes() {
         return MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES;
     }
+
+    boolean OFF_DEVICE_AD_SELECTION_ENABLED = false;
+
+    /** @return whether to call trusted servers for off device ad selection. */
+    default boolean getOffDeviceAdSelectionEnabled() {
+        return OFF_DEVICE_AD_SELECTION_ENABLED;
+    }
 }

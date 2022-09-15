@@ -17,10 +17,13 @@ package {
 }
 
 android_test_helper_app {
-    name: "RequestSurfacePackageSuccessfullySdkProvider",
-    defaults: ["platform_app_defaults"],
+    name: "LoadSdkAndCheckClassloaderSdkProvider",
+    defaults: ["platform_app_defaults",],
     certificate: ":sdksandbox-test",
     srcs: [
        "src/**/*.java",
+    ],
+    static_libs: [
+        "SdkSandbox-java-lib",
     ],
 }
