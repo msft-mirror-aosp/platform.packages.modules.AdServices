@@ -245,8 +245,8 @@ public class AsyncRegistration {
          * Source.SourceType} enum values.
          */
         @NonNull
-        public Builder setSourceType(int sourceType) {
-            mSourceType = Source.SourceType.values()[sourceType];
+        public Builder setSourceType(Source.SourceType sourceType) {
+            mSourceType = sourceType;
             return this;
         }
 
