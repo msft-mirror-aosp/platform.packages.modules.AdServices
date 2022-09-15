@@ -61,6 +61,7 @@ public final class RegisterWebTrigger implements Action {
         mRegistrationRequest =
                 new WebTriggerRegistrationRequestInternal.Builder(
                                 registrationRequest, attributionSource.getPackageName())
+                        .setAdIdPermissionGranted(true)
                         .build();
 
         mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);
@@ -83,9 +84,7 @@ public final class RegisterWebTrigger implements Action {
                                     Uri.parse(
                                             triggerParams.getString(
                                                     TestFormatJsonMapping.REGISTRATION_URI_KEY)))
-                            .setDebugKeyAllowed(
-                                    triggerParams.optBoolean(
-                                            TestFormatJsonMapping.DEBUG_KEY, false))
+                            .setDebugKeyAllowed(true)
                             .build());
         }
 
