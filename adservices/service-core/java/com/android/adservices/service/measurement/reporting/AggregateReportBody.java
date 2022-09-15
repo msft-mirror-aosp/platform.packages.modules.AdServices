@@ -136,10 +136,11 @@ public class AggregateReportBody {
         aggregationServicePayload.put(AggregationServicePayloadKeys.PAYLOAD, encryptedPayload);
         aggregationServicePayload.put(AggregationServicePayloadKeys.KEY_ID, key.getKeyId());
 
-        aggregationServicePayload.put(
-                AggregationServicePayloadKeys.DEBUG_CLEARTEXT_PAYLOAD,
-                AggregateCryptoConverter.encode(mDebugCleartextPayload));
-
+        if (mSourceDebugKey != null || mTriggerDebugKey != null) {
+            aggregationServicePayload.put(
+                    AggregationServicePayloadKeys.DEBUG_CLEARTEXT_PAYLOAD,
+                    AggregateCryptoConverter.encode(mDebugCleartextPayload));
+        }
         aggregationServicePayloadsJson.put(aggregationServicePayload);
 
         return aggregationServicePayloadsJson;
