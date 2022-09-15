@@ -93,10 +93,12 @@ public class AggregateReportBody {
                 aggregationServicePayloadsToJson(sharedInfo, key));
 
         if (mSourceDebugKey != null) {
-            aggregateBodyJson.put(PayloadBodyKeys.SOURCE_DEBUG_KEY, mSourceDebugKey);
+            aggregateBodyJson.put(
+                    PayloadBodyKeys.SOURCE_DEBUG_KEY, Long.toUnsignedString(mSourceDebugKey));
         }
         if (mTriggerDebugKey != null) {
-            aggregateBodyJson.put(PayloadBodyKeys.TRIGGER_DEBUG_KEY, mTriggerDebugKey);
+            aggregateBodyJson.put(
+                    PayloadBodyKeys.TRIGGER_DEBUG_KEY, Long.toUnsignedString(mTriggerDebugKey));
         }
 
         return aggregateBodyJson;
@@ -134,10 +136,11 @@ public class AggregateReportBody {
         aggregationServicePayload.put(AggregationServicePayloadKeys.PAYLOAD, encryptedPayload);
         aggregationServicePayload.put(AggregationServicePayloadKeys.KEY_ID, key.getKeyId());
 
-        aggregationServicePayload.put(
-                AggregationServicePayloadKeys.DEBUG_CLEARTEXT_PAYLOAD,
-                AggregateCryptoConverter.encode(mDebugCleartextPayload));
-
+        if (mSourceDebugKey != null || mTriggerDebugKey != null) {
+            aggregationServicePayload.put(
+                    AggregationServicePayloadKeys.DEBUG_CLEARTEXT_PAYLOAD,
+                    AggregateCryptoConverter.encode(mDebugCleartextPayload));
+        }
         aggregationServicePayloadsJson.put(aggregationServicePayload);
 
         return aggregationServicePayloadsJson;

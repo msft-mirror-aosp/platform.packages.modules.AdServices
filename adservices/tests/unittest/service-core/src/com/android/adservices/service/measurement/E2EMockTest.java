@@ -213,11 +213,23 @@ public abstract class E2EMockTest extends E2ETest {
                 data.getJSONArray("aggregation_service_payloads")
                         .getJSONObject(0)
                         .getString("debug_cleartext_payload");
-        return new JSONObject()
-                .put(
-                        AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION,
-                        sharedInfo.getString("attribution_destination"))
-                .put(AggregateReportPayloadKeys.HISTOGRAMS, getAggregateHistograms(payload));
+        String sourceDebugKey = data.optString(AggregateReportPayloadKeys.SOURCE_DEBUG_KEY);
+        String triggerDebugKey = data.optString(AggregateReportPayloadKeys.TRIGGER_DEBUG_KEY);
+        JSONObject aggregateJson =
+                new JSONObject()
+                        .put(
+                                AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION,
+                                sharedInfo.getString("attribution_destination"))
+                        .put(
+                                AggregateReportPayloadKeys.HISTOGRAMS,
+                                getAggregateHistograms(payload));
+        if (!sourceDebugKey.isEmpty()) {
+            aggregateJson.put(AggregateReportPayloadKeys.SOURCE_DEBUG_KEY, sourceDebugKey);
+        }
+        if (!triggerDebugKey.isEmpty()) {
+            aggregateJson.put(AggregateReportPayloadKeys.TRIGGER_DEBUG_KEY, triggerDebugKey);
+        }
+        return aggregateJson;
     }
 
     private static JSONArray getAggregateHistograms(String payloadJsonBase64) throws JSONException {

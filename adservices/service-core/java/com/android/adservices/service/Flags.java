@@ -983,7 +983,9 @@ public interface Flags extends Dumpable {
      * There must be not any empty space between comma.
      */
     String PPAPI_APP_ALLOW_LIST =
-            "android.adservices.cts,"
+            "android.platform.test.scenario,"
+                    + "android.adservices.crystalball,"
+                    + "android.adservices.cts,"
                     + "android.adservices.debuggablects,"
                     + "com.android.adservices.endtoendtest,"
                     + "com.android.adservices.servicecoretest,"
@@ -999,7 +1001,8 @@ public interface Flags extends Dumpable {
                     + "com.example.adservices.samples.fledge.sampleapp1,"
                     + "com.example.adservices.samples.fledge.sampleapp2,"
                     + "com.example.adservices.samples.fledge.sampleapp3,"
-                    + "com.example.adservices.samples.fledge.sampleapp4";
+                    + "com.example.adservices.samples.fledge.sampleapp4,"
+                    + "com.android.adservices.tests.cts.endtoendtest.measurement";
 
     /**
      * Returns bypass List for PPAPI app signature check. Apps with package name on this list will
@@ -1224,5 +1227,12 @@ public interface Flags extends Dumpable {
      */
     default long getMaxResponseBasedRegistrationPayloadSizeBytes() {
         return MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES;
+    }
+
+    boolean OFF_DEVICE_AD_SELECTION_ENABLED = false;
+
+    /** @return whether to call trusted servers for off device ad selection. */
+    default boolean getOffDeviceAdSelectionEnabled() {
+        return OFF_DEVICE_AD_SELECTION_ENABLED;
     }
 }
