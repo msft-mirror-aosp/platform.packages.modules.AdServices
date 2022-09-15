@@ -23,6 +23,7 @@ import androidx.annotation.Nullable;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.math.BigInteger;
 import java.util.Objects;
 
 /**
@@ -31,19 +32,19 @@ import java.util.Objects;
 public class EventReport {
 
     private String mId;
-    private long mSourceId;
+    private long mSourceId; // uint64 stored as long
     private long mReportTime;
     private long mTriggerTime;
     private long mTriggerPriority;
     private Uri mAttributionDestination;
     private String mEnrollmentId;
-    private long mTriggerData;
-    private Long mTriggerDedupKey;
+    private long mTriggerData; // uint64 stored as long
+    private Long mTriggerDedupKey; // uint64 stored as long
     private double mRandomizedTriggerRate;
     private @Status int mStatus;
     private Source.SourceType mSourceType;
-    @Nullable private Long mSourceDebugKey;
-    @Nullable private Long mTriggerDebugKey;
+    @Nullable private Long mSourceDebugKey; // uint64 stored as long
+    @Nullable private Long mTriggerDebugKey; // uint64 stored as long
 
     @IntDef(value = {
             Status.PENDING,
@@ -335,7 +336,16 @@ public class EventReport {
         }
 
         private long getTruncatedTriggerData(Source source, EventTrigger eventTrigger) {
-            return eventTrigger.getTriggerData() % source.getTriggerDataCardinality();
+            Long triggerData = eventTrigger.getTriggerData();
+            if (triggerData == null) {
+                return 0L;
+            }
+            int cardinality = source.getTriggerDataCardinality();
+            // Trigger-data is an unsigned 64 bit integer that we are storing in a (signed) long,
+            // which could have a negative value.
+            BigInteger truncated = new BigInteger(Long.toUnsignedString(triggerData))
+                    .mod(BigInteger.valueOf(cardinality));
+            return Long.parseUnsignedLong(truncated.toString());
         }
 
         /**
