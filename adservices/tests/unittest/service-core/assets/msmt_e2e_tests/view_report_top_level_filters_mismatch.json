@@ -1,5 +1,5 @@
 {
-  "description": "One source with filter data. Trigger also has filters. Trigger's top level filters don't match with source's, so no report is generated.",
+  "description": "One source with filter data. Trigger also has filters. Trigger's top level filters do not match with source's, so no report is generated.",
   "input": {
     "sources": [{
       "registration_request": {
@@ -64,7 +64,7 @@
             "Attribution-Reporting-Redirect": null
           }
         }],
-        "timestamp": "800604800000"
+        "timestamp": "800604200001"
       }
     ]
   },

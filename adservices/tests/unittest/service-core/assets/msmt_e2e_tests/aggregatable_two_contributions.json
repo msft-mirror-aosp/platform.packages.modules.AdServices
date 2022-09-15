@@ -98,7 +98,7 @@
           "Attribution-Reporting-Redirect": null
         }
       }],
-      "timestamp": "800000000002"
+      "timestamp": "800000600001"
     }]
   },
   "output": {
@@ -114,7 +114,7 @@
       }
     }],
     "aggregatable_results": [{
-      "report_time": 800000000002,
+      "report_time": 800000600001,
       "report_url": "https://www.ad-tech1.com",
       "payload": {
         "attribution_destination": "android-app://example.2d1.com",
