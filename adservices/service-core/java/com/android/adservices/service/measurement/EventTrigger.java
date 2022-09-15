@@ -24,9 +24,9 @@ import java.util.Optional;
 
 /** Event trigger containing trigger data, priority, de-deup key and filters info. */
 public class EventTrigger {
-    private Long mTriggerData;
+    private Long mTriggerData; // uint64 stored as long
     private long mTriggerPriority;
-    private Long mDedupKey;
+    private Long mDedupKey; // uint64 stored as long
     private Optional<AggregateFilterData> mFilter;
     private Optional<AggregateFilterData> mNotFilter;
 
