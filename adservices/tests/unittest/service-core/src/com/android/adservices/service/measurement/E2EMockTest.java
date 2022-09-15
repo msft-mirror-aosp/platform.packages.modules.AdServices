@@ -23,6 +23,7 @@ import static org.mockito.Mockito.when;
 
 import android.net.Uri;
 
+import com.android.adservices.HpkeJni;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.actions.Action;
@@ -32,6 +33,7 @@ import com.android.adservices.service.measurement.actions.RegisterWebSource;
 import com.android.adservices.service.measurement.actions.RegisterWebTrigger;
 import com.android.adservices.service.measurement.actions.ReportObjects;
 import com.android.adservices.service.measurement.actions.ReportingJob;
+import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.registration.SourceFetcher;
 import com.android.adservices.service.measurement.registration.TriggerFetcher;
@@ -212,7 +214,15 @@ public abstract class E2EMockTest extends E2ETest {
         String payload =
                 data.getJSONArray("aggregation_service_payloads")
                         .getJSONObject(0)
-                        .getString("debug_cleartext_payload");
+                        .getString("payload");
+
+        final byte[] decryptedPayload =
+                HpkeJni.decrypt(
+                        decode(AggregateCryptoFixture.getPrivateKeyBase64()),
+                        decode(payload),
+                        (AggregateCryptoFixture.getSharedInfoPrefix() + sharedInfo.toString())
+                                .getBytes());
+
         String sourceDebugKey = data.optString(AggregateReportPayloadKeys.SOURCE_DEBUG_KEY);
         String triggerDebugKey = data.optString(AggregateReportPayloadKeys.TRIGGER_DEBUG_KEY);
         JSONObject aggregateJson =
@@ -222,7 +232,7 @@ public abstract class E2EMockTest extends E2ETest {
                                 sharedInfo.getString("attribution_destination"))
                         .put(
                                 AggregateReportPayloadKeys.HISTOGRAMS,
-                                getAggregateHistograms(payload));
+                                getAggregateHistograms(decryptedPayload));
         if (!sourceDebugKey.isEmpty()) {
             aggregateJson.put(AggregateReportPayloadKeys.SOURCE_DEBUG_KEY, sourceDebugKey);
         }
@@ -232,13 +242,13 @@ public abstract class E2EMockTest extends E2ETest {
         return aggregateJson;
     }
 
-    private static JSONArray getAggregateHistograms(String payloadJsonBase64) throws JSONException {
+    private static JSONArray getAggregateHistograms(byte[] encodedCborPayload)
+            throws JSONException {
         List<JSONObject> result = new ArrayList<>();
 
         try {
-            final byte[] payloadJson = Base64.getDecoder().decode(payloadJsonBase64);
             final List<DataItem> dataItems =
-                    new CborDecoder(new ByteArrayInputStream(payloadJson)).decode();
+                    new CborDecoder(new ByteArrayInputStream(encodedCborPayload)).decode();
             final co.nstant.in.cbor.model.Map payload =
                     (co.nstant.in.cbor.model.Map) dataItems.get(0);
             final Array payloadArray = (Array) payload.get(new UnicodeString("data"));
@@ -276,5 +286,9 @@ public abstract class E2EMockTest extends E2ETest {
             Map<String, List<Map<String, List<String>>>> uriToResponseHeadersMap, String uri) {
         List<Map<String, List<String>>> responseList = uriToResponseHeadersMap.get(uri);
         return responseList.remove(0);
+    }
+
+    private static byte[] decode(String value) {
+        return Base64.getDecoder().decode(value.getBytes());
     }
 }
