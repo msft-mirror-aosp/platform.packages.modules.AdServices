@@ -60,7 +60,7 @@ public class Trigger {
     private String mAggregateValues;
     private AggregatableAttributionTrigger mAggregatableAttributionTrigger;
     private String mFilters;
-    private @Nullable Long mDebugKey;
+    private @Nullable Long mDebugKey; // uint64 stored as long
 
     @IntDef(value = {
             Status.PENDING,
@@ -306,8 +306,8 @@ public class Trigger {
             JSONObject eventTriggersJsonString = jsonArray.getJSONObject(i);
 
             if (!eventTriggersJsonString.isNull(EventTriggerContract.TRIGGER_DATA)) {
-                eventTriggerBuilder.setTriggerData(
-                        eventTriggersJsonString.getLong(EventTriggerContract.TRIGGER_DATA));
+                eventTriggerBuilder.setTriggerData(Long.parseUnsignedLong(
+                        eventTriggersJsonString.getString(EventTriggerContract.TRIGGER_DATA)));
             }
 
             if (!eventTriggersJsonString.isNull(EventTriggerContract.PRIORITY)) {
@@ -316,8 +316,8 @@ public class Trigger {
             }
 
             if (!eventTriggersJsonString.isNull(EventTriggerContract.DEDUPLICATION_KEY)) {
-                eventTriggerBuilder.setDedupKey(
-                        eventTriggersJsonString.getLong(EventTriggerContract.DEDUPLICATION_KEY));
+                eventTriggerBuilder.setDedupKey(Long.parseUnsignedLong(
+                        eventTriggersJsonString.getString(EventTriggerContract.DEDUPLICATION_KEY)));
             }
 
             if (!eventTriggersJsonString.isNull(EventTriggerContract.FILTERS)) {
