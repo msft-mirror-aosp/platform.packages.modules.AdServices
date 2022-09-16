@@ -50,12 +50,21 @@ public class MainActivity extends Activity {
     private static final String SDK_NAME = "com.android.sdksandboxcode";
     private static final String TAG = "SdkSandboxClientMainActivity";
 
+    private static final String VIEW_TYPE_KEY = "view-type";
+    private static final String VIDEO_VIEW_VALUE = "video-view";
+    private static final String VIDEO_URL_KEY = "video-url";
+
+    private static final Handler sHandler = new Handler(Looper.getMainLooper());
+
+    private static String sVideoUrl;
+
     private boolean mSdkLoaded = false;
     private SdkSandboxManager mSdkSandboxManager;
 
     private Button mLoadButton;
     private Button mRenderButton;
     private Button mCreateFileButton;
+    private Button mPlayVideoButton;
 
     private SurfaceView mRenderedView;
 
@@ -67,6 +76,10 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         mSdkSandboxManager = getApplicationContext().getSystemService(
                 SdkSandboxManager.class);
+        Bundle extras = getIntent().getExtras();
+        if (extras != null) {
+            sVideoUrl = extras.getString(VIDEO_URL_KEY);
+        }
 
         mRenderedView = findViewById(R.id.rendered_view);
         mRenderedView.setZOrderOnTop(true);
@@ -75,10 +88,12 @@ public class MainActivity extends Activity {
         mLoadButton = findViewById(R.id.load_code_button);
         mRenderButton = findViewById(R.id.request_surface_button);
         mCreateFileButton = findViewById(R.id.create_file_button);
+        mPlayVideoButton = findViewById(R.id.play_video_button);
 
         registerLoadSdkProviderButton();
         registerLoadSurfacePackageButton();
         registerCreateFileButton();
+        registerPlayVideoButton();
     }
 
     private void registerLoadSdkProviderButton() {
@@ -118,48 +133,18 @@ public class MainActivity extends Activity {
 
     private void registerLoadSurfacePackageButton() {
         OutcomeReceiver<Bundle, RequestSurfacePackageException> receiver =
-                new OutcomeReceiver<Bundle, RequestSurfacePackageException>() {
-                    @Override
-                    public void onResult(@NonNull Bundle result) {
-                        new Handler(Looper.getMainLooper())
-                                .post(
-                                        () -> {
-                                            SurfacePackage surfacePackage =
-                                                    result.getParcelable(
-                                                            EXTRA_SURFACE_PACKAGE,
-                                                            SurfacePackage.class);
-                                            mRenderedView.setChildSurfacePackage(surfacePackage);
-                                            mRenderedView.setVisibility(View.VISIBLE);
-                                        });
-                        makeToast("Rendered surface view");
-                    }
-
-                    @Override
-                    public void onError(@NonNull RequestSurfacePackageException error) {
-                        makeToast("Failed: " + error.getMessage());
-                        Log.e(TAG, error.getMessage(), error);
-                    }
-                };
+                new RequestSurfacePackageReceiver();
         mRenderButton.setOnClickListener(
                 v -> {
                     if (mSdkLoaded) {
-                        new Handler(Looper.getMainLooper())
-                                .post(
-                                        () -> {
-                                            Bundle params = new Bundle();
-                                            params.putInt(
-                                                    EXTRA_WIDTH_IN_PIXELS,
-                                                    mRenderedView.getWidth());
-                                            params.putInt(
-                                                    EXTRA_HEIGHT_IN_PIXELS,
-                                                    mRenderedView.getHeight());
-                                            params.putInt(
-                                                    EXTRA_DISPLAY_ID, getDisplay().getDisplayId());
-                                            params.putBinder(
-                                                    EXTRA_HOST_TOKEN, mRenderedView.getHostToken());
-                                            mSdkSandboxManager.requestSurfacePackage(
-                                                    SDK_NAME, params, Runnable::run, receiver);
-                                        });
+                        sHandler.post(
+                                () -> {
+                                    mSdkSandboxManager.requestSurfacePackage(
+                                            SDK_NAME,
+                                            getRequestSurfacePackageParams(),
+                                            Runnable::run,
+                                            receiver);
+                                });
                     } else {
                         makeToast("Sdk is not loaded");
                     }
@@ -204,7 +189,63 @@ public class MainActivity extends Activity {
                 });
     }
 
+    private void registerPlayVideoButton() {
+        if (sVideoUrl == null) {
+            mPlayVideoButton.setVisibility(View.GONE);
+            return;
+        }
+
+        OutcomeReceiver<Bundle, RequestSurfacePackageException> receiver =
+                new RequestSurfacePackageReceiver();
+        mPlayVideoButton.setOnClickListener(
+                v -> {
+                    if (mSdkLoaded) {
+                        sHandler.post(
+                                () -> {
+                                    Bundle params = getRequestSurfacePackageParams();
+                                    params.putString(VIEW_TYPE_KEY, VIDEO_VIEW_VALUE);
+                                    params.putString(VIDEO_URL_KEY, sVideoUrl);
+                                    mSdkSandboxManager.requestSurfacePackage(
+                                            SDK_NAME, params, Runnable::run, receiver);
+                                });
+                    } else {
+                        makeToast("Sdk is not loaded");
+                    }
+                });
+    }
+
+    private Bundle getRequestSurfacePackageParams() {
+        Bundle params = new Bundle();
+        params.putInt(EXTRA_WIDTH_IN_PIXELS, mRenderedView.getWidth());
+        params.putInt(EXTRA_HEIGHT_IN_PIXELS, mRenderedView.getHeight());
+        params.putInt(EXTRA_DISPLAY_ID, getDisplay().getDisplayId());
+        params.putBinder(EXTRA_HOST_TOKEN, mRenderedView.getHostToken());
+        return params;
+    }
+
     private void makeToast(String message) {
         runOnUiThread(() -> Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show());
+    }
+
+    private class RequestSurfacePackageReceiver
+            implements OutcomeReceiver<Bundle, RequestSurfacePackageException> {
+
+        @Override
+        public void onResult(Bundle result) {
+            sHandler.post(
+                    () -> {
+                        SurfacePackage surfacePackage =
+                                result.getParcelable(EXTRA_SURFACE_PACKAGE, SurfacePackage.class);
+                        mRenderedView.setChildSurfacePackage(surfacePackage);
+                        mRenderedView.setVisibility(View.VISIBLE);
+                    });
+            makeToast("Rendered surface view");
+        }
+
+        @Override
+        public void onError(@NonNull RequestSurfacePackageException error) {
+            makeToast("Failed: " + error.getMessage());
+            Log.e(TAG, error.getMessage(), error);
+        }
     }
 }
