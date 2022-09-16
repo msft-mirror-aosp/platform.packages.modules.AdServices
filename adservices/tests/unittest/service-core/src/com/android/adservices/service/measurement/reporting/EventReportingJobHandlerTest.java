@@ -36,6 +36,7 @@ import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.EventReport;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -54,8 +55,8 @@ import java.util.List;
 /** Unit test for {@link EventReportingJobHandler} */
 @RunWith(MockitoJUnitRunner.class)
 public class EventReportingJobHandlerTest {
-    private static final Long SOURCE_DEBUG_KEY = 237865L;
-    private static final Long TRIGGER_DEBUG_KEY = 928762L;
+    private static final UnsignedLong SOURCE_DEBUG_KEY = new UnsignedLong(237865L);
+    private static final UnsignedLong TRIGGER_DEBUG_KEY = new UnsignedLong(928762L);
 
     private static final EnrollmentData ENROLLMENT = new EnrollmentData.Builder()
             .setAttributionReportingUrl(List.of("https://ad-tech.com"))
@@ -99,7 +100,7 @@ public class EventReportingJobHandlerTest {
         EventReport eventReport =
                 new EventReport.Builder()
                         .setId("eventReportId")
-                        .setSourceId(1234L)
+                        .setSourceId(new UnsignedLong(1234L))
                         .setStatus(EventReport.Status.PENDING)
                         .setSourceDebugKey(SOURCE_DEBUG_KEY)
                         .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
@@ -136,7 +137,7 @@ public class EventReportingJobHandlerTest {
         EventReport eventReport =
                 new EventReport.Builder()
                         .setId("eventReportId")
-                        .setSourceId(1234L)
+                        .setSourceId(new UnsignedLong(1234L))
                         .setStatus(EventReport.Status.PENDING)
                         .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
                         .build();
@@ -172,7 +173,7 @@ public class EventReportingJobHandlerTest {
         EventReport eventReport =
                 new EventReport.Builder()
                         .setId("eventReportId")
-                        .setSourceId(1234L)
+                        .setSourceId(new UnsignedLong(1234L))
                         .setStatus(EventReport.Status.PENDING)
                         .setSourceDebugKey(SOURCE_DEBUG_KEY)
                         .build();
@@ -208,7 +209,7 @@ public class EventReportingJobHandlerTest {
         EventReport eventReport =
                 new EventReport.Builder()
                         .setId("eventReportId")
-                        .setSourceId(1234L)
+                        .setSourceId(new UnsignedLong(1234L))
                         .setStatus(EventReport.Status.PENDING)
                         .setSourceDebugKey(null)
                         .setTriggerDebugKey(null)
@@ -243,7 +244,7 @@ public class EventReportingJobHandlerTest {
         EventReport eventReport =
                 new EventReport.Builder()
                         .setId("eventReportId")
-                        .setSourceId(1234L)
+                        .setSourceId(new UnsignedLong(1234L))
                         .setStatus(EventReport.Status.PENDING)
                         .build();
         JSONObject eventReportPayload =
@@ -294,7 +295,7 @@ public class EventReportingJobHandlerTest {
         EventReport eventReport1 =
                 new EventReport.Builder()
                         .setId("eventReport1")
-                        .setSourceId(1234L)
+                        .setSourceId(new UnsignedLong(1234L))
                         .setStatus(EventReport.Status.PENDING)
                         .setReportTime(1000L)
                         .build();
@@ -307,7 +308,7 @@ public class EventReportingJobHandlerTest {
         EventReport eventReport2 =
                 new EventReport.Builder()
                         .setId("eventReport2")
-                        .setSourceId(12345L)
+                        .setSourceId(new UnsignedLong(12345L))
                         .setStatus(EventReport.Status.PENDING)
                         .setReportTime(1100L)
                         .build();

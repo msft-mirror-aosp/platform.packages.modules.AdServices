@@ -19,6 +19,8 @@ package com.android.adservices.service.measurement.reporting;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import com.android.adservices.service.measurement.util.UnsignedLong;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
@@ -26,20 +28,20 @@ import org.junit.Test;
 public class EventReportPayloadTest {
 
     private static final String ATTRIBUTION_DESTINATION = "https://toasters.example";
-    private static final Long SOURCE_EVENT_ID = 12345L;
-    private static final Long TRIGGER_DATA = 2L;
+    private static final UnsignedLong SOURCE_EVENT_ID = new UnsignedLong(12345L);
+    private static final UnsignedLong TRIGGER_DATA = new UnsignedLong(2L);
     private static final String REPORT_ID = "678";
     private static final String SOURCE_TYPE = "event";
     private static final double RANDOMIZED_TRIGGER_RATE = 0.0024;
-    private static final Long SOURCE_DEBUG_KEY = 3894783L;
-    private static final Long TRIGGER_DEBUG_KEY = 2387222L;
+    private static final UnsignedLong SOURCE_DEBUG_KEY = new UnsignedLong(3894783L);
+    private static final UnsignedLong TRIGGER_DEBUG_KEY = new UnsignedLong(2387222L);
 
-    private static EventReportPayload createEventReportPayload(Long sourceDebugKey,
-            Long triggerDebugKey) {
+    private static EventReportPayload createEventReportPayload(UnsignedLong triggerData,
+            UnsignedLong sourceDebugKey, UnsignedLong triggerDebugKey) {
         return new EventReportPayload.Builder()
                 .setAttributionDestination(ATTRIBUTION_DESTINATION)
                 .setSourceEventId(SOURCE_EVENT_ID)
-                .setTriggerData(TRIGGER_DATA)
+                .setTriggerData(triggerData)
                 .setReportId(REPORT_ID)
                 .setSourceType(SOURCE_TYPE)
                 .setRandomizedTriggerRate(RANDOMIZED_TRIGGER_RATE)
@@ -51,36 +53,47 @@ public class EventReportPayloadTest {
     @Test
     public void testEventPayloadJsonSerialization() throws JSONException {
         EventReportPayload eventReport =
-                createEventReportPayload(SOURCE_DEBUG_KEY, TRIGGER_DEBUG_KEY);
+                createEventReportPayload(TRIGGER_DATA, SOURCE_DEBUG_KEY, TRIGGER_DEBUG_KEY);
         JSONObject eventPayloadReportJson = eventReport.toJson();
 
         assertEquals(ATTRIBUTION_DESTINATION,
                 eventPayloadReportJson.get("attribution_destination"));
-        assertEquals(Long.toUnsignedString(SOURCE_EVENT_ID),
-                eventPayloadReportJson.get("source_event_id"));
-        assertEquals(Long.toUnsignedString(TRIGGER_DATA),
-                eventPayloadReportJson.get("trigger_data"));
+        assertEquals(SOURCE_EVENT_ID.toString(), eventPayloadReportJson.get("source_event_id"));
+        assertEquals(TRIGGER_DATA.toString(), eventPayloadReportJson.get("trigger_data"));
         assertEquals(REPORT_ID, eventPayloadReportJson.get("report_id"));
         assertEquals(SOURCE_TYPE, eventPayloadReportJson.get("source_type"));
         assertEquals(RANDOMIZED_TRIGGER_RATE,
                 eventPayloadReportJson.get("randomized_trigger_rate"));
-        assertEquals(Long.toUnsignedString(SOURCE_DEBUG_KEY),
-                eventPayloadReportJson.get("source_debug_key"));
-        assertEquals(Long.toUnsignedString(TRIGGER_DEBUG_KEY),
-                eventPayloadReportJson.get("trigger_debug_key"));
+        assertEquals(SOURCE_DEBUG_KEY.toString(), eventPayloadReportJson.get("source_debug_key"));
+        assertEquals(TRIGGER_DEBUG_KEY.toString(), eventPayloadReportJson.get("trigger_debug_key"));
     }
 
     @Test
     public void testEventPayloadJsonSerializationWithNullDebugKeys() throws JSONException {
-        EventReportPayload eventReport = createEventReportPayload(null, null);
+        EventReportPayload eventReport = createEventReportPayload(TRIGGER_DATA, null, null);
         JSONObject eventPayloadReportJson = eventReport.toJson();
 
         assertEquals(
                 ATTRIBUTION_DESTINATION, eventPayloadReportJson.get("attribution_destination"));
-        assertEquals(Long.toUnsignedString(SOURCE_EVENT_ID),
-                eventPayloadReportJson.get("source_event_id"));
-        assertEquals(Long.toUnsignedString(TRIGGER_DATA),
-                eventPayloadReportJson.get("trigger_data"));
+        assertEquals(SOURCE_EVENT_ID.toString(), eventPayloadReportJson.get("source_event_id"));
+        assertEquals(TRIGGER_DATA.toString(), eventPayloadReportJson.get("trigger_data"));
+        assertEquals(REPORT_ID, eventPayloadReportJson.get("report_id"));
+        assertEquals(SOURCE_TYPE, eventPayloadReportJson.get("source_type"));
+        assertEquals(
+                RANDOMIZED_TRIGGER_RATE, eventPayloadReportJson.get("randomized_trigger_rate"));
+        assertNull(eventPayloadReportJson.opt("source_debug_key"));
+        assertNull(eventPayloadReportJson.opt("trigger_debug_key"));
+    }
+
+    @Test
+    public void testEventPayloadJsonSerializationWithNullTriggerData() throws JSONException {
+        EventReportPayload eventReport = createEventReportPayload(null, null, null);
+        JSONObject eventPayloadReportJson = eventReport.toJson();
+
+        assertEquals(
+                ATTRIBUTION_DESTINATION, eventPayloadReportJson.get("attribution_destination"));
+        assertEquals(SOURCE_EVENT_ID.toString(), eventPayloadReportJson.get("source_event_id"));
+        assertEquals(new UnsignedLong(0L).toString(), eventPayloadReportJson.get("trigger_data"));
         assertEquals(REPORT_ID, eventPayloadReportJson.get("report_id"));
         assertEquals(SOURCE_TYPE, eventPayloadReportJson.get("source_type"));
         assertEquals(
@@ -91,29 +104,27 @@ public class EventReportPayloadTest {
 
     @Test
     public void testEventPayloadJsonSerializationWithSingleTriggerDebugKeys() throws JSONException {
-        EventReportPayload eventReport = createEventReportPayload(null, TRIGGER_DEBUG_KEY);
+        EventReportPayload eventReport =
+                createEventReportPayload(TRIGGER_DATA, null, TRIGGER_DEBUG_KEY);
         JSONObject eventPayloadReportJson = eventReport.toJson();
 
         assertEquals(
                 ATTRIBUTION_DESTINATION, eventPayloadReportJson.get("attribution_destination"));
-        assertEquals(Long.toUnsignedString(SOURCE_EVENT_ID),
-                eventPayloadReportJson.get("source_event_id"));
-        assertEquals(Long.toUnsignedString(TRIGGER_DATA),
-                eventPayloadReportJson.get("trigger_data"));
+        assertEquals(SOURCE_EVENT_ID.toString(), eventPayloadReportJson.get("source_event_id"));
+        assertEquals(TRIGGER_DATA.toString(), eventPayloadReportJson.get("trigger_data"));
         assertEquals(REPORT_ID, eventPayloadReportJson.get("report_id"));
         assertEquals(SOURCE_TYPE, eventPayloadReportJson.get("source_type"));
         assertEquals(
                 RANDOMIZED_TRIGGER_RATE, eventPayloadReportJson.get("randomized_trigger_rate"));
         assertNull(eventPayloadReportJson.opt("source_debug_key"));
-        assertEquals(Long.toUnsignedString(TRIGGER_DEBUG_KEY),
-                eventPayloadReportJson.get("trigger_debug_key"));
+        assertEquals(TRIGGER_DEBUG_KEY.toString(), eventPayloadReportJson.get("trigger_debug_key"));
     }
 
     @Test
     public void testEventPayloadJsonSerialization_debugKeysSourceEventIdAndTriggerDataUse64thBit()
             throws JSONException {
         String unsigned64BitIntString = "18446744073709551615";
-        Long signed64BitInt = -1L;
+        UnsignedLong signed64BitInt = new UnsignedLong(-1L);
         EventReportPayload eventReport = new EventReportPayload.Builder()
                 .setAttributionDestination(ATTRIBUTION_DESTINATION)
                 .setSourceEventId(signed64BitInt)
@@ -140,21 +151,19 @@ public class EventReportPayloadTest {
 
     @Test
     public void testEventPayloadJsonSerializationWithSingleSourceDebugKeys() throws JSONException {
-        EventReportPayload eventReport = createEventReportPayload(SOURCE_DEBUG_KEY, null);
+        EventReportPayload eventReport =
+                createEventReportPayload(TRIGGER_DATA, SOURCE_DEBUG_KEY, null);
         JSONObject eventPayloadReportJson = eventReport.toJson();
 
         assertEquals(
                 ATTRIBUTION_DESTINATION, eventPayloadReportJson.get("attribution_destination"));
-        assertEquals(Long.toUnsignedString(SOURCE_EVENT_ID),
-                eventPayloadReportJson.get("source_event_id"));
-        assertEquals(Long.toUnsignedString(TRIGGER_DATA),
-                eventPayloadReportJson.get("trigger_data"));
+        assertEquals(SOURCE_EVENT_ID.toString(), eventPayloadReportJson.get("source_event_id"));
+        assertEquals(TRIGGER_DATA.toString(), eventPayloadReportJson.get("trigger_data"));
         assertEquals(REPORT_ID, eventPayloadReportJson.get("report_id"));
         assertEquals(SOURCE_TYPE, eventPayloadReportJson.get("source_type"));
         assertEquals(
                 RANDOMIZED_TRIGGER_RATE, eventPayloadReportJson.get("randomized_trigger_rate"));
         assertNull(eventPayloadReportJson.opt("trigger_debug_key"));
-        assertEquals(Long.toUnsignedString(SOURCE_DEBUG_KEY),
-                eventPayloadReportJson.get("source_debug_key"));
+        assertEquals(SOURCE_DEBUG_KEY.toString(), eventPayloadReportJson.get("source_debug_key"));
     }
 }
