@@ -85,6 +85,7 @@ import com.android.adservices.service.measurement.registration.SourceFetcher;
 import com.android.adservices.service.measurement.registration.SourceRegistration;
 import com.android.adservices.service.measurement.registration.TriggerFetcher;
 import com.android.adservices.service.measurement.registration.TriggerRegistration;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
@@ -180,7 +181,7 @@ public final class MeasurementImplTest {
                     .build();
     private static final SourceRegistration VALID_SOURCE_REGISTRATION_1 =
             new com.android.adservices.service.measurement.registration.SourceRegistration.Builder()
-                    .setSourceEventId(1L)
+                    .setSourceEventId(new UnsignedLong(1L))
                     .setSourcePriority(100L)
                     .setAppDestination(Uri.parse("android-app://com.destination"))
                     .setWebDestination(Uri.parse("https://web-destination.com"))
@@ -192,7 +193,7 @@ public final class MeasurementImplTest {
                     .build();
     private static final SourceRegistration VALID_SOURCE_REGISTRATION_2 =
             new com.android.adservices.service.measurement.registration.SourceRegistration.Builder()
-                    .setSourceEventId(2)
+                    .setSourceEventId(new UnsignedLong(2L))
                     .setSourcePriority(200L)
                     .setAppDestination(Uri.parse("android-app://com.destination2"))
                     .setWebDestination(Uri.parse("https://web-destination2.com"))
@@ -652,7 +653,7 @@ public final class MeasurementImplTest {
                         .setEventTime(eventTime)
                         .setPublisher(DEFAULT_URI)
                         .setAppDestination(Uri.parse("android-app://com.example.abc"))
-                        .setEventId(123L)
+                        .setEventId(new UnsignedLong(123L))
                         .build();
         // Mocking fetchSource call to populate source registrations.
         List<SourceRegistration> sourceRegistrations =
@@ -717,7 +718,7 @@ public final class MeasurementImplTest {
         Source source =
                 spy(
                         SourceFixture.getValidSourceBuilder()
-                                .setEventId(123L)
+                                .setEventId(new UnsignedLong(123L))
                                 .setEventTime(eventTime)
                                 .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(20))
                                 .setSourceType(Source.SourceType.NAVIGATION)
@@ -749,7 +750,8 @@ public final class MeasurementImplTest {
             Assert.assertEquals(source.getEventTime(), report.getTriggerTime());
             Assert.assertEquals(0, report.getTriggerPriority());
             Assert.assertEquals(source.getAppDestination(), report.getAttributionDestination());
-            Assert.assertTrue(report.getTriggerData()
+            Long triggerData = report.getTriggerData().getValue();
+            Assert.assertTrue(0 <= triggerData && triggerData
                     < source.getTriggerDataCardinality());
             Assert.assertNull(report.getTriggerDedupKey());
             Assert.assertEquals(EventReport.Status.PENDING, report.getStatus());
@@ -1302,6 +1304,7 @@ public final class MeasurementImplTest {
         Source source =
                 spy(
                         SourceFixture.getValidSourceBuilder()
+                                .setEventId(new UnsignedLong(0L))
                                 .setAppDestination(
                                         SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
                                 .setWebDestination(null)
@@ -1363,6 +1366,7 @@ public final class MeasurementImplTest {
         Source source =
                 spy(
                         SourceFixture.getValidSourceBuilder()
+                                .setEventId(new UnsignedLong(0L))
                                 .setAppDestination(null)
                                 .setWebDestination(SourceFixture.ValidSourceParams.WEB_DESTINATION)
                                 .build());
@@ -1421,6 +1425,7 @@ public final class MeasurementImplTest {
         Source source =
                 spy(
                         SourceFixture.getValidSourceBuilder()
+                                .setEventId(new UnsignedLong(0L))
                                 .setAppDestination(
                                         SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
                                 .setWebDestination(SourceFixture.ValidSourceParams.WEB_DESTINATION)
@@ -1494,6 +1499,7 @@ public final class MeasurementImplTest {
         Source source =
                 spy(
                         SourceFixture.getValidSourceBuilder()
+                                .setEventId(new UnsignedLong(0L))
                                 .setAppDestination(
                                         SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
                                 .setWebDestination(null)
@@ -1548,7 +1554,9 @@ public final class MeasurementImplTest {
                 .mapToObj(
                         x ->
                                 new Source.FakeReport(
-                                        0, source.getReportingTimeForNoising(0), destination))
+                                        new UnsignedLong(0L),
+                                        source.getReportingTimeForNoising(0),
+                                        destination))
                 .collect(Collectors.toList());
     }
 
