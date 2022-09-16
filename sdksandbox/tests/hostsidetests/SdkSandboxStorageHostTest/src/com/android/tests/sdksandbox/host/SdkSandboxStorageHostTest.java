@@ -39,6 +39,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -57,6 +58,9 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     private static final String TEST_APP_STORAGE_V2_NO_SDK =
             "SdkSandboxStorageTestAppV2_DoesNotConsumeSdk.apk";
     private static final String SDK_NAME = "com.android.tests.codeprovider.storagetest";
+
+    private static final String SHARED_DIR = "shared";
+    private static final String SANDBOX_DIR = "sandbox";
 
     // Needs to be at least 20s since that's how long we delay reconcile on SdkSandboxManagerService
     private static final long WAIT_FOR_RECONCILE_MS = 30000;
@@ -109,9 +113,11 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
                 "sdk_sandbox_system_data_file");
         // Check label of /data/misc_{ce,de}/0/sdksandbox/<app-name>/shared
         assertSelinuxLabel(
-                getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, true), "sdk_sandbox_data_file");
+                getSdkDataInternalPath(0, TEST_APP_STORAGE_PACKAGE, SHARED_DIR, true),
+                "sdk_sandbox_data_file");
         assertSelinuxLabel(
-                getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, false), "sdk_sandbox_data_file");
+                getSdkDataInternalPath(0, TEST_APP_STORAGE_PACKAGE, SHARED_DIR, false),
+                "sdk_sandbox_data_file");
         // Check label of /data/misc_{ce,de}/0/sdksandbox/<app-name>/<sdk-package>
         assertSelinuxLabel(getSdkDataPerSdkPath(0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, true),
                 "sdk_sandbox_data_file");
@@ -400,7 +406,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
         final String cePackageDir = getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, true);
         // Delete the shared directory
-        final String sharedDir = cePackageDir + "/shared";
+        final String sharedDir = cePackageDir + "/" + SHARED_DIR;
         getDevice().deleteFile(sharedDir);
         assertDirectoryDoesNotExist(sharedDir);
 
@@ -490,8 +496,10 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
                 Arrays.asList(
                         getAppDataPath(0, TEST_APP_STORAGE_PACKAGE, true), // CE app data
                         getAppDataPath(0, TEST_APP_STORAGE_PACKAGE, false), // DE app data
-                        getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, true), // CE sdk data
-                        getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, false), // DE sdk data
+                        getSdkDataInternalPath(
+                                0, TEST_APP_STORAGE_PACKAGE, SHARED_DIR, true), // CE sdk data
+                        getSdkDataInternalPath(
+                                0, TEST_APP_STORAGE_PACKAGE, SHARED_DIR, false), // DE sdk data
                         getSdkDataPerSdkPath(
                                 0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, true), // CE per-sdk
                         getSdkDataPerSdkPath(
@@ -526,8 +534,10 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
                 Arrays.asList(
                         getAppDataPath(0, TEST_APP_STORAGE_PACKAGE, true), // CE app data
                         getAppDataPath(0, TEST_APP_STORAGE_PACKAGE, false), // DE app data
-                        getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, true), // CE sdk data
-                        getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, false), // DE sdk data
+                        getSdkDataInternalPath(
+                                0, TEST_APP_STORAGE_PACKAGE, SHARED_DIR, true), // CE sdk data
+                        getSdkDataInternalPath(
+                                0, TEST_APP_STORAGE_PACKAGE, SHARED_DIR, false), // DE sdk data
                         getSdkDataPerSdkPath(
                                 0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, true), // CE per-sdk
                         getSdkDataPerSdkPath(
@@ -562,8 +572,10 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
                 Arrays.asList(
                         getAppDataPath(0, TEST_APP_STORAGE_PACKAGE, true), // CE app data
                         getAppDataPath(0, TEST_APP_STORAGE_PACKAGE, false), // DE app data
-                        getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, true), // CE sdk data
-                        getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, false), // DE sdk data
+                        getSdkDataInternalPath(
+                                0, TEST_APP_STORAGE_PACKAGE, SHARED_DIR, true), // CE sdk data
+                        getSdkDataInternalPath(
+                                0, TEST_APP_STORAGE_PACKAGE, SHARED_DIR, false), // DE sdk data
                         getSdkDataPerSdkPath(
                                 0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, true), // CE per-sdk
                         getSdkDataPerSdkPath(
@@ -620,7 +632,8 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         installPackage(TEST_APP_STORAGE_APK);
 
         // Verify that shared storage exist
-        final String sharedCePath = getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, true);
+        final String sharedCePath =
+                getSdkDataInternalPath(0, TEST_APP_STORAGE_PACKAGE, SHARED_DIR, true);
         assertThat(getDevice().isDirectory(sharedCePath)).isTrue();
 
         // Write a file in the shared storage that code needs to read and write it back
@@ -664,8 +677,10 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
                 /*includeRandomSuffix=*/false);
         final List<String> deSdkDirsAfterLoadingSdksList = getSubDirs(dePackagePath,
                 /*includeRandomSuffix=*/false);
-        assertThat(ceSdkDirsAfterLoadingSdksList).containsExactly("shared", SDK_NAME);
-        assertThat(deSdkDirsAfterLoadingSdksList).containsExactly("shared", SDK_NAME);
+        assertThat(ceSdkDirsAfterLoadingSdksList)
+                .containsExactly(SHARED_DIR, SDK_NAME, SANDBOX_DIR);
+        assertThat(deSdkDirsAfterLoadingSdksList)
+                .containsExactly(SHARED_DIR, SDK_NAME, SANDBOX_DIR);
     }
 
     @Test
@@ -685,8 +700,10 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
                 /*includeRandomSuffix=*/false);
         final List<String> deSdkDirsAfterLoadingSdksList = getSubDirs(dePackagePath,
                 /*includeRandomSuffix=*/false);
-        assertThat(ceSdkDirsAfterLoadingSdksList).containsExactly("shared", SDK_NAME);
-        assertThat(deSdkDirsAfterLoadingSdksList).containsExactly("shared", SDK_NAME);
+        assertThat(ceSdkDirsAfterLoadingSdksList)
+                .containsExactly(SHARED_DIR, SDK_NAME, SANDBOX_DIR);
+        assertThat(deSdkDirsAfterLoadingSdksList)
+                .containsExactly(SHARED_DIR, SDK_NAME, SANDBOX_DIR);
     }
 
     @Test
@@ -710,8 +727,10 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
                 /*includeRandomSuffix=*/false);
         final List<String> deSdkDirsAfterLoadingSdksList =
                 getSubDirs(dePackagePath, /*includeRandomSuffix=*/ false);
-        assertThat(ceSdkDirsAfterLoadingSdksList).containsExactly("shared", SDK_NAME);
-        assertThat(deSdkDirsAfterLoadingSdksList).containsExactly("shared", SDK_NAME);
+        assertThat(ceSdkDirsAfterLoadingSdksList)
+                .containsExactly(SHARED_DIR, SDK_NAME, SANDBOX_DIR);
+        assertThat(deSdkDirsAfterLoadingSdksList)
+                .containsExactly(SHARED_DIR, SDK_NAME, SANDBOX_DIR);
     }
 
     @Test
@@ -724,9 +743,11 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
                 getSubDirs(cePackagePath, /*includeRandomSuffix=*/ true);
         final List<String> deSdkDirsBeforeLoadingSdksList =
                 getSubDirs(dePackagePath, /*includeRandomSuffix=*/ true);
+
         // Delete the sdk sub directories
-        getDevice().deleteFile(cePackagePath + "/" + ceSdkDirsBeforeLoadingSdksList.get(1));
-        getDevice().deleteFile(dePackagePath + "/" + deSdkDirsBeforeLoadingSdksList.get(1));
+        getDevice().deleteFile(cePackagePath + "/" + SHARED_DIR);
+        getDevice().deleteFile(dePackagePath + "/" + SHARED_DIR);
+
         runPhase("loadSdk");
 
         final List<String> ceSdkDirsAfterLoadingSdksList =
@@ -757,6 +778,9 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     @Test
     public void testSdkDataSubDirectory_IsCreatedOnInstall() throws Exception {
         // Directory should not exist before install
+        assertThat(getSdkDataInternalPath(0, TEST_APP_STORAGE_PACKAGE, SANDBOX_DIR, true)).isNull();
+        assertThat(getSdkDataInternalPath(0, TEST_APP_STORAGE_PACKAGE, SANDBOX_DIR, false))
+                .isNull();
         assertThat(getSdkDataPerSdkPath(0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, true)).isNull();
         assertThat(getSdkDataPerSdkPath(0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, false)).isNull();
 
@@ -764,6 +788,10 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         installPackage(TEST_APP_STORAGE_APK);
 
         // Verify directory is created
+        assertThat(getSdkDataInternalPath(0, TEST_APP_STORAGE_PACKAGE, SANDBOX_DIR, true))
+                .isNotNull();
+        assertThat(getSdkDataInternalPath(0, TEST_APP_STORAGE_PACKAGE, SANDBOX_DIR, false))
+                .isNotNull();
         assertThat(getSdkDataPerSdkPath(0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, true)).isNotNull();
         assertThat(getSdkDataPerSdkPath(0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, false)).isNotNull();
     }
@@ -898,7 +926,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
                 boolean isCeData = (i == 0) ? true : false;
                 final String sdkDataRootPath = getSdkDataRootPath(newVolumeUuid, 0, isCeData);
                 final String sdkDataPackagePath = sdkDataRootPath + "/" + TEST_APP_STORAGE_PACKAGE;
-                final String sdkDataSharedPath = sdkDataPackagePath + "/" + "shared";
+                final String sdkDataSharedPath = sdkDataPackagePath + "/" + SHARED_DIR;
 
                 assertThat(getDevice().isDirectory(sdkDataRootPath)).isTrue();
                 assertThat(getDevice().isDirectory(sdkDataPackagePath)).isTrue();
@@ -926,7 +954,8 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
                     "pm move-package " + TEST_APP_STORAGE_PACKAGE + " " + newVolumeUuid));
 
             final String sharedCePath =
-                    getSdkDataSharedPath(newVolumeUuid, 0, TEST_APP_STORAGE_PACKAGE, true);
+                    getSdkDataInternalPath(
+                            newVolumeUuid, 0, TEST_APP_STORAGE_PACKAGE, SHARED_DIR, true);
             assertThat(getDevice().isDirectory(sharedCePath)).isTrue();
 
             String fileToRead = sharedCePath + "/readme.txt";
@@ -983,7 +1012,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
                 assertDirectoryDoesNotExist(OldPackagePath);
                 final List<String> SdkDirsInNewVolume =
                         getSubDirs(sdkDataPackagePath, /*includeRandomSuffix=*/ false);
-                assertThat(SdkDirsInNewVolume).containsExactly("shared", SDK_NAME);
+                assertThat(SdkDirsInNewVolume).containsExactly(SHARED_DIR, SDK_NAME, SANDBOX_DIR);
             }
         } finally {
             mAdoptableUtils.cleanUpVolume();
@@ -1060,19 +1089,54 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
                 "%s/%s", getSdkDataRootPath(volumeUuid, userId, isCeData), packageName);
     }
 
-    private String getSdkDataSharedPath(int userId, String packageName, boolean isCeData) {
-        return getSdkDataSharedPath(/*volumeUuid=*/ null, userId, packageName, isCeData);
-    }
-
-    private String getSdkDataSharedPath(
-            @Nullable String volumeUuid, int userId, String packageName, boolean isCeData) {
-        return String.format(
-                "%s/shared", getSdkDataPackagePath(volumeUuid, userId, packageName, isCeData));
-    }
-
     private String getSdkDataPerSdkPath(
             int userId, String packageName, String sdkName, boolean isCeData) throws Exception {
         return getSdkDataPerSdkPath(/*volumeUuid=*/ null, userId, packageName, sdkName, isCeData);
+    }
+
+    @Nullable
+    private String getSdkDataInternalPath(
+            int userId, String packageName, String internalDirName, boolean isCeData)
+            throws Exception {
+        return getSdkDataInternalPath(
+                /*volumeUuid=*/ null, userId, packageName, internalDirName, isCeData);
+    }
+
+    // Internal sub-directory can have random suffix. So we need to iterate over the app-level
+    // directory to find it.
+    @Nullable
+    private String getSdkDataInternalPath(
+            @Nullable String volumeUuid,
+            int userId,
+            String packageName,
+            String internalDirName,
+            boolean isCeData)
+            throws Exception {
+        final String appLevelPath =
+                getSdkDataPackagePath(volumeUuid, userId, packageName, isCeData);
+        if (internalDirName.equals(SHARED_DIR)) {
+            return Paths.get(appLevelPath, SHARED_DIR).toString();
+        }
+
+        final String[] children = getDevice().getChildren(appLevelPath);
+        String result = null;
+        for (String child : children) {
+            if (!child.contains("#")) continue;
+            String[] tokens = child.split("#");
+            if (tokens.length != 2) {
+                continue;
+            }
+            String dirNameFound = tokens[0];
+            if (internalDirName.equals(dirNameFound)) {
+                if (result == null) {
+                    result = Paths.get(appLevelPath, child).toString();
+                } else {
+                    throw new IllegalStateException(
+                            "Found two internal directory with same name: " + internalDirName);
+                }
+            }
+        }
+        return result;
     }
 
     // Per-Sdk directory has random suffix. So we need to iterate over the app-level directory
@@ -1090,6 +1154,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         final String[] children = getDevice().getChildren(appLevelPath);
         String result = null;
         for (String child : children) {
+            if (!child.contains("@")) continue;
             String[] tokens = child.split("@");
             if (tokens.length != 2) {
                 continue;
@@ -1117,7 +1182,12 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         }
         final List<String> result = new ArrayList();
         for (int i = 0; i < children.length; i++) {
-            final String[] tokens = children[i].split("@");
+            String[] tokens;
+            if (children[i].contains("@")) {
+                tokens = children[i].split("@");
+            } else {
+                tokens = children[i].split("#");
+            }
             result.add(tokens[0]);
         }
         return result;
