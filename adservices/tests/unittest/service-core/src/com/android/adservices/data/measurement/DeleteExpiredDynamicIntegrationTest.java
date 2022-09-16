@@ -20,6 +20,7 @@ import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_DELETE
 import android.net.Uri;
 
 import com.android.adservices.service.measurement.Source;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONException;
 import org.junit.runner.RunWith;
@@ -54,7 +55,7 @@ public class DeleteExpiredDynamicIntegrationTest extends AbstractDbIntegrationTe
                         .setAppDestination(Uri.parse("android-app://com.example.app/aD"))
                         .setPublisher(Uri.parse("https://example.com/aS"))
                         .setId("non-expired")
-                        .setEventId(2L)
+                        .setEventId(new UnsignedLong(2L))
                         .setPriority(3L)
                         .setEventTime(insideExpiredWindow)
                         .setExpiryTime(5L)

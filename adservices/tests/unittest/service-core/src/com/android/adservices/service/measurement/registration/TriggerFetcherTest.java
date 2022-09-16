@@ -49,6 +49,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementRegistrationResponseStats;
 
@@ -85,13 +86,13 @@ public final class TriggerFetcherTest {
             .setEnrollmentId("enrollment-id")
             .build();
     private static final String TOP_ORIGIN = "https://baz.com";
-    private static final long TRIGGER_DATA = 7;
+    private static final UnsignedLong TRIGGER_DATA = new UnsignedLong(7L);
     private static final long PRIORITY = 1;
     private static final String LONG_FILTER_STRING = "12345678901234567890123456";
     private static final String LONG_AGGREGATE_KEY_ID = "12345678901234567890123456";
     private static final String LONG_AGGREGATE_KEY_PIECE = "0x123456789012345678901234567890123";
-    private static final long DEDUP_KEY = 100;
-    private static final Long DEBUG_KEY = 34787843L;
+    private static final UnsignedLong DEDUP_KEY = new UnsignedLong(100L);
+    private static final UnsignedLong DEBUG_KEY = new UnsignedLong(34787843L);
 
     private static final String DEFAULT_REDIRECT = "https://bar.com";
 
@@ -780,7 +781,7 @@ public final class TriggerFetcherTest {
         assertEquals(TOP_ORIGIN, result.get(0).getTopOrigin().toString());
         assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
         assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.get(0).getEventTriggers());
-        assertEquals(Long.valueOf(-1), result.get(0).getDebugKey());
+        assertEquals(new UnsignedLong(-1L), result.get(0).getDebugKey());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 

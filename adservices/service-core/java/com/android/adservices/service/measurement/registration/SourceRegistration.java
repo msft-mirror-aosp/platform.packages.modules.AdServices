@@ -23,6 +23,7 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
 
+import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Validation;
 
 import java.util.Objects;
@@ -36,12 +37,12 @@ public final class SourceRegistration {
     private final String mEnrollmentId;
     private final Uri mAppDestination;
     private final Uri mWebDestination;
-    private final long mSourceEventId;
+    private final UnsignedLong mSourceEventId;
     private final long mExpiry;
     private final long mSourcePriority;
     private final long mInstallAttributionWindow;
     private final long mInstallCooldownWindow;
-    @Nullable private final Long mDebugKey;
+    @Nullable private final UnsignedLong mDebugKey;
     private final String mAggregateSource;
     private final String mAggregateFilterData;
 
@@ -51,12 +52,12 @@ public final class SourceRegistration {
             @NonNull String enrollmentId,
             @Nullable Uri appDestination,
             @Nullable Uri webDestination,
-            long sourceEventId,
+            UnsignedLong sourceEventId,
             long expiry,
             long sourcePriority,
             long installAttributionWindow,
             long installCooldownWindow,
-            @Nullable Long debugKey,
+            @Nullable UnsignedLong debugKey,
             @Nullable String aggregateSource,
             @Nullable String aggregateFilterData) {
         mTopOrigin = topOrigin;
@@ -78,7 +79,7 @@ public final class SourceRegistration {
         if (this == o) return true;
         if (!(o instanceof SourceRegistration)) return false;
         SourceRegistration that = (SourceRegistration) o;
-        return mSourceEventId == that.mSourceEventId
+        return Objects.equals(mSourceEventId, that.mSourceEventId)
                 && mExpiry == that.mExpiry
                 && mSourcePriority == that.mSourcePriority
                 && mInstallAttributionWindow == that.mInstallAttributionWindow
@@ -135,12 +136,12 @@ public final class SourceRegistration {
 
     /** Source event id. */
     @NonNull
-    public long getSourceEventId() {
+    public UnsignedLong getSourceEventId() {
         return mSourceEventId;
     }
 
     /** Source debug key. */
-    public @Nullable Long getDebugKey() {
+    public @Nullable UnsignedLong getDebugKey() {
         return mDebugKey;
     }
 
@@ -192,12 +193,12 @@ public final class SourceRegistration {
         private String mEnrollmentId;
         private Uri mAppDestination;
         private Uri mWebDestination;
-        private long mSourceEventId;
+        private UnsignedLong mSourceEventId;
         private long mExpiry;
         private long mSourcePriority;
         private long mInstallAttributionWindow;
         private long mInstallCooldownWindow;
-        private @Nullable Long mDebugKey;
+        private @Nullable UnsignedLong mDebugKey;
         private String mAggregateSource;
         private String mAggregateFilterData;
 
@@ -246,13 +247,13 @@ public final class SourceRegistration {
 
         /** See {@link SourceRegistration#getSourceEventId}. */
         @NonNull
-        public Builder setSourceEventId(long sourceEventId) {
+        public Builder setSourceEventId(UnsignedLong sourceEventId) {
             mSourceEventId = sourceEventId;
             return this;
         }
 
         /** See {@link SourceRegistration#getDebugKey()}. */
-        public @NonNull Builder setDebugKey(@Nullable Long debugKey) {
+        public @NonNull Builder setDebugKey(@Nullable UnsignedLong debugKey) {
             mDebugKey = debugKey;
             return this;
         }
