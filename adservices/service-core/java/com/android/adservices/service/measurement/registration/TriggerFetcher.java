@@ -104,11 +104,12 @@ public class TriggerFetcher {
         try {
             JSONObject json = new JSONObject(field.get(0));
             if (!json.isNull(TriggerHeaderContract.EVENT_TRIGGER_DATA)) {
-                if (!isValidEventTriggerData(
-                        json.getJSONArray(TriggerHeaderContract.EVENT_TRIGGER_DATA))) {
+                Optional<String> validEventTriggerData = getValidEventTriggerData(
+                        json.getJSONArray(TriggerHeaderContract.EVENT_TRIGGER_DATA));
+                if (!validEventTriggerData.isPresent()) {
                     return false;
                 }
-                result.setEventTriggers(json.getString(TriggerHeaderContract.EVENT_TRIGGER_DATA));
+                result.setEventTriggers(validEventTriggerData.get());
             }
             if (!json.isNull(TriggerHeaderContract.AGGREGATABLE_TRIGGER_DATA)) {
                 if (!isValidAggregateTriggerData(
@@ -133,9 +134,8 @@ public class TriggerFetcher {
             boolean isAppAllow = !isWebSource && isAdIdPermissionGranted;
             if (!json.isNull(TriggerHeaderContract.DEBUG_KEY) && (isWebAllow || isAppAllow)) {
                 try {
-                    result.setDebugKey(
-                            Long.parseUnsignedLong(
-                                    json.getString(TriggerHeaderContract.DEBUG_KEY)));
+                    result.setDebugKey(Long.parseUnsignedLong(
+                            json.getString(TriggerHeaderContract.DEBUG_KEY)));
                 } catch (NumberFormatException e) {
                     LogUtil.e(e, "Parsing trigger debug key failed");
                 }
@@ -320,8 +320,68 @@ public class TriggerFetcher {
                 mIoExecutor);
     }
 
-    private boolean isValidEventTriggerData(JSONArray eventTriggerDataArr) {
-        return eventTriggerDataArr.length() <= MAX_ATTRIBUTION_EVENT_TRIGGER_DATA;
+    private Optional<String> getValidEventTriggerData(JSONArray eventTriggerDataArr) {
+        if (eventTriggerDataArr.length() > MAX_ATTRIBUTION_EVENT_TRIGGER_DATA) {
+            LogUtil.d("Event trigger data list has more entries than permitted. %s",
+                    eventTriggerDataArr.length());
+            return Optional.empty();
+        }
+        JSONArray validEventTriggerData = new JSONArray();
+        for (int i = 0; i < eventTriggerDataArr.length(); i++) {
+            JSONObject validEventTriggerDatum = new JSONObject();
+            try {
+                JSONObject eventTriggerDatum = eventTriggerDataArr.getJSONObject(i);
+                // Treat invalid trigger data, priority and deduplication key as if they were not
+                // set.
+                if (!eventTriggerDatum.isNull("trigger_data")) {
+                    try {
+                        validEventTriggerDatum.put("trigger_data",
+                                Long.toUnsignedString(Long.parseUnsignedLong(
+                                        eventTriggerDatum.getString("trigger_data"))));
+                    } catch (NumberFormatException e) {
+                        LogUtil.d(e, "getValidEventTriggerData: parsing trigger_data failed.");
+                    }
+                }
+                if (!eventTriggerDatum.isNull("priority")) {
+                    try {
+                        validEventTriggerDatum.put("priority",
+                                String.valueOf(
+                                        Long.parseLong(eventTriggerDatum.getString("priority"))));
+                    } catch (NumberFormatException e) {
+                        LogUtil.d(e, "getValidEventTriggerData: parsing priority failed.");
+                    }
+                }
+                if (!eventTriggerDatum.isNull("deduplication_key")) {
+                    try {
+                        validEventTriggerDatum.put("deduplication_key",
+                                Long.toUnsignedString(Long.parseUnsignedLong(
+                                        eventTriggerDatum.getString("deduplication_key"))));
+                    } catch (NumberFormatException e) {
+                        LogUtil.d(e, "getValidEventTriggerData: parsing deduplication_key failed.");
+                    }
+                }
+                if (!eventTriggerDatum.isNull("filters")) {
+                    JSONObject filters = eventTriggerDatum.optJSONObject("filters");
+                    if (!FetcherUtil.areValidAttributionFilters(filters)) {
+                        LogUtil.d("getValidEventTriggerData: filters are invalid.");
+                        return Optional.empty();
+                    }
+                    validEventTriggerDatum.put("filters", filters);
+                }
+                if (!eventTriggerDatum.isNull("not_filters")) {
+                    JSONObject notFilters = eventTriggerDatum.optJSONObject("not_filters");
+                    if (!FetcherUtil.areValidAttributionFilters(notFilters)) {
+                        LogUtil.d("getValidEventTriggerData: not-filters are invalid.");
+                        return Optional.empty();
+                    }
+                    validEventTriggerDatum.put("not_filters", notFilters);
+                }
+                validEventTriggerData.put(validEventTriggerDatum);
+            } catch (JSONException e) {
+                LogUtil.d(e, "Parsing event trigger datum JSON failed.");
+            }
+        }
+        return Optional.of(validEventTriggerData.toString());
     }
 
     private boolean isValidAggregateTriggerData(JSONArray aggregateTriggerDataArr)
