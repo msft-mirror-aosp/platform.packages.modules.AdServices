@@ -155,27 +155,21 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
         @Override
         public void onServiceDisconnected(ComponentName name) {
             LogUtil.d("onServiceDisconnected " + mServiceIntentAction);
-            synchronized (mLock) {
-                mService = null;
-            }
+            unbindFromService();
             mConnectionCountDownLatch.countDown();
         }
 
         @Override
         public void onBindingDied(ComponentName name) {
             LogUtil.d("onBindingDied " + mServiceIntentAction);
-            synchronized (mLock) {
-                mService = null;
-            }
+            unbindFromService();
             mConnectionCountDownLatch.countDown();
         }
 
         @Override
         public void onNullBinding(ComponentName name) {
             LogUtil.e("onNullBinding shouldn't happen: " + mServiceIntentAction);
-            synchronized (mLock) {
-                mService = null;
-            }
+            unbindFromService();
             mConnectionCountDownLatch.countDown();
         }
     }

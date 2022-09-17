@@ -54,6 +54,7 @@ public final class RegisterTrigger implements Action {
                                 Uri.parse(
                                         regParamsJson.getString(
                                                 TestFormatJsonMapping.REGISTRATION_URI_KEY)))
+                        .setAdIdPermissionGranted(true)
                         .setPackageName(attributionSource.getPackageName())
                         .build();
 

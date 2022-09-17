@@ -30,6 +30,7 @@ import com.android.adservices.service.measurement.attribution.AttributionJobHand
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.registration.SourceFetcher;
 import com.android.adservices.service.measurement.registration.TriggerFetcher;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.mockito.stubbing.Answer;
 
@@ -95,7 +96,7 @@ class TestObjectProvider {
                                 new EventReport.Builder()
                                         .setSourceId(source.getEventId())
                                         .setReportTime(source.getExpiryTime() + ONE_HOUR_IN_MILLIS)
-                                        .setTriggerData(0)
+                                        .setTriggerData(new UnsignedLong(0L))
                                         .setAttributionDestination(source.getAppDestination())
                                         .setEnrollmentId(source.getEnrollmentId())
                                         .setTriggerTime(0)

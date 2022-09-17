@@ -429,6 +429,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         try {
             synchronized (mLock) {
                 if (!mCallingInfosWithDeathRecipients.contains(callingInfo)) {
+                    Log.d(TAG, "Registering " + callingInfo + " for death notification");
                     callback.asBinder().linkToDeath(() -> onAppDeath(callingInfo), 0);
                     mCallingInfosWithDeathRecipients.add(callingInfo);
                     mUidImportanceListener.startListening();
@@ -552,6 +553,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private void onAppDeath(CallingInfo callingInfo) {
         synchronized (mLock) {
+            Log.d(TAG, "App " + callingInfo + " has died, cleaning up associated sandbox info");
             mSandboxLifecycleCallbacks.remove(callingInfo);
             mPendingCallbacks.remove(callingInfo);
             mCallingInfosWithDeathRecipients.remove(callingInfo);
@@ -827,11 +829,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             // Sdk sandbox crashed or killed, system will start it again.
             // TODO(b/204991850): Handle restarts differently
             //  (e.g. Exponential backoff retry strategy)
+            Log.d(TAG, "Sandbox service for " + mCallingInfo + " has been disconnected");
             mServiceProvider.setBoundServiceForApp(mCallingInfo, null);
         }
 
         @Override
         public void onBindingDied(ComponentName name) {
+            Log.d(TAG, "Sandbox service failed to bind for " + mCallingInfo + " : died on binding");
             mServiceProvider.setBoundServiceForApp(mCallingInfo, null);
             mServiceProvider.unbindService(mCallingInfo, true);
             mServiceProvider.bindService(mCallingInfo, this);
@@ -839,6 +843,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         @Override
         public void onNullBinding(ComponentName name) {
+            Log.d(TAG, "Sandbox service failed to bind for " + mCallingInfo + " : service is null");
             mCallback.onBindingFailed();
         }
     }
@@ -1140,6 +1145,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     void stopSdkSandboxService(CallingInfo currentCallingInfo, String reason) {
         if (!isSdkSandboxServiceRunning(currentCallingInfo)) {
+            Log.d(TAG, "Cannot kill sandbox for " + currentCallingInfo + ", already dead");
             return;
         }
 
