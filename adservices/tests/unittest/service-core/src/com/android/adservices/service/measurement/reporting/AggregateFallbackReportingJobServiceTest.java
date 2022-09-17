@@ -37,6 +37,7 @@ import android.app.job.JobScheduler;
 import android.content.Context;
 import android.provider.DeviceConfig;
 
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.compatibility.common.util.TestUtils;
@@ -244,6 +245,7 @@ public class AggregateFallbackReportingJobServiceTest {
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(DatastoreManagerFactory.class)
+                        .spyStatic(EnrollmentDao.class)
                         .spyStatic(AggregateFallbackReportingJobService.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
@@ -256,6 +258,8 @@ public class AggregateFallbackReportingJobServiceTest {
             doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
             doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
             doReturn(Mockito.mock(Context.class)).when(mSpyService).getApplicationContext();
+            ExtendedMockito.doReturn(mock(EnrollmentDao.class))
+                    .when(() -> EnrollmentDao.getInstance(any()));
             ExtendedMockito.doReturn(mMockDatastoreManager)
                     .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
             ExtendedMockito.doNothing()

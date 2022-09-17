@@ -1,5 +1,5 @@
 {
-  "description": "Two sources with differing priorities and equal event-time, and one trigger that matches both sources. Event report task within the expiry window sends the data corresponding to the source with higher priority.",
+  "description": "Two sources with the earlier one having higher priority, and one trigger that matches both sources. Event report task within the expiry window sends the data corresponding to the source with higher priority.",
   "input": {
     "sources": [
       {
@@ -37,14 +37,14 @@
             "Attribution-Reporting-Register-Source": {
               "source_event_id": "2",
               "destination": "android-app://example.2d1.com",
-              "priority": "200",
+              "priority": "20",
               "expiry": "172801"
             },
             "Location": null,
             "Attribution-Reporting-Redirect": null
           }
         }],
-        "timestamp": "800000000001"
+        "timestamp": "800000600001"
       }
     ],
     "triggers": [{
@@ -68,7 +68,7 @@
             "Attribution-Reporting-Redirect": null
           }
       }],
-      "timestamp": "800000000003"
+      "timestamp": "800001200001"
     }]
   },
   "output": {
@@ -77,7 +77,7 @@
       "report_url": "https://www.ad-tech1.com",
       "payload": {
         "attribution_destination": "android-app://example.2d1.com",
-        "source_event_id": "2",
+        "source_event_id": "1",
         "trigger_data": "2",
         "source_type": "navigation",
         "randomized_trigger_rate": 0.0024263

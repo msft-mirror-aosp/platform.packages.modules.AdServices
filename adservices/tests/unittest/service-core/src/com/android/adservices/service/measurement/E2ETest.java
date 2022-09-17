@@ -153,6 +153,8 @@ public abstract class E2ETest {
     interface AggregateReportPayloadKeys {
         String ATTRIBUTION_DESTINATION = "attribution_destination";
         String HISTOGRAMS = "histograms";
+        String SOURCE_DEBUG_KEY = "source_debug_key";
+        String TRIGGER_DEBUG_KEY = "trigger_debug_key";
     }
 
     interface AggregateHistogramKeys {
@@ -192,7 +194,6 @@ public abstract class E2ETest {
         String REPORT_TIME_KEY = "report_time";
         String REPORT_TO_KEY = "report_url";
         String PAYLOAD_KEY = "payload";
-        String DEBUG_KEY = "debug_key";
     }
 
     static Collection<Object[]> data(String testDirName) throws IOException, JSONException {
@@ -350,7 +351,7 @@ public abstract class E2ETest {
     }
 
     private static int hashForAggregateReportObject(JSONObject obj) {
-        Object[] objArray = new Object[3];
+        Object[] objArray = new Object[5];
         // We cannot use report time due to fuzzy matching between actual and expected output.
         objArray[0] = obj.optString(TestFormatJsonMapping.REPORT_TO_KEY, "");
         JSONObject payload = obj.optJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
@@ -358,6 +359,8 @@ public abstract class E2ETest {
         // To compare histograms, we already converted them to an ordered string of value pairs.
         objArray[2] = getComparableHistograms(
                 payload.optJSONArray(AggregateReportPayloadKeys.HISTOGRAMS));
+        objArray[3] = payload.optString(AggregateReportPayloadKeys.SOURCE_DEBUG_KEY, "");
+        objArray[4] = payload.optString(AggregateReportPayloadKeys.TRIGGER_DEBUG_KEY, "");
         return Arrays.hashCode(objArray);
     }
 
@@ -401,6 +404,14 @@ public abstract class E2ETest {
         JSONObject payload2 = obj2.getJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
         if (!payload1.optString(AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION, "").equals(
                 payload2.optString(AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION, ""))) {
+            return false;
+        }
+        if (!payload1.optString(AggregateReportPayloadKeys.SOURCE_DEBUG_KEY, "")
+                .equals(payload2.optString(AggregateReportPayloadKeys.SOURCE_DEBUG_KEY, ""))) {
+            return false;
+        }
+        if (!payload1.optString(AggregateReportPayloadKeys.TRIGGER_DEBUG_KEY, "")
+                .equals(payload2.optString(AggregateReportPayloadKeys.TRIGGER_DEBUG_KEY, ""))) {
             return false;
         }
         JSONArray histograms1 = payload1.optJSONArray(AggregateReportPayloadKeys.HISTOGRAMS);

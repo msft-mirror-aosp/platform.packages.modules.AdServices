@@ -19,7 +19,7 @@ package {
 java_library {
     name: "SdkSandboxTestUtils",
     srcs: [
-        "src/**/*.java",
+        "src/**/testutils/*.java",
     ],
     libs: [
         "framework-sdksandbox.impl",
@@ -30,7 +30,13 @@ java_library {
     visibility: [
         // TODO(b/222118402): adjust once code is moved
         "//packages/modules/AdServices:__subpackages__",
-        // TODO(b/222118402): remove once code is moved
-        "//packages/modules/SupplementalProcess/tests:__subpackages__",
     ],
+}
+
+java_library_host {
+    name: "SdkSandboxHostTestUtils",
+    srcs: [
+        "src/**/hosttestutils/*.java",
+    ],
+    libs: ["tradefed"],
 }

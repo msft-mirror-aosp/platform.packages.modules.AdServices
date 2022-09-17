@@ -19,6 +19,7 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
 
+import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Validation;
 
 import java.util.Objects;
@@ -33,7 +34,7 @@ public final class TriggerRegistration {
     private final String mAggregateValues;
     private final String mFilters;
     private final String mEventTriggers;
-    @Nullable private final Long mDebugKey;
+    @Nullable private final UnsignedLong mDebugKey;
 
     /** Create a trigger registration. */
     private TriggerRegistration(
@@ -43,7 +44,7 @@ public final class TriggerRegistration {
             @Nullable String aggregateTriggerData,
             @Nullable String aggregateValues,
             @Nullable String filters,
-            @Nullable Long debugKey) {
+            @Nullable UnsignedLong debugKey) {
         mTopOrigin = topOrigin;
         mEnrollmentId = enrollmentId;
         mAggregateTriggerData = aggregateTriggerData;
@@ -116,7 +117,7 @@ public final class TriggerRegistration {
         return mFilters;
     }
     /** Trigger Debug Key. */
-    public @Nullable Long getDebugKey() {
+    public @Nullable UnsignedLong getDebugKey() {
         return mDebugKey;
     }
 
@@ -130,7 +131,7 @@ public final class TriggerRegistration {
         private String mAggregateTriggerData;
         private String mAggregateValues;
         private String mFilters;
-        private @Nullable Long mDebugKey;
+        private @Nullable UnsignedLong mDebugKey;
 
         /** See {@link TriggerRegistration#getTopOrigin}. */
         @NonNull
@@ -177,7 +178,7 @@ public final class TriggerRegistration {
         }
 
         /** See {@link TriggerRegistration#getDebugKey()}. */
-        public Builder setDebugKey(@Nullable Long debugKey) {
+        public Builder setDebugKey(@Nullable UnsignedLong debugKey) {
             mDebugKey = debugKey;
             return this;
         }

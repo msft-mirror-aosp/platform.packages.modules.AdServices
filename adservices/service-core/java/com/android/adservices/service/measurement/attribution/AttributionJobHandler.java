@@ -184,6 +184,8 @@ class AttributionJobHandler {
                                                     .build())
                                     .setStatus(AggregateReport.Status.PENDING)
                                     .setApiVersion(API_VERSION)
+                                    .setSourceDebugKey(source.getDebugKey())
+                                    .setTriggerDebugKey(trigger.getDebugKey())
                                     .build();
 
                     measurementDao.updateSourceAggregateContributions(source);
