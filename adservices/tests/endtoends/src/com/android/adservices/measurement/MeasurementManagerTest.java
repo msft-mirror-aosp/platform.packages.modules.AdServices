@@ -60,7 +60,6 @@ import java.util.concurrent.TimeUnit;
 public class MeasurementManagerTest {
     // TODO: Add register tests with non-null callback and executor
     private static final String TAG = "MeasurementManagerTest";
-    private static final String SERVICE_APK_NAME = "com.android.adservices.api";
     private static final String CLIENT_PACKAGE_NAME = "com.android.adservices.endtoendtest";
     private static final long AWAIT_GET_ADID_TIMEOUT = 5000L;
 

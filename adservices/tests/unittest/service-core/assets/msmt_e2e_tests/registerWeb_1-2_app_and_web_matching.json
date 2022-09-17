@@ -50,7 +50,7 @@
           "Location": null
         }
       }],
-      "timestamp": "800000000003"
+      "timestamp": "800001200001"
     }],
     "triggers" : [{
       "registration_request": {
@@ -72,7 +72,7 @@
           "Location": null
         }
       }],
-      "timestamp": "800000000002"
+      "timestamp": "800000600001"
     }]
   },
   "output": {

@@ -34,6 +34,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
 import com.android.adservices.service.measurement.util.Enrollment;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
@@ -134,7 +135,7 @@ public class TriggerFetcher {
             boolean isAppAllow = !isWebSource && isAdIdPermissionGranted;
             if (!json.isNull(TriggerHeaderContract.DEBUG_KEY) && (isWebAllow || isAppAllow)) {
                 try {
-                    result.setDebugKey(Long.parseUnsignedLong(
+                    result.setDebugKey(new UnsignedLong(
                             json.getString(TriggerHeaderContract.DEBUG_KEY)));
                 } catch (NumberFormatException e) {
                     LogUtil.e(e, "Parsing trigger debug key failed");
@@ -335,9 +336,8 @@ public class TriggerFetcher {
                 // set.
                 if (!eventTriggerDatum.isNull("trigger_data")) {
                     try {
-                        validEventTriggerDatum.put("trigger_data",
-                                Long.toUnsignedString(Long.parseUnsignedLong(
-                                        eventTriggerDatum.getString("trigger_data"))));
+                        validEventTriggerDatum.put("trigger_data", new UnsignedLong(
+                                eventTriggerDatum.getString("trigger_data")));
                     } catch (NumberFormatException e) {
                         LogUtil.d(e, "getValidEventTriggerData: parsing trigger_data failed.");
                     }
@@ -353,9 +353,8 @@ public class TriggerFetcher {
                 }
                 if (!eventTriggerDatum.isNull("deduplication_key")) {
                     try {
-                        validEventTriggerDatum.put("deduplication_key",
-                                Long.toUnsignedString(Long.parseUnsignedLong(
-                                        eventTriggerDatum.getString("deduplication_key"))));
+                        validEventTriggerDatum.put("deduplication_key", new UnsignedLong(
+                                eventTriggerDatum.getString("deduplication_key")));
                     } catch (NumberFormatException e) {
                         LogUtil.d(e, "getValidEventTriggerData: parsing deduplication_key failed.");
                     }

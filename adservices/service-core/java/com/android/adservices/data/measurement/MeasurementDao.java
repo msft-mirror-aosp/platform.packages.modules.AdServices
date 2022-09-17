@@ -40,6 +40,7 @@ import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Web;
 
 import java.time.Instant;
@@ -101,7 +102,8 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.TriggerContract.AGGREGATE_VALUES,
                 trigger.getAggregateValues());
         values.put(MeasurementTables.TriggerContract.FILTERS, trigger.getFilters());
-        values.put(MeasurementTables.TriggerContract.DEBUG_KEY, trigger.getDebugKey());
+        values.put(MeasurementTables.TriggerContract.DEBUG_KEY,
+                getNullableUnsignedLong(trigger.getDebugKey()));
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.TriggerContract.TABLE,
                         /*nullColumnHack=*/null, values);
@@ -194,7 +196,7 @@ class MeasurementDao implements IMeasurementDao {
 
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.SourceContract.ID, UUID.randomUUID().toString());
-        values.put(MeasurementTables.SourceContract.EVENT_ID, source.getEventId());
+        values.put(MeasurementTables.SourceContract.EVENT_ID, source.getEventId().getValue());
         values.put(MeasurementTables.SourceContract.PUBLISHER, source.getPublisher().toString());
         values.put(MeasurementTables.SourceContract.PUBLISHER_TYPE, source.getPublisherType());
         values.put(
@@ -218,7 +220,8 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.SourceContract.AGGREGATE_SOURCE, source.getAggregateSource());
         values.put(MeasurementTables.SourceContract.FILTER_DATA, source.getAggregateFilterData());
         values.put(MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS, 0);
-        values.put(MeasurementTables.SourceContract.DEBUG_KEY, source.getDebugKey());
+        values.put(MeasurementTables.SourceContract.DEBUG_KEY,
+                getNullableUnsignedLong(source.getDebugKey()));
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.SourceContract.TABLE,
                         /*nullColumnHack=*/null, values);
@@ -450,15 +453,15 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.EventReportContract.ID,
                 UUID.randomUUID().toString());
         values.put(MeasurementTables.EventReportContract.SOURCE_ID,
-                eventReport.getSourceId());
+                eventReport.getSourceId().getValue());
         values.put(MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
                 eventReport.getAttributionDestination().toString());
         values.put(MeasurementTables.EventReportContract.TRIGGER_TIME,
                 eventReport.getTriggerTime());
         values.put(MeasurementTables.EventReportContract.TRIGGER_DATA,
-                eventReport.getTriggerData());
+                getNullableUnsignedLong(eventReport.getTriggerData()));
         values.put(MeasurementTables.EventReportContract.TRIGGER_DEDUP_KEY,
-                eventReport.getTriggerDedupKey());
+                getNullableUnsignedLong(eventReport.getTriggerDedupKey()));
         values.put(MeasurementTables.EventReportContract.ENROLLMENT_ID,
                 eventReport.getEnrollmentId());
         values.put(MeasurementTables.EventReportContract.STATUS,
@@ -473,10 +476,10 @@ class MeasurementDao implements IMeasurementDao {
                 eventReport.getRandomizedTriggerRate());
         values.put(
                 MeasurementTables.EventReportContract.SOURCE_DEBUG_KEY,
-                eventReport.getSourceDebugKey());
+                getNullableUnsignedLong(eventReport.getSourceDebugKey()));
         values.put(
                 MeasurementTables.EventReportContract.TRIGGER_DEBUG_KEY,
-                eventReport.getTriggerDebugKey());
+                getNullableUnsignedLong(eventReport.getTriggerDebugKey()));
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.EventReportContract.TABLE,
                         /*nullColumnHack=*/null, values);
@@ -489,8 +492,11 @@ class MeasurementDao implements IMeasurementDao {
     public void updateSourceDedupKeys(Source source) throws DatastoreException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.SourceContract.DEDUP_KEYS,
-                source.getDedupKeys().stream().map(String::valueOf).collect(
-                        Collectors.joining(",")));
+                source.getDedupKeys()
+                        .stream()
+                        .map(UnsignedLong::getValue)
+                        .map(String::valueOf)
+                        .collect(Collectors.joining(",")));
         long rows = mSQLTransaction.getDatabase()
                 .update(MeasurementTables.SourceContract.TABLE, values,
                         MeasurementTables.SourceContract.ID + " = ?",
@@ -1209,10 +1215,10 @@ class MeasurementDao implements IMeasurementDao {
                 aggregateReport.getApiVersion());
         values.put(
                 MeasurementTables.AggregateReport.SOURCE_DEBUG_KEY,
-                aggregateReport.getSourceDebugKey());
+                getNullableUnsignedLong(aggregateReport.getSourceDebugKey()));
         values.put(
                 MeasurementTables.AggregateReport.TRIGGER_DEBUG_KEY,
-                aggregateReport.getTriggerDebugKey());
+                getNullableUnsignedLong(aggregateReport.getTriggerDebugKey()));
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.AggregateReport.TABLE,
                         /*nullColumnHack=*/null, values);
@@ -1315,6 +1321,10 @@ class MeasurementDao implements IMeasurementDao {
 
     private static String getNullableUriString(@Nullable Uri uri) {
         return Optional.ofNullable(uri).map(Uri::toString).orElse(null);
+    }
+
+    private static Long getNullableUnsignedLong(@Nullable UnsignedLong ulong) {
+        return Optional.ofNullable(ulong).map(UnsignedLong::getValue).orElse(null);
     }
 
     /**

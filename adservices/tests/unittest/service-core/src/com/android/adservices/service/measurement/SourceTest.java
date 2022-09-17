@@ -32,6 +32,7 @@ import com.android.adservices.service.measurement.aggregation.AggregatableAttrib
 import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.noising.ImpressionNoiseParams;
 import com.android.adservices.service.measurement.noising.ImpressionNoiseUtil;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -51,8 +52,8 @@ import java.util.stream.LongStream;
 public class SourceTest {
 
     private static final double ZERO_DELTA = 0D;
-    private static final Long DEBUG_KEY_1 = 81786463L;
-    private static final Long DEBUG_KEY_2 = 23487834L;
+    private static final UnsignedLong DEBUG_KEY_1 = new UnsignedLong(81786463L);
+    private static final UnsignedLong DEBUG_KEY_2 = new UnsignedLong(23487834L);
 
     @Test
     public void testDefaults() {
@@ -89,11 +90,14 @@ public class SourceTest {
                         .setPublisher(Uri.parse("https://example.com/aS"))
                         .setPublisherType(EventSurfaceType.WEB)
                         .setId("1")
-                        .setEventId(2L)
+                        .setEventId(new UnsignedLong(2L))
                         .setPriority(3L)
                         .setEventTime(5L)
                         .setExpiryTime(5L)
-                        .setDedupKeys(LongStream.range(0, 2).boxed().collect(Collectors.toList()))
+                        .setDedupKeys(LongStream.range(0, 2)
+                                .boxed()
+                                .map(UnsignedLong::new)
+                                .collect(Collectors.toList()))
                         .setStatus(Source.Status.ACTIVE)
                         .setSourceType(Source.SourceType.EVENT)
                         .setRegistrant(Uri.parse("android-app://com.example.abc"))
@@ -111,11 +115,14 @@ public class SourceTest {
                         .setPublisher(Uri.parse("https://example.com/aS"))
                         .setPublisherType(EventSurfaceType.WEB)
                         .setId("1")
-                        .setEventId(2L)
+                        .setEventId(new UnsignedLong(2L))
                         .setPriority(3L)
                         .setEventTime(5L)
                         .setExpiryTime(5L)
-                        .setDedupKeys(LongStream.range(0, 2).boxed().collect(Collectors.toList()))
+                        .setDedupKeys(LongStream.range(0, 2)
+                                .boxed()
+                                .map(UnsignedLong::new)
+                                .collect(Collectors.toList()))
                         .setStatus(Source.Status.ACTIVE)
                         .setSourceType(Source.SourceType.EVENT)
                         .setRegistrant(Uri.parse("android-app://com.example.abc"))
@@ -134,8 +141,8 @@ public class SourceTest {
                 SourceFixture.getValidSourceBuilder().setId("1").build(),
                 SourceFixture.getValidSourceBuilder().setId("2").build());
         assertNotEquals(
-                SourceFixture.getValidSourceBuilder().setEventId(1).build(),
-                SourceFixture.getValidSourceBuilder().setEventId(2).build());
+                SourceFixture.getValidSourceBuilder().setEventId(new UnsignedLong(1L)).build(),
+                SourceFixture.getValidSourceBuilder().setEventId(new UnsignedLong(2L)).build());
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder()
                         .setAppDestination(Uri.parse("android-app://1.com"))
@@ -188,11 +195,11 @@ public class SourceTest {
                         .setStatus(Source.Status.IGNORED).build());
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder()
-                        .setDedupKeys(LongStream.range(0, 2).boxed()
+                        .setDedupKeys(LongStream.range(0, 2).boxed().map(UnsignedLong::new)
                                 .collect(Collectors.toList()))
                         .build(),
                 SourceFixture.getValidSourceBuilder()
-                        .setDedupKeys(LongStream.range(1, 3).boxed()
+                        .setDedupKeys(LongStream.range(1, 3).boxed().map(UnsignedLong::new)
                                 .collect(Collectors.toList()))
                         .build());
         assertNotEquals(
@@ -1304,7 +1311,8 @@ public class SourceTest {
                     assertTrue(
                             source.getExpiryTime() + TimeUnit.HOURS.toMillis(1)
                                     >= report.getReportingTime());
-                    assertTrue(report.getTriggerData() < expectedCardinality);
+                    Long triggerData = report.getTriggerData().getValue();
+                    assertTrue(0 <= triggerData && triggerData < expectedCardinality);
                 }
             } else if (source.getAttributionMode() == Source.AttributionMode.NEVER) {
                 neverCount++;
@@ -1331,7 +1339,7 @@ public class SourceTest {
                 .map(
                         reportState ->
                                 new Source.FakeReport(
-                                        reportState[0],
+                                        new UnsignedLong(Long.valueOf(reportState[0])),
                                         source.getReportingTimeForNoising(reportState[1]),
                                         reportState[2] == 0
                                                 ? source.getAppDestination()
@@ -1340,7 +1348,7 @@ public class SourceTest {
     }
 
     private void assertInvalidSourceArguments(
-            Long sourceEventId,
+            UnsignedLong sourceEventId,
             Uri publisher,
             Uri appDestination,
             Uri webDestination,
@@ -1352,7 +1360,7 @@ public class SourceTest {
             Source.SourceType sourceType,
             Long installAttributionWindow,
             Long installCooldownWindow,
-            @Nullable Long debugKey,
+            @Nullable UnsignedLong debugKey,
             @Source.AttributionMode int attributionMode,
             @Nullable String aggregateSource,
             @Nullable String aggregateFilterData) {

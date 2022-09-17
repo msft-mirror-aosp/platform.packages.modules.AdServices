@@ -20,6 +20,8 @@ import android.annotation.NonNull;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.service.measurement.util.UnsignedLong;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -29,13 +31,13 @@ import org.json.JSONObject;
 public final class EventReportPayload {
 
     private String mAttributionDestination;
-    private Long mSourceEventId; // uint64 stored as long
-    @Nullable private Long mTriggerData; // uint64 stored as long
+    private UnsignedLong mSourceEventId;
+    @NonNull private UnsignedLong mTriggerData;
     private String mReportId;
     private String mSourceType;
     private double mRandomizedTriggerRate;
-    @Nullable private Long mSourceDebugKey; // uint64 stored as long
-    @Nullable private Long mTriggerDebugKey; // uint64 stored as long
+    @Nullable private UnsignedLong mSourceDebugKey;
+    @Nullable private UnsignedLong mTriggerDebugKey;
 
     private EventReportPayload() {};
 
@@ -57,18 +59,16 @@ public final class EventReportPayload {
         JSONObject eventPayloadJson = new JSONObject();
 
         eventPayloadJson.put("attribution_destination", mAttributionDestination);
-        eventPayloadJson.put("source_event_id", Long.toUnsignedString(mSourceEventId));
-        if (mTriggerData != null) {
-            eventPayloadJson.put("trigger_data", Long.toUnsignedString(mTriggerData));
-        }
+        eventPayloadJson.put("source_event_id", mSourceEventId.toString());
+        eventPayloadJson.put("trigger_data", mTriggerData.toString());
         eventPayloadJson.put("report_id", mReportId);
         eventPayloadJson.put("source_type", mSourceType);
         eventPayloadJson.put("randomized_trigger_rate", mRandomizedTriggerRate);
         if (mSourceDebugKey != null) {
-            eventPayloadJson.put("source_debug_key", Long.toUnsignedString(mSourceDebugKey));
+            eventPayloadJson.put("source_debug_key", mSourceDebugKey.toString());
         }
         if (mTriggerDebugKey != null) {
-            eventPayloadJson.put("trigger_debug_key", Long.toUnsignedString(mTriggerDebugKey));
+            eventPayloadJson.put("trigger_debug_key", mTriggerDebugKey.toString());
         }
 
         return eventPayloadJson;
@@ -95,7 +95,7 @@ public final class EventReportPayload {
         /**
          * 64-bit event id set on the attribution source.
          */
-        public @NonNull Builder setSourceEventId(@NonNull Long sourceEventId) {
+        public @NonNull Builder setSourceEventId(@NonNull UnsignedLong sourceEventId) {
             mBuilding.mSourceEventId = sourceEventId;
             return this;
         }
@@ -103,7 +103,7 @@ public final class EventReportPayload {
         /**
          * Course data set in the attribution trigger registration.
          */
-        public @NonNull Builder setTriggerData(@NonNull Long triggerData) {
+        public @NonNull Builder setTriggerData(@NonNull UnsignedLong triggerData) {
             mBuilding.mTriggerData = triggerData;
             return this;
         }
@@ -134,13 +134,13 @@ public final class EventReportPayload {
         }
 
         /** Source debug key */
-        public @NonNull Builder setSourceDebugKey(@Nullable Long sourceDebugKey) {
+        public @NonNull Builder setSourceDebugKey(@Nullable UnsignedLong sourceDebugKey) {
             mBuilding.mSourceDebugKey = sourceDebugKey;
             return this;
         }
 
         /** Trigger debug key */
-        public @NonNull Builder setTriggerDebugKey(@Nullable Long triggerDebugKey) {
+        public @NonNull Builder setTriggerDebugKey(@Nullable UnsignedLong triggerDebugKey) {
             mBuilding.mTriggerDebugKey = triggerDebugKey;
             return this;
         }
@@ -149,6 +149,9 @@ public final class EventReportPayload {
          * Build the EventReportPayload.
          */
         public @NonNull EventReportPayload build() {
+            if (mBuilding.mTriggerData == null) {
+                mBuilding.mTriggerData = new UnsignedLong(0L);
+            }
             return new EventReportPayload(mBuilding);
         }
     }

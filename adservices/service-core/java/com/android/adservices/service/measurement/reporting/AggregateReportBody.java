@@ -22,6 +22,7 @@ import androidx.annotation.Nullable;
 
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoConverter;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -40,8 +41,8 @@ public class AggregateReportBody {
     private String mReportId;
     private String mReportingOrigin;
     private String mDebugCleartextPayload;
-    @Nullable private Long mSourceDebugKey;
-    @Nullable private Long mTriggerDebugKey;
+    @Nullable private UnsignedLong mSourceDebugKey;
+    @Nullable private UnsignedLong mTriggerDebugKey;
 
     private static final String API_NAME = "attribution-reporting";
 
@@ -93,12 +94,10 @@ public class AggregateReportBody {
                 aggregationServicePayloadsToJson(sharedInfo, key));
 
         if (mSourceDebugKey != null) {
-            aggregateBodyJson.put(PayloadBodyKeys.SOURCE_DEBUG_KEY,
-                    Long.toUnsignedString(mSourceDebugKey));
+            aggregateBodyJson.put(PayloadBodyKeys.SOURCE_DEBUG_KEY, mSourceDebugKey.toString());
         }
         if (mTriggerDebugKey != null) {
-            aggregateBodyJson.put(PayloadBodyKeys.TRIGGER_DEBUG_KEY,
-                    Long.toUnsignedString(mTriggerDebugKey));
+            aggregateBodyJson.put(PayloadBodyKeys.TRIGGER_DEBUG_KEY, mTriggerDebugKey.toString());
         }
 
         return aggregateBodyJson;
@@ -136,10 +135,11 @@ public class AggregateReportBody {
         aggregationServicePayload.put(AggregationServicePayloadKeys.PAYLOAD, encryptedPayload);
         aggregationServicePayload.put(AggregationServicePayloadKeys.KEY_ID, key.getKeyId());
 
-        aggregationServicePayload.put(
-                AggregationServicePayloadKeys.DEBUG_CLEARTEXT_PAYLOAD,
-                AggregateCryptoConverter.encode(mDebugCleartextPayload));
-
+        if (mSourceDebugKey != null || mTriggerDebugKey != null) {
+            aggregationServicePayload.put(
+                    AggregationServicePayloadKeys.DEBUG_CLEARTEXT_PAYLOAD,
+                    AggregateCryptoConverter.encode(mDebugCleartextPayload));
+        }
         aggregationServicePayloadsJson.put(aggregationServicePayload);
 
         return aggregationServicePayloadsJson;
@@ -212,13 +212,13 @@ public class AggregateReportBody {
         }
 
         /** Source debug key */
-        public @NonNull Builder setSourceDebugKey(@Nullable Long sourceDebugKey) {
+        public @NonNull Builder setSourceDebugKey(@Nullable UnsignedLong sourceDebugKey) {
             mBuilding.mSourceDebugKey = sourceDebugKey;
             return this;
         }
 
         /** Trigger debug key */
-        public @NonNull Builder setTriggerDebugKey(@Nullable Long triggerDebugKey) {
+        public @NonNull Builder setTriggerDebugKey(@Nullable UnsignedLong triggerDebugKey) {
             mBuilding.mTriggerDebugKey = triggerDebugKey;
             return this;
         }

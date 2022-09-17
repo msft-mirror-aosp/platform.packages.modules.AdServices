@@ -73,12 +73,12 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
 
         mWasRoot = getDevice().isAdbRoot();
         getDevice().enableAdbRoot();
-
-        cleanUpAppAndSandboxProcesses();
     }
 
     @After
     public void tearDown() throws Exception {
+        cleanUpAppAndSandboxProcesses();
+
         if (!mWasRoot) {
             getDevice().disableAdbRoot();
         }

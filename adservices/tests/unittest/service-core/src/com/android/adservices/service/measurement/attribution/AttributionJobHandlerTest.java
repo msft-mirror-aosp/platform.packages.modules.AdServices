@@ -43,6 +43,7 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.TriggerFixture;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -70,6 +71,8 @@ public class AttributionJobHandlerTest {
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Uri APP_DESTINATION = Uri.parse("android-app://com.example.app");
     private static final Uri PUBLISHER = Uri.parse("android-app://publisher.app");
+    private static final UnsignedLong SOURCE_DEBUG_KEY = new UnsignedLong(111111L);
+    private static final UnsignedLong TRIGGER_DEBUG_KEY = new UnsignedLong(222222L);
     private static final String EVENT_TRIGGERS =
             "[\n"
                     + "{\n"
@@ -171,7 +174,7 @@ public class AttributionJobHandlerTest {
                                         + "]\n")
                         .build();
         Source source = SourceFixture.getValidSourceBuilder()
-                .setDedupKeys(Arrays.asList(1L, 2L))
+                .setDedupKeys(Arrays.asList(new UnsignedLong(1L), new UnsignedLong(2L)))
                 .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                 .build();
         List<Source> matchingSourceList = new ArrayList<>();
@@ -350,7 +353,8 @@ public class AttributionJobHandlerTest {
         Assert.assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
         ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
         verify(mMeasurementDao).updateSourceDedupKeys(sourceArg.capture());
-        Assert.assertEquals(sourceArg.getValue().getDedupKeys(), Collections.singletonList(2L));
+        Assert.assertEquals(sourceArg.getValue().getDedupKeys(),
+                Collections.singletonList(new UnsignedLong(2L)));
         verify(mMeasurementDao).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
@@ -403,7 +407,8 @@ public class AttributionJobHandlerTest {
         Assert.assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
         ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
         verify(mMeasurementDao).updateSourceDedupKeys(sourceArg.capture());
-        Assert.assertEquals(sourceArg.getValue().getDedupKeys(), Collections.singletonList(2L));
+        Assert.assertEquals(sourceArg.getValue().getDedupKeys(),
+                Collections.singletonList(new UnsignedLong(2L)));
         verify(mMeasurementDao).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
@@ -604,7 +609,7 @@ public class AttributionJobHandlerTest {
                         .build();
         // Lower priority and older priority source.
         Source source1 = SourceFixture.getValidSourceBuilder()
-                .setEventId(1)
+                .setEventId(new UnsignedLong(1L))
                 .setPriority(100L)
                 .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                 .setInstallAttributed(true)
@@ -612,7 +617,7 @@ public class AttributionJobHandlerTest {
                 .setEventTime(eventTime - TimeUnit.DAYS.toMillis(2))
                 .build();
         Source source2 = SourceFixture.getValidSourceBuilder()
-                .setEventId(2)
+                .setEventId(new UnsignedLong(2L))
                 .setPriority(200L)
                 .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                 .setEventTime(eventTime)
@@ -637,7 +642,8 @@ public class AttributionJobHandlerTest {
         ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
         verify(mMeasurementDao).updateSourceDedupKeys(sourceArg.capture());
         Assert.assertEquals(source1.getEventId(), sourceArg.getValue().getEventId());
-        Assert.assertEquals(sourceArg.getValue().getDedupKeys(), Collections.singletonList(2L));
+        Assert.assertEquals(sourceArg.getValue().getDedupKeys(),
+                Collections.singletonList(new UnsignedLong(2L)));
         verify(mMeasurementDao).insertEventReport(any());
     }
 
@@ -659,7 +665,7 @@ public class AttributionJobHandlerTest {
                         .build();
         // Lower Priority. Install cooldown Window passed.
         Source source1 = SourceFixture.getValidSourceBuilder()
-                .setEventId(1)
+                .setEventId(new UnsignedLong(1L))
                 .setPriority(100L)
                 .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                 .setInstallAttributed(true)
@@ -667,7 +673,7 @@ public class AttributionJobHandlerTest {
                 .setEventTime(eventTime - TimeUnit.DAYS.toMillis(2))
                 .build();
         Source source2 = SourceFixture.getValidSourceBuilder()
-                .setEventId(2)
+                .setEventId(new UnsignedLong(2L))
                 .setPriority(200L)
                 .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                 .setEventTime(eventTime)
@@ -692,7 +698,8 @@ public class AttributionJobHandlerTest {
         ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
         verify(mMeasurementDao).updateSourceDedupKeys(sourceArg.capture());
         Assert.assertEquals(source2.getEventId(), sourceArg.getValue().getEventId());
-        Assert.assertEquals(sourceArg.getValue().getDedupKeys(), Collections.singletonList(2L));
+        Assert.assertEquals(sourceArg.getValue().getDedupKeys(),
+                Collections.singletonList(new UnsignedLong(2L)));
         verify(mMeasurementDao).insertEventReport(any());
     }
 
@@ -966,7 +973,187 @@ public class AttributionJobHandlerTest {
         Assert.assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
         ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
         verify(mMeasurementDao).updateSourceDedupKeys(sourceArg.capture());
-        Assert.assertEquals(sourceArg.getValue().getDedupKeys(), Collections.singletonList(1L));
+        Assert.assertEquals(sourceArg.getValue().getDedupKeys(),
+                Collections.singletonList(new UnsignedLong(1L)));
+        verify(mMeasurementDao).insertEventReport(any());
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+    }
+
+    @Test
+    public void performAttributions_commonKeysIntersect_attributeTrigger_debugApi()
+            throws DatastoreException {
+        // Setup
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setStatus(Trigger.Status.PENDING)
+                        .setEventTriggers(
+                                "[\n"
+                                        + "{\n"
+                                        + "  \"trigger_data\": \"5\",\n"
+                                        + "  \"priority\": \"123\",\n"
+                                        + "  \"deduplication_key\": \"1\"\n"
+                                        + "}"
+                                        + "]\n")
+                        .setFilters(
+                                "{\n"
+                                        + "  \"key_1\": [\"value_11\", \"value_12\"],\n"
+                                        + "  \"key_2\": [\"value_21\", \"value_22\"]\n"
+                                        + "}\n")
+                        .setDebugKey(TRIGGER_DEBUG_KEY)
+                        .build();
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setAggregateFilterData(
+                                "{\n"
+                                        + "  \"key_1\": [\"value_11\", \"value_12_x\"],\n"
+                                        + "  \"key_2\": [\"value_21_x\", \"value_22\"]\n"
+                                        + "}\n")
+                        .setDebugKey(SOURCE_DEBUG_KEY)
+                        .build();
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
+        when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
+        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
+
+        // Execution
+        attributionService.performPendingAttributions();
+
+        // Assertions
+        ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
+        verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
+        Assert.assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
+        verify(mMeasurementDao).updateSourceDedupKeys(sourceArg.capture());
+        Assert.assertEquals(sourceArg.getValue().getDedupKeys(),
+                Collections.singletonList(new UnsignedLong(1L)));
+        Assert.assertEquals(sourceArg.getValue().getDebugKey(), SOURCE_DEBUG_KEY);
+        Assert.assertEquals(triggerArg.getValue().getDebugKey(), TRIGGER_DEBUG_KEY);
+        verify(mMeasurementDao).insertEventReport(any());
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+    }
+
+    @Test
+    public void performAttributions_commonKeysIntersect_attributeTrigger_debugApi_sourceKey()
+            throws DatastoreException {
+        // Setup
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setStatus(Trigger.Status.PENDING)
+                        .setEventTriggers(
+                                "[\n"
+                                        + "{\n"
+                                        + "  \"trigger_data\": \"5\",\n"
+                                        + "  \"priority\": \"123\",\n"
+                                        + "  \"deduplication_key\": \"1\"\n"
+                                        + "}"
+                                        + "]\n")
+                        .setFilters(
+                                "{\n"
+                                        + "  \"key_1\": [\"value_11\", \"value_12\"],\n"
+                                        + "  \"key_2\": [\"value_21\", \"value_22\"]\n"
+                                        + "}\n")
+                        .build();
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setAggregateFilterData(
+                                "{\n"
+                                        + "  \"key_1\": [\"value_11\", \"value_12_x\"],\n"
+                                        + "  \"key_2\": [\"value_21_x\", \"value_22\"]\n"
+                                        + "}\n")
+                        .setDebugKey(SOURCE_DEBUG_KEY)
+                        .build();
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
+        when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
+        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
+
+        // Execution
+        attributionService.performPendingAttributions();
+
+        // Assertions
+        ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
+        verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
+        Assert.assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
+        verify(mMeasurementDao).updateSourceDedupKeys(sourceArg.capture());
+        Assert.assertEquals(sourceArg.getValue().getDedupKeys(),
+                Collections.singletonList(new UnsignedLong(1L)));
+        Assert.assertEquals(sourceArg.getValue().getDebugKey(), SOURCE_DEBUG_KEY);
+        verify(mMeasurementDao).insertEventReport(any());
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+    }
+
+    @Test
+    public void performAttributions_commonKeysIntersect_attributeTrigger_debugApi_triggerKey()
+            throws DatastoreException {
+        // Setup
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setStatus(Trigger.Status.PENDING)
+                        .setEventTriggers(
+                                "[\n"
+                                        + "{\n"
+                                        + "  \"trigger_data\": \"5\",\n"
+                                        + "  \"priority\": \"123\",\n"
+                                        + "  \"deduplication_key\": \"1\"\n"
+                                        + "}"
+                                        + "]\n")
+                        .setFilters(
+                                "{\n"
+                                        + "  \"key_1\": [\"value_11\", \"value_12\"],\n"
+                                        + "  \"key_2\": [\"value_21\", \"value_22\"]\n"
+                                        + "}\n")
+                        .setDebugKey(TRIGGER_DEBUG_KEY)
+                        .build();
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setAggregateFilterData(
+                                "{\n"
+                                        + "  \"key_1\": [\"value_11\", \"value_12_x\"],\n"
+                                        + "  \"key_2\": [\"value_21_x\", \"value_22\"]\n"
+                                        + "}\n")
+                        .build();
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
+        when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
+        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
+
+        // Execution
+        attributionService.performPendingAttributions();
+
+        // Assertions
+        ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
+        verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
+        Assert.assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
+        Assert.assertEquals(triggerArg.getValue().getDebugKey(), TRIGGER_DEBUG_KEY);
+        verify(mMeasurementDao).updateSourceDedupKeys(sourceArg.capture());
+        Assert.assertEquals(sourceArg.getValue().getDedupKeys(),
+                Collections.singletonList(new UnsignedLong(1L)));
         verify(mMeasurementDao).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
@@ -1022,7 +1209,8 @@ public class AttributionJobHandlerTest {
         Assert.assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
         ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
         verify(mMeasurementDao).updateSourceDedupKeys(sourceArg.capture());
-        Assert.assertEquals(sourceArg.getValue().getDedupKeys(), Collections.singletonList(1L));
+        Assert.assertEquals(sourceArg.getValue().getDedupKeys(),
+                Collections.singletonList(new UnsignedLong(1L)));
         verify(mMeasurementDao).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
@@ -1070,8 +1258,8 @@ public class AttributionJobHandlerTest {
         EventReport expectedEventReport =
                 new EventReport.Builder()
                         .setTriggerPriority(3L)
-                        .setTriggerDedupKey(3L)
-                        .setTriggerData(1L)
+                        .setTriggerDedupKey(new UnsignedLong(3L))
+                        .setTriggerData(new UnsignedLong(1L))
                         .setTriggerTime(234324L)
                         .setSourceId(source.getEventId())
                         .setStatus(EventReport.Status.PENDING)
@@ -1148,8 +1336,8 @@ public class AttributionJobHandlerTest {
         EventReport expectedEventReport =
                 new EventReport.Builder()
                         .setTriggerPriority(3L)
-                        .setTriggerDedupKey(3L)
-                        .setTriggerData(1L)
+                        .setTriggerDedupKey(new UnsignedLong(3L))
+                        .setTriggerData(new UnsignedLong(1L))
                         .setTriggerTime(234324L)
                         .setSourceId(source.getEventId())
                         .setStatus(EventReport.Status.PENDING)
@@ -1229,8 +1417,8 @@ public class AttributionJobHandlerTest {
         EventReport expectedEventReport =
                 new EventReport.Builder()
                         .setTriggerPriority(3L)
-                        .setTriggerDedupKey(3L)
-                        .setTriggerData(3L)
+                        .setTriggerDedupKey(new UnsignedLong(3L))
+                        .setTriggerData(new UnsignedLong(3L))
                         .setTriggerTime(234324L)
                         .setSourceId(source.getEventId())
                         .setStatus(EventReport.Status.PENDING)

@@ -24,6 +24,7 @@ import android.net.Uri;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Validation;
 
 import org.json.JSONArray;
@@ -60,7 +61,7 @@ public class Trigger {
     private String mAggregateValues;
     private AggregatableAttributionTrigger mAggregatableAttributionTrigger;
     private String mFilters;
-    private @Nullable Long mDebugKey; // uint64 stored as long
+    private @Nullable UnsignedLong mDebugKey;
 
     @IntDef(value = {
             Status.PENDING,
@@ -240,7 +241,7 @@ public class Trigger {
     }
 
     /** Debug key of {@link Trigger}. */
-    public @Nullable Long getDebugKey() {
+    public @Nullable UnsignedLong getDebugKey() {
         return mDebugKey;
     }
     /**
@@ -306,7 +307,7 @@ public class Trigger {
             JSONObject eventTriggersJsonString = jsonArray.getJSONObject(i);
 
             if (!eventTriggersJsonString.isNull(EventTriggerContract.TRIGGER_DATA)) {
-                eventTriggerBuilder.setTriggerData(Long.parseUnsignedLong(
+                eventTriggerBuilder.setTriggerData(new UnsignedLong(
                         eventTriggersJsonString.getString(EventTriggerContract.TRIGGER_DATA)));
             }
 
@@ -316,7 +317,7 @@ public class Trigger {
             }
 
             if (!eventTriggersJsonString.isNull(EventTriggerContract.DEDUPLICATION_KEY)) {
-                eventTriggerBuilder.setDedupKey(Long.parseUnsignedLong(
+                eventTriggerBuilder.setDedupKey(new UnsignedLong(
                         eventTriggersJsonString.getString(EventTriggerContract.DEDUPLICATION_KEY)));
             }
 
@@ -437,7 +438,7 @@ public class Trigger {
         }
 
         /** See {@link Trigger#getDebugKey()} ()} */
-        public Builder setDebugKey(@Nullable Long debugKey) {
+        public Builder setDebugKey(@Nullable UnsignedLong debugKey) {
             mBuilding.mDebugKey = debugKey;
             return this;
         }
