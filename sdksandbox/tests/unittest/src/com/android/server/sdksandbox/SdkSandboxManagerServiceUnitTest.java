@@ -734,7 +734,14 @@ public class SdkSandboxManagerServiceUnitTest {
                 PackageManager.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES);
         assertThat(info).isNotNull();
         SandboxedSdkContext sandboxedSdkContext =
-                new SandboxedSdkContext(context, CLIENT_PACKAGE_NAME, info, SDK_NAME, null, null);
+                new SandboxedSdkContext(
+                        context,
+                        getClass().getClassLoader(),
+                        CLIENT_PACKAGE_NAME,
+                        info,
+                        SDK_NAME,
+                        null,
+                        null);
         Resources resources = sandboxedSdkContext.getResources();
 
         int integerId = resources.getIdentifier("test_integer", "integer",
@@ -2141,11 +2148,6 @@ public class SdkSandboxManagerServiceUnitTest {
             if (shouldForgetConnection) {
                 mService.remove(callingInfo);
             }
-        }
-
-        @Override
-        public void cleanup(CallingInfo callingInfo) {
-            mService.remove(callingInfo);
         }
 
         @Nullable

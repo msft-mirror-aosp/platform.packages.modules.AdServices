@@ -21,6 +21,7 @@ import android.net.Uri;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -100,7 +101,7 @@ public final class TriggerFixture {
                     + "\"geoValue\":1664"
                 + "}";
 
-        public static final Long DEBUG_KEY = 27836L;
+        public static final UnsignedLong DEBUG_KEY = new UnsignedLong(27836L);
 
         public static final AggregatableAttributionTrigger buildAggregatableAttributionTrigger() {
             final AggregateFilterData filter =

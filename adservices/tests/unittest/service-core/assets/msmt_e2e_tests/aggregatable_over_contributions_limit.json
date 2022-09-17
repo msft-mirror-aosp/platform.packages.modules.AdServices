@@ -16,6 +16,7 @@
             "destination": "android-app://example.2d1.com",
             "priority": "100",
             "expiry": "172801",
+            "debug_key": "347982378",
             "filter_data": {
               "conversion_subdomain": [
                 "electronics.megastore"
@@ -99,7 +100,7 @@
             "Attribution-Reporting-Redirect": null
           }
         }],
-        "timestamp": "800000000002"
+        "timestamp": "800000600001"
       },
       {
         "registration_request": {
@@ -154,7 +155,7 @@
             "Attribution-Reporting-Redirect": null
           }
         }],
-        "timestamp": "800000000002"
+        "timestamp": "800001200001"
       }
     ]
   },
@@ -168,7 +169,8 @@
           "source_event_id": "1",
           "trigger_data": "2",
           "source_type": "navigation",
-          "randomized_trigger_rate": 0.0024263
+          "randomized_trigger_rate": 0.0024263,
+          "source_debug_key" : "347982378"
         }
       },
       {
@@ -179,12 +181,13 @@
           "source_event_id": "1",
           "trigger_data": "3",
           "source_type": "navigation",
-          "randomized_trigger_rate": 0.0024263
+          "randomized_trigger_rate": 0.0024263,
+          "source_debug_key" : "347982378"
         }
       }
     ],
     "aggregatable_results": [{
-      "report_time": 800000000002,
+      "report_time": 800001200001,
       "report_url": "https://www.ad-tech1.com",
       "payload": {
         "attribution_destination": "android-app://example.2d1.com",
@@ -192,7 +195,8 @@
         "histograms": [
           {"key": "1369", "value": 32768},
           {"key": "2693", "value": 1664}
-        ]
+        ],
+        "source_debug_key" : "347982378"
       }
     }]
   }

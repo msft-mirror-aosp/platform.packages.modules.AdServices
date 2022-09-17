@@ -22,6 +22,8 @@ import android.net.Uri;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.service.measurement.util.UnsignedLong;
+
 import org.junit.Test;
 
 
@@ -50,7 +52,7 @@ public final class TriggerRegistrationTest {
                     + "}"
                     + "]\n";
 
-    private static final Long DEBUG_KEY = 23478951L;
+    private static final UnsignedLong DEBUG_KEY = new UnsignedLong(23478951L);
 
     private static final String AGGREGATE_TRIGGER_DATA =
             "[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\"],"

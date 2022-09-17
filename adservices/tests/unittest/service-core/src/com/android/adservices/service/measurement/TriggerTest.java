@@ -27,6 +27,7 @@ import android.net.Uri;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -65,7 +66,7 @@ public class TriggerTest {
                     + "}"
                     + "]\n";
 
-    private static final Long DEBUG_KEY = 2367372L;
+    private static final UnsignedLong DEBUG_KEY = new UnsignedLong(2367372L);
 
     @Test
     public void testEqualsPass() throws JSONException {
@@ -392,8 +393,8 @@ public class TriggerTest {
         EventTrigger eventTrigger1 =
                 new EventTrigger.Builder()
                         .setTriggerPriority(2L)
-                        .setTriggerData(2L)
-                        .setDedupKey(2L)
+                        .setTriggerData(new UnsignedLong(2L))
+                        .setDedupKey(new UnsignedLong(2L))
                         .setFilter(
                                 new AggregateFilterData.Builder()
                                         .buildAggregateFilterData(filters1)
@@ -406,8 +407,8 @@ public class TriggerTest {
         EventTrigger eventTrigger2 =
                 new EventTrigger.Builder()
                         .setTriggerPriority(3L)
-                        .setTriggerData(3L)
-                        .setDedupKey(3L)
+                        .setTriggerData(new UnsignedLong(3L))
+                        .setDedupKey(new UnsignedLong(3L))
                         .setNotFilter(
                                 new AggregateFilterData.Builder()
                                         .buildAggregateFilterData(notFilters2)
@@ -430,7 +431,7 @@ public class TriggerTest {
             String aggregateTriggerData,
             String aggregateValues,
             String filters,
-            Long debugKey) {
+            UnsignedLong debugKey) {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->

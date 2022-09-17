@@ -25,6 +25,8 @@ import android.net.Uri;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.service.measurement.util.UnsignedLong;
+
 import org.junit.Test;
 
 import java.util.Set;
@@ -33,8 +35,8 @@ import java.util.Set;
 @SmallTest
 public final class AggregateReportTest {
 
-    private static final Long SOURCE_DEBUG_KEY = 237865L;
-    private static final Long TRIGGER_DEBUG_KEY = 928762L;
+    private static final UnsignedLong SOURCE_DEBUG_KEY = new UnsignedLong(237865L);
+    private static final UnsignedLong TRIGGER_DEBUG_KEY = new UnsignedLong(928762L);
 
     private AggregateReport createAttributionReport() {
         return new AggregateReport.Builder()
