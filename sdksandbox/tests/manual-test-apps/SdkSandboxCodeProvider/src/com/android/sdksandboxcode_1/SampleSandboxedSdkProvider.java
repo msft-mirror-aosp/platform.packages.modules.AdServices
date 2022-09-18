@@ -24,11 +24,15 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.net.Uri;
-import android.os.Binder;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
+import android.widget.VideoView;
+
+import com.android.apiimplementation.SdkApi;
 
 import java.util.Random;
 
@@ -36,9 +40,13 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
 
     private static final String TAG = "SampleSandboxedSdkProvider";
 
+    private static final String VIEW_TYPE_KEY = "view-type";
+    private static final String VIDEO_VIEW_VALUE = "video-view";
+    private static final String VIDEO_URL_KEY = "video-url";
+
     @Override
     public SandboxedSdk onLoadSdk(Bundle params) {
-        return new SandboxedSdk(new Binder());
+        return new SandboxedSdk(new SdkApi(getContext()));
     }
 
     @Override
@@ -48,14 +56,19 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
 
     @Override
     public View getView(Context windowContext, Bundle params, int width, int height) {
-        return new TestView(windowContext, getContext(), width, height);
+        String type = params.getString(VIEW_TYPE_KEY, "");
+        if (VIDEO_VIEW_VALUE.equals(type)) {
+            String videoUrl = params.getString(VIDEO_URL_KEY, "");
+            return new TestVideoView(windowContext, videoUrl);
+        }
+        return new TestView(windowContext, getContext());
     }
 
     private static class TestView extends View {
 
         private Context mSdkContext;
 
-        TestView(Context windowContext, Context sdkContext, int width, int height) {
+        TestView(Context windowContext, Context sdkContext) {
             super(windowContext);
             mSdkContext = sdkContext;
         }
@@ -88,5 +101,19 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
             mSdkContext.startActivity(visitUrl);
         }
 
+    }
+
+    private static class TestVideoView extends VideoView {
+
+        TestVideoView(Context windowContext, String url) {
+            super(windowContext);
+            new Handler(Looper.getMainLooper())
+                    .post(
+                            () -> {
+                                setVideoURI(Uri.parse(url));
+                                requestFocus();
+                                start();
+                            });
+        }
     }
 }

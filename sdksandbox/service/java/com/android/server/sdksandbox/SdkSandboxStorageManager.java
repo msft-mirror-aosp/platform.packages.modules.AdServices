@@ -179,17 +179,7 @@ class SdkSandboxStorageManager {
         final String deSdkDataPackagePath =
                 getSdkDataPackageDirectory(volumeUuid, userId, packageName, /*isCeData=*/ false);
         final SubDirectories existingDeSubDirs = new SubDirectories(deSdkDataPackagePath);
-        final List<String> subDirNames = new ArrayList<>();
-        subDirNames.addAll(SubDirectories.NON_SDK_SUBDIRS);
-        for (int i = 0; i < sdksUsed.size(); i++) {
-            final String sdk = sdksUsed.get(i);
-            final String sdkSubDir = existingDeSubDirs.getSdkSubDir(sdk);
-            if (sdkSubDir == null) {
-                subDirNames.add(sdk + "@" + getRandomString());
-            } else {
-                subDirNames.add(sdkSubDir);
-            }
-        }
+
         final int appId = UserHandle.getAppId(uid);
         final UserManager um = mContext.getSystemService(UserManager.class);
         int flags = 0;
@@ -209,7 +199,11 @@ class SdkSandboxStorageManager {
             flags = PackageManagerLocal.FLAG_STORAGE_DE;
             doesDeNeedReconcile = !existingDeSubDirs.isValid(expectedSdkNames);
         }
+
+        // Reconcile only if ce or de subdirs are different than expectation
         if (doesCeNeedReconcile || doesDeNeedReconcile) {
+            // List of all the sub-directories we need to create
+            final List<String> subDirNames = existingDeSubDirs.generateSubDirNames(sdksUsed);
             try {
                 // TODO(b/224719352): Pass actual seinfo from here
                 mPackageManagerLocal.reconcileSdkData(
@@ -227,14 +221,6 @@ class SdkSandboxStorageManager {
                         + String.join(", ", subDirNames) + " error: " + e.getMessage());
             }
         }
-    }
-
-    // Returns a random string.
-    private static String getRandomString() {
-        SecureRandom random = new SecureRandom();
-        byte[] bytes = new byte[16];
-        random.nextBytes(bytes);
-        return Base64.encodeToString(bytes, Base64.URL_SAFE | Base64.NO_WRAP);
     }
 
     /**
@@ -331,7 +317,7 @@ class SdkSandboxStorageManager {
                 continue;
             }
             final CallingInfo callingInfo = new CallingInfo(uid, packageName);
-            reconcileSdkDataSubDirs(callingInfo, /*forInstrumentation=*/false);
+            reconcileSdkDataSubDirs(callingInfo, /*forInstrumentation=*/ false);
         }
     }
 
@@ -406,7 +392,7 @@ class SdkSandboxStorageManager {
      *
      * <ul>
      *   <li>Sdk sub-directory: belongs exclusively to individual sdk and has name <sdk>@random
-     *   <li>Non-sdk sub-directory: not specific to a particular sdk. Can belong to other entities.
+     *   <li>Internal sub-directory: not specific to a particular sdk. Can belong to other entities.
      *       Typically has structure <name>#random. The only exception being shared storage which is
      *       just named "shared".
      * </ul>
@@ -417,22 +403,23 @@ class SdkSandboxStorageManager {
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
     static class SubDirectories {
 
-        private static final String SHARED_DIR = "shared";
-        private static final ArraySet<String> NON_SDK_SUBDIRS =
-                new ArraySet(Arrays.asList(SHARED_DIR));
+        static final String SHARED_DIR = "shared";
+        static final String SANDBOX_DIR = "sandbox";
+        static final ArraySet<String> INTERNAL_SUBDIRS =
+                new ArraySet(Arrays.asList(SHARED_DIR, SANDBOX_DIR));
 
         private final String mBaseDir;
         private final ArrayMap<String, String> mSdkSubDirs;
-        private final ArrayMap<String, String> mNonSdkSubDirs;
+        private final ArrayMap<String, String> mInternalSubDirs;
         private boolean mHasUnknownSubDirs = false;
 
         /**
-         * Lists all the children of provided path and organizes them into sdk and non-sdk group.
+         * Lists all the children of provided path and organizes them into sdk and internal group.
          */
         SubDirectories(String path) {
             mBaseDir = path;
             mSdkSubDirs = new ArrayMap<>();
-            mNonSdkSubDirs = new ArrayMap<>();
+            mInternalSubDirs = new ArrayMap<>();
 
             final File parent = new File(path);
             final String[] children = parent.list();
@@ -444,8 +431,11 @@ class SdkSandboxStorageManager {
                 if (child.indexOf("@") != -1) {
                     final String[] tokens = child.split("@");
                     mSdkSubDirs.put(tokens[0], child);
+                } else if (child.indexOf("#") != -1) {
+                    final String[] tokens = child.split("#");
+                    mInternalSubDirs.put(tokens[0], child);
                 } else if (child.equals(SHARED_DIR)) {
-                    mNonSdkSubDirs.put(SHARED_DIR, SHARED_DIR);
+                    mInternalSubDirs.put(SHARED_DIR, SHARED_DIR);
                 } else {
                     mHasUnknownSubDirs = true;
                 }
@@ -468,12 +458,61 @@ class SdkSandboxStorageManager {
 
         /**
          * Provided a list of sdk names, verifies if the current collection of directories satisfies
-         * per-sdk and non-sdk sub-directory requirements.
+         * per-sdk and internal sub-directory requirements.
          */
         public boolean isValid(Set<String> expectedSdkNames) {
             final boolean hasCorrectSdkSubDirs = mSdkSubDirs.keySet().equals(expectedSdkNames);
-            final boolean hasCorrectNonSdkSubDirs = mNonSdkSubDirs.keySet().equals(NON_SDK_SUBDIRS);
-            return hasCorrectSdkSubDirs && hasCorrectNonSdkSubDirs && !mHasUnknownSubDirs;
+            final boolean hasCorrectInternalSubDirs =
+                    mInternalSubDirs.keySet().equals(INTERNAL_SUBDIRS);
+            return hasCorrectSdkSubDirs && hasCorrectInternalSubDirs && !mHasUnknownSubDirs;
+        }
+
+        /**
+         * Give the sdk names, generate sub-dir names for these sdks and sub-dirs for internal use.
+         *
+         * <p>Random suffix for existing directories are re-used.
+         */
+        public List<String> generateSubDirNames(List<String> sdkNames) {
+            final List<String> result = new ArrayList<>();
+
+            // Populate sub-dirs for internal use
+            for (int i = 0; i < INTERNAL_SUBDIRS.size(); i++) {
+                final String subDirValue = INTERNAL_SUBDIRS.valueAt(i);
+                final String subDirName = getOrGenerateInternalSubDir(subDirValue);
+                result.add(subDirName);
+            }
+
+            // Populate sub-dirs for per-sdk usage
+            for (int i = 0; i < sdkNames.size(); i++) {
+                final String sdkName = sdkNames.get(i);
+                final String subDirName = getOrGenerateSdkSubDir(sdkName);
+                result.add(subDirName);
+            }
+
+            return result;
+        }
+
+        private String getOrGenerateSdkSubDir(String sdkName) {
+            final String subDir = getSdkSubDir(sdkName);
+            if (subDir != null) return subDir;
+            return sdkName + "@" + getRandomString();
+        }
+
+        private String getOrGenerateInternalSubDir(String internalDirName) {
+            if (internalDirName.equals(SHARED_DIR)) {
+                return SHARED_DIR;
+            }
+            final String subDir = mInternalSubDirs.getOrDefault(internalDirName, null);
+            if (subDir != null) return subDir;
+            return internalDirName + "#" + getRandomString();
+        }
+
+        // Returns a random string.
+        private static String getRandomString() {
+            SecureRandom random = new SecureRandom();
+            byte[] bytes = new byte[16];
+            random.nextBytes(bytes);
+            return Base64.encodeToString(bytes, Base64.URL_SAFE | Base64.NO_WRAP);
         }
     }
 

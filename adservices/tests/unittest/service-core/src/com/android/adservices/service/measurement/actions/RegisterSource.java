@@ -61,6 +61,7 @@ public final class RegisterSource implements Action {
                                                 .equals(TestFormatJsonMapping.SOURCE_VIEW_TYPE)
                                         ? null
                                         : getInputEvent())
+                        .setAdIdPermissionGranted(true)
                         .setPackageName(attributionSource.getPackageName())
                         .build();
         mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);

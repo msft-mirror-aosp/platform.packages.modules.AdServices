@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
+
 package com.android.adservices.tests.cts.measurement;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
 import android.adservices.measurement.DeletionParam;
@@ -61,6 +62,7 @@ public class MeasurementManagerSandboxCtsTest {
     protected static final Context sSandboxedSdkContext =
             new SandboxedSdkContext(
                     /* baseContext = */ sContext,
+                    /* classLoader = */ sContext.getClassLoader(),
                     /* clientPackageName = */ sContext.getPackageName(),
                     /* info = */ new ApplicationInfo(),
                     /* sdkName = */ "sdkName",
@@ -97,12 +99,11 @@ public class MeasurementManagerSandboxCtsTest {
                 /* inputEvent = */ null,
                 mMockCallbackExecutor,
                 mMockOutcomeReceiver);
-
         // Verification
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
 
-        verify(mMockMeasurementService, times(1)).register(captor.capture(), any(), any());
+        verify(mMockMeasurementService, timeout(2000)).register(captor.capture(), any(), any());
         Assert.assertNotNull(captor.getValue());
         Assert.assertEquals(sContext.getPackageName(), captor.getValue().getPackageName());
     }
@@ -119,7 +120,7 @@ public class MeasurementManagerSandboxCtsTest {
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
 
-        verify(mMockMeasurementService, times(1)).register(captor.capture(), any(), any());
+        verify(mMockMeasurementService, timeout(2000)).register(captor.capture(), any(), any());
         Assert.assertNotNull(captor.getValue());
         Assert.assertEquals(sContext.getPackageName(), captor.getValue().getPackageName());
     }
@@ -151,7 +152,8 @@ public class MeasurementManagerSandboxCtsTest {
         ArgumentCaptor<WebSourceRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebSourceRegistrationRequestInternal.class);
 
-        verify(mMockMeasurementService, times(1)).registerWebSource(captor.capture(), any(), any());
+        verify(mMockMeasurementService, timeout(2000))
+                .registerWebSource(captor.capture(), any(), any());
         Assert.assertNotNull(captor.getValue());
         Assert.assertEquals(sContext.getPackageName(), captor.getValue().getPackageName());
     }
@@ -176,7 +178,7 @@ public class MeasurementManagerSandboxCtsTest {
         ArgumentCaptor<WebTriggerRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebTriggerRegistrationRequestInternal.class);
 
-        verify(mMockMeasurementService, times(1))
+        verify(mMockMeasurementService, timeout(2000))
                 .registerWebTrigger(captor.capture(), any(), any());
         Assert.assertNotNull(captor.getValue());
         Assert.assertEquals(sContext.getPackageName(), captor.getValue().getPackageName());
@@ -198,7 +200,7 @@ public class MeasurementManagerSandboxCtsTest {
         // Verification
         ArgumentCaptor<DeletionParam> captor = ArgumentCaptor.forClass(DeletionParam.class);
 
-        verify(mMockMeasurementService, times(1))
+        verify(mMockMeasurementService, timeout(2000))
                 .deleteRegistrations(captor.capture(), any(), any());
         Assert.assertNotNull(captor.getValue());
         Assert.assertEquals(sContext.getPackageName(), captor.getValue().getPackageName());
@@ -212,7 +214,7 @@ public class MeasurementManagerSandboxCtsTest {
         // Verification
         ArgumentCaptor<StatusParam> captor = ArgumentCaptor.forClass(StatusParam.class);
 
-        verify(mMockMeasurementService, times(1))
+        verify(mMockMeasurementService, timeout(2000))
                 .getMeasurementApiStatus(captor.capture(), any(), any());
         Assert.assertNotNull(captor.getValue());
         Assert.assertEquals(sContext.getPackageName(), captor.getValue().getAppPackageName());

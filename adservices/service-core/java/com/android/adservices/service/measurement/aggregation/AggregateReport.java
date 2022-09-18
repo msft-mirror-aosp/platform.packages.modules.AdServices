@@ -21,6 +21,8 @@ import android.net.Uri;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.service.measurement.util.UnsignedLong;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -44,8 +46,8 @@ public class AggregateReport {
     private AggregateAttributionData mAggregateAttributionData;
     private @Status int mStatus;
     private String mApiVersion;
-    @Nullable private Long mSourceDebugKey;
-    @Nullable private Long mTriggerDebugKey;
+    @Nullable private UnsignedLong mSourceDebugKey;
+    @Nullable private UnsignedLong mTriggerDebugKey;
 
     @IntDef(value = {
             Status.PENDING,
@@ -158,13 +160,13 @@ public class AggregateReport {
 
     /** Source Debug Key */
     @Nullable
-    public Long getSourceDebugKey() {
+    public UnsignedLong getSourceDebugKey() {
         return mSourceDebugKey;
     }
 
     /** Trigger Debug Key */
     @Nullable
-    public Long getTriggerDebugKey() {
+    public UnsignedLong getTriggerDebugKey() {
         return mTriggerDebugKey;
     }
 
@@ -308,13 +310,13 @@ public class AggregateReport {
         }
 
         /** See {@link AggregateReport#getSourceDebugKey()} ()} */
-        public Builder setSourceDebugKey(Long sourceDebugKey) {
+        public Builder setSourceDebugKey(UnsignedLong sourceDebugKey) {
             mAttributionReport.mSourceDebugKey = sourceDebugKey;
             return this;
         }
 
         /** See {@link AggregateReport#getTriggerDebugKey()} ()} */
-        public Builder setTriggerDebugKey(Long triggerDebugKey) {
+        public Builder setTriggerDebugKey(UnsignedLong triggerDebugKey) {
             mAttributionReport.mTriggerDebugKey = triggerDebugKey;
             return this;
         }
