@@ -22,6 +22,7 @@ import android.net.Uri;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.android.adservices.service.measurement.AsyncRegistration;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
@@ -297,4 +298,37 @@ public interface IMeasurementDao {
      *     delete every table.
      */
     void deleteAllMeasurementData(List<String> tablesToExclude) throws DatastoreException;
+
+    /**
+     * Insert a record into the Async Registration Table.
+     *
+     * @param asyncRegistration a {@link AsyncRegistration} to insert into the Async Registration
+     *     table
+     */
+    void insertAsyncRegistration(@NonNull AsyncRegistration asyncRegistration)
+            throws DatastoreException;
+
+    /**
+     * Delete a record from the AsyncRegistration table.
+     *
+     * @param id a {@link String} id of the record to delete from the AsyncRegistration table.
+     */
+    void deleteAsyncRegistration(@NonNull String id) throws DatastoreException;
+
+    /**
+     * Get the record with the earliest request time and a valid retry count.
+     *
+     * @param retryLimit a long that is used for determining the next valid record to be serviced
+     * @param failedAdTechEnrollmentIds a String that contains the Ids of records that have been
+     *     serviced during the current run
+     */
+    AsyncRegistration fetchNextQueuedAsyncRegistration(
+            short retryLimit, List<String> failedAdTechEnrollmentIds) throws DatastoreException;
+
+    /**
+     * Update the retry count for a record in the Async Registration table.
+     *
+     * @param asyncRegistration a {@link AsyncRegistration} for which the retryCount will be updated
+     */
+    void updateRetryCount(@NonNull AsyncRegistration asyncRegistration) throws DatastoreException;
 }
