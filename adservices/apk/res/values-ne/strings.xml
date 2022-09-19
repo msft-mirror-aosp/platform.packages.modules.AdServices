@@ -47,7 +47,8 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"सहभागी हुन के गर्नु पर्छ"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"तपाईंले यो बिटा सुविधा अन गर्नुभयो भने एपहरू तपाईंलाई विज्ञापन देखाउने यी नयाँ अनि अझ गोप्य तरिकाको परीक्षण गर्न सक्छन्। तपाईं जुनसुकै बेला गोपनीयतासम्बन्धी सेटिङमा गई यो बिटा सुविधा अफ गर्न सक्नुहुन्छ।"</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"पर्दैन"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"अँ, म सामेल हुन चाहन्छु"</string>
+    <!-- no translation found for notificationUI_right_control_button_text_eu (8484787286437052150) -->
+    <skip />
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"सामेल हुनुभएकोमा धन्यवाद"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"तपाईं Android को विज्ञापनसम्बन्धी गोपनीयता सुविधाको बिटा संस्करणको सदस्य बन्नुभएको छ। तपाईंको डिभाइसमा प्राइभेसी स्यान्डबक्स अन गरिएको छ।\n\nतपाईं जुनसुकै बेला गोपनीयतासम्बन्धी सेटिङमा गई यसका बारेमा थप जान्न वा यसलाई अफ गर्न सक्नुहुन्छ।"</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"तपाईंले यस कार्यक्रममा सामेल नहुने विकल्प छनौट गर्नुभएको छ"</string>

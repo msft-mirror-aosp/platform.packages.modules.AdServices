@@ -47,7 +47,8 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Как принять участие"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Если вы примете участие в бета-тестировании, приложения смогут опробовать новые варианты показа рекламы с более высоким уровнем конфиденциальности. Отказаться от участия можно в любой момент в настройках конфиденциальности."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Нет"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"ОК"</string>
+    <!-- no translation found for notificationUI_right_control_button_text_eu (8484787286437052150) -->
+    <skip />
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Благодарим за участие в тестировании"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Вы участвуете в бета-тестировании функции конфиденциального просмотра рекламы в Android. На вашем устройстве включены технологии Privacy Sandbox.\n\nЧтобы ознакомиться с информацией о бета-тестировании или отказаться от участия в нем, перейдите в настройки конфиденциальности."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Вы отказались от участия в программе"</string>
