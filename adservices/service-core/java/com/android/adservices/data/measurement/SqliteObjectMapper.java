@@ -21,6 +21,7 @@ import static java.util.function.Predicate.not;
 import android.database.Cursor;
 import android.net.Uri;
 
+import com.android.adservices.service.measurement.AsyncRegistration;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
@@ -213,6 +214,64 @@ public class SqliteObjectMapper {
                 builder::setPublicKey);
         setLongColumn(cursor, MeasurementTables.AggregateEncryptionKey.EXPIRY,
                 builder::setExpiry);
+        return builder.build();
+    }
+
+    /** Create {@link AsyncRegistration} object from SQLite datastore. */
+    public static AsyncRegistration constructAsyncRegistration(Cursor cursor) {
+        AsyncRegistration.Builder builder = new AsyncRegistration.Builder();
+        setTextColumn(cursor, MeasurementTables.AsyncRegistrationContract.ID, builder::setId);
+        setTextColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.ENROLLMENT_ID,
+                builder::setEnrollmentId);
+        setUriColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.WEB_DESTINATION,
+                builder::setWebDestination);
+        setUriColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.OS_DESTINATION,
+                builder::setOsDestination);
+        setUriColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.REGISTRATION_URI,
+                builder::setRegistrationUri);
+        setUriColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.VERIFIED_DESTINATION,
+                builder::setVerifiedDestination);
+        setUriColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.TOP_ORIGIN,
+                builder::setTopOrigin);
+        setBooleanColumn(
+                cursor, MeasurementTables.AsyncRegistrationContract.REDIRECT, builder::setRedirect);
+        setIntColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.SOURCE_TYPE,
+                builder::setSourceType);
+        setUriColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.REGISTRANT,
+                builder::setRegistrant);
+        setLongColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.REQUEST_TIME,
+                builder::setRequestTime);
+        setLongColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.RETRY_COUNT,
+                builder::setRetryCount);
+        setLongColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.LAST_PROCESSING_TIME,
+                builder::setLastProcessingTime);
+        setIntColumn(cursor, MeasurementTables.AsyncRegistrationContract.TYPE, builder::setType);
+        setBooleanColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.DEBUG_KEY_ALLOWED,
+                builder::setDebugKeyAllowed);
         return builder.build();
     }
 
