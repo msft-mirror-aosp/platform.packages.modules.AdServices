@@ -17,6 +17,7 @@
 package android.adservices.topics;
 
 import static android.adservices.topics.TopicsManager.EMPTY_SDK;
+import static android.adservices.topics.TopicsManager.RECORD_OBSERVATION_DEFAULT;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -32,20 +33,24 @@ public final class GetTopicsParam implements Parcelable {
     private final String mSdkName;
     private final String mSdkPackageName;
     private final String mAppPackageName;
+    private final boolean mRecordObservation;
 
     private GetTopicsParam(
             @NonNull String sdkName,
             @Nullable String sdkPackageName,
-            @NonNull String appPackageName) {
+            @NonNull String appPackageName,
+            boolean recordObservation) {
         mSdkName = sdkName;
         mSdkPackageName = sdkPackageName;
         mAppPackageName = appPackageName;
+        mRecordObservation = recordObservation;
     }
 
     private GetTopicsParam(@NonNull Parcel in) {
         mSdkName = in.readString();
         mSdkPackageName = in.readString();
         mAppPackageName = in.readString();
+        mRecordObservation = in.readBoolean();
     }
 
     public static final @NonNull Creator<GetTopicsParam> CREATOR =
@@ -71,6 +76,7 @@ public final class GetTopicsParam implements Parcelable {
         out.writeString(mSdkName);
         out.writeString(mSdkPackageName);
         out.writeString(mAppPackageName);
+        out.writeBoolean(mRecordObservation);
     }
 
     /** Get the Sdk Name. This is the name in the <sdk-library> tag of the Manifest. */
@@ -91,11 +97,19 @@ public final class GetTopicsParam implements Parcelable {
         return mAppPackageName;
     }
 
+    /** Get the Record Observation. */
+    @NonNull
+    public boolean isRecordObservation() {
+        return mRecordObservation;
+    }
+
     /** Builder for {@link GetTopicsParam} objects. */
     public static final class Builder {
         private String mSdkName;
         private String mSdkPackageName;
         private String mAppPackageName;
+        // Set mRecordObservation default to true.
+        private boolean mRecordObservation = RECORD_OBSERVATION_DEFAULT;
 
         public Builder() {}
 
@@ -123,6 +137,16 @@ public final class GetTopicsParam implements Parcelable {
             return this;
         }
 
+        /**
+         * Set the Record Observation. Whether to record that the caller has observed the topics of
+         * the host app or not. This will be used to determine if the caller can receive the topic
+         * in the next epoch.
+         */
+        public @NonNull Builder setRecordObservation(boolean recordObservation) {
+            mRecordObservation = recordObservation;
+            return this;
+        }
+
         /** Builds a {@link GetTopicsParam} instance. */
         public @NonNull GetTopicsParam build() {
             if (mSdkName == null) {
@@ -142,7 +166,8 @@ public final class GetTopicsParam implements Parcelable {
                 throw new IllegalArgumentException("App PackageName must not be empty or null");
             }
 
-            return new GetTopicsParam(mSdkName, mSdkPackageName, mAppPackageName);
+            return new GetTopicsParam(
+                    mSdkName, mSdkPackageName, mAppPackageName, mRecordObservation);
         }
     }
 }
