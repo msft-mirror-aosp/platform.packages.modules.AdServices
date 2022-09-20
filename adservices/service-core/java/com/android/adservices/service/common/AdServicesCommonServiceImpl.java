@@ -128,6 +128,7 @@ public class AdServicesCommonServiceImpl extends
                             if (ConsentManager.getInstance(mContext)
                                     .getConsent(mContext.getPackageManager())
                                     .isGiven()) {
+                                PackageChangedReceiver.enableReceiver(mContext);
                                 BackgroundJobsManager.scheduleAllBackgroundJobs(mContext);
                             }
                         }
