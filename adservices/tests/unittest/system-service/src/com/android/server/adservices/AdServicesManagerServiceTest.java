@@ -16,23 +16,39 @@
 
 package com.android.server.adservices;
 
+import static com.android.server.adservices.PhFlags.KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED;
+
+import static com.google.common.truth.Truth.assertThat;
+
+import static org.mockito.ArgumentMatchers.any;
+
 import android.Manifest;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.Uri;
+import android.os.Handler;
 import android.os.UserHandle;
+import android.provider.DeviceConfig;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.google.common.truth.Truth;
+import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 
 /** Tests for {@link AdServicesManagerService} */
 public class AdServicesManagerServiceTest {
+    @Rule
+    public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
+            new TestableDeviceConfig.TestableDeviceConfigRule();
+
     private AdServicesManagerService mService;
     private Context mSpyContext;
     private static final String PACKAGE_NAME = "com.package.example";
@@ -45,18 +61,100 @@ public class AdServicesManagerServiceTest {
 
     @Before
     public void setup() {
+        MockitoAnnotations.initMocks(this);
+
         Context context = InstrumentationRegistry.getInstrumentation().getContext();
         mSpyContext = Mockito.spy(context);
 
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.INTERACT_ACROSS_USERS_FULL);
+    }
+
+    @Test
+    public void testAdServicesSystemService_enabled_then_disabled() {
+        // First enable the flag.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED,
+                Boolean.toString(Boolean.TRUE),
+                /* makeDefault */ false);
+
+        // This will trigger the registration of the Receiver.
+        mService = new AdServicesManagerService(mSpyContext);
+
+        ArgumentCaptor<BroadcastReceiver> argumentReceiver =
+                ArgumentCaptor.forClass(BroadcastReceiver.class);
+        ArgumentCaptor<IntentFilter> argumentIntentFilter =
+                ArgumentCaptor.forClass(IntentFilter.class);
+        ArgumentCaptor<String> argumentPermission = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Handler> argumentHandler = ArgumentCaptor.forClass(Handler.class);
+
+        // Calling the second time will not register again.
+        mService.registerPackagedChangedBroadcastReceivers();
+
+        // The flag is enabled so we call registerReceiverForAllUsers
+        Mockito.verify(mSpyContext, Mockito.times(1))
+                .registerReceiverForAllUsers(
+                        argumentReceiver.capture(),
+                        argumentIntentFilter.capture(),
+                        argumentPermission.capture(),
+                        argumentHandler.capture());
+
+        BroadcastReceiver receiver = argumentReceiver.getValue();
+        assertThat(receiver).isNotNull();
+
+        assertThat(argumentIntentFilter.getValue().getAction(0))
+                .isEqualTo(Intent.ACTION_PACKAGE_FULLY_REMOVED);
+        assertThat(argumentIntentFilter.getValue().getAction(1))
+                .isEqualTo(Intent.ACTION_PACKAGE_DATA_CLEARED);
+        assertThat(argumentIntentFilter.getValue().getAction(2))
+                .isEqualTo(Intent.ACTION_PACKAGE_ADDED);
+        assertThat(argumentIntentFilter.getValue().getDataScheme(0)).isEqualTo("package");
+
+        assertThat(argumentPermission.getValue()).isNull();
+        assertThat(argumentHandler.getValue()).isNotNull();
+
+        // Now disable the flag.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED,
+                Boolean.toString(Boolean.FALSE),
+                /* makeDefault */ false);
+
+        // Calling when the flag is disabled will unregister the Receiver!
+        mService.registerPackagedChangedBroadcastReceivers();
+        Mockito.verify(mSpyContext, Mockito.times(1))
+                .unregisterReceiver(argumentReceiver.capture());
+
+        // The unregistered is called on the same receiver when registered above.
+        assertThat(argumentReceiver.getValue()).isSameInstanceAs(receiver);
+    }
+
+    @Test
+    public void testAdServicesSystemService_disabled() {
+        // Disable the flag.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED,
+                Boolean.toString(Boolean.FALSE),
+                /* makeDefault */ false);
 
         mService = new AdServicesManagerService(mSpyContext);
+
+        // The flag is disabled so there is no registerReceiverForAllUsers
+        Mockito.verify(mSpyContext, Mockito.times(0))
+                .registerReceiverForAllUsers(
+                        any(BroadcastReceiver.class),
+                        any(IntentFilter.class),
+                        any(String.class),
+                        any(Handler.class));
     }
 
     @Test
     public void testSendBroadcastForPackageFullyRemoved() {
+        mService = new AdServicesManagerService(mSpyContext);
+
         Intent i = new Intent(Intent.ACTION_PACKAGE_FULLY_REMOVED);
         i.setData(Uri.parse("package:" + PACKAGE_NAME));
         i.putExtra(Intent.EXTRA_UID, PACKAGE_UID);
@@ -70,18 +168,19 @@ public class AdServicesManagerServiceTest {
         Mockito.verify(mSpyContext, Mockito.times(1))
                 .sendBroadcastAsUser(argumentIntent.capture(), argumentUser.capture());
 
-        Truth.assertThat(argumentIntent.getValue().getAction())
-                .isEqualTo(PACKAGE_CHANGED_BROADCAST);
-        Truth.assertThat(argumentIntent.getValue().getData()).isEqualTo(i.getData());
-        Truth.assertThat(argumentIntent.getValue().getStringExtra("action"))
+        assertThat(argumentIntent.getValue().getAction()).isEqualTo(PACKAGE_CHANGED_BROADCAST);
+        assertThat(argumentIntent.getValue().getData()).isEqualTo(i.getData());
+        assertThat(argumentIntent.getValue().getStringExtra("action"))
                 .isEqualTo(PACKAGE_FULLY_REMOVED);
-        Truth.assertThat(argumentIntent.getValue().getIntExtra(Intent.EXTRA_UID, -1))
+        assertThat(argumentIntent.getValue().getIntExtra(Intent.EXTRA_UID, -1))
                 .isEqualTo(PACKAGE_UID);
-        Truth.assertThat(argumentUser.getValue()).isEqualTo(mSpyContext.getUser());
+        assertThat(argumentUser.getValue()).isEqualTo(mSpyContext.getUser());
     }
 
     @Test
     public void testSendBroadcastForPackageAdded() {
+        mService = new AdServicesManagerService(mSpyContext);
+
         Intent i = new Intent(Intent.ACTION_PACKAGE_ADDED);
         i.setData(Uri.parse("package:" + PACKAGE_NAME));
         i.putExtra(Intent.EXTRA_UID, PACKAGE_UID);
@@ -96,18 +195,18 @@ public class AdServicesManagerServiceTest {
         Mockito.verify(mSpyContext, Mockito.times(1))
                 .sendBroadcastAsUser(argumentIntent.capture(), argumentUser.capture());
 
-        Truth.assertThat(argumentIntent.getValue().getAction())
-                .isEqualTo(PACKAGE_CHANGED_BROADCAST);
-        Truth.assertThat(argumentIntent.getValue().getData()).isEqualTo(i.getData());
-        Truth.assertThat(argumentIntent.getValue().getStringExtra("action"))
-                .isEqualTo(PACKAGE_ADDED);
-        Truth.assertThat(argumentIntent.getValue().getIntExtra(Intent.EXTRA_UID, -1))
+        assertThat(argumentIntent.getValue().getAction()).isEqualTo(PACKAGE_CHANGED_BROADCAST);
+        assertThat(argumentIntent.getValue().getData()).isEqualTo(i.getData());
+        assertThat(argumentIntent.getValue().getStringExtra("action")).isEqualTo(PACKAGE_ADDED);
+        assertThat(argumentIntent.getValue().getIntExtra(Intent.EXTRA_UID, -1))
                 .isEqualTo(PACKAGE_UID);
-        Truth.assertThat(argumentUser.getValue()).isEqualTo(mSpyContext.getUser());
+        assertThat(argumentUser.getValue()).isEqualTo(mSpyContext.getUser());
     }
 
     @Test
     public void testSendBroadcastForPackageDataCleared() {
+        mService = new AdServicesManagerService(mSpyContext);
+
         Intent i = new Intent(Intent.ACTION_PACKAGE_DATA_CLEARED);
         i.setData(Uri.parse("package:" + PACKAGE_NAME));
         i.putExtra(Intent.EXTRA_UID, PACKAGE_UID);
@@ -121,13 +220,12 @@ public class AdServicesManagerServiceTest {
         Mockito.verify(mSpyContext, Mockito.times(1))
                 .sendBroadcastAsUser(argumentIntent.capture(), argumentUser.capture());
 
-        Truth.assertThat(argumentIntent.getValue().getAction())
-                .isEqualTo(PACKAGE_CHANGED_BROADCAST);
-        Truth.assertThat(argumentIntent.getValue().getData()).isEqualTo(i.getData());
-        Truth.assertThat(argumentIntent.getValue().getStringExtra("action"))
+        assertThat(argumentIntent.getValue().getAction()).isEqualTo(PACKAGE_CHANGED_BROADCAST);
+        assertThat(argumentIntent.getValue().getData()).isEqualTo(i.getData());
+        assertThat(argumentIntent.getValue().getStringExtra("action"))
                 .isEqualTo(PACKAGE_DATA_CLEARED);
-        Truth.assertThat(argumentIntent.getValue().getIntExtra(Intent.EXTRA_UID, -1))
+        assertThat(argumentIntent.getValue().getIntExtra(Intent.EXTRA_UID, -1))
                 .isEqualTo(PACKAGE_UID);
-        Truth.assertThat(argumentUser.getValue()).isEqualTo(mSpyContext.getUser());
+        assertThat(argumentUser.getValue()).isEqualTo(mSpyContext.getUser());
     }
 }
