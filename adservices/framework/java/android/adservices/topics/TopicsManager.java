@@ -59,6 +59,9 @@ public final class TopicsManager {
     // When an app calls the Topics API directly, it sets the SDK name to empty string.
     static final String EMPTY_SDK = "";
 
+    // Default value is true to record SDK's Observation when it calls Topics API.
+    static final boolean RECORD_OBSERVATION_DEFAULT = true;
+
     private Context mContext;
     private ServiceBinder<ITopicsService> mServiceBinder;
 
