@@ -36,6 +36,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.AdSelectionServiceImpl;
+import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -64,6 +65,7 @@ public class AdSelectionServiceTest {
                 ExtendedMockito.mockitoSession()
                         .mockStatic(ConsentManager.class)
                         .spyStatic(AdSelectionServiceImpl.class)
+                        .spyStatic(PackageChangedReceiver.class)
                         .mockStatic(MddJobService.class)
                         .initMocks(this)
                         .startMocking();
@@ -92,6 +94,8 @@ public class AdSelectionServiceTest {
                 .when(() -> AdSelectionServiceImpl.create(any(Context.class)));
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any(Context.class)));
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        ExtendedMockito.doReturn(true)
+                .when(() -> PackageChangedReceiver.enableReceiver(any(Context.class)));
         doReturn(true).when(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         AdSelectionService adSelectionServiceSpy =
@@ -105,6 +109,7 @@ public class AdSelectionServiceTest {
         assertNotNull(binder);
 
         verify(mConsentManagerMock).getConsent(any());
+        verify(() -> PackageChangedReceiver.enableReceiver(any(Context.class)));
         verify(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
     }
 
