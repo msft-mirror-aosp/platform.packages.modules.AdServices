@@ -29,6 +29,7 @@ import com.android.adservices.download.MobileDataDownloadFactory;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
 import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -80,6 +81,7 @@ public class TopicsService extends Service {
             mTopicsService.init();
         }
         if (hasUserConsent()) {
+            PackageChangedReceiver.enableReceiver(this);
             schedulePeriodicJobs();
         }
     }

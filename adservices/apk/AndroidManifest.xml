@@ -246,7 +246,8 @@
         </service>
 
         <receiver android:name="com.android.adservices.service.common.PackageChangedReceiver"
-                  android:exported="true">
+              android:enabled= "false"
+              android:exported="true">
             <intent-filter>
                 <!-- This intent must match the intent definition in the AdServices system
                 service. -->
