@@ -1074,6 +1074,19 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
+    public void testSdkData_IsAttributedToApp_DisableQuota() throws Exception {
+        installPackage(TEST_APP_STORAGE_APK);
+        String initialValue = getDevice().getProperty("fw.disable_quota");
+        try {
+            assertThat(getDevice().setProperty("fw.disable_quota", "true")).isTrue();
+            runPhase("testSdkDataIsAttributedToApp");
+        } finally {
+            if (initialValue == null) initialValue = "false";
+            assertThat(getDevice().setProperty("fw.disable_quota", initialValue)).isTrue();
+        }
+    }
+
+    @Test
     public void testSharedPreferences_IsSyncedFromAppToSandbox() throws Exception {
         installPackage(TEST_APP_STORAGE_APK);
         runPhase("testSharedPreferences_IsSyncedFromAppToSandbox");
