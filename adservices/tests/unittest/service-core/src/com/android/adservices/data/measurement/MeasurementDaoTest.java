@@ -39,6 +39,8 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.measurement.AsyncRegistration;
+import com.android.adservices.service.measurement.AsyncRegistrationFixture;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
@@ -1694,6 +1696,240 @@ public class MeasurementDaoTest {
 
     private static String getNullableUriString(Uri uri) {
         return Optional.ofNullable(uri).map(Uri::toString).orElse(null);
+    }
+
+    /** Test that the AsyncRegistration is inserted correctly. */
+    @Test
+    public void testInsertAsyncRegistration() {
+        AsyncRegistration validAsyncRegistration =
+                AsyncRegistrationFixture.getValidAsyncRegistration();
+        String validAsyncRegistrationId = validAsyncRegistration.getId();
+
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction((dao) -> dao.insertAsyncRegistration(validAsyncRegistration));
+
+        try (Cursor cursor =
+                DbHelper.getInstance(sContext)
+                        .getReadableDatabase()
+                        .query(
+                                MeasurementTables.AsyncRegistrationContract.TABLE,
+                                null,
+                                MeasurementTables.AsyncRegistrationContract.ID + " = ? ",
+                                new String[] {validAsyncRegistrationId},
+                                null,
+                                null,
+                                null)) {
+
+            Assert.assertTrue(cursor.moveToNext());
+            AsyncRegistration asyncRegistration =
+                    SqliteObjectMapper.constructAsyncRegistration(cursor);
+            Assert.assertNotNull(asyncRegistration);
+            Assert.assertNotNull(asyncRegistration.getId());
+            Assert.assertEquals(asyncRegistration.getId(), validAsyncRegistration.getId());
+            Assert.assertNotNull(asyncRegistration.getEnrollmentId());
+            Assert.assertEquals(
+                    asyncRegistration.getEnrollmentId(), validAsyncRegistration.getEnrollmentId());
+            Assert.assertNotNull(asyncRegistration.getRegistrationUri());
+            Assert.assertNotNull(asyncRegistration.getTopOrigin());
+            Assert.assertEquals(
+                    asyncRegistration.getTopOrigin(), validAsyncRegistration.getTopOrigin());
+            Assert.assertNotNull(asyncRegistration.getRegistrant());
+            Assert.assertEquals(
+                    asyncRegistration.getRegistrant(), validAsyncRegistration.getRegistrant());
+            Assert.assertNotNull(asyncRegistration.getSourceType());
+            Assert.assertEquals(
+                    asyncRegistration.getSourceType(), validAsyncRegistration.getSourceType());
+            Assert.assertNotNull(asyncRegistration.getDebugKeyAllowed());
+            Assert.assertEquals(
+                    asyncRegistration.getDebugKeyAllowed(),
+                    validAsyncRegistration.getDebugKeyAllowed());
+            Assert.assertNotNull(asyncRegistration.getRetryCount());
+            Assert.assertEquals(
+                    asyncRegistration.getRetryCount(), validAsyncRegistration.getRetryCount());
+            Assert.assertNotNull(asyncRegistration.getRequestTime());
+            Assert.assertEquals(
+                    asyncRegistration.getRequestTime(), validAsyncRegistration.getRequestTime());
+            Assert.assertNotNull(asyncRegistration.getOsDestination());
+            Assert.assertEquals(
+                    asyncRegistration.getOsDestination(),
+                    validAsyncRegistration.getOsDestination());
+            Assert.assertNotNull(asyncRegistration.getLastProcessingTime());
+            Assert.assertEquals(
+                    asyncRegistration.getLastProcessingTime(),
+                    validAsyncRegistration.getLastProcessingTime());
+            Assert.assertNotNull(asyncRegistration.getRedirect());
+            Assert.assertEquals(
+                    asyncRegistration.getRedirect(), validAsyncRegistration.getRedirect());
+            Assert.assertNotNull(asyncRegistration.getRegistrationUri());
+            Assert.assertEquals(
+                    asyncRegistration.getRegistrationUri(),
+                    validAsyncRegistration.getRegistrationUri());
+            Assert.assertNotNull(asyncRegistration.getDebugKeyAllowed());
+            Assert.assertEquals(
+                    asyncRegistration.getDebugKeyAllowed(),
+                    validAsyncRegistration.getDebugKeyAllowed());
+        }
+    }
+
+    /** Test that records in AsyncRegistration queue are fetched properly. */
+    @Test
+    public void testFetchNextQueuedAsyncRegistration_validRetryLimit() {
+        AsyncRegistration asyncRegistration = AsyncRegistrationFixture.getValidAsyncRegistration();
+        String asyncRegistrationId = asyncRegistration.getId();
+
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction((dao) -> dao.insertAsyncRegistration(asyncRegistration));
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        (dao) -> {
+                            AsyncRegistration fetchedAsyncRegistration =
+                                    dao.fetchNextQueuedAsyncRegistration(
+                                            (short) 1, new ArrayList<>());
+                            Assert.assertNotNull(fetchedAsyncRegistration);
+                            Assert.assertEquals(
+                                    fetchedAsyncRegistration.getId(), asyncRegistrationId);
+                            fetchedAsyncRegistration.incrementRetryCount();
+                            dao.updateRetryCount(fetchedAsyncRegistration);
+                        });
+
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        (dao) -> {
+                            AsyncRegistration fetchedAsyncRegistration =
+                                    dao.fetchNextQueuedAsyncRegistration(
+                                            (short) 1, new ArrayList<>());
+                            Assert.assertNull(fetchedAsyncRegistration);
+                        });
+    }
+
+    /** Test that records in AsyncRegistration queue are fetched properly. */
+    @Test
+    public void testFetchNextQueuedAsyncRegistration_excludeByEnrollmentId() {
+        AsyncRegistration firstAsyncRegistration =
+                AsyncRegistrationFixture.getValidAsyncRegistration();
+        AsyncRegistration secondAsyncRegistration =
+                AsyncRegistrationFixture.getValidAsyncRegistration();
+        String firstAsyncRegistrationEnrollmentId = firstAsyncRegistration.getEnrollmentId();
+        String secondAsyncRegistrationEnrollmentId = secondAsyncRegistration.getEnrollmentId();
+
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction((dao) -> dao.insertAsyncRegistration(firstAsyncRegistration));
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction((dao) -> dao.insertAsyncRegistration(secondAsyncRegistration));
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        (dao) -> {
+                            ArrayList<String> excludedEnrollmentIds = new ArrayList<>();
+                            excludedEnrollmentIds.add(firstAsyncRegistrationEnrollmentId);
+                            AsyncRegistration fetchedAsyncRegistration =
+                                    dao.fetchNextQueuedAsyncRegistration(
+                                            (short) 1, excludedEnrollmentIds);
+                            Assert.assertNotNull(fetchedAsyncRegistration);
+                            Assert.assertEquals(
+                                    fetchedAsyncRegistration.getEnrollmentId(),
+                                    secondAsyncRegistrationEnrollmentId);
+                        });
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        (dao) -> {
+                            ArrayList<String> excludedEnrollmentIds = new ArrayList<>();
+                            excludedEnrollmentIds.add(firstAsyncRegistrationEnrollmentId);
+                            excludedEnrollmentIds.add(secondAsyncRegistrationEnrollmentId);
+                            AsyncRegistration fetchedAsyncRegistration =
+                                    dao.fetchNextQueuedAsyncRegistration(
+                                            (short) 1, excludedEnrollmentIds);
+                            Assert.assertNull(fetchedAsyncRegistration);
+                        });
+    }
+
+    /** Test that AsyncRegistration is deleted correctly. */
+    @Test
+    public void testDeleteAsyncRegistration() {
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        AsyncRegistration asyncRegistration = AsyncRegistrationFixture.getValidAsyncRegistration();
+        String asyncRegistrationID = asyncRegistration.getId();
+
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction((dao) -> dao.insertAsyncRegistration(asyncRegistration));
+        try (Cursor cursor =
+                DbHelper.getInstance(sContext)
+                        .getReadableDatabase()
+                        .query(
+                                MeasurementTables.AsyncRegistrationContract.TABLE,
+                                null,
+                                MeasurementTables.AsyncRegistrationContract.ID + " = ? ",
+                                new String[] {asyncRegistration.getId().toString()},
+                                null,
+                                null,
+                                null)) {
+            Assert.assertTrue(cursor.moveToNext());
+            AsyncRegistration updateAsyncRegistration =
+                    SqliteObjectMapper.constructAsyncRegistration(cursor);
+            Assert.assertNotNull(updateAsyncRegistration);
+        }
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction((dao) -> dao.deleteAsyncRegistration(asyncRegistration.getId()));
+
+        db.query(
+                /* table */ MeasurementTables.AsyncRegistrationContract.TABLE,
+                /* columns */ null,
+                /* selection */ MeasurementTables.AsyncRegistrationContract.ID + " = ? ",
+                /* selectionArgs */ new String[] {asyncRegistrationID.toString()},
+                /* groupBy */ null,
+                /* having */ null,
+                /* orderedBy */ null);
+
+        assertThat(
+                        db.query(
+                                        /* table */ MeasurementTables.AsyncRegistrationContract
+                                                .TABLE,
+                                        /* columns */ null,
+                                        /* selection */ MeasurementTables.AsyncRegistrationContract
+                                                        .ID
+                                                + " = ? ",
+                                        /* selectionArgs */ new String[] {
+                                            asyncRegistrationID.toString()
+                                        },
+                                        /* groupBy */ null,
+                                        /* having */ null,
+                                        /* orderedBy */ null)
+                                .getCount())
+                .isEqualTo(0);
+    }
+
+    /** Test that retry count in AsyncRegistration is updated correctly. */
+    @Test
+    public void testUpdateAsyncRegistrationRetryCount() {
+        AsyncRegistration asyncRegistration = AsyncRegistrationFixture.getValidAsyncRegistration();
+        String asyncRegistrationId = asyncRegistration.getId();
+        long originalRetryCount = asyncRegistration.getRetryCount();
+
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction((dao) -> dao.insertAsyncRegistration(asyncRegistration));
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        (dao) -> {
+                            asyncRegistration.incrementRetryCount();
+                            dao.updateRetryCount(asyncRegistration);
+                        });
+
+        try (Cursor cursor =
+                DbHelper.getInstance(sContext)
+                        .getReadableDatabase()
+                        .query(
+                                MeasurementTables.AsyncRegistrationContract.TABLE,
+                                null,
+                                MeasurementTables.AsyncRegistrationContract.ID + " = ? ",
+                                new String[] {asyncRegistrationId},
+                                null,
+                                null,
+                                null)) {
+            Assert.assertTrue(cursor.moveToNext());
+            AsyncRegistration updateAsyncRegistration =
+                    SqliteObjectMapper.constructAsyncRegistration(cursor);
+            Assert.assertNotNull(updateAsyncRegistration);
+            Assert.assertTrue(updateAsyncRegistration.getRetryCount() == originalRetryCount + 1);
+        }
     }
 
     private void setupSourceAndTriggerData() {

@@ -38,11 +38,13 @@ public final class GetTopicsParamTest {
                         .setAppPackageName(SOME_PACKAGE_NAME)
                         .setSdkName(SOME_SDK_NAME)
                         .setSdkPackageName(SOME_SDK_PACKAGE_NAME)
+                        .setRecordObservation(false)
                         .build();
 
         assertThat(request.getSdkName()).isEqualTo(SOME_SDK_NAME);
         assertThat(request.getSdkPackageName()).isEqualTo(SOME_SDK_PACKAGE_NAME);
         assertThat(request.getAppPackageName()).isEqualTo(SOME_PACKAGE_NAME);
+        assertThat(request.isRecordObservation()).isEqualTo(false);
     }
 
     @Test
@@ -81,5 +83,21 @@ public final class GetTopicsParamTest {
                                     .setSdkName(SOME_SDK_NAME)
                                     .build();
                 });
+    }
+
+    @Test
+    public void test_notSettingRecordObservation_returnDefault() {
+        GetTopicsParam request =
+                new GetTopicsParam.Builder()
+                        .setAppPackageName(SOME_PACKAGE_NAME)
+                        .setSdkName(SOME_SDK_NAME)
+                        .setSdkPackageName(SOME_SDK_PACKAGE_NAME)
+                        .build();
+
+        assertThat(request.getSdkName()).isEqualTo(SOME_SDK_NAME);
+        assertThat(request.getSdkPackageName()).isEqualTo(SOME_SDK_PACKAGE_NAME);
+        assertThat(request.getAppPackageName()).isEqualTo(SOME_PACKAGE_NAME);
+        // Not setting RecordObservation will get default value.
+        assertThat(request.isRecordObservation()).isTrue();
     }
 }
