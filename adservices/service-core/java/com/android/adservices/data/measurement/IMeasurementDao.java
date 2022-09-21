@@ -331,4 +331,13 @@ public interface IMeasurementDao {
      * @param asyncRegistration a {@link AsyncRegistration} for which the retryCount will be updated
      */
     void updateRetryCount(@NonNull AsyncRegistration asyncRegistration) throws DatastoreException;
+
+    /**
+     * Deletes all records in measurement tables that correspond with a Uri not in the provided
+     * list.
+     *
+     * @param uriList a {@link List} of Uris whos related records won't be deleted.
+     * @throws DatastoreException
+     */
+    void deleteAppRecordsNotPresent(List<Uri> uriList) throws DatastoreException;
 }
