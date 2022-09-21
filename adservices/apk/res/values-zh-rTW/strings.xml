@@ -47,7 +47,7 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"如何加入本計畫"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"如果開啟 Beta 版，應用程式就可以測試這些新技術，以更保護隱私的方式向你顯示廣告。你隨時可以前往隱私權設定關閉 Beta 版。"</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"不用了，謝謝"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"是，我要加入"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"開啟"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"感謝你的參與。"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"你已加入 Android 廣告隱私權 Beta 版測試計畫。你的裝置已開啟 Privacy Sandbox。\n\n你隨時都可以前往隱私權設定瞭解詳情或關閉 Beta 版。"</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"你已選擇不參與"</string>

@@ -47,7 +47,8 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Sådan kan du deltage"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Hvis du aktiverer betaversionen, giver du apps mulighed for at teste disse nye og mere private måder at vise dig annoncer på. Du kan altid deaktivere betaversionen i privatlivsindstillingerne."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Nej tak"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"Ja, jeg vil gerne tilmelde mig"</string>
+    <!-- no translation found for notificationUI_right_control_button_text_eu (8484787286437052150) -->
+    <skip />
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Tak, fordi du deltager"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Du er en del af Androids betaprogram for beskyttelse af personlige oplysninger i forbindelse med annoncer. Privacy Sandbox er aktiveret på din enhed.\n\nDu kan få flere oplysninger eller deaktivere betaversionen i privatlivsindstillingerne."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Du har valgt ikke at deltage"</string>

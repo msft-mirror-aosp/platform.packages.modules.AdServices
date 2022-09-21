@@ -47,7 +47,8 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Način sodelovanja"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Če vklopite različico beta, lahko aplikacije preizkusijo te nove, bolj zasebne načine prikazovanja oglasov. V nastavitvah zasebnosti lahko kadar koli izklopite različico beta."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Ne, hvala"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"Da, želim se pridružiti"</string>
+    <!-- no translation found for notificationUI_right_control_button_text_eu (8484787286437052150) -->
+    <skip />
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Zahvaljujemo se vam za sodelovanje"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Sodelujete v različici beta Androidove zasebnosti pri oglaševanju. V vaši napravi je vklopljen Zasebni peskovnik.\n\nV nastavitvah zasebnosti si lahko preberete več ali kadar koli izklopite različico beta."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Odločili ste se, da ne želite sodelovati"</string>
