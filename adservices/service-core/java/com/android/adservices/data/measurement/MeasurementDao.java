@@ -1370,7 +1370,9 @@ class MeasurementDao implements IMeasurementDao {
                 asyncRegistration.getRedirect());
         values.put(
                 MeasurementTables.AsyncRegistrationContract.SOURCE_TYPE,
-                asyncRegistration.getSourceType().ordinal());
+                asyncRegistration.getSourceType() == null
+                        ? null
+                        : asyncRegistration.getSourceType().ordinal());
         values.put(
                 MeasurementTables.AsyncRegistrationContract.REQUEST_TIME,
                 asyncRegistration.getRequestTime());

@@ -250,7 +250,9 @@ public class SqliteObjectMapper {
         setIntColumn(
                 cursor,
                 MeasurementTables.AsyncRegistrationContract.SOURCE_TYPE,
-                builder::setSourceType);
+                (enumValue) ->
+                        builder.setSourceType(
+                                enumValue == null ? null : Source.SourceType.values()[enumValue]));
         setUriColumn(
                 cursor,
                 MeasurementTables.AsyncRegistrationContract.REGISTRANT,
