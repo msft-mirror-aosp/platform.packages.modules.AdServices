@@ -19,6 +19,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 
@@ -45,6 +46,7 @@ import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.common.PermissionHelper;
 import com.android.adservices.service.common.SdkRuntimeUtil;
+import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.ApiCallStats;
@@ -64,6 +66,7 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
     private final AdServicesLogger mAdServicesLogger;
     private final Clock mClock;
     private final Flags mFlags;
+    private final Throttler mThrottler;
     private final AppImportanceFilter mAppImportanceFilter;
 
     public AdIdServiceImpl(
@@ -72,12 +75,14 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
             AdServicesLogger adServicesLogger,
             Clock clock,
             Flags flags,
+            Throttler throttler,
             AppImportanceFilter appImportanceFilter) {
         mContext = context;
         mAdIdWorker = adidWorker;
         mAdServicesLogger = adServicesLogger;
         mClock = clock;
         mFlags = flags;
+        mThrottler = throttler;
         mAppImportanceFilter = appImportanceFilter;
     }
 
@@ -86,6 +91,8 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
             @NonNull GetAdIdParam adIdParam,
             @NonNull CallerMetadata callerMetadata,
             @NonNull IGetAdIdCallback callback) {
+
+        if (isThrottled(adIdParam, callback)) return;
 
         final long startServiceTime = mClock.elapsedRealtime();
         final String packageName = adIdParam.getAppPackageName();
@@ -136,6 +143,26 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
                                         .build());
                     }
                 });
+    }
+
+    // Throttle the AdId API.
+    // Return true if we should throttle (don't allow the API call).
+    private boolean isThrottled(GetAdIdParam adIdParam, IGetAdIdCallback callback) {
+        boolean throttled =
+                !mThrottler.tryAcquire(
+                        Throttler.ApiKey.ADID_API_APP_PACKAGE_NAME, adIdParam.getAppPackageName());
+
+        if (throttled) {
+            LogUtil.e("Rate Limit Reached for ADID_API");
+            try {
+                callback.onError(STATUS_RATE_LIMIT_REACHED);
+            } catch (RemoteException e) {
+                LogUtil.e(e, "Fail to call the callback on Rate Limit Reached.");
+            } finally {
+                return true;
+            }
+        }
+        return false;
     }
 
     // Enforce whether caller is from foreground.
