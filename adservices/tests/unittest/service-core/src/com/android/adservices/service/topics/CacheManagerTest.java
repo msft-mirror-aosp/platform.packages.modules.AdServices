@@ -586,6 +586,66 @@ public final class CacheManagerTest {
     }
 
     @Test
+    public void testGetTopicsInEpochRange() {
+        Topic topic1 =
+                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 1L);
+        Topic topic2 =
+                Topic.create(/* topic */ 2, /* taxonomyVersion = */ 1L, /* modelVersion = */ 1L);
+        Topic topic3 =
+                Topic.create(/* topic */ 3, /* taxonomyVersion = */ 1L, /* modelVersion = */ 1L);
+        Topic topic4 =
+                Topic.create(/* topic */ 4, /* taxonomyVersion = */ 1L, /* modelVersion = */ 1L);
+        Topic topic5 =
+                Topic.create(/* topic */ 5, /* taxonomyVersion = */ 1L, /* modelVersion = */ 1L);
+
+        String app1 = "app1";
+        String app2 = "app2";
+        String sdk = "sdk";
+        Pair<String, String> app1Sdk = Pair.create(app1, sdk);
+        Pair<String, String> app2Sdk = Pair.create(app2, sdk);
+        long epoch1 = 1L;
+        long epoch2 = 2L;
+        long epoch3 = 3L;
+
+        long currentEpochId = 4L;
+        when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
+        // Mock Flags to make it independent of configuration
+        when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(3);
+
+        // App1 has Topic1 in Epoch 1. Topic2 in Epoch 2, Topic3 in Epoch 3.
+        // App2 has Topic4 in Epoch 1, Topic5 in Epoch 2.
+        mTopicsDao.persistReturnedAppTopicsMap(epoch1, Map.of(app1Sdk, topic1));
+        mTopicsDao.persistReturnedAppTopicsMap(epoch2, Map.of(app1Sdk, topic2));
+        mTopicsDao.persistReturnedAppTopicsMap(epoch3, Map.of(app1Sdk, topic3));
+        mTopicsDao.persistReturnedAppTopicsMap(epoch1, Map.of(app2Sdk, topic4));
+        mTopicsDao.persistReturnedAppTopicsMap(epoch2, Map.of(app2Sdk, topic5));
+
+        CacheManager cacheManager = new CacheManager(mMockEpochManager, mTopicsDao, mMockFlags);
+        cacheManager.loadCache();
+
+        // App1 should have topic1/2/3 in epoch range [1, 3].
+        assertThat(
+                        cacheManager.getTopicsInEpochRange(
+                                /* epochLowerBound */ 1, /* epochUpperBound */ 3, app1, sdk))
+                .isEqualTo(List.of(topic1, topic2, topic3));
+
+        // App1 should have topic2/3 in epoch range [2, 3].
+        assertThat(
+                        cacheManager.getTopicsInEpochRange(
+                                /* epochLowerBound */ 2, /* epochUpperBound */ 3, app1, sdk))
+                .isEqualTo(List.of(topic2, topic3));
+
+        // App2 should have topic4/5 in epoch range [1, 3].
+        assertThat(
+                        cacheManager.getTopicsInEpochRange(
+                                /* epochLowerBound */ 1, /* epochUpperBound */ 3, app2, sdk))
+                .isEqualTo(List.of(topic4, topic5));
+
+        verify(mMockEpochManager).getCurrentEpochId();
+        verify(mMockFlags).getTopicsNumberOfLookBackEpochs();
+    }
+
+    @Test
     public void testGetKnownTopicsWithConsent_blockSomeTopics() {
         // The cache is empty.
         CacheManager cacheManager = new CacheManager(mMockEpochManager, mTopicsDao, mMockFlags);
