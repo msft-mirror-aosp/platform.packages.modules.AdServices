@@ -15,7 +15,6 @@
  */
 package com.android.adservices.service.topics;
 
-
 import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
@@ -138,8 +137,10 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
 
                         callback.onResult(mTopicsWorker.getTopics(packageName, sdkName));
 
-                        mTopicsWorker.recordUsage(
-                                topicsParam.getAppPackageName(), topicsParam.getSdkName());
+                        if (topicsParam.isRecordObservation()) {
+                            mTopicsWorker.recordUsage(
+                                    topicsParam.getAppPackageName(), topicsParam.getSdkName());
+                        }
                     } catch (RemoteException e) {
                         LogUtil.e(e, "Unable to send result to the callback");
                         resultCode = STATUS_INTERNAL_ERROR;
