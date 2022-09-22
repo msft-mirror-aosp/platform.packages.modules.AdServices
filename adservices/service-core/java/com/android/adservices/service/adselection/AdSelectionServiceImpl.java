@@ -181,9 +181,17 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         DevContext devContext = mDevContextFilter.createDevContext();
+        int callerUid = getCallingUid(apiName);
+        runOnDeviceAdSelection(devContext, callerUid, inputParams, callback);
+    }
 
-        AdSelectionRunner adSelectionRunner =
-                new AdSelectionRunner(
+    private void runOnDeviceAdSelection(
+            DevContext devContext,
+            int callerUid,
+            @NonNull AdSelectionInput inputParams,
+            @NonNull AdSelectionCallback callback) {
+        OnDeviceAdSelectionRunner runner =
+                new OnDeviceAdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
@@ -196,11 +204,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mAppImportanceFilter,
                         mFlags,
                         () -> Throttler.getInstance(mFlags.getSdkRequestPermitsPerSecond()),
-                        getCallingUid(apiName),
+                        callerUid,
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilter);
-
-        adSelectionRunner.runAdSelection(inputParams, callback);
+        runner.runAdSelection(inputParams, callback);
     }
 
     @Override
