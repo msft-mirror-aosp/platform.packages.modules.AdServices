@@ -47,10 +47,6 @@ public final class RegisterSource implements Action {
         mRegistrationRequest =
                 new RegistrationRequest.Builder()
                         .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
-                        .setTopOriginUri(
-                                Uri.parse(
-                                        regParamsJson.getString(
-                                                TestFormatJsonMapping.SOURCE_TOP_ORIGIN_URI_KEY)))
                         .setRegistrationUri(
                                 Uri.parse(
                                         regParamsJson.getString(

@@ -6,7 +6,6 @@
       {
         "registration_request": {
           "attribution_src_url": "https://www.ad-tech1.com",
-          "source_origin": "android-app://example.1s1.com",
           "source_type": "navigation",
           "registrant": "example.1s1.com"
         },
@@ -28,7 +27,6 @@
       {
         "registration_request": {
           "attribution_src_url": "https://www.ad-tech1.com",
-          "source_origin": "android-app://example.1s1.com",
           "source_type": "navigation",
           "registrant": "example.1s1.com"
         },
@@ -52,7 +50,6 @@
       {
         "registration_request": {
           "attribution_src_url": "https://www.ad-tech1.com",
-          "destination_origin": "android-app://example.2d1.com",
           "registrant": "example.2d1.com"
         },
         "responses": [{
@@ -75,7 +72,6 @@
       {
         "registration_request": {
           "attribution_src_url": "https://www.ad-tech1.com",
-          "destination_origin": "android-app://example.2d1.com",
           "registrant": "example.2d1.com"
         },
         "responses": [{
