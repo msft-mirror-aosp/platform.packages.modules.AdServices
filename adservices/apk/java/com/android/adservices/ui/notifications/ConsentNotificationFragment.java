@@ -143,6 +143,7 @@ public class ConsentNotificationFragment extends Fragment {
                         R.id.fragment_container_view,
                         ConsentNotificationConfirmationFragment.class,
                         args)
+                .setReorderingAllowed(true)
                 .addToBackStack(null)
                 .commit();
     }
