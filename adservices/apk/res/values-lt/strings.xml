@@ -47,7 +47,7 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Kaip dalyvauti"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Įjungus beta versiją, programos gali išbandyti šiuos naujus privatesnius būdus skelbimams rodyti. Galite bet kuriuo metu išjungti beta versiją privatumo nustatymuose."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Ne, ačiū"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"Taip, prisijungsiu"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Įjungti"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Dėkojame, kad dalyvaujate"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Dalyvaujate „Android“ su skelbimais susijusio privatumo beta versijos programoje. Privatumo „sandbox“ (smėlio dėžė) jūsų įrenginyje įjungta.\n\nGalite sužinoti daugiau arba bet kuriuo metu išjungti beta versiją privatumo nustatymuose."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Pasirinkote nedalyvauti"</string>

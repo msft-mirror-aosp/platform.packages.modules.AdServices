@@ -47,7 +47,7 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"सहभागी कसे व्हावे"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"बीटा सुरू केल्याने ॲप्सना तुम्हाला जाहिराती दाखवण्यासाठी या नवीन अधिक खाजगी मार्गांची चाचणी घेण्याची अनुमती मिळते. तुम्ही तुमच्या गोपनीयता सेटिंग्जमध्ये बीटा कधीही बंद करू शकता."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"नाही, नको"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"होय, मी सामील होईन"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"सुरू करा"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"सहभागी झाल्याबद्दल धन्यवाद"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"तुम्ही Android च्या जाहिरातींशी संबंधित गोपनीयतेची बीटा आवृत्तीचा भाग आहात. तुमच्या डिव्हाइससाठी प्रायव्हसी सॅंडबाॅक्स सुरू केला आहे.\n\nतुम्ही अधिक जाणून घेऊ शकता किंवा तुमच्या गोपनीयता सेटिंग्जमध्ये बीटा कधीही बंद करू शकता."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"तुम्ही सहभागी न होण्याचे निवडले आहे"</string>

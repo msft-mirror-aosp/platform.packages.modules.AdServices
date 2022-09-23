@@ -47,12 +47,12 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Come partecipare"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Se attivi il programma beta consenti alle app di testare queste nuove modalità più private di mostrarti gli annunci. Puoi disattivare il programma beta in qualsiasi momento dalle impostazioni di privacy."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"No, grazie"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"Sì, partecipo"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Attiva"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Grazie per aver scelto di partecipare"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Fai parte del programma beta di Android sulla privacy per gli annunci. Privacy Sandbox è attivato per il tuo dispositivo.\n\nSe vuoi saperne di più o vuoi disattivare il programma beta, vai alle impostazioni della privacy in qualsiasi momento."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Hai deciso di non partecipare"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="4194388733937808440">"Grazie per la tua risposta. Privacy Sandbox è disattivato per il tuo dispositivo.\n\nSe cambi idea o vuoi saperne di più, vai alle impostazioni della privacy."</string>
-    <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"Impostazioni della privacy"</string>
+    <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"Impostazioni privacy"</string>
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"OK"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"Fai parte del programma beta"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Privacy Sandbox è attivato per il tuo dispositivo e le app possono testare queste nuove modalità più private di mostrarti gli annunci. Puoi disattivare il programma beta in qualsiasi momento dalle impostazioni di privacy."</string>
