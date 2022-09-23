@@ -1,0 +1,377 @@
+{
+  "testCases": [
+    {
+      "name": "Single pending report success",
+      "input": {
+        "sources": [],
+        "triggers": [],
+        "attributions": [],
+        "event_reports": [
+          {
+            "id": "ER1",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.example2/d1",
+            "enrollmentId": "enrollment-id-3",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": 8643600030,
+            "triggerPriority": 101,
+            "sourceType": "navigation",
+            "randomizedTriggerRate":  0.0024263
+          }
+        ]
+      },
+      "output": {
+        "sources": [],
+        "triggers": [],
+        "attributions": [],
+        "event_reports": [
+          {
+            "id": "ER1",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.example2/d1",
+            "enrollmentId": "enrollment-id-3",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 1,
+            "reportTime": 8643600030,
+            "triggerPriority": 101,
+            "sourceType": "navigation",
+            "randomizedTriggerRate":  0.0024263
+          }
+        ]
+      },
+      "param": {
+        "responseCode": 200,
+        "action": "SINGLE_REPORT",
+        "result": 0,
+        "id": "ER1"
+      }
+    },
+    {
+      "name": "Single pending report failure",
+      "input": {
+        "sources": [],
+        "triggers": [],
+        "attributions": [],
+        "event_reports": [
+          {
+            "id": "ER1",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.example2/d1",
+            "enrollmentId": "enrollment-id-3",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": 8643600030,
+            "triggerPriority": 101,
+            "sourceType": "navigation",
+            "randomizedTriggerRate":  0.0024263
+          }
+        ]
+      },
+      "output": {
+        "sources": [],
+        "triggers": [],
+        "attributions": [],
+        "event_reports": [
+          {
+            "id": "ER1",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.example2/d1",
+            "enrollmentId": "enrollment-id-3",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": 8643600030,
+            "triggerPriority": 101,
+            "sourceType": "navigation",
+            "randomizedTriggerRate":  0.0024263
+          }
+        ]
+      },
+      "param": {
+        "responseCode": 400,
+        "action": "SINGLE_REPORT",
+        "result": 4,
+        "id": "ER1"
+      }
+    },
+    {
+      "name": "Single pending report already delivered",
+      "input": {
+        "sources": [],
+        "triggers": [],
+        "attributions": [],
+        "event_reports": [
+          {
+            "id": "ER1",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.example2/d1",
+            "enrollmentId": "enrollment-id-3",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 1,
+            "reportTime": 8643600030,
+            "triggerPriority": 101,
+            "sourceType": "navigation",
+            "randomizedTriggerRate":  0.0024263
+          }
+        ]
+      },
+      "output": {
+        "sources": [],
+        "triggers": [],
+        "attributions": [],
+        "event_reports": [
+          {
+            "id": "ER1",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.example2/d1",
+            "enrollmentId": "enrollment-id-3",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 1,
+            "reportTime": 8643600030,
+            "triggerPriority": 101,
+            "sourceType": "navigation",
+            "randomizedTriggerRate":  0.0024263
+          }
+        ]
+      },
+      "param": {
+        "responseCode": 200,
+        "action": "SINGLE_REPORT",
+        "result": 2,
+        "id": "ER1"
+      }
+    },
+    {
+      "name": "Multiple reports inside window for upload",
+      "input":{
+        "sources": [],
+        "triggers": [],
+        "attributions": [],
+        "event_reports": [
+          {
+            "id": "ER1",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.example2/d1",
+            "enrollmentId": "enrollment-id-3",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": 8643600030,
+            "triggerPriority": 101,
+            "sourceType": "navigation",
+            "randomizedTriggerRate":  0.0024263
+          },
+          {
+            "id": "ER2",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.example2/d1",
+            "enrollmentId": "enrollment-id-3",
+            "triggerData": 2,
+            "triggerTime": 8440000002,
+            "status": 0,
+            "reportTime": 8443600030,
+            "triggerPriority": 101,
+            "sourceType": "navigation",
+            "randomizedTriggerRate":  0.0024263
+          }
+        ]
+      } ,
+      "output":{
+        "sources": [],
+        "triggers": [],
+        "attributions": [],
+        "event_reports": [
+          {
+            "id": "ER1",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.example2/d1",
+            "enrollmentId": "enrollment-id-3",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 1,
+            "reportTime": 8643600030,
+            "triggerPriority": 101,
+            "sourceType": "navigation",
+            "randomizedTriggerRate":  0.0024263
+          },
+          {
+            "id": "ER2",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.example2/d1",
+            "enrollmentId": "enrollment-id-3",
+            "triggerData": 2,
+            "triggerTime": 8440000002,
+            "status": 1,
+            "reportTime": 8443600030,
+            "triggerPriority": 101,
+            "sourceType": "navigation",
+            "randomizedTriggerRate":  0.0024263
+          }
+        ]
+      },
+      "param": {
+        "responseCode": 200,
+        "action": "ALL_REPORTS",
+        "start": 8443600030,
+        "end": 8643600030
+      }
+    },
+    {
+      "name": "One report within the window, before the window, and after the window",
+      "input":{
+        "sources": [],
+        "triggers": [],
+        "attributions": [],
+        "event_reports": [
+          {
+            "id": "ER1",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.example2/d1",
+            "enrollmentId": "enrollment-id-3",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": 8643600030,
+            "triggerPriority": 101,
+            "sourceType": "navigation",
+            "randomizedTriggerRate":  0.0024263
+          },
+          {
+            "id": "ER2",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.example2/d1",
+            "enrollmentId": "enrollment-id-3",
+            "triggerData": 2,
+            "triggerTime": 8440000002,
+            "status": 0,
+            "reportTime": 8443600030,
+            "triggerPriority": 101,
+            "sourceType": "navigation",
+            "randomizedTriggerRate":  0.0024263
+          },
+          {
+            "id": "ER3",
+            "sourceId": 3,
+            "attributionDestination": "android-app://com.example2/d1",
+            "enrollmentId": "enrollment-id-3",
+            "triggerData": 2,
+            "triggerTime": 8240000002,
+            "status": 0,
+            "reportTime": 8243600030,
+            "triggerPriority": 101,
+            "sourceType": "navigation",
+            "randomizedTriggerRate":  0.0024263
+          }
+        ]
+      } ,
+      "output":{
+        "sources": [],
+        "triggers": [],
+        "attributions": [],
+        "event_reports": [
+          {
+            "id": "ER1",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.example2/d1",
+            "enrollmentId": "enrollment-id-3",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": 8643600030,
+            "triggerPriority": 101,
+            "sourceType": "navigation",
+            "randomizedTriggerRate":  0.0024263
+          },
+          {
+            "id": "ER2",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.example2/d1",
+            "enrollmentId": "enrollment-id-3",
+            "triggerData": 2,
+            "triggerTime": 8440000002,
+            "status": 1,
+            "reportTime": 8443600030,
+            "triggerPriority": 101,
+            "sourceType": "navigation",
+            "randomizedTriggerRate":  0.0024263
+          },
+          {
+            "id": "ER2",
+            "sourceId": 3,
+            "attributionDestination": "android-app://com.example2/d1",
+            "enrollmentId": "enrollment-id-3",
+            "triggerData": 2,
+            "triggerTime": 8240000002,
+            "status": 0,
+            "reportTime": 8243600030,
+            "triggerPriority": 101,
+            "sourceType": "navigation",
+            "randomizedTriggerRate":  0.0024263
+          }
+        ]
+      },
+      "param": {
+        "responseCode": 200,
+        "action": "ALL_REPORTS",
+        "start": 8343600030,
+        "end": 8543600030
+      }
+    },
+    {
+      "name": "Single pending report, retrieving enrollment fails",
+      "input": {
+        "sources": [],
+        "triggers": [],
+        "attributions": [],
+        "event_reports": [
+          {
+            "id": "ER1",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.example2/d1",
+            "enrollmentId": "enrollment-id-3",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": 8643600030,
+            "triggerPriority": 101,
+            "sourceType": "navigation",
+            "randomizedTriggerRate":  0.0024263
+          }
+        ]
+      },
+      "output": {
+        "sources": [],
+        "triggers": [],
+        "attributions": [],
+        "event_reports": [
+          {
+            "id": "ER1",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.example2/d1",
+            "enrollmentId": "enrollment-id-3",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": 8643600030,
+            "triggerPriority": 101,
+            "sourceType": "navigation",
+            "randomizedTriggerRate":  0.0024263
+          }
+        ]
+      },
+      "param": {
+        "responseCode": 200,
+        "action": "SINGLE_REPORT",
+        "result": 1,
+        "id": "ER1",
+	"notEnrolled": true
+      }
+    }
+  ]
+}

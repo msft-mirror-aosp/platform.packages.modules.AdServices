@@ -14,47 +14,105 @@
  * limitations under the License.
  */
 package android.adservices.topics;
-import static android.adservices.topics.TopicsManager.EMPTY_SDK;
+
+import static android.adservices.topics.TopicsManager.RECORD_OBSERVATION_DEFAULT;
+
 import android.annotation.NonNull;
-/**
- * Get Topics Request.
- */
-public class GetTopicsRequest {
-    private final String mSdkName;
-    private GetTopicsRequest(@NonNull String sdkName) {
-        mSdkName = sdkName;
+import android.annotation.Nullable;
+
+/** Get Topics Request. */
+public final class GetTopicsRequest {
+
+    /** Name of Ads SDK that is involved in this request. */
+    private final String mAdsSdkName;
+
+    private final boolean mRecordObservation;
+
+    private GetTopicsRequest(@NonNull Builder builder) {
+        mAdsSdkName = builder.mAdsSdkName;
+        mRecordObservation = builder.mRecordObservation;
     }
-    /**
-     * Get the Sdk Name.
-     */
+
+    /** Get the Sdk Name. */
+    @Nullable
+    public String getAdsSdkName() {
+        return mAdsSdkName;
+    }
+
+    /** Get Record Observation. */
     @NonNull
-    public String getSdkName() {
-        return mSdkName;
+    public boolean isRecordObservation() {
+        return mRecordObservation;
     }
+
     /**
-     * Builder for {@link GetTopicsRequest} objects.
+     * @deprecated This method is equivalent to {@code new Builder().build()} and all default
+     *     parameters will be used.
      */
+    @Deprecated
+    @NonNull
+    public static GetTopicsRequest create() {
+        return new Builder().build();
+    }
+
+    /**
+     * @deprecated This method is equivalent to {@code new Builder().setAdsSdkName(String).build()}
+     *     and default parameter will be used.
+     */
+    @Deprecated
+    @NonNull
+    public static GetTopicsRequest createWithAdsSdkName(@NonNull String adsSdkName) {
+        return new Builder().setAdsSdkName(adsSdkName).build();
+    }
+
+    /** Builder for {@link GetTopicsRequest} objects. */
     public static final class Builder {
-        private String mSdkName;
+        private String mAdsSdkName;
+        // Set mRecordObservation default to true.
+        private boolean mRecordObservation = RECORD_OBSERVATION_DEFAULT;
+
+        /** Creates a {@link Builder} for {@link GetTopicsRequest} objects. */
         public Builder() {}
+
         /**
-         * Set the Sdk Name. When the app calls the Topics API directly without using a SDK, don't
-         * set this field.
-         * <p> Currently we allow callers to specify the SdkName. In the future releases we will
-         * probably have a way to get the SdkName internally.
+         * Set Ads Sdk Name.
+         *
+         * <p>This must be called by SDKs running outside of the Sandbox. Other clients must not
+         * call it.
+         *
+         * @param adsSdkName the Ads Sdk Name.
          */
-        public @NonNull Builder setSdkName(@NonNull String sdkName) {
-            mSdkName = sdkName;
+        @NonNull
+        public Builder setAdsSdkName(@NonNull String adsSdkName) {
+            // This is the case the SDK calling from outside of the Sandbox.
+            // Check if the caller set the adsSdkName
+            if (adsSdkName == null) {
+                throw new IllegalArgumentException(
+                        "When calling Topics API outside of the Sandbox, caller should set Ads Sdk"
+                                + " Name");
+            }
+
+            mAdsSdkName = adsSdkName;
             return this;
         }
+
+        /**
+         * Set the Record Observation.
+         *
+         * @param recordObservation whether to record that the caller has observed the topics of the
+         *     host app or not. This will be used to determine if the caller can receive the topic
+         *     in the next epoch.
+         */
+        @NonNull
+        public Builder setRecordObservation(boolean recordObservation) {
+            mRecordObservation = recordObservation;
+            return this;
+        }
+
         /** Builds a {@link GetTopicsRequest} instance. */
-        public @NonNull GetTopicsRequest build() {
-            if (mSdkName == null) {
-                // When Sdk name is not set, we assume the App calls the Topics API directly.
-                // We set the Sdk name to empty to mark this.
-                mSdkName = EMPTY_SDK;
-            }
-            return new GetTopicsRequest(mSdkName);
+        @NonNull
+        public GetTopicsRequest build() {
+            return new GetTopicsRequest(this);
         }
     }
 }

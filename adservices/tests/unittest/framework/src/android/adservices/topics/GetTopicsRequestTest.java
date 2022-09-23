@@ -15,37 +15,86 @@
  */
 package android.adservices.topics;
 
-import static android.adservices.topics.TopicsManager.EMPTY_SDK;
-
 import static com.google.common.truth.Truth.assertThat;
+
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 
 import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
 
-/**
- * Unit tests for {@link android.adservices.topics.GetTopicsRequest}
- */
+/** Unit tests for {@link android.adservices.topics.GetTopicsRequest} */
 @SmallTest
 public final class GetTopicsRequestTest {
-
     private static final String SOME_SDK_NAME = "SomeSDKName";
 
     @Test
-    public void testNonNullSdkName() {
-        GetTopicsRequest request =
-            new GetTopicsRequest.Builder().setSdkName(SOME_SDK_NAME).build();
-
-        assertThat(request.getSdkName()).isEqualTo(SOME_SDK_NAME);
+    public void testCreate() {
+        GetTopicsRequest request = GetTopicsRequest.create();
+        assertNull(request.getAdsSdkName());
     }
 
     @Test
-    public void testNullSdkName() {
+    public void testCreateWithAdsSdkName_nullSdkName() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    GetTopicsRequest.createWithAdsSdkName(/* adsSdkName */ null);
+                });
+    }
+
+    @Test
+    public void testCreateWithAdsSdkName_nonNullSdkName() {
         GetTopicsRequest request =
-            new GetTopicsRequest.Builder()
-                // Not setting mSdkName making it null.
-                .build();
-        // When sdkName is not set in builder, we will use EMPTY_SDK by default
-        assertThat(request.getSdkName()).isEqualTo(EMPTY_SDK);
+                GetTopicsRequest.createWithAdsSdkName(/* adsSdkName */ SOME_SDK_NAME);
+        assertThat(request.getAdsSdkName()).isEqualTo(SOME_SDK_NAME);
+    }
+
+    @Test
+    public void testBuilder() {
+        GetTopicsRequest request = new GetTopicsRequest.Builder().build();
+        assertNull(request.getAdsSdkName());
+        // RecordObservation default value is true
+        assertThat(request.isRecordObservation()).isTrue();
+    }
+
+    @Test
+    public void testBuilderSetAdsSdkName_nullSdkName() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    new GetTopicsRequest.Builder().setAdsSdkName(/* adsSdkName */ null).build();
+                });
+    }
+
+    @Test
+    public void testBuilderSetAdsSdkName_nonNullSdkName() {
+        GetTopicsRequest request =
+                new GetTopicsRequest.Builder()
+                        .setAdsSdkName(/* adsSdkName */ SOME_SDK_NAME)
+                        .build();
+        assertThat(request.getAdsSdkName()).isEqualTo(SOME_SDK_NAME);
+        // RecordObservation default value is true
+        assertThat(request.isRecordObservation()).isTrue();
+    }
+
+    @Test
+    public void testBuilderSetAdsSdkName_recordObservationFalse() {
+        GetTopicsRequest request =
+                new GetTopicsRequest.Builder()
+                        .setAdsSdkName(/* adsSdkName */ SOME_SDK_NAME)
+                        .setRecordObservation(false)
+                        .build();
+        assertThat(request.getAdsSdkName()).isEqualTo(SOME_SDK_NAME);
+        assertThat(request.isRecordObservation()).isFalse();
+    }
+
+    @Test
+    public void testBuilder_recordObservationFalse() {
+        GetTopicsRequest request =
+                new GetTopicsRequest.Builder().setRecordObservation(false).build();
+        assertNull(request.getAdsSdkName());
+        assertThat(request.isRecordObservation()).isFalse();
     }
 }

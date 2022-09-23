@@ -104,7 +104,7 @@ public final class Preprocessor {
         }
         mStopWords = setBuilder.build();
 
-        LogUtil.d("Read %d stop words for pre-processing.", countWords);
+        LogUtil.v("Read %d stop words for pre-processing.", countWords);
     }
 
     /**
@@ -134,6 +134,28 @@ public final class Preprocessor {
         description = NEW_LINE_REGEX.matcher(description).replaceAll(SINGLE_SPACE);
         description = MULTIPLE_SPACES_REGEX.matcher(description).replaceAll(SINGLE_SPACE);
 
+        return description;
+    }
+
+    /**
+     * Truncate the description to {@code maxNumberOfWords} number of words and {@code
+     * maxNumberOfCharacters} number of characters.
+     *
+     * @param description is the string description of the app.
+     * @param maxNumberOfWords limit on the number of words allowed in the description.
+     * @param maxNumberOfCharacters limit on the number of characters allowed in the description.
+     * @return truncated description of the app.
+     */
+    @NonNull
+    public static String limitDescriptionSize(
+            @NonNull String description, int maxNumberOfWords, int maxNumberOfCharacters) {
+        description =
+                Arrays.stream(description.split(SINGLE_SPACE))
+                        .limit(maxNumberOfWords)
+                        .collect(Collectors.joining(SINGLE_SPACE));
+
+        description =
+                description.substring(0, Math.min(maxNumberOfCharacters, description.length()));
         return description;
     }
 }

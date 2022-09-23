@@ -16,64 +16,65 @@
 
 package com.android.adservices.data;
 
+import static com.android.adservices.data.DbTestUtil.doesIndexExist;
+import static com.android.adservices.data.DbTestUtil.doesTableExistAndColumnCountMatch;
+
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import android.content.Context;
-import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 public class DbHelperTest {
-
-    private static final String TAG = "DbHelperTest";
-
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
 
     @Test
     public void testOnCreate() {
-        assertTrue(doesTableExistAndColumnCountMatch("topics_taxonomy", 3));
-        assertTrue(doesTableExistAndColumnCountMatch("topics_app_classification_topics", 6));
-        assertTrue(doesTableExistAndColumnCountMatch("topics_caller_can_learn_topic", 4));
-        assertTrue(doesTableExistAndColumnCountMatch("topics_top_topics", 8));
-        assertTrue(doesTableExistAndColumnCountMatch("topics_returned_topics", 7));
-        assertTrue(doesTableExistAndColumnCountMatch("topics_usage_history", 3));
-        assertTrue(doesTableExistAndColumnCountMatch("topics_app_usage_history", 3));
-        assertTrue(doesTableExistAndColumnCountMatch("msmt_source", 18));
-        assertTrue(doesTableExistAndColumnCountMatch("msmt_trigger", 11));
-        assertTrue(doesTableExistAndColumnCountMatch("msmt_adtech_urls", 2));
-        assertTrue(doesTableExistAndColumnCountMatch("msmt_event_report", 12));
-        assertTrue(doesTableExistAndColumnCountMatch("msmt_attribution_rate_limit", 6));
-        assertTrue(doesIndexExist("idx_msmt_source_ad_rt_et"));
-        assertTrue(doesIndexExist("idx_msmt_trigger_ad_rt_tt"));
-        assertTrue(doesIndexExist("idx_msmt_source_et"));
-        assertTrue(doesIndexExist("idx_msmt_trigger_tt"));
-        assertTrue(doesIndexExist("idx_msmt_attribution_rate_limit_ss_ds_tt"));
+        SQLiteDatabase db = DbTestUtil.getDbHelperForTest().safeGetReadableDatabase();
+        assertNotNull(db);
+        assertTrue(doesTableExistAndColumnCountMatch(db, "topics_taxonomy", 4));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "topics_app_classification_topics", 6));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "topics_caller_can_learn_topic", 6));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "topics_top_topics", 10));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "topics_returned_topics", 7));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "topics_usage_history", 3));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "topics_app_usage_history", 3));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_source", 22));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_trigger", 12));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_async_registration_contract", 15));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_event_report", 14));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_attribution", 8));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_aggregate_report", 11));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_aggregate_encryption_key", 4));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "enrollment_data", 8));
+        assertTrue(doesIndexExist(db, "idx_msmt_source_ad_ei_et"));
+        assertTrue(doesIndexExist(db, "idx_msmt_source_p_ad_wd_s_et"));
+        assertTrue(doesIndexExist(db, "idx_msmt_trigger_ad_ei_tt"));
+        assertTrue(doesIndexExist(db, "idx_msmt_source_et"));
+        assertTrue(doesIndexExist(db, "idx_msmt_trigger_tt"));
+        assertTrue(doesIndexExist(db, "idx_msmt_attribution_ss_so_ds_do_ei_tt"));
     }
 
-    public boolean doesTableExistAndColumnCountMatch(String tableName, int columnCount) {
-        String query =
-                "select s.tbl_name, p.name from sqlite_master s "
-                        + "join pragma_table_info(s.name) p "
-                        + "where s.tbl_name = '" + tableName + "'";
-        Cursor cursor = DbTestUtil.getDbHelperForTest().safeGetReadableDatabase()
-                .rawQuery(query, null);
-        if (cursor != null) {
-            if (cursor.getCount() == columnCount) {
-                return true;
-            }
-        }
-        return false;
-    }
+    @Test
+    public void testGetDbFileSize() {
+        final String databaseName = "testsize.db";
+        DbHelper dbHelper = new DbHelper(sContext, databaseName, 1);
 
-    public boolean doesIndexExist(String index) {
-        String query = "SELECT * FROM sqlite_master WHERE type='index' and name='" + index + "'";
-        Cursor cursor = DbTestUtil.getDbHelperForTest().safeGetReadableDatabase()
-                .rawQuery(query, null);
-        if (cursor != null) {
-            return cursor.getCount() > 0;
-        }
-        return false;
+        // Create database
+        dbHelper.getReadableDatabase();
+
+        // Verify size should be more than 0 bytes as database was created
+        Assert.assertTrue(dbHelper.getDbFileSize() > 0);
+
+        // Delete database file
+        sContext.getDatabasePath(databaseName).delete();
+
+        // Verify database does not exist anymore
+        Assert.assertEquals(-1, dbHelper.getDbFileSize());
     }
 }

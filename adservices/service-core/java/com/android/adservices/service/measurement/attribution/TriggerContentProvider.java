@@ -56,7 +56,7 @@ public class TriggerContentProvider extends ContentProvider {
         //        .insert(TRIGGER_URI, null);
         // 2) Call ContentProvider for inserting during registration and call DAO from here.
         // Sample Code:
-        // MeasurementDAO.getInstance(getContext()).insertTrigger(values);
+        // MeasurementDAO.getInstance(getContext()).insertTrigger(triggerObject);
         getContext().getContentResolver().notifyChange(TRIGGER_URI, null);
         return TRIGGER_URI;
     }

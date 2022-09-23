@@ -16,6 +16,8 @@
 
 package com.android.adservices.data.topics;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -27,8 +29,6 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
-
-import static com.google.common.truth.Truth.assertThat;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -52,6 +52,7 @@ public class TopicsTablesTest {
         DbTestUtil.deleteTable(TopicsTables.ReturnedTopicContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.UsageHistoryContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.AppUsageHistoryContract.TABLE);
+        DbTestUtil.deleteTable(TopicsTables.BlockedTopicsContract.TABLE);
     }
 
     @Test
@@ -60,7 +61,7 @@ public class TopicsTablesTest {
         final long taxonomyVersion = 1L;
         final int modelVersion = 1;
         final String app = "app";
-        final String topic = "topic1";
+        final int topic = 1;
         ContentValues values = new ContentValues();
         values.put(TopicsTables.AppClassificationTopicsContract.EPOCH_ID, epochId);
         values.put(TopicsTables.AppClassificationTopicsContract.APP, app);
@@ -75,34 +76,49 @@ public class TopicsTablesTest {
         }
 
         String[] projection = {
-                TopicsTables.AppClassificationTopicsContract.APP,
-                TopicsTables.AppClassificationTopicsContract.TAXONOMY_VERSION,
-                TopicsTables.AppClassificationTopicsContract.MODEL_VERSION,
-                TopicsTables.AppClassificationTopicsContract.TOPIC,
+            TopicsTables.AppClassificationTopicsContract.APP,
+            TopicsTables.AppClassificationTopicsContract.TAXONOMY_VERSION,
+            TopicsTables.AppClassificationTopicsContract.MODEL_VERSION,
+            TopicsTables.AppClassificationTopicsContract.TOPIC,
         };
 
         String selection = TopicsTables.UsageHistoryContract.EPOCH_ID + " = ?";
-        String[] selectionArgs = { String.valueOf(epochId) };
+        String[] selectionArgs = {String.valueOf(epochId)};
 
-        try (
-            Cursor cursor =
-                    mDb.query(/* distinct = */true,
-                            TopicsTables.AppClassificationTopicsContract.TABLE, projection,
-                            selection,
-                            selectionArgs, null, null,
-                            null, null)
-        )  {
+        try (Cursor cursor =
+                mDb.query(
+                        /* distinct = */ true,
+                        TopicsTables.AppClassificationTopicsContract.TABLE,
+                        projection,
+                        selection,
+                        selectionArgs,
+                        null,
+                        null,
+                        null,
+                        null)) {
             assertThat(cursor.moveToNext()).isTrue();
-            assertThat(cursor.getString(cursor.getColumnIndexOrThrow(
-                    TopicsTables.AppClassificationTopicsContract.APP))).isEqualTo(app);
-            assertThat(cursor.getLong(cursor.getColumnIndexOrThrow(
-                    TopicsTables.AppClassificationTopicsContract.TAXONOMY_VERSION)))
+            assertThat(
+                            cursor.getString(
+                                    cursor.getColumnIndexOrThrow(
+                                            TopicsTables.AppClassificationTopicsContract.APP)))
+                    .isEqualTo(app);
+            assertThat(
+                            cursor.getLong(
+                                    cursor.getColumnIndexOrThrow(
+                                            TopicsTables.AppClassificationTopicsContract
+                                                    .TAXONOMY_VERSION)))
                     .isEqualTo(taxonomyVersion);
-            assertThat(cursor.getInt(cursor.getColumnIndexOrThrow(
-                    TopicsTables.AppClassificationTopicsContract.MODEL_VERSION)))
+            assertThat(
+                            cursor.getInt(
+                                    cursor.getColumnIndexOrThrow(
+                                            TopicsTables.AppClassificationTopicsContract
+                                                    .MODEL_VERSION)))
                     .isEqualTo(modelVersion);
-            assertThat(cursor.getString(cursor.getColumnIndexOrThrow(
-                    TopicsTables.AppClassificationTopicsContract.TOPIC))).isEqualTo(topic);
+            assertThat(
+                            cursor.getInt(
+                                    cursor.getColumnIndexOrThrow(
+                                            TopicsTables.AppClassificationTopicsContract.TOPIC)))
+                    .isEqualTo(topic);
             assertThat(cursor.moveToNext()).isFalse();
         }
     }
@@ -113,7 +129,7 @@ public class TopicsTablesTest {
         final long taxonomyVersion = 1L;
         final int modelVersion = 1;
         final String app = "app";
-        final String topic = "topic1";
+        final int topic = 1;
         ContentValues values = new ContentValues();
         values.put(TopicsTables.AppClassificationTopicsContract.EPOCH_ID, epochId);
         values.put(TopicsTables.AppClassificationTopicsContract.APP, app);
@@ -122,34 +138,27 @@ public class TopicsTablesTest {
         values.put(TopicsTables.AppClassificationTopicsContract.TOPIC, topic);
 
         values.put(TopicsTables.AppClassificationTopicsContract.EPOCH_ID, (Long) null);
-        assertThat(mDb.insert(
-                TopicsTables.AppClassificationTopicsContract.TABLE, null, values))
+        assertThat(mDb.insert(TopicsTables.AppClassificationTopicsContract.TABLE, null, values))
                 .isEqualTo(-1);
         values.put(TopicsTables.AppClassificationTopicsContract.EPOCH_ID, epochId);
 
         values.put(TopicsTables.AppClassificationTopicsContract.APP, (String) null);
-        assertThat(mDb.insert(
-                TopicsTables.AppClassificationTopicsContract.TABLE, null, values))
+        assertThat(mDb.insert(TopicsTables.AppClassificationTopicsContract.TABLE, null, values))
                 .isEqualTo(-1);
         values.put(TopicsTables.AppClassificationTopicsContract.APP, app);
 
         values.put(TopicsTables.AppClassificationTopicsContract.TAXONOMY_VERSION, (Long) null);
-        assertThat(mDb.insert(
-                TopicsTables.AppClassificationTopicsContract.TABLE, null, values))
+        assertThat(mDb.insert(TopicsTables.AppClassificationTopicsContract.TABLE, null, values))
                 .isEqualTo(-1);
-        values.put(TopicsTables.AppClassificationTopicsContract.TAXONOMY_VERSION,
-                taxonomyVersion);
+        values.put(TopicsTables.AppClassificationTopicsContract.TAXONOMY_VERSION, taxonomyVersion);
 
         values.put(TopicsTables.AppClassificationTopicsContract.MODEL_VERSION, (Integer) null);
-        assertThat(mDb.insert(
-                TopicsTables.AppClassificationTopicsContract.TABLE, null, values))
+        assertThat(mDb.insert(TopicsTables.AppClassificationTopicsContract.TABLE, null, values))
                 .isEqualTo(-1);
-        values.put(TopicsTables.AppClassificationTopicsContract.MODEL_VERSION,
-                modelVersion);
+        values.put(TopicsTables.AppClassificationTopicsContract.MODEL_VERSION, modelVersion);
 
-        values.put(TopicsTables.AppClassificationTopicsContract.TOPIC, (String) null);
-        assertThat(mDb.insert(
-                TopicsTables.AppClassificationTopicsContract.TABLE, null, values))
+        values.put(TopicsTables.AppClassificationTopicsContract.TOPIC, (Integer) null);
+        assertThat(mDb.insert(TopicsTables.AppClassificationTopicsContract.TABLE, null, values))
                 .isEqualTo(-1);
         values.put(TopicsTables.AppClassificationTopicsContract.TOPIC, topic);
     }
@@ -158,11 +167,16 @@ public class TopicsTablesTest {
     public void testPersistAndGetCallerCanLearnTopicsContract() {
         final long epochId = 1L;
         final String caller = "caller";
-        final String topic = "topic1";
+        final int topic = 1;
+        final long taxonomyVersion = 1L;
+        final long modelVersion = 1L;
+
         ContentValues values = new ContentValues();
         values.put(TopicsTables.CallerCanLearnTopicsContract.EPOCH_ID, epochId);
         values.put(TopicsTables.CallerCanLearnTopicsContract.CALLER, caller);
         values.put(TopicsTables.CallerCanLearnTopicsContract.TOPIC, topic);
+        values.put(TopicsTables.CallerCanLearnTopicsContract.TAXONOMY_VERSION, taxonomyVersion);
+        values.put(TopicsTables.CallerCanLearnTopicsContract.MODEL_VERSION, modelVersion);
 
         try {
             mDb.insert(TopicsTables.CallerCanLearnTopicsContract.TABLE, null, values);
@@ -171,27 +185,50 @@ public class TopicsTablesTest {
         }
 
         String[] projection = {
-                TopicsTables.CallerCanLearnTopicsContract.EPOCH_ID,
-                TopicsTables.CallerCanLearnTopicsContract.CALLER,
-                TopicsTables.CallerCanLearnTopicsContract.TOPIC,
+            TopicsTables.CallerCanLearnTopicsContract.EPOCH_ID,
+            TopicsTables.CallerCanLearnTopicsContract.CALLER,
+            TopicsTables.CallerCanLearnTopicsContract.TOPIC,
+            TopicsTables.CallerCanLearnTopicsContract.TAXONOMY_VERSION,
+            TopicsTables.CallerCanLearnTopicsContract.MODEL_VERSION,
         };
 
         String selection = TopicsTables.CallerCanLearnTopicsContract.EPOCH_ID + " = ?";
-        String[] selectionArgs = { String.valueOf(epochId) };
+        String[] selectionArgs = {String.valueOf(epochId)};
 
-        try (
-                Cursor cursor =
-                        mDb.query(/* distinct = */true,
-                                TopicsTables.CallerCanLearnTopicsContract.TABLE, projection,
-                                selection,
-                                selectionArgs, null, null,
-                                null, null)
-        )  {
+        try (Cursor cursor =
+                mDb.query(
+                        /* distinct = */ true,
+                        TopicsTables.CallerCanLearnTopicsContract.TABLE,
+                        projection,
+                        selection,
+                        selectionArgs,
+                        null,
+                        null,
+                        null,
+                        null)) {
             assertThat(cursor.moveToNext()).isTrue();
-            assertThat(cursor.getString(cursor.getColumnIndexOrThrow(
-                    TopicsTables.CallerCanLearnTopicsContract.CALLER))).isEqualTo(caller);
-            assertThat(cursor.getString(cursor.getColumnIndexOrThrow(
-                    TopicsTables.CallerCanLearnTopicsContract.TOPIC))).isEqualTo(topic);
+            assertThat(
+                            cursor.getString(
+                                    cursor.getColumnIndexOrThrow(
+                                            TopicsTables.CallerCanLearnTopicsContract.CALLER)))
+                    .isEqualTo(caller);
+            assertThat(
+                            cursor.getInt(
+                                    cursor.getColumnIndexOrThrow(
+                                            TopicsTables.CallerCanLearnTopicsContract.TOPIC)))
+                    .isEqualTo(topic);
+            assertThat(
+                            cursor.getLong(
+                                    cursor.getColumnIndexOrThrow(
+                                            TopicsTables.CallerCanLearnTopicsContract
+                                                    .TAXONOMY_VERSION)))
+                    .isEqualTo(taxonomyVersion);
+            assertThat(
+                            cursor.getLong(
+                                    cursor.getColumnIndexOrThrow(
+                                            TopicsTables.CallerCanLearnTopicsContract
+                                                    .MODEL_VERSION)))
+                    .isEqualTo(modelVersion);
             assertThat(cursor.moveToNext()).isFalse();
         }
     }
@@ -200,27 +237,25 @@ public class TopicsTablesTest {
     public void testCallerCanLearnTopicsContractSchema_notNull() {
         final long epochId = 1L;
         final String caller = "caller";
-        final String topic = "topic1";
+        final int topic = 1;
+
         ContentValues values = new ContentValues();
         values.put(TopicsTables.CallerCanLearnTopicsContract.EPOCH_ID, epochId);
         values.put(TopicsTables.CallerCanLearnTopicsContract.CALLER, caller);
         values.put(TopicsTables.CallerCanLearnTopicsContract.TOPIC, topic);
 
         values.put(TopicsTables.CallerCanLearnTopicsContract.EPOCH_ID, (Long) null);
-        assertThat(mDb.insert(
-                TopicsTables.CallerCanLearnTopicsContract.TABLE, null, values))
+        assertThat(mDb.insert(TopicsTables.CallerCanLearnTopicsContract.TABLE, null, values))
                 .isEqualTo(-1);
         values.put(TopicsTables.CallerCanLearnTopicsContract.EPOCH_ID, epochId);
 
         values.put(TopicsTables.CallerCanLearnTopicsContract.CALLER, (String) null);
-        assertThat(mDb.insert(
-                TopicsTables.CallerCanLearnTopicsContract.TABLE, null, values))
+        assertThat(mDb.insert(TopicsTables.CallerCanLearnTopicsContract.TABLE, null, values))
                 .isEqualTo(-1);
         values.put(TopicsTables.CallerCanLearnTopicsContract.CALLER, caller);
 
-        values.put(TopicsTables.CallerCanLearnTopicsContract.TOPIC, (String) null);
-        assertThat(mDb.insert(
-                TopicsTables.CallerCanLearnTopicsContract.TABLE, null, values))
+        values.put(TopicsTables.CallerCanLearnTopicsContract.TOPIC, (Integer) null);
+        assertThat(mDb.insert(TopicsTables.CallerCanLearnTopicsContract.TABLE, null, values))
                 .isEqualTo(-1);
         values.put(TopicsTables.CallerCanLearnTopicsContract.TOPIC, topic);
     }
@@ -228,12 +263,15 @@ public class TopicsTablesTest {
     @Test
     public void testPersistAndGetTopTopicsContract() {
         final long epochId = 1L;
-        final String topic1 = "topic1";
-        final String topic2 = "topic2";
-        final String topic3 = "topic3";
-        final String topic4 = "topic4";
-        final String topic5 = "topic5";
-        final String randomTopic = "random_topic";
+        final int topic1 = 1;
+        final int topic2 = 2;
+        final int topic3 = 3;
+        final int topic4 = 4;
+        final int topic5 = 5;
+        final int randomTopic = 6;
+        final long taxonomyVersion = 1L;
+        final long modelVersion = 1L;
+
         ContentValues values = new ContentValues();
         values.put(TopicsTables.TopTopicsContract.EPOCH_ID, epochId);
         values.put(TopicsTables.TopTopicsContract.TOPIC1, topic1);
@@ -242,6 +280,8 @@ public class TopicsTablesTest {
         values.put(TopicsTables.TopTopicsContract.TOPIC4, topic4);
         values.put(TopicsTables.TopTopicsContract.TOPIC5, topic5);
         values.put(TopicsTables.TopTopicsContract.RANDOM_TOPIC, randomTopic);
+        values.put(TopicsTables.TopTopicsContract.TAXONOMY_VERSION, taxonomyVersion);
+        values.put(TopicsTables.TopTopicsContract.MODEL_VERSION, modelVersion);
 
         try {
             mDb.insert(TopicsTables.TopTopicsContract.TABLE, null, values);
@@ -250,39 +290,72 @@ public class TopicsTablesTest {
         }
 
         String[] projection = {
-                TopicsTables.TopTopicsContract.EPOCH_ID,
-                TopicsTables.TopTopicsContract.TOPIC1,
-                TopicsTables.TopTopicsContract.TOPIC2,
-                TopicsTables.TopTopicsContract.TOPIC3,
-                TopicsTables.TopTopicsContract.TOPIC4,
-                TopicsTables.TopTopicsContract.TOPIC5,
-                TopicsTables.TopTopicsContract.RANDOM_TOPIC
+            TopicsTables.TopTopicsContract.EPOCH_ID,
+            TopicsTables.TopTopicsContract.TOPIC1,
+            TopicsTables.TopTopicsContract.TOPIC2,
+            TopicsTables.TopTopicsContract.TOPIC3,
+            TopicsTables.TopTopicsContract.TOPIC4,
+            TopicsTables.TopTopicsContract.TOPIC5,
+            TopicsTables.TopTopicsContract.RANDOM_TOPIC,
+            TopicsTables.TopTopicsContract.TAXONOMY_VERSION,
+            TopicsTables.TopTopicsContract.MODEL_VERSION
         };
 
         String selection = TopicsTables.CallerCanLearnTopicsContract.EPOCH_ID + " = ?";
-        String[] selectionArgs = { String.valueOf(epochId) };
+        String[] selectionArgs = {String.valueOf(epochId)};
 
-        try (
-                Cursor cursor =
-                        mDb.query(/* distinct = */true,
-                                TopicsTables.TopTopicsContract.TABLE, projection,
-                                selection,
-                                selectionArgs, null, null,
-                                null, null)
-        )  {
+        try (Cursor cursor =
+                mDb.query(
+                        /* distinct = */ true,
+                        TopicsTables.TopTopicsContract.TABLE,
+                        projection,
+                        selection,
+                        selectionArgs,
+                        null,
+                        null,
+                        null,
+                        null)) {
             assertThat(cursor.moveToNext()).isTrue();
-            assertThat(cursor.getString(cursor.getColumnIndexOrThrow(
-                    TopicsTables.TopTopicsContract.TOPIC1))).isEqualTo(topic1);
-            assertThat(cursor.getString(cursor.getColumnIndexOrThrow(
-                    TopicsTables.TopTopicsContract.TOPIC2))).isEqualTo(topic2);
-            assertThat(cursor.getString(cursor.getColumnIndexOrThrow(
-                    TopicsTables.TopTopicsContract.TOPIC3))).isEqualTo(topic3);
-            assertThat(cursor.getString(cursor.getColumnIndexOrThrow(
-                    TopicsTables.TopTopicsContract.TOPIC4))).isEqualTo(topic4);
-            assertThat(cursor.getString(cursor.getColumnIndexOrThrow(
-                    TopicsTables.TopTopicsContract.TOPIC5))).isEqualTo(topic5);
-            assertThat(cursor.getString(cursor.getColumnIndexOrThrow(
-                    TopicsTables.TopTopicsContract.RANDOM_TOPIC))).isEqualTo(randomTopic);
+            assertThat(
+                            cursor.getInt(
+                                    cursor.getColumnIndexOrThrow(
+                                            TopicsTables.TopTopicsContract.TOPIC1)))
+                    .isEqualTo(topic1);
+            assertThat(
+                            cursor.getInt(
+                                    cursor.getColumnIndexOrThrow(
+                                            TopicsTables.TopTopicsContract.TOPIC2)))
+                    .isEqualTo(topic2);
+            assertThat(
+                            cursor.getInt(
+                                    cursor.getColumnIndexOrThrow(
+                                            TopicsTables.TopTopicsContract.TOPIC3)))
+                    .isEqualTo(topic3);
+            assertThat(
+                            cursor.getInt(
+                                    cursor.getColumnIndexOrThrow(
+                                            TopicsTables.TopTopicsContract.TOPIC4)))
+                    .isEqualTo(topic4);
+            assertThat(
+                            cursor.getInt(
+                                    cursor.getColumnIndexOrThrow(
+                                            TopicsTables.TopTopicsContract.TOPIC5)))
+                    .isEqualTo(topic5);
+            assertThat(
+                            cursor.getInt(
+                                    cursor.getColumnIndexOrThrow(
+                                            TopicsTables.TopTopicsContract.RANDOM_TOPIC)))
+                    .isEqualTo(randomTopic);
+            assertThat(
+                            cursor.getLong(
+                                    cursor.getColumnIndexOrThrow(
+                                            TopicsTables.TopTopicsContract.TAXONOMY_VERSION)))
+                    .isEqualTo(taxonomyVersion);
+            assertThat(
+                            cursor.getLong(
+                                    cursor.getColumnIndexOrThrow(
+                                            TopicsTables.TopTopicsContract.MODEL_VERSION)))
+                    .isEqualTo(modelVersion);
             assertThat(cursor.moveToNext()).isFalse();
         }
     }
@@ -290,12 +363,12 @@ public class TopicsTablesTest {
     @Test
     public void testTopTopicsContractContractSchema_notNull() {
         final long epochId = 1L;
-        final String topic1 = "topic1";
-        final String topic2 = "topic2";
-        final String topic3 = "topic3";
-        final String topic4 = "topic4";
-        final String topic5 = "topic5";
-        final String randomTopic = "random_topic";
+        final int topic1 = 1;
+        final int topic2 = 2;
+        final int topic3 = 3;
+        final int topic4 = 4;
+        final int topic5 = 5;
+        final int randomTopic = 6;
         ContentValues values = new ContentValues();
         values.put(TopicsTables.TopTopicsContract.EPOCH_ID, epochId);
         values.put(TopicsTables.TopTopicsContract.TOPIC1, topic1);
@@ -305,40 +378,28 @@ public class TopicsTablesTest {
         values.put(TopicsTables.TopTopicsContract.TOPIC5, topic5);
         values.put(TopicsTables.TopTopicsContract.RANDOM_TOPIC, randomTopic);
 
-        values.put(TopicsTables.TopTopicsContract.TOPIC1, (String) null);
-        assertThat(mDb.insert(
-                TopicsTables.TopTopicsContract.TABLE, null, values))
-                .isEqualTo(-1);
+        values.put(TopicsTables.TopTopicsContract.TOPIC1, (Integer) null);
+        assertThat(mDb.insert(TopicsTables.TopTopicsContract.TABLE, null, values)).isEqualTo(-1);
         values.put(TopicsTables.TopTopicsContract.TOPIC1, topic1);
 
-        values.put(TopicsTables.TopTopicsContract.TOPIC2, (String) null);
-        assertThat(mDb.insert(
-                TopicsTables.TopTopicsContract.TABLE, null, values))
-                .isEqualTo(-1);
+        values.put(TopicsTables.TopTopicsContract.TOPIC2, (Integer) null);
+        assertThat(mDb.insert(TopicsTables.TopTopicsContract.TABLE, null, values)).isEqualTo(-1);
         values.put(TopicsTables.TopTopicsContract.TOPIC2, topic2);
 
-        values.put(TopicsTables.TopTopicsContract.TOPIC3, (String) null);
-        assertThat(mDb.insert(
-                TopicsTables.TopTopicsContract.TABLE, null, values))
-                .isEqualTo(-1);
+        values.put(TopicsTables.TopTopicsContract.TOPIC3, (Integer) null);
+        assertThat(mDb.insert(TopicsTables.TopTopicsContract.TABLE, null, values)).isEqualTo(-1);
         values.put(TopicsTables.TopTopicsContract.TOPIC3, topic3);
 
-        values.put(TopicsTables.TopTopicsContract.TOPIC4, (String) null);
-        assertThat(mDb.insert(
-                TopicsTables.TopTopicsContract.TABLE, null, values))
-                .isEqualTo(-1);
+        values.put(TopicsTables.TopTopicsContract.TOPIC4, (Integer) null);
+        assertThat(mDb.insert(TopicsTables.TopTopicsContract.TABLE, null, values)).isEqualTo(-1);
         values.put(TopicsTables.TopTopicsContract.TOPIC4, topic4);
 
-        values.put(TopicsTables.TopTopicsContract.TOPIC5, (String) null);
-        assertThat(mDb.insert(
-                TopicsTables.TopTopicsContract.TABLE, null, values))
-                .isEqualTo(-1);
+        values.put(TopicsTables.TopTopicsContract.TOPIC5, (Integer) null);
+        assertThat(mDb.insert(TopicsTables.TopTopicsContract.TABLE, null, values)).isEqualTo(-1);
         values.put(TopicsTables.TopTopicsContract.TOPIC5, topic5);
 
-        values.put(TopicsTables.TopTopicsContract.RANDOM_TOPIC, (String) null);
-        assertThat(mDb.insert(
-                TopicsTables.TopTopicsContract.TABLE, null, values))
-                .isEqualTo(-1);
+        values.put(TopicsTables.TopTopicsContract.RANDOM_TOPIC, (Integer) null);
+        assertThat(mDb.insert(TopicsTables.TopTopicsContract.TABLE, null, values)).isEqualTo(-1);
         values.put(TopicsTables.TopTopicsContract.RANDOM_TOPIC, randomTopic);
     }
 
@@ -349,7 +410,7 @@ public class TopicsTablesTest {
         final int modelVersion = 1;
         final String app = "app";
         final String sdk = "sdk";
-        final String topic = "topic1";
+        final int topic = 1;
         ContentValues values = new ContentValues();
         values.put(TopicsTables.ReturnedTopicContract.EPOCH_ID, epochId);
         values.put(TopicsTables.ReturnedTopicContract.APP, app);
@@ -365,37 +426,53 @@ public class TopicsTablesTest {
         }
 
         String[] projection = {
-                TopicsTables.ReturnedTopicContract.APP,
-                TopicsTables.ReturnedTopicContract.SDK,
-                TopicsTables.ReturnedTopicContract.TAXONOMY_VERSION,
-                TopicsTables.ReturnedTopicContract.MODEL_VERSION,
-                TopicsTables.ReturnedTopicContract.TOPIC,
+            TopicsTables.ReturnedTopicContract.APP,
+            TopicsTables.ReturnedTopicContract.SDK,
+            TopicsTables.ReturnedTopicContract.TAXONOMY_VERSION,
+            TopicsTables.ReturnedTopicContract.MODEL_VERSION,
+            TopicsTables.ReturnedTopicContract.TOPIC,
         };
 
         String selection = TopicsTables.ReturnedTopicContract.EPOCH_ID + " = ?";
-        String[] selectionArgs = { String.valueOf(epochId) };
+        String[] selectionArgs = {String.valueOf(epochId)};
 
-        try (
-                Cursor cursor =
-                        mDb.query(/* distinct = */true,
-                                TopicsTables.ReturnedTopicContract.TABLE, projection,
-                                selection,
-                                selectionArgs, null, null,
-                                null, null)
-        )  {
+        try (Cursor cursor =
+                mDb.query(
+                        /* distinct = */ true,
+                        TopicsTables.ReturnedTopicContract.TABLE,
+                        projection,
+                        selection,
+                        selectionArgs,
+                        null,
+                        null,
+                        null,
+                        null)) {
             assertThat(cursor.moveToNext()).isTrue();
-            assertThat(cursor.getString(cursor.getColumnIndexOrThrow(
-                    TopicsTables.ReturnedTopicContract.APP))).isEqualTo(app);
-            assertThat(cursor.getString(cursor.getColumnIndexOrThrow(
-                    TopicsTables.ReturnedTopicContract.SDK))).isEqualTo(sdk);
-            assertThat(cursor.getLong(cursor.getColumnIndexOrThrow(
-                    TopicsTables.ReturnedTopicContract.TAXONOMY_VERSION)))
+            assertThat(
+                            cursor.getString(
+                                    cursor.getColumnIndexOrThrow(
+                                            TopicsTables.ReturnedTopicContract.APP)))
+                    .isEqualTo(app);
+            assertThat(
+                            cursor.getString(
+                                    cursor.getColumnIndexOrThrow(
+                                            TopicsTables.ReturnedTopicContract.SDK)))
+                    .isEqualTo(sdk);
+            assertThat(
+                            cursor.getLong(
+                                    cursor.getColumnIndexOrThrow(
+                                            TopicsTables.ReturnedTopicContract.TAXONOMY_VERSION)))
                     .isEqualTo(taxonomyVersion);
-            assertThat(cursor.getInt(cursor.getColumnIndexOrThrow(
-                    TopicsTables.ReturnedTopicContract.MODEL_VERSION)))
+            assertThat(
+                            cursor.getInt(
+                                    cursor.getColumnIndexOrThrow(
+                                            TopicsTables.ReturnedTopicContract.MODEL_VERSION)))
                     .isEqualTo(modelVersion);
-            assertThat(cursor.getString(cursor.getColumnIndexOrThrow(
-                    TopicsTables.ReturnedTopicContract.TOPIC))).isEqualTo(topic);
+            assertThat(
+                            cursor.getInt(
+                                    cursor.getColumnIndexOrThrow(
+                                            TopicsTables.ReturnedTopicContract.TOPIC)))
+                    .isEqualTo(topic);
             assertThat(cursor.moveToNext()).isFalse();
         }
     }
@@ -407,7 +484,7 @@ public class TopicsTablesTest {
         final int modelVersion = 1;
         final String app = "app";
         final String sdk = "sdk";
-        final String topic = "topic1";
+        final int topic = 1;
         ContentValues values = new ContentValues();
         values.put(TopicsTables.ReturnedTopicContract.EPOCH_ID, epochId);
         values.put(TopicsTables.ReturnedTopicContract.APP, app);
@@ -417,40 +494,32 @@ public class TopicsTablesTest {
         values.put(TopicsTables.ReturnedTopicContract.TOPIC, topic);
 
         values.put(TopicsTables.ReturnedTopicContract.EPOCH_ID, (Long) null);
-        assertThat(mDb.insert(
-                TopicsTables.ReturnedTopicContract.TABLE, null, values))
+        assertThat(mDb.insert(TopicsTables.ReturnedTopicContract.TABLE, null, values))
                 .isEqualTo(-1);
         values.put(TopicsTables.ReturnedTopicContract.EPOCH_ID, epochId);
 
         values.put(TopicsTables.ReturnedTopicContract.APP, (String) null);
-        assertThat(mDb.insert(
-                TopicsTables.ReturnedTopicContract.TABLE, null, values))
+        assertThat(mDb.insert(TopicsTables.ReturnedTopicContract.TABLE, null, values))
                 .isEqualTo(-1);
         values.put(TopicsTables.ReturnedTopicContract.APP, app);
 
         values.put(TopicsTables.ReturnedTopicContract.SDK, (String) null);
-        assertThat(mDb.insert(
-                TopicsTables.ReturnedTopicContract.TABLE, null, values))
+        assertThat(mDb.insert(TopicsTables.ReturnedTopicContract.TABLE, null, values))
                 .isEqualTo(-1);
         values.put(TopicsTables.ReturnedTopicContract.SDK, sdk);
 
         values.put(TopicsTables.ReturnedTopicContract.TAXONOMY_VERSION, (Long) null);
-        assertThat(mDb.insert(
-                TopicsTables.ReturnedTopicContract.TABLE, null, values))
+        assertThat(mDb.insert(TopicsTables.ReturnedTopicContract.TABLE, null, values))
                 .isEqualTo(-1);
-        values.put(TopicsTables.ReturnedTopicContract.TAXONOMY_VERSION,
-                taxonomyVersion);
+        values.put(TopicsTables.ReturnedTopicContract.TAXONOMY_VERSION, taxonomyVersion);
 
         values.put(TopicsTables.ReturnedTopicContract.MODEL_VERSION, (Integer) null);
-        assertThat(mDb.insert(
-                TopicsTables.ReturnedTopicContract.TABLE, null, values))
+        assertThat(mDb.insert(TopicsTables.ReturnedTopicContract.TABLE, null, values))
                 .isEqualTo(-1);
-        values.put(TopicsTables.ReturnedTopicContract.MODEL_VERSION,
-                modelVersion);
+        values.put(TopicsTables.ReturnedTopicContract.MODEL_VERSION, modelVersion);
 
-        values.put(TopicsTables.ReturnedTopicContract.TOPIC, (String) null);
-        assertThat(mDb.insert(
-                TopicsTables.ReturnedTopicContract.TABLE, null, values))
+        values.put(TopicsTables.ReturnedTopicContract.TOPIC, (Integer) null);
+        assertThat(mDb.insert(TopicsTables.ReturnedTopicContract.TABLE, null, values))
                 .isEqualTo(-1);
         values.put(TopicsTables.ReturnedTopicContract.TOPIC, topic);
     }
@@ -472,27 +541,36 @@ public class TopicsTablesTest {
         }
 
         String[] projection = {
-                TopicsTables.UsageHistoryContract.EPOCH_ID,
-                TopicsTables.UsageHistoryContract.APP,
-                TopicsTables.UsageHistoryContract.SDK,
+            TopicsTables.UsageHistoryContract.EPOCH_ID,
+            TopicsTables.UsageHistoryContract.APP,
+            TopicsTables.UsageHistoryContract.SDK,
         };
 
         String selection = TopicsTables.UsageHistoryContract.EPOCH_ID + " = ?";
-        String[] selectionArgs = { String.valueOf(epochId) };
+        String[] selectionArgs = {String.valueOf(epochId)};
 
-        try (
-                Cursor cursor =
-                        mDb.query(/* distinct = */true,
-                                TopicsTables.UsageHistoryContract.TABLE, projection,
-                                selection,
-                                selectionArgs, null, null,
-                                null, null)
-        )  {
+        try (Cursor cursor =
+                mDb.query(
+                        /* distinct = */ true,
+                        TopicsTables.UsageHistoryContract.TABLE,
+                        projection,
+                        selection,
+                        selectionArgs,
+                        null,
+                        null,
+                        null,
+                        null)) {
             assertThat(cursor.moveToNext()).isTrue();
-            assertThat(cursor.getString(cursor.getColumnIndexOrThrow(
-                    TopicsTables.UsageHistoryContract.APP))).isEqualTo(app);
-            assertThat(cursor.getString(cursor.getColumnIndexOrThrow(
-                    TopicsTables.UsageHistoryContract.SDK))).isEqualTo(sdk);
+            assertThat(
+                            cursor.getString(
+                                    cursor.getColumnIndexOrThrow(
+                                            TopicsTables.UsageHistoryContract.APP)))
+                    .isEqualTo(app);
+            assertThat(
+                            cursor.getString(
+                                    cursor.getColumnIndexOrThrow(
+                                            TopicsTables.UsageHistoryContract.SDK)))
+                    .isEqualTo(sdk);
             assertThat(cursor.moveToNext()).isFalse();
         }
     }
@@ -508,21 +586,16 @@ public class TopicsTablesTest {
         values.put(TopicsTables.UsageHistoryContract.SDK, sdk);
 
         values.put(TopicsTables.UsageHistoryContract.EPOCH_ID, (Long) null);
-        assertThat(mDb.insert(
-                TopicsTables.UsageHistoryContract.TABLE, null, values))
-                .isEqualTo(-1);
+        assertThat(mDb.insert(TopicsTables.UsageHistoryContract.TABLE, null, values)).isEqualTo(-1);
         values.put(TopicsTables.UsageHistoryContract.EPOCH_ID, epochId);
 
         values.put(TopicsTables.UsageHistoryContract.APP, (String) null);
-        assertThat(mDb.insert(
-                TopicsTables.UsageHistoryContract.TABLE, null, values))
-                .isEqualTo(-1);
+        assertThat(mDb.insert(TopicsTables.UsageHistoryContract.TABLE, null, values)).isEqualTo(-1);
         values.put(TopicsTables.UsageHistoryContract.APP, app);
 
         // SDK is nullable
         values.put(TopicsTables.UsageHistoryContract.SDK, (String) null);
-        assertThat(mDb.insert(
-                TopicsTables.UsageHistoryContract.TABLE, null, values))
+        assertThat(mDb.insert(TopicsTables.UsageHistoryContract.TABLE, null, values))
                 .isNotEqualTo(-1);
         values.put(TopicsTables.UsageHistoryContract.SDK, sdk);
     }
@@ -554,30 +627,34 @@ public class TopicsTablesTest {
         }
 
         String[] projection = {
-                TopicsTables.AppUsageHistoryContract.EPOCH_ID,
-                TopicsTables.AppUsageHistoryContract.APP,
+            TopicsTables.AppUsageHistoryContract.EPOCH_ID, TopicsTables.AppUsageHistoryContract.APP,
         };
 
         String selection = TopicsTables.AppUsageHistoryContract.EPOCH_ID + " = ?";
-        String[] selectionArgs1 = { String.valueOf(epochId1) },
-                selectionArgs2 = { String.valueOf(epochId2) };
+        String[] selectionArgs1 = {String.valueOf(epochId1)},
+                selectionArgs2 = {String.valueOf(epochId2)};
 
         // Test Epoch 1
         Map<String, Integer> expectedAppUsageMap1 = new HashMap<>();
         Map<String, Integer> appUsageMapFromDB1 = new HashMap<>();
         expectedAppUsageMap1.put("app1", 2);
         expectedAppUsageMap1.put("app2", 1);
-        try (
-                Cursor cursor =
-                        mDb.query(/* distinct = */false,
-                                TopicsTables.AppUsageHistoryContract.TABLE, projection,
-                                selection,
-                                selectionArgs1, null, null,
-                                null, null)
-        )  {
+        try (Cursor cursor =
+                mDb.query(
+                        /* distinct = */ false,
+                        TopicsTables.AppUsageHistoryContract.TABLE,
+                        projection,
+                        selection,
+                        selectionArgs1,
+                        null,
+                        null,
+                        null,
+                        null)) {
             while (cursor.moveToNext()) {
-                String app = cursor.getString(cursor.getColumnIndexOrThrow(
-                        TopicsTables.AppUsageHistoryContract.APP));
+                String app =
+                        cursor.getString(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.AppUsageHistoryContract.APP));
                 appUsageMapFromDB1.put(app, appUsageMapFromDB1.getOrDefault(app, 0) + 1);
             }
         }
@@ -587,22 +664,26 @@ public class TopicsTablesTest {
         Map<String, Integer> expectedAppUsageMap2 = new HashMap<>();
         Map<String, Integer> appUsageMapFromDB2 = new HashMap<>();
         expectedAppUsageMap1.put("app2", 1);
-        try (
-                Cursor cursor =
-                        mDb.query(/* distinct = */false,
-                                TopicsTables.AppUsageHistoryContract.TABLE, projection,
-                                selection,
-                                selectionArgs2, null, null,
-                                null, null)
-        )  {
+        try (Cursor cursor =
+                mDb.query(
+                        /* distinct = */ false,
+                        TopicsTables.AppUsageHistoryContract.TABLE,
+                        projection,
+                        selection,
+                        selectionArgs2,
+                        null,
+                        null,
+                        null,
+                        null)) {
             while (cursor.moveToNext()) {
-                String app = cursor.getString(cursor.getColumnIndexOrThrow(
-                        TopicsTables.AppUsageHistoryContract.APP));
+                String app =
+                        cursor.getString(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.AppUsageHistoryContract.APP));
                 appUsageMapFromDB1.put(app, appUsageMapFromDB1.getOrDefault(app, 0) + 1);
             }
         }
         assertThat(appUsageMapFromDB2).isEqualTo(expectedAppUsageMap2);
-
     }
 
     @Test
@@ -614,15 +695,66 @@ public class TopicsTablesTest {
         values.put(TopicsTables.AppUsageHistoryContract.APP, app);
 
         values.put(TopicsTables.AppUsageHistoryContract.EPOCH_ID, (Long) null);
-        assertThat(mDb.insert(
-                TopicsTables.AppUsageHistoryContract.TABLE, null, values))
+        assertThat(mDb.insert(TopicsTables.AppUsageHistoryContract.TABLE, null, values))
                 .isEqualTo(-1);
         values.put(TopicsTables.AppUsageHistoryContract.EPOCH_ID, epochId);
 
         values.put(TopicsTables.AppUsageHistoryContract.APP, (String) null);
-        assertThat(mDb.insert(
-                TopicsTables.AppUsageHistoryContract.TABLE, null, values))
+        assertThat(mDb.insert(TopicsTables.AppUsageHistoryContract.TABLE, null, values))
                 .isEqualTo(-1);
         values.put(TopicsTables.AppUsageHistoryContract.APP, app);
+    }
+
+    @Test
+    public void testPersistAndGetBlockedTopicsContract() {
+        final long topic = 1L;
+        final long taxonomyVersion = 1L;
+        final int modelVersion = 1;
+        ContentValues values = new ContentValues();
+        values.put(TopicsTables.BlockedTopicsContract.TOPIC, topic);
+        values.put(TopicsTables.BlockedTopicsContract.TAXONOMY_VERSION, taxonomyVersion);
+        values.put(TopicsTables.BlockedTopicsContract.MODEL_VERSION, modelVersion);
+
+        try {
+            mDb.insert(TopicsTables.BlockedTopicsContract.TABLE, null, values);
+        } catch (SQLException e) {
+            LogUtil.e(e, "Failed to make DB transaction");
+        }
+
+        String[] projection = {
+            TopicsTables.BlockedTopicsContract.TOPIC,
+            TopicsTables.BlockedTopicsContract.TAXONOMY_VERSION,
+            TopicsTables.BlockedTopicsContract.MODEL_VERSION,
+        };
+
+        try (Cursor cursor =
+                mDb.query(
+                        /* distinct = */ true,
+                        TopicsTables.BlockedTopicsContract.TABLE,
+                        projection,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null)) {
+            assertThat(cursor.moveToNext()).isTrue();
+            assertThat(
+                            cursor.getInt(
+                                    cursor.getColumnIndexOrThrow(
+                                            TopicsTables.BlockedTopicsContract.TOPIC)))
+                    .isEqualTo(topic);
+            assertThat(
+                            cursor.getInt(
+                                    cursor.getColumnIndexOrThrow(
+                                            TopicsTables.BlockedTopicsContract.TAXONOMY_VERSION)))
+                    .isEqualTo(taxonomyVersion);
+            assertThat(
+                            cursor.getInt(
+                                    cursor.getColumnIndexOrThrow(
+                                            TopicsTables.BlockedTopicsContract.MODEL_VERSION)))
+                    .isEqualTo(modelVersion);
+            assertThat(cursor.moveToNext()).isFalse();
+        }
     }
 }

@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
+import android.adservices.adselection.AdSelectionConfig;
+import android.adservices.common.AdSelectionSignals;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 
@@ -23,10 +25,7 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 
 import com.google.common.util.concurrent.FluentFuture;
 
-/**
- *  Defines the bid generator applied on the ads of each custom audience during the
- *  ad selection.
- */
+/** Defines the bid generator applied on the ads of each custom audience during the ad selection. */
 interface AdBidGenerator {
     /**
      * This function uses the buyer-provided signals and javascript to generate bids for each of the
@@ -38,13 +37,15 @@ interface AdBidGenerator {
      * @param contextualSignals Contextual information about the App where the Ad is being shown, Ad
      *     slot and size, geographic location information, the seller invoking the ad selection and
      *     so on.
+     * @param adSelectionConfig used as the primary key in remote overrides
      * @return a future contains either a {@link AdBiddingOutcome} containing the candidate ad with
      *     the best bid for this custom audience or null if no valid ads are available for scoring.
      */
     @Nullable
     FluentFuture<AdBiddingOutcome> runAdBiddingPerCA(
             @NonNull DBCustomAudience customAudience,
-            @NonNull String adSelectionSignals,
-            @NonNull String buyerSignals,
-            @NonNull String contextualSignals);
+            @NonNull AdSelectionSignals adSelectionSignals,
+            @NonNull AdSelectionSignals buyerSignals,
+            @NonNull AdSelectionSignals contextualSignals,
+            @NonNull AdSelectionConfig adSelectionConfig);
 }

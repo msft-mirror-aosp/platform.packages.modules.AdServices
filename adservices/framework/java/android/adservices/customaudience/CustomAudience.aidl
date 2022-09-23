@@ -23,6 +23,6 @@ package android.adservices.customaudience;
  * advertiser.  This class is a collection of on-device data that is necessary to serve
  * advertisements targeting a single custom audience.
  *
- * @hide
+ * {@hide}
  */
 parcelable CustomAudience;

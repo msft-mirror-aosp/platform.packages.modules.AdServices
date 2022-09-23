@@ -27,5 +27,9 @@ java_defaults {
         error_checks: ["NewApi"],
         strict_updatability_linting: true,
     },
-    min_sdk_version: "Tiramisu",
+    aidl: {
+        generate_get_transaction_name: true,
+    },
+    min_sdk_version: "33",
+    target_sdk_version: "33",
 }

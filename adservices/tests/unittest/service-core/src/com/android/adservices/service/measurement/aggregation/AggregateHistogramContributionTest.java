@@ -17,12 +17,14 @@
 package com.android.adservices.service.measurement.aggregation;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
 
 import java.math.BigInteger;
+import java.util.Set;
 
 /** Unit tests for {@link AggregateHistogramContribution} */
 @SmallTest
@@ -31,14 +33,14 @@ public final class AggregateHistogramContributionTest {
     private AggregateHistogramContribution createExample() {
         return new AggregateHistogramContribution.Builder()
                 .setKey(BigInteger.valueOf(100L))
-                .setValue(1L).build();
+                .setValue(1).build();
     }
 
     @Test
     public void testCreation() throws Exception {
         AggregateHistogramContribution contribution = createExample();
         assertEquals(100L, contribution.getKey().longValue());
-        assertEquals(1L, contribution.getValue());
+        assertEquals(1, contribution.getValue());
     }
 
     @Test
@@ -46,6 +48,32 @@ public final class AggregateHistogramContributionTest {
         AggregateHistogramContribution contribution =
                 new AggregateHistogramContribution.Builder().build();
         assertEquals(0L, contribution.getKey().longValue());
-        assertEquals(0L, contribution.getValue());
+        assertEquals(0, contribution.getValue());
+    }
+
+    @Test
+    public void testHashCode_equals() throws Exception {
+        final AggregateHistogramContribution contribution1 = createExample();
+        final AggregateHistogramContribution contribution2 = createExample();
+        final Set<AggregateHistogramContribution> contributionSet1 = Set.of(contribution1);
+        final Set<AggregateHistogramContribution> contributionSet2 = Set.of(contribution2);
+        assertEquals(contribution1.hashCode(), contribution2.hashCode());
+        assertEquals(contribution1, contribution2);
+        assertEquals(contributionSet1, contributionSet2);
+    }
+
+    @Test
+    public void testHashCode_notEquals() throws Exception {
+        final AggregateHistogramContribution contribution1 = createExample();
+        final AggregateHistogramContribution contribution2 =
+                new AggregateHistogramContribution.Builder()
+                        .setKey(BigInteger.valueOf(100L))
+                        .setValue(2)
+                        .build();
+        final Set<AggregateHistogramContribution> contributionSet1 = Set.of(contribution1);
+        final Set<AggregateHistogramContribution> contributionSet2 = Set.of(contribution2);
+        assertNotEquals(contribution1.hashCode(), contribution2.hashCode());
+        assertNotEquals(contribution1, contribution2);
+        assertNotEquals(contributionSet1, contributionSet2);
     }
 }

@@ -18,6 +18,6 @@ package android.adservices.adselection;
 
 /**
  * This defines the AdSelectionConfig class, a configuration created by SDKs which contains
- * information used in both the {@link runAdSelection} and {@link reportImpression} APIs.
+ * information used in both the {@link selectAds} and {@link reportImpression} APIs.
  */
 parcelable AdSelectionConfig;

@@ -23,15 +23,18 @@ android_test {
         "android.test.runner",
         "android.test.base",
     ],
-    srcs: ["src/**/*.java"],
+    srcs: ["src/**/*.java",],
     // Tag this module as a cts test artifact
+    exclude_srcs: ["src/android/adservices/debuggablects/*.java"],
     test_suites: [
         "cts",
         "mts-adservices",
         "general-tests",
     ],
+    test_mainline_modules: ["com.google.android.adservices.apex"],
     static_libs: [
         "androidx.test.rules",
+        "androidx.test.ext.junit",
         "androidx.test.ext.truth",
         "compatibility-device-util-axt",
         "ctstestrunner-axt",
@@ -40,10 +43,42 @@ android_test {
         "adservices-clients",
         "adservices-test-fixtures",
         "testng",
-        "adservices-test-fixtures",
-        "adservices-clients",
-        "adservices-service-core",
     ],
     sdk_version: "module_current",
+    compile_multilib: "both",
+}
+android_test {
+    name: "CtsAdServicesDebuggableDeviceTestCases",
+    defaults: ["cts_defaults"],
+    libs: [
+        "android.test.runner",
+        "android.test.base",
+    ],
+    srcs: ["src/**/*.java"],
+    // Tag this module as a cts test artifact
+    exclude_srcs: ["src/android/adservices/cts/*.java"],
+    test_suites: [
+        "cts",
+        "mts-adservices",
+        "general-tests",
+    ],
+    test_mainline_modules: ["com.google.android.adservices.apex"],
+    static_libs: [
+        "androidx.room_room-runtime",
+        "androidx.room_room-testing",
+        "androidx.test.rules",
+        "androidx.test.ext.junit",
+        "androidx.test.ext.truth",
+        "compatibility-device-util-axt",
+        "ctstestrunner-axt",
+        "cts-wm-util",
+        "framework-adservices.impl",
+        "adservices-clients",
+        "adservices-test-fixtures",
+        "testng",
+    ],
+    sdk_version: "module_current",
+    manifest: "AndroidManifestDebuggable.xml",
+    test_config: "AndroidTestDebuggable.xml",
 }
 

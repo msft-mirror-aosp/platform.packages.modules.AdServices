@@ -16,7 +16,7 @@
 
 package com.android.sdksandboxcode_1;
 
-import android.app.sdksandbox.SandboxedSdkContext;
+import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
 import android.content.Intent;
@@ -25,39 +25,52 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
+import android.widget.VideoView;
+
+import com.android.apiimplementation.SdkApi;
 
 import java.util.Random;
-import java.util.concurrent.Executor;
 
 public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
 
-    private SandboxedSdkContext mContext;
+    private static final String TAG = "SampleSandboxedSdkProvider";
+
+    private static final String VIEW_TYPE_KEY = "view-type";
+    private static final String VIDEO_VIEW_VALUE = "video-view";
+    private static final String VIDEO_URL_KEY = "video-url";
 
     @Override
-    public void initSdk(SandboxedSdkContext context, Bundle params,
-            Executor executor, InitSdkCallback callback) {
-        mContext = context;
-        callback.onInitSdkFinished(null);
+    public SandboxedSdk onLoadSdk(Bundle params) {
+        return new SandboxedSdk(new SdkApi(getContext()));
     }
 
     @Override
-    public View getView(Context windowContext, Bundle params) {
-        return new TestView(windowContext, mContext);
+    public void beforeUnloadSdk() {
+        Log.i(TAG, "SDK unloaded");
     }
 
     @Override
-    public void onExtraDataReceived(Bundle extraData) {
+    public View getView(Context windowContext, Bundle params, int width, int height) {
+        String type = params.getString(VIEW_TYPE_KEY, "");
+        if (VIDEO_VIEW_VALUE.equals(type)) {
+            String videoUrl = params.getString(VIDEO_URL_KEY, "");
+            return new TestVideoView(windowContext, videoUrl);
+        }
+        return new TestView(windowContext, getContext());
     }
 
     private static class TestView extends View {
 
-        private SandboxedSdkContext mSandboxedSdkContext;
+        private Context mSdkContext;
 
-        TestView(Context context, SandboxedSdkContext sandboxedSdkContext) {
-            super(context);
-            mSandboxedSdkContext = sandboxedSdkContext;
+        TestView(Context windowContext, Context sdkContext) {
+            super(windowContext);
+            mSdkContext = sdkContext;
         }
 
         @Override
@@ -69,11 +82,10 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
             paint.setColor(Color.WHITE);
             paint.setTextSize(50);
             Random random = new Random();
-            String message = mSandboxedSdkContext.getResources().getString(R.string.view_message);
+            String message = mSdkContext.getResources().getString(R.string.view_message);
             int c = Color.rgb(random.nextInt(256), random.nextInt(256), random.nextInt(256));
             canvas.drawColor(c);
             canvas.drawText(message, 75, 75, paint);
-
             setOnClickListener(this::onClickListener);
         }
 
@@ -86,8 +98,22 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
             visitUrl.setData(Uri.parse(url));
             visitUrl.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-            mContext.startActivity(visitUrl);
+            mSdkContext.startActivity(visitUrl);
         }
 
+    }
+
+    private static class TestVideoView extends VideoView {
+
+        TestVideoView(Context windowContext, String url) {
+            super(windowContext);
+            new Handler(Looper.getMainLooper())
+                    .post(
+                            () -> {
+                                setVideoURI(Uri.parse(url));
+                                requestFocus();
+                                start();
+                            });
+        }
     }
 }

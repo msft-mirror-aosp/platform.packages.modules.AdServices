@@ -17,7 +17,6 @@
             "priority": "100",
             "expiry": "1728000"
           },
-          "Attribution-Reporting-Register-Aggregatable-Source": null,
           "Location": null,
           "Attribution-Reporting-Redirect": null
         }
@@ -34,16 +33,19 @@
         "responses": [{
           "url": "https://www.ad-tech1.com",
           "response": {
-            "Attribution-Reporting-Register-Event-Trigger": [{
-              "trigger_data": "1",
-              "priority": "101"
-            }],
-            "Attribution-Reporting-Register-Aggregatable-Trigger-Data": null,
+            "Attribution-Reporting-Register-Trigger": {
+              "event_trigger_data": [
+                {
+                  "trigger_data": "1",
+                  "priority": "101"
+                }
+              ]
+            },
             "Location": null,
             "Attribution-Reporting-Redirect": null
           }
         }],
-        "timestamp": "800172800003"
+        "timestamp": "800173400001"
       },
       {
         "registration_request": {
@@ -54,16 +56,19 @@
         "responses": [{
           "url": "https://www.ad-tech1.com",
           "response": {
-            "Attribution-Reporting-Register-Event-Trigger": [{
-              "trigger_data": "2",
-              "priority": "101"
-            }],
-            "Attribution-Reporting-Register-Aggregatable-Trigger-Data": null,
+            "Attribution-Reporting-Register-Trigger": {
+              "event_trigger_data": [
+                {
+                  "trigger_data": "2",
+                  "priority": "101"
+                }
+              ]
+            },
             "Location": null,
             "Attribution-Reporting-Redirect": null
           }
         }],
-        "timestamp": "800604800000"
+        "timestamp": "800604200001"
       },
       {
         "registration_request": {
@@ -74,16 +79,19 @@
         "responses": [{
           "url": "https://www.ad-tech1.com",
           "response": {
-            "Attribution-Reporting-Register-Event-Trigger": [{
-              "trigger_data": "3",
-              "priority": "101"
-            }],
-            "Attribution-Reporting-Register-Aggregatable-Trigger-Data": null,
+            "Attribution-Reporting-Register-Trigger": {
+              "event_trigger_data": [
+                {
+                  "trigger_data": "3",
+                  "priority": "101"
+                }
+              ]
+            },
             "Location": null,
             "Attribution-Reporting-Redirect": null
           }
         }],
-        "timestamp": "800604800002"
+        "timestamp": "800605400001"
       }
     ]
   },

@@ -16,104 +16,84 @@
 
 package android.adservices.customaudience;
 
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
+import android.os.OutcomeReceiver;
 
 import java.util.Objects;
+import java.util.concurrent.Executor;
 
 /**
- * This POJO represents the overrideCustomAudienceRemoteInfo request
+ * This POJO represents the {@link
+ * TestCustomAudienceManager#overrideCustomAudienceRemoteInfo(AddCustomAudienceOverrideRequest,
+ * Executor, OutcomeReceiver)} request.
  *
- * @hide
+ * <p>It contains fields {@code buyer} and {@code name} which will serve as the identifier for the
+ * override fields, {@code biddingLogicJs} and {@code trustedBiddingSignals}, which are used during
+ * ad selection instead of querying external servers.
  */
 public class AddCustomAudienceOverrideRequest {
-    @NonNull private final String mOwner;
-    @NonNull private final String mBuyer;
+    @NonNull private final AdTechIdentifier mBuyer;
     @NonNull private final String mName;
     @NonNull private final String mBiddingLogicJs;
-    @NonNull private final String mTrustedBiddingData;
+    @NonNull private final AdSelectionSignals mTrustedBiddingSignals;
 
     public AddCustomAudienceOverrideRequest(
-            String owner,
-            String buyer,
-            String name,
-            String biddingLogicJs,
-            String trustedBiddingData) {
-        mOwner = owner;
+            @NonNull AdTechIdentifier buyer,
+            @NonNull String name,
+            @NonNull String biddingLogicJs,
+            @NonNull AdSelectionSignals trustedBiddingSignals) {
         mBuyer = buyer;
         mName = name;
         mBiddingLogicJs = biddingLogicJs;
-        mTrustedBiddingData = trustedBiddingData;
+        mTrustedBiddingSignals = trustedBiddingSignals;
     }
 
-    /**
-     * @return the owner
-     */
+    /** @return an {@link AdTechIdentifier} representing the buyer */
     @NonNull
-    public String getOwner() {
-        return mOwner;
-    }
-
-    /**
-     * @return the buyer
-     */
-    @NonNull
-    public String getBuyer() {
+    public AdTechIdentifier getBuyer() {
         return mBuyer;
     }
 
-    /**
-     * @return name
-     */
+    /** @return name of the custom audience being overridden */
     @NonNull
     public String getName() {
         return mName;
     }
 
-    /**
-     * @return The override javascript result
-     */
+    /** @return the override JavaScript result that should be served during ad selection */
     @NonNull
-    public String getBiddingLogicJS() {
+    public String getBiddingLogicJs() {
         return mBiddingLogicJs;
     }
 
-    /**
-     * @return The override trusted bidding data result
-     */
+    /** @return the override trusted bidding signals that should be served during ad selection */
     @NonNull
-    public String getTrustedBiddingData() {
-        return mTrustedBiddingData;
+    public AdSelectionSignals getTrustedBiddingSignals() {
+        return mTrustedBiddingSignals;
     }
 
     /** Builder for {@link AddCustomAudienceOverrideRequest} objects. */
     public static final class Builder {
-        private String mOwner;
-        private String mBuyer;
-        private String mName;
-        private String mBiddingLogicJs;
-        private String mTrustedBiddingData;
+        @Nullable private AdTechIdentifier mBuyer;
+        @Nullable private String mName;
+        @Nullable private String mBiddingLogicJs;
+        @Nullable private AdSelectionSignals mTrustedBiddingSignals;
 
         public Builder() {}
 
-        /** Set the Owner. */
+        /** Sets the buyer {@link AdTechIdentifier} for the custom audience. */
         @NonNull
-        public AddCustomAudienceOverrideRequest.Builder setOwner(@NonNull String owner) {
-            Objects.requireNonNull(owner);
-
-            this.mOwner = owner;
-            return this;
-        }
-
-        /** Set the Buyer. */
-        @NonNull
-        public AddCustomAudienceOverrideRequest.Builder setBuyer(@NonNull String buyer) {
+        public AddCustomAudienceOverrideRequest.Builder setBuyer(@NonNull AdTechIdentifier buyer) {
             Objects.requireNonNull(buyer);
 
             this.mBuyer = buyer;
             return this;
         }
 
-        /** Set the Name. */
+        /** Sets the name for the custom audience to be overridden. */
         @NonNull
         public AddCustomAudienceOverrideRequest.Builder setName(@NonNull String name) {
             Objects.requireNonNull(name);
@@ -122,17 +102,17 @@ public class AddCustomAudienceOverrideRequest {
             return this;
         }
 
-        /** Set the TrustedBiddingData. */
+        /** Sets the trusted bidding signals to be served during ad selection. */
         @NonNull
-        public AddCustomAudienceOverrideRequest.Builder setTrustedBiddingData(
-                @NonNull String trustedBiddingData) {
-            Objects.requireNonNull(trustedBiddingData);
+        public AddCustomAudienceOverrideRequest.Builder setTrustedBiddingSignals(
+                @NonNull AdSelectionSignals trustedBiddingSignals) {
+            Objects.requireNonNull(trustedBiddingSignals);
 
-            this.mTrustedBiddingData = trustedBiddingData;
+            this.mTrustedBiddingSignals = trustedBiddingSignals;
             return this;
         }
 
-        /** Set the BiddingLogicJs. */
+        /** Sets the bidding logic JavaScript that should be served during ad selection. */
         @NonNull
         public AddCustomAudienceOverrideRequest.Builder setBiddingLogicJs(
                 @NonNull String biddingLogicJs) {
@@ -145,14 +125,13 @@ public class AddCustomAudienceOverrideRequest {
         /** Builds a {@link AddCustomAudienceOverrideRequest} instance. */
         @NonNull
         public AddCustomAudienceOverrideRequest build() {
-            Objects.requireNonNull(mOwner);
             Objects.requireNonNull(mBuyer);
             Objects.requireNonNull(mName);
             Objects.requireNonNull(mBiddingLogicJs);
-            Objects.requireNonNull(mTrustedBiddingData);
+            Objects.requireNonNull(mTrustedBiddingSignals);
 
             return new AddCustomAudienceOverrideRequest(
-                    mOwner, mBuyer, mName, mBiddingLogicJs, mTrustedBiddingData);
+                    mBuyer, mName, mBiddingLogicJs, mTrustedBiddingSignals);
         }
     }
 }

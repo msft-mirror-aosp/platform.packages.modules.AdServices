@@ -32,7 +32,10 @@ filegroup {
 java_sdk_library {
     name: "framework-adservices",
     srcs: [":framework-adservices-sources"],
-    libs: ["modules-utils-preconditions"],
+    libs: [
+        "modules-utils-preconditions",
+        "framework-sdksandbox.impl"
+    ],
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
     permitted_packages: [
@@ -44,4 +47,16 @@ java_sdk_library {
         "//packages/modules/AdServices:__subpackages__"
     ],
     apex_available: ["com.android.adservices"],
+}
+
+java_library {
+    name: "framework-adservices-lib",
+    srcs: [":framework-adservices-sources"],
+    libs: [
+        "modules-utils-preconditions",
+        "framework-sdksandbox.impl"
+    ],
+    sdk_version: "module_current",
+    min_sdk_version: "Tiramisu",
+    defaults: ["framework-module-defaults"],
 }

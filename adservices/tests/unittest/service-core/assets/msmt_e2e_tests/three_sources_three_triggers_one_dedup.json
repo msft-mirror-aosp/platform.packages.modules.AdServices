@@ -18,7 +18,6 @@
               "priority": "20",
               "expiry": "172801"
             },
-            "Attribution-Reporting-Register-Aggregatable-Source": null,
             "Location": null,
             "Attribution-Reporting-Redirect": null
           }
@@ -41,12 +40,11 @@
               "priority": "20",
               "expiry": "172801"
             },
-            "Attribution-Reporting-Register-Aggregatable-Source": null,
             "Location": null,
             "Attribution-Reporting-Redirect": null
           }
         }],
-        "timestamp": "800000000002"
+        "timestamp": "800000600001"
       },
       {
         "registration_request": {
@@ -64,12 +62,11 @@
               "priority": "10",
               "expiry": "172801"
             },
-            "Attribution-Reporting-Register-Aggregatable-Source": null,
             "Location": null,
             "Attribution-Reporting-Redirect": null
           }
         }],
-        "timestamp": "800000000003"
+        "timestamp": "800001200001"
       }
     ],
     "triggers": [
@@ -82,17 +79,20 @@
         "responses": [{
           "url": "https://www.ad-tech1.com",
             "response": {
-            "Attribution-Reporting-Register-Event-Trigger": [{
-              "trigger_data": "1",
-              "priority": "100",
-              "deduplication_key": "10"
-            }],
-            "Attribution-Reporting-Register-Aggregatable-Trigger-Data": null,
-            "Location": null,
-            "Attribution-Reporting-Redirect": null
-          }
+              "Attribution-Reporting-Register-Trigger": {
+                "event_trigger_data": [
+                  {
+                    "trigger_data": "1",
+                    "priority": "100",
+                    "deduplication_key": "10"
+                  }
+                ]
+              },
+              "Location": null,
+              "Attribution-Reporting-Redirect": null
+            }
         }],
-        "timestamp": "800000000004"
+        "timestamp": "800001800001"
       },
       {
         "registration_request": {
@@ -103,17 +103,20 @@
         "responses": [{
           "url": "https://www.ad-tech1.com",
             "response": {
-            "Attribution-Reporting-Register-Event-Trigger": [{
-              "trigger_data": "2",
-              "priority": "101",
-              "deduplication_key": "10"
-            }],
-            "Attribution-Reporting-Register-Aggregatable-Trigger-Data": null,
-            "Location": null,
-            "Attribution-Reporting-Redirect": null
-          }
+              "Attribution-Reporting-Register-Trigger": {
+                "event_trigger_data": [
+                  {
+                    "trigger_data": "2",
+                    "priority": "101",
+                    "deduplication_key": "10"
+                  }
+                ]
+              },
+              "Location": null,
+              "Attribution-Reporting-Redirect": null
+            }
         }],
-        "timestamp": "800000000005"
+        "timestamp": "800002400001"
       },
       {
         "registration_request": {
@@ -124,24 +127,27 @@
         "responses": [{
           "url": "https://www.ad-tech1.com",
             "response": {
-            "Attribution-Reporting-Register-Event-Trigger": [{
-              "trigger_data": "0",
-              "priority": "200",
-              "deduplication_key": "9"
-            }],
-            "Attribution-Reporting-Register-Aggregatable-Trigger-Data": null,
-            "Location": null,
-            "Attribution-Reporting-Redirect": null
-          }
+              "Attribution-Reporting-Register-Trigger": {
+                "event_trigger_data": [
+                  {
+                    "trigger_data": "0",
+                    "priority": "200",
+                    "deduplication_key": "9"
+                  }
+                ]
+              },
+              "Location": null,
+              "Attribution-Reporting-Redirect": null
+            }
         }],
-        "timestamp": "800000000006"
+        "timestamp": "800003000001"
       }
     ]
   },
   "output": {
     "event_level_results": [
       {
-        "report_time": "800176400002",
+        "report_time": "800177000001",
         "report_url": "https://www.ad-tech1.com",
         "payload": {
           "attribution_destination": "android-app://example.2d1.com",
@@ -152,7 +158,7 @@
         }
       },
       {
-        "report_time": "800176400002",
+        "report_time": "800177000001",
         "report_url": "https://www.ad-tech1.com",
         "payload": {
           "attribution_destination": "android-app://example.2d1.com",

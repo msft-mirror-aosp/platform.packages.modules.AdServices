@@ -22,18 +22,14 @@ import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 
-import com.android.internal.annotations.VisibleForTesting;
-
 import java.time.Instant;
 import java.util.List;
 
 /**
  * Data Access Object interface for access to the local AdSelection data storage.
  *
- * <p>Annotation will generate Room based SQLite Dao implementation. TODO(b/228114258) Add unit
- * tests
+ * <p>Annotation will generate Room based SQLite Dao implementation.
  */
-// TODO (b/229660121): Ad unit tests for this class
 @Dao
 public interface AdSelectionEntryDao {
     /**
@@ -47,12 +43,11 @@ public interface AdSelectionEntryDao {
     void persistAdSelection(DBAdSelection adSelection);
 
     /**
-     * Add a buyer decision logic entry into the table buyer_decision_logic.
+     * Write a buyer decision logic entry into the table buyer_decision_logic.
      *
-     * @param buyerDecisionLogic is the BuyerDecisionLogic to add to table buyer_decision_logic if
-     *     not exists.
+     * @param buyerDecisionLogic is the BuyerDecisionLogic to write to table buyer_decision_logic.
      */
-    @Insert(onConflict = OnConflictStrategy.ABORT)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     void persistBuyerDecisionLogic(DBBuyerDecisionLogic buyerDecisionLogic);
 
     /**
@@ -107,12 +102,12 @@ public interface AdSelectionEntryDao {
                 + " custom_audience_signals_expiration_time,"
                 + " ad_selection.custom_audience_signals_user_bidding_signals as"
                 + " custom_audience_signals_user_bidding_signals, ad_selection.contextual_signals"
-                + " as contextual_signals,ad_selection.winning_ad_render_url as"
-                + " winning_ad_render_url,ad_selection.winning_ad_bid as"
+                + " as contextual_signals,ad_selection.winning_ad_render_uri as"
+                + " winning_ad_render_uri,ad_selection.winning_ad_bid as"
                 + " winning_ad_bid,ad_selection.creation_timestamp as"
                 + " creation_timestamp,buyer_decision_logic.buyer_decision_logic_js as"
                 + " buyer_decision_logic_js FROM ad_selection LEFT JOIN buyer_decision_logic ON"
-                + " ad_selection.bidding_logic_url = buyer_decision_logic.bidding_logic_url WHERE"
+                + " ad_selection.bidding_logic_uri = buyer_decision_logic.bidding_logic_uri WHERE"
                 + " ad_selection.ad_selection_id = :adSelectionId")
     DBAdSelectionEntry getAdSelectionEntityById(long adSelectionId);
 
@@ -134,12 +129,12 @@ public interface AdSelectionEntryDao {
                 + " custom_audience_signals_expiration_time,"
                 + " ad_selection.custom_audience_signals_user_bidding_signals as"
                 + " custom_audience_signals_user_bidding_signals, ad_selection.contextual_signals"
-                + " AS contextual_signals,ad_selection.winning_ad_render_url AS"
-                + " winning_ad_render_url,ad_selection.winning_ad_bid AS winning_ad_bid,"
+                + " AS contextual_signals,ad_selection.winning_ad_render_uri AS"
+                + " winning_ad_render_uri,ad_selection.winning_ad_bid AS winning_ad_bid,"
                 + " ad_selection.creation_timestamp as creation_timestamp,"
                 + " buyer_decision_logic.buyer_decision_logic_js AS buyer_decision_logic_js FROM"
-                + " ad_selection LEFT JOIN buyer_decision_logic ON ad_selection.bidding_logic_url ="
-                + " buyer_decision_logic.bidding_logic_url WHERE ad_selection.ad_selection_id IN"
+                + " ad_selection LEFT JOIN buyer_decision_logic ON ad_selection.bidding_logic_uri"
+                + " = buyer_decision_logic.bidding_logic_uri WHERE ad_selection.ad_selection_id IN"
                 + " (:adSelectionIds) ")
     List<DBAdSelectionEntry> getAdSelectionEntities(List<Long> adSelectionIds);
 
@@ -153,8 +148,20 @@ public interface AdSelectionEntryDao {
             "SELECT decision_logic FROM ad_selection_overrides WHERE ad_selection_config_id ="
                     + " :adSelectionConfigId AND app_package_name = :appPackageName")
     @Nullable
-    @VisibleForTesting
     String getDecisionLogicOverride(String adSelectionConfigId, String appPackageName);
+
+    /**
+     * Get ad selection trusted scoring signals override by its unique key and the package name of
+     * the app that created the override.
+     *
+     * @return ad selection override result if exists.
+     */
+    @Query(
+            "SELECT trusted_scoring_signals FROM ad_selection_overrides WHERE"
+                    + " ad_selection_config_id = :adSelectionConfigId AND app_package_name ="
+                    + " :appPackageName")
+    @Nullable
+    String getTrustedScoringSignalsOverride(String adSelectionConfigId, String appPackageName);
 
     /**
      * Clean up expired adSelection entries if it is older than the given timestamp. If
@@ -188,17 +195,33 @@ public interface AdSelectionEntryDao {
             String adSelectionConfigId, String appPackageName);
 
     /**
-     * Clean up buyer_decision_logic entries in batch if the bidding_logic_url no longer exists in
+     * Clean up buyer_decision_logic entries in batch if the bidding_logic_uri no longer exists in
      * the table ad_selection.
      */
     @Query(
-            "DELETE FROM buyer_decision_logic WHERE bidding_logic_url NOT IN "
-                    + "( SELECT DISTINCT bidding_logic_url "
+            "DELETE FROM buyer_decision_logic WHERE bidding_logic_uri NOT IN "
+                    + "( SELECT DISTINCT bidding_logic_uri "
                     + "FROM ad_selection "
-                    + "WHERE bidding_logic_url is NOT NULL)")
+                    + "WHERE bidding_logic_uri is NOT NULL)")
     void removeExpiredBuyerDecisionLogic();
 
     /** Clean up all ad selection override data */
     @Query("DELETE FROM ad_selection_overrides WHERE  app_package_name = :appPackageName")
     void removeAllAdSelectionOverrides(String appPackageName);
+
+    /**
+     * Checks if there is a row in the ad selection data with the unique combination of
+     * ad_selection_id and caller_package_name
+     *
+     * @param adSelectionId which is the key to query the corresponding ad selection data.
+     * @param callerPackageName the caller's package name, to be verified against the
+     *     calling_package_name that exists in the ad_selection_entry
+     * @return true if row exists, false otherwise
+     */
+    @Query(
+            "SELECT EXISTS(SELECT 1 FROM ad_selection WHERE ad_selection_id = :adSelectionId"
+                    + " AND caller_package_name = :callerPackageName LIMIT"
+                    + " 1)")
+    boolean doesAdSelectionMatchingCallerPackageNameExist(
+            long adSelectionId, String callerPackageName);
 }

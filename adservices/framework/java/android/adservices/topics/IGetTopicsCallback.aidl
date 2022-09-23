@@ -24,4 +24,5 @@ import android.adservices.topics.GetTopicsResult;
   */
 oneway interface IGetTopicsCallback {
   void onResult(in GetTopicsResult responseParcel);
+  void onFailure(int resultCode);
 }

@@ -17,9 +17,12 @@
 package com.android.adservices.service.adselection;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 import android.adservices.adselection.AdWithBid;
 import android.adservices.common.AdData;
+import android.adservices.common.CommonFixture;
+import android.adservices.customaudience.CustomAudienceFixture;
 import android.net.Uri;
 
 import com.android.adservices.data.adselection.CustomAudienceSignals;
@@ -32,16 +35,14 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 
 public class AdBiddingOutcomeTest {
-    private static final String RENDER_URL = "http://test.com/fetch";
+    private static final String RENDER_URI = "http://test.com/fetch";
     private static final String METADATA = "{\"field1\":1}";
-    private static final AdData AD_DATA = new AdData(Uri.parse(RENDER_URL), METADATA);
+    private static final AdData AD_DATA = new AdData(Uri.parse(RENDER_URI), METADATA);
     private static final Double BID = 0.1;
     private static final AdWithBid AD_WITH_BID = new AdWithBid(AD_DATA, BID);
 
-    private static final Uri BIDDING_LOGIC_URL = Uri.parse("https://www.example.com/test");
+    private static final Uri BIDDING_LOGIC_URI = Uri.parse("https://www.example.com/test");
     private static final String BUYER_DECISION_LOGIC_JS = "buyer_decisoin_logic_javascript";
-    private static final String OWNER = "owner";
-    private static final String BUYER = "buyer";
     private static final String NAME = "name";
     private static final Clock CLOCK = Clock.fixed(Instant.now(), ZoneOffset.UTC);
     private static final Instant ACTIVATION_TIME = CLOCK.instant();
@@ -49,16 +50,16 @@ public class AdBiddingOutcomeTest {
     private static final String USER_BIDDING_SIGNALS = "exampleUserBiddingSignals";
     private static final CustomAudienceSignals CUSTOM_AUDIENCE_SIGNALS =
             new CustomAudienceSignals.Builder()
-                    .setOwner(OWNER)
-                    .setBuyer(BUYER)
+                    .setOwner(CustomAudienceFixture.VALID_OWNER)
+                    .setBuyer(CommonFixture.VALID_BUYER_1)
                     .setName(NAME)
                     .setActivationTime(ACTIVATION_TIME)
                     .setExpirationTime(EXPIRATION_TIME)
-                    .setUserBiddingSignals(USER_BIDDING_SIGNALS)
+                    .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                     .build();
     private static final CustomAudienceBiddingInfo CUSTOM_AUDIENCE_BIDDING_INFO =
             CustomAudienceBiddingInfo.create(
-                    BIDDING_LOGIC_URL, BUYER_DECISION_LOGIC_JS, CUSTOM_AUDIENCE_SIGNALS);
+                    BIDDING_LOGIC_URI, BUYER_DECISION_LOGIC_JS, CUSTOM_AUDIENCE_SIGNALS);
 
     @Test
     public void testAdSelectionBiddingOutcomeBuilder() {
@@ -69,5 +70,10 @@ public class AdBiddingOutcomeTest {
                         .build();
         assertEquals(adBiddingOutcome.getAdWithBid(), AD_WITH_BID);
         assertEquals(adBiddingOutcome.getCustomAudienceBiddingInfo(), CUSTOM_AUDIENCE_BIDDING_INFO);
+    }
+
+    @Test
+    public void testAdBiddingOutcomeFailureMissingBiddingInfo() {
+        assertThrows(IllegalStateException.class, () -> AdBiddingOutcome.builder().build());
     }
 }

@@ -15,7 +15,6 @@
  */
 package android.adservices.clients.topics;
 
-import android.adservices.exceptions.GetTopicsException;
 import android.adservices.topics.GetTopicsRequest;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.TopicsManager;
@@ -29,21 +28,25 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 /** AdvertisingTopicsClient. Add more java doc here. */
 // TODO: This should be in JetPack code.
 public class AdvertisingTopicsClient {
 
     private String mSdkName;
+    private boolean mRecordObservation;
     private TopicsManager mTopicsManager;
     private Context mContext;
     private Executor mExecutor;
 
     private AdvertisingTopicsClient(
-            @NonNull Context context, @NonNull Executor executor, @NonNull String sdkName) {
+            @NonNull Context context,
+            @NonNull Executor executor,
+            @NonNull String sdkName,
+            boolean recordObservation) {
         mContext = context;
         mSdkName = sdkName;
+        mRecordObservation = recordObservation;
         mExecutor = executor;
         mTopicsManager = mContext.getSystemService(TopicsManager.class);
     }
@@ -66,21 +69,36 @@ public class AdvertisingTopicsClient {
         return mExecutor;
     }
 
+    /** Get Record Observation. */
+    @NonNull
+    public boolean isRecordObservation() {
+        return mRecordObservation;
+    }
+
     /** Gets the topics. */
     public @NonNull ListenableFuture<GetTopicsResponse> getTopics() {
         return CallbackToFutureAdapter.getFuture(
                 completer -> {
+                    GetTopicsRequest.Builder builder = new GetTopicsRequest.Builder();
+                    if (mSdkName != null) {
+                        builder = builder.setAdsSdkName(mSdkName);
+                    }
+                    if (!mRecordObservation) {
+                        builder.setRecordObservation(false);
+                    }
+                    GetTopicsRequest request = builder.build();
+
                     mTopicsManager.getTopics(
-                            new GetTopicsRequest.Builder().setSdkName(mSdkName).build(),
+                            request,
                             mExecutor,
-                            new OutcomeReceiver<GetTopicsResponse, GetTopicsException>() {
+                            new OutcomeReceiver<GetTopicsResponse, Exception>() {
                                 @Override
                                 public void onResult(@NonNull GetTopicsResponse result) {
                                     completer.set(result);
                                 }
 
                                 @Override
-                                public void onError(@NonNull GetTopicsException error) {
+                                public void onError(@NonNull Exception error) {
                                     completer.setException(error);
                                 }
                             });
@@ -93,6 +111,8 @@ public class AdvertisingTopicsClient {
     /** Builder class. */
     public static final class Builder {
         private String mSdkName;
+        // Set mRecordObservation default to true.
+        private boolean mRecordObservation = true;
         private Context mContext;
         private Executor mExecutor;
 
@@ -108,6 +128,18 @@ public class AdvertisingTopicsClient {
         /** Sets the SdkName. */
         public @NonNull Builder setSdkName(@NonNull String sdkName) {
             mSdkName = sdkName;
+            return this;
+        }
+
+        /**
+         * Set the Record Observation.
+         *
+         * @param recordObservation whether to record that the caller has observed the topics of the
+         *     host app or not. This will be used to determine if the caller can receive the topic
+         *     in the next epoch.
+         */
+        public @NonNull Builder setRecordObservation(boolean recordObservation) {
+            mRecordObservation = recordObservation;
             return this;
         }
 
@@ -129,9 +161,9 @@ public class AdvertisingTopicsClient {
         /** Builds a {@link AdvertisingTopicsClient} instance */
         public @NonNull AdvertisingTopicsClient build() {
             if (mExecutor == null) {
-                mExecutor = Executors.newCachedThreadPool();
+                throw new NullPointerException("Executor is not set");
             }
-            return new AdvertisingTopicsClient(mContext, mExecutor, mSdkName);
+            return new AdvertisingTopicsClient(mContext, mExecutor, mSdkName, mRecordObservation);
         }
     }
 }

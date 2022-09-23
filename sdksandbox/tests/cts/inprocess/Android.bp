@@ -29,6 +29,7 @@ android_test {
     libs: [
         "android.test.base",
         "android.test.runner",
+        "framework-adservices.impl",
     ],
     static_libs: [
         "androidx.core_core",

@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.aggregation;
 
+import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
@@ -26,7 +27,7 @@ import java.util.Set;
  */
 public class AggregateTriggerData {
 
-    private AttributionAggregatableKey mKey;
+    private BigInteger mKey;
     private Set<String> mSourceKeys;
     private Optional<AggregateFilterData> mFilter;
     private Optional<AggregateFilterData> mNotFilter;
@@ -58,7 +59,7 @@ public class AggregateTriggerData {
     /**
      * Returns trigger_data's key which will be used to generate the aggregate key.
      */
-    public AttributionAggregatableKey getKey() {
+    public BigInteger getKey() {
         return mKey;
     }
 
@@ -97,7 +98,7 @@ public class AggregateTriggerData {
         /**
          * See {@link AggregateTriggerData#getKey()}.
          */
-        public Builder setKey(AttributionAggregatableKey key) {
+        public Builder setKey(BigInteger key) {
             mBuilding.mKey = key;
             return this;
         }

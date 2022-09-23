@@ -23,7 +23,9 @@
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
         <option name="test-file-name" value="LoadSdkSuccessfullySdkProvider.apk"/>
-        <option name="test-file-name" value="RetryLoadSameSdkShouldFailSdkProvider.apk"/>
+        <option name="test-file-name" value="LoadSdkAndCheckClassloaderSdkProvider.apk"/>
+        <option name="test-file-name" value="GetLoadedSdkLibInfoSuccessfully.apk"/>
+        <option name="test-file-name" value="LoadSdkSuccessfullySdkProviderTwo.apk"/>
         <option name="test-file-name" value="LoadSdkWithInternalErrorSdkProvider.apk"/>
         <option name="test-file-name" value="RequestSurfacePackageSuccessfullySdkProvider.apk"/>
         <option name="test-file-name" value="RequestSurfacePackageWithInternalErrorSdkProvider.apk"/>
@@ -36,8 +38,17 @@
         <option name="package" value="com.android.tests.sdksandbox.endtoend"/>
     </test>
 
+    <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
+        <option name="run-command" value="cmd sdk_sandbox set-state --enabled" />
+        <option name="teardown-command" value="cmd sdk_sandbox set-state --reset" />
+    </target_preparer>
+
+
     <object type="module_controller"
             class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController" >
         <option name="mainline-module-package-name" value="com.google.android.adservices" />
     </object>
+
+    <option name="config-descriptor:metadata" key="mainline-param"
+        value="com.google.android.adservices.apex" />
 </configuration>
