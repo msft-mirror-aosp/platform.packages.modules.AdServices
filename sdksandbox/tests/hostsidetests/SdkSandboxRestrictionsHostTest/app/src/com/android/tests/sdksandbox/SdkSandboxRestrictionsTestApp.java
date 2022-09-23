@@ -89,6 +89,8 @@ public class SdkSandboxRestrictionsTestApp {
 
         DeviceConfig.setProperty(DeviceConfig.NAMESPACE_SDK_SANDBOX,
                 ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, "true", false);
+        // Allow time for DeviceConfig change to propagate.
+        Thread.sleep(1000);
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
@@ -100,6 +102,8 @@ public class SdkSandboxRestrictionsTestApp {
 
         DeviceConfig.setProperty(DeviceConfig.NAMESPACE_SDK_SANDBOX,
                 ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, "false", false);
+        // Allow time for DeviceConfig change to propagate.
+        Thread.sleep(1000);
         FakeRequestSurfacePackageCallback surfacePackageCallback2 =
                 new FakeRequestSurfacePackageCallback();
         runPhaseInsideSdk("testSdkSandboxBroadcastRestrictions", surfacePackageCallback2);
