@@ -57,19 +57,25 @@ public final class AggregateFallbackReportingJobService extends JobService {
         }
 
         LogUtil.d("AggregateFallbackReportingJobService.onStartJob");
-        sBlockingExecutor.execute(() -> {
-            boolean success = new AggregateReportingJobHandler(
-                    EnrollmentDao.getInstance(getApplicationContext()),
-                    DatastoreManagerFactory.getDatastoreManager(
-                            getApplicationContext()))
-                    .performScheduledPendingReportsInWindow(
-                            System.currentTimeMillis() - SystemHealthParams
-                                    .MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS,
+        sBlockingExecutor.execute(
+                () -> {
+                    final long windowStartTime =
+                            System.currentTimeMillis()
+                                    - SystemHealthParams
+                                            .MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS;
+                    final long windowEndTime =
                             System.currentTimeMillis()
                                     - AdServicesConfig
-                                    .getMeasurementAggregateFallbackReportingJobPeriodMs());
-            jobFinished(params, !success);
-        });
+                                            .getMeasurementAggregateMainReportingJobPeriodMs();
+                    final boolean success =
+                            new AggregateReportingJobHandler(
+                                            EnrollmentDao.getInstance(getApplicationContext()),
+                                            DatastoreManagerFactory.getDatastoreManager(
+                                                    getApplicationContext()))
+                                    .performScheduledPendingReportsInWindow(
+                                            windowStartTime, windowEndTime);
+                    jobFinished(params, !success);
+                });
         return true;
     }
 
