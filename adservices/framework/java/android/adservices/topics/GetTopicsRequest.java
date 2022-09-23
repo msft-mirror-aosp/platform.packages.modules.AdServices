@@ -15,7 +15,6 @@
  */
 package android.adservices.topics;
 
-import static android.adservices.topics.TopicsManager.RECORD_OBSERVATION_DEFAULT;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -26,93 +25,43 @@ public final class GetTopicsRequest {
     /** Name of Ads SDK that is involved in this request. */
     private final String mAdsSdkName;
 
-    private final boolean mRecordObservation;
-
-    private GetTopicsRequest(@NonNull Builder builder) {
-        mAdsSdkName = builder.mAdsSdkName;
-        mRecordObservation = builder.mRecordObservation;
+    private GetTopicsRequest(@Nullable String adsSdkName) {
+        mAdsSdkName = adsSdkName;
     }
 
     /** Get the Sdk Name. */
-    @Nullable
+    @NonNull
     public String getAdsSdkName() {
         return mAdsSdkName;
     }
 
-    /** Get Record Observation. */
-    @NonNull
-    public boolean isRecordObservation() {
-        return mRecordObservation;
-    }
-
     /**
-     * @deprecated This method is equivalent to {@code new Builder().build()} and all default
-     *     parameters will be used.
+     * Builds a {@link GetTopicsRequest} instance.
+     *
+     * <p>This should be called by either the app itself or by SDK running inside the Sandbox.
      */
-    @Deprecated
     @NonNull
     public static GetTopicsRequest create() {
-        return new Builder().build();
+        return new GetTopicsRequest(/* adsSdkName */ null);
     }
 
     /**
-     * @deprecated This method is equivalent to {@code new Builder().setAdsSdkName(String).build()}
-     *     and default parameter will be used.
+     * Create a {@link GetTopicsRequest} instance with the provided Ads Sdk Name.
+     *
+     * <p>This should be called by SDKs running outside of the Sandbox.
+     *
+     * @param adsSdkName the Ads Sdk Name.
      */
-    @Deprecated
     @NonNull
     public static GetTopicsRequest createWithAdsSdkName(@NonNull String adsSdkName) {
-        return new Builder().setAdsSdkName(adsSdkName).build();
-    }
-
-    /** Builder for {@link GetTopicsRequest} objects. */
-    public static final class Builder {
-        private String mAdsSdkName;
-        // Set mRecordObservation default to true.
-        private boolean mRecordObservation = RECORD_OBSERVATION_DEFAULT;
-
-        /** Creates a {@link Builder} for {@link GetTopicsRequest} objects. */
-        public Builder() {}
-
-        /**
-         * Set Ads Sdk Name.
-         *
-         * <p>This must be called by SDKs running outside of the Sandbox. Other clients must not
-         * call it.
-         *
-         * @param adsSdkName the Ads Sdk Name.
-         */
-        @NonNull
-        public Builder setAdsSdkName(@NonNull String adsSdkName) {
-            // This is the case the SDK calling from outside of the Sandbox.
-            // Check if the caller set the adsSdkName
-            if (adsSdkName == null) {
-                throw new IllegalArgumentException(
-                        "When calling Topics API outside of the Sandbox, caller should set Ads Sdk"
-                                + " Name");
-            }
-
-            mAdsSdkName = adsSdkName;
-            return this;
+        // This is the case the SDK calling without the Sandbox.
+        // Check if the caller set the adsSdkName
+        if (adsSdkName == null) {
+            throw new IllegalArgumentException(
+                    "When calling Topics API outside of the Sandbox, caller should set Ads Sdk"
+                            + " Name");
         }
 
-        /**
-         * Set the Record Observation.
-         *
-         * @param recordObservation whether to record that the caller has observed the topics of the
-         *     host app or not. This will be used to determine if the caller can receive the topic
-         *     in the next epoch.
-         */
-        @NonNull
-        public Builder setRecordObservation(boolean recordObservation) {
-            mRecordObservation = recordObservation;
-            return this;
-        }
-
-        /** Builds a {@link GetTopicsRequest} instance. */
-        @NonNull
-        public GetTopicsRequest build() {
-            return new GetTopicsRequest(this);
-        }
+        return new GetTopicsRequest(adsSdkName);
     }
 }
