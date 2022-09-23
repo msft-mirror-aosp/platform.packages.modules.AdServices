@@ -21,12 +21,17 @@ import static com.android.server.adservices.PhFlags.KEY_ADSERVICES_SYSTEM_SERVIC
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
 
 import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.UserHandle;
@@ -40,8 +45,11 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+
+import java.util.ArrayList;
 
 /** Tests for {@link AdServicesManagerService} */
 public class AdServicesManagerServiceTest {
@@ -51,6 +59,9 @@ public class AdServicesManagerServiceTest {
 
     private AdServicesManagerService mService;
     private Context mSpyContext;
+    @Mock private PackageManager mMockPackageManager;
+
+    private static final String PPAPI_PACKAGE_NAME = "com.google.android.adservices.api";
     private static final String PACKAGE_NAME = "com.package.example";
     private static final String PACKAGE_CHANGED_BROADCAST =
             "com.android.adservices.PACKAGE_CHANGED";
@@ -69,6 +80,8 @@ public class AdServicesManagerServiceTest {
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.INTERACT_ACROSS_USERS_FULL);
+
+        doReturn(mMockPackageManager).when(mSpyContext).getPackageManager();
     }
 
     @Test
@@ -162,7 +175,9 @@ public class AdServicesManagerServiceTest {
         ArgumentCaptor<Intent> argumentIntent = ArgumentCaptor.forClass(Intent.class);
         ArgumentCaptor<UserHandle> argumentUser = ArgumentCaptor.forClass(UserHandle.class);
 
+        setupMockResolveInfo();
         Mockito.doNothing().when(mSpyContext).sendBroadcastAsUser(Mockito.any(), Mockito.any());
+
         mService.onPackageChange(i, mSpyContext.getUser());
 
         Mockito.verify(mSpyContext, Mockito.times(1))
@@ -189,7 +204,9 @@ public class AdServicesManagerServiceTest {
         ArgumentCaptor<Intent> argumentIntent = ArgumentCaptor.forClass(Intent.class);
         ArgumentCaptor<UserHandle> argumentUser = ArgumentCaptor.forClass(UserHandle.class);
 
+        setupMockResolveInfo();
         Mockito.doNothing().when(mSpyContext).sendBroadcastAsUser(Mockito.any(), Mockito.any());
+
         mService.onPackageChange(i, mSpyContext.getUser());
 
         Mockito.verify(mSpyContext, Mockito.times(1))
@@ -214,7 +231,9 @@ public class AdServicesManagerServiceTest {
         ArgumentCaptor<Intent> argumentIntent = ArgumentCaptor.forClass(Intent.class);
         ArgumentCaptor<UserHandle> argumentUser = ArgumentCaptor.forClass(UserHandle.class);
 
+        setupMockResolveInfo();
         Mockito.doNothing().when(mSpyContext).sendBroadcastAsUser(Mockito.any(), Mockito.any());
+
         mService.onPackageChange(i, mSpyContext.getUser());
 
         Mockito.verify(mSpyContext, Mockito.times(1))
@@ -227,5 +246,20 @@ public class AdServicesManagerServiceTest {
         assertThat(argumentIntent.getValue().getIntExtra(Intent.EXTRA_UID, -1))
                 .isEqualTo(PACKAGE_UID);
         assertThat(argumentUser.getValue()).isEqualTo(mSpyContext.getUser());
+    }
+
+    private void setupMockResolveInfo() {
+        ResolveInfo resolveInfo = new ResolveInfo();
+        ActivityInfo activityInfo = new ActivityInfo();
+        activityInfo.packageName = PPAPI_PACKAGE_NAME;
+        activityInfo.name = "SomeName";
+        resolveInfo.activityInfo = activityInfo;
+        ArrayList<ResolveInfo> resolveInfoList = new ArrayList<>();
+        resolveInfoList.add(resolveInfo);
+        when(mMockPackageManager.queryBroadcastReceiversAsUser(
+                        any(Intent.class),
+                        any(PackageManager.ResolveInfoFlags.class),
+                        any(UserHandle.class)))
+                .thenReturn(resolveInfoList);
     }
 }
