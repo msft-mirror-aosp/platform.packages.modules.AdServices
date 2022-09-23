@@ -19,6 +19,10 @@ package com.android.adservices.service.measurement;
 import android.annotation.IntDef;
 import android.net.Uri;
 
+import androidx.annotation.Nullable;
+
+import com.android.adservices.service.measurement.util.UnsignedLong;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Objects;
@@ -29,17 +33,19 @@ import java.util.Objects;
 public class EventReport {
 
     private String mId;
-    private long mSourceId;
+    private UnsignedLong mSourceId;
     private long mReportTime;
     private long mTriggerTime;
     private long mTriggerPriority;
     private Uri mAttributionDestination;
-    private Uri mAdTechDomain;
-    private long mTriggerData;
-    private Long mTriggerDedupKey;
+    private String mEnrollmentId;
+    private UnsignedLong mTriggerData;
+    private UnsignedLong mTriggerDedupKey;
     private double mRandomizedTriggerRate;
     private @Status int mStatus;
     private Source.SourceType mSourceType;
+    @Nullable private UnsignedLong mSourceDebugKey;
+    @Nullable private UnsignedLong mTriggerDebugKey;
 
     @IntDef(value = {
             Status.PENDING,
@@ -64,21 +70,34 @@ public class EventReport {
         return mStatus == eventReport.mStatus
                 && mReportTime == eventReport.mReportTime
                 && Objects.equals(mAttributionDestination, eventReport.mAttributionDestination)
-                && Objects.equals(mAdTechDomain, eventReport.mAdTechDomain)
+                && Objects.equals(mEnrollmentId, eventReport.mEnrollmentId)
                 && mTriggerTime == eventReport.mTriggerTime
-                && mTriggerData == eventReport.mTriggerData
-                && mSourceId == eventReport.mSourceId
+                && Objects.equals(mTriggerData, eventReport.mTriggerData)
+                && Objects.equals(mSourceId, eventReport.mSourceId)
                 && mTriggerPriority == eventReport.mTriggerPriority
                 && Objects.equals(mTriggerDedupKey, eventReport.mTriggerDedupKey)
                 && mSourceType == eventReport.mSourceType
-                && mRandomizedTriggerRate == eventReport.mRandomizedTriggerRate;
+                && mRandomizedTriggerRate == eventReport.mRandomizedTriggerRate
+                && Objects.equals(mSourceDebugKey, eventReport.mSourceDebugKey)
+                && Objects.equals(mTriggerDebugKey, eventReport.mTriggerDebugKey);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mStatus, mReportTime, mAttributionDestination, mAdTechDomain,
-                mTriggerTime, mTriggerData, mSourceId, mTriggerPriority, mTriggerDedupKey,
-                mSourceType, mRandomizedTriggerRate);
+        return Objects.hash(
+                mStatus,
+                mReportTime,
+                mAttributionDestination,
+                mEnrollmentId,
+                mTriggerTime,
+                mTriggerData,
+                mSourceId,
+                mTriggerPriority,
+                mTriggerDedupKey,
+                mSourceType,
+                mRandomizedTriggerRate,
+                mSourceDebugKey,
+                mTriggerDebugKey);
     }
 
     /**
@@ -91,7 +110,7 @@ public class EventReport {
     /**
      * Identifier of the associated {@link Source} event.
      */
-    public long getSourceId() {
+    public UnsignedLong getSourceId() {
         return mSourceId;
     }
 
@@ -124,23 +143,23 @@ public class EventReport {
     }
 
     /**
-     * Ad Tech base endpoint for reports.
+     * Ad Tech enrollment ID.
      */
-    public Uri getAdTechDomain() {
-        return mAdTechDomain;
+    public String getEnrollmentId() {
+        return mEnrollmentId;
     }
 
     /**
      * Metadata for the report.
      */
-    public long getTriggerData() {
+    public UnsignedLong getTriggerData() {
         return mTriggerData;
     }
 
     /**
      * Deduplication key of the associated {@link Trigger}
      */
-    public Long getTriggerDedupKey() {
+    public UnsignedLong getTriggerDedupKey() {
         return mTriggerDedupKey;
     }
 
@@ -165,9 +184,19 @@ public class EventReport {
         return mRandomizedTriggerRate;
     }
 
-    /**
-     * Builder for {@link EventReport}
-     */
+    /** Source Debug Key */
+    @Nullable
+    public UnsignedLong getSourceDebugKey() {
+        return mSourceDebugKey;
+    }
+
+    /** Trigger Debug Key */
+    @Nullable
+    public UnsignedLong getTriggerDebugKey() {
+        return mTriggerDebugKey;
+    }
+
+    /** Builder for {@link EventReport} */
     public static final class Builder {
 
         private final EventReport mBuilding;
@@ -187,16 +216,16 @@ public class EventReport {
         /**
          * See {@link EventReport#getSourceId()}
          */
-        public Builder setSourceId(long sourceId) {
+        public Builder setSourceId(UnsignedLong sourceId) {
             mBuilding.mSourceId = sourceId;
             return this;
         }
 
         /**
-         * See {@link EventReport#getAdTechDomain()} ()}
+         * See {@link EventReport#getEnrollmentId()} ()}
          */
-        public Builder setAdTechDomain(Uri adTechDomain) {
-            mBuilding.mAdTechDomain = adTechDomain;
+        public Builder setEnrollmentId(String enrollmentId) {
+            mBuilding.mEnrollmentId = enrollmentId;
             return this;
         }
 
@@ -219,7 +248,7 @@ public class EventReport {
         /**
          * See {@link EventReport#getTriggerData()}
          */
-        public Builder setTriggerData(long triggerData) {
+        public Builder setTriggerData(UnsignedLong triggerData) {
             mBuilding.mTriggerData = triggerData;
             return this;
         }
@@ -235,7 +264,7 @@ public class EventReport {
         /**
          * See {@link EventReport#getTriggerDedupKey()}
          */
-        public Builder setTriggerDedupKey(Long triggerDedupKey) {
+        public Builder setTriggerDedupKey(UnsignedLong triggerDedupKey) {
             mBuilding.mTriggerDedupKey = triggerDedupKey;
             return this;
         }
@@ -272,6 +301,18 @@ public class EventReport {
             return this;
         }
 
+        /** See {@link EventReport#getSourceDebugKey()} ()} */
+        public Builder setSourceDebugKey(UnsignedLong sourceDebugKey) {
+            mBuilding.mSourceDebugKey = sourceDebugKey;
+            return this;
+        }
+
+        /** See {@link EventReport#getTriggerDebugKey()} ()} */
+        public Builder setTriggerDebugKey(UnsignedLong triggerDebugKey) {
+            mBuilding.mTriggerDebugKey = triggerDebugKey;
+            return this;
+        }
+
         /** Populates fields using {@link Source}, {@link Trigger} and {@link EventTrigger}. */
         public Builder populateFromSourceAndTrigger(
                 Source source, Trigger trigger, EventTrigger eventTrigger) {
@@ -281,17 +322,26 @@ public class EventReport {
             mBuilding.mTriggerData = getTruncatedTriggerData(source, eventTrigger);
             mBuilding.mTriggerTime = trigger.getTriggerTime();
             mBuilding.mSourceId = source.getEventId();
-            mBuilding.mAdTechDomain = source.getAdTechDomain();
+            mBuilding.mEnrollmentId = source.getEnrollmentId();
             mBuilding.mStatus = Status.PENDING;
-            mBuilding.mAttributionDestination = source.getAttributionDestination();
-            mBuilding.mReportTime = source.getReportingTime(trigger.getTriggerTime());
+            mBuilding.mAttributionDestination = trigger.getAttributionDestination();
+            mBuilding.mReportTime =
+                    source.getReportingTime(
+                            trigger.getTriggerTime(),
+                            trigger.getDestinationType());
             mBuilding.mSourceType = source.getSourceType();
             mBuilding.mRandomizedTriggerRate = source.getRandomAttributionProbability();
+            mBuilding.mSourceDebugKey = source.getDebugKey();
+            mBuilding.mTriggerDebugKey = trigger.getDebugKey();
             return this;
         }
 
-        private long getTruncatedTriggerData(Source source, EventTrigger eventTrigger) {
-            return eventTrigger.getTriggerData() % source.getTriggerDataCardinality();
+        private UnsignedLong getTruncatedTriggerData(Source source, EventTrigger eventTrigger) {
+            UnsignedLong triggerData = eventTrigger.getTriggerData();
+            if (triggerData == null) {
+                return new UnsignedLong(0L);
+            }
+            return triggerData.mod(source.getTriggerDataCardinality());
         }
 
         /**

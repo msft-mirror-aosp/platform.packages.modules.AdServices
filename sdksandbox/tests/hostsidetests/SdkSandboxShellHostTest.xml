@@ -24,6 +24,11 @@
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true" />
+        <option name="test-file-name" value="TestCodeProvider2.apk" />
+    </target_preparer>
+
+    <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
+        <option name="cleanup-apks" value="true" />
         <option name="test-file-name" value="SdkSandboxTestApp.apk" />
     </target_preparer>
 
@@ -32,10 +37,23 @@
         <option name="test-file-name" value="SdkSandboxTestDebuggableApp.apk" />
     </target_preparer>
 
+    <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
+        <option name="run-command" value="cmd sdk_sandbox set-state --enabled" />
+        <option name="teardown-command" value="cmd sdk_sandbox set-state --reset" />
+    </target_preparer>
+
     <test class="com.android.tradefed.testtype.HostTest" >
         <option
             name="class"
             value="com.android.tests.sdksandbox.host.SdkSandboxShellHostTest"
         />
     </test>
+
+    <object type="module_controller"
+            class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController" >
+        <option name="mainline-module-package-name" value="com.google.android.adservices" />
+    </object>
+
+    <option name="config-descriptor:metadata" key="mainline-param"
+        value="com.google.android.adservices.apex" />
 </configuration>

@@ -17,8 +17,14 @@
 
 <manifest
         xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
         package="com.android.adservices.apk.unit.tests">
+
+    <!--
+        Permissions required for reading device configs. This is needed because the TopicsAPI
+        accesses device config to read epoch time. This works for the unit tests only. The UI test
+        application cannot be granted this permission
+    -->
+    <uses-permission android:name="android.permission.READ_DEVICE_CONFIG" />
 
     <application android:debuggable="true" />
 

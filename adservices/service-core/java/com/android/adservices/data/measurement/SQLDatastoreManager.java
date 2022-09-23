@@ -21,6 +21,7 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.android.adservices.data.DbHelper;
+import com.android.adservices.service.FlagsFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
 /**
@@ -58,6 +59,9 @@ class SQLDatastoreManager extends DatastoreManager {
     @Override
     @VisibleForTesting
     public IMeasurementDao getMeasurementDao() {
-        return new MeasurementDao();
+        return new MeasurementDao(
+                () ->
+                        mDbHelper.getDbFileSize()
+                                >= FlagsFactory.getFlags().getMeasurementDbSizeLimit());
     }
 }

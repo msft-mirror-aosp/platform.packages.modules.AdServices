@@ -59,6 +59,14 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 apiCallStats.getResultCode());
     }
 
+    /** log method for UI stats. */
+    public void logUIStats(UIStats uiStats) {
+        AdServicesStatsLog.write(
+                uiStats.getCode(),
+                uiStats.getRegion(),
+                uiStats.getAction());
+    }
+
     @Override
     public void logFledgeApiCallStats(int apiName, int resultCode) {
         // TODO(b/233628316): Implement latency measurement
@@ -72,5 +80,15 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                         .setSdkPackageName("")
                         .setAppPackageName("")
                         .build());
+    }
+
+    @Override
+    public void logMeasurementRegistrationsResponseSize(
+            MeasurementRegistrationResponseStats stats) {
+        AdServicesStatsLog.write(
+                stats.getCode(),
+                stats.getRegistrationType(),
+                stats.getResponseSize(),
+                stats.getAdTechDomain());
     }
 }

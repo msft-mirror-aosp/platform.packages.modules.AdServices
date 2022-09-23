@@ -17,6 +17,7 @@
 package android.adservices.customaudience;
 
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 
 import java.util.Objects;
 
@@ -60,8 +61,7 @@ public class JoinCustomAudienceRequest {
 
     /** Builder for {@link JoinCustomAudienceRequest} objects. */
     public static final class Builder {
-        @NonNull
-        private CustomAudience mCustomAudience;
+        @Nullable private CustomAudience mCustomAudience;
 
         public Builder() {
         }

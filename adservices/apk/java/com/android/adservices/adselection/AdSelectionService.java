@@ -20,7 +20,15 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 
+import com.android.adservices.LogUtil;
+import com.android.adservices.download.MddJobService;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdSelectionServiceImpl;
+import com.android.adservices.service.common.PackageChangedReceiver;
+import com.android.adservices.service.consent.ConsentManager;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import java.util.Objects;
 
@@ -30,17 +38,42 @@ public class AdSelectionService extends Service {
     /** The binder service. This field will only be accessed on the main thread. */
     private AdSelectionServiceImpl mAdSelectionService;
 
+    private Flags mFlags;
+
+    public AdSelectionService() {
+        this(FlagsFactory.getFlags());
+    }
+
+    @VisibleForTesting
+    AdSelectionService(final Flags flags) {
+        this.mFlags = flags;
+    }
+
     @Override
     public void onCreate() {
         super.onCreate();
+        if (mFlags.getFledgeSelectAdsKillSwitch()) {
+            LogUtil.e("Select Ads API is disabled");
+            return;
+        }
+
         if (mAdSelectionService == null) {
-            mAdSelectionService =
-                    new AdSelectionServiceImpl(this);
+            mAdSelectionService = AdSelectionServiceImpl.create(this);
+        }
+
+        if (hasUserConsent()) {
+            PackageChangedReceiver.enableReceiver(this);
+            MddJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
         }
     }
 
     @Override
     public IBinder onBind(Intent intent) {
+        if (mFlags.getFledgeSelectAdsKillSwitch()) {
+            LogUtil.e("Select Ads API is disabled");
+            // Return null so that clients can not bind to the service.
+            return null;
+        }
         return Objects.requireNonNull(mAdSelectionService);
     }
 
@@ -49,5 +82,10 @@ public class AdSelectionService extends Service {
         if (mAdSelectionService != null) {
             mAdSelectionService.destroy();
         }
+    }
+
+    /** @return {@code true} if the Privacy Sandbox has user consent */
+    private boolean hasUserConsent() {
+        return ConsentManager.getInstance(this).getConsent(getPackageManager()).isGiven();
     }
 }

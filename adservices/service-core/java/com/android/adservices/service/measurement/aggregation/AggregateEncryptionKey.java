@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement.aggregation;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 
+import java.util.Objects;
 
 /**
  * A public key used to encrypt aggregatable reports.
@@ -40,6 +41,22 @@ public final class AggregateEncryptionKey {
         mKeyId = keyId;
         mPublicKey = publicKey;
         mExpiry = expiry;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof AggregateEncryptionKey)) {
+            return false;
+        }
+        AggregateEncryptionKey key = (AggregateEncryptionKey) obj;
+        return Objects.equals(mKeyId, key.mKeyId)
+                && Objects.equals(mPublicKey, key.mPublicKey)
+                && mExpiry == key.mExpiry;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(mKeyId, mPublicKey, mExpiry);
     }
 
     /**

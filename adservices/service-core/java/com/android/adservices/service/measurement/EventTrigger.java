@@ -18,15 +18,16 @@ package com.android.adservices.service.measurement;
 
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import java.util.Objects;
 import java.util.Optional;
 
 /** Event trigger containing trigger data, priority, de-deup key and filters info. */
 public class EventTrigger {
-    private Long mTriggerData;
+    private UnsignedLong mTriggerData;
     private long mTriggerPriority;
-    private Long mDedupKey;
+    private UnsignedLong mDedupKey;
     private Optional<AggregateFilterData> mFilter;
     private Optional<AggregateFilterData> mNotFilter;
 
@@ -54,7 +55,7 @@ public class EventTrigger {
     }
 
     /** Returns trigger_data for the event. */
-    public Long getTriggerData() {
+    public UnsignedLong getTriggerData() {
         return mTriggerData;
     }
 
@@ -64,7 +65,7 @@ public class EventTrigger {
     }
 
     /** De-deuplication key.. */
-    public Long getDedupKey() {
+    public UnsignedLong getDedupKey() {
         return mDedupKey;
     }
 
@@ -87,7 +88,7 @@ public class EventTrigger {
         }
 
         /** See {@link EventTrigger#getTriggerData()}. */
-        public EventTrigger.Builder setTriggerData(Long triggerData) {
+        public EventTrigger.Builder setTriggerData(UnsignedLong triggerData) {
             mBuilding.mTriggerData = triggerData;
             return this;
         }
@@ -99,7 +100,7 @@ public class EventTrigger {
         }
 
         /** See {@link EventTrigger#getDedupKey()}. */
-        public EventTrigger.Builder setDedupKey(Long dedupKey) {
+        public EventTrigger.Builder setDedupKey(UnsignedLong dedupKey) {
             mBuilding.mDedupKey = dedupKey;
             return this;
         }

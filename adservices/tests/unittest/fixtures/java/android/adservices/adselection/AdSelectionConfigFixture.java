@@ -16,7 +16,9 @@
 
 package android.adservices.adselection;
 
-import android.adservices.common.AdData;
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
@@ -28,55 +30,44 @@ import java.util.Map;
 /** This is a static class meant to help with tests that involve creating an AdSelectionConfig. */
 public class AdSelectionConfigFixture {
 
-    public static final String SELLER = "testSeller";
+    public static final AdTechIdentifier SELLER = AdTechIdentifier.fromString("test.com");
+    public static final AdTechIdentifier SELLER_1 = AdTechIdentifier.fromString("test2.com");
 
     // Uri Constants
-    public static final String SCHEME = "testScheme";
-    public static final String SSP = "testSSP";
-    public static final String FRAGMENT = "testFragment";
+    public static final String DECISION_LOGIC_FRAGMENT = "/decisionFragment";
+    public static final String TRUSTED_SCORING_SIGNAL_FRAGMENT = "/trustedScoringSignalsFragment";
 
-    public static final Uri DECISION_LOGIC_URL = Uri.fromParts(SCHEME, SSP, FRAGMENT);
+    public static final Uri DECISION_LOGIC_URI =
+            CommonFixture.getUri(SELLER, DECISION_LOGIC_FRAGMENT);
 
-    public static final String BUYER_1 = "buyer1";
-    public static final String BUYER_2 = "buyer2";
+    public static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("buyer.example.com");
+    public static final AdTechIdentifier BUYER_1 = AdTechIdentifier.fromString("test.com");
+    public static final AdTechIdentifier BUYER_2 = AdTechIdentifier.fromString("test2.com");
+    public static final AdTechIdentifier BUYER_3 = AdTechIdentifier.fromString("test3.com");
+    public static final List<AdTechIdentifier> CUSTOM_AUDIENCE_BUYERS =
+            Arrays.asList(BUYER_1, BUYER_2, BUYER_3);
 
-    public static final List<String> CUSTOM_AUDIENCE_BUYERS =
-            Arrays.asList("buyer1", "buyer2", "buyer3");
+    public static final AdSelectionSignals EMPTY_SIGNALS = AdSelectionSignals.EMPTY;
 
-    public static final String EMPTY_SIGNALS = "{}";
+    public static final AdSelectionSignals AD_SELECTION_SIGNALS =
+            AdSelectionSignals.fromString("{\"ad_selection_signals\":1}");
 
-    public static final String AD_SELECTION_SIGNALS = "{\"ad_selection_signals\":1}";
+    public static final AdSelectionSignals SELLER_SIGNALS =
+            AdSelectionSignals.fromString("{\"test_seller_signals\":1}");
 
-    public static final String SELLER_SIGNALS = "{\"test_seller_signals\":1}";
-
-    public static final Map<String, String> PER_BUYER_SIGNALS =
+    public static final Map<AdTechIdentifier, AdSelectionSignals> PER_BUYER_SIGNALS =
             Map.of(
-                    "buyer1",
-                    "{\"buyer_signals\":1}",
-                    "buyer2",
-                    "{\"buyer_signals\":2}",
-                    "buyer3",
-                    "{\"buyer_signals\":3}",
-                    "buyer",
-                    "{\"buyer_signals\":0}");
+                    BUYER_1,
+                    AdSelectionSignals.fromString("{\"buyer_signals\":1}"),
+                    BUYER_2,
+                    AdSelectionSignals.fromString("{\"buyer_signals\":2}"),
+                    BUYER_3,
+                    AdSelectionSignals.fromString("{\"buyer_signals\":3}"),
+                    BUYER,
+                    AdSelectionSignals.fromString("{\"buyer_signals\":0}"));
 
-    // Contextual Ads Components
-    public static final AdWithBid ADS_WITH_BID_1 =
-            createAdsWithBid(Uri.fromParts("adsScheme", "ssp1", null), "{\"metadata\":1}", 1.0);
-
-    public static final AdWithBid ADS_WITH_BID_2 =
-            createAdsWithBid(Uri.fromParts("adsScheme", "ssp2", null), "{\"metadata\":2}", 2.0);
-
-    public static final AdWithBid ADS_WITH_BID_3 =
-            createAdsWithBid(Uri.fromParts("adsScheme", "ssp3", null), "{\"metadata\":3}", 3.0);
-
-    public static final List<AdWithBid> CONTEXTUAL_ADS =
-            Arrays.asList(ADS_WITH_BID_1, ADS_WITH_BID_2, ADS_WITH_BID_3);
-
-    private static AdWithBid createAdsWithBid(Uri renderUrl, String metaData, double bid) {
-        AdData asData = new AdData(renderUrl, metaData);
-        return new AdWithBid(asData, bid);
-    }
+    public static final Uri TRUSTED_SCORING_SIGNALS_URI =
+            CommonFixture.getUri(SELLER, TRUSTED_SCORING_SIGNAL_FRAGMENT);
 
     /** Creates an AdSelectionConfig object to be used in unit and integration tests */
     public static AdSelectionConfig anAdSelectionConfig() {
@@ -85,32 +76,48 @@ public class AdSelectionConfigFixture {
 
     /**
      * @return returns a pre-loaded builder, where the internal members of the object can be changed
-     * for the unit tests
+     *     for the unit tests
      */
     public static AdSelectionConfig.Builder anAdSelectionConfigBuilder() {
         return new AdSelectionConfig.Builder()
                 .setSeller(SELLER)
-                .setDecisionLogicUrl(DECISION_LOGIC_URL)
+                .setDecisionLogicUri(DECISION_LOGIC_URI)
                 .setCustomAudienceBuyers(CUSTOM_AUDIENCE_BUYERS)
                 .setAdSelectionSignals(AD_SELECTION_SIGNALS)
                 .setSellerSignals(SELLER_SIGNALS)
                 .setPerBuyerSignals(PER_BUYER_SIGNALS)
-                .setContextualAds(CONTEXTUAL_ADS);
+                .setTrustedScoringSignalsUri(TRUSTED_SCORING_SIGNALS_URI);
     }
 
     /**
-     * Creates an AdSelectionConfig object to be used in unit and integration tests
-     * Accepts a Uri decisionLogicUrl to be used instead of the default
+     * Creates an AdSelectionConfig object to be used in unit and integration tests Accepts a Uri
+     * decisionLogicUri to be used instead of the default
      */
-    public static AdSelectionConfig anAdSelectionConfig(@NonNull Uri decisionLogicUrl) {
+    public static AdSelectionConfig anAdSelectionConfig(@NonNull Uri decisionLogicUri) {
         return new AdSelectionConfig.Builder()
                 .setSeller(SELLER)
-                .setDecisionLogicUrl(decisionLogicUrl)
+                .setDecisionLogicUri(decisionLogicUri)
                 .setCustomAudienceBuyers(CUSTOM_AUDIENCE_BUYERS)
                 .setAdSelectionSignals(AD_SELECTION_SIGNALS)
                 .setSellerSignals(SELLER_SIGNALS)
                 .setPerBuyerSignals(PER_BUYER_SIGNALS)
-                .setContextualAds(CONTEXTUAL_ADS)
+                .setTrustedScoringSignalsUri(TRUSTED_SCORING_SIGNALS_URI)
+                .build();
+    }
+
+    /**
+     * Creates an AdSelectionConfig object to be used in unit and integration tests Accepts a Uri
+     * decisionLogicUri to be used instead of the default
+     */
+    public static AdSelectionConfig anAdSelectionConfig(@NonNull AdTechIdentifier seller) {
+        return new AdSelectionConfig.Builder()
+                .setSeller(seller)
+                .setDecisionLogicUri(DECISION_LOGIC_URI)
+                .setCustomAudienceBuyers(CUSTOM_AUDIENCE_BUYERS)
+                .setAdSelectionSignals(AD_SELECTION_SIGNALS)
+                .setSellerSignals(SELLER_SIGNALS)
+                .setPerBuyerSignals(PER_BUYER_SIGNALS)
+                .setTrustedScoringSignalsUri(TRUSTED_SCORING_SIGNALS_URI)
                 .build();
     }
 }

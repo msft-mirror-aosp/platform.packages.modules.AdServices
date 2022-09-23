@@ -15,36 +15,74 @@
  */
 package com.android.server.adservices;
 
-import android.adservices.common.AdServicesCommonManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.Uri;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.UserHandle;
+import android.provider.DeviceConfig;
 import android.util.Log;
 
-import com.android.adservices.LogUtil;
+import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.SystemService;
+
+import java.util.List;
 
 /**
  * @hide
  */
 public class AdServicesManagerService {
     private static final String TAG = "AdServicesManagerService";
+
+    /**
+     * Broadcast send from the system service to the AdServices module when a package has been
+     * installed/uninstalled. This intent must match the intent defined in the AdServices manifest.
+     */
+    private static final String PACKAGE_CHANGED_BROADCAST =
+            "com.android.adservices.PACKAGE_CHANGED";
+
+    /** Key for designating the specific action. */
+    private static final String ACTION_KEY = "action";
+
+    /** Value if the package change was an uninstallation. */
+    private static final String PACKAGE_FULLY_REMOVED = "package_fully_removed";
+
+    /** Value if the package change was an installation. */
+    private static final String PACKAGE_ADDED = "package_added";
+
+    /** Value if the package has its data cleared. */
+    private static final String PACKAGE_DATA_CLEARED = "package_data_cleared";
+
     private final Context mContext;
 
-    private final Handler mHandler;
+    private BroadcastReceiver mSystemServicePackageChangedReceiver;
 
-    private AdServicesManagerService(Context context) {
+    private HandlerThread mHandlerThread;
+    private Handler mHandler;
+
+    // This will be triggered when there is a flag change.
+    private final DeviceConfig.OnPropertiesChangedListener mOnFlagsChangedListener =
+            properties -> {
+                if (!properties.getNamespace().equals(DeviceConfig.NAMESPACE_ADSERVICES)) {
+                    return;
+                }
+                registerPackagedChangedBroadcastReceivers();
+            };
+
+    @VisibleForTesting
+    AdServicesManagerService(Context context) {
         mContext = context;
 
-        // Start the handler thread.
-        HandlerThread handlerThread = new HandlerThread("AdServicesManagerServiceHandler");
-        handlerThread.start();
-        mHandler = new Handler(handlerThread.getLooper());
-        registerBootBroadcastReceivers();
+        DeviceConfig.addOnPropertiesChangedListener(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                mContext.getMainExecutor(),
+                mOnFlagsChangedListener);
+
+        registerPackagedChangedBroadcastReceivers();
     }
 
     /** @hide */
@@ -64,58 +102,110 @@ public class AdServicesManagerService {
         }
     }
 
-    private void registerBootBroadcastReceivers() {
-        BroadcastReceiver bootIntentReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                switch(intent.getAction()) {
-                    case Intent.ACTION_BOOT_COMPLETED:
-                        registerPackagedChangedBroadcastReceivers();
+    /**
+     * Registers a receiver for any broadcasts regarding changes to any packages for all users on
+     * the device at boot up. After receiving the broadcast, send an explicit broadcast to the
+     * AdServices module as that user.
+     */
+    @VisibleForTesting
+    void registerPackagedChangedBroadcastReceivers() {
+        // There could be race condition between registerPackagedChangedBroadcastReceivers call
+        // in the AdServicesManagerService constructor and the mOnFlagsChangedListener.
+        synchronized (AdServicesManagerService.class) {
+            if (FlagsFactory.getFlags().getAdServicesSystemServiceEnabled()) {
+                if (mSystemServicePackageChangedReceiver != null) {
+                    // We already register the receiver.
+                    Log.d(TAG, "SystemServicePackageChangedReceiver is already registered.");
+                    return;
                 }
+
+                // mSystemServicePackageChangedReceiver == null
+                // We haven't registered the receiver.
+                // Start the handler thread.
+                mHandlerThread = new HandlerThread("AdServicesManagerServiceHandler");
+                mHandlerThread.start();
+                mHandler = new Handler(mHandlerThread.getLooper());
+
+                final IntentFilter packageChangedIntentFilter = new IntentFilter();
+
+                packageChangedIntentFilter.addAction(Intent.ACTION_PACKAGE_FULLY_REMOVED);
+                packageChangedIntentFilter.addAction(Intent.ACTION_PACKAGE_DATA_CLEARED);
+                packageChangedIntentFilter.addAction(Intent.ACTION_PACKAGE_ADDED);
+                packageChangedIntentFilter.addDataScheme("package");
+
+                mSystemServicePackageChangedReceiver =
+                        new BroadcastReceiver() {
+                            @Override
+                            public void onReceive(Context context, Intent intent) {
+                                UserHandle user = getSendingUser();
+                                mHandler.post(() -> onPackageChange(intent, user));
+                            }
+                        };
+                mContext.registerReceiverForAllUsers(
+                        mSystemServicePackageChangedReceiver,
+                        packageChangedIntentFilter,
+                        /* broadcastPermission */ null,
+                        mHandler);
+                Log.d(TAG, "Package changed broadcast receivers registered.");
+            } else {
+                // FlagsFactory.getFlags().getAdServicesSystemServiceEnabled() == false
+                Log.d(TAG, "AdServicesSystemServiceEnabled is FALSE.");
+
+                // If there is a SystemServicePackageChangeReceiver, unregister it.
+                if (mSystemServicePackageChangedReceiver != null) {
+                    Log.d(TAG, "Unregistering the existing SystemServicePackageChangeReceiver");
+                    mContext.unregisterReceiver(mSystemServicePackageChangedReceiver);
+                    mSystemServicePackageChangedReceiver = null;
+                    mHandlerThread.quitSafely();
+                    mHandler = null;
+                }
+
+                return;
             }
-        };
-        mContext.registerReceiver(bootIntentReceiver,
-                new IntentFilter(Intent.ACTION_BOOT_COMPLETED));
-        Log.d(TAG, "Boot Broadcast Receivers registered.");
+        }
     }
 
-    private void registerPackagedChangedBroadcastReceivers() {
-        final IntentFilter packageChangedIntentFilter = new IntentFilter();
+    /** Sends an explicit broadcast to the AdServices module when a package change occurs. */
+    @VisibleForTesting
+    public void onPackageChange(Intent intent, UserHandle user) {
+        Intent explicitBroadcast = new Intent();
+        explicitBroadcast.setAction(PACKAGE_CHANGED_BROADCAST);
+        explicitBroadcast.setData(intent.getData());
 
-        packageChangedIntentFilter.addAction(Intent.ACTION_PACKAGE_FULLY_REMOVED);
-        packageChangedIntentFilter.addAction(Intent.ACTION_PACKAGE_ADDED);
-        packageChangedIntentFilter.addDataScheme("package");
-
-        BroadcastReceiver packageChangedIntentReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                LogUtil.d("Received for intent: " + intent);
-                switch(intent.getAction()) {
+        final Intent i = new Intent(PACKAGE_CHANGED_BROADCAST);
+        final List<ResolveInfo> resolveInfo =
+                mContext.getPackageManager()
+                        .queryBroadcastReceiversAsUser(
+                                i,
+                                PackageManager.ResolveInfoFlags.of(PackageManager.GET_RECEIVERS),
+                                user);
+        if (resolveInfo != null && !resolveInfo.isEmpty()) {
+            for (ResolveInfo info : resolveInfo) {
+                explicitBroadcast.setClassName(
+                        info.activityInfo.packageName, info.activityInfo.name);
+                int uidChanged = intent.getIntExtra(Intent.EXTRA_UID, -1);
+                Log.v(TAG, "Package changed with UID " + uidChanged);
+                explicitBroadcast.putExtra(Intent.EXTRA_UID, uidChanged);
+                switch (intent.getAction()) {
+                    case Intent.ACTION_PACKAGE_DATA_CLEARED:
+                        explicitBroadcast.putExtra(ACTION_KEY, PACKAGE_DATA_CLEARED);
+                        mContext.sendBroadcastAsUser(explicitBroadcast, user);
+                        break;
                     case Intent.ACTION_PACKAGE_FULLY_REMOVED:
-                        Uri removedPackageUri = intent.getData();
-                        LogUtil.d("Removed package: " + removedPackageUri);
-                        onPackageFullyRemoved(removedPackageUri);
+                        // TODO (b/233373604): Propagate broadcast to users not currently running
+                        explicitBroadcast.putExtra(ACTION_KEY, PACKAGE_FULLY_REMOVED);
+                        mContext.sendBroadcastAsUser(explicitBroadcast, user);
                         break;
                     case Intent.ACTION_PACKAGE_ADDED:
-                        Uri addedPackageUri = intent.getData();
-                        LogUtil.d("Added package: " + addedPackageUri);
-                        onPackageAdded(addedPackageUri);
+                        explicitBroadcast.putExtra(ACTION_KEY, PACKAGE_ADDED);
+                        // For users where the app is merely being updated rather than added, we
+                        // don't want to send the broadcast.
+                        if (!intent.getExtras().getBoolean(Intent.EXTRA_REPLACING, false)) {
+                            mContext.sendBroadcastAsUser(explicitBroadcast, user);
+                        }
+                        break;
                 }
             }
-        };
-        mContext.registerReceiver(packageChangedIntentReceiver, packageChangedIntentFilter,
-                null, mHandler);
-        LogUtil.d("Package changed Broadcast Receivers registered.");
-    }
-
-    private void onPackageFullyRemoved(Uri packageUri) {
-        mHandler.post(() -> mContext.getSystemService(AdServicesCommonManager.class)
-                .onPackageFullyRemoved(packageUri));
-
-    }
-
-    private void onPackageAdded(Uri packageUri) {
-        mHandler.post(() -> mContext.getSystemService(AdServicesCommonManager.class)
-                .onPackageAdded(packageUri));
+        }
     }
 }

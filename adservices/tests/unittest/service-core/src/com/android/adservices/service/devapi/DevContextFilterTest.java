@@ -26,6 +26,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Process;
 import android.provider.Settings;
 
@@ -54,7 +55,10 @@ public class DevContextFilterTest {
     @Before
     public void setUp() {
         mStaticMockSession =
-                ExtendedMockito.mockitoSession().mockStatic(Settings.Global.class).startMocking();
+                ExtendedMockito.mockitoSession()
+                        .mockStatic(Settings.Global.class)
+                        .mockStatic(Build.class)
+                        .startMocking();
         MockitoAnnotations.initMocks(this);
 
         mDevContextFilter =
@@ -88,6 +92,27 @@ public class DevContextFilterTest {
         disableDeveloperOptions();
 
         assertThat(mDevContextFilter.createDevContext(APP_UID).getDevOptionsEnabled()).isFalse();
+    }
+
+    @Test
+    public void testCreateDevContextReturnsDevEnabledInstanceIfNotInDeveloperModeDebuggableBuild()
+            throws PackageManager.NameNotFoundException {
+        // No need to call disableDeveloperOptions since they wouldn't be checked because we are
+        // in a debuggable build and Mockito would complain of the not necesasry mock.
+        // Not preparing the mock would anyway cause the check method to return false.
+        when(Build.isDebuggable()).thenReturn(true);
+
+        when(mAppPackageNameRetriever.getAppPackageNameForUid(APP_UID)).thenReturn(APP_PACKAGE);
+        when(mPackageManager.getApplicationInfo(
+                        eq(APP_PACKAGE), any(PackageManager.ApplicationInfoFlags.class)))
+                .thenReturn(aDebuggableAppInfo());
+
+        assertThat(mDevContextFilter.createDevContext(APP_UID))
+                .isEqualTo(
+                        DevContext.builder()
+                                .setCallingAppPackageName(APP_PACKAGE)
+                                .setDevOptionsEnabled(true)
+                                .build());
     }
 
     @Test

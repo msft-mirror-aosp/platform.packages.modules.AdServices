@@ -20,6 +20,7 @@ import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_DELETE
 import android.net.Uri;
 
 import com.android.adservices.service.measurement.Source;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONException;
 import org.junit.runner.RunWith;
@@ -48,18 +49,19 @@ public class DeleteExpiredDynamicIntegrationTest extends AbstractDbIntegrationTe
         long insideExpiredWindow = System.currentTimeMillis()
                 - MEASUREMENT_DELETE_EXPIRED_WINDOW_MS / 2;
 
-        Source source = new Source.Builder()
-                .setAdTechDomain(Uri.parse("https://example.com"))
-                .setAttributionDestination(Uri.parse("https://example.com/aD"))
-                .setPublisher(Uri.parse("https://example.com/aS"))
-                .setId("non-expired")
-                .setEventId(2L)
-                .setPriority(3L)
-                .setEventTime(insideExpiredWindow)
-                .setExpiryTime(5L)
-                .setStatus(Source.Status.ACTIVE)
-                .setRegistrant(Uri.parse("android-app://com.example.abc"))
-                .build();
+        Source source =
+                new Source.Builder()
+                        .setEnrollmentId("enrollment-id")
+                        .setAppDestination(Uri.parse("android-app://com.example.app/aD"))
+                        .setPublisher(Uri.parse("https://example.com/aS"))
+                        .setId("non-expired")
+                        .setEventId(new UnsignedLong(2L))
+                        .setPriority(3L)
+                        .setEventTime(insideExpiredWindow)
+                        .setExpiryTime(5L)
+                        .setStatus(Source.Status.ACTIVE)
+                        .setRegistrant(Uri.parse("android-app://com.example.abc"))
+                        .build();
 
         for (Object[] testCase : testCases) {
             // input

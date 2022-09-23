@@ -22,7 +22,7 @@
 
     <LinearLayout
         style="?android:attr/buttonBarButtonStyle"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
@@ -39,6 +39,20 @@
             android:layout_width="wrap_content"
             style="?android:attr/buttonBarButtonStyle"
             android:text="@string/load_surface_package" />
+
+        <Button
+          android:id="@+id/play_video_button"
+          android:layout_height="wrap_content"
+          android:layout_width="wrap_content"
+          style="?android:attr/buttonBarButtonStyle"
+          android:text="@string/play_video" />
+
+        <Button
+            android:id="@+id/create_file_button"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            style="?android:attr/buttonBarButtonStyle"
+            android:text="@string/create_file" />
     </LinearLayout>
 
     <SurfaceView

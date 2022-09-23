@@ -16,7 +16,6 @@
 
 package com.android.adservices.data.measurement.migration;
 
-import static com.android.adservices.data.DbTestUtil.doesIndexExist;
 import static com.android.adservices.data.DbTestUtil.doesTableExistAndColumnCountMatch;
 
 import static org.junit.Assert.assertTrue;
@@ -47,18 +46,10 @@ public class MeasurementDbMigratorV2Test extends AbstractMeasurementDbMigratorTe
         // Verify
         db = dbHelper.getReadableDatabase();
         assertTrue(
-                doesTableExistAndColumnCountMatch(db, MeasurementTables.SourceContract.TABLE, 18));
-        assertTrue(
-                doesTableExistAndColumnCountMatch(db, MeasurementTables.TriggerContract.TABLE, 11));
-        assertTrue(
                 doesTableExistAndColumnCountMatch(
-                        db, MeasurementTables.EventReportContract.TABLE, 12));
+                        db, MeasurementTables.EventReportContract.TABLE, 14));
         assertTrue(
-                doesTableExistAndColumnCountMatch(
-                        db, MeasurementTables.AttributionRateLimitContract.TABLE, 6));
-        assertTrue(doesIndexExist(db, "idx_msmt_source_ad_rt_et"));
-        assertTrue(doesIndexExist(db, "idx_msmt_trigger_ad_rt_tt"));
-        assertTrue(doesIndexExist(db, "idx_msmt_attribution_rate_limit_ss_ds_tt"));
+                doesTableExistAndColumnCountMatch(db, MeasurementTables.AggregateReport.TABLE, 11));
     }
 
     @Override

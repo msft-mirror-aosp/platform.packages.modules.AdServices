@@ -40,6 +40,11 @@ java_sdk_library {
     visibility: [
         "//packages/modules/AdServices/tests:__subpackages__",
     ],
+    impl_library_visibility: [
+            "//packages/modules/AdServices/adservices/tests/unittest:__subpackages__",
+            "//frameworks/base/services/tests/mockingservicestests",
+            "//frameworks/base/services/tests/wmtests",
+        ],
     apex_available: ["com.android.adservices"],
     installable: true,
 }

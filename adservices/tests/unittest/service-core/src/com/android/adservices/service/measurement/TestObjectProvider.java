@@ -25,9 +25,12 @@ import android.annotation.IntDef;
 import android.test.mock.MockContentResolver;
 
 import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.attribution.AttributionJobHandlerWrapper;
+import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.registration.SourceFetcher;
 import com.android.adservices.service.measurement.registration.TriggerFetcher;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.mockito.stubbing.Answer;
 
@@ -54,17 +57,36 @@ class TestObjectProvider {
         return new AttributionJobHandlerWrapper(datastoreManager);
     }
 
-    static MeasurementImpl getMeasurementImpl(@Type int type, DatastoreManager datastoreManager,
-            SourceFetcher sourceFetcher, TriggerFetcher triggerFetcher) {
+    static MeasurementImpl getMeasurementImpl(
+            @Type int type,
+            DatastoreManager datastoreManager,
+            SourceFetcher sourceFetcher,
+            TriggerFetcher triggerFetcher,
+            ClickVerifier clickVerifier,
+            Flags flags) {
         if (type == Type.DENOISED) {
-            MeasurementImpl measurementImpl = spy(new MeasurementImpl(new MockContentResolver(),
-                    datastoreManager, sourceFetcher, triggerFetcher));
+            MeasurementImpl measurementImpl =
+                    spy(
+                            new MeasurementImpl(
+                                    null,
+                                    new MockContentResolver(),
+                                    datastoreManager,
+                                    sourceFetcher,
+                                    triggerFetcher,
+                                    clickVerifier));
             // Disable Impression Noise
-            doReturn(Collections.emptyList()).when(measurementImpl).getSourceEventReports(any());
+            doReturn(Collections.emptyList()).when(measurementImpl).generateFakeEventReports(any());
             return measurementImpl;
         } else if (type == Type.NOISY) {
-            MeasurementImpl measurementImpl = spy(new MeasurementImpl(
-                    new MockContentResolver(), datastoreManager, sourceFetcher, triggerFetcher));
+            MeasurementImpl measurementImpl =
+                    spy(
+                            new MeasurementImpl(
+                                    null,
+                                    new MockContentResolver(),
+                                    datastoreManager,
+                                    sourceFetcher,
+                                    triggerFetcher,
+                                    clickVerifier));
             // Create impression noise with 100% probability
             Answer<?> answerSourceEventReports =
                     invocation -> {
@@ -74,10 +96,9 @@ class TestObjectProvider {
                                 new EventReport.Builder()
                                         .setSourceId(source.getEventId())
                                         .setReportTime(source.getExpiryTime() + ONE_HOUR_IN_MILLIS)
-                                        .setTriggerData(0)
-                                        .setAttributionDestination(
-                                                source.getAttributionDestination())
-                                        .setAdTechDomain(source.getAdTechDomain())
+                                        .setTriggerData(new UnsignedLong(0L))
+                                        .setAttributionDestination(source.getAppDestination())
+                                        .setEnrollmentId(source.getEnrollmentId())
                                         .setTriggerTime(0)
                                         .setTriggerPriority(0L)
                                         .setTriggerDedupKey(null)
@@ -85,11 +106,18 @@ class TestObjectProvider {
                                         .setStatus(EventReport.Status.PENDING)
                                         .build());
                     };
-            doAnswer(answerSourceEventReports).when(measurementImpl).getSourceEventReports(any());
+            doAnswer(answerSourceEventReports)
+                    .when(measurementImpl)
+                    .generateFakeEventReports(any());
             return measurementImpl;
         }
 
         return new MeasurementImpl(
-                new MockContentResolver(), datastoreManager, sourceFetcher, triggerFetcher);
+                null,
+                new MockContentResolver(),
+                datastoreManager,
+                sourceFetcher,
+                triggerFetcher,
+                clickVerifier);
     }
 }

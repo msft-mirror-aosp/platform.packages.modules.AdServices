@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertFalse;
@@ -23,6 +24,10 @@ import static org.junit.Assert.assertFalse;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdWithBid;
 import android.adservices.common.AdData;
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.CommonFixture;
+import android.adservices.customaudience.CustomAudienceFixture;
 import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
@@ -33,6 +38,7 @@ import androidx.test.filters.SmallTest;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.service.adselection.AdSelectionScriptEngine.AuctionScriptResult;
 import com.android.adservices.service.exception.JSExecutionException;
+import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
 
 import com.google.common.collect.ImmutableList;
@@ -43,7 +49,6 @@ import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.net.MalformedURLException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -57,20 +62,39 @@ import java.util.concurrent.atomic.AtomicReference;
 public class AdSelectionScriptEngineTest {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final String TAG = "AdSelectionScriptEngineTest";
-    private final ExecutorService mExecutorService = Executors.newFixedThreadPool(1);
-    private final AdSelectionScriptEngine mAdSelectionScriptEngine =
-            new AdSelectionScriptEngine(sContext);
     private static final Instant NOW = Instant.now();
-    private static final CustomAudienceSignals CUSTOM_AUDIENCE_SIGNALS =
-            new CustomAudienceSignals("owner", "buyer", "name",
-                    NOW, NOW.plus(Duration.ofDays(1)),
-                    "{}");
+    private static final CustomAudienceSignals CUSTOM_AUDIENCE_SIGNALS_1 =
+            new CustomAudienceSignals(
+                    CustomAudienceFixture.VALID_OWNER,
+                    CommonFixture.VALID_BUYER_1,
+                    "name",
+                    NOW,
+                    NOW.plus(Duration.ofDays(1)),
+                    AdSelectionSignals.EMPTY);
+    private static final CustomAudienceSignals CUSTOM_AUDIENCE_SIGNALS_2 =
+            new CustomAudienceSignals(
+                    CustomAudienceFixture.VALID_OWNER,
+                    CommonFixture.VALID_BUYER_1,
+                    "name",
+                    NOW,
+                    NOW.plus(Duration.ofDays(1)),
+                    AdSelectionSignals.EMPTY);
+    private static final List<CustomAudienceSignals> CUSTOM_AUDIENCE_SIGNALS_LIST =
+            ImmutableList.of(CUSTOM_AUDIENCE_SIGNALS_1, CUSTOM_AUDIENCE_SIGNALS_2);
+    private final ExecutorService mExecutorService = Executors.newFixedThreadPool(1);
+    IsolateSettings mIsolateSettings = IsolateSettings.forMaxHeapSizeEnforcementDisabled();
+    private final AdSelectionScriptEngine mAdSelectionScriptEngine =
+            new AdSelectionScriptEngine(
+                    sContext,
+                    () -> mIsolateSettings.getEnforceMaxHeapSizeFeature(),
+                    () -> mIsolateSettings.getMaxHeapSizeBytes());
+
     @Test
     public void testAuctionScriptIsInvalidIfRequiredFunctionDoesNotExist() throws Exception {
         assertFalse(
                 callJsValidation(
                         "function helloAdvert(ad) { return {'status': 0, 'greeting': 'hello ' +"
-                                + " ad.render_url }; }",
+                                + " ad.render_uri }; }",
                         ImmutableList.of("helloAdvertWrongName")));
     }
 
@@ -79,7 +103,7 @@ public class AdSelectionScriptEngineTest {
         assertFalse(
                 callJsValidation(
                         "function helloAdvert(ad) { return {'status': 0, 'greeting': 'hello ' +"
-                                + " ad.render_url }; }",
+                                + " ad.render_uri }; }",
                         ImmutableList.of("helloAdvert", "helloAdvertWrongName")));
     }
 
@@ -89,7 +113,7 @@ public class AdSelectionScriptEngineTest {
         final AuctionScriptResult result =
                 callAuctionEngine(
                         "function helloAdvert(ad) { return {'status': 0, 'greeting': 'hello ' +"
-                                + " ad.render_url }; }",
+                                + " ad.render_uri }; }",
                         "helloAdvert(ad)",
                         advert,
                         ImmutableList.of());
@@ -107,7 +131,7 @@ public class AdSelectionScriptEngineTest {
                         () ->
                                 callAuctionEngine(
                                         "function helloAdvert(ad) { return {'status': 0,"
-                                                + " 'greeting': 'hello ' + ad.render_url }; }",
+                                                + " 'greeting': 'hello ' + ad.render_uri }; }",
                                         "helloAdvertWrongName",
                                         advert,
                                         ImmutableList.of()));
@@ -120,7 +144,7 @@ public class AdSelectionScriptEngineTest {
         AdData advert = new AdData(Uri.parse("http://www.domain.com/adverts/123"), "{}");
         final AuctionScriptResult result =
                 callAuctionEngine(
-                        "function helloAdvert(ad) { return 'hello ' + ad.render_url; }",
+                        "function helloAdvert(ad) { return 'hello ' + ad.render_uri; }",
                         "helloAdvert(ad)",
                         advert,
                         ImmutableList.of());
@@ -138,7 +162,7 @@ public class AdSelectionScriptEngineTest {
         final AuctionScriptResult result =
                 callAuctionEngine(
                         "function injectFailure(ad) { return {'status': ad.metadata.result,"
-                                + " 'value': ad.render_url }; }",
+                                + " 'value': ad.render_uri }; }",
                         "injectFailure(ad)",
                         ImmutableList.of(processedSuccessfully, failToProcess, willNotBeProcessed),
                         ImmutableList.of());
@@ -164,12 +188,12 @@ public class AdSelectionScriptEngineTest {
                                 + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
                                 + "}",
                         ads,
-                        "{}",
-                        "{}",
-                        "{}",
-                        "{}",
-                        "{}",
-                        CUSTOM_AUDIENCE_SIGNALS);
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        CUSTOM_AUDIENCE_SIGNALS_1);
         assertThat(result).containsExactly(new AdWithBid(ad1, 1.1), new AdWithBid(ad2, 2.1));
     }
 
@@ -188,12 +212,12 @@ public class AdSelectionScriptEngineTest {
                                 + "  return {'status': 1, 'ad': ad, 'bid': ad.metadata.result };\n"
                                 + "}",
                         ads,
-                        "{}",
-                        "{}",
-                        "{}",
-                        "{}",
-                        "{}",
-                        CUSTOM_AUDIENCE_SIGNALS);
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        CUSTOM_AUDIENCE_SIGNALS_1);
         assertThat(result).isEmpty();
     }
 
@@ -215,12 +239,12 @@ public class AdSelectionScriptEngineTest {
                                 + " else return {'status': 0, 'ad': ad, 'bid': 10 };\n"
                                 + "}",
                         ads,
-                        "{}",
-                        "{}",
-                        "{}",
-                        "{}",
-                        "{}",
-                        CUSTOM_AUDIENCE_SIGNALS);
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        CUSTOM_AUDIENCE_SIGNALS_1);
         assertThat(result).isEmpty();
     }
 
@@ -241,10 +265,10 @@ public class AdSelectionScriptEngineTest {
                                 + "}",
                         adWithBids,
                         anAdSelectionConfig(),
-                        "{}",
-                        "{}",
-                        "{}",
-                        CUSTOM_AUDIENCE_SIGNALS);
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        CUSTOM_AUDIENCE_SIGNALS_LIST);
         assertThat(result).containsExactly(100.0, 200.0);
     }
 
@@ -265,10 +289,10 @@ public class AdSelectionScriptEngineTest {
                                 + "}",
                         adWithBids,
                         anAdSelectionConfig(),
-                        "{}",
-                        "{}",
-                        "{}",
-                        CUSTOM_AUDIENCE_SIGNALS);
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        CUSTOM_AUDIENCE_SIGNALS_LIST);
         assertThat(result).isEmpty();
     }
 
@@ -278,22 +302,23 @@ public class AdSelectionScriptEngineTest {
         final AuctionScriptResult result =
                 callAuctionEngine(
                         "function helloAdvert(ad) { return {'status': 0, 'greeting': '%shello ' +"
-                                + " ad.render_url }; }",
+                                + " ad.render_uri }; }",
                         "helloAdvert(ad)", advert, ImmutableList.of());
         assertThat(result.status).isEqualTo(0);
         assertThat(((JSONObject) result.results.get(0)).getString("greeting"))
                 .isEqualTo("%shello http://www.domain.com/adverts/123");
     }
 
-    private AdSelectionConfig anAdSelectionConfig() throws MalformedURLException {
+    private AdSelectionConfig anAdSelectionConfig() {
         return new AdSelectionConfig.Builder()
-                .setSeller("www.mydomain.com")
+                .setSeller(AdTechIdentifier.fromString("www.mydomain.com"))
                 .setPerBuyerSignals(ImmutableMap.of())
-                .setContextualAds(ImmutableList.of())
-                .setDecisionLogicUrl(Uri.parse("http://www.mydomain.com/updateAds"))
-                .setSellerSignals("{}")
-                .setCustomAudienceBuyers(ImmutableList.of("www.buyer.com"))
-                .setAdSelectionSignals("{}")
+                .setDecisionLogicUri(Uri.parse("http://www.mydomain.com/updateAds"))
+                .setSellerSignals(AdSelectionSignals.EMPTY)
+                .setCustomAudienceBuyers(
+                        ImmutableList.of(AdTechIdentifier.fromString("www.buyer.com")))
+                .setAdSelectionSignals(AdSelectionSignals.EMPTY)
+                .setTrustedScoringSignalsUri(Uri.parse("https://kvtrusted.com/scoring_signals"))
                 .build();
     }
 
@@ -310,11 +335,11 @@ public class AdSelectionScriptEngineTest {
     private List<AdWithBid> generateBids(
             String jsScript,
             List<AdData> ads,
-            String auctionSignals,
-            String perBuyerSignals,
-            String trustedBiddingSignals,
-            String contextualSignals,
-            String userSignals,
+            AdSelectionSignals auctionSignals,
+            AdSelectionSignals perBuyerSignals,
+            AdSelectionSignals trustedBiddingSignals,
+            AdSelectionSignals contextualSignals,
+            AdSelectionSignals userSignals,
             CustomAudienceSignals customAudienceSignals)
             throws Exception {
         return waitForFuture(
@@ -336,14 +361,14 @@ public class AdSelectionScriptEngineTest {
             String jsScript,
             List<AdWithBid> adsWithBids,
             AdSelectionConfig adSelectionConfig,
-            String sellerSignals,
-            String trustedScoringSignals,
-            String contextualSignals,
-            CustomAudienceSignals customAudienceSignals)
+            AdSelectionSignals sellerSignals,
+            AdSelectionSignals trustedScoringSignals,
+            AdSelectionSignals contextualSignals,
+            List<CustomAudienceSignals> customAudienceSignals)
             throws Exception {
         return waitForFuture(
                 () -> {
-                    Log.i(TAG, "Calling generateBids");
+                    Log.i(TAG, "Calling scoreAds");
                     return mAdSelectionScriptEngine.scoreAds(
                             jsScript,
                             adsWithBids,

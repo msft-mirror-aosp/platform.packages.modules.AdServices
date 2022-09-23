@@ -19,7 +19,8 @@ package com.android.adservices.service.measurement;
 import static android.view.MotionEvent.ACTION_BUTTON_PRESS;
 import static android.view.MotionEvent.obtain;
 
-import android.adservices.measurement.IMeasurementCallback;
+import static com.android.adservices.ResultCode.RESULT_OK;
+
 import android.content.AttributionSource;
 import android.content.Context;
 import android.content.res.AssetManager;
@@ -33,16 +34,21 @@ import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.DbHelper;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
+import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.InstallApp;
 import com.android.adservices.service.measurement.actions.RegisterSource;
 import com.android.adservices.service.measurement.actions.RegisterTrigger;
+import com.android.adservices.service.measurement.actions.RegisterWebSource;
+import com.android.adservices.service.measurement.actions.RegisterWebTrigger;
 import com.android.adservices.service.measurement.actions.ReportObjects;
 import com.android.adservices.service.measurement.actions.ReportingJob;
 import com.android.adservices.service.measurement.actions.UninstallApp;
 import com.android.adservices.service.measurement.attribution.AttributionJobHandlerWrapper;
+import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import com.google.common.collect.ImmutableList;
 
@@ -50,6 +56,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -66,6 +73,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -76,10 +84,52 @@ import java.util.concurrent.TimeUnit;
  * Consider @RunWith(Parameterized.class)
  */
 public abstract class E2ETest {
+    @Rule
+    public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
+            new TestableDeviceConfig.TestableDeviceConfigRule();
+
     // Used to fuzzy-match expected report (not delivery) time
     private static final long REPORT_TIME_EPSILON = TimeUnit.HOURS.toMillis(2);
+    private static final EnrollmentData AD_TECH_1 =
+            new EnrollmentData.Builder()
+                    .setEnrollmentId(UUID.randomUUID().toString())
+                    .setCompanyId("ad-tech-1")
+                    .setSdkNames("sdk")
+                    .setAttributionSourceRegistrationUrl(Arrays.asList("https://www.ad-tech1.com"))
+                    .setAttributionTriggerRegistrationUrl(Arrays.asList("https://www.ad-tech1.com"))
+                    .setAttributionReportingUrl(Arrays.asList("https://www.ad-tech1.com"))
+                    .setRemarketingResponseBasedRegistrationUrl(
+                            Arrays.asList("https://www.ad-tech1.com"))
+                    .setEncryptionKeyUrl(Arrays.asList("https://www.ad-tech1.com/keys"))
+                    .build();
+    private static final EnrollmentData AD_TECH_2 =
+            new EnrollmentData.Builder()
+                    .setEnrollmentId(UUID.randomUUID().toString())
+                    .setCompanyId("ad-tech-2")
+                    .setSdkNames("sdk")
+                    .setAttributionSourceRegistrationUrl(Arrays.asList("https://www.ad-tech2.com"))
+                    .setAttributionTriggerRegistrationUrl(Arrays.asList("https://www.ad-tech2.com"))
+                    .setAttributionReportingUrl(Arrays.asList("https://www.ad-tech2.com"))
+                    .setRemarketingResponseBasedRegistrationUrl(
+                            Arrays.asList("https://www.ad-tech2.com"))
+                    .setEncryptionKeyUrl(Arrays.asList("https://www.ad-tech2.com/keys"))
+                    .build();
+    private static final EnrollmentData AD_TECH_3 =
+            new EnrollmentData.Builder()
+                    .setEnrollmentId(UUID.randomUUID().toString())
+                    .setCompanyId("ad-tech-3")
+                    .setSdkNames("sdk")
+                    .setAttributionSourceRegistrationUrl(Arrays.asList("https://www.ad-tech3.com"))
+                    .setAttributionTriggerRegistrationUrl(Arrays.asList("https://www.ad-tech3.com"))
+                    .setAttributionReportingUrl(Arrays.asList("https://www.ad-tech3.com"))
+                    .setRemarketingResponseBasedRegistrationUrl(
+                            Arrays.asList("https://www.ad-tech3.com"))
+                    .setEncryptionKeyUrl(Arrays.asList("https://www.ad-tech3.com/keys"))
+                    .build();
 
     static final Context sContext = ApplicationProvider.getApplicationContext();
+    static final EnrollmentDao sEnrollmentDao = EnrollmentDao.getInstance(
+            ApplicationProvider.getApplicationContext());
     static final DatastoreManager sDatastoreManager = DatastoreManagerFactory.getDatastoreManager(
             ApplicationProvider.getApplicationContext());
     private final Collection<Action> mActionsList;
@@ -102,8 +152,9 @@ public abstract class E2ETest {
 
     interface AggregateReportPayloadKeys {
         String ATTRIBUTION_DESTINATION = "attribution_destination";
-        String SOURCE_SITE = "source_site";
         String HISTOGRAMS = "histograms";
+        String SOURCE_DEBUG_KEY = "source_debug_key";
+        String TRIGGER_DEBUG_KEY = "trigger_debug_key";
     }
 
     interface AggregateHistogramKeys {
@@ -115,7 +166,11 @@ public abstract class E2ETest {
         String TEST_INPUT_KEY = "input";
         String TEST_OUTPUT_KEY = "output";
         String SOURCE_REGISTRATIONS_KEY = "sources";
-        String TRIGGER_REGISTRATIONS_KEY = "triggers";
+        String WEB_SOURCES_KEY = "web_sources";
+        String SOURCE_PARAMS_REGISTRATIONS_KEY = "source_params";
+        String TRIGGER_KEY = "triggers";
+        String WEB_TRIGGERS_KEY = "web_triggers";
+        String TRIGGER_PARAMS_REGISTRATIONS_KEY = "trigger_params";
         String URI_TO_RESPONSE_HEADERS_KEY = "responses";
         String URI_TO_RESPONSE_HEADERS_URL_KEY = "url";
         String URI_TO_RESPONSE_HEADERS_RESPONSE_KEY = "response";
@@ -123,6 +178,9 @@ public abstract class E2ETest {
         String ATTRIBUTION_SOURCE_KEY = "registrant";
         String SOURCE_TOP_ORIGIN_URI_KEY = "source_origin";
         String TRIGGER_TOP_ORIGIN_URI_KEY = "destination_origin";
+        String SOURCE_APP_DESTINATION_URI_KEY = "app_destination";
+        String SOURCE_WEB_DESTINATION_URI_KEY = "web_destination";
+        String SOURCE_VERIFIED_DESTINATION_URI_KEY = "verified_destination";
         String REGISTRATION_URI_KEY = "attribution_src_url";
         String INPUT_EVENT_KEY = "source_type";
         String SOURCE_VIEW_TYPE = "event";
@@ -140,10 +198,10 @@ public abstract class E2ETest {
 
     static Collection<Object[]> data(String testDirName) throws IOException, JSONException {
         AssetManager assetManager = sContext.getAssets();
-        List<InputStream> inputStreams = new ArrayList<InputStream>();
+        List<InputStream> inputStreams = new ArrayList<>();
         String[] testDirectoryList = assetManager.list(testDirName);
-        for (int i = 0; i < testDirectoryList.length; i++) {
-            inputStreams.add(assetManager.open(testDirName + "/" + testDirectoryList[i]));
+        for (String testFile : testDirectoryList) {
+            inputStreams.add(assetManager.open(testDirName + "/" + testFile));
         }
         return getTestCasesFrom(inputStreams, testDirectoryList);
     }
@@ -229,11 +287,17 @@ public abstract class E2ETest {
     @Test
     public void runTest() throws IOException, JSONException {
         clearDatabase();
+        unseedEnrollment();
+        seedEnrollment();
         for (Action action : mActionsList) {
             if (action instanceof RegisterSource) {
                 processAction((RegisterSource) action);
             } else if (action instanceof RegisterTrigger) {
                 processAction((RegisterTrigger) action);
+            } else if (action instanceof RegisterWebSource) {
+                processAction((RegisterWebSource) action);
+            } else if (action instanceof RegisterWebTrigger) {
+                processAction((RegisterWebTrigger) action);
             } else if (action instanceof ReportingJob) {
                 processAction((ReportingJob) action);
             } else if (action instanceof InstallApp) {
@@ -244,6 +308,7 @@ public abstract class E2ETest {
         }
         evaluateResults();
         clearDatabase();
+        unseedEnrollment();
     }
 
     /**
@@ -264,6 +329,14 @@ public abstract class E2ETest {
     abstract void prepareRegistrationServer(RegisterTrigger triggerRegistration)
             throws IOException;
 
+    /** Override with HTTP response mocks, for example. */
+    abstract void prepareRegistrationServer(RegisterWebSource sourceRegistration)
+            throws IOException;
+
+    /** Override with HTTP response mocks, for example. */
+    abstract void prepareRegistrationServer(RegisterWebTrigger triggerRegistration)
+            throws IOException;
+
     private static int hashForEventReportObject(JSONObject obj) {
         int n = EventReportPayloadKeys.STRINGS.size();
         Object[] objArray = new Object[n + 2];
@@ -278,15 +351,16 @@ public abstract class E2ETest {
     }
 
     private static int hashForAggregateReportObject(JSONObject obj) {
-        Object[] objArray = new Object[4];
+        Object[] objArray = new Object[5];
         // We cannot use report time due to fuzzy matching between actual and expected output.
         objArray[0] = obj.optString(TestFormatJsonMapping.REPORT_TO_KEY, "");
         JSONObject payload = obj.optJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
         objArray[1] = payload.optString(AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION, "");
-        objArray[2] = payload.optString(AggregateReportPayloadKeys.SOURCE_SITE, "");
         // To compare histograms, we already converted them to an ordered string of value pairs.
-        objArray[3] = getComparableHistograms(
+        objArray[2] = getComparableHistograms(
                 payload.optJSONArray(AggregateReportPayloadKeys.HISTOGRAMS));
+        objArray[3] = payload.optString(AggregateReportPayloadKeys.SOURCE_DEBUG_KEY, "");
+        objArray[4] = payload.optString(AggregateReportPayloadKeys.TRIGGER_DEBUG_KEY, "");
         return Arrays.hashCode(objArray);
     }
 
@@ -332,8 +406,12 @@ public abstract class E2ETest {
                 payload2.optString(AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION, ""))) {
             return false;
         }
-        if (!payload1.optString(AggregateReportPayloadKeys.SOURCE_SITE, "").equals(
-                payload1.optString(AggregateReportPayloadKeys.SOURCE_SITE, ""))) {
+        if (!payload1.optString(AggregateReportPayloadKeys.SOURCE_DEBUG_KEY, "")
+                .equals(payload2.optString(AggregateReportPayloadKeys.SOURCE_DEBUG_KEY, ""))) {
+            return false;
+        }
+        if (!payload1.optString(AggregateReportPayloadKeys.TRIGGER_DEBUG_KEY, "")
+                .equals(payload2.optString(AggregateReportPayloadKeys.TRIGGER_DEBUG_KEY, ""))) {
             return false;
         }
         JSONArray histograms1 = payload1.optJSONArray(AggregateReportPayloadKeys.HISTOGRAMS);
@@ -430,40 +508,50 @@ public abstract class E2ETest {
 
     private static String prettifyObjs(JSONObject obj1, JSONObject obj2) {
         StringBuilder result = new StringBuilder();
-        result.append(TestFormatJsonMapping.REPORT_TIME_KEY + ": "
-                + obj1.optString(TestFormatJsonMapping.REPORT_TIME_KEY) + " ::: "
-                + obj2.optString(TestFormatJsonMapping.REPORT_TIME_KEY) + "\n");
+        result.append(TestFormatJsonMapping.REPORT_TIME_KEY + ": ")
+                .append(obj1.optString(TestFormatJsonMapping.REPORT_TIME_KEY))
+                .append(" ::: ")
+                .append(obj2.optString(TestFormatJsonMapping.REPORT_TIME_KEY))
+                .append("\n");
         JSONObject payload1 = obj1.optJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
         JSONObject payload2 = obj2.optJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
         for (String key : EventReportPayloadKeys.STRINGS) {
-            result.append(key + ": " + payload1.optString(key)
-                    + " ::: " + payload2.optString(key) + "\n");
+            result.append(key)
+                    .append(": ")
+                    .append(payload1.optString(key))
+                    .append(" ::: ")
+                    .append(payload2.optString(key))
+                    .append("\n");
         }
-        result.append(EventReportPayloadKeys.DOUBLE + ": "
-                + payload1.optDouble(EventReportPayloadKeys.DOUBLE)
-                + " ::: " + payload2.optDouble(EventReportPayloadKeys.DOUBLE));
+        result.append(EventReportPayloadKeys.DOUBLE + ": ")
+                .append(payload1.optDouble(EventReportPayloadKeys.DOUBLE))
+                .append(" ::: ")
+                .append(payload2.optDouble(EventReportPayloadKeys.DOUBLE));
         return result.toString();
     }
 
     private static String prettifyObj(String pad, JSONObject obj) {
         StringBuilder result = new StringBuilder();
-        result.append(TestFormatJsonMapping.REPORT_TIME_KEY + ": " + pad
-                + obj.optString(TestFormatJsonMapping.REPORT_TIME_KEY) + "\n");
+        result.append(TestFormatJsonMapping.REPORT_TIME_KEY + ": ")
+                .append(pad)
+                .append(obj.optString(TestFormatJsonMapping.REPORT_TIME_KEY))
+                .append("\n");
         JSONObject payload = obj.optJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
         for (String key : EventReportPayloadKeys.STRINGS) {
-            result.append(key + ": " + pad + payload.optString(key) + "\n");
+            result.append(key).append(": ").append(pad).append(payload.optString(key)).append("\n");
         }
-        result.append(EventReportPayloadKeys.DOUBLE + ": " + pad
-                + payload.optDouble(EventReportPayloadKeys.DOUBLE));
+        result.append(EventReportPayloadKeys.DOUBLE + ": ")
+                .append(pad)
+                .append(payload.optDouble(EventReportPayloadKeys.DOUBLE));
         return result.toString();
     }
 
-    private static Set<Long> getExpiryTimesFrom(RegisterSource sourceRegistration)
+    private static Set<Long> getExpiryTimesFrom(
+            Collection<List<Map<String, List<String>>>> responseHeadersCollection)
             throws JSONException {
         Set<Long> expiryTimes = new HashSet<>();
 
-        for (List<Map<String, List<String>>> responseHeaders :
-                sourceRegistration.mUriToResponseHeadersMap.values()) {
+        for (List<Map<String, List<String>>> responseHeaders : responseHeadersCollection) {
             for (Map<String, List<String>> headersMap : responseHeaders) {
                 String sourceStr = headersMap.get("Attribution-Reporting-Register-Source").get(0);
                 JSONObject sourceJson = new JSONObject(sourceStr);
@@ -479,10 +567,11 @@ public abstract class E2ETest {
         return expiryTimes;
     }
 
-    private static void maybeAddReportingJobTimes(RegisterSource sourceRegistration,
-            Set<Long> reportingJobTimes) throws JSONException {
-        long sourceTime = sourceRegistration.mTimestamp;
-        Set<Long> expiryTimes = getExpiryTimesFrom(sourceRegistration);
+    private static Set<Action> maybeAddReportingJobTimes(
+            long sourceTime, Collection<List<Map<String, List<String>>>> responseHeaders)
+            throws JSONException {
+        Set<Action> reportingJobsActions = new HashSet<>();
+        Set<Long> expiryTimes = getExpiryTimesFrom(responseHeaders);
         for (Long expiry : expiryTimes) {
             long validExpiry = expiry;
             if (expiry > PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS) {
@@ -491,8 +580,10 @@ public abstract class E2ETest {
                 validExpiry = PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
             }
             long jobTime = sourceTime + 1000 * validExpiry + 3600000L;
-            reportingJobTimes.add(jobTime);
+            reportingJobsActions.add(new ReportingJob(jobTime));
         }
+
+        return reportingJobsActions;
     }
 
     /**
@@ -520,54 +611,108 @@ public abstract class E2ETest {
 
             // "Actions" are source or trigger registrations, or a reporting job.
             List<Action> actions = new ArrayList<>();
-            Set<Long> reportingJobTimes = new HashSet<>();
 
+            actions.addAll(createSourceBasedActions(input));
+            actions.addAll(createTriggerActions(input));
+            actions.addAll(createInstallActions(input));
+            actions.addAll(createUninstallActions(input));
+
+            actions.sort(Comparator.comparing(Action::getComparable));
+
+            ReportObjects expectedOutput = getExpectedOutput(output);
+
+            testCases.add(new Object[] {actions, expectedOutput, name});
+        }
+
+        return testCases;
+    }
+
+    private static List<Action> createSourceBasedActions(JSONObject input) throws JSONException {
+        List<Action> actions = new ArrayList<>();
+        // Set avoids duplicate reporting times across sources to do attribution upon.
+        Set<Action> reportingJobActions = new HashSet<>();
+        if (!input.isNull(TestFormatJsonMapping.SOURCE_REGISTRATIONS_KEY)) {
             JSONArray sourceRegistrationArray = input.getJSONArray(
                     TestFormatJsonMapping.SOURCE_REGISTRATIONS_KEY);
             for (int j = 0; j < sourceRegistrationArray.length(); j++) {
                 RegisterSource sourceRegistration =
                         new RegisterSource(sourceRegistrationArray.getJSONObject(j));
                 actions.add(sourceRegistration);
-                maybeAddReportingJobTimes(sourceRegistration, reportingJobTimes);
+                // Add corresponding reporting job time actions
+                reportingJobActions.addAll(
+                        maybeAddReportingJobTimes(
+                                sourceRegistration.mTimestamp,
+                                sourceRegistration.mUriToResponseHeadersMap.values()));
             }
+        }
 
-            for (Long reportingJobTime : reportingJobTimes) {
-                actions.add(new ReportingJob(reportingJobTime.longValue()));
+        if (!input.isNull(TestFormatJsonMapping.WEB_SOURCES_KEY)) {
+            JSONArray webSourceRegistrationArray =
+                    input.getJSONArray(TestFormatJsonMapping.WEB_SOURCES_KEY);
+            for (int j = 0; j < webSourceRegistrationArray.length(); j++) {
+                RegisterWebSource webSource =
+                        new RegisterWebSource(webSourceRegistrationArray.getJSONObject(j));
+                actions.add(webSource);
+                // Add corresponding reporting job time actions
+                reportingJobActions.addAll(
+                        maybeAddReportingJobTimes(
+                                webSource.mTimestamp, webSource.mUriToResponseHeadersMap.values()));
             }
+        }
 
-            JSONArray triggerRegistrationArray = input.getJSONArray(
-                    TestFormatJsonMapping.TRIGGER_REGISTRATIONS_KEY);
+        actions.addAll(reportingJobActions);
+        return actions;
+    }
+
+    private static List<Action> createTriggerActions(JSONObject input) throws JSONException {
+        List<Action> actions = new ArrayList<>();
+        if (!input.isNull(TestFormatJsonMapping.TRIGGER_KEY)) {
+            JSONArray triggerRegistrationArray =
+                    input.getJSONArray(TestFormatJsonMapping.TRIGGER_KEY);
             for (int j = 0; j < triggerRegistrationArray.length(); j++) {
                 RegisterTrigger triggerRegistration =
                         new RegisterTrigger(triggerRegistrationArray.getJSONObject(j));
                 actions.add(triggerRegistration);
             }
-
-            if (input.has(TestFormatJsonMapping.INSTALLS_KEY)) {
-                JSONArray installsArray = input.getJSONArray(TestFormatJsonMapping.INSTALLS_KEY);
-                for (int j = 0; j < installsArray.length(); j++) {
-                    InstallApp installApp = new InstallApp(installsArray.getJSONObject(j));
-                    actions.add(installApp);
-                }
-            }
-
-            if (input.has(TestFormatJsonMapping.UNINSTALLS_KEY)) {
-                JSONArray uninstallsArray =
-                        input.getJSONArray(TestFormatJsonMapping.UNINSTALLS_KEY);
-                for (int j = 0; j < uninstallsArray.length(); j++) {
-                    UninstallApp uninstallApp = new UninstallApp(uninstallsArray.getJSONObject(j));
-                    actions.add(uninstallApp);
-                }
-            }
-
-            actions.sort(Comparator.comparing(Action::getComparable));
-
-            ReportObjects expectedOutput = getExpectedOutput(output);
-
-            testCases.add(new Object[]{actions, expectedOutput, name});
         }
 
-        return testCases;
+        if (!input.isNull(TestFormatJsonMapping.WEB_TRIGGERS_KEY)) {
+            JSONArray webTriggerRegistrationArray =
+                    input.getJSONArray(TestFormatJsonMapping.WEB_TRIGGERS_KEY);
+            for (int j = 0; j < webTriggerRegistrationArray.length(); j++) {
+                RegisterWebTrigger webTrigger =
+                        new RegisterWebTrigger(webTriggerRegistrationArray.getJSONObject(j));
+                actions.add(webTrigger);
+            }
+        }
+
+        return actions;
+    }
+
+    private static List<Action> createInstallActions(JSONObject input) throws JSONException {
+        List<Action> actions = new ArrayList<>();
+        if (!input.isNull(TestFormatJsonMapping.INSTALLS_KEY)) {
+            JSONArray installsArray = input.getJSONArray(TestFormatJsonMapping.INSTALLS_KEY);
+            for (int j = 0; j < installsArray.length(); j++) {
+                InstallApp installApp = new InstallApp(installsArray.getJSONObject(j));
+                actions.add(installApp);
+            }
+        }
+
+        return actions;
+    }
+
+    private static List<Action> createUninstallActions(JSONObject input) throws JSONException {
+        List<Action> actions = new ArrayList<>();
+        if (!input.isNull(TestFormatJsonMapping.UNINSTALLS_KEY)) {
+            JSONArray uninstallsArray = input.getJSONArray(TestFormatJsonMapping.UNINSTALLS_KEY);
+            for (int j = 0; j < uninstallsArray.length(); j++) {
+                UninstallApp uninstallApp = new UninstallApp(uninstallsArray.getJSONObject(j));
+                actions.add(uninstallApp);
+            }
+        }
+
+        return actions;
     }
 
     private static ReportObjects getExpectedOutput(JSONObject output) throws JSONException {
@@ -590,40 +735,77 @@ public abstract class E2ETest {
         return new ReportObjects(eventReportObjects, aggregateReportObjects);
     }
 
+    private static void seedEnrollment() {
+        sEnrollmentDao.insert(AD_TECH_1);
+        sEnrollmentDao.insert(AD_TECH_2);
+        sEnrollmentDao.insert(AD_TECH_3);
+    }
+
+    private static void unseedEnrollment() {
+        sEnrollmentDao.delete(AD_TECH_1.getEnrollmentId());
+        sEnrollmentDao.delete(AD_TECH_2.getEnrollmentId());
+        sEnrollmentDao.delete(AD_TECH_3.getEnrollmentId());
+    }
+
     /**
      * Empties measurement database tables, used for test cleanup.
      */
     private static void emptyTables(SQLiteDatabase db) {
         db.delete("msmt_source", null, null);
         db.delete("msmt_trigger", null, null);
-        db.delete("msmt_adtech_urls", null, null);
         db.delete("msmt_event_report", null, null);
-        db.delete("msmt_attribution_rate_limit", null, null);
+        db.delete("msmt_attribution", null, null);
         db.delete("msmt_aggregate_report", null, null);
     }
 
     void processAction(RegisterSource sourceRegistration) throws IOException {
         prepareRegistrationServer(sourceRegistration);
-        Assert.assertTrue("MeasurementImpl.register source failed",
-                mMeasurementImpl.register(sourceRegistration.mRegistrationRequest,
-                    sourceRegistration.mTimestamp) == IMeasurementCallback.RESULT_OK);
+        Assert.assertEquals(
+                "MeasurementImpl.register source failed",
+                RESULT_OK,
+                mMeasurementImpl.register(
+                        sourceRegistration.mRegistrationRequest, sourceRegistration.mTimestamp));
+    }
+
+    void processAction(RegisterWebSource sourceRegistration) throws IOException {
+        prepareRegistrationServer(sourceRegistration);
+        Assert.assertEquals(
+                "MeasurementImpl.registerWebSource failed",
+                RESULT_OK,
+                mMeasurementImpl.registerWebSource(
+                        sourceRegistration.mRegistrationRequest, sourceRegistration.mTimestamp));
+    }
+
+    void processAction(RegisterWebTrigger triggerRegistration) throws IOException {
+        prepareRegistrationServer(triggerRegistration);
+        Assert.assertEquals(
+                "MeasurementImpl.registerWebTrigger failed",
+                RESULT_OK,
+                mMeasurementImpl.registerWebTrigger(
+                        triggerRegistration.mRegistrationRequest, triggerRegistration.mTimestamp));
+        Assert.assertTrue(
+                "AttributionJobHandler.performPendingAttributions returned false",
+                mAttributionHelper.performPendingAttributions());
     }
 
     void processAction(RegisterTrigger triggerRegistration) throws IOException {
         prepareRegistrationServer(triggerRegistration);
-        Assert.assertTrue("MeasurementImpl.register trigger failed",
-                mMeasurementImpl.register(triggerRegistration.mRegistrationRequest,
-                    triggerRegistration.mTimestamp) == IMeasurementCallback.RESULT_OK);
+        Assert.assertEquals(
+                "MeasurementImpl.register trigger failed",
+                RESULT_OK,
+                mMeasurementImpl.register(
+                        triggerRegistration.mRegistrationRequest, triggerRegistration.mTimestamp));
         Assert.assertTrue("AttributionJobHandler.performPendingAttributions returned false",
                 mAttributionHelper.performPendingAttributions());
     }
 
     void processAction(InstallApp installApp) {
-        Assert.assertTrue("measurementDao.doInstallAttribution failed",
+        Assert.assertTrue(
+                "measurementDao.doInstallAttribution failed",
                 sDatastoreManager.runInTransaction(
-                    measurementDao -> {
-                        measurementDao.doInstallAttribution(installApp.mUri, installApp.mTimestamp);
-                    }));
+                        measurementDao ->
+                                measurementDao.doInstallAttribution(
+                                        installApp.mUri, installApp.mTimestamp)));
     }
 
     void processAction(UninstallApp uninstallApp) {
