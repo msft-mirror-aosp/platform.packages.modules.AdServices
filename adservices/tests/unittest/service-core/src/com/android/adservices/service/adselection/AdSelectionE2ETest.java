@@ -183,7 +183,8 @@ public class AdSelectionE2ETest {
 
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final String MY_APP_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
-    @Spy private final AdServicesLogger mAdServicesLoggerSpy = AdServicesLoggerImpl.getInstance();
+    private final AdServicesLogger mAdServicesLoggerMock =
+            ExtendedMockito.mock(AdServicesLoggerImpl.class);
     private final Flags mFlags = new AdSelectionE2ETestFlags();
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
     // Mocking DevContextFilter to test behavior with and without override api authorization
@@ -192,13 +193,13 @@ public class AdSelectionE2ETest {
 
     @Spy
     FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
-            new FledgeAllowListsFilter(mFlags, mAdServicesLoggerSpy);
+            new FledgeAllowListsFilter(mFlags, mAdServicesLoggerMock);
 
     private Context mContext = ApplicationProvider.getApplicationContext();
 
     @Spy
     FledgeAuthorizationFilter mFledgeAuthorizationFilterSpy =
-            FledgeAuthorizationFilter.create(mContext, mAdServicesLoggerSpy);
+            FledgeAuthorizationFilter.create(mContext, mAdServicesLoggerMock);
 
     @Mock private ConsentManager mConsentManagerMock;
     private MockitoSession mStaticMockSession = null;
@@ -256,7 +257,7 @@ public class AdSelectionE2ETest {
                         mScheduledExecutor,
                         mContext,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -328,7 +329,7 @@ public class AdSelectionE2ETest {
                             loggerLatch.countDown();
                             return null;
                         })
-                .when(mAdServicesLoggerSpy)
+                .when(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
 
         mMockWebServerRule.startMockWebServer(mDispatcher);
@@ -365,7 +366,7 @@ public class AdSelectionE2ETest {
                 AD_URI_PREFIX + BUYER_2 + "/ad3",
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(STATUS_SUCCESS),
@@ -384,7 +385,7 @@ public class AdSelectionE2ETest {
                             loggerLatch.countDown();
                             return null;
                         })
-                .when(mAdServicesLoggerSpy)
+                .when(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
 
         mMockWebServerRule.startMockWebServer(mDispatcher);
@@ -420,7 +421,7 @@ public class AdSelectionE2ETest {
                 Uri.EMPTY.toString(),
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(STATUS_USER_CONSENT_REVOKED),
@@ -568,7 +569,7 @@ public class AdSelectionE2ETest {
                         mScheduledExecutor,
                         mContext,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1262,7 +1263,7 @@ public class AdSelectionE2ETest {
                         mScheduledExecutor,
                         mContext,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         flagsWithSmallerLimits,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1384,7 +1385,7 @@ public class AdSelectionE2ETest {
                         mScheduledExecutor,
                         mContext,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         flagsWithSmallerLimits,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1485,7 +1486,7 @@ public class AdSelectionE2ETest {
                             loggerLatch.countDown();
                             return null;
                         })
-                .when(mAdServicesLoggerSpy)
+                .when(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
 
         AdSelectionConfig invalidAdSelectionConfig =
@@ -1509,7 +1510,7 @@ public class AdSelectionE2ETest {
         assertEquals(
                 "Error response code mismatch", STATUS_INVALID_ARGUMENT, response.getStatusCode());
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(STATUS_INVALID_ARGUMENT),
@@ -1716,7 +1717,7 @@ public class AdSelectionE2ETest {
                             loggerLatch.countDown();
                             return null;
                         })
-                .when(mAdServicesLoggerSpy)
+                .when(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
 
         mMockWebServerRule.startMockWebServer(mDispatcher);
@@ -1762,7 +1763,7 @@ public class AdSelectionE2ETest {
                                 .SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE));
 
         // TODO(b/242139312): Remove atLeastOnce once this the double logging is addressed
-        verify(mAdServicesLoggerSpy, Mockito.atLeastOnce())
+        verify(mAdServicesLoggerMock, Mockito.atLeastOnce())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(STATUS_UNAUTHORIZED),
@@ -1792,7 +1793,7 @@ public class AdSelectionE2ETest {
                             loggerLatch.countDown();
                             return null;
                         })
-                .when(mAdServicesLoggerSpy)
+                .when(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
 
         mMockWebServerRule.startMockWebServer(mDispatcher);
@@ -1837,7 +1838,7 @@ public class AdSelectionE2ETest {
                         AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE));
 
         // TODO(b/242139312): Remove atLeastOnce once this the double logging is addressed
-        verify(mAdServicesLoggerSpy, Mockito.atLeastOnce())
+        verify(mAdServicesLoggerMock, Mockito.atLeastOnce())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(STATUS_CALLER_NOT_ALLOWED),
@@ -1870,7 +1871,7 @@ public class AdSelectionE2ETest {
                         mScheduledExecutor,
                         mContext,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         flagsWithEnrollmentCheckEnabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1883,7 +1884,7 @@ public class AdSelectionE2ETest {
                             loggerLatch.countDown();
                             return null;
                         })
-                .when(mAdServicesLoggerSpy)
+                .when(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
 
         mMockWebServerRule.startMockWebServer(mDispatcher);
@@ -1928,7 +1929,7 @@ public class AdSelectionE2ETest {
                         AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE));
 
         // TODO(b/242139312): Remove atLeastOnce once this the double logging is addressed
-        verify(mAdServicesLoggerSpy, Mockito.atLeastOnce())
+        verify(mAdServicesLoggerMock, Mockito.atLeastOnce())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(STATUS_CALLER_NOT_ALLOWED),
@@ -1987,7 +1988,7 @@ public class AdSelectionE2ETest {
                         mScheduledExecutor,
                         mContext,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         throttlingFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -2000,7 +2001,7 @@ public class AdSelectionE2ETest {
                             loggerLatch.countDown();
                             return null;
                         })
-                .when(mAdServicesLoggerSpy)
+                .when(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
 
         mMockWebServerRule.startMockWebServer(mDispatcher);
@@ -2104,7 +2105,7 @@ public class AdSelectionE2ETest {
                         mScheduledExecutor,
                         mContext,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         flagsWithEnrollmentCheckEnabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -2117,7 +2118,7 @@ public class AdSelectionE2ETest {
                             loggerLatch.countDown();
                             return null;
                         })
-                .when(mAdServicesLoggerSpy)
+                .when(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
 
         mMockWebServerRule.startMockWebServer(mDispatcher);
@@ -2154,7 +2155,7 @@ public class AdSelectionE2ETest {
                 AD_URI_PREFIX + BUYER_2 + "/ad3",
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(STATUS_SUCCESS),
@@ -2174,7 +2175,7 @@ public class AdSelectionE2ETest {
                             loggerLatch.countDown();
                             return null;
                         })
-                .when(mAdServicesLoggerSpy)
+                .when(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
 
         // Instantiate a latch that counts down when the dao clears data
@@ -2260,7 +2261,7 @@ public class AdSelectionE2ETest {
                 AD_URI_PREFIX + BUYER_2 + "/ad3",
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(STATUS_SUCCESS),
@@ -2286,7 +2287,7 @@ public class AdSelectionE2ETest {
                             loggerLatch.countDown();
                             return null;
                         })
-                .when(mAdServicesLoggerSpy)
+                .when(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
 
         // Instantiate a latch that counts down when the dao clears data
@@ -2364,7 +2365,7 @@ public class AdSelectionE2ETest {
                 AD_URI_PREFIX + BUYER_2 + "/ad3",
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(STATUS_SUCCESS),
@@ -2436,7 +2437,7 @@ public class AdSelectionE2ETest {
                         mScheduledExecutor,
                         mContext,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         flagsWithEnrollmentCheckEnabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -2449,7 +2450,7 @@ public class AdSelectionE2ETest {
                             loggerLatch.countDown();
                             return null;
                         })
-                .when(mAdServicesLoggerSpy)
+                .when(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
 
         // Instantiate a latch that counts down when the dao clears data
@@ -2512,7 +2513,7 @@ public class AdSelectionE2ETest {
                         AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE));
 
         // TODO(b/242139312): Remove atLeastOnce once this the double logging is addressed
-        verify(mAdServicesLoggerSpy, Mockito.atLeastOnce())
+        verify(mAdServicesLoggerMock, Mockito.atLeastOnce())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(STATUS_CALLER_NOT_ALLOWED),
