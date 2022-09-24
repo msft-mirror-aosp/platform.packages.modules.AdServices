@@ -25,8 +25,11 @@ import javax.annotation.concurrent.ThreadSafe;
 @ThreadSafe
 public class AdServicesLoggerImpl implements AdServicesLogger {
     private static volatile AdServicesLoggerImpl sAdServicesLogger;
+    private final StatsdAdServicesLogger mStatsdAdServicesLogger;
 
-    private AdServicesLoggerImpl() {}
+    private AdServicesLoggerImpl() {
+        mStatsdAdServicesLogger = StatsdAdServicesLogger.getInstance();
+    }
 
     /** Returns an instance of AdServicesLogger. */
     public static AdServicesLoggerImpl getInstance() {
@@ -42,17 +45,17 @@ public class AdServicesLoggerImpl implements AdServicesLogger {
 
     @Override
     public void logMeasurementReports(MeasurementReportsStats measurementReportsStats) {
-        StatsdAdServicesLogger.getInstance().logMeasurementReports(measurementReportsStats);
+        mStatsdAdServicesLogger.logMeasurementReports(measurementReportsStats);
     }
 
     @Override
     public void logApiCallStats(ApiCallStats apiCallStats) {
-        StatsdAdServicesLogger.getInstance().logApiCallStats(apiCallStats);
+        mStatsdAdServicesLogger.logApiCallStats(apiCallStats);
     }
 
     @Override
     public void logUIStats(UIStats uiStats) {
-        StatsdAdServicesLogger.getInstance().logUIStats(uiStats);
+        mStatsdAdServicesLogger.logUIStats(uiStats);
     }
 
     @Override
@@ -73,6 +76,6 @@ public class AdServicesLoggerImpl implements AdServicesLogger {
     @Override
     public void logMeasurementRegistrationsResponseSize(
             MeasurementRegistrationResponseStats stats) {
-        StatsdAdServicesLogger.getInstance().logMeasurementRegistrationsResponseSize(stats);
+        mStatsdAdServicesLogger.logMeasurementRegistrationsResponseSize(stats);
     }
 }
