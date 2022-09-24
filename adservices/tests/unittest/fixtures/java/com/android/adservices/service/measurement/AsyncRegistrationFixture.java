@@ -34,7 +34,7 @@ public class AsyncRegistrationFixture {
                 .setRegistrant(ValidAsyncRegistrationParams.REGISTRANT)
                 .setTopOrigin(ValidAsyncRegistrationParams.TOP_ORIGIN)
                 .setRedirect(ValidAsyncRegistrationParams.REDIRECT)
-                .setSourceType(ValidAsyncRegistrationParams.SOURCE_TYPE.ordinal())
+                .setSourceType(ValidAsyncRegistrationParams.SOURCE_TYPE)
                 .setRequestTime(System.currentTimeMillis())
                 .setRetryCount(ValidAsyncRegistrationParams.RETRY_COUNT)
                 .setLastProcessingTime(System.currentTimeMillis())
