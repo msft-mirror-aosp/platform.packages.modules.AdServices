@@ -62,7 +62,13 @@ public class Throttler {
         FLEDGE_API_LEAVE_CUSTOM_AUDIENCE,
 
         // Key to throttle Report impressions API
-        FLEDGE_API_REPORT_IMPRESSIONS
+        FLEDGE_API_REPORT_IMPRESSIONS,
+
+        // Key to throttle AdId API, based on app package name.
+        ADID_API_APP_PACKAGE_NAME,
+
+        // Key to throttle AppSetId API, based on app package name.
+        APPSETID_API_APP_PACKAGE_NAME,
     }
 
     private static volatile Throttler sSingleton;

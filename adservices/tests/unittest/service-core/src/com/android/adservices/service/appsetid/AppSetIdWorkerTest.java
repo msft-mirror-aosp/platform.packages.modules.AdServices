@@ -48,7 +48,7 @@ public class AppSetIdWorkerTest {
         AppSetIdWorker spyWorker =
                 Mockito.spy(
                         AppSetIdWorker.getInstance(ApplicationProvider.getApplicationContext()));
-        Mockito.when(spyWorker.getService()).thenReturn(mInterface);
+        Mockito.doReturn(mInterface).when(spyWorker).getService();
 
         spyWorker.getAppSetId(
                 "testPackageName",
@@ -80,7 +80,7 @@ public class AppSetIdWorkerTest {
         AppSetIdWorker spyWorker =
                 Mockito.spy(
                         AppSetIdWorker.getInstance(ApplicationProvider.getApplicationContext()));
-        Mockito.when(spyWorker.getService()).thenReturn(mInterface);
+        Mockito.doReturn(mInterface).when(spyWorker).getService();
 
         spyWorker.getAppSetId(
                 "testPackageName",

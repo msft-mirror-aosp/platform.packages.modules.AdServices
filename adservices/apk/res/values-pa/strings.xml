@@ -47,7 +47,8 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"ਭਾਗ ਲੈਣ ਦਾ ਤਰੀਕਾ"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"ਬੀਟਾ ਨੂੰ ਚਾਲੂ ਕਰਨ ਨਾਲ ਐਪਾਂ ਨੂੰ ਤੁਹਾਨੂੰ ਵਿਗਿਆਪਨ ਦਿਖਾਉਣ ਲਈ ਇਨ੍ਹਾਂ ਨਵੇਂ, ਹੋਰ ਜ਼ਿਆਦਾ ਨਿੱਜੀ ਤਰੀਕਿਆਂ ਦੀ ਜਾਂਚ ਕਰਨ ਦੀ ਆਗਿਆ ਮਿਲਦੀ ਹੈ। ਤੁਸੀਂ ਆਪਣੀਆਂ ਪਰਦੇਦਾਰੀ ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਜਾ ਕੇ ਕਿਸੇ ਵੇਲੇ ਵੀ ਬੀਟਾ ਨੂੰ ਬੰਦ ਕਰ ਸਕਦੇ ਹੋ।"</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"ਨਹੀਂ ਧੰਨਵਾਦ"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"ਹਾਂ, ਮੈਂ ਸ਼ਾਮਲ ਹੋਣ ਲਈ ਤਿਆਰ ਹਾਂ"</string>
+    <!-- no translation found for notificationUI_right_control_button_text_eu (8484787286437052150) -->
+    <skip />
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"ਭਾਗੀਦਾਰੀ ਲਈ ਤੁਹਾਡਾ ਧੰਨਵਾਦ"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"ਤੁਸੀਂ Android ਦੇ ਵਿਗਿਆਪਨ ਪਰਦੇਦਾਰੀ ਸੰਬੰਧੀ ਬੀਟਾ ਵਰਜਨ ਦਾ ਹਿੱਸਾ ਹੋ। ਪ੍ਰਾਈਵੇਸੀ ਸੈਂਡਬਾਕਸ ਨੂੰ ਤੁਹਾਡੇ ਡੀਵਾਈਸ ਲਈ ਚਾਲੂ ਕੀਤਾ ਗਿਆ ਹੈ।\n\nਤੁਸੀਂ ਆਪਣੀਆਂ ਪਰਦੇਦਾਰੀ ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਜਾ ਕੇ ਹੋਰ ਜਾਣ ਸਕਦੇ ਹੋ ਜਾਂ ਕਿਸੇ ਵੀ ਸਮੇਂ ਬੀਟਾ ਨੂੰ ਬੰਦ ਕਰ ਸਕਦੇ ਹੋ।"</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"ਤੁਸੀਂ ਭਾਗੀਦਾਰੀ ਨਾ ਕਰਨ ਦੀ ਚੋਣ ਕੀਤੀ ਹੈ"</string>

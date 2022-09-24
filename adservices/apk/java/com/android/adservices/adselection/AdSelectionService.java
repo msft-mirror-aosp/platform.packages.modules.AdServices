@@ -25,6 +25,7 @@ import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdSelectionServiceImpl;
+import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.ConsentManager;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -61,6 +62,7 @@ public class AdSelectionService extends Service {
         }
 
         if (hasUserConsent()) {
+            PackageChangedReceiver.enableReceiver(this);
             MddJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
         }
     }

@@ -47,7 +47,8 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"සහභාගී වන ආකාරය"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"බීටා ක්‍රියාත්මක කිරීම යෙදුම්වලට ඔබට වෙළඳ දැන්වීම් පෙන්විය හැකි මෙම නව වඩා පෞද්ගලික ක්‍රම පරීක්ෂා කිරීමට ඉඩ සලසයි. ඔබට ඕනෑම මොහොතක ඔබේ පෞද්ගලිකත්ව සැකසීම් වෙතින් බීටා ක්‍රියා විරහිත කළ හැක."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"එපා ස්තුතියි"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"ඔව්, මම එක් වෙමි"</string>
+    <!-- no translation found for notificationUI_right_control_button_text_eu (8484787286437052150) -->
+    <skip />
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"සහභාගී වීම වෙනුවෙන් ඔබට ස්තුතියි"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"ඔබ Android වෙළෙඳ දැන්වීම් පෞද්ගලිකත්ව බීටාවල කොටසකි. ඔබේ උපාංගය සඳහා පෞද්ගලිකත්ව වැලිපෙට්ටිය සක්‍රීයයි.\n\nඔබට ඕනෑම මොහොතක ඔබේ පෞද්ගලිකත්ව සැකසීම් වෙතින් වැඩි විස්තර දැන ගැනීමට හෝ බීටා අක්‍රිය කළ හැක."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"ඔබ සහභාගී නොවීමට තෝරා ගෙන ඇත"</string>

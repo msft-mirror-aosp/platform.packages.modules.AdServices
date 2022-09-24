@@ -47,7 +47,8 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"સહભાગી બનવાની રીત"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"બીટા વર્ઝન ચાલુ કરવાથી, ઍપને જાહેરાતો બતાવવા માટે, આ નવી વધુ ખાનગી રીતોનું પરીક્ષણ કરવાની મંજૂરી મળે છે. તમે તમારા પ્રાઇવસી સેટિંગમાં જઈને કોઈપણ સમયે બીટા વર્ઝન બંધ કરી શકો છો."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"ના, આભાર"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"હા, હું જોડાઈશ"</string>
+    <!-- no translation found for notificationUI_right_control_button_text_eu (8484787286437052150) -->
+    <skip />
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"સહભાગિતા બદલ આપનો આભાર"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"તમે Androidની જાહેરાતો સંબંધિત પ્રાઇવસીનું બીટા વર્ઝનનો ભાગ છો. તમારા ડિવાઇસ માટે પ્રાઇવસી સૅન્ડબૉક્સ ચાલુ કરવામાં આવ્યું છે.\n\nતમે તમારા પ્રાઇવસી સેટિંગમાં જઈને કોઈપણ સમયે વધુ જાણી શકો છો અથવા બીટા વર્ઝન બંધ કરી શકો છો."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"તમે ભાગ ન લેવાનું પસંદ કર્યું"</string>
