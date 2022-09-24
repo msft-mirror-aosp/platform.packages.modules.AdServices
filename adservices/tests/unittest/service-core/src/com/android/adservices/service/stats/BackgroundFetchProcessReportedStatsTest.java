@@ -24,9 +24,9 @@ import org.junit.Test;
 
 /** Unit tests for {@link BackgroundFetchProcessReportedStats}. */
 public class BackgroundFetchProcessReportedStatsTest {
-    private static final int LATENCY_IN_MILLIS = 10;
-    private static final int NUM_OF_ELIGIBLE_TO_UPDATE_CAS = 5;
-    private static final int RESULT_CODE =
+    static final int LATENCY_IN_MILLIS = 10;
+    static final int NUM_OF_ELIGIBLE_TO_UPDATE_CAS = 5;
+    static final int RESULT_CODE =
             BACKGROUND_FETCH_PROCESS_REPORTED__RESULT_CODE__BACKGROUND_FETCH_SUCCESS;
 
     @Test

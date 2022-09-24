@@ -28,25 +28,25 @@ import org.junit.Test;
 
 /** Unit tests for {@link RunAdScoringProcessReportedStats}. */
 public class RunAdScoringProcessReportedStatsTest {
-    private static final int GET_AD_SELECTION_LOGIC_LATENCY_IN_MILLIS = 10;
-    private static final int FETCHED_AD_SELECTION_LOGIC_SCRIPT_SIZE_IN_BYTES = 20;
-    private static final int GET_TRUSTED_SCORING_SIGNALS_LATENCY_IN_MILLIS = 10;
-    private static final int FETCHED_TRUSTED_SCORING_SIGNALS_DATA_SIZE_IN_BYTES = 10;
-    private static final int SCORE_ADS_LATENCY_IN_MILLIS = 5;
-    private static final int GET_AD_SCORES_LATENCY_IN_MILLIS = 5;
-    private static final int GET_AD_SELECTION_LOGIC_RESULT_CODE =
+    static final int GET_AD_SELECTION_LOGIC_LATENCY_IN_MILLIS = 10;
+    static final int FETCHED_AD_SELECTION_LOGIC_SCRIPT_SIZE_IN_BYTES = 20;
+    static final int GET_TRUSTED_SCORING_SIGNALS_LATENCY_IN_MILLIS = 10;
+    static final int FETCHED_TRUSTED_SCORING_SIGNALS_DATA_SIZE_IN_BYTES = 10;
+    static final int SCORE_ADS_LATENCY_IN_MILLIS = 5;
+    static final int GET_AD_SCORES_LATENCY_IN_MILLIS = 5;
+    static final int GET_AD_SELECTION_LOGIC_RESULT_CODE =
             RUN_AD_SCORING_PROCESS_REPORTED__GET_AD_SELECTION_LOGIC_RESULT_CODE__RUN_AD_SELECTION_STATUS_SUCCESS;
-    private static final int GET_AD_SCORES_RESULT_CODE =
+    static final int GET_AD_SCORES_RESULT_CODE =
             RUN_AD_SCORING_PROCESS_REPORTED__GET_AD_SCORES_RESULT_CODE__RUN_AD_SELECTION_STATUS_SUCCESS;
-    private static final int GET_TRUSTED_SCORING_SIGNALS_RESULT_CODE =
+    static final int GET_TRUSTED_SCORING_SIGNALS_RESULT_CODE =
             RUN_AD_SCORING_PROCESS_REPORTED__GET_TRUSTED_SCORING_SIGNALS_RESULT_CODE__RUN_AD_SELECTION_STATUS_SUCCESS;
-    private static final int NUM_OF_CAS_ENTERING_SCORING = 5;
-    private static final int NUM_OF_REMARKETING_ADS_ENTERING_SCORING = 6;
-    private static final int NUM_OF_CONTEXTUAL_ADS_ENTERING_SCORING = 0;
-    private static final int RUN_AD_SCORING_LATENCY_IN_MILLIS = 10;
-    private static final int RUN_AD_SCORING_RESULT_CODE =
+    static final int NUM_OF_CAS_ENTERING_SCORING = 5;
+    static final int NUM_OF_REMARKETING_ADS_ENTERING_SCORING = 6;
+    static final int NUM_OF_CONTEXTUAL_ADS_ENTERING_SCORING = 0;
+    static final int RUN_AD_SCORING_LATENCY_IN_MILLIS = 10;
+    static final int RUN_AD_SCORING_RESULT_CODE =
             RUN_AD_SCORING_PROCESS_REPORTED__RUN_AD_SCORING_RESULT_CODE__RUN_AD_SELECTION_STATUS_SUCCESS;
-    private static final int GET_AD_SELECTION_LOGIC_SCRIPT_TYPE =
+    static final int GET_AD_SELECTION_LOGIC_SCRIPT_TYPE =
             RUN_AD_SCORING_PROCESS_REPORTED__GET_AD_SELECTION_LOGIC_SCRIPT_TYPE__JAVASCRIPT;
 
     @Test
