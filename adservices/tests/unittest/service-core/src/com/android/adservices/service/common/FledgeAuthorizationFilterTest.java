@@ -16,7 +16,12 @@
 
 package com.android.adservices.service.common;
 
-import static com.android.adservices.stats.FledgeApiCallStatsMatcher.aCallStatForFledgeApiWithStatus;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
+
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyNoMoreInteractions;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyZeroInteractions;
@@ -120,12 +125,7 @@ public class FledgeAuthorizationFilterTest {
                 exception.getMessage());
         verify(mPackageManager).getPackagesForUid(UID);
         verify(mAdServicesLoggerSpy)
-                .logFledgeApiCallStats(
-                        API_NAME_LOGGING_ID, AdServicesStatusUtils.STATUS_UNAUTHORIZED);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                API_NAME_LOGGING_ID, AdServicesStatusUtils.STATUS_UNAUTHORIZED));
+                .logFledgeApiCallStats(eq(API_NAME_LOGGING_ID), eq(STATUS_UNAUTHORIZED), anyInt());
         verifyNoMoreInteractions(mPackageManager, mAdServicesLoggerSpy, mEnrollmentDao);
     }
 
@@ -145,12 +145,7 @@ public class FledgeAuthorizationFilterTest {
                 exception.getMessage());
         verify(mPackageManager).getPackagesForUid(UID);
         verify(mAdServicesLoggerSpy)
-                .logFledgeApiCallStats(
-                        API_NAME_LOGGING_ID, AdServicesStatusUtils.STATUS_UNAUTHORIZED);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                API_NAME_LOGGING_ID, AdServicesStatusUtils.STATUS_UNAUTHORIZED));
+                .logFledgeApiCallStats(eq(API_NAME_LOGGING_ID), eq(STATUS_UNAUTHORIZED), anyInt());
         verifyNoMoreInteractions(mPackageManager, mEnrollmentDao, mAdServicesLoggerSpy);
     }
 
@@ -177,12 +172,7 @@ public class FledgeAuthorizationFilterTest {
                 exception.getMessage());
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        API_NAME_LOGGING_ID, AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                API_NAME_LOGGING_ID,
-                                AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED));
+                        eq(API_NAME_LOGGING_ID), eq(STATUS_PERMISSION_NOT_REQUESTED), anyInt());
         verifyNoMoreInteractions(mAdServicesLoggerSpy);
         verifyZeroInteractions(mPackageManager, mEnrollmentDao);
     }
@@ -236,12 +226,7 @@ public class FledgeAuthorizationFilterTest {
                 .getEnrollmentDataForFledgeByAdTechIdentifier(CommonFixture.VALID_BUYER_1);
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        API_NAME_LOGGING_ID, AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                API_NAME_LOGGING_ID,
-                                AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED));
+                        eq(API_NAME_LOGGING_ID), eq(STATUS_CALLER_NOT_ALLOWED), anyInt());
         verifyNoMoreInteractions(mEnrollmentDao, mAdServicesLoggerSpy);
         verifyZeroInteractions(mPackageManager);
     }
@@ -272,12 +257,7 @@ public class FledgeAuthorizationFilterTest {
                 .getEnrollmentDataForFledgeByAdTechIdentifier(CommonFixture.VALID_BUYER_1);
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        API_NAME_LOGGING_ID, AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                API_NAME_LOGGING_ID,
-                                AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED));
+                        eq(API_NAME_LOGGING_ID), eq(STATUS_CALLER_NOT_ALLOWED), anyInt());
         verifyNoMoreInteractions(mEnrollmentDao, mAdServicesLoggerSpy);
         verifyZeroInteractions(mPackageManager);
     }

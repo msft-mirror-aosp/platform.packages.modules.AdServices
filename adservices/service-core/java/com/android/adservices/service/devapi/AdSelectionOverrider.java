@@ -295,7 +295,7 @@ public class AdSelectionOverrider {
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
             throw e.rethrowFromSystemServer();
         } finally {
-            mAdServicesLogger.logFledgeApiCallStats(apiName, resultCode);
+            mAdServicesLogger.logFledgeApiCallStats(apiName, resultCode, 0);
         }
     }
 
@@ -313,7 +313,7 @@ public class AdSelectionOverrider {
             resultCodeInt = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
             throw e.rethrowFromSystemServer();
         } finally {
-            mAdServicesLogger.logFledgeApiCallStats(apiName, resultCodeInt);
+            mAdServicesLogger.logFledgeApiCallStats(apiName, resultCodeInt, 0);
         }
     }
 

@@ -36,7 +36,6 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES;
-import static com.android.adservices.stats.FledgeApiCallStatsMatcher.aCallStatForFledgeApiWithStatus;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyString;
@@ -1591,9 +1590,7 @@ public class CustomAudienceServiceImplTest {
     }
 
     private void verifyLoggerSpy(int apiName, int statusCode) {
-        verify(mAdServicesLoggerSpy).logFledgeApiCallStats(apiName, statusCode);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(aCallStatForFledgeApiWithStatus(apiName, statusCode));
+        verify(mAdServicesLoggerSpy).logFledgeApiCallStats(eq(apiName), eq(statusCode), anyInt());
     }
 
     private static class FlagsWithCheckEnabledSwitch implements Flags {

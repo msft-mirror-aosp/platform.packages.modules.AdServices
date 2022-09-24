@@ -16,9 +16,6 @@
 
 package com.android.adservices.service.stats;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__FLEDGE;
-
 import com.android.internal.annotations.VisibleForTesting;
 
 import javax.annotation.concurrent.ThreadSafe;
@@ -66,18 +63,8 @@ public class AdServicesLoggerImpl implements AdServicesLogger {
     }
 
     @Override
-    public void logFledgeApiCallStats(int apiName, int resultCode) {
-        // TODO(b/233628316): Implement latency measurement
-        logApiCallStats(
-                new ApiCallStats.Builder()
-                        .setCode(AD_SERVICES_API_CALLED)
-                        .setApiClass(AD_SERVICES_API_CALLED__API_CLASS__FLEDGE)
-                        .setApiName(apiName)
-                        .setResultCode(resultCode)
-                        // TODO(b/233629557): Implement app/SDK reporting
-                        .setSdkPackageName("")
-                        .setAppPackageName("")
-                        .build());
+    public void logFledgeApiCallStats(int apiName, int resultCode, int latencyMs) {
+        mStatsdAdServicesLogger.logFledgeApiCallStats(apiName, resultCode, latencyMs);
     }
 
     @Override
