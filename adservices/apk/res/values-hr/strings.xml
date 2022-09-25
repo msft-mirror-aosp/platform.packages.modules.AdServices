@@ -47,7 +47,7 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Način sudjelovanja"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Uključivanje beta verzije aplikacijama omogućuje ispitivanje novih, privatnijih načina za prikazivanje oglasa. Beta verziju uvijek možete isključiti u postavkama privatnosti."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Ne, hvala"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"U redu"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Uključi"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Hvala na sudjelovanju."</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Dio ste Androidove beta verzije privatnosti za oglase. Uključen je Privacy Sandbox za vaš uređaj.\n\nMožete saznati više ili isključiti beta verziju u postavkama privatnosti."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Odlučili ste da nećete sudjelovati"</string>
