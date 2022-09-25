@@ -47,7 +47,7 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"ఎలా పాల్గొనాలి"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"బీటాను ఆన్ చేయడం వలన మీకు యాడ్‌లను చూపించడానికి ఈ కొత్త మరిన్ని ప్రైవేట్ మార్గాలను పరీక్షించడానికి యాప్‌లను అనుమతిస్తుంది. మీరు మీ గోప్యతా సెట్టింగ్‌లలో ఎప్పుడైనా బీటాను ఆఫ్ చేయవచ్చు."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"వద్దు"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"అవును, నేను చేరతాను"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"ఆన్ చేయండి"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"మీరు పాల్గొన్నందుకు థ్యాంక్స్"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"మీరు Android యాడ్‌ల గోప్యతా బీటాలో భాగం. మీ పరికరం కోసం గోప్యతా పరిరక్షణ టెక్నాలజీల సెట్ ఆన్ చేయబడింది.\n\nమీరు మీ గోప్యతా సెట్టింగ్‌లలో ఎప్పుడైనా మరింత సమాచారం తెలుసుకోవచ్చు లేదా బీటాను ఆఫ్ చేయవచ్చు."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"మీరు పాల్గొనకూడదని ఎంచుకున్నారు"</string>
