@@ -47,8 +47,7 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Si të marrësh pjesë"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Aktivizimi i versionit beta i lejon aplikacionet të testojnë këto mënyra të reja më private për të të shfaqur reklama. Mund ta çaktivizosh versionin beta në çdo kohë te cilësimet e privatësisë."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Jo, faleminderit"</string>
-    <!-- no translation found for notificationUI_right_control_button_text_eu (8484787286437052150) -->
-    <skip />
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Aktivizo"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Faleminderit për pjesëmarrjen"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Je pjesë e versionit beta të Android për privatësinë e reklamave. Privacy Sandbox është aktivizuar për pajisjen tënde.\n\nMund të mësosh më shumë ose mund ta çaktivizosh versionin beta në çdo kohë te cilësimet e privatësisë."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Ke zgjedhur të mos marrësh pjesë"</string>
