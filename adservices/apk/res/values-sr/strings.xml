@@ -47,7 +47,7 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Како се учествује"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Укључивање бета верзије омогућава апликацијама да тестирају ове нове приватније начине за приказивање огласа. Увек можете да искључите бета верзију у подешавањима приватности."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Не, хвала"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"Да, придружићу се"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Укључи"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Хвала вам на учешћу"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Део сте бета верзије Android приватности за огласе. Заштићено окружење приватности је укључено за уређај.\n\nМожете да сазнате више или искључите бета верзију у било ком тренутку у подешавањима приватности."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Одабрали сте да не учествујете"</string>

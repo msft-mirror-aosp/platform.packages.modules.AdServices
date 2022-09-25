@@ -22,6 +22,7 @@ android_test {
         "src/com/android/server/adservices/*.java",
         "src/**/*.java",
     ],
+    defaults: ["modules-utils-testable-device-config-defaults"],
     manifest: "AndroidManifest.xml",
     test_config: "AndroidTest.xml",
     static_libs: [

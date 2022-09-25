@@ -17,11 +17,14 @@
 package com.android.adservices.service.appsetid;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_APPSETID;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
@@ -44,6 +47,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
+import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.Clock;
@@ -89,6 +93,7 @@ public class AppSetIdServiceImplTest {
     @Mock private Clock mClock;
     @Mock private Context mMockSdkContext;
     @Mock private Context mMockAppContext;
+    @Mock private Throttler mMockThrottler;
     @Mock private AppSetIdServiceImpl mAppSetIdServiceImpl;
     @Mock private AppImportanceFilter mMockAppImportanceFilter;
 
@@ -111,6 +116,11 @@ public class AppSetIdServiceImplTest {
         // Put this test app into bypass list to bypass Allow-list check.
         when(mMockFlags.getPpapiAppAllowList()).thenReturn(APPSETID_API_ALLOW_LIST);
 
+        // Rate Limit is not reached.
+        when(mMockThrottler.tryAcquire(
+                        eq(Throttler.ApiKey.APPSETID_API_APP_PACKAGE_NAME), anyString()))
+                .thenReturn(true);
+
         // Initialize mock static.
         mStaticMockitoSession =
                 ExtendedMockito.mockitoSession().mockStatic(Binder.class).startMocking();
@@ -127,6 +137,22 @@ public class AppSetIdServiceImplTest {
         // Empty allow list.
         when(mMockFlags.getPpapiAppAllowList()).thenReturn("");
         invokeGetAppSetIdAndVerifyError(mContext, STATUS_CALLER_NOT_ALLOWED);
+    }
+
+    @Test
+    public void checkThrottler_rateLimitReached_forAppPackageName() throws InterruptedException {
+        // App calls AppSetId API directly, not via an SDK.
+        GetAppSetIdParam request =
+                new GetAppSetIdParam.Builder()
+                        .setAppPackageName(TEST_APP_PACKAGE_NAME)
+                        .setSdkPackageName(SDK_PACKAGE_NAME)
+                        .build();
+
+        // Rate Limit Reached.
+        when(mMockThrottler.tryAcquire(
+                        eq(Throttler.ApiKey.APPSETID_API_APP_PACKAGE_NAME), anyString()))
+                .thenReturn(false);
+        invokeGetAppSetIdAndVerifyError(mContext, STATUS_RATE_LIMIT_REACHED, request);
     }
 
     @Test
@@ -252,6 +278,7 @@ public class AppSetIdServiceImplTest {
                         mAdServicesLogger,
                         mClock,
                         mMockFlags,
+                        mMockThrottler,
                         mMockAppImportanceFilter);
         mAppSetIdServiceImpl.getAppSetId(
                 request,
@@ -334,6 +361,7 @@ public class AppSetIdServiceImplTest {
                 mAdServicesLogger,
                 mClock,
                 mMockFlags,
+                mMockThrottler,
                 mMockAppImportanceFilter);
     }
 
@@ -345,6 +373,7 @@ public class AppSetIdServiceImplTest {
                 mAdServicesLogger,
                 mClock,
                 mMockFlags,
+                mMockThrottler,
                 mMockAppImportanceFilter);
     }
 }

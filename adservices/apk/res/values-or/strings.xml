@@ -47,7 +47,7 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"କିପରି ଅଂଶଗ୍ରହଣ କରିବେ"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"ବିଟା ଚାଲୁ କରିବା ଫଳରେ ଆପଣଙ୍କୁ ବିଜ୍ଞାପନଗୁଡ଼ିକ ଦେଖାଇବା ପାଇଁ ଏହି ନୂଆ, ଅଧିକ ବ୍ୟକ୍ତିଗତ ଉପାୟକୁ ପରୀକ୍ଷା କରିବା ପାଇଁ ଏହା ଆପ୍ସକୁ ଅନୁମତି ଦିଏ। ଆପଣ ଯେ କୌଣସି ସମୟରେ ଆପଣଙ୍କ ଗୋପନୀୟତା ସେଟିଂସରେ ବିଟାକୁ ବନ୍ଦ କରିପାରିବେ।"</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"ନା, ଧନ୍ୟବାଦ"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"ହଁ, ମୁଁ ଯୋଗ ଦେବି"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"ଚାଲୁ କରନ୍ତୁ"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"ଅଂଶଗ୍ରହଣ ପାଇଁ ଆପଣଙ୍କୁ ଧନ୍ୟବାଦ"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"ଆପଣ Androidର ବିଜ୍ଞାପନ ଗୋପନୀୟତା ବିଟାର ଅଂଶ ଅଟନ୍ତି। ଆପଣଙ୍କ ଡିଭାଇସ ପାଇଁ ପ୍ରାଇଭେସି ସେଣ୍ଡବକ୍ସ ଚାଲୁ ଅଛି।\n\nଆପଣଙ୍କର ଗୋପନୀୟତା ସେଟିଂସରେ ଆପଣ ଅଧିକ ଜାଣିପାରିବେ କିମ୍ବା ଯେ କୌଣସି ସମୟରେ ବିଟାକୁ ବନ୍ଦ କରିପାରିବେ।"</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"ଆପଣ ଅଂଶଗ୍ରହଣ ନକରିବା ପାଇଁ ବାଛିଛନ୍ତି"</string>
