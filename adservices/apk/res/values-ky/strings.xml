@@ -47,7 +47,7 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Кантип катышуу керек"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Бета версияны күйгүзсөңүз, колдонмолор сизге жарнамаларды көрсөтүүнүн жаңы купуя жолдорун сынай алат. Бул бета версияны каалаган убакта купуялык параметрлеринен өчүрө аласыз."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Жок, рахмат"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"Ооба, кошулам"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Күйгүзүү"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Катышканыңыз үчүн рахмат"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Android\'деги жарнамалардын купуялыгынын бета версиясына катышып жатасыз. Түзмөгүңүздө Privacy Sandbox өчүрүлдү.\n\nКеңири маалымат алып же каалаган убакта бета версияны купуялык параметрлеринен өчүрө аласыз."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Кошулбоону тандадыңыз"</string>

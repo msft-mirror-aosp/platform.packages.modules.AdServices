@@ -47,7 +47,7 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"მონაწილეობის წესი"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"ბეტას ჩართვით აპებს შეუძლია თქვენთვის რეკლამების ჩვენების უფრო მეტი გზების გამოცდა. ბეტას გამორთვა ნებისმიერ დროს შეგიძლიათ კონფიდენციალურობის პარამეტრებში."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"არა, გმადლობთ"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"დიახ, შევუერთდები"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"ჩართვა"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"გმადლობთ მონაწილეობისათვის"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"თქვენ Android რეკლამების კონფიდენციალურობის (ბეტა) წევრი ხართ. Privacy Sandbox ჩართულია თქვენს მოწყობილობაზე.\n\nშეიტყვეთ მეტი ან გამორთეთ ბეტა ნებისმიერ დროს კონფიდენციალურობის პარამეტრებიდან."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"თქვენ გადაწყვიტეთ, რომ არ მიიღოთ მონაწილეობა"</string>
