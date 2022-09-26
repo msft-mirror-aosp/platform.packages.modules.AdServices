@@ -32,7 +32,6 @@ import android.os.Binder;
 import android.os.Bundle;
 import android.os.Looper;
 import android.os.Process;
-import android.preference.PreferenceManager;
 import android.view.SurfaceControlViewHost;
 
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -130,7 +129,7 @@ public class SdkSandboxTest {
 
     @After
     public void teardown() throws Exception {
-        getClientSharedPreference().edit().clear().commit();
+        mService.getClientSharedPreferences().edit().clear().commit();
     }
 
     @Test
@@ -328,7 +327,7 @@ public class SdkSandboxTest {
         mService.syncDataFromClient(TEST_UPDATE);
 
         // Verify that ClientSharedPreference contains the synced data
-        SharedPreferences pref = getClientSharedPreference();
+        SharedPreferences pref = mService.getClientSharedPreferences();
         assertThat(pref.getAll().keySet()).containsExactlyElementsIn(TEST_DATA.keySet());
         assertThat(pref.getAll().values()).containsExactlyElementsIn(TEST_DATA.values());
     }
@@ -357,7 +356,7 @@ public class SdkSandboxTest {
         mService.syncDataFromClient(update);
 
         // Verify that ClientSharedPreference contains the synced data
-        SharedPreferences pref = getClientSharedPreference();
+        SharedPreferences pref = mService.getClientSharedPreferences();
         assertThat(pref.getAll().keySet()).containsExactlyElementsIn(bundle.keySet());
         assertThat(pref.getString("string", "")).isEqualTo("value");
         assertThat(pref.getBoolean("boolean", false)).isEqualTo(true);
@@ -380,7 +379,7 @@ public class SdkSandboxTest {
         mService.syncDataFromClient(newUpdate);
 
         // Verify that ClientSharedPreference contains the synced data
-        SharedPreferences pref = getClientSharedPreference();
+        SharedPreferences pref = mService.getClientSharedPreferences();
         assertThat(pref.getAll().keySet()).containsExactlyElementsIn(TEST_DATA.keySet());
         assertThat(pref.getString(KEY_TO_UPDATE, "")).isEqualTo("update");
     }
@@ -396,7 +395,7 @@ public class SdkSandboxTest {
         mService.syncDataFromClient(newUpdate);
 
         // Verify that ClientSharedPreference contains the synced data
-        SharedPreferences pref = getClientSharedPreference();
+        SharedPreferences pref = mService.getClientSharedPreferences();
         assertThat(pref.getAll().keySet()).doesNotContain(KEY_TO_UPDATE);
     }
 
@@ -611,10 +610,6 @@ public class SdkSandboxTest {
             bundle.putString(key, data.get(key));
         }
         return bundle;
-    }
-
-    private SharedPreferences getClientSharedPreference() {
-        return PreferenceManager.getDefaultSharedPreferences(mContext);
     }
 
     private static class RequestSurfacePackageCallbackImpl
