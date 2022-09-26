@@ -28,10 +28,10 @@
         <activity
                 android:name="com.android.adservices.ui.settings.AdServicesSettingsActivityWrapper"
                 android:exported="true"
-                android:theme="@style/Theme.AdServices.Settings">
+                android:theme="@style/Theme.SubSettingsBase">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="android.test.adservices.ui.SETTINGS" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
 
