@@ -204,6 +204,28 @@ public class SdkSandboxStorageTestApp {
         assertThat(syncedValueInSandbox).isEqualTo(BULK_SYNC_VALUE);
     }
 
+    @Test
+    public void testSharedPreferences_SyncRemoveKeys() throws Exception {
+        loadSdk();
+
+        // Write to default shared preference
+        final SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(mContext);
+        pref.edit().putString(KEY_TO_SYNC, BULK_SYNC_VALUE).commit();
+
+        // Start syncing keys
+        mSdkSandboxManager.addSyncedSharedPreferencesKeys(Set.of(KEY_TO_SYNC));
+
+        // Remove the key
+        mSdkSandboxManager.removeSyncedSharedPreferencesKeys(Set.of(KEY_TO_SYNC));
+
+        // Allow some time for data to sync
+        Thread.sleep(1000);
+
+        // Verify key has been removed from the sandbox
+        final String syncedValueInSandbox = mSdk.getSyncedSharedPreferencesString(KEY_TO_SYNC);
+        assertThat(syncedValueInSandbox).isEmpty();
+    }
+
     private static void assertDirIsNotAccessible(String path) {
         // Trying to access a file that does not exist in that directory, it should return
         // permission denied not file not found.
