@@ -2193,7 +2193,6 @@ public class SdkSandboxManagerServiceUnitTest {
         @Override
         public void loadSdk(
                 String callingPackageName,
-                IBinder codeToken,
                 ApplicationInfo info,
                 String sdkName,
                 String sdkProviderClass,
@@ -2209,7 +2208,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
         @Override
         public void unloadSdk(
-                IBinder sdkToken,
+                String sdkName,
                 IUnloadSdkCallback callback,
                 SandboxLatencyInfo sandboxLatencyInfo) {
             mUnloadSdkCallback = callback;
