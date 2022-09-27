@@ -461,14 +461,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             return;
         }
 
-        final SdkToServiceLink sdkToServiceLink = new SdkToServiceLink();
         invokeSdkSandboxServiceToLoadSdk(
-                callingInfo,
-                sdkProviderInfo,
-                params,
-                link,
-                timeSystemServerReceivedCallFromApp,
-                sdkToServiceLink);
+                callingInfo, sdkProviderInfo, params, link, timeSystemServerReceivedCallFromApp);
     }
 
     @Override
@@ -864,8 +858,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             SdkProviderInfo info,
             Bundle params,
             AppAndRemoteSdkLink link,
-            long timeSystemServerReceivedCallFromApp,
-            SdkToServiceLink sdkToServiceLink) {
+            long timeSystemServerReceivedCallFromApp) {
         // check first if service already bound
         ISdkSandboxService service = mServiceProvider.getBoundServiceForApp(callingInfo);
         if (service != null) {
@@ -876,8 +869,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     link,
                     /*timeToLoadSandbox=*/ -1,
                     timeSystemServerReceivedCallFromApp,
-                    service,
-                    sdkToServiceLink);
+                    service);
             return;
         }
 
@@ -910,7 +902,21 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                 /* success=*/ true,
                                 SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__LOAD_SANDBOX);
 
-                        onSandboxStart(callingInfo);
+                        try {
+                            onSandboxStart(callingInfo, service);
+                        } catch (RemoteException e) {
+                            final String errorMsg = "Failed to initialize sandbox";
+                            Log.e(TAG, errorMsg);
+                            link.handleLoadSdkException(
+                                    new LoadSdkException(
+                                            SDK_SANDBOX_PROCESS_NOT_AVAILABLE,
+                                            SANDBOX_NOT_AVAILABLE_MSG + " : " + errorMsg,
+                                            e),
+                                    /*startTimeOfErrorStage=*/ startTimeForLoadingSandbox,
+                                    SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__LOAD_SANDBOX,
+                                    /*successAtStage=*/ false);
+                            return;
+                        }
 
                         loadSdkForService(
                                 callingInfo,
@@ -919,8 +925,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                 link,
                                 timeToLoadSandbox,
                                 timeSystemServerReceivedCallFromApp,
-                                service,
-                                sdkToServiceLink);
+                                service);
                     }
 
                     @Override
@@ -1174,18 +1179,25 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         return mServiceProvider.getBoundServiceForApp(callingInfo) != null;
     }
 
-    private void onSandboxStart(CallingInfo callingInfo) {
+    private void onSandboxStart(CallingInfo callingInfo, ISdkSandboxService service)
+            throws RemoteException {
+        service.initialize(new SdkToServiceLink());
+
+        notifySyncManagerSandboxStarted(callingInfo);
+    }
+
+    private void notifySyncManagerSandboxStarted(CallingInfo callingInfo) {
         ISharedPreferencesSyncCallback syncManagerCallback = null;
         synchronized (mLock) {
             syncManagerCallback = mSyncDataCallbacks.get(callingInfo);
-            mSyncDataCallbacks.remove(callingInfo);
-        }
-        if (syncManagerCallback != null) {
-            try {
-                syncManagerCallback.onSandboxStart();
-            } catch (RemoteException ignore) {
-                // App died.
+            if (syncManagerCallback != null) {
+                try {
+                    syncManagerCallback.onSandboxStart();
+                } catch (RemoteException ignore) {
+                    // App died.
+                }
             }
+            mSyncDataCallbacks.remove(callingInfo);
         }
     }
 
@@ -1196,8 +1208,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             AppAndRemoteSdkLink link,
             int timeToLoadSandbox,
             long timeSystemServerReceivedCallFromApp,
-            ISdkSandboxService service,
-            SdkToServiceLink sdkToServiceLink) {
+            ISdkSandboxService service) {
 
         if (isSdkSandboxDisabled(service)) {
             link.handleLoadSdkException(
@@ -1256,8 +1267,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     sdkDataInfo.getDeDataDir(),
                     params,
                     link,
-                    sandboxLatencyInfo,
-                    sdkToServiceLink);
+                    sandboxLatencyInfo);
         } catch (DeadObjectException e) {
             link.handleLoadSdkException(
                     new LoadSdkException(
@@ -1513,10 +1523,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
      * A callback object to establish a link between the sdk in sandbox calling into manager
      * service.
      *
-     * <p>When a sdk is loaded into a sandbox, a callback object of {@link SdkToServiceLink} is
-     * passed with the load call as a part of {@link android.app.sdksandbox.SdkSandboxController}.
-     * The sdk can call APIs on the link object and invoked the methods here to get data from the
-     * manager service.
+     * <p>When a sandbox is initialized, a callback object of {@link SdkToServiceLink} is passed to
+     * be used as a part of {@link android.app.sdksandbox.SdkSandboxController}. The Controller can
+     * then can call APIs on the link object to get data from the manager service.
      */
     private class SdkToServiceLink extends ISdkToServiceCallback.Stub {
 
