@@ -30,7 +30,6 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Binder;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.os.Looper;
 import android.os.Process;
 import android.preference.PreferenceManager;
@@ -140,7 +139,6 @@ public class SdkSandboxTest {
         RemoteCode mRemoteCode = new RemoteCode(latch);
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
-                new Binder(),
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
@@ -160,10 +158,8 @@ public class SdkSandboxTest {
         RemoteCode mRemoteCode1 = new RemoteCode(latch1);
         CountDownLatch latch2 = new CountDownLatch(1);
         RemoteCode mRemoteCode2 = new RemoteCode(latch2);
-        IBinder duplicateToken = new Binder();
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
-                duplicateToken,
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
@@ -177,7 +173,6 @@ public class SdkSandboxTest {
         assertThat(mRemoteCode1.mSuccessful).isTrue();
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
-                duplicateToken,
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
@@ -194,49 +189,11 @@ public class SdkSandboxTest {
     }
 
     @Test
-    public void testLoadingMultiple() throws Exception {
-        CountDownLatch latch1 = new CountDownLatch(1);
-        RemoteCode mRemoteCode1 = new RemoteCode(latch1);
-        CountDownLatch latch2 = new CountDownLatch(1);
-        RemoteCode mRemoteCode2 = new RemoteCode(latch2);
-        StubSdkToServiceLink sdkToServiceLink = new StubSdkToServiceLink();
-        mService.loadSdk(
-                CLIENT_PACKAGE_NAME,
-                new Binder(),
-                mApplicationInfo,
-                SDK_NAME,
-                SDK_PROVIDER_CLASS,
-                null,
-                null,
-                new Bundle(),
-                mRemoteCode1,
-                SANDBOX_LATENCY_INFO,
-                sdkToServiceLink);
-        mService.loadSdk(
-                CLIENT_PACKAGE_NAME,
-                new Binder(),
-                mApplicationInfo,
-                SDK_NAME,
-                SDK_PROVIDER_CLASS,
-                null,
-                null,
-                new Bundle(),
-                mRemoteCode2,
-                SANDBOX_LATENCY_INFO,
-                sdkToServiceLink);
-        assertThat(latch1.await(1, TimeUnit.MINUTES)).isTrue();
-        assertThat(mRemoteCode1.mSuccessful).isTrue();
-        assertThat(latch2.await(1, TimeUnit.MINUTES)).isTrue();
-        assertThat(mRemoteCode2.mSuccessful).isTrue();
-    }
-
-    @Test
     public void testRequestSurfacePackage() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
         RemoteCode mRemoteCode = new RemoteCode(latch);
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
-                new Binder(),
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
@@ -271,7 +228,6 @@ public class SdkSandboxTest {
         RemoteCode mRemoteCode = new RemoteCode(latch);
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
-                new Binder(),
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
@@ -323,7 +279,6 @@ public class SdkSandboxTest {
 
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
-                new Binder(),
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
@@ -460,7 +415,6 @@ public class SdkSandboxTest {
 
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
-                new Binder(),
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
@@ -505,12 +459,9 @@ public class SdkSandboxTest {
                         TIME_SDK_CALL_COMPLETED,
                         TIME_SANDBOX_CALLED_SYSTEM_SERVER);
 
-        final IBinder sdkToken = new Binder();
-
         final CountDownLatch latch = new CountDownLatch(1);
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
-                sdkToken,
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
@@ -523,7 +474,7 @@ public class SdkSandboxTest {
         assertThat(latch.await(1, TimeUnit.MINUTES)).isTrue();
 
         final UnloadSdkCallbackImpl unloadSdkCallback = new UnloadSdkCallbackImpl();
-        mService.unloadSdk(sdkToken, unloadSdkCallback, SANDBOX_LATENCY_INFO);
+        mService.unloadSdk(SDK_NAME, unloadSdkCallback, SANDBOX_LATENCY_INFO);
 
         final SandboxLatencyInfo sandboxLatencyInfo = unloadSdkCallback.getSandboxLatencyInfo();
 
@@ -561,7 +512,6 @@ public class SdkSandboxTest {
 
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
-                new Binder(),
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
