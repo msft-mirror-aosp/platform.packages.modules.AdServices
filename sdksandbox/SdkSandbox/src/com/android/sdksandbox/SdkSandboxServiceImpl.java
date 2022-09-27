@@ -63,6 +63,7 @@ public class SdkSandboxServiceImpl extends Service {
     @GuardedBy("mHeldSdk")
     private final Map<String, SandboxedSdkHolder> mHeldSdk = new ArrayMap<>();
 
+    private volatile boolean mInitialized;
     private Injector mInjector;
     private ISdkSandboxService.Stub mBinder;
 
@@ -109,13 +110,23 @@ public class SdkSandboxServiceImpl extends Service {
     /**
      * Initializes the Sandbox.
      *
-     * <p>Sandbox should be initialized before any SDKs are loaded.
+     * <p>Sandbox should be initialized before any SDKs are loaded. This method is idempotent.
      *
      * @param sdkToServiceCallback for initialization of {@link SdkSandboxLocalSingleton}
      */
     public void initialize(ISdkToServiceCallback sdkToServiceCallback) {
+        if (mInitialized) {
+            Log.e(TAG, "Sandbox is already initialized");
+            return;
+        }
+
         enforceCallerIsSystemServer();
+
         SdkSandboxLocalSingleton.initInstance(sdkToServiceCallback.asBinder());
+
+        cleanUpSyncedSharedPreferencesData();
+
+        mInitialized = true;
     }
 
     /** Loads SDK. */
@@ -188,6 +199,10 @@ public class SdkSandboxServiceImpl extends Service {
                 .getContext()
                 .getSharedPreferences(
                         SdkSandboxController.CLIENT_SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE);
+    }
+
+    private void cleanUpSyncedSharedPreferencesData() {
+        getClientSharedPreferences().edit().clear().apply();
     }
 
     private void updateSharedPreferences(
@@ -294,6 +309,7 @@ public class SdkSandboxServiceImpl extends Service {
         }
     }
 
+    // TODO(b/249760546): Write test for enforceCallerIsSystemServer
     private void enforceCallerIsSystemServer() {
         if (mInjector.getCallingUid() != Process.SYSTEM_UID) {
             throw new SecurityException(

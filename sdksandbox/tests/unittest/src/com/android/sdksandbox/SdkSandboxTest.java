@@ -146,6 +146,16 @@ public class SdkSandboxTest {
     }
 
     @Test
+    public void testSandboxInitialization_clearsSyncedData() throws Exception {
+        // First write some data
+        mService.syncDataFromClient(TEST_UPDATE);
+
+        mService.initialize(new StubSdkToServiceLink());
+
+        assertThat(mService.getClientSharedPreferences().getAll()).isEmpty();
+    }
+
+    @Test
     public void testLoadingSuccess() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
         RemoteCode mRemoteCode = new RemoteCode(latch);
