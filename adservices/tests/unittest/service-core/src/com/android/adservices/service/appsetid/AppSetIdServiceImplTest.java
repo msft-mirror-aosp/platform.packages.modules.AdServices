@@ -96,7 +96,11 @@ public class AppSetIdServiceImplTest {
     public void setup() throws Exception {
         MockitoAnnotations.initMocks(this);
 
-        mAppSetIdWorker = new AppSetIdWorker(mContext, mMockFlags);
+        mAppSetIdWorker =
+                Mockito.spy(
+                        AppSetIdWorker.getInstance(ApplicationProvider.getApplicationContext()));
+        Mockito.doReturn(null).when(mAppSetIdWorker).getService();
+
         when(mClock.elapsedRealtime()).thenReturn(150L, 200L);
         mCallerMetadata = new CallerMetadata.Builder().setBinderElapsedTimestamp(100L).build();
         mRequest =
