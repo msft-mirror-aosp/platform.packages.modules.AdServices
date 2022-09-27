@@ -1059,6 +1059,12 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         runPhase("testSharedPreferences_SyncStartedBeforeLoadingSdk");
     }
 
+    @Test
+    public void testSharedPreferences_SyncRemoveKeys() throws Exception {
+        installPackage(TEST_APP_STORAGE_APK);
+        runPhase("testSharedPreferences_SyncRemoveKeys");
+    }
+
     private String getAppDataPath(int userId, String packageName, boolean isCeData) {
         return getAppDataPath(/*volumeUuid=*/ null, userId, packageName, isCeData);
     }
