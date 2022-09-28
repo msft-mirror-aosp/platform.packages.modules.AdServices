@@ -53,7 +53,6 @@
     }],
     "triggers": [{
         "registration_request": {
-          "destination_origin": "android-app://com.example.2d1",
           "registrant": "example.2d1.com",
           "attribution_src_url": "https://www.ad-tech1.com"
         },

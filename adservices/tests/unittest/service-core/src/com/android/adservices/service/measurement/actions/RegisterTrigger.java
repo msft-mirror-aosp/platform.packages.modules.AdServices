@@ -46,10 +46,6 @@ public final class RegisterTrigger implements Action {
         mRegistrationRequest =
                 new RegistrationRequest.Builder()
                         .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
-                        .setTopOriginUri(
-                                Uri.parse(
-                                        regParamsJson.getString(
-                                                TestFormatJsonMapping.TRIGGER_TOP_ORIGIN_URI_KEY)))
                         .setRegistrationUri(
                                 Uri.parse(
                                         regParamsJson.getString(

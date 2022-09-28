@@ -244,7 +244,6 @@ public class SourceFetcher {
     }
 
     private boolean parseSource(
-            @NonNull Uri topOrigin,
             @NonNull String enrollmentId,
             @Nullable Uri appDestination,
             @Nullable Uri webDestination,
@@ -255,7 +254,6 @@ public class SourceFetcher {
             boolean isAllowDebugKey,
             boolean isAdIdPermissionGranted) {
         SourceRegistration.Builder result = new SourceRegistration.Builder();
-        result.setTopOrigin(topOrigin);
         result.setEnrollmentId(enrollmentId);
         List<String> field;
         field = headers.get("Attribution-Reporting-Register-Source");
@@ -302,7 +300,6 @@ public class SourceFetcher {
     }
 
     private void fetchSource(
-            @NonNull Uri topOrigin,
             @NonNull Uri registrationUri,
             @Nullable Uri appDestination,
             @Nullable Uri webDestination,
@@ -359,7 +356,6 @@ public class SourceFetcher {
 
             final boolean parsed =
                     parseSource(
-                            topOrigin,
                             enrollmentId.get(),
                             appDestination,
                             webDestination,
@@ -379,7 +375,6 @@ public class SourceFetcher {
                 if (!redirects.isEmpty()) {
                     processAsyncRedirects(
                             redirects,
-                            topOrigin,
                             sourceType,
                             registrationsOut,
                             isWebSource,
@@ -396,7 +391,6 @@ public class SourceFetcher {
 
     private void processAsyncRedirects(
             List<Uri> redirects,
-            Uri topOrigin,
             String sourceInfo,
             List<SourceRegistration> registrationsOut,
             boolean isWebSource,
@@ -408,7 +402,6 @@ public class SourceFetcher {
                             CompletableFuture.runAsync(
                                     () ->
                                             fetchSource(
-                                                    topOrigin,
                                                     redirect,
                                                     /* appDestination */ null,
                                                     /* webDestination */ null,
@@ -438,7 +431,6 @@ public class SourceFetcher {
         }
         List<SourceRegistration> out = new ArrayList<>();
         fetchSource(
-                request.getTopOriginUri(),
                 request.getRegistrationUri(),
                 null,
                 null,
@@ -461,7 +453,6 @@ public class SourceFetcher {
             @NonNull WebSourceRegistrationRequest request, boolean isAdIdPermissionGranted) {
         List<SourceRegistration> out = new ArrayList<>();
         processWebSourcesFetch(
-                request.getTopOriginUri(),
                 request.getSourceParams(),
                 request.getAppDestination(),
                 request.getWebDestination(),
@@ -476,7 +467,6 @@ public class SourceFetcher {
     }
 
     private void processWebSourcesFetch(
-            Uri topOrigin,
             List<WebSourceParams> sourceParamsList,
             Uri appDestination,
             Uri webDestination,
@@ -489,7 +479,6 @@ public class SourceFetcher {
                                     .map(
                                             sourceParams ->
                                                     createFutureToFetchWebSource(
-                                                            topOrigin,
                                                             appDestination,
                                                             webDestination,
                                                             sourceType,
@@ -504,7 +493,6 @@ public class SourceFetcher {
     }
 
     private CompletableFuture<Void> createFutureToFetchWebSource(
-            Uri topOrigin,
             Uri appDestination,
             Uri webDestination,
             String sourceType,
@@ -514,7 +502,6 @@ public class SourceFetcher {
         return CompletableFuture.runAsync(
                 () ->
                         fetchSource(
-                                topOrigin,
                                 sourceParams.getRegistrationUri(),
                                 appDestination,
                                 webDestination,
