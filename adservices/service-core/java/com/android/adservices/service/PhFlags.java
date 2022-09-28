@@ -261,6 +261,9 @@ public final class PhFlags implements Flags {
     static final String KEY_MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES =
             "max_response_based_registration_size_bytes";
 
+    // UI keys
+    static final String KEY_UI_DIALOGS_FEATURE_ENABLED = "ui_dialogs_feature_enabled";
+
     // Maximum possible percentage for percentage variables
     static final int MAX_PERCENTAGE = 100;
 
@@ -1493,6 +1496,17 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getUIDialogsFeatureEnabled() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(KEY_UI_DIALOGS_FEATURE_ENABLED),
+                /* defaultValue */ DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_UI_DIALOGS_FEATURE_ENABLED,
+                        /* defaultValue */ UI_DIALOGS_FEATURE_ENABLED));
+    }
+
+    @Override
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
         writer.println("==== AdServices PH Flags Dump Enrollment ====");
         writer.println(
@@ -1865,6 +1879,10 @@ public final class PhFlags implements Flags {
 
         writer.println(
                 "\t" + KEY_ISOLATE_MAX_HEAP_SIZE_BYTES + " = " + getIsolateMaxHeapSizeBytes());
+
+        writer.println("==== AdServices PH Flags Dump UI Related Flags ====");
+        writer.println(
+                "\t" + KEY_UI_DIALOGS_FEATURE_ENABLED + " = " + getUIDialogsFeatureEnabled());
 
         writer.println("==== AdServices PH Flags Dump STATUS ====");
         writer.println("\t" + KEY_ADSERVICES_ENABLED + " = " + getAdServicesEnabled());
