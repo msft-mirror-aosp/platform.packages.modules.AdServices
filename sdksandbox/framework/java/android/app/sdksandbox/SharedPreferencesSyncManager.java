@@ -107,7 +107,24 @@ public class SharedPreferencesSyncManager {
     public void removeSharedPreferencesSyncKeys(@NonNull Set<String> keys) {
         synchronized (mLock) {
             mKeysToSync.removeAll(keys);
-            // TODO(b/19742283): removed keys need to be erased from sandbox.
+
+            final ArrayList<SharedPreferencesKey> keysWithTypeBeingRemoved = new ArrayList<>();
+
+            for (final String key : keys) {
+                keysWithTypeBeingRemoved.add(
+                        new SharedPreferencesKey(key, SharedPreferencesKey.KEY_TYPE_STRING));
+            }
+            final SharedPreferencesUpdate update =
+                    new SharedPreferencesUpdate(keysWithTypeBeingRemoved, new Bundle());
+            try {
+                mService.syncDataFromClient(
+                        mContext.getPackageName(),
+                        /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                        update,
+                        mCallback);
+            } catch (RemoteException e) {
+                Log.e(TAG, "Couldn't connect to SdkSandboxManagerService: " + e.getMessage());
+            }
         }
     }
 
