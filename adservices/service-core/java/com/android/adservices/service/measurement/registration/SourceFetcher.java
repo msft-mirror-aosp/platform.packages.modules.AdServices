@@ -258,6 +258,7 @@ public class SourceFetcher {
         List<String> field;
         field = headers.get("Attribution-Reporting-Register-Source");
         if (field == null || field.size() != 1) {
+            LogUtil.d("Invalid Attribution-Reporting-Register-Source header");
             return false;
         }
         try {
@@ -349,6 +350,8 @@ public class SourceFetcher {
                     registrationUri);
 
             int responseCode = urlConnection.getResponseCode();
+            LogUtil.d("Response code = " + responseCode);
+
             if (!FetcherUtil.isRedirect(responseCode)
                     && !FetcherUtil.isSuccess(responseCode)) {
                 return;
