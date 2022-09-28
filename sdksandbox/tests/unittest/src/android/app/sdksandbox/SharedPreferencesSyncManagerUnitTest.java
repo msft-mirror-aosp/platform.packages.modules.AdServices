@@ -122,6 +122,18 @@ public class SharedPreferencesSyncManagerUnitTest {
     }
 
     @Test
+    public void test_removeKeys_updateSentForRemoval() throws Exception {
+        mSyncManager.addSharedPreferencesSyncKeys(KEYS_TO_SYNC);
+
+        // Remove key
+        mSyncManager.removeSharedPreferencesSyncKeys(Set.of(KEY_TO_UPDATE));
+
+        final SharedPreferencesUpdate update = mSdkSandboxManagerService.getLastUpdate();
+        assertThat(update.getData().keySet()).doesNotContain(Set.of(KEY_TO_UPDATE));
+        assertThat(update.getKeysInUpdate()).containsExactly(KEY_WITH_TYPE_TO_UPDATE);
+    }
+
+    @Test
     public void test_bulkSync_syncSpecifiedKeys() throws Exception {
         // Populate default shared preference with test data
         populateDefaultSharedPreference(TEST_DATA);
