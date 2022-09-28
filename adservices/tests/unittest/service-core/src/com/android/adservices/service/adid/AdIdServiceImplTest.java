@@ -100,7 +100,10 @@ public class AdIdServiceImplTest {
     public void setup() throws Exception {
         MockitoAnnotations.initMocks(this);
 
-        mAdIdWorker = new AdIdWorker(mContext, mMockFlags);
+        mAdIdWorker =
+                Mockito.spy(AdIdWorker.getInstance(ApplicationProvider.getApplicationContext()));
+        Mockito.doReturn(null).when(mAdIdWorker).getService();
+
         when(mClock.elapsedRealtime()).thenReturn(150L, 200L);
         mCallerMetadata = new CallerMetadata.Builder().setBinderElapsedTimestamp(100L).build();
         mRequest =

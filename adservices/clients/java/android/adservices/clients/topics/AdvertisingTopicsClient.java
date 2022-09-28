@@ -68,10 +68,12 @@ public class AdvertisingTopicsClient {
     public @NonNull ListenableFuture<GetTopicsResponse> getTopics() {
         return CallbackToFutureAdapter.getFuture(
                 completer -> {
-                    GetTopicsRequest request =
-                            mSdkName == null
-                                    ? GetTopicsRequest.create()
-                                    : GetTopicsRequest.createWithAdsSdkName(mSdkName);
+                    GetTopicsRequest.Builder builder = new GetTopicsRequest.Builder();
+                    if (mSdkName != null) {
+                        builder = builder.setAdsSdkName(mSdkName);
+                    }
+                    GetTopicsRequest request = builder.build();
+
                     mTopicsManager.getTopics(
                             request,
                             mExecutor,
