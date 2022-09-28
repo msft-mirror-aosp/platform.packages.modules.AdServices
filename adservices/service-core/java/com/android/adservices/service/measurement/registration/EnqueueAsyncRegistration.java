@@ -41,6 +41,7 @@ import java.util.UUID;
 
 /** Class containing static functions for enqueueing AsyncRegistrations */
 public class EnqueueAsyncRegistration {
+    private static final String ANDROID_APP_SCHEME = "android-app";
 
     /**
      * Inserts an App Source or Trigger Registration request into the Async Registration Queue
@@ -73,7 +74,7 @@ public class EnqueueAsyncRegistration {
                             /* mOsDestination */ null,
                             registrant,
                             /* verifiedDestination */ null,
-                            registrationRequest.getTopOriginUri(),
+                            getPublisher(registrationRequest),
                             registrationRequest.getRegistrationType()
                                             == RegistrationRequest.REGISTER_SOURCE
                                     ? AsyncRegistration.RegistrationType.APP_SOURCE
@@ -226,5 +227,9 @@ public class EnqueueAsyncRegistration {
     @VisibleForTesting
     static Source.SourceType getSourceType(InputEvent inputEvent) {
         return inputEvent == null ? Source.SourceType.EVENT : Source.SourceType.NAVIGATION;
+    }
+
+    private static Uri getPublisher(RegistrationRequest request) {
+        return Uri.parse(ANDROID_APP_SCHEME + "://" + request.getPackageName());
     }
 }
