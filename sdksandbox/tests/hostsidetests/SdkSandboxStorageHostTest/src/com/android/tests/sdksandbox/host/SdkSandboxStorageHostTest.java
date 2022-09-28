@@ -154,7 +154,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     public void testSdkDataRootDirectory_IsDestroyedOnUserDeletion() throws Exception {
         // delete the new user
         final int newUser = mUserUtils.createAndStartSecondaryUser();
-        mUserUtils.removeSecondaryUserIfNecessary();
+        mUserUtils.removeSecondaryUserIfNecessary(/*waitForUserDataDeletion=*/ true);
 
         // Sdk Sandbox root directories should not exist as the user was removed
         final String ceSdkSandboxDataRootPath = getSdkDataRootPath(newUser, true);
