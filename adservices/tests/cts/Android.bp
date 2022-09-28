@@ -45,6 +45,7 @@ android_test {
         "testng",
     ],
     sdk_version: "module_current",
+    min_sdk_version: "Tiramisu",
     compile_multilib: "both",
 }
 android_test {
@@ -78,6 +79,7 @@ android_test {
         "testng",
     ],
     sdk_version: "module_current",
+    min_sdk_version: "Tiramisu",
     manifest: "AndroidManifestDebuggable.xml",
     test_config: "AndroidTestDebuggable.xml",
 }
