@@ -904,20 +904,20 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
-    public void testGetLoadedSdkLibrariesInfo_afterLoadSdkSuccess() throws Exception {
+    public void testGetSandboxedSdks_afterLoadSdkSuccess() throws Exception {
         loadSdk();
-        assertThat(mService.getLoadedSdkLibrariesInfo(TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER))
+        assertThat(mService.getSandboxedSdks(TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER))
                 .hasSize(1);
         assertThat(
-                        mService.getLoadedSdkLibrariesInfo(
-                                        TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER)
+                        mService.getSandboxedSdks(TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER)
                                 .get(0)
+                                .getSharedLibraryInfo()
                                 .getName())
                 .isEqualTo(SDK_NAME);
     }
 
     @Test
-    public void testGetLoadedSdkLibrariesInfo_errorLoadingSdk() throws Exception {
+    public void testGetSandboxedSdks_errorLoadingSdk() throws Exception {
         disableNetworkPermissionChecks();
         disableForegroundCheck();
 
@@ -931,7 +931,7 @@ public class SdkSandboxManagerServiceUnitTest {
         assertThat(callback.isLoadSdkSuccessful()).isFalse();
         assertThat(callback.getLoadSdkErrorCode())
                 .isEqualTo(SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR);
-        assertThat(mService.getLoadedSdkLibrariesInfo(TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER))
+        assertThat(mService.getSandboxedSdks(TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER))
                 .isEmpty();
     }
 
@@ -1213,8 +1213,8 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
-    public void testLatencyMetrics_IpcFromAppToSystemServer_GetLoadedSdkLibrariesInfo() {
-        mService.getLoadedSdkLibrariesInfo(TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER);
+    public void testLatencyMetrics_IpcFromAppToSystemServer_GetSandboxedSdks() {
+        mService.getSandboxedSdks(TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER);
         ExtendedMockito.verify(
                 () ->
                         SdkSandboxStatsLog.write(
@@ -1730,12 +1730,12 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
-    public void testLatencyMetrics_SystemServerAppToSandbox_GetLoadedSdkLibrariesInfo() {
+    public void testLatencyMetrics_SystemServerAppToSandbox_GetSandboxedSdks() {
         // TODO(b/242149555): Update tests to use fake for getting time series.
         Mockito.when(mInjector.getCurrentTime())
                 .thenReturn(TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP, END_TIME_IN_SYSTEM_SERVER);
 
-        mService.getLoadedSdkLibrariesInfo(TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER);
+        mService.getSandboxedSdks(TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER);
 
         ExtendedMockito.verify(
                 () ->

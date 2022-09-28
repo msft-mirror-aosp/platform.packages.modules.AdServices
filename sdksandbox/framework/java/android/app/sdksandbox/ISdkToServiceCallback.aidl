@@ -16,9 +16,9 @@
 package android.app.sdksandbox;
 
 import android.os.Bundle;
-import android.content.pm.SharedLibraryInfo;
+import android.app.sdksandbox.SandboxedSdk;
 
 /** @hide */
 interface ISdkToServiceCallback {
-   List<SharedLibraryInfo> getLoadedSdkLibrariesInfo(in String clientPackageName);
+   List<SandboxedSdk> getSandboxedSdks(in String clientPackageName);
 }
