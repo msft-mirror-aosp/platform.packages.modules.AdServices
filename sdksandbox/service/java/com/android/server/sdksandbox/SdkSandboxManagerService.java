@@ -234,10 +234,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     @Override
-    public List<SharedLibraryInfo> getLoadedSdkLibrariesInfo(
+    public List<SandboxedSdk> getSandboxedSdks(
             String callingPackageName, long timeAppCalledSystemServer) {
         final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
-
+        // TODO(b/248034341): Rename API call field in SdkSandboxStatsLog
         SdkSandboxStatsLog.write(
                 SdkSandboxStatsLog.SANDBOX_API_CALLED,
                 SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__GET_LOADED_SDK_LIBRARIES_INFO,
@@ -248,12 +248,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         final int callingUid = Binder.getCallingUid();
         final CallingInfo callingInfo = new CallingInfo(callingUid, callingPackageName);
         enforceCallingPackageBelongsToUid(callingInfo);
-        List<SharedLibraryInfo> sharedLibraryInfos = new ArrayList<>();
+        final List<SandboxedSdk> sandboxedSdks = new ArrayList<>();
         synchronized (mLock) {
             for (int i = mAppAndRemoteSdkLinks.size() - 1; i >= 0; i--) {
                 AppAndRemoteSdkLink link = mAppAndRemoteSdkLinks.valueAt(i);
-                if (link.mCallingInfo.equals(callingInfo) && link.mSdkProviderInfo != null) {
-                    sharedLibraryInfos.add(link.mSdkProviderInfo.mSdkInfo);
+                if (link.mCallingInfo.equals(callingInfo) && link.mSandboxedSdk != null) {
+                    sandboxedSdks.add(link.mSandboxedSdk);
                 }
             }
         }
@@ -264,7 +264,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         (mInjector.getCurrentTime() - timeSystemServerReceivedCallFromApp),
                 /*success=*/ true,
                 SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX);
-        return sharedLibraryInfos;
+        return sandboxedSdks;
     }
 
     @Override
@@ -1521,26 +1521,30 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private class SdkToServiceLink extends ISdkToServiceCallback.Stub {
 
         /**
-         * Fetches information about Sdks that are loaded in the sandbox.
+         * Fetches {@link SandboxedSdk} for all SDKs that are loaded in the sandbox.
+         *
+         * <p>This provides the information on the library that is currently loaded in the sandbox
+         * and also channels to communicate with loaded SDK.
          *
          * @param clientPackageName package name of the app for which the sdk was loaded in the
          *     sandbox
-         * @return List of {@link SharedLibraryInfo} containing all currently loaded sdks
+         * @return List of {@link SandboxedSdk} containing all currently loaded sdks
          */
         @Override
-        public List<SharedLibraryInfo> getLoadedSdkLibrariesInfo(String clientPackageName)
+        public List<SandboxedSdk> getSandboxedSdks(String clientPackageName)
                 throws RemoteException {
             // TODO(b/242039497): Add authorisation checks
-            final List<SharedLibraryInfo> libraryInfoList = new ArrayList<>();
+            // TODO(b/247592493): Add test
+            final List<SandboxedSdk> sandboxedSdks = new ArrayList<>();
             synchronized (mLock) {
                 for (int i = mAppAndRemoteSdkLinks.size() - 1; i >= 0; i--) {
                     AppAndRemoteSdkLink link = mAppAndRemoteSdkLinks.valueAt(i);
                     if (link.mCallingInfo.getPackageName().equals(clientPackageName)) {
-                        libraryInfoList.add(link.mSdkProviderInfo.mSdkInfo);
+                        sandboxedSdks.add(link.mSandboxedSdk);
                     }
                 }
             }
-            return libraryInfoList;
+            return sandboxedSdks;
         }
     }
 
@@ -1572,6 +1576,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         private final SdkProviderInfo mSdkProviderInfo;
         private final String mSdkName;
         private final ILoadSdkCallback mManagerToAppCallback;
+        private SandboxedSdk mSandboxedSdk;
 
         @GuardedBy("this")
         private ISdkSandboxManagerToSdkSandboxCallback mManagerToCodeCallback;
@@ -1599,11 +1604,17 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK,
                     sandboxLatencyInfo);
 
-            // Keep reference to callback so that manager service can
-            // callback to remote code loaded.
             synchronized (this) {
+                // Keep reference to callback so that manager service can
+                // callback to remote code loaded.
                 mManagerToCodeCallback = callback;
+                // attach the SharedLibraryInfo for the loaded SDK to the sandboxedSdk.
+                sandboxedSdk.attachSharedLibraryInfo(mSdkProviderInfo.getSdkInfo());
+                // Keep reference to sandboxedSdk so that manager service can
+                // keep log of all loaded SDKs and their binders for communication.
+                mSandboxedSdk = sandboxedSdk;
             }
+
             handleLoadSdkSuccess(sandboxedSdk, timeSystemServerReceivedCallFromSandbox);
         }
 

@@ -53,6 +53,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.util.List;
+
 /*
  * TODO(b/215372846): These providers
  * (RequestSurfacePackageSuccessfullySdkProvider, RetryLoadSameSdkShouldFailSdkProvider) could be
@@ -95,6 +97,28 @@ public class SdkSandboxManagerTest {
         assertNotNull(callback.getSandboxedSdk());
         assertNotNull(callback.getSandboxedSdk().getInterface());
         mSdkSandboxManager.unloadSdk(sdkName);
+    }
+
+    @Test
+    public void getSandboxedSdkSuccessfully() {
+        final String sdkName = "com.android.loadSdkSuccessfullySdkProvider";
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
+        assertThat(callback.isLoadSdkSuccessful(/*ignoreSdkAlreadyLoadedError=*/ true)).isTrue();
+
+        List<SandboxedSdk> sandboxedSdks = mSdkSandboxManager.getSandboxedSdks();
+
+        int nLoadedSdks = sandboxedSdks.size();
+        assertThat(nLoadedSdks).isGreaterThan(0);
+        assertThat(
+                        sandboxedSdks.stream()
+                                .filter(s -> s.getSharedLibraryInfo().getName().equals(sdkName))
+                                .count())
+                .isEqualTo(1);
+
+        mSdkSandboxManager.unloadSdk(sdkName);
+        List<SandboxedSdk> sandboxedSdksAfterUnload = mSdkSandboxManager.getSandboxedSdks();
+        assertThat(sandboxedSdksAfterUnload.size()).isEqualTo(nLoadedSdks - 1);
     }
 
     @Test
