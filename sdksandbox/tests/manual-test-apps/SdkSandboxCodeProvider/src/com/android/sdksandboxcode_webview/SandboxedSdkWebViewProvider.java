@@ -78,7 +78,7 @@ public class SandboxedSdkWebViewProvider extends SandboxedSdkProvider {
             WebView wv = new WebView(context);
             WebSettings settings = wv.getSettings();
             initializeSettings(settings);
-            wv.loadUrl("https://www.google.com");
+            wv.loadUrl("localhost:5037");
             mWebView = wv;
             latch.countDown();
         }
