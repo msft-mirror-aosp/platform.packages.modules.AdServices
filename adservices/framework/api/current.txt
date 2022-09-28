@@ -379,9 +379,13 @@ package android.adservices.measurement {
 package android.adservices.topics {
 
   public final class GetTopicsRequest {
-    method @NonNull public static android.adservices.topics.GetTopicsRequest create();
-    method @NonNull public static android.adservices.topics.GetTopicsRequest createWithAdsSdkName(@NonNull String);
     method @NonNull public String getAdsSdkName();
+  }
+
+  public static final class GetTopicsRequest.Builder {
+    ctor public GetTopicsRequest.Builder();
+    method @NonNull public android.adservices.topics.GetTopicsRequest build();
+    method @NonNull public android.adservices.topics.GetTopicsRequest.Builder setAdsSdkName(@NonNull String);
   }
 
   public final class GetTopicsResponse {
