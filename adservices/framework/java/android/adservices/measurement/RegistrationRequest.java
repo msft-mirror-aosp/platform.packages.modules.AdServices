@@ -51,7 +51,6 @@ public final class RegistrationRequest implements Parcelable {
 
     private final @RegistrationType int mRegistrationType;
     private final Uri mRegistrationUri;
-    private final Uri mTopOriginUri;
     private final InputEvent mInputEvent;
     private final String mPackageName;
     private final long mRequestTime;
@@ -60,7 +59,6 @@ public final class RegistrationRequest implements Parcelable {
     private RegistrationRequest(@NonNull Builder builder) {
         mRegistrationType = builder.mRegistrationType;
         mRegistrationUri = builder.mRegistrationUri;
-        mTopOriginUri = builder.mTopOriginUri;
         mInputEvent = builder.mInputEvent;
         mPackageName = builder.mPackageName;
         mRequestTime = builder.mRequestTime;
@@ -73,7 +71,6 @@ public final class RegistrationRequest implements Parcelable {
     private RegistrationRequest(Parcel in) {
         mRegistrationType = in.readInt();
         mRegistrationUri = Uri.CREATOR.createFromParcel(in);
-        mTopOriginUri = Uri.CREATOR.createFromParcel(in);
         mPackageName = in.readString();
         boolean hasInputEvent = in.readBoolean();
         if (hasInputEvent) {
@@ -113,7 +110,6 @@ public final class RegistrationRequest implements Parcelable {
         Objects.requireNonNull(out);
         out.writeInt(mRegistrationType);
         mRegistrationUri.writeToParcel(out, flags);
-        mTopOriginUri.writeToParcel(out, flags);
         out.writeString(mPackageName);
         if (mInputEvent != null) {
             out.writeBoolean(true);
@@ -130,13 +126,6 @@ public final class RegistrationRequest implements Parcelable {
      */
     public @RegistrationType int getRegistrationType() {
         return mRegistrationType;
-    }
-
-    /**
-     * Top level origin of the App / Publisher.
-     */
-    public @NonNull Uri getTopOriginUri() {
-        return mTopOriginUri;
     }
 
     /**
@@ -173,7 +162,6 @@ public final class RegistrationRequest implements Parcelable {
     public static final class Builder {
         private @RegistrationType int mRegistrationType;
         private Uri mRegistrationUri;
-        private Uri mTopOriginUri;
         private InputEvent mInputEvent;
         private String mPackageName;
         private long mRequestTime;
@@ -194,15 +182,6 @@ public final class RegistrationRequest implements Parcelable {
                 throw new IllegalArgumentException("Invalid registrationType");
             }
             mRegistrationType = type;
-            return this;
-        }
-
-        /**
-         * See {@link RegistrationRequest#getTopOriginUri}.
-         */
-        public @NonNull Builder setTopOriginUri(@NonNull Uri origin) {
-            Objects.requireNonNull(origin);
-            mTopOriginUri = origin;
             return this;
         }
 
@@ -263,12 +242,6 @@ public final class RegistrationRequest implements Parcelable {
             // throws IllegalArgumentException if the packageName is null.
             if (mPackageName == null) {
                 throw new IllegalArgumentException("packageName unset");
-            }
-
-            // Check if topOrigin has been set.
-            // However, if it's not set, caller package is defaulted
-            if (mTopOriginUri == null) {
-                mTopOriginUri = Uri.parse("android-app://" + mPackageName);
             }
 
             return new RegistrationRequest(this);

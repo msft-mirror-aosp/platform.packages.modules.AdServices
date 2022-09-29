@@ -2543,7 +2543,6 @@ public final class MeasurementServiceImplTest {
         return new RegistrationRequest.Builder()
                 .setPackageName(PACKAGE_NAME)
                 .setRegistrationUri(Uri.parse("https://registration-uri.com"))
-                .setTopOriginUri(Uri.parse("android-app://com.example"))
                 .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
                 .build();
     }
@@ -2552,7 +2551,6 @@ public final class MeasurementServiceImplTest {
         return new RegistrationRequest.Builder()
                 .setPackageName(PACKAGE_NAME)
                 .setRegistrationUri(Uri.parse("https://registration-uri.com"))
-                .setTopOriginUri(Uri.parse("android-app://com.example"))
                 .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
                 .build();
     }

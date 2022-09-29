@@ -24,8 +24,8 @@ import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
 public class SecondaryUserUtils {
 
-    private static final long SWITCH_USER_COMPLETED_NUMBER_OF_POLLS = 60;
-    private static final long SWITCH_USER_COMPLETED_POLL_INTERVAL_IN_MILLIS = 1000;
+    private static final long NUMBER_OF_POLLS = 2 * 60;
+    private static final long POLL_INTERVAL_IN_MILLIS = 1000;
 
     private final BaseHostJUnit4Test mTest;
 
@@ -43,44 +43,42 @@ public class SecondaryUserUtils {
         mOriginalUserId = mTest.getDevice().getCurrentUser();
         String name = "SdkSandboxStorageHost_User" + System.currentTimeMillis();
         mSecondaryUserId = mTest.getDevice().createUser(name);
-        mTest.getDevice().startUser(mSecondaryUserId);
-        // Note we can't install apps on a locked user
-        awaitUserUnlocked(mSecondaryUserId);
+        // Note we can't install apps on a locked user, so we wait
+        mTest.getDevice().startUser(mSecondaryUserId, /*waitFlag=*/ true);
         return mSecondaryUserId;
     }
 
-    private void awaitUserUnlocked(int userId) throws Exception {
-        for (int i = 0; i < SWITCH_USER_COMPLETED_NUMBER_OF_POLLS; ++i) {
-            String userState =
-                    mTest.getDevice().executeShellCommand("am get-started-user-state " + userId);
-            if (userState.contains("RUNNING_UNLOCKED")) {
-                return;
-            }
-            Thread.sleep(SWITCH_USER_COMPLETED_POLL_INTERVAL_IN_MILLIS);
-        }
-        fail("Timed out in unlocking user: " + userId);
+    public void removeSecondaryUserIfNecessary() throws Exception {
+        removeSecondaryUserIfNecessary(/*waitForUserDataDeletion=*/ false);
     }
 
-    public void removeSecondaryUserIfNecessary() throws Exception {
-        if (mOriginalUserId != -1 && mSecondaryUserId != -1) {
+    public void removeSecondaryUserIfNecessary(boolean waitForUserDataDeletion) throws Exception {
+        if (mSecondaryUserId == -1) {
+            return;
+        }
+
+        final int userBeingRemoved = mSecondaryUserId;
+        // Set to -1 so that we can create new users later, even when removal goes wrong
+        mSecondaryUserId = -1;
+
+        if (mOriginalUserId != -1 && userBeingRemoved != -1) {
             // Can't remove the 2nd user without switching out of it
             assertThat(mTest.getDevice().switchUser(mOriginalUserId)).isTrue();
-            mTest.getDevice().removeUser(mSecondaryUserId);
-            waitForUserDataDeletion(mSecondaryUserId);
-            mSecondaryUserId = -1;
+            mTest.getDevice().removeUser(userBeingRemoved);
+            if (waitForUserDataDeletion) {
+                waitForUserDataDeletion(userBeingRemoved);
+            }
         }
     }
 
     private void waitForUserDataDeletion(int userId) throws Exception {
-        int timeElapsed = 0;
         final String deSdkSandboxDataRootPath = "/data/misc_de/" + userId + "/sdksandbox";
-        while (timeElapsed <= 30000) {
+        for (int i = 0; i < NUMBER_OF_POLLS; ++i) {
             if (!mTest.getDevice().isDirectory(deSdkSandboxDataRootPath)) {
                 return;
             }
-            Thread.sleep(1000);
-            timeElapsed += 1000;
+            Thread.sleep(POLL_INTERVAL_IN_MILLIS);
         }
-        throw new AssertionError("User data was not deleted for UserId " + userId);
+        fail("User data was not deleted for UserId " + userId);
     }
 }
