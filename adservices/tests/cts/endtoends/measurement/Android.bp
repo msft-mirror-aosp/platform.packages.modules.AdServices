@@ -42,5 +42,6 @@ android_test {
     // To fix Pre-submit warning, suggested by farivar@
     javacflags: ["-parameters"],
     sdk_version: "module_current",
+    min_sdk_version: "Tiramisu",
     test_mainline_modules: ["com.google.android.adservices.apex"],
 }
