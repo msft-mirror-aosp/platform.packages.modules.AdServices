@@ -79,8 +79,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Пакуль няма інтарэсаў"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Праграма \"Прыватнасць у рэкламе на прыладах Android\" (бэта-версія) забяспечвае ўжыванне ў праграмах новых функцый для паказу вам рэкламы. Гэтыя тэхналогіі не выкарыстоўваюць ідэнтыфікатары прылады.\n\nAndroid будзе аналізаваць, якія тыпы рэкламы могуць быць для вас цікавымі, і часова захоўваць інфармацыю пра вашы інтарэсы на вашай прыладзе. Гэта дазволіць праграмам паказваць вам рэлевантную рэкламу, не адсочваючы вашы дзеянні на вэб-сайтах і ў праграмах іншых распрацоўшчыкаў."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"У вас няма заблакіраваных інтарэсаў"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Праграмы могуць аналізаваць інфармацыю пра вашы інтарэсы і часова захоўваць яе на прыладзе Android. Пазней іншая праграма, кіруючыся гэтымі данымі, можа паказаць вам адпаведную рэкламу.\n\nКалі заблакіраваць праграму, яна не зможа аналізаваць даныя пра інтарэсы і не будзе дадавацца ў гэты спіс праграм, пакуль вы не разблакіруеце яе. Даныя пра інтарэсы, ужо прааналізаваныя праграмай, будуць выдалены, аднак вам па-ранейшаму можа паказвацца адпаведная рэклама."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Праграмы, якія вы заблакіравалі"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Скінуць даныя пра інтарэсы, захаваныя праграмамі"</string>
@@ -88,7 +87,44 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Праграма \"Прыватнасць у рэкламе на прыладах Android\" (бэта-версія) забяспечвае ўжыванне ў праграмах новых функцый для паказу вам рэкламы. Гэтыя тэхналогіі не выкарыстоўваюць ідэнтыфікатары прылады.\n\nПраграмы будуць аналізаваць, якія тыпы рэкламы могуць быць для вас цікавымі, і часова захоўваць інфармацыю пра вашы інтарэсы на вашай прыладзе. Гэта дазволіць праграмам паказваць вам рэлевантную рэкламу, не адсочваючы вашы дзеянні на вэб-сайтах і ў праграмах іншых распрацоўшчыкаў."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"У вас няма заблакіраваных праграм"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"У вас няма заблакіраваных інтарэсаў"</string>
+    <!-- no translation found for settingsUI_dialog_negative_text (3014088254631375852) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_title (1862069591629418291) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_message (5696012172835241848) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_positive_text (5344259263448028614) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_title (5744004384480280782) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_message (2474902516721078270) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_positive_text (2626152417590300510) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_title (7361000923920947234) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_message (4058967523591550460) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_positive_text (2192452325573789737) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_title (1949146936958849544) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (8099126076667244456) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_positive_text (8345697359799280761) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_app_title (421160714549264414) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_app_message (4703493174054204149) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_app_title (4360730780049298286) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_app_message (7858109719986236041) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_title (7193520707240514769) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1967554695864827385) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Мастацтва і забавы"</string>
     <string name="topic10002" msgid="1226367977754287428">"Акцёрскае майстэрства і тэатр"</string>
     <string name="topic10003" msgid="6949890838957814881">"Анімэ і манга"</string>

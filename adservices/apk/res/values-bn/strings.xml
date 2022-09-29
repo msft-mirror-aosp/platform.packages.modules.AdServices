@@ -79,8 +79,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"এই মুহূর্তে দেখানোর মতো কোনও আগ্রহ নেই"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"প্রাইভেসি স্যান্ডবক্স"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android-এর বিজ্ঞাপন সম্পর্কিত গোপনীয়তা বিটা নতুন ফিচার প্রদান করে যা, আপনার পছন্দ হতে পারে এমন বিজ্ঞাপন আপনাকে দেখানোর জন্য অ্যাপ ব্যবহার করতে পারে। এইসব প্রযুক্তি ডিভাইস শনাক্তকারী ব্যবহার করে না।\n\nAndroid অনুমান করতে পারে যে কী ধরনের বিজ্ঞাপনে আপনি আগ্রহী হতে পারেন, এবং আপনার ডিভাইসে সাময়িকভাবে এইসব বিজ্ঞাপন সেভ করতে পারে। এটি অন্যান্য ডেভেলপারদের ওয়েবসাইট ও অ্যাপ জুড়ে আপনার অ্যাক্টিভিটি ট্র্যাক না করেই, এই সম্পর্কিত বিজ্ঞাপন দেখানোর জন্য অ্যাপকে অনুমতি দেয়।"</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"আপনার কোনও ব্লক করা আগ্রহ নেই"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"অ্যাপ আপনার আগ্রহ অনুমান করতে পারে এবং Android-এ সাময়িকভাবে এগুলি সেভ করতে পারে। এরপরে, এইসব বিজ্ঞাপনের উপর নির্ভর করে অ্যাপ বিজ্ঞাপন দেখাতে পারে।\n\nআপনি কোনও অ্যাপ ব্লক করলে, এটি আর কোনও আগ্রহ অনুমান করবে না। আপনি আনব্লক না করা পর্যন্ত অ্যাপের এই তালিকায় এটি আর যোগ করা হবে না। ইতিমধ্যেই অ্যাপের মাধ্যমে অনুমান করা আগ্রহ সম্পর্কিত ডেটা মুছে ফেলা হবে, তবে আপনি হয়ত এই সম্পর্কিত বিজ্ঞাপন এখনও দেখতে পাবেন।"</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"আপনার ব্লক করা অ্যাপ"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"অ্যাপের মাধ্যমে অনুমান করা আগ্রহ রিসেট করুন"</string>
@@ -88,7 +87,44 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"প্রাইভেসি স্যান্ডবক্স"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android-এর বিজ্ঞাপন সম্পর্কিত গোপনীয়তা বিটা নতুন ফিচার প্রদান করে যা, আপনার পছন্দ হতে পারে এমন বিজ্ঞাপন আপনাকে দেখানোর জন্য অ্যাপ ব্যবহার করতে পারে। এইসব প্রযুক্তি ডিভাইস শনাক্তকারী ব্যবহার করে না।\n\nঅ্যাপ অনুমান করতে পারে যে কী ধরনের বিজ্ঞাপনে আপনি আগ্রহী হতে পারেন, এবং আপনার ডিভাইসে সাময়িকভাবে এইসব বিজ্ঞাপন সেভ করতে পারবে। এটি অন্যান্য ডেভেলপারদের ওয়েবসাইট ও অ্যাপ জুড়ে আপনার অ্যাক্টিভিটি ট্র্যাক না করেই, এই সম্পর্কিত বিজ্ঞাপন দেখানোর জন্য অ্যাপকে অনুমতি দেয়।"</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"আপনার কাছে কোনও ব্লক করা অ্যাপ নেই"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"আপনার কোনও ব্লক করা আগ্রহ নেই"</string>
+    <!-- no translation found for settingsUI_dialog_negative_text (3014088254631375852) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_title (1862069591629418291) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_message (5696012172835241848) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_positive_text (5344259263448028614) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_title (5744004384480280782) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_message (2474902516721078270) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_positive_text (2626152417590300510) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_title (7361000923920947234) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_message (4058967523591550460) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_positive_text (2192452325573789737) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_title (1949146936958849544) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (8099126076667244456) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_positive_text (8345697359799280761) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_app_title (421160714549264414) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_app_message (4703493174054204149) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_app_title (4360730780049298286) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_app_message (7858109719986236041) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_title (7193520707240514769) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1967554695864827385) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"শিল্পকলা ও বিনোদন"</string>
     <string name="topic10002" msgid="1226367977754287428">"অভিনয় ও থিয়েটার"</string>
     <string name="topic10003" msgid="6949890838957814881">"অ্যানিমে এবং মাঙ্গা"</string>

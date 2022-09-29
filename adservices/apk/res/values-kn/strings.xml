@@ -79,8 +79,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"ಇದೀಗ ತೋರಿಸಲು ಯಾವುದೇ ಆಸಕ್ತಿಗಳಿಲ್ಲ"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"ಗೌಪ್ಯತೆ ಸ್ಯಾಂಡ್‌ಬಾಕ್ಸ್"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android ಜಾಹೀರಾತುಗಳ ಗೌಪ್ಯತೆಯ ಬೀಟಾ ಹೊಸ ಫೀಚರ್‌ಗಳನ್ನು ಒದಗಿಸುತ್ತಿದ್ದು ಅವುಗಳನ್ನು ಬಳಸಿಕೊಂಡು ಆ್ಯಪ್‌ಗಳು ನಿಮಗೆ ಇಷ್ಟವಾಗಬಹುದಾದ ಜಾಹೀರಾತುಗಳನ್ನು ತೋರಿಸಬಹುದು. ಈ ತಂತ್ರಜ್ಞಾನಗಳು ಸಾಧನ ಗುರುತಿಸುವಿಕೆಗಳನ್ನು ಬಳಸುವುದಿಲ್ಲ.\n\nAndroid ನಿಮಗೆ ಯಾವ ಪ್ರಕಾರದ ಜಾಹೀರಾತುಗಳು ಇಷ್ಟವಾಗುತ್ತವೆ ಎಂಬುದನ್ನು ಅಂದಾಜು ಮಾಡಬಲ್ಲದು ಮತ್ತು ಈ ಆಸಕ್ತಿಗಳನ್ನು ನಿಮ್ಮ ಸಾಧನದಲ್ಲಿ ತಾತ್ಕಾಲಿಕವಾಗಿ ಉಳಿಸಬಲ್ಲದು. ಇತರ ಡೆವಲಪರ್‌ಗಳ ವೆಬ್‌ಸೈಟ್‌ಗಳು ಮತ್ತು ಆ್ಯಪ್‌ಗಳಾದ್ಯಂತ ನಿಮ್ಮ ಚಟುವಟಿಕೆಯನ್ನು ಟ್ರ್ಯಾಕ್ ಮಾಡದೇ ನಿಮಗೆ ಸೂಕ್ತವಾದ ಜಾಹೀರಾತುಗಳನ್ನು ತೋರಿಸಲು ಇದು ಆ್ಯಪ್‌ಗಳಿಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"ನೀವು ಯಾವುದೇ ನಿರ್ಬಂಧಿತ ಆಸಕ್ತಿಗಳನ್ನು ಹೊಂದಿಲ್ಲ"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"ಆ್ಯಪ್‌ಗಳು ನಿಮ್ಮ ಆಸಕ್ತಿಗಳನ್ನು ಅಂದಾಜು ಮಾಡಬಲ್ಲವು ಮತ್ತು ಅವುಗಳನ್ನು Android ನಲ್ಲಿ ತಾತ್ಕಾಲಿಕವಾಗಿ ಉಳಿಸಬಲ್ಲವು. ನಂತರ ಈ ಆಸಕ್ತಿಗಳನ್ನು ಆಧರಿಸಿ ಮತ್ತೊಂದು ಆ್ಯಪ್ ನಿಮಗೆ ಜಾಹೀರಾತೊಂದನ್ನು ತೋರಿಸಬಹುದು.\n\nನೀವು ಆ್ಯಪ್ ಒಂದನ್ನು ನಿರ್ಬಂಧಿಸಿದರೆ, ಅದು ಯಾವುದೇ ಆಸಕ್ತಿಗಳನ್ನು ಅಂದಾಜು ಮಾಡುವುದಿಲ್ಲ. ನೀವು ಅದರ ಮೇಲಿನ ನಿರ್ಬಂಧವನ್ನು ತೆಗೆದುಹಾಕದ ಹೊರತು ಅದನ್ನು ಈ ಆ್ಯಪ್‌ಗಳ ಪಟ್ಟಿಗೆ ಸೇರಿಸಲಾಗುವುದಿಲ್ಲ. ಆ್ಯಪ್ ಈಗಾಗಲೇ ಅಂದಾಜು ಮಾಡಿರುವ ಆಸಕ್ತಿಗಳನ್ನು ಅಳಿಸಲಾಗುತ್ತದೆ, ಆದರೆ ನಿಮಗೆ ಈಗಲೂ ಕೆಲವು ಸಂಬಂಧಿತ ಜಾಹೀರಾತುಗಳು ಕಾಣಿಸಬಹುದು."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"ನೀವು ನಿರ್ಬಂಧಿಸಿದ ಆ್ಯಪ್‌ಗಳು"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"ಆ್ಯಪ್‌ಗಳು ಅಂದಾಜು ಮಾಡಿರುವ ಆಸಕ್ತಿಗಳನ್ನು ರೀಸೆಟ್ ಮಾಡಿ"</string>
@@ -88,7 +87,44 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"ಗೌಪ್ಯತೆ ಸ್ಯಾಂಡ್‌ಬಾಕ್ಸ್"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android ಜಾಹೀರಾತುಗಳ ಗೌಪ್ಯತೆಯ ಬೀಟಾ ಹೊಸ ಫೀಚರ್‌ಗಳನ್ನು ಒದಗಿಸುತ್ತಿದ್ದು ಅವುಗಳನ್ನು ಬಳಸಿಕೊಂಡು ಆ್ಯಪ್‌ಗಳು ನಿಮಗೆ ಇಷ್ಟವಾಗಬಹುದಾದ ಜಾಹೀರಾತುಗಳನ್ನು ತೋರಿಸಬಹುದು. ಈ ತಂತ್ರಜ್ಞಾನಗಳು ಸಾಧನ ಗುರುತಿಸುವಿಕೆಗಳನ್ನು ಬಳಸುವುದಿಲ್ಲ.\n\nಆ್ಯಪ್‌ಗಳು ನಿಮಗೆ ಯಾವ ಪ್ರಕಾರದ ಜಾಹೀರಾತುಗಳು ಇಷ್ಟವಾಗುತ್ತವೆ ಎಂಬುದನ್ನು ಅಂದಾಜು ಮಾಡಬಲ್ಲವು ಮತ್ತು ಈ ಆಸಕ್ತಿಗಳನ್ನು ನಿಮ್ಮ ಸಾಧನದಲ್ಲಿ ತಾತ್ಕಾಲಿಕವಾಗಿ ಉಳಿಸಬಲ್ಲವು. ಇತರ ಡೆವಲಪರ್‌ಗಳ ವೆಬ್‌ಸೈಟ್‌ಗಳು ಮತ್ತು ಆ್ಯಪ್‌ಗಳಾದ್ಯಂತ ನಿಮ್ಮ ಚಟುವಟಿಕೆಯನ್ನು ಟ್ರ್ಯಾಕ್ ಮಾಡದೇ ನಿಮಗೆ ಸೂಕ್ತವಾದ ಜಾಹೀರಾತುಗಳನ್ನು ತೋರಿಸಲು ಇದು ಆ್ಯಪ್‌ಗಳಿಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"ನೀವು ಯಾವುದೇ ನಿರ್ಬಂಧಿತ ಆ್ಯಪ್‌ಗಳನ್ನು ಹೊಂದಿಲ್ಲ"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"ನೀವು ಯಾವುದೇ ನಿರ್ಬಂಧಿತ ಆಸಕ್ತಿಗಳನ್ನು ಹೊಂದಿಲ್ಲ"</string>
+    <!-- no translation found for settingsUI_dialog_negative_text (3014088254631375852) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_title (1862069591629418291) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_message (5696012172835241848) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_positive_text (5344259263448028614) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_title (5744004384480280782) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_message (2474902516721078270) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_positive_text (2626152417590300510) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_title (7361000923920947234) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_message (4058967523591550460) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_positive_text (2192452325573789737) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_title (1949146936958849544) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (8099126076667244456) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_positive_text (8345697359799280761) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_app_title (421160714549264414) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_app_message (4703493174054204149) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_app_title (4360730780049298286) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_app_message (7858109719986236041) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_title (7193520707240514769) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1967554695864827385) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"ಕಲೆ &amp; ಮನರಂಜನೆ"</string>
     <string name="topic10002" msgid="1226367977754287428">"ನಟನೆ &amp; ಥೇಟರ್"</string>
     <string name="topic10003" msgid="6949890838957814881">"ಆನಿಮೇ &amp; ಮಾಂಗ"</string>

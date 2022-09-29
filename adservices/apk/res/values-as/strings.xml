@@ -79,8 +79,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"এই মুহূৰ্তত দেখুৱাবলৈ কোনো আগ্ৰহ নাই"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"প্ৰাইভেচি ছেণ্ডবক্স"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Androidৰ বিজ্ঞাপনৰ গোপনীয়তাৰ বিটায়ে নতুন সুবিধাসমূহ দিয়ে, যিসমূহ সুবিধা এপে আপোনাক আপুনি পচন্দ কৰিব পৰা ধৰণৰ বিজ্ঞাপন দেখুৱাবলৈ ব্যৱহাৰ কৰিব পাৰে। এই প্ৰযুক্তিসমূহে ডিভাইচ চিনাক্তকাৰী ব্যৱহাৰ নকৰে।\n\nAndroidএ আপুনি আগ্ৰহী হ’ব পৰা ধৰণৰ বিজ্ঞাপন অনুমান কৰিব পাৰে আৰু আপোনাৰ ডিভাইচত অস্থায়ীভাৱে আগ্ৰহসমূহ ছেভ কৰিব পাৰে। এইটোৱে সমগ্ৰ ৱেবছাইট আৰু অন্য বিকাশকৰ্তাৰ এপত আপোনাৰ কাৰ্যকলাপ ট্ৰেক নকৰাকৈয়ে আপোনাৰ বাবে প্ৰাসংগিক বিজ্ঞাপন দেখুৱাবলৈ এপক অনুমতি দিয়ে।"</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"আপোনাৰ ওচৰত অৱৰোধ কৰি থোৱা কোনো আগ্ৰহ নাই"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"এপে আপোনাৰ আগ্ৰহসমূহ অনুমান কৰিব আৰু সেইবোৰ Androidৰ জৰিয়তে অস্থায়ীভাৱে ছেভ কৰিব পাৰে। পাছত, অন্য এটা এপে এই আগ্ৰহসমূহৰ ভিত্তিত আপোনাক কোনো বিজ্ঞাপন দেখুৱাব পাৰে।\n\nযদি আপুনি কোনো এপ্ অৱৰোধ কৰে, সেইটোৱে আৰু কোনো আগ্ৰহ অনুমান কৰিব নোৱাৰিব। আপুনি ইয়াক অৱৰোধৰ পৰা আঁতৰাই নিদিয়ালৈকে ইয়াক এপৰ এই সূচীখনত যোগ দিয়া নহ’ব। এপ্‌টোৱে ইতিমধ্যে অনুমান কৰা আগ্ৰহসমূহ মচি পেলোৱা হ’ব, কিন্তু আপুনি তথাপি কিছুমান প্ৰাসংগিক বিজ্ঞাপন দেখিব পাৰে।"</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"আপুনি অৱৰোধ কৰা এপ্"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"এপে অনুমান কৰা আগ্ৰহ ৰিছেট কৰক"</string>
@@ -88,7 +87,44 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"প্ৰাইভেচি ছেণ্ডবক্স"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Androidৰ বিজ্ঞাপনৰ গোপনীয়তাৰ বিটায়ে নতুন সুবিধাসমূহ দিয়ে, যিসমূহ সুবিধা এপে আপোনাক আপুনি পচন্দ কৰিব পৰা ধৰণৰ বিজ্ঞাপন দেখুৱাবলৈ ব্যৱহাৰ কৰিব পাৰে। এই প্ৰযুক্তিসমূহে ডিভাইচ চিনাক্তকাৰী ব্যৱহাৰ নকৰে।\n\nএপে আপুনি আগ্ৰহী হ’ব পৰা ধৰণৰ বিজ্ঞাপন অনুমান কৰিব পাৰে আৰু আপোনাৰ ডিভাইচত অস্থায়ীভাৱে আগ্ৰহসমূহ ছেভ কৰিব পাৰে। এইটোৱে সমগ্ৰ ৱেবছাইট আৰু অন্য বিকাশকৰ্তাৰ এপত আপোনাৰ কাৰ্যকলাপ ট্ৰেক নকৰাকৈয়ে আপোনাৰ বাবে প্ৰাসংগিক বিজ্ঞাপন দেখুৱাবলৈ এপক অনুমতি দিয়ে।"</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"আপোনাৰ ওচৰত কোনো অৱৰোধিত এপ্ নাই"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"আপোনাৰ ওচৰত অৱৰোধ কৰি থোৱা কোনো আগ্ৰহ নাই"</string>
+    <!-- no translation found for settingsUI_dialog_negative_text (3014088254631375852) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_title (1862069591629418291) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_message (5696012172835241848) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_positive_text (5344259263448028614) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_title (5744004384480280782) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_message (2474902516721078270) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_positive_text (2626152417590300510) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_title (7361000923920947234) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_message (4058967523591550460) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_positive_text (2192452325573789737) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_title (1949146936958849544) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (8099126076667244456) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_positive_text (8345697359799280761) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_app_title (421160714549264414) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_app_message (4703493174054204149) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_app_title (4360730780049298286) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_app_message (7858109719986236041) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_title (7193520707240514769) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1967554695864827385) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"কলা আৰু বিনোদন"</string>
     <string name="topic10002" msgid="1226367977754287428">"অভিনয় আৰু থিয়েটাৰ"</string>
     <string name="topic10003" msgid="6949890838957814881">"এনিমে’ আৰু মাংগা"</string>
