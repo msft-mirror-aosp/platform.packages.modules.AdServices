@@ -77,15 +77,7 @@ public class SdkSandboxStorageManagerUnitTest {
                 .when(mSpyContext)
                 .createContextAsUser(Mockito.any(UserHandle.class), Mockito.anyInt());
 
-        PackageManagerLocal packageManagerLocal =
-                (volumeUuid,
-                        packageName,
-                        subDirNames,
-                        userId,
-                        appId,
-                        previousAppId,
-                        seInfo,
-                        flags) -> {};
+        PackageManagerLocal packageManagerLocal = Mockito.mock(PackageManagerLocal.class);
 
         mSdkSandboxManagerLocal = new FakeSdkSandboxManagerLocal();
         mSdkSandboxStorageManager =
