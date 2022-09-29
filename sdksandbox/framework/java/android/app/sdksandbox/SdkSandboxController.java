@@ -20,6 +20,7 @@ import static android.app.sdksandbox.SdkSandboxController.SDK_SANDBOX_CONTROLLER
 import android.annotation.NonNull;
 import android.annotation.SystemService;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.RemoteException;
 
 import java.util.List;
@@ -38,7 +39,12 @@ import java.util.List;
 @SystemService(SDK_SANDBOX_CONTROLLER_SERVICE)
 public class SdkSandboxController {
     public static final String SDK_SANDBOX_CONTROLLER_SERVICE = "sdk_sandbox_controller_service";
+    /** @hide */
+    public static final String CLIENT_SHARED_PREFERENCES_NAME =
+            "com.android.sdksandbox.client_sharedpreferences";
+
     private static final String TAG = "SdkSandboxController";
+
     private SdkSandboxLocalSingleton mSdkSandboxLocalSingleton;
     private Context mContext;
 
@@ -77,17 +83,43 @@ public class SdkSandboxController {
      *     context. Use {@link SandboxedSdkProvider#getContext()} for the right context
      */
     public @NonNull List<SandboxedSdk> getSandboxedSdks() {
-        if (!(mContext instanceof SandboxedSdkContext)) {
-            throw new UnsupportedOperationException(
-                    "Only available from the context obtained by calling android.app.sdksandbox"
-                            + ".SandboxedSdkProvider#getContext()");
-        }
+        enforceSandboxedSdkContextInitialization();
         try {
             return mSdkSandboxLocalSingleton
                     .getSdkToServiceCallback()
                     .getSandboxedSdks(((SandboxedSdkContext) mContext).getClientPackageName());
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Returns {@link SharedPreferences} containing data synced from the client app.
+     *
+     * <p>Keys that have been synced by the client app using {@link
+     * SdkSandboxManager#addSyncedSharedPreferencesKeys(Set)} can be found in this {@link
+     * SharedPreferences}.
+     *
+     * <p>The returned {@link SharedPreferences} should only be read. Writing to it is not
+     * supported.
+     *
+     * @return {@link SharedPreferences} containing data synced from client app.
+     * @throws UnsupportedOperationException if the controller is obtained from an unexpected
+     *     context. Use {@link SandboxedSdkProvider#getContext()} for the right context
+     */
+    @NonNull
+    public SharedPreferences getClientSharedPreferences() {
+        enforceSandboxedSdkContextInitialization();
+
+        // TODO(b/248214708): We should store synced data in a separate internal storage directory.
+        return mContext.getSharedPreferences(CLIENT_SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE);
+    }
+
+    private void enforceSandboxedSdkContextInitialization() {
+        if (!(mContext instanceof SandboxedSdkContext)) {
+            throw new UnsupportedOperationException(
+                    "Only available from the context obtained by calling android.app.sdksandbox"
+                            + ".SandboxedSdkProvider#getContext()");
         }
     }
 }

@@ -16,9 +16,9 @@
 
 package com.android.tests.codeprovider.storagetest_1;
 
+import android.app.sdksandbox.SdkSandboxController;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -101,8 +101,7 @@ public class StorageTestSdk1ApiImpl extends IStorageTestSdk1Api.Stub {
         return mContext.getApplicationContext().getCacheDir().toString();
     }
 
-    // TODO(b/237410689): Replace with real getClientSharedPreferences
     private SharedPreferences getClientSharedPreferences() {
-        return PreferenceManager.getDefaultSharedPreferences(mContext.getApplicationContext());
+        return mContext.getSystemService(SdkSandboxController.class).getClientSharedPreferences();
     }
 }
