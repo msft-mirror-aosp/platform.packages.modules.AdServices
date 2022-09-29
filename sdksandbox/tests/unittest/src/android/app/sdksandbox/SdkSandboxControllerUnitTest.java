@@ -21,8 +21,8 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
 import android.os.Binder;
 import android.os.RemoteException;
 
@@ -53,20 +53,15 @@ public class SdkSandboxControllerUnitTest {
     @Before
     public void setup() throws Exception {
         mContext = InstrumentationRegistry.getInstrumentation().getContext();
-        ApplicationInfo info =
-                mContext.getPackageManager()
-                        .getApplicationInfo(
-                                RESOURCES_PACKAGE,
-                                PackageManager.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES);
         mSandboxedSdkContext =
                 new SandboxedSdkContext(
-                        androidx.test.InstrumentationRegistry.getContext(),
+                        mContext,
                         getClass().getClassLoader(),
-                        "com.test.app",
-                        info,
-                        "com.test.sdk",
-                        "testCe",
-                        "testDe");
+                        /*clientPackageName=*/ "",
+                        new ApplicationInfo(),
+                        /*sdkName=*/ "",
+                        /*sdkCeDataDir=*/ null,
+                        /*sdkDeDataDir=*/ null);
 
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
@@ -85,7 +80,7 @@ public class SdkSandboxControllerUnitTest {
 
     @Test
     public void testCreateInstance() throws Exception {
-        SdkSandboxController controller = new SdkSandboxController(mContext);
+        final SdkSandboxController controller = new SdkSandboxController(mContext);
         assertThat(controller).isNotNull();
     }
 
@@ -125,5 +120,32 @@ public class SdkSandboxControllerUnitTest {
                         + ".SandboxedSdkProvider#getContext()",
                 UnsupportedOperationException.class,
                 () -> controller.getSandboxedSdks());
+    }
+
+    @Test
+    public void testGetClientSharedPreferences_onlyFromSandboxedContext() throws Exception {
+        final SdkSandboxController controller = new SdkSandboxController(mContext);
+        assertThrows(
+                "Only available from SandboxedSdkContext",
+                UnsupportedOperationException.class,
+                () -> controller.getClientSharedPreferences());
+    }
+
+    @Test
+    public void testGetClientSharedPreferences() throws Exception {
+        final SdkSandboxController controller = new SdkSandboxController(mContext);
+        controller.initialize(mSandboxedSdkContext);
+
+        final SharedPreferences sp = controller.getClientSharedPreferences();
+        // Assert same instance as a name SharedPreference on sandboxed context
+        final SharedPreferences spFromSandboxedContext =
+                mSandboxedSdkContext.getSharedPreferences(
+                        SdkSandboxController.CLIENT_SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE);
+        assertThat(sp).isSameInstanceAs(spFromSandboxedContext);
+        // Assert same instance as a name SharedPreference on original context
+        final SharedPreferences spFromOriginalContext =
+                mContext.getSharedPreferences(
+                        SdkSandboxController.CLIENT_SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE);
+        assertThat(sp).isSameInstanceAs(spFromOriginalContext);
     }
 }
