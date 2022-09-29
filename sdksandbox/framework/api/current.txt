@@ -22,6 +22,7 @@ package android.app.sdksandbox {
     ctor public SandboxedSdk(@NonNull android.os.IBinder);
     method public int describeContents();
     method @Nullable public android.os.IBinder getInterface();
+    method @NonNull public android.content.pm.SharedLibraryInfo getSharedLibraryInfo();
     method public void writeToParcel(@NonNull android.os.Parcel, int);
     field @NonNull public static final android.os.Parcelable.Creator<android.app.sdksandbox.SandboxedSdk> CREATOR;
   }
@@ -38,6 +39,7 @@ package android.app.sdksandbox {
   public final class SdkSandboxManager {
     method public void addSdkSandboxProcessDeathCallback(@NonNull java.util.concurrent.Executor, @NonNull android.app.sdksandbox.SdkSandboxManager.SdkSandboxProcessDeathCallback);
     method public void addSyncedSharedPreferencesKeys(@NonNull java.util.Set<java.lang.String>);
+    method @NonNull public java.util.List<android.app.sdksandbox.SandboxedSdk> getSandboxedSdks();
     method public static int getSdkSandboxState();
     method @NonNull public java.util.Set<java.lang.String> getSyncedSharedPreferencesKeys();
     method public void loadSdk(@NonNull String, @NonNull android.os.Bundle, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<android.app.sdksandbox.SandboxedSdk,android.app.sdksandbox.LoadSdkException>);

@@ -1235,4 +1235,12 @@ public interface Flags extends Dumpable {
     default boolean getOffDeviceAdSelectionEnabled() {
         return OFF_DEVICE_AD_SELECTION_ENABLED;
     }
+
+    /** UI Dialogs feature enabled. */
+    boolean UI_DIALOGS_FEATURE_ENABLED = true;
+
+    /** Returns if the UI Dialogs feature is enabled. */
+    default boolean getUIDialogsFeatureEnabled() {
+        return UI_DIALOGS_FEATURE_ENABLED;
+    }
 }

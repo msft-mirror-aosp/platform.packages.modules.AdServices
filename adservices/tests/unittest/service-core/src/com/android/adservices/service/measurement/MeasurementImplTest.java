@@ -124,6 +124,8 @@ public final class MeasurementImplTest {
     private static final Context DEFAULT_CONTEXT = ApplicationProvider.getApplicationContext();
     private static final Uri URI_WITHOUT_APP_SCHEME = Uri.parse("com.example.abc");
     private static final Uri DEFAULT_URI = Uri.parse("android-app://com.example.abc");
+    private static final Uri TOP_ORIGIN =
+            Uri.parse("android-app://" + DEFAULT_CONTEXT.getPackageName());
     private static final Uri REGISTRATION_URI_1 = Uri.parse("https://foo.com/bar?ad=134");
     private static final Uri REGISTRATION_URI_2 = Uri.parse("https://foo.com/bar?ad=256");
     private static final String DEFAULT_ENROLLMENT = "enrollment-id";
@@ -169,7 +171,6 @@ public final class MeasurementImplTest {
                     + "]\n";
     private static final TriggerRegistration VALID_TRIGGER_REGISTRATION =
             new TriggerRegistration.Builder()
-                    .setTopOrigin(Uri.parse("https://foo.com"))
                     .setEnrollmentId(DEFAULT_ENROLLMENT)
                     .setEventTriggers(EVENT_TRIGGERS)
                     .setAggregateTriggerData(
@@ -189,7 +190,6 @@ public final class MeasurementImplTest {
                     .setInstallAttributionWindow(841839879274L)
                     .setInstallCooldownWindow(8418398274L)
                     .setEnrollmentId(DEFAULT_ENROLLMENT)
-                    .setTopOrigin(Uri.parse("android-app://com.source"))
                     .build();
     private static final SourceRegistration VALID_SOURCE_REGISTRATION_2 =
             new com.android.adservices.service.measurement.registration.SourceRegistration.Builder()
@@ -201,7 +201,6 @@ public final class MeasurementImplTest {
                     .setInstallAttributionWindow(841839879275L)
                     .setInstallCooldownWindow(7418398274L)
                     .setEnrollmentId(DEFAULT_ENROLLMENT)
-                    .setTopOrigin(Uri.parse("android-app://com.source2"))
                     .build();
     private static final WebSourceParams INPUT_SOURCE_REGISTRATION_1 =
             new WebSourceParams.Builder(REGISTRATION_URI_1).setDebugKeyAllowed(true).build();
@@ -268,7 +267,6 @@ public final class MeasurementImplTest {
     private static RegistrationRequest createRegistrationRequest(int type) {
         return new RegistrationRequest.Builder()
                 .setRegistrationUri(REGISTRATION_URI_1)
-                .setTopOriginUri(DEFAULT_URI)
                 .setPackageName(DEFAULT_CONTEXT.getAttributionSource().getPackageName())
                 .setRegistrationType(type)
                 .build();
@@ -548,7 +546,7 @@ public final class MeasurementImplTest {
                 createTrigger(
                         triggerTime,
                         DEFAULT_CONTEXT.getAttributionSource(),
-                        DEFAULT_URI,
+                        TOP_ORIGIN,
                         EventSurfaceType.APP);
         verify(mMeasurementDao).insertTrigger(trigger);
     }
@@ -651,7 +649,7 @@ public final class MeasurementImplTest {
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setExpiryTime(eventTime + TimeUnit.SECONDS.toMillis(expiry))
                         .setEventTime(eventTime)
-                        .setPublisher(DEFAULT_URI)
+                        .setPublisher(TOP_ORIGIN)
                         .setAppDestination(Uri.parse("android-app://com.example.abc"))
                         .setEventId(new UnsignedLong(123L))
                         .build();
@@ -661,7 +659,6 @@ public final class MeasurementImplTest {
                         new SourceRegistration.Builder()
                                 .setSourceEventId(sampleSource.getEventId())
                                 .setAppDestination(sampleSource.getAppDestination())
-                                .setTopOrigin(sampleSource.getPublisher())
                                 .setExpiry(expiry)
                                 .setEnrollmentId(DEFAULT_ENROLLMENT)
                                 .build());
@@ -689,7 +686,6 @@ public final class MeasurementImplTest {
                 measurementImpl.register(
                         new RegistrationRequest.Builder()
                                 .setRegistrationUri(REGISTRATION_URI_1)
-                                .setTopOriginUri(DEFAULT_URI)
                                 .setPackageName(
                                         DEFAULT_CONTEXT.getAttributionSource().getPackageName())
                                 .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
@@ -723,7 +719,7 @@ public final class MeasurementImplTest {
                                 .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(20))
                                 .setSourceType(Source.SourceType.NAVIGATION)
                                 .setAppDestination(DEFAULT_URI)
-                                .setPublisher(DEFAULT_URI)
+                                .setPublisher(TOP_ORIGIN)
                                 .build());
         when(source.getRandomAttributionProbability()).thenReturn(1.1D);
         DatastoreManager mockDatastoreManager = Mockito.mock(DatastoreManager.class);
@@ -1227,7 +1223,6 @@ public final class MeasurementImplTest {
         RegistrationRequest registrationRequest =
                 new RegistrationRequest.Builder()
                         .setRegistrationUri(REGISTRATION_URI_1)
-                        .setTopOriginUri(DEFAULT_URI)
                         .setPackageName(DEFAULT_CONTEXT.getAttributionSource().getPackageName())
                         .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
                         .setInputEvent(getInputEvent())
@@ -1573,7 +1568,7 @@ public final class MeasurementImplTest {
                         eventTime,
                         firstSourceDestination,
                         firstSourceWebDestination,
-                        registrationRequest.getTopOriginUri(),
+                        Uri.parse(ANDROID_APP_SCHEME + registrationRequest.getPackageName()),
                         EventSurfaceType.APP,
                         registrationRequest.getPackageName());
         verify(mMeasurementDao).insertSource(source);

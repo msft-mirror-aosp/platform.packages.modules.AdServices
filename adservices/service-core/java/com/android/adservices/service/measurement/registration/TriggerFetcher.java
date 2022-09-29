@@ -87,7 +87,6 @@ public class TriggerFetcher {
     }
 
     private boolean parseTrigger(
-            @NonNull Uri topOrigin,
             @NonNull String enrollmentId,
             @NonNull Map<String, List<String>> headers,
             @NonNull List<TriggerRegistration> addToResults,
@@ -95,7 +94,6 @@ public class TriggerFetcher {
             boolean isAllowDebugKey,
             boolean isAdIdPermissionGranted) {
         TriggerRegistration.Builder result = new TriggerRegistration.Builder();
-        result.setTopOrigin(topOrigin);
         result.setEnrollmentId(enrollmentId);
         List<String> field;
         field = headers.get("Attribution-Reporting-Register-Trigger");
@@ -156,7 +154,6 @@ public class TriggerFetcher {
     }
 
     private void fetchTrigger(
-            @NonNull Uri topOrigin,
             @NonNull Uri registrationUri,
             boolean shouldProcessRedirects,
             @NonNull List<TriggerRegistration> registrationsOut,
@@ -210,7 +207,6 @@ public class TriggerFetcher {
 
             final boolean parsed =
                     parseTrigger(
-                            topOrigin,
                             enrollmentId.get(),
                             headers,
                             registrationsOut,
@@ -226,7 +222,6 @@ public class TriggerFetcher {
                 List<Uri> redirects = FetcherUtil.parseRedirects(headers);
                 for (Uri redirect : redirects) {
                     fetchTrigger(
-                            topOrigin,
                             redirect,
                             false,
                             registrationsOut,
@@ -253,7 +248,6 @@ public class TriggerFetcher {
         }
         List<TriggerRegistration> out = new ArrayList<>();
         fetchTrigger(
-                request.getTopOriginUri(),
                 request.getRegistrationUri(),
                 true,
                 out,
@@ -271,8 +265,7 @@ public class TriggerFetcher {
     public Optional<List<TriggerRegistration>> fetchWebTriggers(
             WebTriggerRegistrationRequest request, boolean isAdIdPermissionGranted) {
         List<TriggerRegistration> out = new ArrayList<>();
-        processWebTriggersFetch(
-                request.getDestination(), request.getTriggerParams(), out, isAdIdPermissionGranted);
+        processWebTriggersFetch(request.getTriggerParams(), out, isAdIdPermissionGranted);
 
         if (out.isEmpty()) {
             return Optional.empty();
@@ -282,7 +275,6 @@ public class TriggerFetcher {
     }
 
     private void processWebTriggersFetch(
-            Uri topOrigin,
             List<WebTriggerParams> triggerParamsList,
             List<TriggerRegistration> registrationsOut,
             boolean isAdIdPermissionGranted) {
@@ -292,7 +284,6 @@ public class TriggerFetcher {
                                     .map(
                                             triggerParams ->
                                                     createFutureToFetchWebTrigger(
-                                                            topOrigin,
                                                             registrationsOut,
                                                             triggerParams,
                                                             isAdIdPermissionGranted))
@@ -304,14 +295,12 @@ public class TriggerFetcher {
     }
 
     private CompletableFuture<Void> createFutureToFetchWebTrigger(
-            Uri topOrigin,
             List<TriggerRegistration> registrationsOut,
             WebTriggerParams triggerParams,
             boolean isAdIdPermissionGranted) {
         return CompletableFuture.runAsync(
                 () ->
                         fetchTrigger(
-                                topOrigin,
                                 triggerParams.getRegistrationUri(),
                                 /* should process redirects*/ false,
                                 registrationsOut,

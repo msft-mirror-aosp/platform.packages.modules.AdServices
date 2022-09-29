@@ -41,6 +41,7 @@ android_test {
         "truth-prebuilt",
         "ub-uiautomator",
         "adservices-assets",
+        "adservices-service-core-schema",
         "androidx.room_room-runtime",
         "androidx.room_room-testing",
         "adservices-test-fixtures",
