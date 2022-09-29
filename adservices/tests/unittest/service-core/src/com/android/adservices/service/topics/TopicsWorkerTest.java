@@ -174,10 +174,6 @@ public class TopicsWorkerTest {
                 .containsExactlyElementsIn(expectedGetTopicsResult.getModelVersions());
         assertThat(getTopicsResult.getTopics())
                 .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
-
-        // getTopic() + loadCache() + handleSdkTopicsAssignmentForAppInstallation()
-        verify(mMockEpochManager, times(3)).getCurrentEpochId();
-        verify(mMockFlags, times(3)).getTopicsNumberOfLookBackEpochs();
     }
 
     @Test
@@ -213,10 +209,6 @@ public class TopicsWorkerTest {
                         .build();
 
         assertThat(getTopicsResult).isEqualTo(expectedGetTopicsResult);
-
-        // getTopic() + loadCache() + handleSdkTopicsAssignmentForAppInstallation()
-        verify(mMockEpochManager, times(3)).getCurrentEpochId();
-        verify(mMockFlags, times(3)).getTopicsNumberOfLookBackEpochs();
     }
 
     @Test
@@ -252,10 +244,6 @@ public class TopicsWorkerTest {
                         .build();
 
         assertThat(getTopicsResult).isEqualTo(expectedGetTopicsResult);
-
-        // getTopic() + loadCache() + handleSdkTopicsAssignmentForAppInstallation()
-        verify(mMockEpochManager, times(3)).getCurrentEpochId();
-        verify(mMockFlags, times(3)).getTopicsNumberOfLookBackEpochs();
     }
 
     @Test
@@ -308,11 +296,65 @@ public class TopicsWorkerTest {
                 .containsExactlyElementsIn(expectedGetTopicsResult.getModelVersions());
         assertThat(getTopicsResult.getTopics())
                 .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
+    }
 
-        // Invocation Summary
-        // getTopic(): 1, handleSdkTopicsAssignmentForAppInstallation(): 1 * 2
-        verify(mMockEpochManager, times(3)).getCurrentEpochId();
-        verify(mMockFlags, times(3)).getTopicsNumberOfLookBackEpochs();
+    @Test
+    public void testGetTopics_handleSdkTopicAssignment_existingTopicsForSdk() {
+        final int numberOfLookBackEpochs = 3;
+        final long currentEpochId = 5L;
+
+        final String app = "app";
+        final String sdk = "sdk";
+
+        Pair<String, String> appOnlyCaller = Pair.create(app, /* sdk */ "");
+        Pair<String, String> appSdkCaller = Pair.create(app, sdk);
+
+        Topic topic1 =
+                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
+        Topic topic2 =
+                Topic.create(/* topic */ 2, /* taxonomyVersion = */ 2L, /* modelVersion = */ 5L);
+        Topic topic3 =
+                Topic.create(/* topic */ 3, /* taxonomyVersion = */ 3L, /* modelVersion = */ 6L);
+        Topic[] topics = {topic1, topic2, topic3};
+
+        // persist returned topics into DB
+        for (long epoch = 0; epoch < numberOfLookBackEpochs; epoch++) {
+            long epochId = currentEpochId - 1 - epoch;
+            Topic topic = topics[(int) epoch];
+
+            mTopicsDao.persistReturnedAppTopicsMap(epochId, Map.of(appOnlyCaller, topic));
+            // SDK needs to be able to learn this topic in past epochs
+            mTopicsDao.persistCallerCanLearnTopics(epochId, Map.of(topic, Set.of(sdk)));
+        }
+
+        // Sdk has an existing topic in Epoch 1
+        mTopicsDao.persistReturnedAppTopicsMap(
+                currentEpochId - numberOfLookBackEpochs + 1, Map.of(appSdkCaller, topic1));
+
+        when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
+        when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
+
+        mTopicsWorker.loadCache();
+        GetTopicsResult getTopicsResult = mTopicsWorker.getTopics(app, sdk);
+
+        // Only the existing topic will be returned, i.e. No topic assignment has happened.
+        GetTopicsResult expectedGetTopicsResult =
+                new GetTopicsResult.Builder()
+                        .setResultCode(STATUS_SUCCESS)
+                        .setTaxonomyVersions(List.of(1L))
+                        .setModelVersions(List.of(4L))
+                        .setTopics(List.of(1))
+                        .build();
+
+        // Since the returned topic list is shuffled, elements have to be verified separately
+        assertThat(getTopicsResult.getResultCode())
+                .isEqualTo(expectedGetTopicsResult.getResultCode());
+        assertThat(getTopicsResult.getTaxonomyVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTaxonomyVersions());
+        assertThat(getTopicsResult.getModelVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getModelVersions());
+        assertThat(getTopicsResult.getTopics())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
     }
 
     @Test
@@ -555,10 +597,6 @@ public class TopicsWorkerTest {
         assertThat(getTopicsResultAppSdk1.getTopics())
                 .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
 
-        verify(mMockEpochManager, times(5)).getCurrentEpochId();
-        // app only caller has 1 fewer invocation of getTopicsNumberOfLookBackEpochs()
-        verify(mMockFlags, times(4)).getTopicsNumberOfLookBackEpochs();
-
         // Clear all data in database belonging to app except blocked topics table
         mTopicsWorker.clearAllTopicsData(tableExclusionList);
         assertThat(mTopicsDao.retrieveAllBlockedTopics()).isNotEmpty();
@@ -576,13 +614,6 @@ public class TopicsWorkerTest {
 
         assertThat(mTopicsWorker.getTopics(app, sdk)).isEqualTo(emptyGetTopicsResult);
         assertThat(mTopicsWorker.getTopics(app, /* sdk */ "")).isEqualTo(emptyGetTopicsResult);
-
-        // Invocation Summary:
-        // loadCache(): 1, getTopics(): 4 * 2, clearAllTopicsData(): 2
-        verify(mMockEpochManager, times(11)).getCurrentEpochId();
-        // app only caller has 1 fewer invocation of getTopicsNumberOfLookBackEpochs(), and it
-        // happens twice.
-        verify(mMockFlags, times(9)).getTopicsNumberOfLookBackEpochs();
     }
 
     @Test
@@ -768,12 +799,6 @@ public class TopicsWorkerTest {
         // Therefore, it won't get any topic in recent epochs.
         assertThat((topicsWorker.getTopics(app5, sdk))).isEqualTo(emptyGetTopicsResult);
 
-        // Invocations Summary
-        // reconcileInstalledApps(): 1, loadCache(): 1, getTopics(): 4 * 2,
-        verify(mMockEpochManager, times(10)).getCurrentEpochId();
-        // app3 is passed as app only caller, so it doesn't assign topic to sdk. Therefore, the
-        // invocation time for getTopicsNumberOfLookBackEpochs() is 1 time fewer.
-        verify(mMockFlags, times(9)).getTopicsNumberOfLookBackEpochs();
         verify(mMockFlags).getTopicsNumberOfTopTopics();
         verify(mMockFlags).getTopicsNumberOfRandomTopics();
         verify(mMockFlags).getTopicsPercentageForRandomTopic();
@@ -843,11 +868,6 @@ public class TopicsWorkerTest {
                         .setTopics(Collections.emptyList())
                         .build();
         assertThat((mTopicsWorker.getTopics(app, sdk))).isEqualTo(emptyGetTopicsResult);
-
-        // Invocations Summary
-        // loadCache() : 1, getTopics(): 2 * 2, deletePackageData(): 1
-        verify(mMockEpochManager, times(6)).getCurrentEpochId();
-        verify(mMockFlags, times(6)).getTopicsNumberOfLookBackEpochs();
     }
 
     @Test
@@ -944,11 +964,6 @@ public class TopicsWorkerTest {
         assertThat(getTopicsResult.getTopics())
                 .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
 
-        // Invocations Summary
-        // loadCache() : 1, assignTopicsToNewlyInstalledApps() : 1, getTopics(): 2 * 2
-        verify(mMockEpochManager, times(6)).getCurrentEpochId();
-        // loadCache() : 1, assignTopicsToNewlyInstalledApps() : 1, getTopics(): 1 * 2
-        verify(mMockFlags, times(4)).getTopicsNumberOfLookBackEpochs();
         verify(mMockFlags).getTopicsNumberOfTopTopics();
         verify(mMockFlags).getTopicsNumberOfRandomTopics();
         verify(mMockFlags).getTopicsPercentageForRandomTopic();
