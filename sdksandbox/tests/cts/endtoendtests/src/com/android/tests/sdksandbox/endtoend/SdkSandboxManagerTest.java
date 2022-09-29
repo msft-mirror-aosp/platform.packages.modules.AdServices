@@ -151,15 +151,26 @@ public class SdkSandboxManagerTest {
 
         mSdkSandboxManager.unloadSdk(sdkName);
 
-        // Calls to an unloaded SDK should throw an exception.
+        // Calls to an unloaded SDK should fail.
+        // TODO(249482251): Only check one error case.
         final FakeRequestSurfacePackageCallback requestSurfacePackageCallback =
                 new FakeRequestSurfacePackageCallback();
-        Bundle params = getRequestSurfacePackageParams();
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        mSdkSandboxManager.requestSurfacePackage(
-                                sdkName, params, Runnable::run, requestSurfacePackageCallback));
+        boolean threwException = false;
+        try {
+            mSdkSandboxManager.requestSurfacePackage(
+                    sdkName,
+                    getRequestSurfacePackageParams(),
+                    Runnable::run,
+                    requestSurfacePackageCallback);
+        } catch (IllegalArgumentException e) {
+            threwException = true;
+        }
+
+        if (!threwException) {
+            assertThat(requestSurfacePackageCallback.isRequestSurfacePackageSuccessful()).isFalse();
+            assertThat(requestSurfacePackageCallback.getSurfacePackageErrorCode())
+                    .isEqualTo(SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE);
+        }
 
         // SDK can be reloaded after being unloaded.
         final FakeLoadSdkCallback callback2 = new FakeLoadSdkCallback();
