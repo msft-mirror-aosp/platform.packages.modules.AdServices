@@ -22,6 +22,7 @@ import static android.app.sdksandbox.SdkSandboxManager.EXTRA_HOST_TOKEN;
 import static android.app.sdksandbox.SdkSandboxManager.EXTRA_SURFACE_PACKAGE;
 import static android.app.sdksandbox.SdkSandboxManager.EXTRA_WIDTH_IN_PIXELS;
 
+import android.annotation.NonNull;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.sdksandbox.LoadSdkException;
@@ -43,8 +44,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
-
-import androidx.annotation.NonNull;
 
 public class MainActivity extends Activity {
     private static final String SDK_NAME = "com.android.sdksandboxcode";
