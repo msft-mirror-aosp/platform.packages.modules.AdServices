@@ -52,6 +52,7 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -69,6 +70,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final AdServicesHttpsClient adServicesHttpsClient,
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final ExecutorService backgroundExecutorService,
+            @NonNull final ScheduledThreadPoolExecutor scheduledExecutor,
             @NonNull final ConsentManager consentManager,
             @NonNull final AdServicesLogger adServicesLogger,
             @NonNull final DevContext devContext,
@@ -84,6 +86,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 adSelectionEntryDao,
                 lightweightExecutorService,
                 backgroundExecutorService,
+                scheduledExecutor,
                 consentManager,
                 adServicesLogger,
                 devContext,
@@ -103,6 +106,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
+                        mScheduledExecutor,
                         devContext,
                         mCustomAudienceDao,
                         flags);
@@ -114,6 +118,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                                 () -> flags.getIsolateMaxHeapSizeBytes()),
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
+                        mScheduledExecutor,
                         mAdServicesHttpsClient,
                         devContext,
                         mAdSelectionEntryDao,
@@ -128,6 +133,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final AdServicesHttpsClient adServicesHttpsClient,
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final ExecutorService backgroundExecutorService,
+            @NonNull final ScheduledThreadPoolExecutor scheduledExecutor,
             @NonNull final ConsentManager consentManager,
             @NonNull final AdsScoreGenerator adsScoreGenerator,
             @NonNull final AdBidGenerator adBidGenerator,
@@ -146,6 +152,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 adSelectionEntryDao,
                 lightweightExecutorService,
                 backgroundExecutorService,
+                scheduledExecutor,
                 consentManager,
                 adSelectionIdGenerator,
                 clock,
