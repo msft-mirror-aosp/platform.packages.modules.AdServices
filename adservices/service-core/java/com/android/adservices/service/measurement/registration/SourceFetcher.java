@@ -208,7 +208,7 @@ public class SourceFetcher {
         return true;
     }
 
-    private boolean hasRequiredParams(JSONObject json, boolean shouldValidateDestinations) {
+    private static boolean hasRequiredParams(JSONObject json, boolean shouldValidateDestinations) {
         boolean isDestinationAvailable;
         if (shouldValidateDestinations) {
             // This is multiple-destinations case (web or app). At least one of them should be
@@ -223,7 +223,7 @@ public class SourceFetcher {
         return !json.isNull(SourceHeaderContract.SOURCE_EVENT_ID) && isDestinationAvailable;
     }
 
-    private boolean doUriFieldsMatch(JSONObject json, String fieldName, Uri expectedValue)
+    private static boolean doUriFieldsMatch(JSONObject json, String fieldName, Uri expectedValue)
             throws JSONException {
         if (json.isNull(fieldName) && expectedValue == null) {
             return true;
@@ -233,7 +233,7 @@ public class SourceFetcher {
                 && Objects.equals(expectedValue, Uri.parse(json.getString(fieldName)));
     }
 
-    private long extractValidNumberInRange(long value, long lowerLimit, long upperLimit) {
+    private static long extractValidNumberInRange(long value, long lowerLimit, long upperLimit) {
         if (value < lowerLimit) {
             return lowerLimit;
         } else if (value > upperLimit) {
