@@ -112,6 +112,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.function.Supplier;
 
 public class FledgeE2ETest {
@@ -164,6 +165,7 @@ public class FledgeE2ETest {
     private AdSelectionEntryDao mAdSelectionEntryDao;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
+    private ScheduledThreadPoolExecutor mScheduledExecutor;
     private CustomAudienceServiceImpl mCustomAudienceService;
     private AdSelectionServiceImpl mAdSelectionService;
 
@@ -201,6 +203,7 @@ public class FledgeE2ETest {
 
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
+        mScheduledExecutor = AdServicesExecutors.getScheduler();
 
         mAdServicesHttpsClient =
                 new AdServicesHttpsClient(AdServicesExecutors.getBlockingExecutor());
@@ -239,6 +242,7 @@ public class FledgeE2ETest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
+                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLogger,
@@ -581,6 +585,7 @@ public class FledgeE2ETest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
+                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLogger,
