@@ -205,6 +205,7 @@ public class ConsentManagerTest {
     public void testJobsAreScheduledAfterEnablingKillSwitchOff() {
         doReturn(mPackageManagerMock).when(mContextSpy).getPackageManager();
         doReturn(false).when(mMockFlags).getTopicsKillSwitch();
+        doReturn(false).when(mMockFlags).getFledgeSelectAdsKillSwitch();
         doReturn(false).when(mMockFlags).getMeasurementKillSwitch();
         doReturn(false).when(mMockFlags).getMddBackgroundTaskKillSwitch();
 
@@ -239,6 +240,7 @@ public class ConsentManagerTest {
     public void testJobsAreNotScheduledAfterEnablingKillSwitchOn() {
         doReturn(mPackageManagerMock).when(mContextSpy).getPackageManager();
         doReturn(true).when(mMockFlags).getTopicsKillSwitch();
+        doReturn(true).when(mMockFlags).getFledgeSelectAdsKillSwitch();
         doReturn(true).when(mMockFlags).getMeasurementKillSwitch();
         doReturn(true).when(mMockFlags).getMddBackgroundTaskKillSwitch();
 

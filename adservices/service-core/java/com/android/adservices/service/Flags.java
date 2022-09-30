@@ -496,6 +496,16 @@ public interface Flags extends Dumpable {
         return FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
     }
 
+    // 24 hours in seconds
+    long FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S = 60 * 60 * 24;
+
+    /**
+     * Returns the amount of time in seconds after which ad selection data is considered expired.
+     */
+    default long getAdSelectionExpirationWindowS() {
+        return FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S;
+    }
+
     boolean ADSERVICES_ENABLED = false;
 
     default boolean getAdServicesEnabled() {

@@ -149,6 +149,8 @@ public final class PhFlags implements Flags {
             "fledge_ad_selection_scoring_timeout_ms";
     static final String KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS =
             "fledge_ad_selection_overall_timeout_ms";
+    static final String KEY_FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S =
+            "fledge_ad_selection_expiration_window_s";
     static final String KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS =
             "fledge_report_impression_overall_timeout_ms";
     static final String KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY =
@@ -1507,6 +1509,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public long getAdSelectionExpirationWindowS() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S,
+                /* defaultValue */ FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S);
+    }
+
+    @Override
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
         writer.println("==== AdServices PH Flags Dump Enrollment ====");
         writer.println(
@@ -1879,6 +1889,11 @@ public final class PhFlags implements Flags {
 
         writer.println(
                 "\t" + KEY_ISOLATE_MAX_HEAP_SIZE_BYTES + " = " + getIsolateMaxHeapSizeBytes());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S
+                        + " = "
+                        + getAdSelectionExpirationWindowS());
 
         writer.println("==== AdServices PH Flags Dump UI Related Flags ====");
         writer.println(

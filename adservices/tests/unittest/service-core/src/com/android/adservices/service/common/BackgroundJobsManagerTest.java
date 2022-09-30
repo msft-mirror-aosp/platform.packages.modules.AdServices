@@ -76,6 +76,7 @@ public class BackgroundJobsManagerTest {
                 () -> {
                     ExtendedMockito.doReturn(false).when(mMockFlags).getMeasurementKillSwitch();
                     ExtendedMockito.doReturn(false).when(mMockFlags).getTopicsKillSwitch();
+                    ExtendedMockito.doReturn(false).when(mMockFlags).getFledgeSelectAdsKillSwitch();
                     ExtendedMockito.doReturn(false)
                             .when(mMockFlags)
                             .getMddBackgroundTaskKillSwitch();
@@ -84,6 +85,7 @@ public class BackgroundJobsManagerTest {
 
                     assertMeasurementJobsScheduled(1);
                     assertTopicsJobsScheduled(1);
+                    assertMaintenanceJobScheduled(1);
                     assertMddJobsScheduled(1);
                 });
     }
@@ -94,6 +96,7 @@ public class BackgroundJobsManagerTest {
                 () -> {
                     ExtendedMockito.doReturn(true).when(mMockFlags).getMeasurementKillSwitch();
                     ExtendedMockito.doReturn(false).when(mMockFlags).getTopicsKillSwitch();
+                    ExtendedMockito.doReturn(false).when(mMockFlags).getFledgeSelectAdsKillSwitch();
                     ExtendedMockito.doReturn(false)
                             .when(mMockFlags)
                             .getMddBackgroundTaskKillSwitch();
@@ -102,6 +105,7 @@ public class BackgroundJobsManagerTest {
 
                     assertMeasurementJobsScheduled(0);
                     assertTopicsJobsScheduled(1);
+                    assertMaintenanceJobScheduled(1);
                     assertMddJobsScheduled(1);
                 });
     }
@@ -112,6 +116,7 @@ public class BackgroundJobsManagerTest {
                 () -> {
                     ExtendedMockito.doReturn(false).when(mMockFlags).getMeasurementKillSwitch();
                     ExtendedMockito.doReturn(true).when(mMockFlags).getTopicsKillSwitch();
+                    ExtendedMockito.doReturn(false).when(mMockFlags).getFledgeSelectAdsKillSwitch();
                     ExtendedMockito.doReturn(false)
                             .when(mMockFlags)
                             .getMddBackgroundTaskKillSwitch();
@@ -120,6 +125,7 @@ public class BackgroundJobsManagerTest {
 
                     assertMeasurementJobsScheduled(1);
                     assertTopicsJobsScheduled(0);
+                    assertMaintenanceJobScheduled(1);
                     assertMddJobsScheduled(1);
                 });
     }
@@ -130,6 +136,7 @@ public class BackgroundJobsManagerTest {
                 () -> {
                     ExtendedMockito.doReturn(false).when(mMockFlags).getMeasurementKillSwitch();
                     ExtendedMockito.doReturn(false).when(mMockFlags).getTopicsKillSwitch();
+                    ExtendedMockito.doReturn(false).when(mMockFlags).getFledgeSelectAdsKillSwitch();
                     ExtendedMockito.doReturn(true)
                             .when(mMockFlags)
                             .getMddBackgroundTaskKillSwitch();
@@ -138,7 +145,48 @@ public class BackgroundJobsManagerTest {
 
                     assertMeasurementJobsScheduled(1);
                     assertTopicsJobsScheduled(1);
+                    assertMaintenanceJobScheduled(1);
                     assertMddJobsScheduled(0);
+                });
+    }
+
+    @Test
+    public void testScheduleAllBackgroundJobs_selectAdsKillSwitchOn() throws Exception {
+        runWithMocks(
+                () -> {
+                    ExtendedMockito.doReturn(false).when(mMockFlags).getMeasurementKillSwitch();
+                    ExtendedMockito.doReturn(false).when(mMockFlags).getTopicsKillSwitch();
+                    ExtendedMockito.doReturn(true).when(mMockFlags).getFledgeSelectAdsKillSwitch();
+                    ExtendedMockito.doReturn(false)
+                            .when(mMockFlags)
+                            .getMddBackgroundTaskKillSwitch();
+
+                    BackgroundJobsManager.scheduleAllBackgroundJobs(Mockito.mock(Context.class));
+
+                    assertMeasurementJobsScheduled(1);
+                    assertTopicsJobsScheduled(1);
+                    assertMaintenanceJobScheduled(1);
+                    assertMddJobsScheduled(1);
+                });
+    }
+
+    @Test
+    public void testScheduleAllBackgroundJobs_topicsAndSelectAdsKillSwitchOn() throws Exception {
+        runWithMocks(
+                () -> {
+                    ExtendedMockito.doReturn(false).when(mMockFlags).getMeasurementKillSwitch();
+                    ExtendedMockito.doReturn(true).when(mMockFlags).getTopicsKillSwitch();
+                    ExtendedMockito.doReturn(true).when(mMockFlags).getFledgeSelectAdsKillSwitch();
+                    ExtendedMockito.doReturn(false)
+                            .when(mMockFlags)
+                            .getMddBackgroundTaskKillSwitch();
+
+                    BackgroundJobsManager.scheduleAllBackgroundJobs(Mockito.mock(Context.class));
+
+                    assertMeasurementJobsScheduled(1);
+                    assertTopicsJobsScheduled(0);
+                    assertMaintenanceJobScheduled(0);
+                    assertMddJobsScheduled(1);
                 });
     }
 
@@ -238,12 +286,15 @@ public class BackgroundJobsManagerTest {
                 times(numberOfTimes));
     }
 
-    private void assertTopicsJobsScheduled(int numberOfTimes) {
-        ExtendedMockito.verify(
-                () -> EpochJobService.scheduleIfNeeded(any(), eq(false)), times(numberOfTimes));
+    private void assertMaintenanceJobScheduled(int numberOfTimes) {
         ExtendedMockito.verify(
                 () -> MaintenanceJobService.scheduleIfNeeded(any(), eq(false)),
                 times(numberOfTimes));
+    }
+
+    private void assertTopicsJobsScheduled(int numberOfTimes) {
+        ExtendedMockito.verify(
+                () -> EpochJobService.scheduleIfNeeded(any(), eq(false)), times(numberOfTimes));
     }
 
     private void assertMddJobsScheduled(int numberOfTimes) {

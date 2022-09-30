@@ -42,9 +42,14 @@ public class BackgroundJobsManager {
      * @param context application context.
      */
     public static void scheduleAllBackgroundJobs(@NonNull Context context) {
+        // We will schedule MaintenanceJobService as long as either kill switch is off
+        if (!FlagsFactory.getFlags().getTopicsKillSwitch()
+                || !FlagsFactory.getFlags().getFledgeSelectAdsKillSwitch()) {
+            MaintenanceJobService.scheduleIfNeeded(context, false);
+        }
+
         if (!FlagsFactory.getFlags().getTopicsKillSwitch()) {
             EpochJobService.scheduleIfNeeded(context, false);
-            MaintenanceJobService.scheduleIfNeeded(context, false);
         }
 
         if (!FlagsFactory.getFlags().getMddBackgroundTaskKillSwitch()) {
