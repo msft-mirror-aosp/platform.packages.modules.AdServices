@@ -68,21 +68,15 @@ public class StorageTestSdk1ApiImpl extends IStorageTestSdk1Api.Stub {
     }
 
     @Override
-    public void createFilesInSharedStorage() {
+    public void createFilesInSharedStorage(int sizeInBytes, boolean inCacheDir) {
         try {
-            final byte[] buffer = new byte[1000000];
-            String sharedPath = getSharedStoragePath();
-            String sharedCachePath = getSharedStorageCachePath();
+            final byte[] buffer = new byte[sizeInBytes];
+            final String path = inCacheDir ? getSharedStorageCachePath() : getSharedStoragePath();
 
-            Files.createDirectory(Paths.get(sharedPath, "attribution"));
-            Path filepath = Paths.get(sharedPath, "attribution", "file");
+            Files.createDirectory(Paths.get(path, "attribution"));
+            final Path filepath = Paths.get(path, "attribution", "file");
             Files.createFile(filepath);
             Files.write(filepath, buffer);
-
-            Files.createDirectory(Paths.get(sharedCachePath, "attribution"));
-            Path cacheFilepath = Paths.get(sharedCachePath, "attribution", "file");
-            Files.createFile(cacheFilepath);
-            Files.write(cacheFilepath, buffer);
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
