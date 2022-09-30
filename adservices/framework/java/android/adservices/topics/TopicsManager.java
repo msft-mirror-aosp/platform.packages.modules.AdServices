@@ -30,6 +30,7 @@ import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 import android.os.SystemClock;
+import android.text.TextUtils;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
@@ -136,7 +137,7 @@ public final class TopicsManager {
             sdkPackageName = sandboxedSdkContext.getSdkPackageName();
             appPackageName = sandboxedSdkContext.getClientPackageName();
 
-            if (sdkName != null) {
+            if (!TextUtils.isEmpty(sdkName)) {
                 throw new IllegalArgumentException(
                         "When calling Topics API from Sandbox, caller should not set Ads Sdk Name");
             }
