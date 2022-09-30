@@ -23,6 +23,7 @@ import android.app.Service;
 import android.app.sdksandbox.ISdkToServiceCallback;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxedSdkContext;
+import android.app.sdksandbox.SdkSandboxLocalSingleton;
 import android.app.sdksandbox.SharedPreferencesKey;
 import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.content.Context;
@@ -118,6 +119,11 @@ public class SdkSandboxServiceImpl extends Service {
             SandboxLatencyInfo sandboxLatencyInfo,
             ISdkToServiceCallback sdkToServiceCallback) {
         enforceCallerIsSystemServer();
+        // Instantiate the local sandbox singleton. Should be done only once when sandbox
+        // starts.
+        // TODO(b/249021450): Move instantiation of singleton to a new API which will be called
+        //  when the sandbox starts
+        SdkSandboxLocalSingleton.initInstance(sdkToServiceCallback.asBinder());
         final long token = Binder.clearCallingIdentity();
         try {
             loadSdkInternal(

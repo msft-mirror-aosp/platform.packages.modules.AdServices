@@ -424,7 +424,7 @@ public class TopicsServiceImplTest {
         runGetTopics(createTestTopicsServiceImplInstance());
     }
 
-    //    @Test
+    @Test
     public void getTopicsSdk() throws Exception {
         Mockito.lenient().when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         PackageManager.Property property =
@@ -589,9 +589,9 @@ public class TopicsServiceImplTest {
                 .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
 
         // Invocations Summary
-        // loadCache() : 1, getTopics(): 1 * 2
-        verify(mMockEpochManager, Mockito.times(3)).getCurrentEpochId();
-        verify(mMockFlags, Mockito.times(3)).getTopicsNumberOfLookBackEpochs();
+        // loadCache() : 1, getTopics(): 1 * 3
+        verify(mMockEpochManager, Mockito.times(4)).getCurrentEpochId();
+        verify(mMockFlags, Mockito.times(4)).getTopicsNumberOfLookBackEpochs();
     }
 
     @Test
@@ -700,9 +700,9 @@ public class TopicsServiceImplTest {
         assertThat(argument.getValue().getLatencyMillisecond()).isEqualTo(150);
 
         // Invocations Summary
-        // loadCache() : 1, getTopics(): 1 * 2
-        verify(mMockEpochManager, Mockito.times(3)).getCurrentEpochId();
-        verify(mMockFlags, Mockito.times(3)).getTopicsNumberOfLookBackEpochs();
+        // loadCache() : 1, getTopics(): 1 * 3
+        verify(mMockEpochManager, Mockito.times(4)).getCurrentEpochId();
+        verify(mMockFlags, Mockito.times(4)).getTopicsNumberOfLookBackEpochs();
     }
 
     @Test
