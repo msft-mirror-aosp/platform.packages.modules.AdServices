@@ -226,6 +226,15 @@ public class SdkSandboxStorageTestApp {
         assertThat(syncedValueInSandbox).isEmpty();
     }
 
+    @Test
+    public void testSharedPreferences_SyncedDataClearedOnSandboxRestart() throws Exception {
+        loadSdk();
+
+        // Verify previously synced keys are not available in sandbox anymore
+        final String syncedValueInSandbox = mSdk.getSyncedSharedPreferencesString(KEY_TO_SYNC);
+        assertThat(syncedValueInSandbox).isEmpty();
+    }
+
     private static void assertDirIsNotAccessible(String path) {
         // Trying to access a file that does not exist in that directory, it should return
         // permission denied not file not found.
