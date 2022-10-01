@@ -34,7 +34,6 @@ import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -1074,8 +1073,6 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         runPhase("testSdkDataIsAttributedToApp");
     }
 
-    // TODO(b/246954235): Manual calcualtions have bigger margin of error
-    @Ignore
     @Test
     public void testSdkData_IsAttributedToApp_DisableQuota() throws Exception {
         installPackage(TEST_APP_STORAGE_APK);
@@ -1111,6 +1108,13 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     public void testSharedPreferences_SyncRemoveKeys() throws Exception {
         installPackage(TEST_APP_STORAGE_APK);
         runPhase("testSharedPreferences_SyncRemoveKeys");
+    }
+
+    @Test
+    public void testSharedPreferences_SyncedDataClearedOnSandboxRestart() throws Exception {
+        installPackage(TEST_APP_STORAGE_APK);
+        runPhase("testSharedPreferences_IsSyncedFromAppToSandbox");
+        runPhase("testSharedPreferences_SyncedDataClearedOnSandboxRestart");
     }
 
     private String getAppDataPath(int userId, String packageName, boolean isCeData) {

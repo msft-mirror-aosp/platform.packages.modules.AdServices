@@ -15,9 +15,9 @@
  */
 package android.adservices.topics;
 
+import static android.adservices.topics.TopicsManager.EMPTY_SDK;
 
 import android.annotation.NonNull;
-import android.annotation.Nullable;
 
 /** Get Topics Request. */
 public final class GetTopicsRequest {
@@ -25,8 +25,8 @@ public final class GetTopicsRequest {
     /** Name of Ads SDK that is involved in this request. */
     private final String mAdsSdkName;
 
-    private GetTopicsRequest(@Nullable String adsSdkName) {
-        mAdsSdkName = adsSdkName;
+    private GetTopicsRequest(@NonNull Builder builder) {
+        mAdsSdkName = builder.mAdsSdkName;
     }
 
     /** Get the Sdk Name. */
@@ -35,33 +35,39 @@ public final class GetTopicsRequest {
         return mAdsSdkName;
     }
 
-    /**
-     * Builds a {@link GetTopicsRequest} instance.
-     *
-     * <p>This should be called by either the app itself or by SDK running inside the Sandbox.
-     */
-    @NonNull
-    public static GetTopicsRequest create() {
-        return new GetTopicsRequest(/* adsSdkName */ null);
-    }
+    /** Builder for {@link GetTopicsRequest} objects. */
+    public static final class Builder {
+        private String mAdsSdkName = EMPTY_SDK;
 
-    /**
-     * Create a {@link GetTopicsRequest} instance with the provided Ads Sdk Name.
-     *
-     * <p>This should be called by SDKs running outside of the Sandbox.
-     *
-     * @param adsSdkName the Ads Sdk Name.
-     */
-    @NonNull
-    public static GetTopicsRequest createWithAdsSdkName(@NonNull String adsSdkName) {
-        // This is the case the SDK calling without the Sandbox.
-        // Check if the caller set the adsSdkName
-        if (adsSdkName == null) {
-            throw new IllegalArgumentException(
-                    "When calling Topics API outside of the Sandbox, caller should set Ads Sdk"
-                            + " Name");
+        /** Creates a {@link Builder} for {@link GetTopicsRequest} objects. */
+        public Builder() {}
+
+        /**
+         * Set Ads Sdk Name.
+         *
+         * <p>This must be called by SDKs running outside of the Sandbox. Other clients must not
+         * call it.
+         *
+         * @param adsSdkName the Ads Sdk Name.
+         */
+        @NonNull
+        public Builder setAdsSdkName(@NonNull String adsSdkName) {
+            // This is the case the SDK calling from outside of the Sandbox.
+            // Check if the caller set the adsSdkName
+            if (adsSdkName == null) {
+                throw new IllegalArgumentException(
+                        "When calling Topics API outside of the Sandbox, caller should set Ads Sdk"
+                                + " Name");
+            }
+
+            mAdsSdkName = adsSdkName;
+            return this;
         }
 
-        return new GetTopicsRequest(adsSdkName);
+        /** Builds a {@link GetTopicsRequest} instance. */
+        @NonNull
+        public GetTopicsRequest build() {
+            return new GetTopicsRequest(this);
+        }
     }
 }

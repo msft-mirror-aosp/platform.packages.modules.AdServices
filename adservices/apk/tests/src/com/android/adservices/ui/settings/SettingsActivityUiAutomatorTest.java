@@ -54,7 +54,6 @@ import com.google.common.collect.ImmutableList;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -68,11 +67,10 @@ import java.util.List;
 
 @RunWith(AndroidJUnit4.class)
 public class SettingsActivityUiAutomatorTest {
-    private static final String BASIC_SAMPLE_PACKAGE = "android.test.adservices.ui.SETTINGS";
+    private static final String PRIVACY_SANDBOX_TEST_PACKAGE =
+            "android.test.adservices.ui.SETTINGS";
     private static final int LAUNCH_TIMEOUT = 5000;
     private static UiDevice sDevice;
-    private static Context sContext;
-    private static Intent sIntent;
     static ViewModelProvider sViewModelProvider = Mockito.mock(ViewModelProvider.class);
     static ConsentManager sConsentManager;
     private MockitoSession mStaticMockSession;
@@ -138,17 +136,6 @@ public class SettingsActivityUiAutomatorTest {
         return sViewModelProvider;
     }
 
-    @BeforeClass
-    public static void classSetup() {
-        // Initialize UiDevice instance
-        sDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-
-        // Launch the app
-        sContext = ApplicationProvider.getApplicationContext();
-        sIntent = new Intent(BASIC_SAMPLE_PACKAGE);
-        sIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-    }
-
     @Before
     public void setup() throws UiObjectNotFoundException, IOException {
         MockitoAnnotations.initMocks(this);
@@ -165,6 +152,9 @@ public class SettingsActivityUiAutomatorTest {
         doReturn(true).when(mPhFlags).getUIDialogsFeatureEnabled();
         ExtendedMockito.doReturn(mPhFlags).when(PhFlags::getInstance);
 
+        // Initialize UiDevice instance
+        sDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
         // Start from the home screen
         sDevice.pressHome();
 
@@ -173,11 +163,15 @@ public class SettingsActivityUiAutomatorTest {
         assertThat(launcherPackage).isNotNull();
         sDevice.wait(Until.hasObject(By.pkg(launcherPackage).depth(0)), LAUNCH_TIMEOUT);
 
-        // launch
-        sContext.startActivity(sIntent);
+        // launch app
+        Context context = ApplicationProvider.getApplicationContext();
+        Intent intent = new Intent(PRIVACY_SANDBOX_TEST_PACKAGE);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(intent);
 
         // Wait for the app to appear
-        sDevice.wait(Until.hasObject(By.pkg(BASIC_SAMPLE_PACKAGE).depth(0)), LAUNCH_TIMEOUT);
+        sDevice.wait(
+                Until.hasObject(By.pkg(PRIVACY_SANDBOX_TEST_PACKAGE).depth(0)), LAUNCH_TIMEOUT);
 
         // set consent to true if not
         UiObject mainSwitch =
@@ -412,6 +406,52 @@ public class SettingsActivityUiAutomatorTest {
         // cancel and verify it has still only been called once
         negativeText.click();
         verify(sConsentManager).resetApps();
+    }
+
+    @Test
+    public void disableDialogFeatureTest() throws UiObjectNotFoundException {
+        doReturn(false).when(mPhFlags).getUIDialogsFeatureEnabled();
+        UiObject mainSwitch =
+                sDevice.findObject(new UiSelector().className("android.widget.Switch"));
+        assertThat(mainSwitch.exists()).isTrue();
+
+        // click switch
+        mainSwitch.click();
+        UiObject dialogTitle = getElement(R.string.settingsUI_dialog_opt_out_title);
+        assertThat(dialogTitle.exists()).isFalse();
+        assertThat(mainSwitch.isChecked()).isFalse();
+
+        // click switch again
+        mainSwitch.click();
+        assertThat(mainSwitch.isChecked()).isTrue();
+
+        // open topics view
+        scrollToAndClick(R.string.settingsUI_topics_title);
+        UiObject blockTopicText = getElement(R.string.settingsUI_block_topic_title, 0);
+        assertThat(blockTopicText.exists()).isTrue();
+
+        // block topic
+        blockTopicText.click();
+        dialogTitle = getElement(R.string.settingsUI_dialog_block_topic_message);
+        assertThat(dialogTitle.exists()).isFalse();
+        verify(sConsentManager).revokeConsentForTopic(any(Topic.class));
+
+        // reset topic
+        scrollToAndClick(R.string.settingsUI_reset_topics_title);
+        dialogTitle = getElement(R.string.settingsUI_dialog_reset_topic_message);
+        assertThat(dialogTitle.exists()).isFalse();
+        verify(sConsentManager).resetTopics();
+
+        // open unblock topic view
+        scrollToAndClick(R.string.settingsUI_blocked_topics_title);
+        UiObject unblockTopicText = getElement(R.string.settingsUI_unblock_topic_title, 0);
+        assertThat(unblockTopicText.exists()).isTrue();
+
+        // click unblock
+        unblockTopicText.click();
+        dialogTitle = getElement(R.string.settingsUI_dialog_unblock_topic_message);
+        assertThat(dialogTitle.exists()).isFalse();
+        verify(sConsentManager).restoreConsentForTopic(any(Topic.class));
     }
 
     private String getString(int resourceId) {
