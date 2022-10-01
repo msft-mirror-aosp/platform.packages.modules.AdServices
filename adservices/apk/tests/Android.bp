@@ -41,6 +41,7 @@ android_test {
         "SettingsLibSettingsTheme",
         "SettingsLibCollapsingToolbarBaseActivity",
         "SettingsLibMainSwitchPreference",
+        "androidx.test.uiautomator_uiautomator",
     ],
     libs: [
         "android.test.base",

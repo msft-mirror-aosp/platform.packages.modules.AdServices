@@ -79,11 +79,8 @@ public final class MeasurementHttpClientTest {
                     mMockWebServerRule.startMockWebServer(
                             request -> {
                                 Assert.assertNotNull(request);
-                                final String hostHeader = request.getHeader("host");
                                 final String userAgentHeader = request.getHeader("user-agent");
-                                Assert.assertNotNull(hostHeader);
                                 Assert.assertNotNull(userAgentHeader);
-                                Assert.assertEquals("", hostHeader);
                                 Assert.assertEquals("", userAgentHeader);
                                 return new MockResponse().setResponseCode(200);
                             });

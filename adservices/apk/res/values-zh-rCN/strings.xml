@@ -47,8 +47,7 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"参与方式"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"开启 Beta 版会允许应用测试这些更注重保护隐私的新方式以向您展示广告。您随时可在隐私设置中关闭 Beta 版。"</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"不用了"</string>
-    <!-- no translation found for notificationUI_right_control_button_text_eu (8484787286437052150) -->
-    <skip />
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"开启"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"感谢您的加入"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"您已加入 Android 广告隐私权 Beta 版测试计划。我们已为您的设备开启 Privacy Sandbox。\n\n您随时可在隐私设置中了解详情或关闭 Beta 版。"</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"您已选择不加入"</string>

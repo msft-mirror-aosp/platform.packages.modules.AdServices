@@ -124,6 +124,8 @@ public final class MeasurementImplTest {
     private static final Context DEFAULT_CONTEXT = ApplicationProvider.getApplicationContext();
     private static final Uri URI_WITHOUT_APP_SCHEME = Uri.parse("com.example.abc");
     private static final Uri DEFAULT_URI = Uri.parse("android-app://com.example.abc");
+    private static final Uri TOP_ORIGIN =
+            Uri.parse("android-app://" + DEFAULT_CONTEXT.getPackageName());
     private static final Uri REGISTRATION_URI_1 = Uri.parse("https://foo.com/bar?ad=134");
     private static final Uri REGISTRATION_URI_2 = Uri.parse("https://foo.com/bar?ad=256");
     private static final String DEFAULT_ENROLLMENT = "enrollment-id";
@@ -169,7 +171,6 @@ public final class MeasurementImplTest {
                     + "]\n";
     private static final TriggerRegistration VALID_TRIGGER_REGISTRATION =
             new TriggerRegistration.Builder()
-                    .setTopOrigin(Uri.parse("https://foo.com"))
                     .setEnrollmentId(DEFAULT_ENROLLMENT)
                     .setEventTriggers(EVENT_TRIGGERS)
                     .setAggregateTriggerData(
@@ -189,7 +190,7 @@ public final class MeasurementImplTest {
                     .setInstallAttributionWindow(841839879274L)
                     .setInstallCooldownWindow(8418398274L)
                     .setEnrollmentId(DEFAULT_ENROLLMENT)
-                    .setTopOrigin(Uri.parse("android-app://com.source"))
+                    .setDebugKey(new UnsignedLong(47823478789L))
                     .build();
     private static final SourceRegistration VALID_SOURCE_REGISTRATION_2 =
             new com.android.adservices.service.measurement.registration.SourceRegistration.Builder()
@@ -201,7 +202,7 @@ public final class MeasurementImplTest {
                     .setInstallAttributionWindow(841839879275L)
                     .setInstallCooldownWindow(7418398274L)
                     .setEnrollmentId(DEFAULT_ENROLLMENT)
-                    .setTopOrigin(Uri.parse("android-app://com.source2"))
+                    .setDebugKey(new UnsignedLong(37348783483L))
                     .build();
     private static final WebSourceParams INPUT_SOURCE_REGISTRATION_1 =
             new WebSourceParams.Builder(REGISTRATION_URI_1).setDebugKeyAllowed(true).build();
@@ -268,9 +269,18 @@ public final class MeasurementImplTest {
     private static RegistrationRequest createRegistrationRequest(int type) {
         return new RegistrationRequest.Builder()
                 .setRegistrationUri(REGISTRATION_URI_1)
-                .setTopOriginUri(DEFAULT_URI)
                 .setPackageName(DEFAULT_CONTEXT.getAttributionSource().getPackageName())
                 .setRegistrationType(type)
+                .setAdIdPermissionGranted(true)
+                .build();
+    }
+
+    private static RegistrationRequest createRegistrationRequestWithoutAdIdPermission(int type) {
+        return new RegistrationRequest.Builder()
+                .setRegistrationUri(REGISTRATION_URI_1)
+                .setPackageName(DEFAULT_CONTEXT.getAttributionSource().getPackageName())
+                .setRegistrationType(type)
+                .setAdIdPermissionGranted(false)
                 .build();
     }
 
@@ -285,6 +295,22 @@ public final class MeasurementImplTest {
         return new WebTriggerRegistrationRequestInternal.Builder(
                         webTriggerRegistrationRequest,
                         DEFAULT_CONTEXT.getAttributionSource().getPackageName())
+                .setAdIdPermissionGranted(true)
+                .build();
+    }
+
+    private static WebTriggerRegistrationRequestInternal
+            createWebTriggerRegistrationRequestWithoutAdIdPermission(Uri destination) {
+        WebTriggerRegistrationRequest webTriggerRegistrationRequest =
+                new WebTriggerRegistrationRequest.Builder(
+                                Arrays.asList(
+                                        INPUT_TRIGGER_REGISTRATION_1, INPUT_TRIGGER_REGISTRATION_2),
+                                destination)
+                        .build();
+        return new WebTriggerRegistrationRequestInternal.Builder(
+                        webTriggerRegistrationRequest,
+                        DEFAULT_CONTEXT.getAttributionSource().getPackageName())
+                .setAdIdPermissionGranted(false)
                 .build();
     }
 
@@ -305,6 +331,29 @@ public final class MeasurementImplTest {
                         sourceRegistrationRequest,
                         DEFAULT_CONTEXT.getAttributionSource().getPackageName(),
                         REQUEST_TIME)
+                .setAdIdPermissionGranted(true)
+                .build();
+    }
+
+    private static WebSourceRegistrationRequestInternal
+            createWebSourceRegistrationRequestWithoutAdIdPermission(
+                    Uri appDestination, Uri webDestination, Uri verifiedDestination) {
+
+        WebSourceRegistrationRequest sourceRegistrationRequest =
+                new WebSourceRegistrationRequest.Builder(
+                                Arrays.asList(
+                                        INPUT_SOURCE_REGISTRATION_1, INPUT_SOURCE_REGISTRATION_2),
+                                DEFAULT_URI)
+                        .setAppDestination(appDestination)
+                        .setWebDestination(webDestination)
+                        .setVerifiedDestination(verifiedDestination)
+                        .build();
+
+        return new WebSourceRegistrationRequestInternal.Builder(
+                        sourceRegistrationRequest,
+                        DEFAULT_CONTEXT.getAttributionSource().getPackageName(),
+                        REQUEST_TIME)
+                .setAdIdPermissionGranted(false)
                 .build();
     }
 
@@ -374,6 +423,73 @@ public final class MeasurementImplTest {
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
         verify(mMeasurementDao, times(4)).countDistinctEnrollmentsPerPublisherXDestinationInSource(
                 any(), anyInt(), any(), any(), anyLong(), anyLong());
+        verify(mTriggerFetcher, never()).fetchTrigger(any());
+
+        List<ThrowingCheckedConsumer> insertionLogicExecutor =
+                insertionLogicExecutorCaptor.getAllValues();
+        assertEquals(2, insertionLogicExecutor.size());
+
+        verifyInsertSource(
+                registrationRequest,
+                VALID_SOURCE_REGISTRATION_1,
+                eventTime,
+                VALID_SOURCE_REGISTRATION_1.getAppDestination(),
+                VALID_SOURCE_REGISTRATION_1.getWebDestination());
+        verifyInsertSource(
+                registrationRequest,
+                VALID_SOURCE_REGISTRATION_2,
+                eventTime,
+                VALID_SOURCE_REGISTRATION_1.getAppDestination(),
+                VALID_SOURCE_REGISTRATION_1.getWebDestination());
+    }
+
+    @Test
+    public void testRegister_registrationTypeSource_sourceFetchSuccess_withoutAdIdPermission()
+            throws RemoteException, DatastoreException {
+        // setup
+        List<SourceRegistration> sourceRegistrationsOut =
+                Arrays.asList(VALID_SOURCE_REGISTRATION_1, VALID_SOURCE_REGISTRATION_2);
+        RegistrationRequest registrationRequest =
+                createRegistrationRequestWithoutAdIdPermission(RegistrationRequest.REGISTER_SOURCE);
+        doReturn(Optional.of(sourceRegistrationsOut)).when(mSourceFetcher).fetchSource(any());
+        ArgumentCaptor<ThrowingCheckedConsumer> insertionLogicExecutorCaptor =
+                ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
+
+        when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        when(mMeasurementDao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        DatastoreManager datastoreManager = spy(new FakeDatastoreManager());
+
+        // Test
+        MeasurementImpl measurementImpl =
+                spy(
+                        new MeasurementImpl(
+                                null,
+                                mContentResolver,
+                                datastoreManager,
+                                mSourceFetcher,
+                                mTriggerFetcher,
+                                mClickVerifier));
+
+        long eventTime = System.currentTimeMillis();
+        // Disable Impression Noise
+        doReturn(Collections.emptyList()).when(measurementImpl).generateFakeEventReports(any());
+        final int result = measurementImpl.register(registrationRequest, eventTime);
+
+        // Assert
+        assertEquals(STATUS_SUCCESS, result);
+        verify(mMockContentProviderClient, never()).insert(any(), any());
+        verify(mSourceFetcher, times(1)).fetchSource(any());
+        verify(datastoreManager, times(2)).runInTransaction(insertionLogicExecutorCaptor.capture());
+        verify(mMeasurementDao, times(4))
+                .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
+        verify(mMeasurementDao, times(4))
+                .countDistinctEnrollmentsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong());
         verify(mTriggerFetcher, never()).fetchTrigger(any());
 
         List<ThrowingCheckedConsumer> insertionLogicExecutor =
@@ -548,7 +664,46 @@ public final class MeasurementImplTest {
                 createTrigger(
                         triggerTime,
                         DEFAULT_CONTEXT.getAttributionSource(),
-                        DEFAULT_URI,
+                        TOP_ORIGIN,
+                        EventSurfaceType.APP);
+        verify(mMeasurementDao).insertTrigger(trigger);
+    }
+
+    @Test
+    public void testRegister_registrationTypeTrigger_triggerFetchSuccess_withoutAdIdPermission()
+            throws Exception {
+        ArgumentCaptor<ThrowingCheckedConsumer> consumerArgumentCaptor =
+                ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
+        final long triggerTime = System.currentTimeMillis();
+        Answer<Optional<List<TriggerRegistration>>> populateTriggerRegistrations =
+                invocation -> {
+                    List<TriggerRegistration> triggerRegs = new ArrayList<>();
+                    triggerRegs.add(VALID_TRIGGER_REGISTRATION);
+                    return Optional.of(triggerRegs);
+                };
+        RegistrationRequest registrationRequest =
+                createRegistrationRequestWithoutAdIdPermission(
+                        RegistrationRequest.REGISTER_TRIGGER);
+
+        doAnswer(populateTriggerRegistrations)
+                .when(mTriggerFetcher)
+                .fetchTrigger(registrationRequest);
+
+        // Execution
+        final int result = mMeasurementImpl.register(registrationRequest, triggerTime);
+        verify(mDatastoreManager).runInTransaction(consumerArgumentCaptor.capture());
+        consumerArgumentCaptor.getValue().accept(mMeasurementDao);
+
+        // Assertions
+        assertEquals(STATUS_SUCCESS, result);
+        verify(mMockContentProviderClient).insert(any(), any());
+        verify(mSourceFetcher, never()).fetchSource(any());
+        verify(mTriggerFetcher, times(1)).fetchTrigger(any());
+        Trigger trigger =
+                createTrigger(
+                        triggerTime,
+                        DEFAULT_CONTEXT.getAttributionSource(),
+                        TOP_ORIGIN,
                         EventSurfaceType.APP);
         verify(mMeasurementDao).insertTrigger(trigger);
     }
@@ -651,7 +806,7 @@ public final class MeasurementImplTest {
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setExpiryTime(eventTime + TimeUnit.SECONDS.toMillis(expiry))
                         .setEventTime(eventTime)
-                        .setPublisher(DEFAULT_URI)
+                        .setPublisher(TOP_ORIGIN)
                         .setAppDestination(Uri.parse("android-app://com.example.abc"))
                         .setEventId(new UnsignedLong(123L))
                         .build();
@@ -661,7 +816,6 @@ public final class MeasurementImplTest {
                         new SourceRegistration.Builder()
                                 .setSourceEventId(sampleSource.getEventId())
                                 .setAppDestination(sampleSource.getAppDestination())
-                                .setTopOrigin(sampleSource.getPublisher())
                                 .setExpiry(expiry)
                                 .setEnrollmentId(DEFAULT_ENROLLMENT)
                                 .build());
@@ -689,7 +843,6 @@ public final class MeasurementImplTest {
                 measurementImpl.register(
                         new RegistrationRequest.Builder()
                                 .setRegistrationUri(REGISTRATION_URI_1)
-                                .setTopOriginUri(DEFAULT_URI)
                                 .setPackageName(
                                         DEFAULT_CONTEXT.getAttributionSource().getPackageName())
                                 .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
@@ -723,7 +876,7 @@ public final class MeasurementImplTest {
                                 .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(20))
                                 .setSourceType(Source.SourceType.NAVIGATION)
                                 .setAppDestination(DEFAULT_URI)
-                                .setPublisher(DEFAULT_URI)
+                                .setPublisher(TOP_ORIGIN)
                                 .build());
         when(source.getRandomAttributionProbability()).thenReturn(1.1D);
         DatastoreManager mockDatastoreManager = Mockito.mock(DatastoreManager.class);
@@ -878,6 +1031,76 @@ public final class MeasurementImplTest {
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
         verify(mMeasurementDao, times(4)).countDistinctEnrollmentsPerPublisherXDestinationInSource(
                 any(), anyInt(), any(), any(), anyLong(), anyLong());
+        verify(mTriggerFetcher, never()).fetchWebTriggers(any(), anyBoolean());
+
+        List<ThrowingCheckedConsumer> insertionLogicExecutor =
+                insertionLogicExecutorCaptor.getAllValues();
+        assertEquals(2, insertionLogicExecutor.size());
+
+        verifyInsertSource(
+                registrationRequest,
+                VALID_SOURCE_REGISTRATION_1,
+                eventTime,
+                VALID_SOURCE_REGISTRATION_1.getAppDestination(),
+                VALID_SOURCE_REGISTRATION_1.getWebDestination());
+        verifyInsertSource(
+                registrationRequest,
+                VALID_SOURCE_REGISTRATION_2,
+                eventTime,
+                VALID_SOURCE_REGISTRATION_1.getAppDestination(),
+                VALID_SOURCE_REGISTRATION_1.getWebDestination());
+    }
+
+    @Test
+    public void registerWebSource_sourceFetchSuccess_withoutAdIdPermission()
+            throws RemoteException, DatastoreException {
+        // setup
+        List<SourceRegistration> sourceRegistrationsOut =
+                Arrays.asList(VALID_SOURCE_REGISTRATION_1, VALID_SOURCE_REGISTRATION_2);
+        WebSourceRegistrationRequestInternal registrationRequest =
+                createWebSourceRegistrationRequestWithoutAdIdPermission(
+                        APP_DESTINATION, WEB_DESTINATION, null);
+        doReturn(Optional.of(sourceRegistrationsOut))
+                .when(mSourceFetcher)
+                .fetchWebSources(any(), eq(false));
+        ArgumentCaptor<ThrowingCheckedConsumer> insertionLogicExecutorCaptor =
+                ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
+
+        when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        when(mMeasurementDao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        DatastoreManager datastoreManager = spy(new FakeDatastoreManager());
+
+        // Test
+        MeasurementImpl measurementImpl =
+                spy(
+                        new MeasurementImpl(
+                                null,
+                                mContentResolver,
+                                datastoreManager,
+                                mSourceFetcher,
+                                mTriggerFetcher,
+                                mClickVerifier));
+
+        long eventTime = System.currentTimeMillis();
+        // Disable Impression Noise
+        doReturn(Collections.emptyList()).when(measurementImpl).generateFakeEventReports(any());
+        final int result = measurementImpl.registerWebSource(registrationRequest, eventTime);
+
+        // Assert
+        assertEquals(STATUS_SUCCESS, result);
+        verify(mMockContentProviderClient, never()).insert(any(), any());
+        verify(mSourceFetcher, times(1)).fetchWebSources(any(), anyBoolean());
+        verify(datastoreManager, times(2)).runInTransaction(insertionLogicExecutorCaptor.capture());
+        verify(mMeasurementDao, times(4))
+                .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
+        verify(mMeasurementDao, times(4))
+                .countDistinctEnrollmentsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong());
         verify(mTriggerFetcher, never()).fetchWebTriggers(any(), anyBoolean());
 
         List<ThrowingCheckedConsumer> insertionLogicExecutor =
@@ -1187,6 +1410,40 @@ public final class MeasurementImplTest {
     }
 
     @Test
+    public void registerWebTrigger_triggerFetchSuccess_withoutAdIdPermission() throws Exception {
+        // Setup
+        when(mTriggerFetcher.fetchWebTriggers(any(), eq(false)))
+                .thenReturn(Optional.of(Collections.singletonList(VALID_TRIGGER_REGISTRATION)));
+
+        ArgumentCaptor<ThrowingCheckedConsumer> consumerArgumentCaptor =
+                ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
+        final long triggerTime = System.currentTimeMillis();
+
+        // Execution
+        final int result =
+                mMeasurementImpl.registerWebTrigger(
+                        createWebTriggerRegistrationRequestWithoutAdIdPermission(WEB_DESTINATION),
+                        triggerTime);
+
+        verify(mDatastoreManager).runInTransaction(consumerArgumentCaptor.capture());
+        consumerArgumentCaptor.getValue().accept(mMeasurementDao);
+
+        // Assertions
+        assertEquals(STATUS_SUCCESS, result);
+        verify(mMockContentProviderClient).insert(any(), any());
+        verify(mSourceFetcher, never()).fetchSource(any());
+        verify(mTriggerFetcher, times(1)).fetchWebTriggers(any(), eq(false));
+        verify(mMeasurementDao)
+                .insertTrigger(
+                        eq(
+                                createTrigger(
+                                        triggerTime,
+                                        DEFAULT_CONTEXT.getAttributionSource(),
+                                        WEB_DESTINATION,
+                                        EventSurfaceType.WEB)));
+    }
+
+    @Test
     public void registerWebTrigger_triggerFetchFailure() throws RemoteException {
         when(mTriggerFetcher.fetchWebTriggers(any(), anyBoolean())).thenReturn(Optional.empty());
 
@@ -1227,7 +1484,6 @@ public final class MeasurementImplTest {
         RegistrationRequest registrationRequest =
                 new RegistrationRequest.Builder()
                         .setRegistrationUri(REGISTRATION_URI_1)
-                        .setTopOriginUri(DEFAULT_URI)
                         .setPackageName(DEFAULT_CONTEXT.getAttributionSource().getPackageName())
                         .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
                         .setInputEvent(getInputEvent())
@@ -1573,7 +1829,7 @@ public final class MeasurementImplTest {
                         eventTime,
                         firstSourceDestination,
                         firstSourceWebDestination,
-                        registrationRequest.getTopOriginUri(),
+                        Uri.parse(ANDROID_APP_SCHEME + registrationRequest.getPackageName()),
                         EventSurfaceType.APP,
                         registrationRequest.getPackageName());
         verify(mMeasurementDao).insertSource(source);

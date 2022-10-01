@@ -47,8 +47,7 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Beta-bertsioa probatzeko argibideak"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Beta-bertsioa aktibatuz gero, iragarkiak erakusteko modu berriak eta pribatuagoak probatzeko baimena izango dute aplikazioek. Beta-bertsioa desaktibatzeko, joan pribatutasun-ezarpenetara."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Ez, eskerrik asko"</string>
-    <!-- no translation found for notificationUI_right_control_button_text_eu (8484787286437052150) -->
-    <skip />
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Aktibatu"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Eskerrik asko parte hartzeagatik"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Android-eko iragarkien pribatutasunaren beta-bertsioa probatzen ari zara. Privacy Sandbox-a aktibatuta dago gailuan.\n\nInformazio gehiago lortu edo beta-bertsioa probatzeari utzi nahi izanez gero, joan pribatutasun-ezarpenetara."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Ez parte hartzea aukeratu duzu"</string>

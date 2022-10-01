@@ -26,7 +26,6 @@ import android.annotation.SystemService;
 import android.annotation.TestApi;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.pm.SharedLibraryInfo;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.OutcomeReceiver;
@@ -360,12 +359,11 @@ public final class SdkSandboxManager {
     /**
      * Fetches information about Sdks that are loaded in the sandbox.
      *
-     * @return List of {@link SharedLibraryInfo} containing all currently loaded sdks
-     * @hide
+     * @return List of {@link SandboxedSdk} containing all currently loaded sdks
      */
-    public @NonNull List<SharedLibraryInfo> getLoadedSdkLibrariesInfo() {
+    public @NonNull List<SandboxedSdk> getSandboxedSdks() {
         try {
-            return mService.getLoadedSdkLibrariesInfo(
+            return mService.getSandboxedSdks(
                     mContext.getPackageName(),
                     /*timeAppCalledSystemServer=*/ System.currentTimeMillis());
         } catch (RemoteException e) {
@@ -530,13 +528,12 @@ public final class SdkSandboxManager {
         }
     }
 
-    // TODO(b/237410689): Update links to getClientSharedPreferences when cl is merged.
     /**
      * Adds keys to set of keys being synced from app's default {@link SharedPreferences} to
      * SdkSandbox.
      *
-     * <p>Synced data will be available for sdks to read using the {@code
-     * getClientSharedPreferences} API.
+     * <p>Synced data will be available for sdks to read using the {@link
+     * SdkSandboxController#getClientSharedPreferences()} API.
      *
      * <p>To stop syncing any key that has been added using this API, use {@link
      * #removeSyncedSharedPreferencesKeys(Set)}.
