@@ -528,13 +528,12 @@ public final class SdkSandboxManager {
         }
     }
 
-    // TODO(b/237410689): Update links to getClientSharedPreferences when cl is merged.
     /**
      * Adds keys to set of keys being synced from app's default {@link SharedPreferences} to
      * SdkSandbox.
      *
-     * <p>Synced data will be available for sdks to read using the {@code
-     * getClientSharedPreferences} API.
+     * <p>Synced data will be available for sdks to read using the {@link
+     * SdkSandboxController#getClientSharedPreferences()} API.
      *
      * <p>To stop syncing any key that has been added using this API, use {@link
      * #removeSyncedSharedPreferencesKeys(Set)}.

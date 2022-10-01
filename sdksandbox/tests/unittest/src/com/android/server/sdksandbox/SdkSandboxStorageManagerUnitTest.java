@@ -29,7 +29,7 @@ import androidx.annotation.NonNull;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.server.pm.PackageManagerLocal;
-import com.android.server.sdksandbox.SdkSandboxStorageManager.SdkDataDirInfo;
+import com.android.server.sdksandbox.SdkSandboxStorageManager.StorageDirInfo;
 import com.android.server.sdksandbox.SdkSandboxStorageManager.SubDirectories;
 
 import org.junit.After;
@@ -77,15 +77,7 @@ public class SdkSandboxStorageManagerUnitTest {
                 .when(mSpyContext)
                 .createContextAsUser(Mockito.any(UserHandle.class), Mockito.anyInt());
 
-        PackageManagerLocal packageManagerLocal =
-                (volumeUuid,
-                        packageName,
-                        subDirNames,
-                        userId,
-                        appId,
-                        previousAppId,
-                        seInfo,
-                        flags) -> {};
+        PackageManagerLocal packageManagerLocal = Mockito.mock(PackageManagerLocal.class);
 
         mSdkSandboxManagerLocal = new FakeSdkSandboxManagerLocal();
         mSdkSandboxStorageManager =
@@ -122,25 +114,25 @@ public class SdkSandboxStorageManagerUnitTest {
     }
 
     @Test
-    public void test_SdkDataDirInfo_GetterApis() throws Exception {
-        final SdkDataDirInfo sdkInfo = new SdkDataDirInfo("foo", "bar");
+    public void test_StorageDirInfo_GetterApis() throws Exception {
+        final StorageDirInfo sdkInfo = new StorageDirInfo("foo", "bar");
         assertThat(sdkInfo.getCeDataDir()).isEqualTo("foo");
         assertThat(sdkInfo.getDeDataDir()).isEqualTo("bar");
     }
 
     @Test
-    public void test_GetSdkDataDirInfo_NonExistingStorage() throws Exception {
-        // Call getSdkDataDirInfo on SdkStorageManager
+    public void test_getSdkStorageDirInfo_nonExistingStorage() throws Exception {
+        // Call getSdkStorageDirInfo on SdkStorageManager
         final CallingInfo callingInfo = new CallingInfo(CLIENT_UID, CLIENT_PKG_NAME);
-        final SdkDataDirInfo sdkInfo =
-                mSdkSandboxStorageManager.getSdkDataDirInfo(callingInfo, SDK_NAME);
+        final StorageDirInfo sdkInfo =
+                mSdkSandboxStorageManager.getSdkStorageDirInfo(callingInfo, SDK_NAME);
 
         assertThat(sdkInfo.getCeDataDir()).isNull();
         assertThat(sdkInfo.getDeDataDir()).isNull();
     }
 
     @Test
-    public void test_GetSdkDataDirInfo_StorageExists() throws Exception {
+    public void test_getSdkStorageDirInfo_storageExists() throws Exception {
         createSdkStorageForTest(Arrays.asList(SDK_NAME), Collections.emptyList());
 
         final ApplicationInfo info = new ApplicationInfo();
@@ -149,10 +141,10 @@ public class SdkSandboxStorageManagerUnitTest {
                 .when(mPmMock)
                 .getApplicationInfo(Mockito.any(String.class), Mockito.anyInt());
 
-        // Call getSdkDataDirInfo on SdkStorageManager
+        // Call getSdkStorageDirInfo on SdkStorageManager
         final CallingInfo callingInfo = new CallingInfo(CLIENT_UID, CLIENT_PKG_NAME);
-        final SdkDataDirInfo sdkInfo =
-                mSdkSandboxStorageManager.getSdkDataDirInfo(callingInfo, SDK_NAME);
+        final StorageDirInfo sdkInfo =
+                mSdkSandboxStorageManager.getSdkStorageDirInfo(callingInfo, SDK_NAME);
 
         assertThat(sdkInfo.getCeDataDir())
                 .isEqualTo(mTestDir + "/data/misc_ce/0/sdksandbox/client/sdk@sdk");
@@ -161,7 +153,38 @@ public class SdkSandboxStorageManagerUnitTest {
     }
 
     @Test
-    public void test_GetMountedVolumes_NewVolumeExists() throws Exception {
+    public void test_getInernalStorageDirInfo_nonExistingStorage() throws Exception {
+        final CallingInfo callingInfo = new CallingInfo(CLIENT_UID, CLIENT_PKG_NAME);
+        final StorageDirInfo dirInfo =
+                mSdkSandboxStorageManager.getInternalStorageDirInfo(callingInfo, SDK_NAME);
+
+        assertThat(dirInfo.getCeDataDir()).isNull();
+        assertThat(dirInfo.getDeDataDir()).isNull();
+    }
+
+    @Test
+    public void test_getInternalStorageDirInfo_storageExists() throws Exception {
+        createSdkStorageForTest(Collections.emptyList(), Arrays.asList(SubDirectories.SANDBOX_DIR));
+
+        final ApplicationInfo info = new ApplicationInfo();
+        info.storageUuid = UUID.fromString("41217664-9172-527a-b3d5-edabb50a7d69");
+        Mockito.doReturn(info)
+                .when(mPmMock)
+                .getApplicationInfo(Mockito.any(String.class), Mockito.anyInt());
+
+        final CallingInfo callingInfo = new CallingInfo(CLIENT_UID, CLIENT_PKG_NAME);
+        final StorageDirInfo internalSubDirInfo =
+                mSdkSandboxStorageManager.getInternalStorageDirInfo(
+                        callingInfo, SubDirectories.SANDBOX_DIR);
+
+        assertThat(internalSubDirInfo.getCeDataDir())
+                .isEqualTo(mTestDir + "/data/misc_ce/0/sdksandbox/client/sandbox#sandbox");
+        assertThat(internalSubDirInfo.getDeDataDir())
+                .isEqualTo(mTestDir + "/data/misc_de/0/sdksandbox/client/sandbox#sandbox");
+    }
+
+    @Test
+    public void test_getMountedVolumes_newVolumeExists() throws Exception {
         createSdkStorageForTest(
                 /*volumeUuid=*/ null,
                 /*userId=*/ 0,

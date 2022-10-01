@@ -92,10 +92,10 @@ class SdkSandboxStorageManager {
     /**
      * Handle package added or updated event.
      *
-     * On package added or updated, we need to reconcile sdk subdirectories for the new/updated
+     * <p>On package added or updated, we need to reconcile sdk subdirectories for the new/updated
      * package.
      */
-    void onPackageAddedOrUpdated(CallingInfo callingInfo) {
+    public void onPackageAddedOrUpdated(CallingInfo callingInfo) {
         synchronized (mLock) {
             reconcileSdkDataSubDirs(callingInfo, /*forInstrumentation=*/false);
         }
@@ -113,13 +113,45 @@ class SdkSandboxStorageManager {
         }
     }
 
-    void prepareSdkDataOnLoad(CallingInfo callingInfo) {
+    public void prepareSdkDataOnLoad(CallingInfo callingInfo) {
         synchronized (mLock) {
             reconcileSdkDataSubDirs(callingInfo, /*forInstrumentation=*/false);
         }
     }
 
-    SdkDataDirInfo getSdkDataDirInfo(CallingInfo callingInfo, String sdkName) {
+    public StorageDirInfo getSdkStorageDirInfo(CallingInfo callingInfo, String sdkName) {
+        final StorageDirInfo packageDirInfo = getSdkDataPackageDirInfo(callingInfo);
+        if (packageDirInfo == null) {
+            // TODO(b/238164644): SdkSandboxManagerService should fail loadSdk
+            return new StorageDirInfo(null, null);
+        }
+        // TODO(b/232924025): We should have these information cached, instead of rescanning dirs.
+        synchronized (mLock) {
+            final SubDirectories ceSubDirs = new SubDirectories(packageDirInfo.getCeDataDir());
+            final SubDirectories deSubDirs = new SubDirectories(packageDirInfo.getDeDataDir());
+            final String sdkCeSubDirPath = ceSubDirs.getSdkSubDir(sdkName, /*fullPath=*/ true);
+            final String sdkDeSubDirPath = deSubDirs.getSdkSubDir(sdkName, /*fullPath=*/ true);
+            return new StorageDirInfo(sdkCeSubDirPath, sdkDeSubDirPath);
+        }
+    }
+
+    public StorageDirInfo getInternalStorageDirInfo(CallingInfo callingInfo, String subDirName) {
+        final StorageDirInfo packageDirInfo = getSdkDataPackageDirInfo(callingInfo);
+        if (packageDirInfo == null) {
+            // TODO(b/238164644): SdkSandboxManagerService should fail loadSdk
+            return new StorageDirInfo(null, null);
+        }
+        synchronized (mLock) {
+            final SubDirectories ceSubDirs = new SubDirectories(packageDirInfo.getCeDataDir());
+            final SubDirectories deSubDirs = new SubDirectories(packageDirInfo.getDeDataDir());
+            final String ceSubDirPath = ceSubDirs.getInternalSubDir(subDirName, /*fullPath=*/ true);
+            final String deSubDirPath = deSubDirs.getInternalSubDir(subDirName, /*fullPath=*/ true);
+            return new StorageDirInfo(ceSubDirPath, deSubDirPath);
+        }
+    }
+
+    @Nullable
+    private StorageDirInfo getSdkDataPackageDirInfo(CallingInfo callingInfo) {
         final int uid = callingInfo.getUid();
         final String packageName = callingInfo.getPackageName();
         String volumeUuid = null;
@@ -127,8 +159,7 @@ class SdkSandboxStorageManager {
             volumeUuid = getVolumeUuidForPackage(getUserId(uid), packageName);
         } catch (Exception e) {
             Log.w(TAG, "Failed to find package " + packageName + " error: " + e.getMessage());
-            // TODO(b/238164644): SdkSandboxManagerService should fail loadSdk
-            return new SdkDataDirInfo(null, null);
+            return null;
         }
         final String cePackagePath =
                 getSdkDataPackageDirectory(
@@ -136,14 +167,7 @@ class SdkSandboxStorageManager {
         final String dePackagePath =
                 getSdkDataPackageDirectory(
                         volumeUuid, getUserId(uid), packageName, /*isCeData=*/ false);
-        // TODO(b/232924025): We should have these information cached, instead of rescanning dirs.
-        synchronized (mLock) {
-            final SubDirectories ceSubDirs = new SubDirectories(cePackagePath);
-            final String sdkCeSubDirPath = ceSubDirs.getSdkSubDir(sdkName, /*fullPath=*/ true);
-            final SubDirectories deSubDirs = new SubDirectories(dePackagePath);
-            final String sdkDeSubDirPath = deSubDirs.getSdkSubDir(sdkName, /*fullPath=*/ true);
-            return new SdkDataDirInfo(sdkCeSubDirPath, sdkDeSubDirPath);
-        }
+        return new StorageDirInfo(cePackagePath, dePackagePath);
     }
 
     private int getUserId(int uid) {
@@ -456,6 +480,14 @@ class SdkSandboxStorageManager {
             return Paths.get(mBaseDir, subDir).toString();
         }
 
+        /** Gets the full path of internal storage directory with random suffix */
+        @Nullable
+        public String getInternalSubDir(String subDirName, boolean fullPath) {
+            final String subDir = mInternalSubDirs.getOrDefault(subDirName, null);
+            if (subDir == null || !fullPath) return subDir;
+            return Paths.get(mBaseDir, subDir).toString();
+        }
+
         /**
          * Provided a list of sdk names, verifies if the current collection of directories satisfies
          * per-sdk and internal sub-directory requirements.
@@ -650,16 +682,16 @@ class SdkSandboxStorageManager {
     }
 
     /**
-     * Sdk data directories for a particular sdk.
+     * Sdk data directories for a particular sdk or internal usage.
      *
-     * Every sdk has two data directories. One is credentially encrypted storage and another is
-     * device encrypted.
+     * <p>Every sdk sub-directory has two data directories. One is credentially encrypted storage
+     * and another is device encrypted.
      */
-    static class SdkDataDirInfo {
+    static class StorageDirInfo {
         @Nullable final String mCeData;
         @Nullable final String mDeData;
 
-        SdkDataDirInfo(@Nullable String ceDataPath, @Nullable String deDataPath) {
+        StorageDirInfo(@Nullable String ceDataPath, @Nullable String deDataPath) {
             mCeData = ceDataPath;
             mDeData = deDataPath;
         }

@@ -126,27 +126,32 @@ public class SdkSandboxStorageTestApp {
         final StorageStats initialAppStats = stats.queryStatsForUid(UUID_DEFAULT, uid);
         final StorageStats initialUserStats = stats.queryStatsForUser(UUID_DEFAULT, user);
 
-        mSdk.createFilesInSharedStorage();
+        final int sizeInBytes = 10000000; // 10 MB
+        mSdk.createFilesInSharedStorage(sizeInBytes, /*inCacheDir*/ false);
+        mSdk.createFilesInSharedStorage(sizeInBytes, /*inCacheDir*/ true);
 
         final StorageStats finalAppStats = stats.queryStatsForUid(UUID_DEFAULT, uid);
         final StorageStats finalUserStats = stats.queryStatsForUser(UUID_DEFAULT, user);
 
-        // Verify the space used with a few hundred kilobytes error margin
-        long deltaAppSize = 2000000;
-        long deltaCacheSize = 1000000;
-        long errorMarginSize = 100000;
-        assertMostlyEquals(deltaAppSize,
-                    finalAppStats.getDataBytes() - initialAppStats.getDataBytes(),
-                           errorMarginSize);
-        assertMostlyEquals(deltaAppSize,
-                    finalUserStats.getDataBytes() - initialUserStats.getDataBytes(),
-                           errorMarginSize);
-        assertMostlyEquals(deltaCacheSize,
-                    finalAppStats.getCacheBytes() - initialAppStats.getCacheBytes(),
-                           errorMarginSize);
-        assertMostlyEquals(deltaCacheSize,
-                    finalUserStats.getCacheBytes() - initialUserStats.getCacheBytes(),
-                           errorMarginSize);
+        // Verify the space used with a 5% error margin
+        long deltaAppSize = 2 * sizeInBytes;
+        long deltaCacheSize = sizeInBytes;
+        long errorMarginSize = sizeInBytes / 20; // 0.5 MB
+
+        // Assert app size is same
+        final long appSizeAppStats = finalAppStats.getDataBytes() - initialAppStats.getDataBytes();
+        final long appSizeUserStats =
+                finalUserStats.getDataBytes() - initialUserStats.getDataBytes();
+        assertMostlyEquals(deltaAppSize, appSizeAppStats, errorMarginSize);
+        assertMostlyEquals(deltaAppSize, appSizeUserStats, errorMarginSize);
+
+        // Assert cache size is same
+        final long cacheSizeAppStats =
+                finalAppStats.getCacheBytes() - initialAppStats.getCacheBytes();
+        final long cacheSizeUserStats =
+                finalUserStats.getCacheBytes() - initialUserStats.getCacheBytes();
+        assertMostlyEquals(deltaCacheSize, cacheSizeAppStats, errorMarginSize);
+        assertMostlyEquals(deltaCacheSize, cacheSizeUserStats, errorMarginSize);
     }
 
     @Test
@@ -222,6 +227,15 @@ public class SdkSandboxStorageTestApp {
         Thread.sleep(1000);
 
         // Verify key has been removed from the sandbox
+        final String syncedValueInSandbox = mSdk.getSyncedSharedPreferencesString(KEY_TO_SYNC);
+        assertThat(syncedValueInSandbox).isEmpty();
+    }
+
+    @Test
+    public void testSharedPreferences_SyncedDataClearedOnSandboxRestart() throws Exception {
+        loadSdk();
+
+        // Verify previously synced keys are not available in sandbox anymore
         final String syncedValueInSandbox = mSdk.getSyncedSharedPreferencesString(KEY_TO_SYNC);
         assertThat(syncedValueInSandbox).isEmpty();
     }

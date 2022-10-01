@@ -18,8 +18,11 @@ package com.android.sdksandbox;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertThrows;
+
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxedSdk;
+import android.app.sdksandbox.SdkSandboxLocalSingleton;
 import android.app.sdksandbox.SharedPreferencesKey;
 import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.app.sdksandbox.testutils.StubSdkToServiceLink;
@@ -32,7 +35,6 @@ import android.os.Binder;
 import android.os.Bundle;
 import android.os.Looper;
 import android.os.Process;
-import android.preference.PreferenceManager;
 import android.view.SurfaceControlViewHost;
 
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -130,7 +132,27 @@ public class SdkSandboxTest {
 
     @After
     public void teardown() throws Exception {
-        getClientSharedPreference().edit().clear().commit();
+        mService.getClientSharedPreferences().edit().clear().commit();
+    }
+
+    @Test
+    public void testSandboxInitialization_initializesSdkSandboxLocalSingleTon() throws Exception {
+        assertThrows(
+                IllegalStateException.class, () -> SdkSandboxLocalSingleton.getExistingInstance());
+
+        mService.initialize(new StubSdkToServiceLink());
+
+        assertThat(SdkSandboxLocalSingleton.getExistingInstance()).isNotNull();
+    }
+
+    @Test
+    public void testSandboxInitialization_clearsSyncedData() throws Exception {
+        // First write some data
+        mService.syncDataFromClient(TEST_UPDATE);
+
+        mService.initialize(new StubSdkToServiceLink());
+
+        assertThat(mService.getClientSharedPreferences().getAll()).isEmpty();
     }
 
     @Test
@@ -146,8 +168,7 @@ public class SdkSandboxTest {
                 null,
                 new Bundle(),
                 mRemoteCode,
-                SANDBOX_LATENCY_INFO,
-                new StubSdkToServiceLink());
+                SANDBOX_LATENCY_INFO);
         assertThat(latch.await(1, TimeUnit.MINUTES)).isTrue();
         assertThat(mRemoteCode.mSuccessful).isTrue();
     }
@@ -167,8 +188,7 @@ public class SdkSandboxTest {
                 null,
                 new Bundle(),
                 mRemoteCode1,
-                SANDBOX_LATENCY_INFO,
-                new StubSdkToServiceLink());
+                SANDBOX_LATENCY_INFO);
         assertThat(latch1.await(1, TimeUnit.MINUTES)).isTrue();
         assertThat(mRemoteCode1.mSuccessful).isTrue();
         mService.loadSdk(
@@ -180,8 +200,7 @@ public class SdkSandboxTest {
                 null,
                 new Bundle(),
                 mRemoteCode2,
-                SANDBOX_LATENCY_INFO,
-                new StubSdkToServiceLink());
+                SANDBOX_LATENCY_INFO);
         assertThat(latch2.await(1, TimeUnit.MINUTES)).isTrue();
         assertThat(mRemoteCode2.mSuccessful).isFalse();
         assertThat(mRemoteCode2.mErrorCode)
@@ -201,8 +220,7 @@ public class SdkSandboxTest {
                 null,
                 new Bundle(),
                 mRemoteCode,
-                SANDBOX_LATENCY_INFO,
-                new StubSdkToServiceLink());
+                SANDBOX_LATENCY_INFO);
         assertThat(latch.await(1, TimeUnit.MINUTES)).isTrue();
 
         CountDownLatch surfaceLatch = new CountDownLatch(1);
@@ -235,8 +253,7 @@ public class SdkSandboxTest {
                 null,
                 new Bundle(),
                 mRemoteCode,
-                SANDBOX_LATENCY_INFO,
-                new StubSdkToServiceLink());
+                SANDBOX_LATENCY_INFO);
         assertThat(latch.await(1, TimeUnit.MINUTES)).isTrue();
 
         CountDownLatch surfaceLatch = new CountDownLatch(1);
@@ -286,8 +303,7 @@ public class SdkSandboxTest {
                 null,
                 new Bundle(),
                 new RemoteCode(new CountDownLatch(1)),
-                SANDBOX_LATENCY_INFO,
-                new StubSdkToServiceLink());
+                SANDBOX_LATENCY_INFO);
 
         final StringWriter stringWriter = new StringWriter();
         mService.dump(new FileDescriptor(), new PrintWriter(stringWriter), new String[0]);
@@ -328,7 +344,7 @@ public class SdkSandboxTest {
         mService.syncDataFromClient(TEST_UPDATE);
 
         // Verify that ClientSharedPreference contains the synced data
-        SharedPreferences pref = getClientSharedPreference();
+        SharedPreferences pref = mService.getClientSharedPreferences();
         assertThat(pref.getAll().keySet()).containsExactlyElementsIn(TEST_DATA.keySet());
         assertThat(pref.getAll().values()).containsExactlyElementsIn(TEST_DATA.values());
     }
@@ -357,7 +373,7 @@ public class SdkSandboxTest {
         mService.syncDataFromClient(update);
 
         // Verify that ClientSharedPreference contains the synced data
-        SharedPreferences pref = getClientSharedPreference();
+        SharedPreferences pref = mService.getClientSharedPreferences();
         assertThat(pref.getAll().keySet()).containsExactlyElementsIn(bundle.keySet());
         assertThat(pref.getString("string", "")).isEqualTo("value");
         assertThat(pref.getBoolean("boolean", false)).isEqualTo(true);
@@ -380,7 +396,7 @@ public class SdkSandboxTest {
         mService.syncDataFromClient(newUpdate);
 
         // Verify that ClientSharedPreference contains the synced data
-        SharedPreferences pref = getClientSharedPreference();
+        SharedPreferences pref = mService.getClientSharedPreferences();
         assertThat(pref.getAll().keySet()).containsExactlyElementsIn(TEST_DATA.keySet());
         assertThat(pref.getString(KEY_TO_UPDATE, "")).isEqualTo("update");
     }
@@ -396,7 +412,7 @@ public class SdkSandboxTest {
         mService.syncDataFromClient(newUpdate);
 
         // Verify that ClientSharedPreference contains the synced data
-        SharedPreferences pref = getClientSharedPreference();
+        SharedPreferences pref = mService.getClientSharedPreferences();
         assertThat(pref.getAll().keySet()).doesNotContain(KEY_TO_UPDATE);
     }
 
@@ -422,8 +438,7 @@ public class SdkSandboxTest {
                 null,
                 new Bundle(),
                 mRemoteCode,
-                SANDBOX_LATENCY_INFO,
-                new StubSdkToServiceLink());
+                SANDBOX_LATENCY_INFO);
         assertThat(latch.await(1, TimeUnit.MINUTES)).isTrue();
         assertThat(mRemoteCode.mSandboxLatencyInfo.getLatencySystemServerToSandbox())
                 .isEqualTo(
@@ -469,8 +484,7 @@ public class SdkSandboxTest {
                 null,
                 new Bundle(),
                 new RemoteCode(latch),
-                SANDBOX_LATENCY_INFO,
-                new StubSdkToServiceLink());
+                SANDBOX_LATENCY_INFO);
         assertThat(latch.await(1, TimeUnit.MINUTES)).isTrue();
 
         final UnloadSdkCallbackImpl unloadSdkCallback = new UnloadSdkCallbackImpl();
@@ -519,8 +533,7 @@ public class SdkSandboxTest {
                 null,
                 new Bundle(),
                 mRemoteCode,
-                SANDBOX_LATENCY_INFO,
-                new StubSdkToServiceLink());
+                SANDBOX_LATENCY_INFO);
         assertThat(latch.await(1, TimeUnit.MINUTES)).isTrue();
 
         CountDownLatch surfaceLatch = new CountDownLatch(1);
@@ -611,10 +624,6 @@ public class SdkSandboxTest {
             bundle.putString(key, data.get(key));
         }
         return bundle;
-    }
-
-    private SharedPreferences getClientSharedPreference() {
-        return PreferenceManager.getDefaultSharedPreferences(mContext);
     }
 
     private static class RequestSurfacePackageCallbackImpl
