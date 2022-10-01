@@ -47,8 +47,7 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Paano makilahok"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Kapag na-on ang beta, magbibigay-daan ito sa mga app na subukan ang mga bago at karagdagang pribadong paraang ito para magpakita sa iyo ng mga ad. Puwede mong i-off ang beta anumang oras sa iyong mga setting ng privacy."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Huwag na lang"</string>
-    <!-- no translation found for notificationUI_right_control_button_text_eu (8484787286437052150) -->
-    <skip />
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"I-on"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Salamat sa paglahok"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Bahagi ka ng beta ng privacy sa mga ad ng Android. Naka-on ang Privacy Sandbox para sa device mo.\n\nPuwede kang matuto pa o puwede mong i-off ang beta kahit kailan sa iyong mga setting ng privacy."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Pinili mong hindi makilahok"</string>

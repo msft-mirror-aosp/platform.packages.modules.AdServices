@@ -47,8 +47,7 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"ಭಾಗವಹಿಸುವುದು ಹೇಗೆ"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"ಬೀಟಾವನ್ನು ಆನ್ ಮಾಡುವುದರಿಂದ ನಿಮಗೆ ಜಾಹೀರಾತುಗಳನ್ನು ತೋರಿಸುವ ಈ ಇನ್ನಷ್ಟು ಖಾಸಗಿಯಾದ ವಿಧಾನವನ್ನು ಪರೀಕ್ಷಿಸುವ ಅವಕಾಶ ಆ್ಯಪ್‌ಗಳಿಗೆ ದೊರೆಯುತ್ತದೆ. ನಿಮ್ಮ ಗೌಪ್ಯತೆ ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ನೀವು ಯಾವಾಗ ಬೇಕಾದರೂ ಬೀಟಾ ಅನ್ನು ಆಫ್ ಮಾಡಬಹುದು."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"ಬೇಡ"</string>
-    <!-- no translation found for notificationUI_right_control_button_text_eu (8484787286437052150) -->
-    <skip />
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"ಆನ್ ಮಾಡಿ"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"ಭಾಗವಹಿಸಿದ್ದಕ್ಕಾಗಿ ಧನ್ಯವಾದಗಳು"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"ನೀವು Android ನ ಜಾಹೀರಾತುಗಳ ಗೌಪ್ಯತೆ ಬೀಟಾದ ಭಾಗವಾಗಿದ್ದೀರಿ. ನಿಮ್ಮ ಸಾಧನಕ್ಕಾಗಿ ಪ್ರೈವೆಸಿ ಸ್ಯಾಂಡ್‌ಬಾಕ್ಸ್ ಅನ್ನು ಆನ್ ಮಾಡಲಾಗಿದೆ.\n\nನಿಮ್ಮ ಗೌಪ್ಯತೆ ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ನೀವು ಇನ್ನಷ್ಟು ತಿಳಿಯಬಹುದು ಅಥವಾ ಬೀಟಾ ಅನ್ನು ಯಾವಾಗ ಬೇಕಾದರೂ ಆಫ್ ಮಾಡಬಹುದು."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"ನೀವು ಭಾಗವಹಿಸದಿರಲು ಆಯ್ಕೆಮಾಡಿದ್ದೀರಿ"</string>

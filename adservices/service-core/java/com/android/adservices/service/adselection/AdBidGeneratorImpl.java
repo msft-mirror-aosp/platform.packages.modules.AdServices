@@ -60,13 +60,11 @@ import java.util.stream.Collectors;
  */
 public class AdBidGeneratorImpl implements AdBidGenerator {
 
-    @VisibleForTesting static final String QUERY_PARAM_KEYS = "keys";
+    @VisibleForTesting
+    static final String QUERY_PARAM_KEYS = "keys";
 
     @VisibleForTesting
     static final String MISSING_TRUSTED_BIDDING_SIGNALS = "Error fetching trusted bidding signals";
-
-    @VisibleForTesting
-    static final String MISSING_BIDDING_LOGIC = "Error fetching bidding js logic";
 
     @VisibleForTesting
     static final String BIDDING_TIMED_OUT = "Bidding exceeded allowed time limit";
@@ -78,16 +76,19 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
     @NonNull private final Context mContext;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
+    @NonNull private final ScheduledThreadPoolExecutor mScheduledExecutor;
     @NonNull private final AdSelectionScriptEngine mAdSelectionScriptEngine;
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull private final CustomAudienceDevOverridesHelper mCustomAudienceDevOverridesHelper;
     @NonNull private final Flags mFlags;
+    @NonNull private final JsFetcher mJsFetcher;
 
     public AdBidGeneratorImpl(
             @NonNull Context context,
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull ListeningExecutorService lightweightExecutorService,
             @NonNull ListeningExecutorService backgroundExecutorService,
+            @NonNull ScheduledThreadPoolExecutor scheduledExecutor,
             @NonNull DevContext devContext,
             @NonNull CustomAudienceDao customAudienceDao,
             @NonNull Flags flags) {
@@ -95,6 +96,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(backgroundExecutorService);
+        Objects.requireNonNull(scheduledExecutor);
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(flags);
@@ -102,6 +104,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         mContext = context;
         mLightweightExecutorService = lightweightExecutorService;
         mBackgroundExecutorService = backgroundExecutorService;
+        mScheduledExecutor = scheduledExecutor;
         mAdServicesHttpsClient = adServicesHttpsClient;
         mCustomAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(devContext, customAudienceDao);
@@ -111,6 +114,12 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                         mContext,
                         () -> mFlags.getEnforceIsolateMaxHeapSize(),
                         () -> mFlags.getIsolateMaxHeapSizeBytes());
+        mJsFetcher =
+                new JsFetcher(
+                        backgroundExecutorService,
+                        lightweightExecutorService,
+                        mCustomAudienceDevOverridesHelper,
+                        adServicesHttpsClient);
     }
 
     @VisibleForTesting
@@ -118,27 +127,33 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             @NonNull Context context,
             @NonNull ListeningExecutorService lightWeightExecutorService,
             @NonNull ListeningExecutorService backgroundExecutorService,
+            @NonNull ScheduledThreadPoolExecutor scheduledExecutor,
             @NonNull AdSelectionScriptEngine adSelectionScriptEngine,
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper,
             @NonNull Flags flags,
-            @NonNull IsolateSettings isolateSettings) {
+            @NonNull IsolateSettings isolateSettings,
+            @NonNull JsFetcher jsFetcher) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(lightWeightExecutorService);
         Objects.requireNonNull(backgroundExecutorService);
+        Objects.requireNonNull(scheduledExecutor);
         Objects.requireNonNull(adSelectionScriptEngine);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(customAudienceDevOverridesHelper);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(isolateSettings);
+        Objects.requireNonNull(jsFetcher);
 
         mContext = context;
         mLightweightExecutorService = lightWeightExecutorService;
         mBackgroundExecutorService = backgroundExecutorService;
+        mScheduledExecutor = scheduledExecutor;
         mAdSelectionScriptEngine = adSelectionScriptEngine;
         mAdServicesHttpsClient = adServicesHttpsClient;
         mCustomAudienceDevOverridesHelper = customAudienceDevOverridesHelper;
         mFlags = flags;
+        mJsFetcher = jsFetcher;
     }
 
     @Override
@@ -168,7 +183,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         // TODO(b/221862406): implement ads filtering logic.
 
         FluentFuture<String> buyerDecisionLogic =
-                getBuyerDecisionLogic(
+                mJsFetcher.getBuyerDecisionLogic(
                         customAudience.getBiddingLogicUri(),
                         customAudience.getOwner(),
                         customAudience.getBuyer(),
@@ -216,9 +231,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                 .withTimeout(
                         mFlags.getAdSelectionBiddingTimeoutPerCaMs(),
                         TimeUnit.MILLISECONDS,
-                        // TODO(b/237103033): Comply with thread usage policy for AdServices;
-                        //  use a global scheduled executor
-                        new ScheduledThreadPoolExecutor(1))
+                        mScheduledExecutor)
                 .catching(
                         JSONException.class, this::handleBiddingError, mLightweightExecutorService)
                 .catching(
@@ -293,44 +306,6 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                         mLightweightExecutorService);
     }
 
-    private FluentFuture<String> getBuyerDecisionLogic(
-            @NonNull final Uri decisionLogicUri,
-            @NonNull String owner,
-            @NonNull AdTechIdentifier buyer,
-            @NonNull String name) {
-        FluentFuture<String> jsOverrideFuture =
-                FluentFuture.from(
-                        mBackgroundExecutorService.submit(
-                                () ->
-                                        mCustomAudienceDevOverridesHelper.getBiddingLogicOverride(
-                                                owner, buyer, name)));
-        return jsOverrideFuture
-                .transformAsync(
-                        jsOverride -> {
-                            if (jsOverride == null) {
-                                LogUtil.v(
-                                        "Fetching buyer decision logic from server: %s",
-                                        decisionLogicUri.toString());
-                                return mAdServicesHttpsClient.fetchPayload(decisionLogicUri);
-                            } else {
-                                LogUtil.d(
-                                        "Developer options enabled and an override JS is provided "
-                                                + "for the current Custom Audience. "
-                                                + "Skipping call to server.");
-                                return Futures.immediateFuture(jsOverride);
-                            }
-                        },
-                        mLightweightExecutorService)
-                .catching(
-                        Exception.class,
-                        e -> {
-                            LogUtil.w(
-                                    e, "Exception encountered when fetching buyer decision logic");
-                            throw new IllegalStateException(MISSING_BIDDING_LOGIC);
-                        },
-                        mLightweightExecutorService);
-    }
-
     /**
      * @return user information with respect to the custom audience will be available to
      *     generateBid(). This could include language, demographic information, information about
@@ -344,7 +319,9 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         return AdSelectionSignals.EMPTY;
     }
 
-    /** @return the {@link AdWithBid} with the best bid per CustomAudience. */
+    /**
+     * @return the {@link AdWithBid} with the best bid per CustomAudience.
+     */
     @NonNull
     @VisibleForTesting
     FluentFuture<Pair<AdWithBid, String>> runBidding(

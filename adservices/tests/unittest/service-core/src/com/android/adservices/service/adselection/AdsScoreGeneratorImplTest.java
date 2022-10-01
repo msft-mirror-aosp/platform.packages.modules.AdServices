@@ -70,6 +70,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.stream.Collectors;
 
 public class AdsScoreGeneratorImplTest {
@@ -86,6 +87,7 @@ public class AdsScoreGeneratorImplTest {
     private ListeningExecutorService mLightweightExecutorService;
     private ListeningExecutorService mBackgroundExecutorService;
     private ListeningExecutorService mBlockingExecutorService;
+    private ScheduledThreadPoolExecutor mSchedulingExecutor;
     private AdServicesHttpsClient mWebClient;
     private String mSellerDecisionLogicJs;
 
@@ -114,6 +116,7 @@ public class AdsScoreGeneratorImplTest {
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mBlockingExecutorService = AdServicesExecutors.getBlockingExecutor();
+        mSchedulingExecutor = AdServicesExecutors.getScheduler();
         mWebClient = new AdServicesHttpsClient(AdServicesExecutors.getBlockingExecutor());
 
         mAdBiddingOutcomeBuyer1 =
@@ -203,6 +206,7 @@ public class AdsScoreGeneratorImplTest {
                         mMockAdSelectionScriptEngine,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
+                        mSchedulingExecutor,
                         mWebClient,
                         mDevContext,
                         mAdSelectionEntryDao,
@@ -367,6 +371,7 @@ public class AdsScoreGeneratorImplTest {
                         mMockAdSelectionScriptEngine,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
+                        mSchedulingExecutor,
                         mWebClient,
                         mDevContext,
                         mAdSelectionEntryDao,
@@ -467,6 +472,7 @@ public class AdsScoreGeneratorImplTest {
                         mMockAdSelectionScriptEngine,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
+                        mSchedulingExecutor,
                         mWebClient,
                         mDevContext,
                         mAdSelectionEntryDao,

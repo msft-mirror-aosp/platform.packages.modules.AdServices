@@ -152,6 +152,12 @@ message SelectWinningAdRequest {
     // Note: Not all types of clients will be attested.
     ClientType client_type = 5;
 
+    // Raw (unencrypted) version of the encrypted_input_per_buyer field above.
+    // See encrypted_input_per_buyer for details.
+    // TODO(b/239242947): Remove this field and reserve, after encryption is
+    // incorporated.
+    map<string, BuyerInput> raw_buyer_input = 6;
+
     // Field representing client attestation data will be added later.
   }
 
@@ -163,8 +169,10 @@ message SelectWinningAdRequest {
   // 'request_ciphertext'.
   string key_id = 2;
 
-  // TODO(b/239076127): Remove this field and reserve, after request
-  // encryption / decryption is incorporated.
+  // Unencrypted form of the SelectWinningAdRawRequest to be used until
+  // encryption is incorporated in the client/server communication.
+  // TODO(b/239242947): Remove this field and reserve, after request
+  // encryption / decryption is complete.
   SelectWinningAdRawRequest raw_request = 3;
 }
 
@@ -232,7 +240,7 @@ message BuyerInput {
     string bidding_wasm_helper_url = 4;
 
     // Keys to lookup from buyer Key/Value service.
-    string bidding_signals_keys = 5;
+    repeated string bidding_signals_keys = 5;
 
     // The endpoint for buyer Key/Value service. This points to that shard of
     // KV Service that has data corresponding to 'bidding_signals_keys'.

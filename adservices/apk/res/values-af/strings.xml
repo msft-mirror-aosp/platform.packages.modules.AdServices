@@ -47,8 +47,7 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Hoe om deel te neem"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"As die beta aangeskakel is, word programme toegelaat om hierdie nuwe, meer private maniere te toets om vir jou advertensies te wys. Jy kan die beta enige tyd in jou privaatheidinstellings afskakel."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Nee, dankie"</string>
-    <!-- no translation found for notificationUI_right_control_button_text_eu (8484787286437052150) -->
-    <skip />
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Skakel aan"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Dankie vir jou deelname"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Jy is deel van Android se advertensieprivaatheidbeta. Die Privacy Sandbox is vir jou toestel aangeskakel.\n\nJy kan enige tyd in jou privaatheidinstellings meer te wete kom of die beta afskakel."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Jy het gekies om nie deel te neem nie"</string>

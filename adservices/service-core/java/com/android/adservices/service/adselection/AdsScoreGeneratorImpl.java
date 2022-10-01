@@ -69,6 +69,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
     @NonNull private final AdSelectionScriptEngine mAdSelectionScriptEngine;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
+    @NonNull private final ScheduledThreadPoolExecutor mScheduledExecutor;
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull private final AdSelectionDevOverridesHelper mAdSelectionDevOverridesHelper;
     @NonNull private final Flags mFlags;
@@ -77,6 +78,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
             @NonNull AdSelectionScriptEngine adSelectionScriptEngine,
             @NonNull ListeningExecutorService lightweightExecutor,
             @NonNull ListeningExecutorService backgroundExecutor,
+            @NonNull ScheduledThreadPoolExecutor scheduledExecutor,
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull DevContext devContext,
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
@@ -84,6 +86,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
         Objects.requireNonNull(adSelectionScriptEngine);
         Objects.requireNonNull(lightweightExecutor);
         Objects.requireNonNull(backgroundExecutor);
+        Objects.requireNonNull(scheduledExecutor);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(adSelectionEntryDao);
@@ -93,6 +96,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
         mAdServicesHttpsClient = adServicesHttpsClient;
         mLightweightExecutorService = lightweightExecutor;
         mBackgroundExecutorService = backgroundExecutor;
+        mScheduledExecutor = scheduledExecutor;
         mAdSelectionDevOverridesHelper =
                 new AdSelectionDevOverridesHelper(devContext, adSelectionEntryDao);
         mFlags = flags;
@@ -133,9 +137,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                 .withTimeout(
                         mFlags.getAdSelectionScoringTimeoutMs(),
                         TimeUnit.MILLISECONDS,
-                        // TODO(b/237103033): Comply with thread usage policy for AdServices;
-                        //  use a global scheduled executor
-                        new ScheduledThreadPoolExecutor(1))
+                        mScheduledExecutor)
                 .catching(
                         TimeoutException.class,
                         this::handleTimeoutError,

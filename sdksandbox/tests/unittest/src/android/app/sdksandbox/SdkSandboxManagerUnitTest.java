@@ -32,7 +32,6 @@ import static org.junit.Assert.assertTrue;
 
 import android.app.sdksandbox.testutils.FakeOutcomeReceiver;
 import android.content.Context;
-import android.content.pm.SharedLibraryInfo;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.OutcomeReceiver;
@@ -152,15 +151,14 @@ public class SdkSandboxManagerUnitTest {
     }
 
     @Test
-    public void testGetLoadedSdkLibrariesInfo() throws Exception {
-        List<SharedLibraryInfo> sharedLibraries = List.of();
-        Mockito.when(mBinder.getLoadedSdkLibrariesInfo(Mockito.anyString(), Mockito.anyLong()))
-                .thenReturn(sharedLibraries);
+    public void testGetSandboxedSdks() throws Exception {
+        List<SandboxedSdk> sandboxedSdks = List.of();
+        Mockito.when(mBinder.getSandboxedSdks(Mockito.anyString(), Mockito.anyLong()))
+                .thenReturn(sandboxedSdks);
 
-        assertThat(mSdkSandboxManager.getLoadedSdkLibrariesInfo()).isEqualTo(sharedLibraries);
+        assertThat(mSdkSandboxManager.getSandboxedSdks()).isSameInstanceAs(sandboxedSdks);
         Mockito.verify(mBinder)
-                .getLoadedSdkLibrariesInfo(
-                        Mockito.eq(mContext.getPackageName()), Mockito.anyLong());
+                .getSandboxedSdks(Mockito.eq(mContext.getPackageName()), Mockito.anyLong());
     }
 
     @Test
