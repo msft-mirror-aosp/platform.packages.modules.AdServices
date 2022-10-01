@@ -79,8 +79,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Une honetan ez dago interesik erakusteko"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox-a"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Eginbide berriak eskaintzen ditu Android-eko iragarkien pribatutasunaren beta-bertsioak; eginbide horiei esker, aplikazioek agian gustatuko zaizkizun iragarkiak erakutsiko dizkizute. Teknologia horiek ez dute erabiltzen gailuaren identifikatzailerik.\n\nAgian interesatuko zaizkizun iragarki motak igar ditzake Android-ek, eta interesak gailuan aldi baterako gorde. Hala, aplikazioek iragarki egokiak erakutsiko dizkizute beste garatzaile batzuen webgune eta aplikazioetan egindako jardueren jarraipena egin gabe."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Ez daukazu blokeatutako interesik"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Aplikazioek zure interesak igar ditzakete, eta Android-en aldi baterako gorde. Geroago, interes horietan oinarrituta, baliteke beste aplikazio batek iragarki bat erakustea.\n\nAplikazio bat blokeatzen baduzu, ez du interes gehiagorik igarriko. Aplikazioa ez da berriz gehituko aplikazioen zerrenda honetan baldin eta aplikazio hori desblokeatzen ez baduzu. Aplikazioak igarritako interesak ezabatuko dira; hala ere, baliteke haiekin erlazionatutako iragarki batzuk ikusten jarraitzea."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Blokeatu dituzun aplikazioak"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Berrezarri aplikazioek igarritako interesak"</string>
@@ -88,7 +87,44 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox-a"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Eginbide berriak eskaintzen ditu Android-eko iragarkien pribatutasunaren beta-bertsioak; eginbide horiei esker, aplikazioek agian gustatuko zaizkizun iragarkiak erakutsiko dizkizute. Teknologia horiek ez dute erabiltzen gailuaren identifikatzailerik.\n\nAgian interesatuko zaizkizun iragarki motak igar ditzakete aplikazioek, eta interesak gailuan aldi baterako gorde. Hala, aplikazioek iragarki egokiak erakutsiko dizkizute beste garatzaile batzuen webgune eta aplikazioetan egindako jardueren jarraipena egin gabe."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Ez daukazu blokeatutako aplikaziorik"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Ez daukazu blokeatutako interesik"</string>
+    <!-- no translation found for settingsUI_dialog_negative_text (3014088254631375852) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_title (1862069591629418291) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_message (5696012172835241848) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_positive_text (5344259263448028614) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_title (5744004384480280782) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_message (2474902516721078270) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_positive_text (2626152417590300510) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_title (7361000923920947234) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_message (4058967523591550460) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_positive_text (2192452325573789737) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_title (1949146936958849544) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (8099126076667244456) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_positive_text (8345697359799280761) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_app_title (421160714549264414) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_app_message (4703493174054204149) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_app_title (4360730780049298286) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_app_message (7858109719986236041) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_title (7193520707240514769) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1967554695864827385) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Artea eta aisia"</string>
     <string name="topic10002" msgid="1226367977754287428">"Interpretazioa eta antzerkia"</string>
     <string name="topic10003" msgid="6949890838957814881">"Animea eta manga"</string>
@@ -369,7 +405,7 @@
     <string name="topic10278" msgid="873251714192341707">"Mezu elektronikoak eta mezularitza"</string>
     <string name="topic10279" msgid="6514296374139842600">"Posta elektronikoa"</string>
     <string name="topic10280" msgid="7976787187115018267">"Testu-mezuak eta istanteko mezularitza"</string>
-    <string name="topic10281" msgid="4013341162811169339">"Ahots- eta bideo-txatak"</string>
+    <string name="topic10281" msgid="4013341162811169339">"Ahots- eta bideodeiak"</string>
     <string name="topic10282" msgid="7810462611906257564">"Interneteko zerbitzu-hornitzaileak"</string>
     <string name="topic10283" msgid="3958287780718485172">"Telefono-zerbitzuen hornitzaileak"</string>
     <string name="topic10284" msgid="2415044270290467935">"Mugikorretarako tonuak eta gaiak"</string>

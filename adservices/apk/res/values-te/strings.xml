@@ -79,8 +79,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"ప్రస్తుతం చూపించడానికి ఆసక్తులు ఏవీ లేవు"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"గోప్యతా పరిరక్షణ టెక్నాలజీల సెట్"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android యాడ్‌ల గోప్యతా బీటా వెర్షన్ మీకు నచ్చే యాడ్‌లను చూపడానికి యాప్‌లు ఉపయోగించగల కొత్త ఫీచర్‌లను అందిస్తుంది. ఈ టెక్నాలజీలు పరికర ఐడెంటిఫైయర్‌లను ఉపయోగించవు.\n\nAndroid పరికరం మీకు ఆసక్తి కలిగించే యాడ్‌ల రకాలను అంచనా వేయగలదు, అలాగే ఈ ఆసక్తులను మీ పరికరంలో తాత్కాలికంగా సేవ్ చేయగలవు. ఇతర డెవలపర్‌ల నుండి వెబ్‌సైట్‌లు, యాప్‌లలో మీ యాక్టివిటీని ట్రాక్ చేయకుండానే, సంబంధిత యాడ్‌లను మీకు చూపడానికి ఇది యాప్‌లను అనుమతిస్తుంది."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"మీకు బ్లాక్ చేయబడిన ఆసక్తులు లేవు"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"యాప్‌లు మీ ఆసక్తులను అంచనా వేయగలవు, వీటిని Android పరికరంతో తాత్కాలికంగా సేవ్ చేయవచ్చు. తర్వాత, ఈ ఆసక్తుల ఆధారంగా వేరే యాప్ మీకు యాడ్‌ను చూపుతుంది.\n\nమీరు యాప్‌ను బ్లాక్ చేస్తే, అది మరిన్ని ఇతర ఆసక్తులను అంచనా వేయదు. మీరు దీన్ని అన్‌బ్లాక్ చేస్తే తప్ప ఇది మళ్లీ ఈ యాప్‌ల లిస్ట్‌కు జోడించబడదు. యాప్ ద్వారా ఇప్పటికే అంచనా వేసిన ఆసక్తులు తొలగించబడతాయి, కానీ మీరు ఇప్పటికీ కొన్ని సంబంధిత యాడ్‌లను చూడవచ్చు."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"మీరు బ్లాక్ చేసిన యాప్‌లు"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"యాప్‌ల ద్వారా అంచనా వేయబడిన ఆసక్తులను రీసెట్ చేయండి"</string>
@@ -88,7 +87,44 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"గోప్యతా పరిరక్షణ టెక్నాలజీల సెట్"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android యాడ్‌ల గోప్యతా బీటా వెర్షన్ మీకు నచ్చే యాడ్‌లను చూపడానికి యాప్‌లు ఉపయోగించగల కొత్త ఫీచర్‌లను అందిస్తుంది. ఈ టెక్నాలజీలు పరికర ఐడెంటిఫైయర్‌లను ఉపయోగించవు.\n\nయాప్‌లు మీకు ఆసక్తి కలిగించే యాడ్‌ల రకాలను అంచనా వేయగలవు, అలాగే ఈ ఆసక్తులను మీ పరికరంలో తాత్కాలికంగా సేవ్ చేయగలవు. ఇతర డెవలపర్‌ల నుండి వెబ్‌సైట్‌లు, యాప్‌లలో మీ యాక్టివిటీని ట్రాక్ చేయకుండానే, సంబంధిత యాడ్‌లను మీకు చూపడానికి ఇది యాప్‌లను అనుమతిస్తుంది."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"మీకు బ్లాక్ చేయబడిన యాప్‌లు ఏవీ లేవు"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"మీకు బ్లాక్ చేయబడిన ఆసక్తులు లేవు"</string>
+    <!-- no translation found for settingsUI_dialog_negative_text (3014088254631375852) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_title (1862069591629418291) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_message (5696012172835241848) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_positive_text (5344259263448028614) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_title (5744004384480280782) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_message (2474902516721078270) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_positive_text (2626152417590300510) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_title (7361000923920947234) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_message (4058967523591550460) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_positive_text (2192452325573789737) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_title (1949146936958849544) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (8099126076667244456) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_positive_text (8345697359799280761) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_app_title (421160714549264414) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_app_message (4703493174054204149) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_app_title (4360730780049298286) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_app_message (7858109719986236041) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_title (7193520707240514769) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1967554695864827385) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"కళలు &amp; వినోదం"</string>
     <string name="topic10002" msgid="1226367977754287428">"నటన &amp; థియేటర్"</string>
     <string name="topic10003" msgid="6949890838957814881">"యానిమే &amp; మాంగా"</string>

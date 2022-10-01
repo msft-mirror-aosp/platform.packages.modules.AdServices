@@ -79,8 +79,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"지금 표시할 관심분야 없음"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"개인 정보 보호 샌드박스"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android의 광고 개인 정보 보호 베타는 앱에서 사용자가 좋아할 만한 광고를 표시할 수 있는 새로운 기능을 제공합니다. 이 새로운 기술은 기기 식별자를 사용하지 않습니다.\n\nAndroid는 사용자가 관심을 보일 만한 광고 종류를 추정하고 관심분야를 기기에 임시 저장합니다. 이렇게 하면 앱이 다른 개발자의 웹사이트/앱에서 이루어진 활동을 추적하지 않고도 관련성 있는 광고를 표시할 수 있습니다."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"차단한 관심분야가 없습니다."</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"앱에서 관심분야를 추정하고 Android를 통해 임시로 저장할 수 있습니다. 나중에 다른 앱이 이 관심분야를 토대로 광고를 표시할 수 있습니다\n\n특정 앱을 차단하면 그 앱은 더 이상 관심분야를 추정하지 않습니다. 차단을 해제하지 않는 한 앱은 목록에 다시 추가되지 않습니다. 차단된 앱에서 이미 추정한 관심분야는 삭제되지만 이와 관련된 일부 광고가 계속 표시될 수도 있습니다"</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"차단한 앱"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"앱에서 추정한 관심분야 초기화"</string>
@@ -88,7 +87,44 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"개인 정보 보호 샌드박스"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android의 광고 개인 정보 보호 베타는 앱에서 사용자가 좋아할 만한 광고를 표시할 수 있는 새로운 기능을 제공합니다. 이 새로운 기술은 기기 식별자를 사용하지 않습니다.\n\n앱은 사용자가 관심을 보일 만한 광고 종류를 추정하고 관심분야를 기기에 임시 저장합니다. 이렇게 하면 앱이 다른 개발자의 웹사이트/앱에서 이루어진 활동을 추적하지 않고도 관련성 있는 광고를 표시할 수 있습니다."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"차단한 앱이 없습니다."</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"차단한 관심분야가 없습니다."</string>
+    <!-- no translation found for settingsUI_dialog_negative_text (3014088254631375852) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_title (1862069591629418291) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_message (5696012172835241848) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_positive_text (5344259263448028614) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_title (5744004384480280782) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_message (2474902516721078270) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_positive_text (2626152417590300510) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_title (7361000923920947234) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_message (4058967523591550460) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_positive_text (2192452325573789737) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_title (1949146936958849544) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (8099126076667244456) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_positive_text (8345697359799280761) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_app_title (421160714549264414) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_app_message (4703493174054204149) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_app_title (4360730780049298286) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_app_message (7858109719986236041) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_title (7193520707240514769) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1967554695864827385) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"예술 및 엔터테인먼트"</string>
     <string name="topic10002" msgid="1226367977754287428">"연기 및 연극"</string>
     <string name="topic10003" msgid="6949890838957814881">"일본 애니메이션 및 망가"</string>
