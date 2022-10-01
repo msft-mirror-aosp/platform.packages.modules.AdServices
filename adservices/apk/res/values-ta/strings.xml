@@ -79,8 +79,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"தற்சமயம் காட்டுவதற்கு ஆர்வங்கள் எதுவும் இல்லை"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"தனியுரிமை சாண்ட்பாக்ஸ்"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Androidன் விளம்பரத் தனியுரிமை பீட்டா பதிப்பு புதிய அம்சங்களை வழங்குகிறது. அவற்றைப் பயன்படுத்தி நீங்கள் விரும்பக்கூடிய விளம்பரங்களை ஆப்ஸால் வழங்க முடியும். இந்தத் தொழில்நுட்பங்கள் சாதன அடையாளங்காட்டிகளைப் பயன்படுத்தாது.\n\nAndroid நீங்கள் விரும்பக்கூடிய விளம்பர வகைகளை மதிப்பீடு செய்து அவற்றைத் தற்காலிகமாக உங்கள் சாதனத்தில் சேமித்து வைக்கும். இதன் மூலம், இணையதளங்களிலும் பிற டெவெலப்பர்களின் ஆப்ஸிலும் உங்கள் செயல்பாடுகளைக் கண்காணிக்காமலே தொடர்புடைய விளம்பரங்களை ஆப்ஸால் காட்ட முடியும்."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"தடுக்கப்பட்ட ஆர்வங்கள் எதுவுமில்லை"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"ஆப்ஸால் உங்கள் ஆர்வங்களை மதிப்பீடு செய்து அவற்றை Androidல் தற்காலிகமாகச் சேமிக்க முடியும். பிறகு, வேறொரு ஆப்ஸ் இந்த ஆர்வங்களின் அடிப்படையில் விளம்பரங்களைக் காட்டலாம்.\n\nநீங்கள் ஓர் ஆப்ஸைத் தடுத்தால் அதன் பிறகு அந்த ஆப்ஸ் உங்கள் ஆர்வங்களை மதிப்பீடு செய்யாது. நீங்கள் தடுப்பை நீக்காதவரை அது இந்த ஆப்ஸ் பட்டியலில் மீண்டும் சேர்க்கப்படாது. ஆப்ஸால் ஏற்கெனவே மதிப்பீடு செய்யப்பட்ட ஆர்வங்கள் நீக்கப்படும். இருப்பினும் சில தொடர்புடைய விளம்பரங்கள் காட்டப்படலாம்."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"நீங்கள் தடுத்த ஆப்ஸ்"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"ஆப்ஸால் மதிப்பீடு செய்யப்பட்ட ஆர்வங்களை மீட்டமை"</string>
@@ -88,7 +87,44 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"தனியுரிமை சாண்ட்பாக்ஸ்"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Androidன் விளம்பரத் தனியுரிமை பீட்டா பதிப்பு புதிய அம்சங்களை வழங்குகிறது. அவற்றைப் பயன்படுத்தி நீங்கள் விரும்பக்கூடிய விளம்பரங்களை ஆப்ஸால் வழங்க முடியும். இந்தத் தொழில்நுட்பங்கள் சாதன அடையாளங்காட்டிகளைப் பயன்படுத்தாது.\n\nஆப்ஸ் நீங்கள் விரும்பக்கூடிய விளம்பர வகைகளை மதிப்பீடு செய்து அவற்றைத் தற்காலிகமாக உங்கள் சாதனத்தில் சேமித்து வைக்கும். இதன் மூலம், இணையதளங்களிலும் பிற டெவெலப்பர்களின் ஆப்ஸிலும் உங்கள் செயல்பாடுகளைக் கண்காணிக்காமலே தொடர்புடைய விளம்பரங்களை ஆப்ஸால் காட்ட முடியும்."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"தடுக்கப்பட்ட ஆப்ஸ் எதுவுமில்லை"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"தடுக்கப்பட்ட ஆர்வங்கள் எதுவுமில்லை"</string>
+    <!-- no translation found for settingsUI_dialog_negative_text (3014088254631375852) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_title (1862069591629418291) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_message (5696012172835241848) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_positive_text (5344259263448028614) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_title (5744004384480280782) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_message (2474902516721078270) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_positive_text (2626152417590300510) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_title (7361000923920947234) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_message (4058967523591550460) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_positive_text (2192452325573789737) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_title (1949146936958849544) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (8099126076667244456) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_positive_text (8345697359799280761) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_app_title (421160714549264414) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_app_message (4703493174054204149) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_app_title (4360730780049298286) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_app_message (7858109719986236041) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_title (7193520707240514769) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1967554695864827385) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"கலை &amp; பொழுதுபோக்கு"</string>
     <string name="topic10002" msgid="1226367977754287428">"நடிப்பு &amp; திரையரங்கு"</string>
     <string name="topic10003" msgid="6949890838957814881">"அனிமே &amp; மங்கா"</string>

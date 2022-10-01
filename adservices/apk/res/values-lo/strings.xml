@@ -79,8 +79,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"ບໍ່ມີຄວາມໃຈເພື່ອສະແດງຂຶ້ນໃນຕອນນີ້"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"ເວີຊັນເບຕ້າຂອງຄວາມເປັນສ່ວນຕົວສຳລັບໂຄສະນາໃນ Android ມີຄຸນສົມບັດໃໝ່ໆທີ່ແອັບສາມາດໃຊ້ເພື່ອສະແດງໂຄສະນາທີ່ທ່ານອາດມັກໃຫ້ແກ່ທ່ານ. ເທັກໂນໂລຢີເຫຼົ່ານີ້ບໍ່ໄດ້ໃຊ້ຕົວລະບຸອຸປະກອນ.\n\nAndroid ສາມາດຄາດການປະເພດຂອງໂຄສະນາທີ່ທ່ານອາດສົນໃຈ ແລະ ບັນທຶກຄວາມສົນໃຈເຫຼົ່ານີ້ໄວ້ຢູ່ອຸປະກອນຂອງທ່ານຊົ່ວຄາວ. ສິ່ງນີ້ຊ່ວຍໃຫ້ແອັບຕ່າງໆສະແດງໂຄສະນາທີ່ກ່ຽວຂ້ອງໃຫ້ແກ່ທ່ານໂດຍທີ່ບໍ່ຕ້ອງຕິດຕາມການເຄື່ອນໄຫວຂອງທ່ານຢູ່ເວັບໄຊ ແລະ ແອັບຈາກນັກພັດທະນາອື່ນໆ."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"ທ່ານບໍ່ມີຄວາມສົນໃຈໃດຖືກບລັອກ"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"ແອັບສາມາດຄາດການຄວາມສົນໃຈຂອງທ່ານ ແລະ ບັນທຶກສິ່ງເຫຼົ່ານີ້ໄວ້ກັບ Android ແບບຊົ່ວຄາວໄດ້. ຈາກນັ້ນ, ແອັບອື່ນສາມາດສະແດງໂຄສະນາໂດຍອີງຕາມຄວາມສົນໃຈເຫຼົ່ານີ້ໃຫ້ທ່ານໄດ້.\n\nຫາກທ່ານບລັອກແອັບໃດໜຶ່ງ, ມັນຈະບໍ່ຄາດການຄວາມສົນໃຈອີກຕໍ່ໄປ. ມັນຈະບໍ່ຖືກເພີ່ມໃສ່ລາຍການນີ້ຂອງແອັບອີກຄັ້ງ ເວັ້ນແຕ່ວ່າທ່ານຍົກເລີກການບລັອກມັນ. ຄວາມສົນໃຈທີ່ແອັບຄາດການໄວ້ແລ້ວຈະຖືກລຶບ, ແຕ່ທ່ານອາດຍັງເຫັນໂຄສະນາບາງຢ່າງທີ່ກ່ຽວຂ້ອງຢູ່."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"ແອັບທີ່ທ່ານໄດ້ບລັອກ"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"ຣີເຊັດຄວາມສົນໃຈທີ່ຄາດການໂດຍແອັບ"</string>
@@ -88,7 +87,44 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"ເວີຊັນເບຕ້າຂອງຄວາມເປັນສ່ວນຕົວສຳລັບໂຄສະນາໃນ Android ມີຄຸນສົມບັດໃໝ່ໆທີ່ແອັບສາມາດໃຊ້ເພື່ອສະແດງໂຄສະນາທີ່ທ່ານອາດມັກໃຫ້ແກ່ທ່ານ. ເທັກໂນໂລຢີເຫຼົ່ານີ້ບໍ່ໄດ້ໃຊ້ຕົວລະບຸອຸປະກອນ.\n\nແອັບສາມາດຄາດການປະເພດຂອງໂຄສະນາທີ່ທ່ານອາດສົນໃຈ ແລະ ບັນທຶກຄວາມສົນໃຈເຫຼົ່ານີ້ໄວ້ຢູ່ອຸປະກອນຂອງທ່ານຊົ່ວຄາວ. ສິ່ງນີ້ຊ່ວຍໃຫ້ແອັບຕ່າງໆສະແດງໂຄສະນາທີ່ກ່ຽວຂ້ອງໃຫ້ແກ່ທ່ານໂດຍທີ່ບໍ່ຕ້ອງຕິດຕາມການເຄື່ອນໄຫວຂອງທ່ານຢູ່ເວັບໄຊ ແລະ ແອັບຈາກນັກພັດທະນາອື່ນໆ."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"ທ່ານບໍ່ມີແອັບໃດຖືກບລັອກ"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"ທ່ານບໍ່ມີຄວາມສົນໃຈໃດຖືກບລັອກ"</string>
+    <!-- no translation found for settingsUI_dialog_negative_text (3014088254631375852) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_title (1862069591629418291) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_message (5696012172835241848) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_positive_text (5344259263448028614) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_title (5744004384480280782) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_message (2474902516721078270) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_positive_text (2626152417590300510) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_title (7361000923920947234) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_message (4058967523591550460) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_positive_text (2192452325573789737) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_title (1949146936958849544) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (8099126076667244456) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_positive_text (8345697359799280761) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_app_title (421160714549264414) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_app_message (4703493174054204149) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_app_title (4360730780049298286) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_app_message (7858109719986236041) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_title (7193520707240514769) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1967554695864827385) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"ສິນລະປະ ແລະ ການບັນເທີງ"</string>
     <string name="topic10002" msgid="1226367977754287428">"ການສະແດງ ແລະ ໂຮງຮູບເງົາ"</string>
     <string name="topic10003" msgid="6949890838957814881">"ອະນິເມະ ແລະ ມັງງະ"</string>

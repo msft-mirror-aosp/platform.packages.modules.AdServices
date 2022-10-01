@@ -114,6 +114,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
  * This test the actual flow of Ad Selection internal flow without any mocking. The dependencies in
@@ -174,33 +175,35 @@ public class AdSelectionE2ETest {
             Uri.parse("https://developer%$android.com/test/decisions_logic_uris");
 
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
-    @Spy private final AdServicesLogger mAdServicesLoggerSpy = AdServicesLoggerImpl.getInstance();
     private static final String MY_APP_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
+    @Spy private final AdServicesLogger mAdServicesLoggerSpy = AdServicesLoggerImpl.getInstance();
+    private final Flags mFlags = new AdSelectionE2ETestFlags();
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
-    private Context mContext = ApplicationProvider.getApplicationContext();
     // Mocking DevContextFilter to test behavior with and without override api authorization
     @Mock DevContextFilter mDevContextFilter;
     @Mock AppImportanceFilter mAppImportanceFilter;
-    @Mock private ConsentManager mConsentManagerMock;
+
+    @Spy
+    FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
+            new FledgeAllowListsFilter(mFlags, mAdServicesLoggerSpy);
+
+    private Context mContext = ApplicationProvider.getApplicationContext();
 
     @Spy
     FledgeAuthorizationFilter mFledgeAuthorizationFilterSpy =
             FledgeAuthorizationFilter.create(mContext, mAdServicesLoggerSpy);
 
+    @Mock private ConsentManager mConsentManagerMock;
     private MockitoSession mStaticMockSession = null;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
+    private ScheduledThreadPoolExecutor mScheduledExecutor;
     private CustomAudienceDao mCustomAudienceDao;
     private AdSelectionEntryDao mAdSelectionEntryDao;
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private AdSelectionConfig mAdSelectionConfig;
     private AdSelectionServiceImpl mAdSelectionService;
     private Dispatcher mDispatcher;
-    private final Flags mFlags = new AdSelectionE2ETestFlags();
-
-    @Spy
-    FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
-            new FledgeAllowListsFilter(mFlags, mAdServicesLoggerSpy);
 
     @Before
     public void setUp() throws Exception {
@@ -216,6 +219,7 @@ public class AdSelectionE2ETest {
         // Initialize dependencies for the AdSelectionService
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
+        mScheduledExecutor = AdServicesExecutors.getScheduler();
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(mContext, CustomAudienceDatabase.class)
                         .build()
@@ -242,6 +246,7 @@ public class AdSelectionE2ETest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
+                        mScheduledExecutor,
                         mContext,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -558,6 +563,7 @@ public class AdSelectionE2ETest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
+                        mScheduledExecutor,
                         mContext,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -1251,6 +1257,7 @@ public class AdSelectionE2ETest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
+                        mScheduledExecutor,
                         mContext,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -1372,6 +1379,7 @@ public class AdSelectionE2ETest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
+                        mScheduledExecutor,
                         mContext,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -1871,6 +1879,7 @@ public class AdSelectionE2ETest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
+                        mScheduledExecutor,
                         mContext,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -1991,6 +2000,7 @@ public class AdSelectionE2ETest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
+                        mScheduledExecutor,
                         mContext,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -2107,6 +2117,7 @@ public class AdSelectionE2ETest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
+                        mScheduledExecutor,
                         mContext,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,

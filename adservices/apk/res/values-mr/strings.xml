@@ -79,8 +79,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"आता दाखवण्यासाठी कोणतीही स्वारस्ये नाहीत"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"प्रायव्हसी सॅंडबाॅक्स"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"तुम्हाला कदाचित आवडतील अशा जाहिराती दाखवण्यासाठी अ‍ॅप्सना वापरता येतील अशी नवीन वैशिष्ट्ये Android ची जाहिरातींशी संबंधित गोपनीयतेची बीटा आवृत्ती पुरवते. ही तंत्रज्ञाने डिव्हाइस आयडेंटिफायर वापरत नाहीत.\n\nतुम्हाला कोणत्या प्रकारच्या जाहिरातींमध्ये स्वारस्य असू शकते याच अंदाज Android लावू शकते आणि तुमच्या डिव्हाइसवर ती स्वारस्ये तात्पुरती सेव्ह करू शकते. हे अ‍ॅप्सना इतर डेव्हलपरच्या सर्व वेबसाइटवर आणि अ‍ॅप्सवर तुमची अ‍ॅक्टिव्हिटी ट्रॅक न करता उपयुक्त जाहिराती दाखवण्याची अनुमती देते."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"तुमच्याकडे कोणतीही ब्लॉक केलेली स्वारस्ये नाहीत"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"अ‍ॅप्स ही तुमच्या स्वारस्यांचा अंदाज लावून ती Android वर तात्पुरती सेव्ह करू शकतात. नंतर, दुसरे एखादे अ‍ॅप या स्वारस्यांच्या आधारावर तुम्हाला जाहिरात दाखवू शकते.\n\nतुम्ही एखादे अ‍ॅप ब्लॉक केल्यास, ते आणखी स्वारस्यांचा अंदाज लावणार नाही. तुम्ही ते अनब्लॉक केल्याशिवाय पुन्हा या अ‍ॅप्सच्या सूचीमध्ये जोडले जाणार नाही. ॲपद्वारे आधीच अंजाद वर्तवलेली स्वारस्ये हटवली जातील, परंतु तरीही तुम्हाला काही संबंधित जाहिराती दिसतील."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"तुम्ही ब्लॉक केलेली अ‍ॅप्स"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"ॲप्सद्वारे अंदाज लावलेली स्वारस्ये रीसेट करा"</string>
@@ -88,7 +87,44 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"प्रायव्हसी सॅंडबाॅक्स"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"तुम्हाला कदाचित आवडतील अशा जाहिराती दाखवण्यासाठी अ‍ॅप्सना वापरता येतील अशी नवीन वैशिष्ट्ये Android ची जाहिरातींशी संबंधित गोपनीयतेची बीटा आवृत्ती पुरवते. ही तंत्रज्ञाने डिव्हाइस आयडेंटिफायर वापरत नाहीत.\n\nतुम्हाला कोणत्या प्रकारच्या जाहिरातींमध्ये स्वारस्य असू शकते याच अंदाज अ‍ॅप्स लावू शकतात आणि तुमच्या डिव्हाइसवर ती स्वारस्ये तात्पुरती सेव्ह करू शकतात. हे अ‍ॅप्सना इतर डेव्हलपरच्या सर्व वेबसाइटवर आणि अ‍ॅप्सवर तुमची अ‍ॅक्टिव्हिटी ट्रॅक न करता उपयुक्त जाहिराती दाखवण्याची अनुमती देते."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"तुमच्याकडे कोणतीही ब्लॉक केलेली अ‍ॅप्स नाहीत"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"तुमच्याकडे कोणतीही ब्लॉक केलेली स्वारस्ये नाहीत"</string>
+    <!-- no translation found for settingsUI_dialog_negative_text (3014088254631375852) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_title (1862069591629418291) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_message (5696012172835241848) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_positive_text (5344259263448028614) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_title (5744004384480280782) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_message (2474902516721078270) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_positive_text (2626152417590300510) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_title (7361000923920947234) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_message (4058967523591550460) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_positive_text (2192452325573789737) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_title (1949146936958849544) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (8099126076667244456) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_positive_text (8345697359799280761) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_app_title (421160714549264414) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_app_message (4703493174054204149) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_app_title (4360730780049298286) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_app_message (7858109719986236041) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_title (7193520707240514769) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1967554695864827385) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"कला आणि मनोरंजन"</string>
     <string name="topic10002" msgid="1226367977754287428">"अभिनय आणि रंगभूमी"</string>
     <string name="topic10003" msgid="6949890838957814881">"ॲनिमे आणि मांगा"</string>
