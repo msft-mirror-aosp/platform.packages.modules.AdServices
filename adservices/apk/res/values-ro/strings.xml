@@ -48,9 +48,9 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Dacă activezi versiunea beta, aplicațiile pot testa noile modalități mai private de a-ți afișa anunțuri. Poți să dezactivezi oricând versiunea beta în setările de confidențialitate."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Nu, mulțumesc"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Activează"</string>
-    <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Vă mulțumim pentru participare"</string>
+    <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Mulțumim pentru participare"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Te-ai înscris în versiunea beta pentru confidențialitatea anunțurilor Android. Privacy Sandbox este activat pentru dispozitivul tău.\n\nPoți să afli mai multe sau să dezactivezi oricând versiunea beta în setările de confidențialitate."</string>
-    <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Ați ales să nu participați"</string>
+    <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Ai ales să nu participi"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="4194388733937808440">"Mulțumim pentru răspuns. Privacy Sandbox este dezactivat pentru dispozitivul tău.\n\nDacă te răzgândești sau dorești să afli mai multe, accesează setările de confidențialitate."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"Setări de confidențialitate"</string>
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"OK"</string>
@@ -79,16 +79,52 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Momentan, nu există categorii de interese de afișat"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Versiunea beta pentru confidențialitatea anunțurilor Android oferă noi funcții pe care aplicațiile le pot folosi pentru a-ți afișa anunțuri care ți-ar putea plăcea. Aceste tehnologii nu utilizează identificatorii dispozitivului.\n\nAndroid poate să estimeze tipurile de anunțuri care te-ar putea interesa și salvează temporar categoriile de interese pe dispozitivul tău. Astfel, aplicațiile îți pot afișa anunțuri relevante, fără să-ți urmărească activitatea în site-uri și aplicații de la alți dezvoltatori."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Nu ai blocat nicio categorie de interese"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Aplicațiile pot să-ți estimeze categoriile de interese și să le salveze temporar pe Android. Mai târziu, altă aplicație îți poate afișa un anunț pe baza acestor interese.\n\nDacă blochezi o aplicație, aceasta nu îți va mai estima interesele. Aplicația nu va fi adăugată din nou în lista de aplicații decât dacă o deblochezi. Categoriile de interese estimate deja de aplicație vor fi șterse, dar este posibil să vezi în continuare câteva anunțuri asociate."</string>
-    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Aplicații pe care le-ați blocat"</string>
+    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Aplicații pe care le-ai blocat"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Resetează categoriile de interese estimate de aplicații"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Momentan, nicio aplicație nu sugerează categorii de interese"</string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Versiunea beta pentru confidențialitatea anunțurilor Android oferă noi funcții pe care aplicațiile le pot folosi pentru a-ți afișa anunțuri care ți-ar putea plăcea. Aceste tehnologii nu utilizează identificatorii dispozitivului.\n\nAplicațiile pot să estimeze tipurile de anunțuri care te-ar putea interesa și salvează temporar categoriile de interese pe dispozitivul tău. Astfel, aplicațiile îți pot afișa anunțuri relevante, fără să-ți urmărească activitatea în site-uri și aplicații de la alți dezvoltatori."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Nu ai blocat nicio aplicație"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Nu ai blocat nicio categorie de interese"</string>
+    <!-- no translation found for settingsUI_dialog_negative_text (3014088254631375852) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_title (1862069591629418291) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_message (5696012172835241848) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_positive_text (5344259263448028614) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_title (5744004384480280782) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_message (2474902516721078270) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_positive_text (2626152417590300510) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_title (7361000923920947234) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_message (4058967523591550460) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_positive_text (2192452325573789737) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_title (1949146936958849544) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (8099126076667244456) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_positive_text (8345697359799280761) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_app_title (421160714549264414) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_app_message (4703493174054204149) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_app_title (4360730780049298286) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_app_message (7858109719986236041) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_title (7193520707240514769) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1967554695864827385) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Artă și divertisment"</string>
     <string name="topic10002" msgid="1226367977754287428">"Actorie și teatru"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime și manga"</string>
@@ -109,7 +145,7 @@
     <string name="topic10018" msgid="6823676154109177487">"Filme de acțiune și aventură"</string>
     <string name="topic10019" msgid="6875960630918973127">"Filme de animație"</string>
     <string name="topic10020" msgid="4323870300602151489">"Filme de comedie"</string>
-    <string name="topic10021" msgid="446758643774468418">"Filme de cult și independente"</string>
+    <string name="topic10021" msgid="446758643774468418">"Filme cult și independente"</string>
     <string name="topic10022" msgid="3671929742155787005">"Filme documentare"</string>
     <string name="topic10023" msgid="3547616830531182863">"Drame"</string>
     <string name="topic10024" msgid="1044853632986202120">"Filme pentru familie"</string>
@@ -316,7 +352,7 @@
     <string name="topic10225" msgid="8056906319560292131">"Jocuri de cărți"</string>
     <string name="topic10226" msgid="714463563336281099">"Jocuri cu cartonașe de colecție"</string>
     <string name="topic10227" msgid="218768654597520683">"Jocuri video și pe computer"</string>
-    <string name="topic10228" msgid="850597136074192489">"Jocuri de acțiune și pe platformă"</string>
+    <string name="topic10228" msgid="850597136074192489">"Jocuri de acțiune și tip platformă"</string>
     <string name="topic10229" msgid="4284501233897149886">"Jocuri de aventură"</string>
     <string name="topic10230" msgid="7156822286576815181">"Jocuri ocazionale"</string>
     <string name="topic10231" msgid="7620407218897744361">"Competiții de jocuri video"</string>

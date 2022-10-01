@@ -79,8 +79,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"ယခုပြသရန် စိတ်ဝင်စားမှုများ မရှိပါ"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android ၏ ကြော်ငြာဆိုင်ရာ ကိုယ်ရေးအချက်အလက်လုံခြုံမှု စမ်းသပ်အစီအစဉ်သည် သင်နှစ်သက်နိုင်မည့် ကြော်ငြာများပြရန် အက်ပ်များအသုံးပြုနိုင်သော ဝန်ဆောင်မှုသစ်များကို ပံ့ပိုးသည်။ ဤနည်းပညာများသည် စက်ပစ္စည်း သတ်မှတ်မှုစနစ်များကို အသုံးမပြုပါ။\n\nAndroid က သင်နှစ်သက်နိုင်မည့် ကြော်ငြာအမျိုးအစားများကို ခန့်မှန်းနိုင်ပြီး သင့်စက်တွင် စိတ်ဝင်စားမှုများကို ယာယီသိမ်းနိုင်သည်။ ၎င်းက သင့်လုပ်ဆောင်ချက်များကို ဝဘ်ဆိုက်နှင့် အခြားဆော့ဖ်ဝဲရေးသူများ၏ အက်ပ်များတွင် ခြေရာခံစရာမလိုဘဲ သင်နှင့်သက်ဆိုင်သည့် ကြော်ငြာများအား အက်ပ်များကို ပြခွင့်ပေးသည်။"</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"ပိတ်ထားသည့် စိတ်ဝင်စားမှုများ မရှိပါ"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"အက်ပ်များက သင့်စိတ်ဝင်စားမှုများကို ခန့်မှန်းပြီး ၎င်းတို့ကို Android ဖြင့် ယာယီသိမ်းနိုင်သည်။ နောက်ပိုင်းတွင် အခြားအက်ပ်တစ်ခုက ဤစိတ်ဝင်စားမှုများပေါ်မူတည်၍ ကြော်ငြာပြနိုင်သည်။\n\nအက်ပ်တစ်ခုအား ပိတ်ထားပါက ၎င်းသည် စိတ်ဝင်စားမှုများကို ခန့်မှန်းတော့မည်မဟုတ်ပါ။ ၎င်းကို ပြန်မဖွင့်မချင်း ဤအက်ပ်စာရင်းတွင် ထည့်မည်မဟုတ်ပါ။ အက်ပ်က ခန့်မှန်းထားသည့် စိတ်ဝင်စားမှုများကို ဖျက်မည်ဖြစ်သော်လည်း သက်ဆိုင်ရာကြော်ငြာအချို့ကို မြင်နိုင်သေးသည်။"</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"သင်ပိတ်ထားသော အက်ပ်များ"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"အက်ပ်များက ခန့်မှန်းထားသည့် စိတ်ဝင်စားမှုများ ပြင်ဆင်သတ်မှတ်ရန်"</string>
@@ -88,7 +87,44 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android ၏ ကြော်ငြာဆိုင်ရာ ကိုယ်ရေးအချက်အလက်လုံခြုံမှု စမ်းသပ်အစီအစဉ်သည် သင်နှစ်သက်နိုင်မည့် ကြော်ငြာများပြရန် အက်ပ်များအသုံးပြုနိုင်သော ဝန်ဆောင်မှုသစ်များကို ပံ့ပိုးသည်။ ဤနည်းပညာများသည် စက်ပစ္စည်း သတ်မှတ်မှုစနစ်များကို အသုံးမပြုပါ။\n\nအက်ပ်များက သင်နှစ်သက်နိုင်မည့် ကြော်ငြာအမျိုးအစားများကို ခန့်မှန်းနိုင်ပြီး သင့်စက်တွင် စိတ်ဝင်စားမှုများကို ယာယီသိမ်းနိုင်သည်။ ၎င်းက သင့်လုပ်ဆောင်ချက်များကို ဝဘ်ဆိုက်နှင့် အခြားဆော့ဖ်ဝဲရေးသူများ၏ အက်ပ်များတွင် ခြေရာခံစရာမလိုဘဲ သင်နှင့်သက်ဆိုင်သည့် ကြော်ငြာများအား အက်ပ်များကို ပြခွင့်ပေးသည်။"</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"ပိတ်ထားသည့်အက်ပ်များ မရှိပါ"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"ပိတ်ထားသည့် စိတ်ဝင်စားမှုများ မရှိပါ"</string>
+    <!-- no translation found for settingsUI_dialog_negative_text (3014088254631375852) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_title (1862069591629418291) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_message (5696012172835241848) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_positive_text (5344259263448028614) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_title (5744004384480280782) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_message (2474902516721078270) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_positive_text (2626152417590300510) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_title (7361000923920947234) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_message (4058967523591550460) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_positive_text (2192452325573789737) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_title (1949146936958849544) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (8099126076667244456) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_positive_text (8345697359799280761) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_app_title (421160714549264414) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_app_message (4703493174054204149) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_app_title (4360730780049298286) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_app_message (7858109719986236041) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_title (7193520707240514769) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1967554695864827385) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"အနုပညာနှင့် ဖျော်ဖြေရေး"</string>
     <string name="topic10002" msgid="1226367977754287428">"သရုပ်ဆောင်ခြင်းနှင့် ကဇာတ်ရုံ"</string>
     <string name="topic10003" msgid="6949890838957814881">"အန်နီမီနှင့် မန်ဂါ"</string>

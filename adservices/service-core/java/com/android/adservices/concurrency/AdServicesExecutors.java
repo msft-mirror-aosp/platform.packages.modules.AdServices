@@ -23,6 +23,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -34,14 +35,15 @@ import java.util.concurrent.TimeUnit;
 // TODO(b/224987182): set appropriate parameters (priority, size, etc..) for the shared thread pools
 // after doing detailed analysis. Ideally the parameters should be backed by PH flags.
 public final class AdServicesExecutors {
-    // We set the minimal number of threads for background executor to 4 and lightweight executor to
-    // 2 since Runtime.getRuntime().availableProcessors() may return 1 or 2 for low-end devices.
-    // This may cause deadlock for starvation in those low-end devices.
+    // We set the minimal number of threads for background executor to 4 and lightweight & scheduled
+    //  executors to 2 since Runtime.getRuntime().availableProcessors() may return 1 or 2 for
+    //  low-end devices. This may cause deadlock for starvation in those low-end devices.
     private static final int MIN_BACKGROUND_EXECUTOR_THREADS = 4;
     private static final int MIN_LIGHTWEIGHT_EXECUTOR_THREADS = 2;
+    private static final int MAX_SCHEDULED_EXECUTOR_THREADS = 2;
 
     private static final ListeningExecutorService sLightWeightExecutor =
-            // Always use at least two threads, so that clients can't depend on light weight
+            // Always use at least two threads, so that clients can't depend on light-weight
             // executor tasks executing sequentially
             MoreExecutors.listeningDecorator(
                     new ThreadPoolExecutor(
@@ -91,6 +93,25 @@ public final class AdServicesExecutors {
     @NonNull
     public static ListeningExecutorService getBackgroundExecutor() {
         return sBackgroundExecutor;
+    }
+
+    private static final ScheduledThreadPoolExecutor sScheduler =
+            new ScheduledThreadPoolExecutor(
+                    /* corePoolSize = */ Math.min(
+                            MAX_SCHEDULED_EXECUTOR_THREADS,
+                            Runtime.getRuntime().availableProcessors()));
+
+    /**
+     * Functions that require to be run with a delay, or have timed executions should run on this
+     * Executor
+     *
+     * <p>Example includes having timeouts on Futures
+     *
+     * @return
+     */
+    @NonNull
+    public static ScheduledThreadPoolExecutor getScheduler() {
+        return sScheduler;
     }
 
     private static final ListeningExecutorService sBlockingExecutor =

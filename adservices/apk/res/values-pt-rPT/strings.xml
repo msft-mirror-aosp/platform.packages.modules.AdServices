@@ -79,8 +79,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Não existem interesses para mostrar neste momento"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"A versão beta da privacidade de anúncios do Android fornece novas funcionalidades que as apps podem usar para lhe mostrar anúncios de que pode gostar. Estas tecnologias não usam identificadores de dispositivos.\n\nO Android podem estimar os tipos de anúncios em que pode ter interesse e guardar estes interesses temporariamente no seu dispositivo. Isto permite que as apps lhe mostrem anúncios relevantes, sem monitorizar a sua atividade em Websites e apps de outros programadores."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Não tem interesses bloqueados"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"As apps podem estimar os seus interesses e guardá-los temporariamente com o Android. Posteriormente, uma app diferente pode mostrar-lhe um anúncio com base nestes interesses.\n\nSe bloquear uma app, a mesma deixa de estimar interesses. Não volta a ser adicionada a esta lista de apps, a menos que a desbloqueie. Os interesses já estimados pela app são eliminados, mas pode continuar a ver alguns anúncios relacionados."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Apps que bloqueou"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Repor interesses estimados pelas apps"</string>
@@ -88,7 +87,44 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"A versão beta da privacidade de anúncios do Android fornece novas funcionalidades que as apps podem usar para lhe mostrar anúncios de que pode gostar. Estas tecnologias não usam identificadores de dispositivos.\n\nAs apps podem estimar os tipos de anúncios em que pode ter interesse e guardar estes interesses temporariamente no seu dispositivo. Isto permite que as apps lhe mostrem anúncios relevantes, sem monitorizar a sua atividade em Websites e apps de outros programadores."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Não tem apps bloqueadas"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Não tem interesses bloqueados"</string>
+    <!-- no translation found for settingsUI_dialog_negative_text (3014088254631375852) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_title (1862069591629418291) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_message (5696012172835241848) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_opt_out_positive_text (5344259263448028614) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_title (5744004384480280782) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_message (2474902516721078270) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_topic_positive_text (2626152417590300510) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_title (7361000923920947234) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_message (4058967523591550460) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_topic_positive_text (2192452325573789737) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_title (1949146936958849544) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (8099126076667244456) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_topic_positive_text (8345697359799280761) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_app_title (421160714549264414) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_block_app_message (4703493174054204149) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_app_title (4360730780049298286) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_unblock_app_message (7858109719986236041) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_title (7193520707240514769) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1967554695864827385) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Artes e entretenimento"</string>
     <string name="topic10002" msgid="1226367977754287428">"Representação e teatro"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime e manga"</string>
