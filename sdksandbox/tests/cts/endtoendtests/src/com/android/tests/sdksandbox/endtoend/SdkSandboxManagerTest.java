@@ -53,6 +53,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.util.List;
+
 /*
  * TODO(b/215372846): These providers
  * (RequestSurfacePackageSuccessfullySdkProvider, RetryLoadSameSdkShouldFailSdkProvider) could be
@@ -89,6 +91,39 @@ public class SdkSandboxManagerTest {
     @Test
     public void loadSdkSuccessfully() {
         final String sdkName = "com.android.loadSdkSuccessfullySdkProvider";
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        assertNotNull(callback.getSandboxedSdk());
+        assertNotNull(callback.getSandboxedSdk().getInterface());
+        mSdkSandboxManager.unloadSdk(sdkName);
+    }
+
+    @Test
+    public void getSandboxedSdkSuccessfully() {
+        final String sdkName = "com.android.loadSdkSuccessfullySdkProvider";
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
+        assertThat(callback.isLoadSdkSuccessful(/*ignoreSdkAlreadyLoadedError=*/ true)).isTrue();
+
+        List<SandboxedSdk> sandboxedSdks = mSdkSandboxManager.getSandboxedSdks();
+
+        int nLoadedSdks = sandboxedSdks.size();
+        assertThat(nLoadedSdks).isGreaterThan(0);
+        assertThat(
+                        sandboxedSdks.stream()
+                                .filter(s -> s.getSharedLibraryInfo().getName().equals(sdkName))
+                                .count())
+                .isEqualTo(1);
+
+        mSdkSandboxManager.unloadSdk(sdkName);
+        List<SandboxedSdk> sandboxedSdksAfterUnload = mSdkSandboxManager.getSandboxedSdks();
+        assertThat(sandboxedSdksAfterUnload.size()).isEqualTo(nLoadedSdks - 1);
+    }
+
+    @Test
+    public void loadSdkAndCheckClassloader() {
+        final String sdkName = "com.android.loadSdkAndCheckClassloader";
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
@@ -151,15 +186,26 @@ public class SdkSandboxManagerTest {
 
         mSdkSandboxManager.unloadSdk(sdkName);
 
-        // Calls to an unloaded SDK should throw an exception.
+        // Calls to an unloaded SDK should fail.
+        // TODO(249482251): Only check one error case.
         final FakeRequestSurfacePackageCallback requestSurfacePackageCallback =
                 new FakeRequestSurfacePackageCallback();
-        Bundle params = getRequestSurfacePackageParams();
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        mSdkSandboxManager.requestSurfacePackage(
-                                sdkName, params, Runnable::run, requestSurfacePackageCallback));
+        boolean threwException = false;
+        try {
+            mSdkSandboxManager.requestSurfacePackage(
+                    sdkName,
+                    getRequestSurfacePackageParams(),
+                    Runnable::run,
+                    requestSurfacePackageCallback);
+        } catch (IllegalArgumentException e) {
+            threwException = true;
+        }
+
+        if (!threwException) {
+            assertThat(requestSurfacePackageCallback.isRequestSurfacePackageSuccessful()).isFalse();
+            assertThat(requestSurfacePackageCallback.getSurfacePackageErrorCode())
+                    .isEqualTo(SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE);
+        }
 
         // SDK can be reloaded after being unloaded.
         final FakeLoadSdkCallback callback2 = new FakeLoadSdkCallback();

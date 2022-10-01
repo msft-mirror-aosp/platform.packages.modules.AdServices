@@ -4,7 +4,6 @@
     "sources": [{
       "registration_request": {
         "attribution_src_url": "https://www.ad-tech1.com",
-        "source_origin": "android-app://example.1s1.com",
         "source_type": "navigation",
         "registrant": "example.1s1.com"
       },
@@ -27,7 +26,6 @@
       {
         "registration_request": {
           "attribution_src_url": "https://www.ad-tech1.com",
-          "destination_origin": "android-app://example.2d1.com",
           "registrant": "example.2d1.com"
         },
         "responses": [{
@@ -45,12 +43,11 @@
             "Attribution-Reporting-Redirect": null
           }
         }],
-        "timestamp": "800172800003"
+        "timestamp": "800173400001"
       },
       {
         "registration_request": {
           "attribution_src_url": "https://www.ad-tech1.com",
-          "destination_origin": "android-app://example.2d1.com",
           "registrant": "example.2d1.com"
         },
         "responses": [{
@@ -68,12 +65,11 @@
             "Attribution-Reporting-Redirect": null
           }
         }],
-        "timestamp": "800604800000"
+        "timestamp": "800604200001"
       },
       {
         "registration_request": {
           "attribution_src_url": "https://www.ad-tech1.com",
-          "destination_origin": "android-app://example.2d1.com",
           "registrant": "example.2d1.com"
         },
         "responses": [{
@@ -91,7 +87,7 @@
             "Attribution-Reporting-Redirect": null
           }
         }],
-        "timestamp": "800604800002"
+        "timestamp": "800605400001"
       }
     ]
   },

@@ -40,10 +40,10 @@ import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.TrustedBiddingDataFixture;
 import android.net.Uri;
 import android.os.Process;
+import android.util.Log;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.adservices.LogUtil;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
@@ -69,6 +69,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
+    public static final String TAG = "adservices";
     // Time allowed by current test setup for APIs to respond
     private static final int API_RESPONSE_TIMEOUT_SECONDS = 5;
 
@@ -90,6 +91,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     private static final String SELLER_REPORTING_PATH = "/reporting/seller";
     private static final String BUYER_REPORTING_PATH = "/reporting/buyer";
 
+    private static final String SELLER_REPORTING_URI =
+            String.format("https://%s%s", AdSelectionConfigFixture.SELLER, SELLER_REPORTING_PATH);
+
     private static final String DEFAULT_DECISION_LOGIC_JS =
             "function scoreAd(ad, bid, auction_config, seller_signals,"
                     + " trusted_scoring_signals, contextual_signal, user_signal,"
@@ -100,7 +104,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                     + " contextual_signals) { \n"
                     + " return {'status': 0, 'results': {'signals_for_buyer':"
                     + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
-                    + SELLER_REPORTING_PATH
+                    + SELLER_REPORTING_URI
                     + "' } };\n"
                     + "}";
     private static final AdSelectionSignals TRUSTED_SCORING_SIGNALS =
@@ -136,7 +140,11 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                                             AdSelectionConfigFixture.SELLER,
                                             SELLER_TRUSTED_SIGNAL_URI_PATH)))
                     .build();
-    private static final String DEFAULT_BIDDING_LOGIC_JS =
+
+    private static final String BUYER_2_REPORTING_URI =
+            String.format("https://%s%s", AdSelectionConfigFixture.BUYER_2, BUYER_REPORTING_PATH);
+
+    private static final String BUYER_2_BIDDING_LOGIC_JS =
             "function generateBid(ad, auction_signals, per_buyer_signals,"
                     + " trusted_bidding_signals, contextual_signals, user_signals,"
                     + " custom_audience_signals) { \n"
@@ -145,7 +153,23 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                     + "function reportWin(ad_selection_signals, per_buyer_signals,"
                     + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
                     + " return {'status': 0, 'results': {'reporting_uri': '"
-                    + BUYER_REPORTING_PATH
+                    + BUYER_2_REPORTING_URI
+                    + "' } };\n"
+                    + "}";
+
+    private static final String BUYER_1_REPORTING_URI =
+            String.format("https://%s%s", AdSelectionConfigFixture.BUYER_1, BUYER_REPORTING_PATH);
+
+    private static final String BUYER_1_BIDDING_LOGIC_JS =
+            "function generateBid(ad, auction_signals, per_buyer_signals,"
+                    + " trusted_bidding_signals, contextual_signals, user_signals,"
+                    + " custom_audience_signals) { \n"
+                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
+                    + "}\n"
+                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                    + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
+                    + " return {'status': 0, 'results': {'reporting_uri': '"
+                    + BUYER_1_REPORTING_URI
                     + "' } };\n"
                     + "}";
     private AdSelectionClient mAdSelectionClient;
@@ -249,14 +273,14 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience1.getBuyer())
                         .setName(customAudience1.getName())
-                        .setBiddingLogicJs(DEFAULT_BIDDING_LOGIC_JS)
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
         AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest2 =
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience2.getBuyer())
                         .setName(customAudience2.getName())
-                        .setBiddingLogicJs(DEFAULT_BIDDING_LOGIC_JS)
+                        .setBiddingLogicJs(BUYER_2_BIDDING_LOGIC_JS)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
 
@@ -269,9 +293,11 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest2)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        LogUtil.i(
+        Log.i(
+                TAG,
                 "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
-        LogUtil.i(
+        Log.i(
+                TAG,
                 "Decision logic URI domain is "
                         + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
 
@@ -327,7 +353,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience.getBuyer())
                         .setName(customAudience.getName())
-                        .setBiddingLogicJs(DEFAULT_BIDDING_LOGIC_JS)
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
 
@@ -337,9 +363,11 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        LogUtil.i(
+        Log.i(
+                TAG,
                 "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
-        LogUtil.i(
+        Log.i(
+                TAG,
                 "Decision logic URI domain is "
                         + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
 
@@ -416,14 +444,14 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience1.getBuyer())
                         .setName(customAudience1.getName())
-                        .setBiddingLogicJs(DEFAULT_BIDDING_LOGIC_JS)
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
         AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest2 =
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience2.getBuyer())
                         .setName(customAudience2.getName())
-                        .setBiddingLogicJs(DEFAULT_BIDDING_LOGIC_JS)
+                        .setBiddingLogicJs(BUYER_2_BIDDING_LOGIC_JS)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
 
@@ -499,14 +527,14 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience1.getBuyer())
                         .setName(customAudience1.getName())
-                        .setBiddingLogicJs(DEFAULT_BIDDING_LOGIC_JS)
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
         AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest2 =
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience2.getBuyer())
                         .setName(customAudience2.getName())
-                        .setBiddingLogicJs(DEFAULT_BIDDING_LOGIC_JS)
+                        .setBiddingLogicJs(BUYER_2_BIDDING_LOGIC_JS)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
 
@@ -581,7 +609,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience1.getBuyer())
                         .setName(customAudience1.getName())
-                        .setBiddingLogicJs(DEFAULT_BIDDING_LOGIC_JS)
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
         AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest2 =
@@ -659,14 +687,14 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience1.getBuyer())
                         .setName(customAudience1.getName())
-                        .setBiddingLogicJs(DEFAULT_BIDDING_LOGIC_JS)
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
         AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest2 =
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience2.getBuyer())
                         .setName(customAudience2.getName())
-                        .setBiddingLogicJs(DEFAULT_BIDDING_LOGIC_JS)
+                        .setBiddingLogicJs(BUYER_2_BIDDING_LOGIC_JS)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
 
@@ -724,7 +752,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience1.getBuyer())
                         .setName(customAudience1.getName())
-                        .setBiddingLogicJs(DEFAULT_BIDDING_LOGIC_JS)
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
         // We do not provide override for CA 2, that should lead to failure to get biddingLogic
@@ -783,14 +811,14 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience1.getBuyer())
                         .setName(customAudience1.getName())
-                        .setBiddingLogicJs(DEFAULT_BIDDING_LOGIC_JS)
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
         AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest2 =
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience2.getBuyer())
                         .setName(customAudience2.getName())
-                        .setBiddingLogicJs(DEFAULT_BIDDING_LOGIC_JS)
+                        .setBiddingLogicJs(BUYER_2_BIDDING_LOGIC_JS)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
 
@@ -861,14 +889,14 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience1.getBuyer())
                         .setName(customAudience1.getName())
-                        .setBiddingLogicJs(DEFAULT_BIDDING_LOGIC_JS)
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
         AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest2 =
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience2.getBuyer())
                         .setName(customAudience2.getName())
-                        .setBiddingLogicJs(DEFAULT_BIDDING_LOGIC_JS)
+                        .setBiddingLogicJs(BUYER_2_BIDDING_LOGIC_JS)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
 
@@ -945,14 +973,14 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience1.getBuyer())
                         .setName(customAudience1.getName())
-                        .setBiddingLogicJs(DEFAULT_BIDDING_LOGIC_JS)
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
         AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest2 =
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience2.getBuyer())
                         .setName(customAudience2.getName())
-                        .setBiddingLogicJs(DEFAULT_BIDDING_LOGIC_JS)
+                        .setBiddingLogicJs(BUYER_2_BIDDING_LOGIC_JS)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
 
@@ -1031,7 +1059,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience1.getBuyer())
                         .setName(customAudience1.getName())
-                        .setBiddingLogicJs(DEFAULT_BIDDING_LOGIC_JS)
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
         AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest2 =
@@ -1115,7 +1143,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience2.getBuyer())
                         .setName(customAudience2.getName())
-                        .setBiddingLogicJs(DEFAULT_BIDDING_LOGIC_JS)
+                        .setBiddingLogicJs(BUYER_2_BIDDING_LOGIC_JS)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
 
@@ -1125,9 +1153,11 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        LogUtil.i(
+        Log.i(
+                TAG,
                 "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
-        LogUtil.i(
+        Log.i(
+                TAG,
                 "Decision logic URI domain is "
                         + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
 

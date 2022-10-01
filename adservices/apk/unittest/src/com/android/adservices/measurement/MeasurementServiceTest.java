@@ -27,6 +27,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.IBinder;
@@ -34,9 +35,11 @@ import android.os.IBinder;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.enrollment.EnrollmentData;
@@ -98,6 +101,8 @@ public class MeasurementServiceTest {
                     // Verification
                     assertNotNull(binder);
                     verify(mMockConsentManager, times(1)).getConsent(any());
+                    ExtendedMockito.verify(
+                            () -> PackageChangedReceiver.enableReceiver(any(Context.class)));
                     assertJobScheduled(/* timesCalled */ 1);
                 });
     }
@@ -160,8 +165,10 @@ public class MeasurementServiceTest {
                         .spyStatic(ConsentManager.class)
                         .spyStatic(EnrollmentDao.class)
                         .spyStatic(EventReportingJobService.class)
+                        .spyStatic(PackageChangedReceiver.class)
                         .spyStatic(EventFallbackReportingJobService.class)
                         .spyStatic(DeleteExpiredJobService.class)
+                        .spyStatic(MddJobService.class)
                         .spyStatic(FlagsFactory.class)
                         .spyStatic(MeasurementImpl.class)
                         .strictness(Strictness.LENIENT)
@@ -190,6 +197,8 @@ public class MeasurementServiceTest {
             ExtendedMockito.doReturn(mMockAppImportanceFilter)
                     .when(() -> AppImportanceFilter.create(any(), anyInt(), any()));
 
+            ExtendedMockito.doReturn(true)
+                    .when(() -> PackageChangedReceiver.enableReceiver(any(Context.class)));
             ExtendedMockito.doNothing()
                     .when(() -> AggregateReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
             ExtendedMockito.doNothing()
@@ -209,6 +218,8 @@ public class MeasurementServiceTest {
                                             any(), anyBoolean()));
             ExtendedMockito.doNothing()
                     .when(() -> DeleteExpiredJobService.scheduleIfNeeded(any(), anyBoolean()));
+            ExtendedMockito.doReturn(true)
+                    .when(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
 
             // Execute
             execute.run();
@@ -236,5 +247,7 @@ public class MeasurementServiceTest {
         ExtendedMockito.verify(
                 () -> DeleteExpiredJobService.scheduleIfNeeded(any(), anyBoolean()),
                 times(timesCalled));
+        ExtendedMockito.verify(
+                () -> MddJobService.scheduleIfNeeded(any(), anyBoolean()), times(timesCalled));
     }
 }

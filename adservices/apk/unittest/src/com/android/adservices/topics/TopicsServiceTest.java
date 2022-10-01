@@ -37,6 +37,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
 import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -84,6 +85,7 @@ public class TopicsServiceTest {
                         .spyStatic(MddJobService.class)
                         .spyStatic(EnrollmentDao.class)
                         .spyStatic(AppImportanceFilter.class)
+                        .spyStatic(PackageChangedReceiver.class)
                         .startMocking();
 
         try {
@@ -105,13 +107,8 @@ public class TopicsServiceTest {
                     .when(mMockConsentManager)
                     .getConsent(mMockPackageManager);
 
-            ExtendedMockito.doReturn(mMockEnrollmentDao)
-                    .when(() -> EnrollmentDao.getInstance(any(Context.class)));
-            ExtendedMockito.doReturn(mMockAppImportanceFilter)
-                    .when(
-                            () ->
-                                    AppImportanceFilter.create(
-                                            any(Context.class), anyInt(), any(Supplier.class)));
+            ExtendedMockito.doReturn(true)
+                    .when(() -> PackageChangedReceiver.enableReceiver(any(Context.class)));
             ExtendedMockito.doReturn(true)
                     .when(
                             () ->
@@ -121,6 +118,14 @@ public class TopicsServiceTest {
                     .when(() -> EpochJobService.scheduleIfNeeded(any(Context.class), eq(false)));
             ExtendedMockito.doReturn(true)
                     .when(() -> MddJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+
+            ExtendedMockito.doReturn(mMockEnrollmentDao)
+                    .when(() -> EnrollmentDao.getInstance(any(Context.class)));
+            ExtendedMockito.doReturn(mMockAppImportanceFilter)
+                    .when(
+                            () ->
+                                    AppImportanceFilter.create(
+                                            any(Context.class), anyInt(), any(Supplier.class)));
 
             spyTopicsService.onCreate();
             IBinder binder = spyTopicsService.onBind(getIntentForTopicsService());

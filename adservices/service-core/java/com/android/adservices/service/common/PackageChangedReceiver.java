@@ -16,10 +16,14 @@
 
 package com.android.adservices.service.common;
 
+import static android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED;
+
 import android.annotation.NonNull;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
@@ -60,6 +64,21 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     public static final String PACKAGE_DATA_CLEARED = "package_data_cleared";
 
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
+
+    /** Enable the PackageChangedReceiver */
+    public static boolean enableReceiver(@NonNull Context context) {
+        try {
+            context.getPackageManager()
+                    .setComponentEnabledSetting(
+                            new ComponentName(context, PackageChangedReceiver.class),
+                            COMPONENT_ENABLED_STATE_ENABLED,
+                            PackageManager.DONT_KILL_APP);
+        } catch (IllegalArgumentException e) {
+            LogUtil.e("enableService failed for %s", context.getPackageName());
+            return false;
+        }
+        return true;
+    }
 
     @Override
     public void onReceive(Context context, Intent intent) {

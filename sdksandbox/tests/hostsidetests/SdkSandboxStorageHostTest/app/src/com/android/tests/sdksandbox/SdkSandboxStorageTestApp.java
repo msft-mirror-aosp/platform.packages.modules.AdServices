@@ -24,18 +24,20 @@ import static org.junit.Assert.assertThrows;
 
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
-import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallback;
 import android.app.usage.StorageStats;
 import android.app.usage.StorageStatsManager;
 import android.content.Context;
-import android.os.Binder;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Process;
 import android.os.UserHandle;
+import android.preference.PreferenceManager;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.platform.app.InstrumentationRegistry;
+
+import com.android.tests.codeprovider.storagetest_1.IStorageTestSdk1Api;
 
 import junit.framework.AssertionFailedError;
 
@@ -48,12 +50,14 @@ import org.junit.runners.JUnit4;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.util.Set;
 
 @RunWith(JUnit4.class)
 public class SdkSandboxStorageTestApp {
 
-    private static final String SDK_NAME = "com.android.tests.codeprovider.storagetest";
+    private static final String TAG = "SdkSandboxStorageTestApp";
 
+    private static final String SDK_NAME = "com.android.tests.codeprovider.storagetest";
     private static final String BUNDLE_KEY_PHASE_NAME = "phase-name";
 
     private static final String JAVA_FILE_PERMISSION_DENIED_MSG =
@@ -63,8 +67,13 @@ public class SdkSandboxStorageTestApp {
 
     @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(TestActivity.class);
 
+    private static final String KEY_TO_SYNC = "hello";
+    private static final String BULK_SYNC_VALUE = "bulksync";
+    private static final String UPDATE_VALUE = "update";
+
     private Context mContext;
     private SdkSandboxManager mSdkSandboxManager;
+    private IStorageTestSdk1Api mSdk;
 
     @Before
     public void setup() {
@@ -74,27 +83,14 @@ public class SdkSandboxStorageTestApp {
         mRule.getScenario();
     }
 
-    // Run a phase of the test inside the code loaded for this app
-    // TODO(b/242678799): We want to use interface provided by loadSdk to perform the communication
-    // i.e. use the correct approach
-    private void runPhaseInsideCode(String phaseName) {
-        FakeRequestSurfacePackageCallback callback = new FakeRequestSurfacePackageCallback();
-        Bundle params = new Bundle();
-        params.putInt(mSdkSandboxManager.EXTRA_WIDTH_IN_PIXELS, 500);
-        params.putInt(mSdkSandboxManager.EXTRA_HEIGHT_IN_PIXELS, 500);
-        params.putInt(mSdkSandboxManager.EXTRA_DISPLAY_ID, 0);
-        params.putBinder(mSdkSandboxManager.EXTRA_HOST_TOKEN, new Binder());
-        params.putString(BUNDLE_KEY_PHASE_NAME, phaseName);
-        mSdkSandboxManager.requestSurfacePackage(SDK_NAME, params, Runnable::run, callback);
-        // Wait for SDK to finish handling the request
-        assertThat(callback.isRequestSurfacePackageSuccessful()).isFalse();
-    }
-
     @Test
     public void loadSdk() throws Exception {
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
+
+        // Store the returned SDK interface so that we can interact with it later.
+        mSdk = IStorageTestSdk1Api.Stub.asInterface(callback.getSandboxedSdk().getInterface());
     }
 
     @Test
@@ -107,15 +103,14 @@ public class SdkSandboxStorageTestApp {
     public void testSdkDataPackageDirectory_SharedStorageIsUsable() throws Exception {
         loadSdk();
 
-        // Run phase inside the SDK
-        runPhaseInsideCode("testSdkDataPackageDirectory_SharedStorageIsUsable");
+        mSdk.verifySharedStorageIsUsable();
     }
 
     @Test
     public void testSdkDataSubDirectory_PerSdkStorageIsUsable() throws Exception {
         loadSdk();
 
-        runPhaseInsideCode("testSdkDataSubDirectory_PerSdkStorageIsUsable");
+        mSdk.verifyPerSdkStorageIsUsable();
     }
 
     @Test
@@ -131,27 +126,118 @@ public class SdkSandboxStorageTestApp {
         final StorageStats initialAppStats = stats.queryStatsForUid(UUID_DEFAULT, uid);
         final StorageStats initialUserStats = stats.queryStatsForUser(UUID_DEFAULT, user);
 
-        runPhaseInsideCode("testSdkDataIsAttributedToApp");
+        final int sizeInBytes = 10000000; // 10 MB
+        mSdk.createFilesInSharedStorage(sizeInBytes, /*inCacheDir*/ false);
+        mSdk.createFilesInSharedStorage(sizeInBytes, /*inCacheDir*/ true);
 
         final StorageStats finalAppStats = stats.queryStatsForUid(UUID_DEFAULT, uid);
         final StorageStats finalUserStats = stats.queryStatsForUser(UUID_DEFAULT, user);
 
-        // Verify the space used with a few hundred kilobytes error margin
-        long deltaAppSize = 2000000;
-        long deltaCacheSize = 1000000;
-        long errorMarginSize = 100000;
-        assertMostlyEquals(deltaAppSize,
-                    finalAppStats.getDataBytes() - initialAppStats.getDataBytes(),
-                           errorMarginSize);
-        assertMostlyEquals(deltaAppSize,
-                    finalUserStats.getDataBytes() - initialUserStats.getDataBytes(),
-                           errorMarginSize);
-        assertMostlyEquals(deltaCacheSize,
-                    finalAppStats.getCacheBytes() - initialAppStats.getCacheBytes(),
-                           errorMarginSize);
-        assertMostlyEquals(deltaCacheSize,
-                    finalUserStats.getCacheBytes() - initialUserStats.getCacheBytes(),
-                           errorMarginSize);
+        // Verify the space used with a 5% error margin
+        long deltaAppSize = 2 * sizeInBytes;
+        long deltaCacheSize = sizeInBytes;
+        long errorMarginSize = sizeInBytes / 20; // 0.5 MB
+
+        // Assert app size is same
+        final long appSizeAppStats = finalAppStats.getDataBytes() - initialAppStats.getDataBytes();
+        final long appSizeUserStats =
+                finalUserStats.getDataBytes() - initialUserStats.getDataBytes();
+        assertMostlyEquals(deltaAppSize, appSizeAppStats, errorMarginSize);
+        assertMostlyEquals(deltaAppSize, appSizeUserStats, errorMarginSize);
+
+        // Assert cache size is same
+        final long cacheSizeAppStats =
+                finalAppStats.getCacheBytes() - initialAppStats.getCacheBytes();
+        final long cacheSizeUserStats =
+                finalUserStats.getCacheBytes() - initialUserStats.getCacheBytes();
+        assertMostlyEquals(deltaCacheSize, cacheSizeAppStats, errorMarginSize);
+        assertMostlyEquals(deltaCacheSize, cacheSizeUserStats, errorMarginSize);
+    }
+
+    @Test
+    public void testSharedPreferences_IsSyncedFromAppToSandbox() throws Exception {
+        loadSdk();
+
+        // Write to default shared preference
+        final SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(mContext);
+        pref.edit().putString(KEY_TO_SYNC, BULK_SYNC_VALUE).commit();
+
+        // Start syncing keys
+        mSdkSandboxManager.addSyncedSharedPreferencesKeys(Set.of(KEY_TO_SYNC));
+        // Allow some time for data to sync
+        Thread.sleep(1000);
+
+        // Verify same key can be read from the sandbox
+        final String syncedValueInSandbox = mSdk.getSyncedSharedPreferencesString(KEY_TO_SYNC);
+        assertThat(syncedValueInSandbox).isEqualTo(BULK_SYNC_VALUE);
+    }
+
+    @Test
+    public void testSharedPreferences_SyncPropagatesUpdates() throws Exception {
+        loadSdk();
+
+        // Start syncing keys
+        mSdkSandboxManager.addSyncedSharedPreferencesKeys(Set.of(KEY_TO_SYNC));
+
+        // Update the default SharedPreferences
+        final SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(mContext);
+        pref.edit().putString(KEY_TO_SYNC, UPDATE_VALUE).commit();
+        // Allow some time for data to sync
+        Thread.sleep(1000);
+
+        // Verify update was propagated
+        final String syncedValueInSandbox = mSdk.getSyncedSharedPreferencesString(KEY_TO_SYNC);
+        assertThat(syncedValueInSandbox).isEqualTo(UPDATE_VALUE);
+    }
+
+    @Test
+    public void testSharedPreferences_SyncStartedBeforeLoadingSdk() throws Exception {
+        // Write to default shared preference
+        final SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(mContext);
+        pref.edit().putString(KEY_TO_SYNC, BULK_SYNC_VALUE).commit();
+
+        // Start syncing keys
+        mSdkSandboxManager.addSyncedSharedPreferencesKeys(Set.of(KEY_TO_SYNC));
+
+        // Load Sdk so that sandbox is started
+        loadSdk();
+        // Allow some time for data to sync
+        Thread.sleep(1000);
+
+        // Verify same key can be read from the sandbox
+        final String syncedValueInSandbox = mSdk.getSyncedSharedPreferencesString(KEY_TO_SYNC);
+        assertThat(syncedValueInSandbox).isEqualTo(BULK_SYNC_VALUE);
+    }
+
+    @Test
+    public void testSharedPreferences_SyncRemoveKeys() throws Exception {
+        loadSdk();
+
+        // Write to default shared preference
+        final SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(mContext);
+        pref.edit().putString(KEY_TO_SYNC, BULK_SYNC_VALUE).commit();
+
+        // Start syncing keys
+        mSdkSandboxManager.addSyncedSharedPreferencesKeys(Set.of(KEY_TO_SYNC));
+
+        // Remove the key
+        mSdkSandboxManager.removeSyncedSharedPreferencesKeys(Set.of(KEY_TO_SYNC));
+
+        // Allow some time for data to sync
+        Thread.sleep(1000);
+
+        // Verify key has been removed from the sandbox
+        final String syncedValueInSandbox = mSdk.getSyncedSharedPreferencesString(KEY_TO_SYNC);
+        assertThat(syncedValueInSandbox).isEmpty();
+    }
+
+    @Test
+    public void testSharedPreferences_SyncedDataClearedOnSandboxRestart() throws Exception {
+        loadSdk();
+
+        // Verify previously synced keys are not available in sandbox anymore
+        final String syncedValueInSandbox = mSdk.getSyncedSharedPreferencesString(KEY_TO_SYNC);
+        assertThat(syncedValueInSandbox).isEmpty();
     }
 
     private static void assertDirIsNotAccessible(String path) {

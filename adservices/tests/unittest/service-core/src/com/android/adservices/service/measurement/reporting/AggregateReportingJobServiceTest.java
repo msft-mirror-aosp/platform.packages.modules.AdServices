@@ -35,32 +35,29 @@ import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
 import android.content.Context;
-import android.provider.DeviceConfig;
 
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
+import com.android.adservices.service.AdServicesConfig;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
-import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Unit test for {@link AggregateReportingJobService
  */
 public class AggregateReportingJobServiceTest {
-    // This rule is used for configuring P/H flags
-    @Rule
-    public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
-            new TestableDeviceConfig.TestableDeviceConfigRule();
-
     private static final long WAIT_IN_MILLIS = 50L;
 
     private DatastoreManager mMockDatastoreManager;
@@ -77,10 +74,11 @@ public class AggregateReportingJobServiceTest {
 
     @Test
     public void onStartJob_killSwitchOn() throws Exception {
-        enableKillSwitch();
-
         runWithMocks(
                 () -> {
+                    // Setup
+                    enableKillSwitch();
+
                     // Execute
                     boolean result = mSpyService.onStartJob(mock(JobParameters.class));
 
@@ -97,10 +95,11 @@ public class AggregateReportingJobServiceTest {
 
     @Test
     public void onStartJob_killSwitchOff() throws Exception {
-        disableKillSwitch();
-
         runWithMocks(
                 () -> {
+                    // Setup
+                    disableKillSwitch();
+
                     // Execute
                     boolean result = mSpyService.onStartJob(mock(JobParameters.class));
 
@@ -117,11 +116,11 @@ public class AggregateReportingJobServiceTest {
 
     @Test
     public void scheduleIfNeeded_killSwitchOn_dontSchedule() throws Exception {
-        enableKillSwitch();
-
         runWithMocks(
                 () -> {
                     // Setup
+                    enableKillSwitch();
+
                     final Context mockContext = mock(Context.class);
                     doReturn(mMockJobScheduler)
                             .when(mockContext)
@@ -148,11 +147,11 @@ public class AggregateReportingJobServiceTest {
     @Test
     public void scheduleIfNeeded_killSwitchOff_previouslyExecuted_dontForceSchedule_dontSchedule()
             throws Exception {
-        disableKillSwitch();
-
         runWithMocks(
                 () -> {
                     // Setup
+                    disableKillSwitch();
+
                     final Context mockContext = mock(Context.class);
                     doReturn(mMockJobScheduler)
                             .when(mockContext)
@@ -179,11 +178,11 @@ public class AggregateReportingJobServiceTest {
     @Test
     public void scheduleIfNeeded_killSwitchOff_previouslyExecuted_forceSchedule_schedule()
             throws Exception {
-        disableKillSwitch();
-
         runWithMocks(
                 () -> {
                     // Setup
+                    disableKillSwitch();
+
                     final Context mockContext = mock(Context.class);
                     doReturn(mMockJobScheduler)
                             .when(mockContext)
@@ -210,11 +209,11 @@ public class AggregateReportingJobServiceTest {
     @Test
     public void scheduleIfNeeded_killSwitchOff_previouslyNotExecuted_dontForceSchedule_schedule()
             throws Exception {
-        disableKillSwitch();
-
         runWithMocks(
                 () -> {
                     // Setup
+                    disableKillSwitch();
+
                     final Context mockContext = mock(Context.class);
                     doReturn(mMockJobScheduler)
                             .when(mockContext)
@@ -239,8 +238,11 @@ public class AggregateReportingJobServiceTest {
     private void runWithMocks(TestUtils.RunnableWithThrow execute) throws Exception {
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
-                        .spyStatic(DatastoreManagerFactory.class)
+                        .spyStatic(AdServicesConfig.class)
                         .spyStatic(AggregateReportingJobService.class)
+                        .spyStatic(DatastoreManagerFactory.class)
+                        .spyStatic(EnrollmentDao.class)
+                        .spyStatic(FlagsFactory.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
         try {
@@ -252,6 +254,12 @@ public class AggregateReportingJobServiceTest {
             doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
             doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
             doReturn(Mockito.mock(Context.class)).when(mSpyService).getApplicationContext();
+            ExtendedMockito.doReturn(TimeUnit.HOURS.toMillis(4))
+                    .when(AdServicesConfig::getMeasurementAggregateMainReportingJobPeriodMs);
+            ExtendedMockito.doReturn("http://example.com")
+                    .when(AdServicesConfig::getMeasurementAggregateEncryptionKeyCoordinatorUrl);
+            ExtendedMockito.doReturn(mock(EnrollmentDao.class))
+                    .when(() -> EnrollmentDao.getInstance(any()));
             ExtendedMockito.doReturn(mMockDatastoreManager)
                     .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
             ExtendedMockito.doNothing()
@@ -273,10 +281,10 @@ public class AggregateReportingJobServiceTest {
     }
 
     private void toggleKillSwitch(boolean value) {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "measurement_job_aggregate_reporting_kill_switch",
-                Boolean.toString(value),
-                /* makeDefault */ false);
+        Flags mockFlags = Mockito.mock(Flags.class);
+        ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
+        ExtendedMockito.doReturn(value)
+                .when(mockFlags)
+                .getMeasurementJobAggregateReportingKillSwitch();
     }
 }

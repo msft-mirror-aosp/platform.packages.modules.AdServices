@@ -31,6 +31,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.measurement.AsyncRegistration;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
@@ -40,6 +41,7 @@ import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Web;
 
 import java.time.Instant;
@@ -101,7 +103,8 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.TriggerContract.AGGREGATE_VALUES,
                 trigger.getAggregateValues());
         values.put(MeasurementTables.TriggerContract.FILTERS, trigger.getFilters());
-        values.put(MeasurementTables.TriggerContract.DEBUG_KEY, trigger.getDebugKey());
+        values.put(MeasurementTables.TriggerContract.DEBUG_KEY,
+                getNullableUnsignedLong(trigger.getDebugKey()));
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.TriggerContract.TABLE,
                         /*nullColumnHack=*/null, values);
@@ -194,7 +197,7 @@ class MeasurementDao implements IMeasurementDao {
 
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.SourceContract.ID, UUID.randomUUID().toString());
-        values.put(MeasurementTables.SourceContract.EVENT_ID, source.getEventId());
+        values.put(MeasurementTables.SourceContract.EVENT_ID, source.getEventId().getValue());
         values.put(MeasurementTables.SourceContract.PUBLISHER, source.getPublisher().toString());
         values.put(MeasurementTables.SourceContract.PUBLISHER_TYPE, source.getPublisherType());
         values.put(
@@ -218,7 +221,8 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.SourceContract.AGGREGATE_SOURCE, source.getAggregateSource());
         values.put(MeasurementTables.SourceContract.FILTER_DATA, source.getAggregateFilterData());
         values.put(MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS, 0);
-        values.put(MeasurementTables.SourceContract.DEBUG_KEY, source.getDebugKey());
+        values.put(MeasurementTables.SourceContract.DEBUG_KEY,
+                getNullableUnsignedLong(source.getDebugKey()));
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.SourceContract.TABLE,
                         /*nullColumnHack=*/null, values);
@@ -450,15 +454,15 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.EventReportContract.ID,
                 UUID.randomUUID().toString());
         values.put(MeasurementTables.EventReportContract.SOURCE_ID,
-                eventReport.getSourceId());
+                eventReport.getSourceId().getValue());
         values.put(MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
                 eventReport.getAttributionDestination().toString());
         values.put(MeasurementTables.EventReportContract.TRIGGER_TIME,
                 eventReport.getTriggerTime());
         values.put(MeasurementTables.EventReportContract.TRIGGER_DATA,
-                eventReport.getTriggerData());
+                getNullableUnsignedLong(eventReport.getTriggerData()));
         values.put(MeasurementTables.EventReportContract.TRIGGER_DEDUP_KEY,
-                eventReport.getTriggerDedupKey());
+                getNullableUnsignedLong(eventReport.getTriggerDedupKey()));
         values.put(MeasurementTables.EventReportContract.ENROLLMENT_ID,
                 eventReport.getEnrollmentId());
         values.put(MeasurementTables.EventReportContract.STATUS,
@@ -473,10 +477,10 @@ class MeasurementDao implements IMeasurementDao {
                 eventReport.getRandomizedTriggerRate());
         values.put(
                 MeasurementTables.EventReportContract.SOURCE_DEBUG_KEY,
-                eventReport.getSourceDebugKey());
+                getNullableUnsignedLong(eventReport.getSourceDebugKey()));
         values.put(
                 MeasurementTables.EventReportContract.TRIGGER_DEBUG_KEY,
-                eventReport.getTriggerDebugKey());
+                getNullableUnsignedLong(eventReport.getTriggerDebugKey()));
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.EventReportContract.TABLE,
                         /*nullColumnHack=*/null, values);
@@ -489,8 +493,11 @@ class MeasurementDao implements IMeasurementDao {
     public void updateSourceDedupKeys(Source source) throws DatastoreException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.SourceContract.DEDUP_KEYS,
-                source.getDedupKeys().stream().map(String::valueOf).collect(
-                        Collectors.joining(",")));
+                source.getDedupKeys()
+                        .stream()
+                        .map(UnsignedLong::getValue)
+                        .map(String::valueOf)
+                        .collect(Collectors.joining(",")));
         long rows = mSQLTransaction.getDatabase()
                 .update(MeasurementTables.SourceContract.TABLE, values,
                         MeasurementTables.SourceContract.ID + " = ?",
@@ -1209,10 +1216,10 @@ class MeasurementDao implements IMeasurementDao {
                 aggregateReport.getApiVersion());
         values.put(
                 MeasurementTables.AggregateReport.SOURCE_DEBUG_KEY,
-                aggregateReport.getSourceDebugKey());
+                getNullableUnsignedLong(aggregateReport.getSourceDebugKey()));
         values.put(
                 MeasurementTables.AggregateReport.TRIGGER_DEBUG_KEY,
-                aggregateReport.getTriggerDebugKey());
+                getNullableUnsignedLong(aggregateReport.getTriggerDebugKey()));
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.AggregateReport.TABLE,
                         /*nullColumnHack=*/null, values);
@@ -1317,6 +1324,10 @@ class MeasurementDao implements IMeasurementDao {
         return Optional.ofNullable(uri).map(Uri::toString).orElse(null);
     }
 
+    private static Long getNullableUnsignedLong(@Nullable UnsignedLong ulong) {
+        return Optional.ofNullable(ulong).map(UnsignedLong::getValue).orElse(null);
+    }
+
     /**
      * Returns the min or max possible long value to avoid the ArithmeticException thrown when
      * calling toEpochMilli() on Instant.MAX or Instant.MIN
@@ -1327,5 +1338,135 @@ class MeasurementDao implements IMeasurementDao {
         };
         Arrays.sort(instants);
         return instants[1];
+    }
+
+    public void insertAsyncRegistration(@NonNull AsyncRegistration asyncRegistration)
+            throws DatastoreException {
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.AsyncRegistrationContract.ID, asyncRegistration.getId());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.ENROLLMENT_ID,
+                asyncRegistration.getEnrollmentId());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.REGISTRATION_URI,
+                asyncRegistration.getRegistrationUri().toString());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.WEB_DESTINATION,
+                getNullableUriString(asyncRegistration.getWebDestination()));
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.VERIFIED_DESTINATION,
+                getNullableUriString(asyncRegistration.getVerifiedDestination()));
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.OS_DESTINATION,
+                getNullableUriString(asyncRegistration.getOsDestination()));
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.REGISTRANT,
+                getNullableUriString(asyncRegistration.getRegistrant()));
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.TOP_ORIGIN,
+                asyncRegistration.getTopOrigin().toString());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.REDIRECT,
+                asyncRegistration.getRedirect());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.SOURCE_TYPE,
+                asyncRegistration.getSourceType() == null
+                        ? null
+                        : asyncRegistration.getSourceType().ordinal());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.REQUEST_TIME,
+                asyncRegistration.getRequestTime());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.RETRY_COUNT,
+                asyncRegistration.getRetryCount());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.LAST_PROCESSING_TIME,
+                asyncRegistration.getLastProcessingTime());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.TYPE,
+                asyncRegistration.getType().ordinal());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.DEBUG_KEY_ALLOWED,
+                asyncRegistration.getDebugKeyAllowed());
+        long rowId =
+                mSQLTransaction
+                        .getDatabase()
+                        .insert(
+                                MeasurementTables.AsyncRegistrationContract.TABLE,
+                                /*nullColumnHack=*/ null,
+                                values);
+        LogUtil.d("MeasurementDao: insertAsyncRegistration: rowId=" + rowId);
+        if (rowId == -1) {
+            throw new DatastoreException("Async Registration insertion failed.");
+        }
+    }
+
+    @Override
+    public void deleteAsyncRegistration(@NonNull String id) throws DatastoreException {
+        SQLiteDatabase db = mSQLTransaction.getDatabase();
+        db.delete(
+                MeasurementTables.AsyncRegistrationContract.TABLE,
+                MeasurementTables.AsyncRegistrationContract.ID + " = ?",
+                new String[] {id});
+    }
+
+    @Override
+    public AsyncRegistration fetchNextQueuedAsyncRegistration(
+            short retryLimit, List<String> failedAdTechEnrollmentIds) throws DatastoreException {
+        StringBuilder notIn = new StringBuilder();
+        StringBuilder lessThanRetryLimit = new StringBuilder();
+        lessThanRetryLimit.append(" < ? ");
+
+        if (!failedAdTechEnrollmentIds.isEmpty()) {
+            lessThanRetryLimit.append(
+                    "AND " + MeasurementTables.AsyncRegistrationContract.ENROLLMENT_ID);
+            notIn.append(" NOT IN ");
+            notIn.append(
+                    "("
+                            + failedAdTechEnrollmentIds.stream()
+                                    .map((o) -> "'" + o + "'")
+                                    .collect(Collectors.joining(", "))
+                            + ")");
+        }
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                MeasurementTables.AsyncRegistrationContract.TABLE,
+                                /*columns=*/ null,
+                                MeasurementTables.AsyncRegistrationContract.RETRY_COUNT
+                                        + lessThanRetryLimit.toString()
+                                        + notIn.toString(),
+                                new String[] {String.valueOf(retryLimit)},
+                                /*groupBy=*/ null,
+                                /*having=*/ null,
+                                /*orderBy=*/ MeasurementTables.AsyncRegistrationContract
+                                        .REQUEST_TIME,
+                                /*limit=*/ "1")) {
+            if (cursor.getCount() == 0) {
+                return null;
+            }
+            cursor.moveToNext();
+            return SqliteObjectMapper.constructAsyncRegistration(cursor);
+        }
+    }
+
+    @Override
+    public void updateRetryCount(AsyncRegistration asyncRegistration) throws DatastoreException {
+        ContentValues values = new ContentValues();
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.RETRY_COUNT,
+                asyncRegistration.getRetryCount());
+        long rows =
+                mSQLTransaction
+                        .getDatabase()
+                        .update(
+                                MeasurementTables.AsyncRegistrationContract.TABLE,
+                                values,
+                                MeasurementTables.AsyncRegistrationContract.ID + " = ?",
+                                new String[] {asyncRegistration.getId()});
+        if (rows != 1) {
+            throw new DatastoreException("Retry Count update failed.");
+        }
     }
 }

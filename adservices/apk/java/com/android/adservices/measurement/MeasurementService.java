@@ -23,9 +23,11 @@ import android.os.IBinder;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.MeasurementServiceImpl;
@@ -71,6 +73,7 @@ public class MeasurementService extends Service {
         }
 
         if (hasUserConsent()) {
+            PackageChangedReceiver.enableReceiver(this);
             schedulePeriodicJobsIfNeeded();
         }
     }
@@ -96,5 +99,6 @@ public class MeasurementService extends Service {
         EventReportingJobService.scheduleIfNeeded(this, false);
         EventFallbackReportingJobService.scheduleIfNeeded(this, false);
         DeleteExpiredJobService.scheduleIfNeeded(this, false);
+        MddJobService.scheduleIfNeeded(this, false);
     }
 }

@@ -36,7 +36,7 @@
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"Колдонмого AdService кызматынын иштетүү абалын өзгөртүү API\'cин пайдаланууга мүмкүнчүлүк берет."</string>
     <string name="permlab_accessAdServicesState" msgid="482058883975394398">"AdService кызматынын иштетүү абалынын API\'сине кирүү"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Колдонмого AdService кызматынын иштетүү абалынын API\'син пайдаланууга мүмкүнчүлүк берет."</string>
-    <string name="app_label" msgid="5985320129629013968">"Android Тутуму"</string>
+    <string name="app_label" msgid="5985320129629013968">"Android системасы"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Android\'деги жарнамалардын купуялыгынын бета версиясына кошулуңуз"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android сизге жарнамаларды көрсөтүүнүн мындан да купуя жолдорун изилдеп жатат"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Кененирээк"</string>
@@ -47,7 +47,7 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Кантип катышуу керек"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Бета версияны күйгүзсөңүз, колдонмолор сизге жарнамаларды көрсөтүүнүн жаңы купуя жолдорун сынай алат. Бул бета версияны каалаган убакта купуялык параметрлеринен өчүрө аласыз."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Жок, рахмат"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"Ооба, кошулам"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Күйгүзүү"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Катышканыңыз үчүн рахмат"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Android\'деги жарнамалардын купуялыгынын бета версиясына катышып жатасыз. Түзмөгүңүздө Privacy Sandbox өчүрүлдү.\n\nКеңири маалымат алып же каалаган убакта бета версияны купуялык параметрлеринен өчүрө аласыз."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Кошулбоону тандадыңыз"</string>

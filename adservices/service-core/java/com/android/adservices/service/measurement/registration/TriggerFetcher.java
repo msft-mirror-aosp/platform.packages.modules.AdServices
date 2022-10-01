@@ -34,6 +34,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
 import com.android.adservices.service.measurement.util.Enrollment;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
@@ -63,7 +64,6 @@ import java.util.concurrent.ExecutorService;
  */
 public class TriggerFetcher {
     private final ExecutorService mIoExecutor = AdServicesExecutors.getBlockingExecutor();
-    private final AdIdPermissionFetcher mAdIdPermissionFetcher;
     private final MeasurementHttpClient mNetworkConnection = new MeasurementHttpClient();
     private final EnrollmentDao mEnrollmentDao;
     private final Flags mFlags;
@@ -72,7 +72,6 @@ public class TriggerFetcher {
     public TriggerFetcher(Context context) {
         this(
                 EnrollmentDao.getInstance(context),
-                new AdIdPermissionFetcher(),
                 FlagsFactory.getFlags(),
                 AdServicesLoggerImpl.getInstance());
     }
@@ -80,24 +79,21 @@ public class TriggerFetcher {
     @VisibleForTesting
     public TriggerFetcher(
             EnrollmentDao enrollmentDao,
-            AdIdPermissionFetcher adIdPermissionFetcher,
             Flags flags,
             AdServicesLogger logger) {
         mEnrollmentDao = enrollmentDao;
-        mAdIdPermissionFetcher = adIdPermissionFetcher;
         mFlags = flags;
         mLogger = logger;
     }
 
     private boolean parseTrigger(
-            @NonNull Uri topOrigin,
             @NonNull String enrollmentId,
             @NonNull Map<String, List<String>> headers,
             @NonNull List<TriggerRegistration> addToResults,
             boolean isWebSource,
-            boolean isAllowDebugKey) {
+            boolean isAllowDebugKey,
+            boolean isAdIdPermissionGranted) {
         TriggerRegistration.Builder result = new TriggerRegistration.Builder();
-        result.setTopOrigin(topOrigin);
         result.setEnrollmentId(enrollmentId);
         List<String> field;
         field = headers.get("Attribution-Reporting-Register-Trigger");
@@ -107,11 +103,12 @@ public class TriggerFetcher {
         try {
             JSONObject json = new JSONObject(field.get(0));
             if (!json.isNull(TriggerHeaderContract.EVENT_TRIGGER_DATA)) {
-                if (!isValidEventTriggerData(
-                        json.getJSONArray(TriggerHeaderContract.EVENT_TRIGGER_DATA))) {
+                Optional<String> validEventTriggerData = getValidEventTriggerData(
+                        json.getJSONArray(TriggerHeaderContract.EVENT_TRIGGER_DATA));
+                if (!validEventTriggerData.isPresent()) {
                     return false;
                 }
-                result.setEventTriggers(json.getString(TriggerHeaderContract.EVENT_TRIGGER_DATA));
+                result.setEventTriggers(validEventTriggerData.get());
             }
             if (!json.isNull(TriggerHeaderContract.AGGREGATABLE_TRIGGER_DATA)) {
                 if (!isValidAggregateTriggerData(
@@ -132,14 +129,14 @@ public class TriggerFetcher {
             if (!json.isNull(TriggerHeaderContract.FILTERS)) {
                 result.setFilters(json.getString(TriggerHeaderContract.FILTERS));
             }
-            boolean isWebAllow = isWebSource && isAllowDebugKey;
-            boolean isAppAllow = !isWebSource && mAdIdPermissionFetcher.isAdIdPermissionEnabled();
+            boolean isWebAllow = isWebSource && isAllowDebugKey && isAdIdPermissionGranted;
+            boolean isAppAllow = !isWebSource && isAdIdPermissionGranted;
             if (!json.isNull(TriggerHeaderContract.DEBUG_KEY) && (isWebAllow || isAppAllow)) {
                 try {
-                    result.setDebugKey(
-                            Long.parseLong(json.getString(TriggerHeaderContract.DEBUG_KEY)));
+                    result.setDebugKey(new UnsignedLong(
+                            json.getString(TriggerHeaderContract.DEBUG_KEY)));
                 } catch (NumberFormatException e) {
-                    LogUtil.e(e, "Parsing debug key failed");
+                    LogUtil.e(e, "Parsing trigger debug key failed");
                 }
             }
             addToResults.add(result.build());
@@ -157,12 +154,12 @@ public class TriggerFetcher {
     }
 
     private void fetchTrigger(
-            @NonNull Uri topOrigin,
             @NonNull Uri registrationUri,
             boolean shouldProcessRedirects,
             @NonNull List<TriggerRegistration> registrationsOut,
             boolean isWebSource,
-            boolean isAllowDebugKey) {
+            boolean isAllowDebugKey,
+            boolean isAdIdPermissionGranted) {
         // Require https.
         if (!registrationUri.getScheme().equals("https")) {
             return;
@@ -210,12 +207,12 @@ public class TriggerFetcher {
 
             final boolean parsed =
                     parseTrigger(
-                            topOrigin,
                             enrollmentId.get(),
                             headers,
                             registrationsOut,
                             isWebSource,
-                            isAllowDebugKey);
+                            isAllowDebugKey,
+                            isAdIdPermissionGranted);
             if (!parsed) {
                 LogUtil.d("Failed to parse.");
                 return;
@@ -225,12 +222,12 @@ public class TriggerFetcher {
                 List<Uri> redirects = FetcherUtil.parseRedirects(headers);
                 for (Uri redirect : redirects) {
                     fetchTrigger(
-                            topOrigin,
                             redirect,
                             false,
                             registrationsOut,
                             isWebSource,
-                            isAllowDebugKey);
+                            isAllowDebugKey,
+                            isAdIdPermissionGranted);
                 }
             }
         } catch (IOException e) {
@@ -251,7 +248,12 @@ public class TriggerFetcher {
         }
         List<TriggerRegistration> out = new ArrayList<>();
         fetchTrigger(
-                request.getTopOriginUri(), request.getRegistrationUri(), true, out, false, false);
+                request.getRegistrationUri(),
+                true,
+                out,
+                false,
+                false,
+                request.isAdIdPermissionGranted());
         if (out.isEmpty()) {
             return Optional.empty();
         } else {
@@ -261,9 +263,9 @@ public class TriggerFetcher {
 
     /** Fetch a trigger type registration without redirects. */
     public Optional<List<TriggerRegistration>> fetchWebTriggers(
-            WebTriggerRegistrationRequest request) {
+            WebTriggerRegistrationRequest request, boolean isAdIdPermissionGranted) {
         List<TriggerRegistration> out = new ArrayList<>();
-        processWebTriggersFetch(request.getDestination(), request.getTriggerParams(), out);
+        processWebTriggersFetch(request.getTriggerParams(), out, isAdIdPermissionGranted);
 
         if (out.isEmpty()) {
             return Optional.empty();
@@ -273,18 +275,18 @@ public class TriggerFetcher {
     }
 
     private void processWebTriggersFetch(
-            Uri topOrigin,
             List<WebTriggerParams> triggerParamsList,
-            List<TriggerRegistration> registrationsOut) {
+            List<TriggerRegistration> registrationsOut,
+            boolean isAdIdPermissionGranted) {
         try {
             CompletableFuture.allOf(
                             triggerParamsList.stream()
                                     .map(
                                             triggerParams ->
                                                     createFutureToFetchWebTrigger(
-                                                            topOrigin,
                                                             registrationsOut,
-                                                            triggerParams))
+                                                            triggerParams,
+                                                            isAdIdPermissionGranted))
                                     .toArray(CompletableFuture<?>[]::new))
                     .get();
         } catch (InterruptedException | ExecutionException e) {
@@ -293,23 +295,81 @@ public class TriggerFetcher {
     }
 
     private CompletableFuture<Void> createFutureToFetchWebTrigger(
-            Uri topOrigin,
             List<TriggerRegistration> registrationsOut,
-            WebTriggerParams triggerParams) {
+            WebTriggerParams triggerParams,
+            boolean isAdIdPermissionGranted) {
         return CompletableFuture.runAsync(
                 () ->
                         fetchTrigger(
-                                topOrigin,
                                 triggerParams.getRegistrationUri(),
                                 /* should process redirects*/ false,
                                 registrationsOut,
                                 true,
-                                triggerParams.isDebugKeyAllowed()),
+                                triggerParams.isDebugKeyAllowed(),
+                                isAdIdPermissionGranted),
                 mIoExecutor);
     }
 
-    private boolean isValidEventTriggerData(JSONArray eventTriggerDataArr) {
-        return eventTriggerDataArr.length() <= MAX_ATTRIBUTION_EVENT_TRIGGER_DATA;
+    private Optional<String> getValidEventTriggerData(JSONArray eventTriggerDataArr) {
+        if (eventTriggerDataArr.length() > MAX_ATTRIBUTION_EVENT_TRIGGER_DATA) {
+            LogUtil.d("Event trigger data list has more entries than permitted. %s",
+                    eventTriggerDataArr.length());
+            return Optional.empty();
+        }
+        JSONArray validEventTriggerData = new JSONArray();
+        for (int i = 0; i < eventTriggerDataArr.length(); i++) {
+            JSONObject validEventTriggerDatum = new JSONObject();
+            try {
+                JSONObject eventTriggerDatum = eventTriggerDataArr.getJSONObject(i);
+                // Treat invalid trigger data, priority and deduplication key as if they were not
+                // set.
+                if (!eventTriggerDatum.isNull("trigger_data")) {
+                    try {
+                        validEventTriggerDatum.put("trigger_data", new UnsignedLong(
+                                eventTriggerDatum.getString("trigger_data")));
+                    } catch (NumberFormatException e) {
+                        LogUtil.d(e, "getValidEventTriggerData: parsing trigger_data failed.");
+                    }
+                }
+                if (!eventTriggerDatum.isNull("priority")) {
+                    try {
+                        validEventTriggerDatum.put("priority",
+                                String.valueOf(
+                                        Long.parseLong(eventTriggerDatum.getString("priority"))));
+                    } catch (NumberFormatException e) {
+                        LogUtil.d(e, "getValidEventTriggerData: parsing priority failed.");
+                    }
+                }
+                if (!eventTriggerDatum.isNull("deduplication_key")) {
+                    try {
+                        validEventTriggerDatum.put("deduplication_key", new UnsignedLong(
+                                eventTriggerDatum.getString("deduplication_key")));
+                    } catch (NumberFormatException e) {
+                        LogUtil.d(e, "getValidEventTriggerData: parsing deduplication_key failed.");
+                    }
+                }
+                if (!eventTriggerDatum.isNull("filters")) {
+                    JSONObject filters = eventTriggerDatum.optJSONObject("filters");
+                    if (!FetcherUtil.areValidAttributionFilters(filters)) {
+                        LogUtil.d("getValidEventTriggerData: filters are invalid.");
+                        return Optional.empty();
+                    }
+                    validEventTriggerDatum.put("filters", filters);
+                }
+                if (!eventTriggerDatum.isNull("not_filters")) {
+                    JSONObject notFilters = eventTriggerDatum.optJSONObject("not_filters");
+                    if (!FetcherUtil.areValidAttributionFilters(notFilters)) {
+                        LogUtil.d("getValidEventTriggerData: not-filters are invalid.");
+                        return Optional.empty();
+                    }
+                    validEventTriggerDatum.put("not_filters", notFilters);
+                }
+                validEventTriggerData.put(validEventTriggerDatum);
+            } catch (JSONException e) {
+                LogUtil.d(e, "Parsing event trigger datum JSON failed.");
+            }
+        }
+        return Optional.of(validEventTriggerData.toString());
     }
 
     private boolean isValidAggregateTriggerData(JSONArray aggregateTriggerDataArr)

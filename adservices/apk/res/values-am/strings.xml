@@ -47,7 +47,7 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"እንዴት መሳተፍ እንደሚቻል"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"የቅድመ-ይሁንታውን ማብራት መተግበሪያዎች ለእርስዎ ማስታወቂያዎችን ለማሳየት እነዚህን አዲስና ይበልጥ የግል የሆኑ መንገዶች እንዲሞክሩ ያስችላቸዋል። በማንኛውም ጊዜ በእርስዎ የግላዊነት ቅንብሮች ውስጥ ቅድመ-ይሁንታውን ማጥፋት ይችላሉ።"</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"አይ፣ አመሰግናለሁ"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"አዎ፣ እቀላቀላለሁ"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"አብራ"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"ስለተሳትፎዎ እናመሰግናለን"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"የAndroid የማስታወቂያዎች ግላዊነት ቅድመ-ይሁንታ አካል ነዎት። የግላዊነት Sandbox ለመሣሪያዎ በርቷል።\n\nበማንኛውም ሰዓት በእርስዎ የግላዊነት ቅንብሮች ውስጥ የበለጠ ማወቅ ወይም ቅድመ-ይሁንታውን ማጥፋት ይችላሉ።"</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"ላለመሳተፍ መርጠዋል"</string>
@@ -173,7 +173,7 @@
     <string name="topic10082" msgid="7168659489029594320">"የቅንጦት ተሽከርካሪዎች"</string>
     <string name="topic10083" msgid="1532745144715857802">"አነስተኛ መኪናዎች እና ንዑስ ኮምፓክቶች"</string>
     <string name="topic10084" msgid="1984231414410381476">"ሞተርሳይክሎች"</string>
-    <string name="topic10085" msgid="5235555028227554661">"ከመንገድ ውጪ ተሽከርካሪዎች"</string>
+    <string name="topic10085" msgid="5235555028227554661">"ከመንገድ ውጭ ተሽከርካሪዎች"</string>
     <string name="topic10086" msgid="8360336602646460411">"ፒካፕ መኪናዎች"</string>
     <string name="topic10087" msgid="6566900167002195406">"ስኩተሮች እና ሞፔዶች"</string>
     <string name="topic10088" msgid="2899313082601001223">"ሴዳኖች"</string>

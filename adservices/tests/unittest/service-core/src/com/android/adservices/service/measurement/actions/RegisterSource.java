@@ -47,10 +47,6 @@ public final class RegisterSource implements Action {
         mRegistrationRequest =
                 new RegistrationRequest.Builder()
                         .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
-                        .setTopOriginUri(
-                                Uri.parse(
-                                        regParamsJson.getString(
-                                                TestFormatJsonMapping.SOURCE_TOP_ORIGIN_URI_KEY)))
                         .setRegistrationUri(
                                 Uri.parse(
                                         regParamsJson.getString(
@@ -61,6 +57,7 @@ public final class RegisterSource implements Action {
                                                 .equals(TestFormatJsonMapping.SOURCE_VIEW_TYPE)
                                         ? null
                                         : getInputEvent())
+                        .setAdIdPermissionGranted(true)
                         .setPackageName(attributionSource.getPackageName())
                         .build();
         mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);

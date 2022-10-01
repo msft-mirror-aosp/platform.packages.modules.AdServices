@@ -47,18 +47,21 @@ public final class MeasurementTables {
     public interface AsyncRegistrationContract {
         String TABLE = MSMT_TABLE_PREFIX + "async_registration_contract";
         String ID = "_id";
+        String ENROLLMENT_ID = "enrollment_id";
         String REGISTRATION_URI = "registration_uri";
         String TOP_ORIGIN = "top_origin";
         String INPUT_EVENT = "input_event";
+        String SOURCE_TYPE = "source_type";
         String REDIRECT = "redirect";
         String REGISTRANT = "registrant";
-        String SCHEDULE_TIME = "scheduled_time";
+        String REQUEST_TIME = "request_time";
         String RETRY_COUNT = "retry_count";
-        String LAST_TIME_PROCESSING = "last_processing_time";
+        String LAST_PROCESSING_TIME = "last_processing_time";
         String TYPE = "type";
         String WEB_DESTINATION = "web_destination";
         String OS_DESTINATION = "os_destination";
         String VERIFIED_DESTINATION = "verified_destination";
+        String DEBUG_KEY_ALLOWED = "debug_key_allowed";
     }
 
     /** Contract for Source. */
@@ -184,13 +187,49 @@ public final class MeasurementTables {
                     + " INTEGER, "
                     + AsyncRegistrationContract.REGISTRANT
                     + " TEXT, "
-                    + AsyncRegistrationContract.SCHEDULE_TIME
+                    + AsyncRegistrationContract.REQUEST_TIME
                     + " INTEGER, "
                     + AsyncRegistrationContract.RETRY_COUNT
                     + " INTEGER, "
-                    + AsyncRegistrationContract.LAST_TIME_PROCESSING
+                    + AsyncRegistrationContract.LAST_PROCESSING_TIME
                     + " INTEGER, "
                     + AsyncRegistrationContract.TYPE
+                    + " INTEGER "
+                    + ")";
+
+    public static final String CREATE_TABLE_ASYNC_REGISTRATION_V2 =
+            "CREATE TABLE "
+                    + AsyncRegistrationContract.TABLE
+                    + " ("
+                    + AsyncRegistrationContract.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + AsyncRegistrationContract.ENROLLMENT_ID
+                    + " TEXT, "
+                    + AsyncRegistrationContract.REGISTRATION_URI
+                    + " TEXT, "
+                    + AsyncRegistrationContract.WEB_DESTINATION
+                    + " TEXT, "
+                    + AsyncRegistrationContract.OS_DESTINATION
+                    + " TEXT, "
+                    + AsyncRegistrationContract.VERIFIED_DESTINATION
+                    + " TEXT, "
+                    + AsyncRegistrationContract.TOP_ORIGIN
+                    + " TEXT, "
+                    + AsyncRegistrationContract.REDIRECT
+                    + " INTEGER, "
+                    + AsyncRegistrationContract.SOURCE_TYPE
+                    + " INTEGER, "
+                    + AsyncRegistrationContract.REGISTRANT
+                    + " TEXT, "
+                    + AsyncRegistrationContract.REQUEST_TIME
+                    + " INTEGER, "
+                    + AsyncRegistrationContract.RETRY_COUNT
+                    + " INTEGER, "
+                    + AsyncRegistrationContract.LAST_PROCESSING_TIME
+                    + " INTEGER, "
+                    + AsyncRegistrationContract.TYPE
+                    + " INTEGER, "
+                    + AsyncRegistrationContract.DEBUG_KEY_ALLOWED
                     + " INTEGER "
                     + ")";
 
@@ -520,7 +559,7 @@ public final class MeasurementTables {
                             CREATE_TABLE_ATTRIBUTION_V1,
                             CREATE_TABLE_AGGREGATE_REPORT_V2,
                             CREATE_TABLE_AGGREGATE_ENCRYPTION_KEY_V1,
-                            CREATE_TABLE_ASYNC_REGISTRATION_V1));
+                            CREATE_TABLE_ASYNC_REGISTRATION_V2));
 
     // Private constructor to prevent instantiation.
     private MeasurementTables() {

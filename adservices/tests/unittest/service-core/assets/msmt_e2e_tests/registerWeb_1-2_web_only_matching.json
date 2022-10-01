@@ -49,11 +49,10 @@
           "Location": null
         }
       }],
-      "timestamp": "800000000003"
+      "timestamp": "800001200001"
     }],
     "triggers": [{
         "registration_request": {
-          "destination_origin": "android-app://com.example.2d1",
           "registrant": "example.2d1.com",
           "attribution_src_url": "https://www.ad-tech1.com"
         },
@@ -71,7 +70,7 @@
             "Location": null
           }
         }],
-        "timestamp": "800000000002"
+        "timestamp": "800000600001"
     }]
   },
   "output": {

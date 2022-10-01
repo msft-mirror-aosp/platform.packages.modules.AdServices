@@ -19,12 +19,15 @@ package com.android.adservices.service.adid;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_AD_ID;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_ADID;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
@@ -48,6 +51,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
+import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.Clock;
@@ -93,6 +97,7 @@ public class AdIdServiceImplTest {
     @Mock private Clock mClock;
     @Mock private Context mMockSdkContext;
     @Mock private Context mMockAppContext;
+    @Mock private Throttler mMockThrottler;
     @Mock private AdIdServiceImpl mAdIdServiceImpl;
     @Mock private AppImportanceFilter mMockAppImportanceFilter;
 
@@ -100,7 +105,10 @@ public class AdIdServiceImplTest {
     public void setup() throws Exception {
         MockitoAnnotations.initMocks(this);
 
-        mAdIdWorker = new AdIdWorker(mContext, mMockFlags);
+        mAdIdWorker =
+                Mockito.spy(AdIdWorker.getInstance(ApplicationProvider.getApplicationContext()));
+        Mockito.doReturn(null).when(mAdIdWorker).getService();
+
         when(mClock.elapsedRealtime()).thenReturn(150L, 200L);
         mCallerMetadata = new CallerMetadata.Builder().setBinderElapsedTimestamp(100L).build();
         mRequest =
@@ -114,6 +122,10 @@ public class AdIdServiceImplTest {
 
         // Put this test app into bypass list to bypass Allow-list check.
         when(mMockFlags.getPpapiAppAllowList()).thenReturn(ADID_API_ALLOW_LIST);
+
+        // Rate Limit is not reached.
+        when(mMockThrottler.tryAcquire(eq(Throttler.ApiKey.ADID_API_APP_PACKAGE_NAME), anyString()))
+                .thenReturn(true);
 
         // Initialize mock static.
         mStaticMockitoSession =
@@ -131,6 +143,21 @@ public class AdIdServiceImplTest {
         // Empty allow list.
         when(mMockFlags.getPpapiAppAllowList()).thenReturn("");
         invokeGetAdIdAndVerifyError(mContext, STATUS_CALLER_NOT_ALLOWED);
+    }
+
+    @Test
+    public void checkThrottler_rateLimitReached_forAppPackageName() throws InterruptedException {
+        // App calls AdId API directly, not via an SDK.
+        GetAdIdParam request =
+                new GetAdIdParam.Builder()
+                        .setAppPackageName(TEST_APP_PACKAGE_NAME)
+                        .setSdkPackageName(SDK_PACKAGE_NAME)
+                        .build();
+
+        // Rate Limit Reached.
+        when(mMockThrottler.tryAcquire(eq(Throttler.ApiKey.ADID_API_APP_PACKAGE_NAME), anyString()))
+                .thenReturn(false);
+        invokeGetAdIdAndVerifyError(mContext, STATUS_RATE_LIMIT_REACHED, request);
     }
 
     @Test
@@ -281,6 +308,7 @@ public class AdIdServiceImplTest {
                         mAdServicesLogger,
                         mClock,
                         mMockFlags,
+                        mMockThrottler,
                         mMockAppImportanceFilter);
         mAdIdServiceImpl.getAdId(
                 request,
@@ -360,6 +388,7 @@ public class AdIdServiceImplTest {
                 mAdServicesLogger,
                 mClock,
                 mMockFlags,
+                mMockThrottler,
                 mMockAppImportanceFilter);
     }
 
@@ -371,6 +400,7 @@ public class AdIdServiceImplTest {
                 mAdServicesLogger,
                 mClock,
                 mMockFlags,
+                mMockThrottler,
                 mMockAppImportanceFilter);
     }
 }

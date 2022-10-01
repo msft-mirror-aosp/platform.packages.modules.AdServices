@@ -20,6 +20,7 @@ import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.measurement.EventReport;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONException;
 
@@ -56,8 +57,8 @@ public final class AggregateReportFixture {
                 Uri.parse("android-app://com.destination");
         public static final long SOURCE_REGISTRATION_TIME = 8640000000L;
         public static final long TRIGGER_TIME = 8640000000L;
-        public static final long SOURCE_DEBUG_KEY = 43254545L;
-        public static final long TRIGGER_DEBUG_KEY = 67878545L;
+        public static final UnsignedLong SOURCE_DEBUG_KEY = new UnsignedLong(43254545L);
+        public static final UnsignedLong TRIGGER_DEBUG_KEY = new UnsignedLong(67878545L);
         public static final String ENROLLMENT_ID = "enrollment-id";
 
         public static final String getDebugPayload() {

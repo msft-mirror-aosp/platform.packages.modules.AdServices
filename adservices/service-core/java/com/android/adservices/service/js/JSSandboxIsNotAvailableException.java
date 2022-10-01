@@ -14,15 +14,20 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.measurement.registration;
+package com.android.adservices.service.js;
 
-/** A wrapper class to get Ad ID consent permission info */
-public class AdIdPermissionFetcher {
+/**
+ * Internal exception for thrown when the current active WebView version doesn't have JS Sandbox
+ * available.
+ *
+ * <p>This exception is not meant to be exposed externally and should not be passed outside of the
+ * service.
+ */
+public class JSSandboxIsNotAvailableException extends RuntimeException {
+    private static final String JS_SANDBOX_IS_NOT_AVAILABLE_EXCEPTION_MSG =
+            "JS Sandbox is not available in the current version of WebView";
 
-    // TODO : replace with stub ag/19194826
-    private static final long PLATFORM_AD_ID = 0L;
-
-    public boolean isAdIdPermissionEnabled() {
-        return PLATFORM_AD_ID > 0;
+    public JSSandboxIsNotAvailableException() {
+        super(JS_SANDBOX_IS_NOT_AVAILABLE_EXCEPTION_MSG);
     }
 }
