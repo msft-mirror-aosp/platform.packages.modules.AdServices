@@ -16,7 +16,6 @@
 
 package com.android.sdksandbox;
 
-import android.app.sdksandbox.ISdkToServiceCallback;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkContext;
@@ -66,8 +65,7 @@ class SandboxedSdkHolder {
             ClassLoader loader,
             SandboxedSdkContext sandboxedSdkContext,
             SdkSandboxServiceImpl.Injector injector,
-            SandboxLatencyInfo sandboxLatencyInfo,
-            ISdkToServiceCallback sdkToServiceCallback) {
+            SandboxLatencyInfo sandboxLatencyInfo) {
         if (mInitialized) {
             throw new IllegalStateException("Already initialized!");
         }

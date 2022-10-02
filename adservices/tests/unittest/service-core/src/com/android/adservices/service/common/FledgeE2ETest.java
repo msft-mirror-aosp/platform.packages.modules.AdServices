@@ -112,6 +112,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.function.Supplier;
 
 public class FledgeE2ETest {
@@ -164,6 +165,7 @@ public class FledgeE2ETest {
     private AdSelectionEntryDao mAdSelectionEntryDao;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
+    private ScheduledThreadPoolExecutor mScheduledExecutor;
     private CustomAudienceServiceImpl mCustomAudienceService;
     private AdSelectionServiceImpl mAdSelectionService;
 
@@ -201,6 +203,7 @@ public class FledgeE2ETest {
 
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
+        mScheduledExecutor = AdServicesExecutors.getScheduler();
 
         mAdServicesHttpsClient =
                 new AdServicesHttpsClient(AdServicesExecutors.getBlockingExecutor());
@@ -239,6 +242,7 @@ public class FledgeE2ETest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
+                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLogger,
@@ -256,6 +260,8 @@ public class FledgeE2ETest {
                 .thenReturn(true);
         when(mMockThrottler.tryAcquire(eq(FLEDGE_API_LEAVE_CUSTOM_AUDIENCE), anyString()))
                 .thenReturn(true);
+
+        mLocalhostBuyerDomain = Uri.parse(mMockWebServerRule.getServerBaseAddress());
     }
 
     @After
@@ -273,12 +279,15 @@ public class FledgeE2ETest {
                 .when(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
 
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
+
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setCustomAudienceBuyers(
                                 ImmutableList.of(
-                                        AdTechIdentifier.fromString(BUYER_DOMAIN_1.getHost()),
-                                        AdTechIdentifier.fromString(BUYER_DOMAIN_2.getHost())))
+                                        AdTechIdentifier.fromString(
+                                                mLocalhostBuyerDomain.getHost())))
                         .setSeller(
                                 AdTechIdentifier.fromString(
                                         mMockWebServerRule
@@ -288,6 +297,11 @@ public class FledgeE2ETest {
                                 mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
+                        .setPerBuyerSignals(
+                                ImmutableMap.of(
+                                        AdTechIdentifier.fromString(
+                                                mLocalhostBuyerDomain.getHost()),
+                                        AdSelectionSignals.fromString("{\"buyer_signals\":0}")))
                         .build();
 
         String decisionLogicJs =
@@ -300,7 +314,7 @@ public class FledgeE2ETest {
                         + " contextual_signals) { \n"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
                         + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
-                        + SELLER_REPORTING_PATH
+                        + sellerReportingUri
                         + "' } };\n"
                         + "}";
         String biddingLogicJs =
@@ -312,7 +326,7 @@ public class FledgeE2ETest {
                         + "function reportWin(ad_selection_signals, per_buyer_signals,"
                         + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
                         + " return {'status': 0, 'results': {'reporting_uri': '"
-                        + BUYER_REPORTING_PATH
+                        + buyerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -330,9 +344,13 @@ public class FledgeE2ETest {
         doNothing()
                 .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
 
-        CustomAudience customAudience1 = createCustomAudience(BUYER_DOMAIN_1, BIDS_FOR_BUYER_1);
+        CustomAudience customAudience1 =
+                createCustomAudience(
+                        mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_1, BIDS_FOR_BUYER_1);
 
-        CustomAudience customAudience2 = createCustomAudience(BUYER_DOMAIN_2, BIDS_FOR_BUYER_2);
+        CustomAudience customAudience2 =
+                createCustomAudience(
+                        mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_2, BIDS_FOR_BUYER_2);
 
         // Join first custom audience
         ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
@@ -390,7 +408,9 @@ public class FledgeE2ETest {
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
         assertEquals(
-                CommonFixture.getUri(BUYER_DOMAIN_2.getHost(), AD_URI_PREFIX + "/ad3"),
+                CommonFixture.getUri(
+                        mLocalhostBuyerDomain.getAuthority(),
+                        AD_URI_PREFIX + CUSTOM_AUDIENCE_SEQ_2 + "/ad3"),
                 resultsCallback.mAdSelectionResponse.getRenderUri());
 
         // Run Report Impression
@@ -421,12 +441,15 @@ public class FledgeE2ETest {
                 .thenReturn(false)
                 .thenReturn(true);
 
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
+
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setCustomAudienceBuyers(
                                 ImmutableList.of(
-                                        AdTechIdentifier.fromString(BUYER_DOMAIN_1.getHost()),
-                                        AdTechIdentifier.fromString(BUYER_DOMAIN_2.getHost())))
+                                        AdTechIdentifier.fromString(
+                                                mLocalhostBuyerDomain.getHost())))
                         .setSeller(
                                 AdTechIdentifier.fromString(
                                         mMockWebServerRule
@@ -436,6 +459,11 @@ public class FledgeE2ETest {
                                 mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
+                        .setPerBuyerSignals(
+                                ImmutableMap.of(
+                                        AdTechIdentifier.fromString(
+                                                mLocalhostBuyerDomain.getHost()),
+                                        AdSelectionSignals.fromString("{\"buyer_signals\":0}")))
                         .build();
 
         String decisionLogicJs =
@@ -448,7 +476,7 @@ public class FledgeE2ETest {
                         + " contextual_signals) { \n"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
                         + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
-                        + SELLER_REPORTING_PATH
+                        + sellerReportingUri
                         + "' } };\n"
                         + "}";
         String biddingLogicJs =
@@ -460,7 +488,7 @@ public class FledgeE2ETest {
                         + "function reportWin(ad_selection_signals, per_buyer_signals,"
                         + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
                         + " return {'status': 0, 'results': {'reporting_uri': '"
-                        + BUYER_REPORTING_PATH
+                        + buyerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -475,9 +503,13 @@ public class FledgeE2ETest {
                                 .setCallingAppPackageName(CommonFixture.TEST_PACKAGE_NAME)
                                 .build());
 
-        CustomAudience customAudience1 = createCustomAudience(BUYER_DOMAIN_1, BIDS_FOR_BUYER_1);
+        CustomAudience customAudience1 =
+                createCustomAudience(
+                        mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_1, BIDS_FOR_BUYER_1);
 
-        CustomAudience customAudience2 = createCustomAudience(BUYER_DOMAIN_2, BIDS_FOR_BUYER_2);
+        CustomAudience customAudience2 =
+                createCustomAudience(
+                        mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_2, BIDS_FOR_BUYER_2);
 
         // Join first custom audience
         ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
@@ -534,7 +566,9 @@ public class FledgeE2ETest {
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
         assertEquals(
-                CommonFixture.getUri(BUYER_DOMAIN_1.getHost(), AD_URI_PREFIX + "/ad2"),
+                CommonFixture.getUri(
+                        mLocalhostBuyerDomain.getAuthority(),
+                        AD_URI_PREFIX + CUSTOM_AUDIENCE_SEQ_1 + "/ad2"),
                 resultsCallback.mAdSelectionResponse.getRenderUri());
 
         // Run Report Impression
@@ -581,6 +615,7 @@ public class FledgeE2ETest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
+                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLogger,
@@ -758,12 +793,15 @@ public class FledgeE2ETest {
                 .when(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
 
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
+
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setCustomAudienceBuyers(
                                 ImmutableList.of(
-                                        AdTechIdentifier.fromString(BUYER_DOMAIN_1.getHost()),
-                                        AdTechIdentifier.fromString(BUYER_DOMAIN_2.getHost())))
+                                        AdTechIdentifier.fromString(
+                                                mLocalhostBuyerDomain.getHost())))
                         .setSeller(
                                 AdTechIdentifier.fromString(
                                         mMockWebServerRule
@@ -773,6 +811,11 @@ public class FledgeE2ETest {
                                 mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
+                        .setPerBuyerSignals(
+                                ImmutableMap.of(
+                                        AdTechIdentifier.fromString(
+                                                mLocalhostBuyerDomain.getHost()),
+                                        AdSelectionSignals.fromString("{\"buyer_signals\":0}")))
                         .build();
 
         String decisionLogicJs =
@@ -785,7 +828,7 @@ public class FledgeE2ETest {
                         + " contextual_signals) { \n"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
                         + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
-                        + SELLER_REPORTING_PATH
+                        + sellerReportingUri
                         + "' } };\n"
                         + "}";
         String biddingLogicJs =
@@ -797,7 +840,7 @@ public class FledgeE2ETest {
                         + "function reportWin(ad_selection_signals, per_buyer_signals,"
                         + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
                         + " return {'status': 0, 'results': {'reporting_uri': '"
-                        + BUYER_REPORTING_PATH
+                        + buyerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -818,10 +861,12 @@ public class FledgeE2ETest {
         doNothing()
                 .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
 
-        CustomAudience customAudience1 = createCustomAudience(BUYER_DOMAIN_1, BIDS_FOR_BUYER_1);
+        CustomAudience customAudience1 =
+                createCustomAudience(
+                        mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_1, BIDS_FOR_BUYER_1);
 
-        CustomAudience customAudience2 = createCustomAudience(BUYER_DOMAIN_2, INVALID_BIDS);
-
+        CustomAudience customAudience2 =
+                createCustomAudience(mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_2, INVALID_BIDS);
         // Join first custom audience
         ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
         mCustomAudienceService.joinCustomAudience(
@@ -883,7 +928,9 @@ public class FledgeE2ETest {
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
         // Expect that ad from buyer 1 won since buyer 2 had negative bids
         assertEquals(
-                CommonFixture.getUri(BUYER_DOMAIN_1.getAuthority(), AD_URI_PREFIX + "/ad2"),
+                CommonFixture.getUri(
+                        mLocalhostBuyerDomain.getAuthority(),
+                        AD_URI_PREFIX + CUSTOM_AUDIENCE_SEQ_1 + "/ad2"),
                 resultsCallback.mAdSelectionResponse.getRenderUri());
 
         // Run Report Impression
@@ -1050,7 +1097,6 @@ public class FledgeE2ETest {
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
-        mLocalhostBuyerDomain = Uri.parse(mMockWebServerRule.getServerBaseAddress());
 
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
@@ -1207,7 +1253,6 @@ public class FledgeE2ETest {
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
-        mLocalhostBuyerDomain = Uri.parse(mMockWebServerRule.getServerBaseAddress());
 
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
@@ -1358,8 +1403,6 @@ public class FledgeE2ETest {
                 .when(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
 
-        mLocalhostBuyerDomain = Uri.parse(mMockWebServerRule.getServerBaseAddress());
-
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setCustomAudienceBuyers(
@@ -1444,7 +1487,6 @@ public class FledgeE2ETest {
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
-        mLocalhostBuyerDomain = Uri.parse(mMockWebServerRule.getServerBaseAddress());
 
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
@@ -1600,7 +1642,6 @@ public class FledgeE2ETest {
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
-        mLocalhostBuyerDomain = Uri.parse(mMockWebServerRule.getServerBaseAddress());
 
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()

@@ -28,12 +28,12 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
 
 import android.view.View;
-import android.widget.Toast;
 
 import androidx.fragment.app.FragmentManager;
 
 import com.android.adservices.api.R;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.consent.App;
 import com.android.adservices.service.consent.DeviceRegionProvider;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -102,9 +102,12 @@ public class ActionDelegate {
                                         mMainViewModel.setConsent(true);
                                         break;
                                     case SWITCH_OFF_PRIVACY_SANDBOX_BETA:
-                                        // TODO(b/235138016): confirmation for privacy sandbox
-                                        // consent
-                                        mMainViewModel.setConsent(false);
+                                        if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
+                                            DialogManager.showOptOutDialog(
+                                                    mAdServicesSettingsActivity, mMainViewModel);
+                                        } else {
+                                            mMainViewModel.setConsent(false);
+                                        }
                                         break;
                                     case DISPLAY_APPS_FRAGMENT:
                                         logManageAppsSelected();
@@ -157,21 +160,31 @@ public class ActionDelegate {
                                 switch (event) {
                                     case BLOCK_TOPIC:
                                         logBlockTopicSelected();
-                                        // TODO(b/229721429): show confirmation for blocking a
-                                        // topic.
-                                        mTopicsViewModel.revokeTopicConsent(topic);
+                                        if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
+                                            DialogManager.showBlockTopicDialog(
+                                                    mAdServicesSettingsActivity,
+                                                    mTopicsViewModel,
+                                                    topic);
+                                        } else {
+                                            mTopicsViewModel.revokeTopicConsent(topic);
+                                        }
                                         break;
                                     case RESTORE_TOPIC:
                                         logUnblockTopicSelected();
-                                        // TODO(b/229721429): show confirmation for restoring a
-                                        // topic.
                                         mTopicsViewModel.restoreTopicConsent(topic);
+                                        if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
+                                            DialogManager.showUnlockTopicDialog(
+                                                    mAdServicesSettingsActivity, topic);
+                                        }
                                         break;
                                     case RESET_TOPICS:
                                         logResetTopicSelected();
-                                        // TODO(b/229721429): show confirmation for resetting
-                                        // topics.
-                                        mTopicsViewModel.resetTopics();
+                                        if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
+                                            DialogManager.showResetTopicDialog(
+                                                    mAdServicesSettingsActivity, mTopicsViewModel);
+                                        } else {
+                                            mTopicsViewModel.resetTopics();
+                                        }
                                         break;
                                     case DISPLAY_BLOCKED_TOPICS_FRAGMENT:
                                         mFragmentManager
@@ -209,35 +222,39 @@ public class ActionDelegate {
                                         // TODO(b/241605477): add RESET_APP with logging
                                     case BLOCK_APP:
                                         logBlockAppSelected();
-                                        try {
-                                            mAppsViewModel.revokeAppConsent(app);
-                                        } catch (IOException e) {
-                                            Toast.makeText(
-                                                    mMainViewModel.getApplication(),
-                                                    "Block app failed",
-                                                    Toast.LENGTH_SHORT);
+                                        if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
+                                            DialogManager.showBlockAppDialog(
+                                                    mAdServicesSettingsActivity,
+                                                    mAppsViewModel,
+                                                    app);
+                                        } else {
+                                            try {
+                                                mAppsViewModel.revokeAppConsent(app);
+                                            } catch (IOException ignored) {
+                                            }
                                         }
                                         break;
                                     case RESTORE_APP:
                                         logUnblockAppSelected();
                                         try {
                                             mAppsViewModel.restoreAppConsent(app);
-                                        } catch (IOException e) {
-                                            Toast.makeText(
-                                                    mMainViewModel.getApplication(),
-                                                    "Unblock app failed",
-                                                    Toast.LENGTH_SHORT);
+                                        } catch (IOException ignored) {
+                                        }
+                                        if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
+                                            DialogManager.showUnblockAppDialog(
+                                                    mAdServicesSettingsActivity, app);
                                         }
                                         break;
                                     case RESET_APPS:
                                         logResetAppSelected();
-                                        try {
-                                            mAppsViewModel.resetApps();
-                                        } catch (IOException e) {
-                                            Toast.makeText(
-                                                    mMainViewModel.getApplication(),
-                                                    "Reset app failed",
-                                                    Toast.LENGTH_SHORT);
+                                        if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
+                                            DialogManager.showResetAppDialog(
+                                                    mAdServicesSettingsActivity, mAppsViewModel);
+                                        } else {
+                                            try {
+                                                mAppsViewModel.resetApps();
+                                            } catch (IOException ignored) {
+                                            }
                                         }
                                         break;
                                     case DISPLAY_BLOCKED_APPS_FRAGMENT:
@@ -283,8 +300,7 @@ public class ActionDelegate {
         mMainViewModel.getConsent().observe(fragment, mainSwitchBar::setChecked);
 
         mainSwitchBar.setOnClickListener(
-                switchBar -> mMainViewModel.consentSwitchClickHandler(
-                        ((MainSwitchBar) switchBar).isChecked()));
+                switchBar -> mMainViewModel.consentSwitchClickHandler((MainSwitchBar) switchBar));
     }
 
     private void configureTopicsButton() {

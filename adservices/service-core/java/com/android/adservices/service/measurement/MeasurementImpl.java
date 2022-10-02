@@ -328,7 +328,7 @@ public final class MeasurementImpl {
             insertTriggers(
                     fetch.get(),
                     requestTime,
-                    request.getTopOriginUri(),
+                    getPublisher(request),
                     getRegistrant(request.getPackageName()),
                     EventSurfaceType.APP);
             return STATUS_SUCCESS;
@@ -344,7 +344,7 @@ public final class MeasurementImpl {
             insertSources(
                     fetch.get(),
                     requestTime,
-                    request.getTopOriginUri(),
+                    getPublisher(request),
                     EventSurfaceType.APP,
                     getRegistrant(request.getPackageName()),
                     getSourceType(request.getInputEvent(), request.getRequestTime()));
@@ -571,6 +571,10 @@ public final class MeasurementImpl {
 
     private Uri getRegistrant(String packageName) {
         return Uri.parse(ANDROID_APP_SCHEME + "://" + packageName);
+    }
+
+    private Uri getPublisher(RegistrationRequest request) {
+        return Uri.parse(ANDROID_APP_SCHEME + "://" + request.getPackageName());
     }
 
     private Uri getAppUri(Uri packageUri) {

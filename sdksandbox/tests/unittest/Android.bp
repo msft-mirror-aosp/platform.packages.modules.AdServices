@@ -19,7 +19,7 @@ package {
 java_defaults {
     name: "SdkSandboxUnitTestsDefault",
     min_sdk_version: "Tiramisu",
-    target_sdk_version: "current",
+    target_sdk_version: "Tiramisu",
     test_suites: [
         "mts-adservices",
         "general-tests"
