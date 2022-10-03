@@ -124,7 +124,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class AdSelectionServiceImplTest {
@@ -154,13 +153,10 @@ public class AdSelectionServiceImplTest {
             AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
     private static final int SHORT_API_NAME_RESET_ALL_OVERRIDES =
             AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES;
-    private static final String TIMEOUT_MESSAGE = "Timed out:";
     private final ExecutorService mLightweightExecutorService =
             AdServicesExecutors.getLightWeightExecutor();
     private final ExecutorService mBackgroundExecutorService =
             AdServicesExecutors.getBackgroundExecutor();
-    private final ScheduledThreadPoolExecutor mScheduledExecutor =
-            AdServicesExecutors.getScheduler();
     private final String mSellerReportingPath = "/reporting/seller";
     private final String mBuyerReportingPath = "/reporting/buyer";
     private final String mFetchJavaScriptPathSeller = "/fetchJavascript/seller";
@@ -168,26 +164,26 @@ public class AdSelectionServiceImplTest {
     private final String mFetchTrustedScoringSignalsPath = "/fetchTrustedSignals/";
     private final AdTechIdentifier mContextualSignals =
             AdTechIdentifier.fromString("{\"contextual_signals\":1}");
+    private static final String TIMEOUT_MESSAGE = "Timed out:";
     private final int mBytesPerPeriod = 1;
     private final AdServicesHttpsClient mClient =
             new AdServicesHttpsClient(AdServicesExecutors.getBlockingExecutor());
+    private Flags mFlags = new FlagsWithEnrollmentCheckEnabledSwitch(false);
+    private MockitoSession mStaticMockSession = null;
     @Spy private final AdServicesLogger mAdServicesLoggerSpy = AdServicesLoggerImpl.getInstance();
-    @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
-    // This object access some system APIs
-    @Mock public DevContextFilter mDevContextFilter;
-    @Mock public AppImportanceFilter mAppImportanceFilter;
 
     @Spy
     FledgeAuthorizationFilter mFledgeAuthorizationFilterSpy =
             FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerSpy);
 
-    private Flags mFlags = new FlagsWithEnrollmentCheckEnabledSwitch(false);
-
     @Spy
     FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
             new FledgeAllowListsFilter(mFlags, mAdServicesLoggerSpy);
 
-    private MockitoSession mStaticMockSession = null;
+    @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
+    // This object access some system APIs
+    @Mock public DevContextFilter mDevContextFilter;
+    @Mock public AppImportanceFilter mAppImportanceFilter;
     @Mock private ConsentManager mConsentManagerMock;
     private CustomAudienceDao mCustomAudienceDao;
     private AdSelectionEntryDao mAdSelectionEntryDao;
@@ -324,7 +320,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -419,7 +414,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -519,7 +513,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -619,7 +612,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -725,7 +717,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -826,7 +817,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -922,7 +912,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -1018,7 +1007,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -1114,7 +1102,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -1230,7 +1217,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -1281,7 +1267,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -1333,7 +1318,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -1381,7 +1365,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -1434,7 +1417,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -1499,7 +1481,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -1558,7 +1539,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -1623,7 +1603,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -1689,7 +1668,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -1796,7 +1774,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -1905,7 +1882,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -2009,7 +1985,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -2109,7 +2084,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -2145,7 +2119,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -2202,7 +2175,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -2255,7 +2227,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -2313,7 +2284,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -2360,7 +2330,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -2410,7 +2379,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -2454,7 +2422,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -2502,7 +2469,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -2583,7 +2549,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -2679,7 +2644,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -2783,7 +2747,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -2895,7 +2858,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -3036,7 +2998,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -3175,7 +3136,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -3290,7 +3250,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -3395,7 +3354,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,
@@ -3502,7 +3460,6 @@ public class AdSelectionServiceImplTest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLoggerSpy,

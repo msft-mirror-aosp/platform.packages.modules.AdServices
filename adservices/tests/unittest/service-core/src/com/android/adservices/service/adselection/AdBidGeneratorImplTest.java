@@ -82,7 +82,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class AdBidGeneratorImplTest {
     public static final List<Double> BIDS =
@@ -121,7 +120,6 @@ public class AdBidGeneratorImplTest {
     private ListeningExecutorService mLightweightExecutorService;
     private ListeningExecutorService mBackgroundExecutorService;
     private ListeningExecutorService mBlockingExecutorService;
-    private ScheduledThreadPoolExecutor mScheduledExecutor;
     private final Context mContext = ApplicationProvider.getApplicationContext();
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
     @Mock AdSelectionScriptEngine mAdSelectionScriptEngine;
@@ -152,7 +150,6 @@ public class AdBidGeneratorImplTest {
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mBlockingExecutorService = AdServicesExecutors.getBlockingExecutor();
-        mScheduledExecutor = AdServicesExecutors.getScheduler();
         mAdServicesHttpsClient =
                 new AdServicesHttpsClient(AdServicesExecutors.getBlockingExecutor());
         mCustomAudienceDao =
@@ -235,7 +232,6 @@ public class AdBidGeneratorImplTest {
                         mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
@@ -334,7 +330,6 @@ public class AdBidGeneratorImplTest {
                         mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
@@ -404,7 +399,6 @@ public class AdBidGeneratorImplTest {
                         mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
@@ -477,7 +471,6 @@ public class AdBidGeneratorImplTest {
                         mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
@@ -542,7 +535,6 @@ public class AdBidGeneratorImplTest {
                         mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
@@ -634,7 +626,6 @@ public class AdBidGeneratorImplTest {
                         mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
@@ -719,7 +710,6 @@ public class AdBidGeneratorImplTest {
                         mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
@@ -775,7 +765,6 @@ public class AdBidGeneratorImplTest {
                         mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
@@ -817,7 +806,6 @@ public class AdBidGeneratorImplTest {
                         mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
@@ -871,7 +859,6 @@ public class AdBidGeneratorImplTest {
                         mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,

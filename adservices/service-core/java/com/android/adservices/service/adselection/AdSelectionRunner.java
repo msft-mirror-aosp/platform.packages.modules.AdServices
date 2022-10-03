@@ -116,7 +116,6 @@ public abstract class AdSelectionRunner {
     @NonNull protected final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull protected final ListeningExecutorService mLightweightExecutorService;
     @NonNull protected final ListeningExecutorService mBackgroundExecutorService;
-    @NonNull protected final ScheduledThreadPoolExecutor mScheduledExecutor;
     @NonNull protected final AdSelectionIdGenerator mAdSelectionIdGenerator;
     @NonNull protected final Clock mClock;
     @NonNull protected final ConsentManager mConsentManager;
@@ -134,7 +133,6 @@ public abstract class AdSelectionRunner {
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final ExecutorService backgroundExecutorService,
-            @NonNull final ScheduledThreadPoolExecutor scheduledExecutor,
             @NonNull final ConsentManager consentManager,
             @NonNull final AdServicesLogger adServicesLogger,
             @NonNull final DevContext devContext,
@@ -166,7 +164,6 @@ public abstract class AdSelectionRunner {
         mAdSelectionEntryDao = adSelectionEntryDao;
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
-        mScheduledExecutor = scheduledExecutor;
         mConsentManager = consentManager;
         mAdServicesLogger = adServicesLogger;
         mAdSelectionIdGenerator = new AdSelectionIdGenerator();
@@ -186,7 +183,6 @@ public abstract class AdSelectionRunner {
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final ExecutorService backgroundExecutorService,
-            @NonNull final ScheduledThreadPoolExecutor scheduledExecutor,
             @NonNull final ConsentManager consentManager,
             @NonNull final AdSelectionIdGenerator adSelectionIdGenerator,
             @NonNull Clock clock,
@@ -202,7 +198,6 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(backgroundExecutorService);
-        Objects.requireNonNull(scheduledExecutor);
         Objects.requireNonNull(consentManager);
         Objects.requireNonNull(adSelectionIdGenerator);
         Objects.requireNonNull(clock);
@@ -216,7 +211,6 @@ public abstract class AdSelectionRunner {
         mAdSelectionEntryDao = adSelectionEntryDao;
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
-        mScheduledExecutor = scheduledExecutor;
         mConsentManager = consentManager;
         mAdSelectionIdGenerator = adSelectionIdGenerator;
         mClock = clock;
@@ -399,7 +393,9 @@ public abstract class AdSelectionRunner {
                 .withTimeout(
                         mFlags.getAdSelectionOverallTimeoutMs(),
                         TimeUnit.MILLISECONDS,
-                        mScheduledExecutor)
+                        // TODO(b/237103033): Comply with thread usage policy for AdServices;
+                        //  use a global scheduled executor
+                        new ScheduledThreadPoolExecutor(1))
                 .catching(
                         TimeoutException.class,
                         this::handleTimeoutError,
