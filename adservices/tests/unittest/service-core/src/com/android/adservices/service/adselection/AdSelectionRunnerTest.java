@@ -113,8 +113,8 @@ import java.util.function.Supplier;
  * This test covers strictly the unit of {@link AdSelectionRunner} The dependencies in this test are
  * mocked and provide expected mock responses when invoked with desired input
  */
-public class OnDeviceAdSelectionRunnerTest {
-    private static final String TAG = OnDeviceAdSelectionRunnerTest.class.getName();
+public class AdSelectionRunnerTest {
+    private static final String TAG = AdSelectionRunnerTest.class.getName();
 
     private static final AdTechIdentifier BUYER_1 = AdSelectionConfigFixture.BUYER_1;
     private static final AdTechIdentifier BUYER_2 = AdSelectionConfigFixture.BUYER_2;
@@ -315,7 +315,7 @@ public class OnDeviceAdSelectionRunnerTest {
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
 
         mAdSelectionRunner =
-                new OnDeviceAdSelectionRunner(
+                new AdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
@@ -402,7 +402,7 @@ public class OnDeviceAdSelectionRunnerTest {
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
 
         mAdSelectionRunner =
-                new OnDeviceAdSelectionRunner(
+                new AdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
@@ -515,7 +515,7 @@ public class OnDeviceAdSelectionRunnerTest {
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
 
         mAdSelectionRunner =
-                new OnDeviceAdSelectionRunner(
+                new AdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
@@ -592,7 +592,7 @@ public class OnDeviceAdSelectionRunnerTest {
         verifyZeroInteractions(mMockAdsScoreGenerator);
 
         mAdSelectionRunner =
-                new OnDeviceAdSelectionRunner(
+                new AdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
@@ -643,7 +643,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         CALLER_UID, AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, null);
 
         mAdSelectionRunner =
-                new OnDeviceAdSelectionRunner(
+                new AdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
@@ -690,7 +690,7 @@ public class OnDeviceAdSelectionRunnerTest {
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
         mAdSelectionRunner =
-                new OnDeviceAdSelectionRunner(
+                new AdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
@@ -773,7 +773,7 @@ public class OnDeviceAdSelectionRunnerTest {
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
 
         mAdSelectionRunner =
-                new OnDeviceAdSelectionRunner(
+                new AdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
@@ -906,7 +906,7 @@ public class OnDeviceAdSelectionRunnerTest {
         verifyZeroInteractions(mMockAdsScoreGenerator);
 
         mAdSelectionRunner =
-                new OnDeviceAdSelectionRunner(
+                new AdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
@@ -1009,7 +1009,7 @@ public class OnDeviceAdSelectionRunnerTest {
                 .thenReturn((FluentFuture.from(Futures.immediateFuture(Collections.EMPTY_LIST))));
 
         mAdSelectionRunner =
-                new OnDeviceAdSelectionRunner(
+                new AdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
@@ -1119,7 +1119,7 @@ public class OnDeviceAdSelectionRunnerTest {
                 .thenReturn((FluentFuture.from(Futures.immediateFuture(negativeScoreOutcome))));
 
         mAdSelectionRunner =
-                new OnDeviceAdSelectionRunner(
+                new AdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
@@ -1231,7 +1231,7 @@ public class OnDeviceAdSelectionRunnerTest {
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
 
         mAdSelectionRunner =
-                new OnDeviceAdSelectionRunner(
+                new AdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
@@ -1368,7 +1368,7 @@ public class OnDeviceAdSelectionRunnerTest {
                 .thenThrow(new AdServicesException(ERROR_INVALID_JSON));
 
         mAdSelectionRunner =
-                new OnDeviceAdSelectionRunner(
+                new AdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
@@ -1491,7 +1491,7 @@ public class OnDeviceAdSelectionRunnerTest {
                                 new Returns(AD_SELECTION_ID)));
 
         mAdSelectionRunner =
-                new OnDeviceAdSelectionRunner(
+                new AdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
@@ -1537,7 +1537,7 @@ public class OnDeviceAdSelectionRunnerTest {
         when(mMockThrottler.tryAcquire(eq(FLEDGE_API_SELECT_ADS), anyString())).thenReturn(false);
 
         mAdSelectionRunner =
-                new OnDeviceAdSelectionRunner(
+                new AdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
