@@ -46,8 +46,6 @@ import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
-import com.android.adservices.service.js.JSSandboxIsNotAvailableException;
-import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -102,13 +100,6 @@ public abstract class AdSelectionRunner {
     @VisibleForTesting
     static final String AD_SELECTION_THROTTLED = "Ad selection exceeded allowed rate limit";
 
-    @VisibleForTesting
-    static final String JS_SANDBOX_IS_NOT_AVAILABLE =
-            String.format(
-                    AD_SELECTION_ERROR_PATTERN,
-                    ERROR_AD_SELECTION_FAILURE,
-                    "JS Sandbox is not available");
-
     public static final long DAY_IN_SECONDS = 60 * 60 * 24;
 
     @NonNull protected final Context mContext;
@@ -155,10 +146,6 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(throttlerSupplier);
         Objects.requireNonNull(fledgeAuthorizationFilter);
         Objects.requireNonNull(fledgeAllowListsFilter);
-        Preconditions.checkArgument(
-                JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable(),
-                JS_SANDBOX_IS_NOT_AVAILABLE);
-
         mContext = context;
         mCustomAudienceDao = customAudienceDao;
         mAdSelectionEntryDao = adSelectionEntryDao;
@@ -337,8 +324,6 @@ public abstract class AdSelectionRunner {
                 resultCode = AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
             } else if (t instanceof LimitExceededException) {
                 resultCode = AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
-            } else if (t instanceof JSSandboxIsNotAvailableException) {
-                resultCode = AdServicesStatusUtils.STATUS_JS_SANDBOX_UNAVAILABLE;
             } else {
                 resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
             }
