@@ -121,7 +121,6 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -159,8 +158,7 @@ public class AdSelectionServiceImplTest {
             AdServicesExecutors.getBackgroundExecutor();
     private final String mSellerReportingPath = "/reporting/seller";
     private final String mBuyerReportingPath = "/reporting/buyer";
-    private final String mFetchJavaScriptPathSeller = "/fetchJavascript/seller";
-    private final String mFetchJavaScriptPathBuyer = "/fetchJavascript/buyer";
+    private final String mFetchJavaScriptPath = "/fetchJavascript/";
     private final String mFetchTrustedScoringSignalsPath = "/fetchTrustedSignals/";
     private final AdTechIdentifier mContextualSignals =
             AdTechIdentifier.fromString("{\"contextual_signals\":1}");
@@ -189,9 +187,6 @@ public class AdSelectionServiceImplTest {
     private AdSelectionEntryDao mAdSelectionEntryDao;
     private AdSelectionConfig.Builder mAdSelectionConfigBuilder;
 
-    private Uri mBiddingLogicUri;
-    private CustomAudienceSignals mCustomAudienceSignals;
-
     @Before
     public void setUp() {
         mStaticMockSession =
@@ -213,36 +208,16 @@ public class AdSelectionServiceImplTest {
                         .build()
                         .adSelectionEntryDao();
 
-        mBiddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
-
-        mCustomAudienceSignals =
-                CustomAudienceSignalsFixture.aCustomAudienceSignalsBuilder()
-                        .setBuyer(AdTechIdentifier.fromString(mBiddingLogicUri.getHost()))
-                        .build();
-
-        Map<AdTechIdentifier, AdSelectionSignals> perBuyerSignals =
-                Map.of(
-                        AdTechIdentifier.fromString("test.com"),
-                        AdSelectionSignals.fromString("{\"buyer_signals\":1}"),
-                        AdTechIdentifier.fromString("test2.com"),
-                        AdSelectionSignals.fromString("{\"buyer_signals\":2}"),
-                        AdTechIdentifier.fromString("test3.com"),
-                        AdSelectionSignals.fromString("{\"buyer_signals\":3}"),
-                        AdTechIdentifier.fromString(mBiddingLogicUri.getHost()),
-                        AdSelectionSignals.fromString("{\"buyer_signals\":0}"));
-
         mAdSelectionConfigBuilder =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setSeller(
                                 AdTechIdentifier.fromString(
                                         mMockWebServerRule
-                                                .uriForPath(mFetchJavaScriptPathSeller)
+                                                .uriForPath(mFetchJavaScriptPath)
                                                 .getHost()))
-                        .setDecisionLogicUri(
-                                mMockWebServerRule.uriForPath(mFetchJavaScriptPathSeller))
+                        .setDecisionLogicUri(mMockWebServerRule.uriForPath(mFetchJavaScriptPath))
                         .setTrustedScoringSignalsUri(
-                                mMockWebServerRule.uriForPath(mFetchTrustedScoringSignalsPath))
-                        .setPerBuyerSignals(perBuyerSignals);
+                                mMockWebServerRule.uriForPath(mFetchTrustedScoringSignalsPath));
     }
 
     @After
@@ -258,8 +233,6 @@ public class AdSelectionServiceImplTest {
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
-
-        Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
 
         String sellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
@@ -287,16 +260,19 @@ public class AdSelectionServiceImplTest {
 
         DBBuyerDecisionLogic dbBuyerDecisionLogic =
                 new DBBuyerDecisionLogic.Builder()
-                        .setBiddingLogicUri(biddingLogicUri)
+                        .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                         .build();
+
+        CustomAudienceSignals customAudienceSignals =
+                CustomAudienceSignalsFixture.aCustomAudienceSignals();
 
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
-                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
-                        .setBiddingLogicUri(biddingLogicUri)
+                        .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URI)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
@@ -338,7 +314,7 @@ public class AdSelectionServiceImplTest {
 
         assertTrue(callback.mIsSuccess);
         RecordedRequest fetchRequest = server.takeRequest();
-        assertEquals(mFetchJavaScriptPathSeller, fetchRequest.getPath());
+        assertEquals(mFetchJavaScriptPath, fetchRequest.getPath());
 
         List<String> notifications =
                 ImmutableList.of(server.takeRequest().getPath(), server.takeRequest().getPath());
@@ -385,10 +361,13 @@ public class AdSelectionServiceImplTest {
                         .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                         .build();
 
+        CustomAudienceSignals customAudienceSignals =
+                CustomAudienceSignalsFixture.aCustomAudienceSignals();
+
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
-                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URI)
@@ -484,10 +463,13 @@ public class AdSelectionServiceImplTest {
                         .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                         .build();
 
+        CustomAudienceSignals customAudienceSignals =
+                CustomAudienceSignalsFixture.aCustomAudienceSignals();
+
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
-                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URI)
@@ -583,10 +565,13 @@ public class AdSelectionServiceImplTest {
                         .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                         .build();
 
+        CustomAudienceSignals customAudienceSignals =
+                CustomAudienceSignalsFixture.aCustomAudienceSignals();
+
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
-                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URI)
@@ -688,10 +673,13 @@ public class AdSelectionServiceImplTest {
                         .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                         .build();
 
+        CustomAudienceSignals customAudienceSignals =
+                CustomAudienceSignalsFixture.aCustomAudienceSignals();
+
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
-                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URI)
@@ -788,10 +776,13 @@ public class AdSelectionServiceImplTest {
                         .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                         .build();
 
+        CustomAudienceSignals customAudienceSignals =
+                CustomAudienceSignalsFixture.aCustomAudienceSignals();
+
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
-                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URI)
@@ -883,10 +874,13 @@ public class AdSelectionServiceImplTest {
                         .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                         .build();
 
+        CustomAudienceSignals customAudienceSignals =
+                CustomAudienceSignalsFixture.aCustomAudienceSignals();
+
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
-                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URI)
@@ -979,10 +973,13 @@ public class AdSelectionServiceImplTest {
                         .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                         .build();
 
+        CustomAudienceSignals customAudienceSignals =
+                CustomAudienceSignalsFixture.aCustomAudienceSignals();
+
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
-                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URI)
@@ -1073,10 +1070,13 @@ public class AdSelectionServiceImplTest {
                         .setBuyerDecisionLogicJs(inValidBuyerDecisionLogicJsMissingCurlyBracket)
                         .build();
 
+        CustomAudienceSignals customAudienceSignals =
+                CustomAudienceSignalsFixture.aCustomAudienceSignals();
+
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
-                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URI)
@@ -1168,10 +1168,13 @@ public class AdSelectionServiceImplTest {
                         .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                         .build();
 
+        CustomAudienceSignals customAudienceSignals =
+                CustomAudienceSignalsFixture.aCustomAudienceSignals();
+
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
-                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URI)
@@ -2520,10 +2523,13 @@ public class AdSelectionServiceImplTest {
                         .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                         .build();
 
+        CustomAudienceSignals customAudienceSignals =
+                CustomAudienceSignalsFixture.aCustomAudienceSignals();
+
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
-                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URI)
@@ -2615,10 +2621,13 @@ public class AdSelectionServiceImplTest {
                         .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                         .build();
 
+        CustomAudienceSignals customAudienceSignals =
+                CustomAudienceSignalsFixture.aCustomAudienceSignals();
+
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
-                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URI)
@@ -2718,10 +2727,13 @@ public class AdSelectionServiceImplTest {
                         .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                         .build();
 
+        CustomAudienceSignals customAudienceSignals =
+                CustomAudienceSignalsFixture.aCustomAudienceSignals();
+
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
-                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URI)
@@ -2821,10 +2833,13 @@ public class AdSelectionServiceImplTest {
                         .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                         .build();
 
+        CustomAudienceSignals customAudienceSignals =
+                CustomAudienceSignalsFixture.aCustomAudienceSignals();
+
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
-                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URI)
@@ -2876,7 +2891,7 @@ public class AdSelectionServiceImplTest {
 
         assertTrue(callback.mIsSuccess);
         RecordedRequest fetchRequest = server.takeRequest();
-        assertEquals(mFetchJavaScriptPathSeller, fetchRequest.getPath());
+        assertEquals(mFetchJavaScriptPath, fetchRequest.getPath());
 
         List<String> notifications =
                 ImmutableList.of(server.takeRequest().getPath(), server.takeRequest().getPath());
@@ -2967,10 +2982,13 @@ public class AdSelectionServiceImplTest {
                         .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                         .build();
 
+        CustomAudienceSignals customAudienceSignals =
+                CustomAudienceSignalsFixture.aCustomAudienceSignals();
+
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
-                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URI)
@@ -3068,10 +3086,13 @@ public class AdSelectionServiceImplTest {
                         .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                         .build();
 
+        CustomAudienceSignals customAudienceSignals =
+                CustomAudienceSignalsFixture.aCustomAudienceSignals();
+
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
-                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URI)
@@ -3161,7 +3182,7 @@ public class AdSelectionServiceImplTest {
 
         assertTrue(callbackFirstCall.mIsSuccess);
         RecordedRequest fetchRequest = server.takeRequest();
-        assertEquals(mFetchJavaScriptPathSeller, fetchRequest.getPath());
+        assertEquals(mFetchJavaScriptPath, fetchRequest.getPath());
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
@@ -3180,318 +3201,6 @@ public class AdSelectionServiceImplTest {
                 callbackSubsequentCall.mFledgeErrorResponse.getErrorMessage(),
                 REPORT_IMPRESSION_THROTTLED);
         resetThrottlerToNoRateLimits();
-    }
-
-    @Test
-    public void testReportImpressionDoestNotReportWhenUrisDoNotMatchDomain() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
-
-        // Instantiate a server with different domain from buyer and seller for reporting
-        MockWebServer reportingServer = new MockWebServer();
-        reportingServer.play();
-        Uri sellerReportingUri = Uri.parse(reportingServer.getUrl(mSellerReportingPath).toString());
-        Uri buyerReportingUri = Uri.parse(reportingServer.getUrl(mBuyerReportingPath).toString());
-
-        Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
-
-        String sellerDecisionLogicJs =
-                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
-                        + " \n"
-                        + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
-                        + sellerReportingUri
-                        + "' } };\n"
-                        + "}";
-
-        String buyerDecisionLogicJs =
-                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
-                        + " contextual_signals, custom_audience_signals) { \n"
-                        + " return {'status': 0, 'results': {'reporting_uri': '"
-                        + buyerReportingUri
-                        + "' } };\n"
-                        + "}";
-
-        MockWebServer server =
-                mMockWebServerRule.startMockWebServer(
-                        List.of(new MockResponse().setBody(sellerDecisionLogicJs)));
-
-        DBBuyerDecisionLogic dbBuyerDecisionLogic =
-                new DBBuyerDecisionLogic.Builder()
-                        .setBiddingLogicUri(biddingLogicUri)
-                        .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
-                        .build();
-
-        DBAdSelection dbAdSelection =
-                new DBAdSelection.Builder()
-                        .setAdSelectionId(AD_SELECTION_ID)
-                        .setCustomAudienceSignals(mCustomAudienceSignals)
-                        .setContextualSignals(mContextualSignals.toString())
-                        .setBiddingLogicUri(biddingLogicUri)
-                        .setWinningAdRenderUri(RENDER_URI)
-                        .setWinningAdBid(BID)
-                        .setCreationTimestamp(ACTIVATION_TIME)
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
-                        .build();
-
-        mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
-        mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
-
-        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
-
-        when(mDevContextFilter.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
-
-        AdSelectionServiceImpl adSelectionService =
-                new AdSelectionServiceImpl(
-                        mAdSelectionEntryDao,
-                        mCustomAudienceDao,
-                        mClient,
-                        mDevContextFilter,
-                        mAppImportanceFilter,
-                        mLightweightExecutorService,
-                        mBackgroundExecutorService,
-                        CONTEXT,
-                        mConsentManagerMock,
-                        mAdServicesLoggerSpy,
-                        mFlags,
-                        CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
-                        mFledgeAllowListsFilterSpy);
-
-        ReportImpressionInput input =
-                new ReportImpressionInput.Builder()
-                        .setAdSelectionId(AD_SELECTION_ID)
-                        .setAdSelectionConfig(adSelectionConfig)
-                        .setCallerPackageName(TEST_PACKAGE_NAME)
-                        .build();
-        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
-        assertTrue(callback.mIsSuccess);
-        RecordedRequest fetchRequest = server.takeRequest();
-        assertEquals(mFetchJavaScriptPathSeller, fetchRequest.getPath());
-
-        // Assert that reporting didn't happen
-        assertEquals(reportingServer.getRequestCount(), 0);
-
-        verify(mAdServicesLoggerSpy)
-                .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, STATUS_SUCCESS);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                STATUS_SUCCESS));
-    }
-
-    @Test
-    public void testReportImpressionOnlyReportsBuyerWhenSellerReportingUriDoesNotMatchDomain()
-            throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
-
-        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
-
-        // Instantiate a server with a different domain than seller
-        MockWebServer sellerServer = new MockWebServer();
-        sellerServer.play();
-        Uri sellerReportingUri = Uri.parse(sellerServer.getUrl(mSellerReportingPath).toString());
-
-        Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
-
-        String sellerDecisionLogicJs =
-                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
-                        + " \n"
-                        + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
-                        + sellerReportingUri
-                        + "' } };\n"
-                        + "}";
-
-        String buyerDecisionLogicJs =
-                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
-                        + " contextual_signals, custom_audience_signals) { \n"
-                        + " return {'status': 0, 'results': {'reporting_uri': '"
-                        + buyerReportingUri
-                        + "' } };\n"
-                        + "}";
-
-        MockWebServer server =
-                mMockWebServerRule.startMockWebServer(
-                        List.of(
-                                new MockResponse().setBody(sellerDecisionLogicJs),
-                                new MockResponse()));
-
-        DBBuyerDecisionLogic dbBuyerDecisionLogic =
-                new DBBuyerDecisionLogic.Builder()
-                        .setBiddingLogicUri(biddingLogicUri)
-                        .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
-                        .build();
-
-        DBAdSelection dbAdSelection =
-                new DBAdSelection.Builder()
-                        .setAdSelectionId(AD_SELECTION_ID)
-                        .setCustomAudienceSignals(mCustomAudienceSignals)
-                        .setContextualSignals(mContextualSignals.toString())
-                        .setBiddingLogicUri(biddingLogicUri)
-                        .setWinningAdRenderUri(RENDER_URI)
-                        .setWinningAdBid(BID)
-                        .setCreationTimestamp(ACTIVATION_TIME)
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
-                        .build();
-
-        mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
-        mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
-
-        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
-
-        when(mDevContextFilter.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
-
-        AdSelectionServiceImpl adSelectionService =
-                new AdSelectionServiceImpl(
-                        mAdSelectionEntryDao,
-                        mCustomAudienceDao,
-                        mClient,
-                        mDevContextFilter,
-                        mAppImportanceFilter,
-                        mLightweightExecutorService,
-                        mBackgroundExecutorService,
-                        CONTEXT,
-                        mConsentManagerMock,
-                        mAdServicesLoggerSpy,
-                        mFlags,
-                        CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
-                        mFledgeAllowListsFilterSpy);
-
-        ReportImpressionInput input =
-                new ReportImpressionInput.Builder()
-                        .setAdSelectionId(AD_SELECTION_ID)
-                        .setAdSelectionConfig(adSelectionConfig)
-                        .setCallerPackageName(TEST_PACKAGE_NAME)
-                        .build();
-        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
-        assertTrue(callback.mIsSuccess);
-        RecordedRequest fetchRequest = server.takeRequest();
-        assertEquals(mFetchJavaScriptPathSeller, fetchRequest.getPath());
-
-        assertEquals(mBuyerReportingPath, server.takeRequest().getPath());
-
-        // Assert that buyer reporting didn't happen
-        assertEquals(sellerServer.getRequestCount(), 0);
-
-        verify(mAdServicesLoggerSpy)
-                .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, STATUS_SUCCESS);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                STATUS_SUCCESS));
-    }
-
-    @Test
-    public void testReportImpressionOnlyReportsSellerWhenBuyerReportingUriDoesNotMatchDomain()
-            throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
-
-        Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
-
-        // Instantiate a server with a different domain than buyer
-        MockWebServer buyerServer = new MockWebServer();
-        buyerServer.play();
-        Uri buyerReportingUri = Uri.parse(buyerServer.getUrl(mBuyerReportingPath).toString());
-
-        Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
-
-        String sellerDecisionLogicJs =
-                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
-                        + " \n"
-                        + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
-                        + sellerReportingUri
-                        + "' } };\n"
-                        + "}";
-
-        String buyerDecisionLogicJs =
-                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
-                        + " contextual_signals, custom_audience_signals) { \n"
-                        + " return {'status': 0, 'results': {'reporting_uri': '"
-                        + buyerReportingUri
-                        + "' } };\n"
-                        + "}";
-
-        MockWebServer server =
-                mMockWebServerRule.startMockWebServer(
-                        List.of(
-                                new MockResponse().setBody(sellerDecisionLogicJs),
-                                new MockResponse()));
-
-        DBBuyerDecisionLogic dbBuyerDecisionLogic =
-                new DBBuyerDecisionLogic.Builder()
-                        .setBiddingLogicUri(biddingLogicUri)
-                        .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
-                        .build();
-
-        DBAdSelection dbAdSelection =
-                new DBAdSelection.Builder()
-                        .setAdSelectionId(AD_SELECTION_ID)
-                        .setCustomAudienceSignals(mCustomAudienceSignals)
-                        .setContextualSignals(mContextualSignals.toString())
-                        .setBiddingLogicUri(biddingLogicUri)
-                        .setWinningAdRenderUri(RENDER_URI)
-                        .setWinningAdBid(BID)
-                        .setCreationTimestamp(ACTIVATION_TIME)
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
-                        .build();
-
-        mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
-        mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
-
-        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
-
-        when(mDevContextFilter.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
-
-        AdSelectionServiceImpl adSelectionService =
-                new AdSelectionServiceImpl(
-                        mAdSelectionEntryDao,
-                        mCustomAudienceDao,
-                        mClient,
-                        mDevContextFilter,
-                        mAppImportanceFilter,
-                        mLightweightExecutorService,
-                        mBackgroundExecutorService,
-                        CONTEXT,
-                        mConsentManagerMock,
-                        mAdServicesLoggerSpy,
-                        mFlags,
-                        CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
-                        mFledgeAllowListsFilterSpy);
-
-        ReportImpressionInput input =
-                new ReportImpressionInput.Builder()
-                        .setAdSelectionId(AD_SELECTION_ID)
-                        .setAdSelectionConfig(adSelectionConfig)
-                        .setCallerPackageName(TEST_PACKAGE_NAME)
-                        .build();
-        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
-        assertTrue(callback.mIsSuccess);
-        RecordedRequest fetchRequest = server.takeRequest();
-        assertEquals(mFetchJavaScriptPathSeller, fetchRequest.getPath());
-
-        assertEquals(mSellerReportingPath, server.takeRequest().getPath());
-
-        // Assert that buyer reporting didn't happen
-        assertEquals(buyerServer.getRequestCount(), 0);
-
-        verify(mAdServicesLoggerSpy)
-                .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, STATUS_SUCCESS);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                STATUS_SUCCESS));
     }
 
     /**
