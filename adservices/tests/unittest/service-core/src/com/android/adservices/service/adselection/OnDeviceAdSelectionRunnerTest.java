@@ -112,7 +112,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.function.Supplier;
 
 /**
@@ -161,7 +160,6 @@ public class OnDeviceAdSelectionRunnerTest {
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
-    private ScheduledThreadPoolExecutor mScheduledExecutor;
     private CustomAudienceDao mCustomAudienceDao;
     private AdSelectionEntryDao mAdSelectionEntryDao;
     private Supplier<Throttler> mThrottlerSupplier = () -> mMockThrottler;
@@ -202,7 +200,6 @@ public class OnDeviceAdSelectionRunnerTest {
         mContext = ApplicationProvider.getApplicationContext();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
-        mScheduledExecutor = AdServicesExecutors.getScheduler();
         mAdServicesHttpsClient =
                 new AdServicesHttpsClient(AdServicesExecutors.getBlockingExecutor());
         mCustomAudienceDao =
@@ -330,7 +327,6 @@ public class OnDeviceAdSelectionRunnerTest {
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -418,7 +414,6 @@ public class OnDeviceAdSelectionRunnerTest {
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -532,7 +527,6 @@ public class OnDeviceAdSelectionRunnerTest {
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -610,7 +604,6 @@ public class OnDeviceAdSelectionRunnerTest {
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -662,7 +655,6 @@ public class OnDeviceAdSelectionRunnerTest {
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -710,7 +702,6 @@ public class OnDeviceAdSelectionRunnerTest {
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -794,7 +785,6 @@ public class OnDeviceAdSelectionRunnerTest {
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -928,7 +918,6 @@ public class OnDeviceAdSelectionRunnerTest {
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -1032,7 +1021,6 @@ public class OnDeviceAdSelectionRunnerTest {
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -1143,7 +1131,6 @@ public class OnDeviceAdSelectionRunnerTest {
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -1256,7 +1243,6 @@ public class OnDeviceAdSelectionRunnerTest {
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -1394,7 +1380,6 @@ public class OnDeviceAdSelectionRunnerTest {
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -1518,7 +1503,6 @@ public class OnDeviceAdSelectionRunnerTest {
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -1565,7 +1549,6 @@ public class OnDeviceAdSelectionRunnerTest {
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -1604,7 +1587,6 @@ public class OnDeviceAdSelectionRunnerTest {
                                 mAdServicesHttpsClient,
                                 mLightweightExecutorService,
                                 mBackgroundExecutorService,
-                                mScheduledExecutor,
                                 mConsentManagerMock,
                                 mAdServicesLoggerSpy,
                                 DevContext.createForDevOptionsDisabled(),
