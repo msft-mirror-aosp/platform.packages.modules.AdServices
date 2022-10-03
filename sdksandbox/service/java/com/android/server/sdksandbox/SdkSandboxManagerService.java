@@ -1712,7 +1712,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             final long timeSystemServerCalledApp = mInjector.getCurrentTime();
             SdkSandboxStatsLog.write(
                     SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                    SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK,
+                    SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE,
                     (int) (timeSystemServerCalledApp - timeSystemServerReceivedCallFromSandbox),
                     /*success=*/ true,
                     SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_SANDBOX_TO_APP);
