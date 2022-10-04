@@ -56,6 +56,7 @@ public class AdSelectionEntryDaoTest {
     private static final long AD_SELECTION_ID_1 = 1;
     private static final long AD_SELECTION_ID_2 = 2;
     private static final long AD_SELECTION_ID_3 = 3;
+    private static final long AD_SELECTION_ID_4 = 4;
     private static final String CONTEXTUAL_SIGNALS = "contextual_signals";
 
     private static final double BID = 5;
@@ -552,6 +553,88 @@ public class AdSelectionEntryDaoTest {
                 toAdSelectionEntry(DB_AD_SELECTION_1, secondEntry);
 
         assertEquals(adSelectionEntry, expected);
+    }
+
+    @Test
+    public void testRemoveExpiredAdSelection() {
+        DBAdSelection expiredDBAdSelection =
+                new DBAdSelection.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID_4)
+                        .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
+                        .setContextualSignals(CONTEXTUAL_SIGNALS)
+                        .setBiddingLogicUri(BIDDING_LOGIC_URI_1)
+                        .setWinningAdRenderUri(RENDER_URI)
+                        .setWinningAdBid(BID)
+                        .setCreationTimestamp(ACTIVATION_TIME.minusSeconds(10))
+                        .setCallerPackageName(CALLER_PACKAGE_NAME_1)
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_1);
+        mAdSelectionEntryDao.persistAdSelection(expiredDBAdSelection);
+
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionIdExist(DB_AD_SELECTION_1.getAdSelectionId()));
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionIdExist(
+                        expiredDBAdSelection.getAdSelectionId()));
+
+        mAdSelectionEntryDao.removeExpiredAdSelection(ACTIVATION_TIME.minusSeconds(5));
+
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionIdExist(DB_AD_SELECTION_1.getAdSelectionId()));
+        assertFalse(
+                mAdSelectionEntryDao.doesAdSelectionIdExist(
+                        expiredDBAdSelection.getAdSelectionId()));
+    }
+
+    @Test
+    public void testDoesBuyerDecisionLogicExist() {
+        assertFalse(
+                mAdSelectionEntryDao.doesBuyerDecisionLogicExist(
+                        DB_BUYER_DECISION_LOGIC_1.getBiddingLogicUri()));
+
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(DB_BUYER_DECISION_LOGIC_1);
+
+        assertTrue(
+                mAdSelectionEntryDao.doesBuyerDecisionLogicExist(
+                        DB_BUYER_DECISION_LOGIC_1.getBiddingLogicUri()));
+    }
+
+    @Test
+    public void testRemoveExpiredBuyerDecisionLogic() {
+        assertFalse(
+                mAdSelectionEntryDao.doesBuyerDecisionLogicExist(
+                        DB_BUYER_DECISION_LOGIC_1.getBiddingLogicUri()));
+        assertFalse(
+                mAdSelectionEntryDao.doesBuyerDecisionLogicExist(
+                        DB_BUYER_DECISION_LOGIC_2.getBiddingLogicUri()));
+
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(DB_BUYER_DECISION_LOGIC_1);
+        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_1);
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(DB_BUYER_DECISION_LOGIC_2);
+
+        assertTrue(
+                mAdSelectionEntryDao.doesBuyerDecisionLogicExist(
+                        DB_BUYER_DECISION_LOGIC_1.getBiddingLogicUri()));
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionIdExist(DB_AD_SELECTION_1.getAdSelectionId()));
+        assertTrue(
+                mAdSelectionEntryDao.doesBuyerDecisionLogicExist(
+                        DB_BUYER_DECISION_LOGIC_2.getBiddingLogicUri()));
+
+        mAdSelectionEntryDao.removeExpiredBuyerDecisionLogic();
+
+        assertTrue(
+                mAdSelectionEntryDao.doesBuyerDecisionLogicExist(
+                        DB_BUYER_DECISION_LOGIC_1.getBiddingLogicUri()));
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionIdExist(DB_AD_SELECTION_1.getAdSelectionId()));
+
+        // DB_BUYER_DECISION_LOGIC_2 will be removed because there is no instance of
+        // DB_BUYER_DECISION_LOGIC_2.getBiddingLogicUri() in the DBAdSelection table
+        assertFalse(
+                mAdSelectionEntryDao.doesBuyerDecisionLogicExist(
+                        DB_BUYER_DECISION_LOGIC_2.getBiddingLogicUri()));
     }
 
     /**
