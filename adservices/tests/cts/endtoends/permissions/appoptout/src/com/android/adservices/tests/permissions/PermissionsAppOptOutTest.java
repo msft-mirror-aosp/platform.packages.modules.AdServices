@@ -70,12 +70,14 @@ public class PermissionsAppOptOutTest {
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
         PhFlagsFixture.overrideSdkRequestPermitsPerSecond(Integer.MAX_VALUE);
+        overrideAdservicesGlobalKillSwitch(true);
     }
 
     @After
     public void teardown() {
         overrideConsentManagerDebugMode(false);
         overrideAPIRateLimit(DEFAULT_API_REQUEST_PER_SECOND);
+        overrideAdservicesGlobalKillSwitch(false);
     }
 
     @Test
@@ -309,5 +311,14 @@ public class PermissionsAppOptOutTest {
     private void overrideAPIRateLimit(int requestPerSecond) {
         ShellUtils.runShellCommand(
                 "setprop debug.adservices.sdk_request_permits_per_second " + requestPerSecond);
+    }
+
+    // Override global_kill_switch to ignore the effect of actual PH values.
+    // If isOverride = true, override global_kill_switch to OFF to allow adservices
+    // If isOverride = false, override global_kill_switch to meaningless value so that PhFlags will
+    // use the default value.
+    private void overrideAdservicesGlobalKillSwitch(boolean isOverride) {
+        String overrideString = isOverride ? "false" : "null";
+        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
     }
 }

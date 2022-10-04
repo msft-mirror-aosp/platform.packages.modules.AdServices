@@ -85,10 +85,12 @@ public class TopicsApiLoggingHostTest implements IDeviceTest {
         overrideConsentManagerDebugMode();
         disableMddBackgroundTasks(true);
         overrideDisableTopicsEnrollmentCheck("1");
+        overrideAdservicesGlobalKillSwitch(true);
     }
 
     @After
     public void tearDown() throws Exception {
+        overrideAdservicesGlobalKillSwitch(false);
         ConfigUtils.removeConfig(getDevice());
         ReportUtils.clearReports(getDevice());
     }
@@ -165,5 +167,17 @@ public class TopicsApiLoggingHostTest implements IDeviceTest {
         getDevice()
                 .executeShellCommand(
                         "setprop debug.adservices.disable_topics_enrollment_check " + val);
+    }
+
+    // Override global_kill_switch to ignore the effect of actual PH values.
+    // If isOverride = true, override global_kill_switch to OFF to allow adservices
+    // If isOverride = false, override global_kill_switch to meaningless value so that PhFlags will
+    // use the default value.
+    private void overrideAdservicesGlobalKillSwitch(boolean isOverride)
+            throws DeviceNotAvailableException {
+        String overrideString = isOverride ? "false" : "null";
+        getDevice()
+                .executeShellCommand(
+                        "setprop debug.adservices.global_kill_switch " + overrideString);
     }
 }
