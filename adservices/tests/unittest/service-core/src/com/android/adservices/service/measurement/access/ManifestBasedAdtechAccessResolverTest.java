@@ -68,7 +68,7 @@ public class ManifestBasedAdtechAccessResolverTest {
         mMockEnrollmentDao = mock(EnrollmentDao.class);
         doReturn(EnrollmentFixture.getValidEnrollment())
                 .when(mMockEnrollmentDao)
-                .getEnrollmentDataFromMeasurementUrl(eq(ENROLLED_AD_TECH_URL.toString()));
+                .getEnrollmentDataFromMeasurementUrl(eq(ENROLLED_AD_TECH_URL));
         mMockitoSession =
                 ExtendedMockito.mockitoSession()
                         .mockStatic(AppManifestConfigHelper.class)

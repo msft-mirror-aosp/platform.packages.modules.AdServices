@@ -2348,7 +2348,7 @@ public final class AsyncSourceFetcherTest {
                                         .getRegistrationUri()
                                         .buildUpon()
                                         .clearQuery()
-                                        .toString())
+                                        .build())
                 != null) {
             enrollmentId =
                     EnrollmentDao.getInstance(sContext)
@@ -2357,7 +2357,7 @@ public final class AsyncSourceFetcherTest {
                                             .getRegistrationUri()
                                             .buildUpon()
                                             .clearQuery()
-                                            .toString())
+                                            .build())
                             .getEnrollmentId();
         }
         return createAsyncRegistration(
@@ -2395,7 +2395,7 @@ public final class AsyncSourceFetcherTest {
                                             .getRegistrationUri()
                                             .buildUpon()
                                             .clearQuery()
-                                            .toString())
+                                            .build())
                     != null) {
                 enrollmentId =
                         EnrollmentDao.getInstance(sContext)
@@ -2404,7 +2404,7 @@ public final class AsyncSourceFetcherTest {
                                                 .getRegistrationUri()
                                                 .buildUpon()
                                                 .clearQuery()
-                                                .toString())
+                                                .build())
                                 .getEnrollmentId();
             }
             return createAsyncRegistration(
