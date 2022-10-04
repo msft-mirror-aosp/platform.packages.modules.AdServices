@@ -17,6 +17,7 @@
 package com.android.adservices.concurrency;
 
 import android.annotation.NonNull;
+import android.annotation.SuppressLint;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -24,8 +25,10 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * ALl executors of the PP API module.
@@ -42,6 +45,27 @@ public final class AdServicesExecutors {
     private static final int MIN_LIGHTWEIGHT_EXECUTOR_THREADS = 2;
     private static final int MAX_SCHEDULED_EXECUTOR_THREADS = 2;
 
+    private static final String LIGHTWEIGHT_NAME = "lightweight";
+    private static final String BACKGROUND_NAME = "background";
+    private static final String SCHEDULED_NAME = "scheduled";
+    private static final String BLOCKING_NAME = "blocking";
+
+    private static ThreadFactory getFactory(final String threadPrefix) {
+        return new ThreadFactory() {
+            private final AtomicLong mThreadCount = new AtomicLong(0L);
+
+            @SuppressLint("DefaultLocale")
+            @Override
+            public Thread newThread(Runnable runnable) {
+                Thread thread = Executors.defaultThreadFactory().newThread(runnable);
+                thread.setName(
+                        String.format(
+                                "%s-pool-thread-%d", threadPrefix, mThreadCount.incrementAndGet()));
+                return thread;
+            }
+        };
+    }
+
     private static final ListeningExecutorService sLightWeightExecutor =
             // Always use at least two threads, so that clients can't depend on light-weight
             // executor tasks executing sequentially
@@ -56,7 +80,8 @@ public final class AdServicesExecutors {
                                     Runtime.getRuntime().availableProcessors() - 2),
                             /* keepAliveTime = */ 60L,
                             TimeUnit.SECONDS,
-                            new LinkedBlockingQueue<>()));
+                            new LinkedBlockingQueue<>(),
+                            getFactory(LIGHTWEIGHT_NAME)));
 
     /**
      * Functions that don't do direct I/O and that are fast (under ten milliseconds or thereabouts)
@@ -80,7 +105,8 @@ public final class AdServicesExecutors {
                                     Runtime.getRuntime().availableProcessors()),
                             /* keepAliveTime = */ 60L,
                             TimeUnit.SECONDS,
-                            new LinkedBlockingQueue<>()));
+                            new LinkedBlockingQueue<>(),
+                            getFactory(BACKGROUND_NAME)));
 
     /**
      * Functions that directly execute disk I/O, or that are CPU bound and long-running (over ten
@@ -99,7 +125,8 @@ public final class AdServicesExecutors {
             new ScheduledThreadPoolExecutor(
                     /* corePoolSize = */ Math.min(
                             MAX_SCHEDULED_EXECUTOR_THREADS,
-                            Runtime.getRuntime().availableProcessors()));
+                            Runtime.getRuntime().availableProcessors()),
+                    getFactory(SCHEDULED_NAME));
 
     /**
      * Functions that require to be run with a delay, or have timed executions should run on this
@@ -115,7 +142,8 @@ public final class AdServicesExecutors {
     }
 
     private static final ListeningExecutorService sBlockingExecutor =
-            MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
+            MoreExecutors.listeningDecorator(
+                    Executors.newCachedThreadPool(getFactory(BLOCKING_NAME)));
 
     /**
      * Functions that directly execute network I/O, or that block their thread awaiting the progress
