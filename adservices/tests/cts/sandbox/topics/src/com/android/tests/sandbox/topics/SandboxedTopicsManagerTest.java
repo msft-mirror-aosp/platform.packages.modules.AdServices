@@ -147,6 +147,8 @@ public class SandboxedTopicsManagerTest {
 
         // We need to turn off random topic so that we can verify the returned topic.
         overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+
+        overrideAdservicesGlobalKillSwitch(true);
     }
 
     // Reset back the original values.
@@ -156,6 +158,7 @@ public class SandboxedTopicsManagerTest {
         overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
         disableMddBackgroundTasks(false);
         overridingAdservicesLoggingLevel("INFO");
+        overrideAdservicesGlobalKillSwitch(false);
     }
 
     // Override the flag to disable Topics enrollment check.
@@ -197,6 +200,15 @@ public class SandboxedTopicsManagerTest {
 
     private void overridingAdservicesLoggingLevel(String loggingLevel) {
         ShellUtils.runShellCommand("setprop log.tag.adservices %s", loggingLevel);
+    }
+
+    // Override global_kill_switch to ignore the effect of actual PH values.
+    // If isOverride = true, override global_kill_switch to OFF to allow adservices
+    // If isOverride = false, override global_kill_switch to meaningless value so that PhFlags will
+    // use the default value.
+    private void overrideAdservicesGlobalKillSwitch(boolean isOverride) {
+        String overrideString = isOverride ? "false" : "null";
+        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
     }
 
     // Used to get the package name. Copied over from com.android.adservices.AndroidServiceBinder

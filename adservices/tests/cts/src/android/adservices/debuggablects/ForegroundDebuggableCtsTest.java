@@ -22,6 +22,8 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.compatibility.common.util.ShellUtils;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
@@ -52,15 +54,26 @@ public class ForegroundDebuggableCtsTest {
 
     @BeforeClass
     public static void prepareSuite() throws TimeoutException {
+        overrideAdservicesGlobalKillSwitch(true);
         makeTestProcessForeground();
     }
 
     @AfterClass
     public static void tearDownSuite() {
+        overrideAdservicesGlobalKillSwitch(false);
         shutdownForegroundActivity();
     }
 
     protected void assertForegroundActivityStarted() {
         assertTrue("Foreground activity didn't start successfully", sSimpleActivityStarted);
+    }
+
+    // Override global_kill_switch to ignore the effect of actual PH values.
+    // If isOverride = true, override global_kill_switch to OFF to allow adservices
+    // If isOverride = false, override global_kill_switch to meaningless value so that PhFlags will
+    // use the default value
+    private static void overrideAdservicesGlobalKillSwitch(boolean isOverride) {
+        String overrideString = isOverride ? "false" : "null";
+        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
     }
 }
