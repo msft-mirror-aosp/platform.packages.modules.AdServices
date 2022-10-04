@@ -20,7 +20,7 @@ import static com.android.adservices.service.js.JSScriptArgument.arrayArg;
 import static com.android.adservices.service.js.JSScriptArgument.numericArg;
 import static com.android.adservices.service.js.JSScriptArgument.recordArg;
 import static com.android.adservices.service.js.JSScriptArgument.stringArg;
-import static com.android.adservices.service.js.JSScriptEngine.JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_MSG;
+import static com.android.adservices.service.js.JSScriptEngine.JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_ERROR_MSG;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -39,7 +39,6 @@ import static org.mockito.Mockito.when;
 
 import android.content.Context;
 import android.util.Log;
-import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
 import androidx.javascriptengine.IsolateStartupParameters;
@@ -53,7 +52,6 @@ import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.profiling.JSScriptEngineLogConstants;
 import com.android.adservices.service.profiling.Profiler;
 import com.android.adservices.service.profiling.StopWatch;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FluentFuture;
@@ -66,12 +64,9 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.function.ThrowingRunnable;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -137,32 +132,6 @@ public class JSScriptEngineTest {
         FluentFuture<JavaScriptSandbox> futureInstance =
                 FluentFuture.from(Futures.immediateFuture(mMockedSandbox));
         when(mMockSandboxProvider.getFutureInstance(sContext)).thenReturn(futureInstance);
-    }
-
-    @Test
-    public void testProviderFailsIfJSSandboxNotAvailableInWebViewVersion() {
-        MockitoSession staticMockSessionLocal = null;
-
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(WebView.class)
-                            .strictness(Strictness.LENIENT)
-                            .initMocks(this)
-                            .startMocking();
-            ExtendedMockito.doReturn(null).when(WebView::getCurrentWebViewPackage);
-
-            ThrowingRunnable getFutureInstance =
-                    () ->
-                            new JSScriptEngine.JavaScriptSandboxProvider(sMockProfiler)
-                                    .getFutureInstance(sContext);
-
-            assertThrows(JSSandboxIsNotAvailableException.class, getFutureInstance);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
     }
 
     @Test
@@ -377,7 +346,7 @@ public class JSScriptEngineTest {
                 .isInstanceOf(JSScriptEngineConnectionException.class);
         assertThat(executionException)
                 .hasMessageThat()
-                .contains(JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_MSG);
+                .contains(JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_ERROR_MSG);
         verify(sMockProfiler).start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
     }
 
@@ -411,7 +380,7 @@ public class JSScriptEngineTest {
                 .isInstanceOf(JSScriptEngineConnectionException.class);
         assertThat(executionException)
                 .hasMessageThat()
-                .contains(JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_MSG);
+                .contains(JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_ERROR_MSG);
         verify(sMockProfiler).start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
         verify(mMockedSandbox)
                 .isFeatureSupported(JavaScriptSandbox.JS_FEATURE_ISOLATE_MAX_HEAP_SIZE);
@@ -441,7 +410,7 @@ public class JSScriptEngineTest {
                 .isInstanceOf(JSScriptEngineConnectionException.class);
         assertThat(executionException)
                 .hasMessageThat()
-                .contains(JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_MSG);
+                .contains(JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_ERROR_MSG);
         verify(sMockProfiler).start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
     }
 

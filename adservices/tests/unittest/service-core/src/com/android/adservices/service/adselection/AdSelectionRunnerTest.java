@@ -22,7 +22,6 @@ import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_CA_AVAILABLE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_VALID_BIDS_FOR_SCORING;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_WINNING_AD_FOUND;
-import static com.android.adservices.service.adselection.AdSelectionRunner.JS_SANDBOX_IS_NOT_AVAILABLE;
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_SELECT_ADS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
 import static com.android.adservices.stats.FledgeApiCallStatsMatcher.aCallStatForFledgeApiWithStatus;
@@ -37,7 +36,6 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -59,7 +57,6 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Process;
 import android.os.RemoteException;
-import android.webkit.WebView;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
@@ -82,7 +79,6 @@ import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -94,7 +90,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.function.ThrowingRunnable;
 import org.mockito.Mock;
 import org.mockito.MockitoSession;
 import org.mockito.Spy;
@@ -112,15 +107,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.function.Supplier;
 
 /**
  * This test covers strictly the unit of {@link AdSelectionRunner} The dependencies in this test are
  * mocked and provide expected mock responses when invoked with desired input
  */
-public class OnDeviceAdSelectionRunnerTest {
-    private static final String TAG = OnDeviceAdSelectionRunnerTest.class.getName();
+public class AdSelectionRunnerTest {
+    private static final String TAG = AdSelectionRunnerTest.class.getName();
 
     private static final AdTechIdentifier BUYER_1 = AdSelectionConfigFixture.BUYER_1;
     private static final AdTechIdentifier BUYER_2 = AdSelectionConfigFixture.BUYER_2;
@@ -161,7 +155,6 @@ public class OnDeviceAdSelectionRunnerTest {
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
-    private ScheduledThreadPoolExecutor mScheduledExecutor;
     private CustomAudienceDao mCustomAudienceDao;
     private AdSelectionEntryDao mAdSelectionEntryDao;
     private Supplier<Throttler> mThrottlerSupplier = () -> mMockThrottler;
@@ -194,7 +187,6 @@ public class OnDeviceAdSelectionRunnerTest {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
-                        .spyStatic(WebView.class)
                         .strictness(Strictness.LENIENT)
                         .initMocks(this)
                         .startMocking();
@@ -202,7 +194,6 @@ public class OnDeviceAdSelectionRunnerTest {
         mContext = ApplicationProvider.getApplicationContext();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
-        mScheduledExecutor = AdServicesExecutors.getScheduler();
         mAdServicesHttpsClient =
                 new AdServicesHttpsClient(AdServicesExecutors.getBlockingExecutor());
         mCustomAudienceDao =
@@ -257,6 +248,7 @@ public class OnDeviceAdSelectionRunnerTest {
         when(mClock.instant()).thenReturn(Clock.systemUTC().instant());
         doReturn(mFlags).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        // Creating ad selection config for happy case with all the buyers in place
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
         // Populating the Custom Audience DB
@@ -323,14 +315,13 @@ public class OnDeviceAdSelectionRunnerTest {
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
 
         mAdSelectionRunner =
-                new OnDeviceAdSelectionRunner(
+                new AdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -411,14 +402,13 @@ public class OnDeviceAdSelectionRunnerTest {
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
 
         mAdSelectionRunner =
-                new OnDeviceAdSelectionRunner(
+                new AdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -525,14 +515,13 @@ public class OnDeviceAdSelectionRunnerTest {
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
 
         mAdSelectionRunner =
-                new OnDeviceAdSelectionRunner(
+                new AdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -603,14 +592,13 @@ public class OnDeviceAdSelectionRunnerTest {
         verifyZeroInteractions(mMockAdsScoreGenerator);
 
         mAdSelectionRunner =
-                new OnDeviceAdSelectionRunner(
+                new AdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -655,14 +643,13 @@ public class OnDeviceAdSelectionRunnerTest {
                         CALLER_UID, AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, null);
 
         mAdSelectionRunner =
-                new OnDeviceAdSelectionRunner(
+                new AdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -703,14 +690,13 @@ public class OnDeviceAdSelectionRunnerTest {
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
         mAdSelectionRunner =
-                new OnDeviceAdSelectionRunner(
+                new AdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -787,14 +773,13 @@ public class OnDeviceAdSelectionRunnerTest {
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
 
         mAdSelectionRunner =
-                new OnDeviceAdSelectionRunner(
+                new AdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -921,14 +906,13 @@ public class OnDeviceAdSelectionRunnerTest {
         verifyZeroInteractions(mMockAdsScoreGenerator);
 
         mAdSelectionRunner =
-                new OnDeviceAdSelectionRunner(
+                new AdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -1025,14 +1009,13 @@ public class OnDeviceAdSelectionRunnerTest {
                 .thenReturn((FluentFuture.from(Futures.immediateFuture(Collections.EMPTY_LIST))));
 
         mAdSelectionRunner =
-                new OnDeviceAdSelectionRunner(
+                new AdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -1136,14 +1119,13 @@ public class OnDeviceAdSelectionRunnerTest {
                 .thenReturn((FluentFuture.from(Futures.immediateFuture(negativeScoreOutcome))));
 
         mAdSelectionRunner =
-                new OnDeviceAdSelectionRunner(
+                new AdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -1249,14 +1231,13 @@ public class OnDeviceAdSelectionRunnerTest {
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
 
         mAdSelectionRunner =
-                new OnDeviceAdSelectionRunner(
+                new AdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -1387,14 +1368,13 @@ public class OnDeviceAdSelectionRunnerTest {
                 .thenThrow(new AdServicesException(ERROR_INVALID_JSON));
 
         mAdSelectionRunner =
-                new OnDeviceAdSelectionRunner(
+                new AdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -1511,14 +1491,13 @@ public class OnDeviceAdSelectionRunnerTest {
                                 new Returns(AD_SELECTION_ID)));
 
         mAdSelectionRunner =
-                new OnDeviceAdSelectionRunner(
+                new AdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -1558,14 +1537,13 @@ public class OnDeviceAdSelectionRunnerTest {
         when(mMockThrottler.tryAcquire(eq(FLEDGE_API_SELECT_ADS), anyString())).thenReturn(false);
 
         mAdSelectionRunner =
-                new OnDeviceAdSelectionRunner(
+                new AdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
-                        mScheduledExecutor,
                         mConsentManagerMock,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
@@ -1589,35 +1567,6 @@ public class OnDeviceAdSelectionRunnerTest {
                 "Error response code mismatch",
                 AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED,
                 response.getStatusCode());
-    }
-
-    @Test
-    public void testAdSelectionRunnerInstanceNotCreatedIfJSSandboxNotInWebView() {
-        doReturn(null).when(WebView::getCurrentWebViewPackage);
-
-        ThrowingRunnable initializeAdSelectionRunner =
-                () ->
-                        new OnDeviceAdSelectionRunner(
-                                mContext,
-                                mCustomAudienceDao,
-                                mAdSelectionEntryDao,
-                                mAdServicesHttpsClient,
-                                mLightweightExecutorService,
-                                mBackgroundExecutorService,
-                                mScheduledExecutor,
-                                mConsentManagerMock,
-                                mAdServicesLoggerSpy,
-                                DevContext.createForDevOptionsDisabled(),
-                                mAppImportanceFilter,
-                                mFlags,
-                                mThrottlerSupplier,
-                                CALLER_UID,
-                                mFledgeAuthorizationFilter,
-                                mFledgeAllowListsFilter);
-
-        Throwable throwable =
-                assertThrows(IllegalArgumentException.class, initializeAdSelectionRunner);
-        verifyErrorMessageIsCorrect(throwable.getMessage(), JS_SANDBOX_IS_NOT_AVAILABLE);
     }
 
     private void verifyErrorMessageIsCorrect(
