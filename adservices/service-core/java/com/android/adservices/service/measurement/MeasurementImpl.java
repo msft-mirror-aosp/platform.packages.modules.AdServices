@@ -40,6 +40,8 @@ import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.RemoteException;
 import android.view.InputEvent;
@@ -318,6 +320,28 @@ public final class MeasurementImpl {
         } finally {
             mReadWriteLock.writeLock().unlock();
         }
+    }
+
+    /** Delete all data generated from apps that are not currently installed. */
+    public void deleteAllUninstalledMeasurementData() {
+        List<Uri> installedApplicationsList = getCurrentInstalledApplicationsList(mContext);
+        mReadWriteLock.writeLock().lock();
+        try {
+            mDatastoreManager.runInTransaction(
+                    (dao) -> dao.deleteAppRecordsNotPresent(installedApplicationsList));
+        } finally {
+            mReadWriteLock.writeLock().unlock();
+        }
+    }
+
+    private List<Uri> getCurrentInstalledApplicationsList(Context context) {
+        PackageManager packageManager = context.getPackageManager();
+        List<ApplicationInfo> applicationInfoList =
+                packageManager.getInstalledApplications(
+                        PackageManager.ApplicationInfoFlags.of(PackageManager.GET_META_DATA));
+        return applicationInfoList.stream()
+                .map(applicationInfo -> Uri.parse("android-app://" + applicationInfo.packageName))
+                .collect(Collectors.toList());
     }
 
     private int fetchAndInsertTriggers(RegistrationRequest request, long requestTime) {

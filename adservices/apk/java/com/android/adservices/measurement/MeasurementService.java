@@ -30,6 +30,7 @@ import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
+import com.android.adservices.service.measurement.DeleteUninstalledJobService;
 import com.android.adservices.service.measurement.MeasurementServiceImpl;
 import com.android.adservices.service.measurement.attribution.AttributionJobService;
 import com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService;
@@ -99,6 +100,7 @@ public class MeasurementService extends Service {
         EventReportingJobService.scheduleIfNeeded(this, false);
         EventFallbackReportingJobService.scheduleIfNeeded(this, false);
         DeleteExpiredJobService.scheduleIfNeeded(this, false);
+        DeleteUninstalledJobService.scheduleIfNeeded(this, false);
         MddJobService.scheduleIfNeeded(this, false);
     }
 }

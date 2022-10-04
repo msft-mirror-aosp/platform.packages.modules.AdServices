@@ -808,6 +808,24 @@ public interface Flags extends Dumpable {
     }
 
     /**
+     * Measurement Job Delete Uninstalled Kill Switch. The default value is false which means Delete
+     * Uninstalled Job is enabled. This flag is used for emergency turning off the Delete
+     * Uninstalled Job.
+     */
+    boolean MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Measurement Job Delete Uninstalled. The API will be
+     * disabled if either the Global Kill Switch, Measurement Kill Switch, or the Measurement Job
+     * Delete Uninstalled Kill Switch value is true.
+     */
+    default boolean getMeasurementJobDeleteUninstalledKillSwitch() {
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH;
+    }
+
+    /**
      * Measurement Job Event Fallback Reporting Kill Switch. The default value is false which means
      * Event Fallback Reporting Job is enabled. This flag is used for emergency turning off the
      * Event Fallback Reporting Job.
