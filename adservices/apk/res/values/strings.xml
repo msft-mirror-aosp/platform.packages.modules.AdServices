@@ -100,6 +100,8 @@
     <string name="notificationUI_left_control_button_text_eu">No thanks</string>
     <!-- Text for button to accept joining the Privacy Sandbox. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_right_control_button_text_eu">Turn On</string>
+    <!-- Text for button that scrolls the page down to view more text. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_more_button_text">More</string>
 
     <!-- EU Detailed Notification Activity Confirmation Pages UI strings ************************-->
     <!-- Text for the title of the confirmation screen for accepting to be part of the Privacy Sandbox Beta. [CHAR LIMIT=NONE] -->
@@ -126,7 +128,6 @@
     <!-- ROW Detailed Notification Activity Landing Page UI strings *****************************-->
     <!-- Text for the title of the header. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_header_title" translatable="false">@string/notificationUI_header_title_eu</string>
-
     <!-- Text for container1 title. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_container1_title" translatable="false">@string/notificationUI_container1_title_eu</string>
     <!-- Text for container1 body text. [CHAR LIMIT=NONE] -->
