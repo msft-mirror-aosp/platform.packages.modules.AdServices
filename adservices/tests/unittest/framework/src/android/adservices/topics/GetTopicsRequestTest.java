@@ -35,6 +35,8 @@ public final class GetTopicsRequestTest {
     public void testBuilder_notSettingSdkName() {
         GetTopicsRequest request = new GetTopicsRequest.Builder().build();
         assertThat(request.getAdsSdkName()).isEmpty();
+        // RecordObservation default value is true
+        assertThat(request.isRecordObservation()).isTrue();
     }
 
     @Test
@@ -53,5 +55,26 @@ public final class GetTopicsRequestTest {
                         .setAdsSdkName(/* adsSdkName */ SOME_SDK_NAME)
                         .build();
         assertThat(request.getAdsSdkName()).isEqualTo(SOME_SDK_NAME);
+        // RecordObservation default value is true
+        assertThat(request.isRecordObservation()).isTrue();
+    }
+
+    @Test
+    public void testBuilderSetAdsSdkName_recordObservationFalse() {
+        GetTopicsRequest request =
+                new GetTopicsRequest.Builder()
+                        .setAdsSdkName(/* adsSdkName */ SOME_SDK_NAME)
+                        .setRecordObservation(false)
+                        .build();
+        assertThat(request.getAdsSdkName()).isEqualTo(SOME_SDK_NAME);
+        assertThat(request.isRecordObservation()).isFalse();
+    }
+
+    @Test
+    public void testBuilder_recordObservationFalse() {
+        GetTopicsRequest request =
+                new GetTopicsRequest.Builder().setRecordObservation(false).build();
+        assertThat(request.getAdsSdkName()).isEmpty();
+        assertThat(request.isRecordObservation()).isFalse();
     }
 }
