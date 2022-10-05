@@ -44,6 +44,7 @@ import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Web;
 
+
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -145,6 +146,28 @@ class MeasurementDao implements IMeasurementDao {
             cursor.moveToNext();
             return SqliteObjectMapper.constructTriggerFromCursor(cursor);
         }
+    }
+
+    @Override
+    public int getNumAggregateReportsPerDestination(
+            @NonNull Uri attributionDestination, @EventSurfaceType int destinationType)
+            throws DatastoreException {
+        return getNumReportsPerDestination(
+                MeasurementTables.AggregateReport.TABLE,
+                MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION,
+                attributionDestination,
+                destinationType);
+    }
+
+    @Override
+    public int getNumEventReportsPerDestination(
+            @NonNull Uri attributionDestination, @EventSurfaceType int destinationType)
+            throws DatastoreException {
+        return getNumReportsPerDestination(
+                MeasurementTables.EventReportContract.TABLE,
+                MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
+                attributionDestination,
+                destinationType);
     }
 
     @Override
@@ -1569,5 +1592,75 @@ class MeasurementDao implements IMeasurementDao {
         if (rows != 1) {
             throw new DatastoreException("Retry Count update failed.");
         }
+    }
+
+    private int getNumReportsPerDestination(
+            String tableName,
+            String columnName,
+            Uri attributionDestination,
+            @EventSurfaceType int destinationType)
+            throws DatastoreException {
+        Optional<Uri> destinationBaseUri = extractBaseUri(attributionDestination, destinationType);
+        if (!destinationBaseUri.isPresent()) {
+            throw new IllegalStateException("extractBaseUri failed for destination.");
+        }
+
+        // Example: https://destination.com
+        String noSubdomainOrPostfixMatch =
+                DatabaseUtils.sqlEscapeString(
+                        destinationBaseUri.get().getScheme()
+                                + "://"
+                                + destinationBaseUri.get().getHost());
+
+        // Example: https://subdomain.destination.com/path
+        String subdomainAndPostfixMatch =
+                DatabaseUtils.sqlEscapeString(
+                        destinationBaseUri.get().getScheme()
+                                + "://%."
+                                + destinationBaseUri.get().getHost()
+                                + "/%");
+
+        // Example: https://subdomain.destination.com
+        String subdomainMatch =
+                DatabaseUtils.sqlEscapeString(
+                        destinationBaseUri.get().getScheme()
+                                + "://%."
+                                + destinationBaseUri.get().getHost());
+
+        // Example: https://destination.com/path
+        String postfixMatch =
+                DatabaseUtils.sqlEscapeString(
+                        destinationBaseUri.get().getScheme()
+                                + "://"
+                                + destinationBaseUri.get().getHost()
+                                + "/%");
+        String query;
+        if (destinationType == EventSurfaceType.WEB) {
+            query =
+                    String.format(
+                            Locale.ENGLISH,
+                            "SELECT COUNT(*) FROM %2$s WHERE %1$s = %3$s"
+                                    + " OR %1$s LIKE %4$s"
+                                    + " OR %1$s LIKE %5$s"
+                                    + " OR %1$s LIKE %6$s",
+                            columnName,
+                            tableName,
+                            noSubdomainOrPostfixMatch,
+                            subdomainAndPostfixMatch,
+                            subdomainMatch,
+                            postfixMatch);
+        } else {
+            query =
+                    String.format(
+                            Locale.ENGLISH,
+                            "SELECT COUNT(*) FROM %2$s WHERE"
+                                    + " %1$s = %3$s"
+                                    + " OR %1$s LIKE %4$s",
+                            columnName,
+                            tableName,
+                            noSubdomainOrPostfixMatch,
+                            postfixMatch);
+        }
+        return (int) DatabaseUtils.longForQuery(mSQLTransaction.getDatabase(), query, null);
     }
 }
