@@ -51,6 +51,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 
+import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
@@ -137,6 +138,13 @@ public class FledgeCtsTest extends ForegroundCtsTest {
         PhFlagsFixture.overrideSdkRequestPermitsPerSecond(Integer.MAX_VALUE);
         // We need to turn the Consent Manager into debug mode
         overrideConsentManagerDebugMode();
+
+        overrideAdservicesGlobalKillSwitch(true);
+    }
+
+    @After
+    public void teardown() {
+        overrideAdservicesGlobalKillSwitch(false);
     }
 
     // Override the Consent Manager behaviour - Consent Given
@@ -273,5 +281,14 @@ public class FledgeCtsTest extends ForegroundCtsTest {
                                 buyer, BUYER_BIDDING_LOGIC_URI_PREFIX + buyer.toString()))
                 .setAds(ads)
                 .build();
+    }
+
+    // Override global_kill_switch to ignore the effect of actual PH values.
+    // If isOverride = true, override global_kill_switch to OFF to allow adservices
+    // If isOverride = false, override global_kill_switch to meaningless value so that PhFlags will
+    // use the default value
+    private void overrideAdservicesGlobalKillSwitch(boolean isOverride) {
+        String overrideString = isOverride ? "false" : "null";
+        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
     }
 }

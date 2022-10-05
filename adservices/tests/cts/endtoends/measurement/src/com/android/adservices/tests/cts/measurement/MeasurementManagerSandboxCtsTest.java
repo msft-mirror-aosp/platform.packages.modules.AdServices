@@ -45,6 +45,9 @@ import android.test.suitebuilder.annotation.SmallTest;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
+import com.android.compatibility.common.util.ShellUtils;
+
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -88,6 +91,13 @@ public class MeasurementManagerSandboxCtsTest {
         mMeasurementManager =
                 Mockito.spy(sSandboxedSdkContext.getSystemService(MeasurementManager.class));
         doReturn(mMockMeasurementService).when(mMeasurementManager).getService();
+
+        overrideAdservicesGlobalKillSwitch(true);
+    }
+
+    @After
+    public void teardown() {
+        overrideAdservicesGlobalKillSwitch(false);
     }
 
     @Test
@@ -217,5 +227,14 @@ public class MeasurementManagerSandboxCtsTest {
                 .getMeasurementApiStatus(captor.capture(), any(), any());
         Assert.assertNotNull(captor.getValue());
         Assert.assertEquals(sContext.getPackageName(), captor.getValue().getAppPackageName());
+    }
+
+    // Override global_kill_switch to ignore the effect of actual PH values.
+    // If isOverride = true, override global_kill_switch to OFF to allow adservices
+    // If isOverride = false, override global_kill_switch to meaningless value so that PhFlags will
+    // use the default value.
+    private void overrideAdservicesGlobalKillSwitch(boolean isOverride) {
+        String overrideString = isOverride ? "false" : "null";
+        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
     }
 }
