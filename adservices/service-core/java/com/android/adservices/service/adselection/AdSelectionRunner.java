@@ -120,6 +120,7 @@ public final class AdSelectionRunner {
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
+    @NonNull protected final ScheduledThreadPoolExecutor mScheduledExecutor;
     @NonNull private final AdsScoreGenerator mAdsScoreGenerator;
     @NonNull private final AdBidGenerator mAdBidGenerator;
     @NonNull private final AdSelectionIdGenerator mAdSelectionIdGenerator;
@@ -140,6 +141,7 @@ public final class AdSelectionRunner {
             @NonNull final AdServicesHttpsClient adServicesHttpsClient,
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final ExecutorService backgroundExecutorService,
+            @NonNull final ScheduledThreadPoolExecutor scheduledExecutor,
             @NonNull final ConsentManager consentManager,
             @NonNull final AdServicesLogger adServicesLogger,
             @NonNull final DevContext devContext,
@@ -169,6 +171,7 @@ public final class AdSelectionRunner {
         mAdServicesHttpsClient = adServicesHttpsClient;
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
+        mScheduledExecutor = scheduledExecutor;
         mConsentManager = consentManager;
         mAdServicesLogger = adServicesLogger;
         mAdsScoreGenerator =
@@ -179,6 +182,7 @@ public final class AdSelectionRunner {
                                 () -> flags.getIsolateMaxHeapSizeBytes()),
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
+                        mScheduledExecutor,
                         mAdServicesHttpsClient,
                         devContext,
                         mAdSelectionEntryDao,
@@ -189,6 +193,7 @@ public final class AdSelectionRunner {
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
+                        mScheduledExecutor,
                         devContext,
                         mCustomAudienceDao,
                         flags);
@@ -210,6 +215,7 @@ public final class AdSelectionRunner {
             @NonNull final AdServicesHttpsClient adServicesHttpsClient,
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final ExecutorService backgroundExecutorService,
+            @NonNull final ScheduledThreadPoolExecutor scheduledExecutor,
             @NonNull final ConsentManager consentManager,
             @NonNull final AdsScoreGenerator adsScoreGenerator,
             @NonNull final AdBidGenerator adBidGenerator,
@@ -228,6 +234,7 @@ public final class AdSelectionRunner {
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(backgroundExecutorService);
+        Objects.requireNonNull(scheduledExecutor);
         Objects.requireNonNull(consentManager);
         Objects.requireNonNull(adsScoreGenerator);
         Objects.requireNonNull(adBidGenerator);
@@ -244,6 +251,7 @@ public final class AdSelectionRunner {
         mAdServicesHttpsClient = adServicesHttpsClient;
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
+        mScheduledExecutor = scheduledExecutor;
         mConsentManager = consentManager;
         mAdsScoreGenerator = adsScoreGenerator;
         mAdBidGenerator = adBidGenerator;
@@ -294,7 +302,7 @@ public final class AdSelectionRunner {
                         public void onSuccess(DBAdSelection result) {
                             notifySuccessToCaller(result, callback);
                             // TODO(242280808): Schedule a clear for stale data instead of this hack
-                            clearExpiredAdSelectionData();
+                            clearExpiredAdSelectionDataAndBuyerDecisionLogic();
                         }
 
                         @Override
@@ -307,7 +315,7 @@ public final class AdSelectionRunner {
                                 notifyFailureToCaller(callback, t);
                             }
                             // TODO(242280808): Schedule a clear for stale data instead of this hack
-                            clearExpiredAdSelectionData();
+                            clearExpiredAdSelectionDataAndBuyerDecisionLogic();
                         }
                     },
                     mLightweightExecutorService);
@@ -455,9 +463,7 @@ public final class AdSelectionRunner {
                 .withTimeout(
                         mFlags.getAdSelectionOverallTimeoutMs(),
                         TimeUnit.MILLISECONDS,
-                        // TODO(b/237103033): Comply with thread usage policy for AdServices;
-                        //  use a global scheduled executor
-                        new ScheduledThreadPoolExecutor(1))
+                        mScheduledExecutor)
                 .catching(
                         TimeoutException.class,
                         this::handleTimeoutError,
@@ -793,8 +799,9 @@ public final class AdSelectionRunner {
         return null;
     }
 
-    private void clearExpiredAdSelectionData() {
+    private void clearExpiredAdSelectionDataAndBuyerDecisionLogic() {
         Instant expirationTime = mClock.instant().minusSeconds(DAY_IN_SECONDS);
         mAdSelectionEntryDao.removeExpiredAdSelection(expirationTime);
+        mAdSelectionEntryDao.removeExpiredBuyerDecisionLogic();
     }
 }

@@ -78,6 +78,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
     @NonNull private final Context mContext;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
+    @NonNull private final ScheduledThreadPoolExecutor mScheduledExecutor;
     @NonNull private final AdSelectionScriptEngine mAdSelectionScriptEngine;
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull private final CustomAudienceDevOverridesHelper mCustomAudienceDevOverridesHelper;
@@ -88,6 +89,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull ListeningExecutorService lightweightExecutorService,
             @NonNull ListeningExecutorService backgroundExecutorService,
+            @NonNull ScheduledThreadPoolExecutor scheduledExecutor,
             @NonNull DevContext devContext,
             @NonNull CustomAudienceDao customAudienceDao,
             @NonNull Flags flags) {
@@ -95,6 +97,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(backgroundExecutorService);
+        Objects.requireNonNull(scheduledExecutor);
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(flags);
@@ -102,6 +105,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         mContext = context;
         mLightweightExecutorService = lightweightExecutorService;
         mBackgroundExecutorService = backgroundExecutorService;
+        mScheduledExecutor = scheduledExecutor;
         mAdServicesHttpsClient = adServicesHttpsClient;
         mCustomAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(devContext, customAudienceDao);
@@ -118,6 +122,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             @NonNull Context context,
             @NonNull ListeningExecutorService lightWeightExecutorService,
             @NonNull ListeningExecutorService backgroundExecutorService,
+            @NonNull ScheduledThreadPoolExecutor scheduledExecutor,
             @NonNull AdSelectionScriptEngine adSelectionScriptEngine,
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper,
@@ -126,6 +131,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         Objects.requireNonNull(context);
         Objects.requireNonNull(lightWeightExecutorService);
         Objects.requireNonNull(backgroundExecutorService);
+        Objects.requireNonNull(scheduledExecutor);
         Objects.requireNonNull(adSelectionScriptEngine);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(customAudienceDevOverridesHelper);
@@ -135,6 +141,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         mContext = context;
         mLightweightExecutorService = lightWeightExecutorService;
         mBackgroundExecutorService = backgroundExecutorService;
+        mScheduledExecutor = scheduledExecutor;
         mAdSelectionScriptEngine = adSelectionScriptEngine;
         mAdServicesHttpsClient = adServicesHttpsClient;
         mCustomAudienceDevOverridesHelper = customAudienceDevOverridesHelper;
@@ -216,9 +223,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                 .withTimeout(
                         mFlags.getAdSelectionBiddingTimeoutPerCaMs(),
                         TimeUnit.MILLISECONDS,
-                        // TODO(b/237103033): Comply with thread usage policy for AdServices;
-                        //  use a global scheduled executor
-                        new ScheduledThreadPoolExecutor(1))
+                        mScheduledExecutor)
                 .catching(
                         JSONException.class, this::handleBiddingError, mLightweightExecutorService)
                 .catching(
