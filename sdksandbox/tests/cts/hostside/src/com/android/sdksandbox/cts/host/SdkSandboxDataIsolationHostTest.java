@@ -60,6 +60,8 @@ public class SdkSandboxDataIsolationHostTest extends BaseHostJUnit4Test {
 
     @Before
     public void setUp() throws Exception {
+        // These tests run on system user
+        assertThat(getDevice().getCurrentUser()).isEqualTo(0);
         uninstallPackage(APP_PACKAGE);
         uninstallPackage(APP_2_PACKAGE);
     }
