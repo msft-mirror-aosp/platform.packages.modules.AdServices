@@ -162,7 +162,7 @@
             app:layout_constraintTop_toTopOf="parent" />
         <Button
             android:id="@+id/leftControlButton"
-            style="@style/MainStyle.NotificationPrimaryButton"
+            style="@style/MainStyle.PrimaryButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/notificationUI_left_control_button_text_eu"
@@ -171,7 +171,7 @@
             app:layout_constraintTop_toTopOf="parent" />
         <Button
             android:id="@+id/rightControlButton"
-            style="@style/MainStyle.NotificationPrimaryButton"
+            style="@style/MainStyle.PrimaryButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/notificationUI_right_control_button_text_eu"
