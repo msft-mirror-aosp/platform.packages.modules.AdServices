@@ -70,6 +70,8 @@ android_test_helper_app {
         "androidx.test.ext.junit",
         "SdkSandboxTestUtils",
     ],
+    min_sdk_version: "33",
+    target_sdk_version: "33",
 }
 
 android_test_helper_app {
@@ -87,6 +89,8 @@ android_test_helper_app {
         "androidx.core_core",
         "SdkSandboxTestUtils",
     ],
+    min_sdk_version: "33",
+    target_sdk_version: "33",
 }
 
 android_test_helper_app {
@@ -104,6 +108,8 @@ android_test_helper_app {
         "androidx.core_core",
         "SdkSandboxTestUtils",
     ],
+    min_sdk_version: "33",
+    target_sdk_version: "33",
 }
 
 android_test_helper_app {
@@ -122,6 +128,8 @@ android_test_helper_app {
         "SdkSandboxTestUtils",
     ],
     platform_apis: true,
+    min_sdk_version: "33",
+    target_sdk_version: "33",
 }
 
 android_test_helper_app {
@@ -142,6 +150,8 @@ android_test_helper_app {
         "SdkSandboxTestUtils",
     ],
     platform_apis: true,
+    min_sdk_version: "33",
+    target_sdk_version: "33",
 }
 
 android_test_helper_app {
@@ -154,6 +164,8 @@ android_test_helper_app {
        ":framework-sdksandbox-sources",
     ],
     platform_apis: true,
+    min_sdk_version: "33",
+    target_sdk_version: "33",
 }
 
 android_test_helper_app {
@@ -166,4 +178,6 @@ android_test_helper_app {
        ":framework-sdksandbox-sources",
     ],
     platform_apis: true,
+    min_sdk_version: "33",
+    target_sdk_version: "33",
 }

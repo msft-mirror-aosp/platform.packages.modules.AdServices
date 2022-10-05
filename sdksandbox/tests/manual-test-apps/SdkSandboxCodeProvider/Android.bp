@@ -27,6 +27,8 @@ android_test_helper_app {
     static_libs: ["SdkInterfaces"],
     resource_dirs: ["res"],
     manifest: "AndroidManifest.xml",
+    min_sdk_version: "33",
+    target_sdk_version: "33",
 }
 
 android_test_helper_app {
@@ -40,4 +42,6 @@ android_test_helper_app {
     static_libs: ["SdkInterfaces"],
     resource_dirs: ["res"],
     manifest: "AndroidManifest_WebViewProvider.xml",
+    min_sdk_version: "33",
+    target_sdk_version: "33",
 }
