@@ -36,7 +36,7 @@ public final class GetTopicsRequestTest {
         GetTopicsRequest request = new GetTopicsRequest.Builder().build();
         assertThat(request.getAdsSdkName()).isEmpty();
         // RecordObservation default value is true
-        assertThat(request.isRecordObservation()).isTrue();
+        assertThat(request.shouldRecordObservation()).isTrue();
     }
 
     @Test
@@ -56,7 +56,7 @@ public final class GetTopicsRequestTest {
                         .build();
         assertThat(request.getAdsSdkName()).isEqualTo(SOME_SDK_NAME);
         // RecordObservation default value is true
-        assertThat(request.isRecordObservation()).isTrue();
+        assertThat(request.shouldRecordObservation()).isTrue();
     }
 
     @Test
@@ -64,17 +64,17 @@ public final class GetTopicsRequestTest {
         GetTopicsRequest request =
                 new GetTopicsRequest.Builder()
                         .setAdsSdkName(/* adsSdkName */ SOME_SDK_NAME)
-                        .setRecordObservation(false)
+                        .setShouldRecordObservation(false)
                         .build();
         assertThat(request.getAdsSdkName()).isEqualTo(SOME_SDK_NAME);
-        assertThat(request.isRecordObservation()).isFalse();
+        assertThat(request.shouldRecordObservation()).isFalse();
     }
 
     @Test
     public void testBuilder_recordObservationFalse() {
         GetTopicsRequest request =
-                new GetTopicsRequest.Builder().setRecordObservation(false).build();
+                new GetTopicsRequest.Builder().setShouldRecordObservation(false).build();
         assertThat(request.getAdsSdkName()).isEmpty();
-        assertThat(request.isRecordObservation()).isFalse();
+        assertThat(request.shouldRecordObservation()).isFalse();
     }
 }

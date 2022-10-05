@@ -837,7 +837,7 @@ public class TopicsServiceImplTest {
                         .setAppPackageName(TEST_APP_PACKAGE_NAME)
                         .setSdkName(SOME_SDK_NAME)
                         .setSdkPackageName(SOME_SDK_NAME)
-                        .setRecordObservation(false)
+                        .setShouldRecordObservation(false)
                         .build();
 
         mGetTopicsCallbackLatch = new CountDownLatch(1);
