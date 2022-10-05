@@ -39,13 +39,11 @@ import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelectionEntry;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdServicesHttpsClient;
-import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.Throttler;
-import com.android.adservices.service.common.ValidatorUtil;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
@@ -75,8 +73,6 @@ public class ImpressionReporter {
             "Unable to find ad selection with given ID";
     public static final String CALLER_PACKAGE_NAME_MISMATCH =
             "Caller package name does not match name used in ad selection";
-
-    private static final String REPORTING_URI_FIELD_NAME = "reporting URI";
 
     @VisibleForTesting
     static final String REPORT_IMPRESSION_THROTTLED = "Report impression exceeded rate limit";
@@ -247,11 +243,7 @@ public class ImpressionReporter {
                                         requestParams.getCallerPackageName()),
                         mLightweightExecutorService)
                 .transform(
-                        reportingUrisAndContext ->
-                                notifySuccessToCaller(
-                                        callback,
-                                        reportingUrisAndContext.first,
-                                        reportingUrisAndContext.second),
+                        reportingUris -> notifySuccessToCaller(callback, reportingUris),
                         mLightweightExecutorService)
                 .withTimeout(
                         mFlags.getReportImpressionOverallTimeoutMs(),
@@ -259,12 +251,7 @@ public class ImpressionReporter {
                         // TODO(b/237103033): Comply with thread usage policy for AdServices;
                         //  use a global scheduled executor
                         mScheduledExecutor)
-                .transformAsync(
-                        reportingUrisAndContext ->
-                                doReport(
-                                        reportingUrisAndContext.first,
-                                        reportingUrisAndContext.second),
-                        mLightweightExecutorService)
+                .transformAsync(this::doReport, mLightweightExecutorService)
                 .addCallback(
                         new FutureCallback<List<Void>>() {
                             @Override
@@ -287,12 +274,10 @@ public class ImpressionReporter {
                         mLightweightExecutorService);
     }
 
-    private Pair<ReportingUris, ReportingContext> notifySuccessToCaller(
-            @NonNull ReportImpressionCallback callback,
-            @NonNull ReportingUris reportingUris,
-            @NonNull ReportingContext ctx) {
+    private ReportingUris notifySuccessToCaller(
+            @NonNull ReportImpressionCallback callback, @NonNull ReportingUris reportingUris) {
         invokeSuccess(callback, AdServicesStatusUtils.STATUS_SUCCESS);
-        return Pair.create(reportingUris, ctx);
+        return reportingUris;
     }
 
     private void notifyFailureToCaller(
@@ -316,58 +301,22 @@ public class ImpressionReporter {
     }
 
     @NonNull
-    private ListenableFuture<List<Void>> doReport(
-            ReportingUris reportingUris, ReportingContext ctx) {
+    private ListenableFuture<List<Void>> doReport(ReportingUris reportingUris) {
         LogUtil.v("Reporting URIs");
-
-        ListenableFuture<Void> sellerFuture;
-
-        // Validate seller uri before reporting
-        AdTechUriValidator sellerValidator =
-                new AdTechUriValidator(
-                        ValidatorUtil.AD_TECH_ROLE_SELLER,
-                        ctx.mAdSelectionConfig.getSeller().toString(),
-                        this.getClass().getSimpleName(),
-                        REPORTING_URI_FIELD_NAME);
-        try {
-            sellerValidator.validate(reportingUris.sellerReportingUri);
-            // Perform reporting if no exception was thrown
-            sellerFuture = mAdServicesHttpsClient.reportUri(reportingUris.sellerReportingUri);
-        } catch (IllegalArgumentException e) {
-            LogUtil.v("Seller reporting URI validation failed!");
-            sellerFuture = Futures.immediateFuture(null);
-        }
-
+        ListenableFuture<Void> sellerFuture =
+                mAdServicesHttpsClient.reportUri(reportingUris.sellerReportingUri);
         ListenableFuture<Void> buyerFuture;
 
-        // Validate buyer uri if it exists
         if (!Objects.isNull(reportingUris.buyerReportingUri)) {
-            CustomAudienceSignals customAudienceSignals =
-                    Objects.requireNonNull(ctx.mDBAdSelectionEntry.getCustomAudienceSignals());
-
-            AdTechUriValidator buyerValidator =
-                    new AdTechUriValidator(
-                            ValidatorUtil.AD_TECH_ROLE_BUYER,
-                            customAudienceSignals.getBuyer().toString(),
-                            this.getClass().getSimpleName(),
-                            REPORTING_URI_FIELD_NAME);
-            try {
-                buyerValidator.validate(reportingUris.buyerReportingUri);
-                // Perform reporting if no exception was thrown
-                buyerFuture = mAdServicesHttpsClient.reportUri(reportingUris.buyerReportingUri);
-            } catch (IllegalArgumentException e) {
-                LogUtil.v("Buyer reporting URI validation failed!");
-                buyerFuture = Futures.immediateFuture(null);
-            }
+            buyerFuture = mAdServicesHttpsClient.reportUri(reportingUris.buyerReportingUri);
         } else {
-            // In case of contextual ad
             buyerFuture = Futures.immediateFuture(null);
         }
 
         return Futures.allAsList(sellerFuture, buyerFuture);
     }
 
-    private FluentFuture<Pair<ReportingUris, ReportingContext>> computeReportingUris(
+    private FluentFuture<ReportingUris> computeReportingUris(
             long adSelectionId, AdSelectionConfig adSelectionConfig, String callerPackageName) {
         return fetchAdSelectionEntry(adSelectionId, callerPackageName)
                 .transformAsync(
@@ -387,7 +336,8 @@ public class ImpressionReporter {
                         sellerResultAndCtx ->
                                 invokeBuyerScript(
                                         sellerResultAndCtx.first, sellerResultAndCtx.second),
-                        mLightweightExecutorService);
+                        mLightweightExecutorService)
+                .transform(urisAndContext -> urisAndContext.first, mLightweightExecutorService);
     }
 
     private FluentFuture<DBAdSelectionEntry> fetchAdSelectionEntry(

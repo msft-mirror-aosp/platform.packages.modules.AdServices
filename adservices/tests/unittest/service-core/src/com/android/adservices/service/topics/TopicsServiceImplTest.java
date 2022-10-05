@@ -135,6 +135,7 @@ public class TopicsServiceImplTest {
     @Mock private Throttler mMockThrottler;
     @Mock private EnrollmentDao mEnrollmentDao;
     @Mock private AppImportanceFilter mMockAppImportanceFilter;
+    @Mock private TopicsWorker mMockTopicsWorker;
 
     @Before
     public void setup() throws Exception {
@@ -626,16 +627,18 @@ public class TopicsServiceImplTest {
         // Topic impl service use a background executor to run the task,
         // use a countdownLatch and set the countdown in the logging call operation
         final CountDownLatch logOperationCalledLatch = new CountDownLatch(1);
-        Mockito.doAnswer(new Answer<Object>() {
-            @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                // The method logAPiCallStats is called.
-                invocation.callRealMethod();
-                logOperationCalledLatch.countDown();
-                return null;
-            }
-        }).when(mAdServicesLogger).logApiCallStats(
-                ArgumentMatchers.any(ApiCallStats.class));
+        Mockito.doAnswer(
+                new Answer<Object>() {
+                    @Override
+                    public Object answer(InvocationOnMock invocation) throws Throwable {
+                        // The method logAPiCallStats is called.
+                        invocation.callRealMethod();
+                        logOperationCalledLatch.countDown();
+                        return null;
+                    }
+                })
+                .when(mAdServicesLogger)
+                .logApiCallStats(ArgumentMatchers.any(ApiCallStats.class));
 
         // Setting up the timestamp for latency calculation, we passing in a client side call
         // timestamp as a parameter to the call (100 in the below code), in topic service, it
@@ -754,6 +757,119 @@ public class TopicsServiceImplTest {
                         mGetTopicsCallbackLatch.await(
                                 BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
                 .isTrue();
+    }
+
+    @Test
+    public void testGetTopics_recordObservation() throws InterruptedException {
+        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        // To capture result in inner class, we have to declare final.
+        final GetTopicsResult[] capturedResponseParcel = new GetTopicsResult[1];
+        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        final long currentEpochId = 4L;
+        final int numberOfLookBackEpochs = 3;
+
+        when(mConsentManager.getConsent(any(PackageManager.class)))
+                .thenReturn(AdServicesApiConsent.GIVEN);
+        when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
+        when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
+
+        TopicsServiceImpl topicsService = createTestTopicsServiceImplInstance_mockTopicsWorker();
+
+        // Not setting isRecordObservation explicitly will make isRecordObservation to have
+        // default value which is true.
+        mRequest =
+                new GetTopicsParam.Builder()
+                        .setAppPackageName(TEST_APP_PACKAGE_NAME)
+                        .setSdkName(SOME_SDK_NAME)
+                        .setSdkPackageName(SOME_SDK_NAME)
+                        .build();
+
+        mGetTopicsCallbackLatch = new CountDownLatch(1);
+
+        topicsService.getTopics(
+                mRequest,
+                mCallerMetadata,
+                new IGetTopicsCallback() {
+                    @Override
+                    public void onResult(GetTopicsResult responseParcel) {
+                        capturedResponseParcel[0] = responseParcel;
+                        mGetTopicsCallbackLatch.countDown();
+                    }
+
+                    @Override
+                    public void onFailure(int resultCode) {
+                        Assert.fail();
+                    }
+
+                    @Override
+                    public IBinder asBinder() {
+                        return null;
+                    }
+                });
+
+        assertThat(
+                        mGetTopicsCallbackLatch.await(
+                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+                .isTrue();
+
+        // Record the call from App and Sdk to usage history only when isRecordObservation is true.
+        verify(mMockTopicsWorker, Mockito.times(1)).recordUsage(anyString(), anyString());
+    }
+
+    @Test
+    public void testGetTopics_notRecordObservation() throws InterruptedException {
+        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        // To capture result in inner class, we have to declare final.
+        final GetTopicsResult[] capturedResponseParcel = new GetTopicsResult[1];
+        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        final long currentEpochId = 4L;
+        final int numberOfLookBackEpochs = 3;
+
+        when(mConsentManager.getConsent(any(PackageManager.class)))
+                .thenReturn(AdServicesApiConsent.GIVEN);
+        when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
+        when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
+
+        TopicsServiceImpl topicsService = createTestTopicsServiceImplInstance_mockTopicsWorker();
+
+        mRequest =
+                new GetTopicsParam.Builder()
+                        .setAppPackageName(TEST_APP_PACKAGE_NAME)
+                        .setSdkName(SOME_SDK_NAME)
+                        .setSdkPackageName(SOME_SDK_NAME)
+                        .setRecordObservation(false)
+                        .build();
+
+        mGetTopicsCallbackLatch = new CountDownLatch(1);
+
+        topicsService.getTopics(
+                mRequest,
+                mCallerMetadata,
+                new IGetTopicsCallback() {
+                    @Override
+                    public void onResult(GetTopicsResult responseParcel) {
+                        capturedResponseParcel[0] = responseParcel;
+                        mGetTopicsCallbackLatch.countDown();
+                    }
+
+                    @Override
+                    public void onFailure(int resultCode) {
+                        Assert.fail();
+                    }
+
+                    @Override
+                    public IBinder asBinder() {
+                        return null;
+                    }
+                });
+
+        assertThat(
+                        mGetTopicsCallbackLatch.await(
+                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+                .isTrue();
+
+        // Not record the call from App and Sdk to usage history when isRecordObservation is false.
+        verify(mMockTopicsWorker, never()).recordUsage(anyString(), anyString());
     }
 
     private void invokeGetTopicsAndVerifyError(Context context, int expectedResultCode)
@@ -909,6 +1025,20 @@ public class TopicsServiceImplTest {
         return new TopicsServiceImpl(
                 mMockSdkContext,
                 mTopicsWorker,
+                mConsentManager,
+                mAdServicesLogger,
+                mClock,
+                mMockFlags,
+                mMockThrottler,
+                mEnrollmentDao,
+                mMockAppImportanceFilter);
+    }
+
+    @NonNull
+    private TopicsServiceImpl createTestTopicsServiceImplInstance_mockTopicsWorker() {
+        return new TopicsServiceImpl(
+                mContext,
+                mMockTopicsWorker,
                 mConsentManager,
                 mAdServicesLogger,
                 mClock,

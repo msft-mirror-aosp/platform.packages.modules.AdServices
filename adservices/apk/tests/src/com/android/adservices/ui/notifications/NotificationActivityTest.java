@@ -16,7 +16,6 @@
 package com.android.adservices.ui.notifications;
 
 import static androidx.test.espresso.Espresso.onView;
-import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
@@ -87,17 +86,6 @@ public class NotificationActivityTest {
     @Test
     public void test_ConsentNotificationFragment_isDisplayed() {
         checkConsentNotificationFragmentIsDisplayed();
-    }
-
-    @Test
-    public void test_ConsentNotificationConfirmationFragment_isDisplayed() {
-        launchEUActivity();
-        checkConsentNotificationFragmentIsDisplayed();
-
-        onView(withId(R.id.rightControlButton)).perform(click());
-
-        onView(withId(R.id.consent_notification_accept_confirmation_view))
-                .check(matches(isDisplayed()));
     }
 
     private void checkConsentNotificationFragmentIsDisplayed() {
