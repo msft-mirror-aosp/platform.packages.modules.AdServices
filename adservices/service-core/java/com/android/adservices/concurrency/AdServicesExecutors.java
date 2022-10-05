@@ -59,8 +59,7 @@ public final class AdServicesExecutors {
             public Thread newThread(Runnable runnable) {
                 Thread thread = Executors.defaultThreadFactory().newThread(runnable);
                 thread.setName(
-                        String.format(
-                                "%s-pool-thread-%d", threadPrefix, mThreadCount.incrementAndGet()));
+                        String.format("%s-%d", threadPrefix, mThreadCount.incrementAndGet()));
                 return thread;
             }
         };
