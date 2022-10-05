@@ -138,6 +138,7 @@ public class EpochManager implements Dumpable {
         }
 
         // This cross db and java boundaries multiple times, so we need to have a db transaction.
+        LogUtil.d("Start of Epoch Computation");
         db.beginTransaction();
 
         long currentEpochId = getCurrentEpochId();
@@ -218,6 +219,7 @@ public class EpochManager implements Dumpable {
             db.setTransactionSuccessful();
         } finally {
             db.endTransaction();
+            LogUtil.d("End of Epoch Computation");
         }
     }
 
