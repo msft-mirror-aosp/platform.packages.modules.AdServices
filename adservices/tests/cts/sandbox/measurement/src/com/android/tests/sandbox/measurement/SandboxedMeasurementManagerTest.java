@@ -61,6 +61,8 @@ public class SandboxedMeasurementManagerTest {
 
         // Allow sandbox package name to be able to execute Measurement APIs
         allowSandboxPackageNameAccessMeasurementApis();
+
+        overrideAdservicesGlobalKillSwitch(true);
     }
 
     @After
@@ -70,6 +72,8 @@ public class SandboxedMeasurementManagerTest {
         // Reset back the original values.
         resetAllowSandboxPackageNameAccessMeasurementApis();
         resetOverrideConsentManagerDebugMode();
+
+        overrideAdservicesGlobalKillSwitch(false);
     }
 
     @Test
@@ -127,5 +131,14 @@ public class SandboxedMeasurementManagerTest {
 
     private void resetOverrideConsentManagerDebugMode() {
         ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode null");
+    }
+
+    // Override global_kill_switch to ignore the effect of actual PH values.
+    // If isOverride = true, override global_kill_switch to OFF to allow adservices
+    // If isOverride = false, override global_kill_switch to meaningless value so that PhFlags will
+    // use the default value.
+    private void overrideAdservicesGlobalKillSwitch(boolean isOverride) {
+        String overrideString = isOverride ? "false" : "null";
+        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
     }
 }
