@@ -41,7 +41,7 @@ public class AdServicesExecutorTest {
                         .submit(() -> Thread.currentThread().getName())
                         .get();
         // Expecting 1-19 digits since the thread number is a positive long
-        assertTrue(threadName.matches("lightweight-pool-thread-\\d{1,19}$"));
+        assertTrue(threadName.matches("lightweight-\\d{1,19}$"));
     }
 
     @Test
@@ -50,7 +50,7 @@ public class AdServicesExecutorTest {
                 AdServicesExecutors.getBackgroundExecutor()
                         .submit(() -> Thread.currentThread().getName())
                         .get();
-        assertTrue(threadName.matches("background-pool-thread-\\d{1,19}$"));
+        assertTrue(threadName.matches("background-\\d{1,19}$"));
     }
 
     @Test
@@ -59,7 +59,7 @@ public class AdServicesExecutorTest {
                 AdServicesExecutors.getScheduler()
                         .submit(() -> Thread.currentThread().getName())
                         .get();
-        assertTrue(threadName.matches("scheduled-pool-thread-\\d{1,19}$"));
+        assertTrue(threadName.matches("scheduled-\\d{1,19}$"));
     }
 
     @Test
@@ -68,6 +68,6 @@ public class AdServicesExecutorTest {
                 AdServicesExecutors.getBlockingExecutor()
                         .submit(() -> Thread.currentThread().getName())
                         .get();
-        assertTrue(threadName.matches("blocking-pool-thread-\\d{1,19}$"));
+        assertTrue(threadName.matches("blocking-\\d{1,19}$"));
     }
 }
