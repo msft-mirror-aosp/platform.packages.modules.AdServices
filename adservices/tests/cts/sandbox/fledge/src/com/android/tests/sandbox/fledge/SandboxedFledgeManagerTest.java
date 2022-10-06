@@ -79,6 +79,7 @@ public class SandboxedFledgeManagerTest {
         makeTestProcessForeground();
         PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
         overrideConsentManagerDebugMode(true);
+        overrideAdservicesGlobalKillSwitch(true);
     }
 
     /**
@@ -93,6 +94,7 @@ public class SandboxedFledgeManagerTest {
     public void shutDown() {
         SimpleActivity.stopSimpleActivity(sContext);
         overrideConsentManagerDebugMode(false);
+        overrideAdservicesGlobalKillSwitch(false);
     }
 
     @Test
@@ -117,5 +119,14 @@ public class SandboxedFledgeManagerTest {
     private void overrideConsentManagerDebugMode(boolean enable) {
         ShellUtils.runShellCommand(
                 "setprop debug.adservices.consent_manager_debug_mode %s", enable);
+    }
+
+    // Override global_kill_switch to ignore the effect of actual PH values.
+    // If isOverride = true, override global_kill_switch to OFF to allow adservices
+    // If isOverride = false, override global_kill_switch to meaningless value so that PhFlags will
+    // use the default value.
+    private void overrideAdservicesGlobalKillSwitch(boolean isOverride) {
+        String overrideString = isOverride ? "false" : "null";
+        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
     }
 }

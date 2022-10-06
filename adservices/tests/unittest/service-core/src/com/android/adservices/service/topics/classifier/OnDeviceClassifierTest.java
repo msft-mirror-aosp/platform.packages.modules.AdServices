@@ -126,7 +126,7 @@ public class OnDeviceClassifierTest {
         // One value for input package name.
         assertThat(classifications).hasSize(1);
         // Verify size of the labels returned.
-        assertThat(classifications.get(appPackage1)).hasSize(2);
+        assertThat(classifications.get(appPackage1)).hasSize(3);
 
         // Check if the first category matches in the top CLASSIFIER_NUMBER_OF_TOP_LABELS.
         // Scores can differ a little on devices. Using this technique to reduce flakiness.
@@ -172,7 +172,7 @@ public class OnDeviceClassifierTest {
         // Two values for two input package names.
         assertThat(classifications).hasSize(2);
         // Verify size of the labels returned.
-        assertThat(classifications.get(appPackage1)).hasSize(2);
+        assertThat(classifications.get(appPackage1)).hasSize(3);
         assertThat(classifications.get(appPackage2)).hasSize(CLASSIFIER_NUMBER_OF_TOP_LABELS);
 
         // Check if the first category matches in the top CLASSIFIER_NUMBER_OF_TOP_LABELS.
@@ -228,7 +228,7 @@ public class OnDeviceClassifierTest {
         verify(mPackageManagerUtil).getAppInformation(eq(appPackages));
         assertThat(classifications).hasSize(1);
         // Expecting 2 values greater than 0.1 threshold.
-        assertThat(classifications.get(appPackage1)).hasSize(2);
+        assertThat(classifications.get(appPackage1)).hasSize(3);
     }
 
     @Test
@@ -317,7 +317,7 @@ public class OnDeviceClassifierTest {
         assertThat(topTopics).hasSize(numberOfTopTopics + numberOfRandomTopics);
         // Verify the top topics are from the description that was repeated.
         List<Topic> expectedLabelsForCommonDescription =
-                createTopics(Arrays.asList(10220, 10235, 10247, 10225));
+                createTopics(Arrays.asList(10230, 10227, 10238, 10253));
         assertThat(topTopics.subList(0, numberOfTopTopics))
                 .containsAnyIn(expectedLabelsForCommonDescription);
     }
