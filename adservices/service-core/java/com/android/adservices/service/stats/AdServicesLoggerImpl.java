@@ -19,6 +19,8 @@ package com.android.adservices.service.stats;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__FLEDGE;
 
+import com.android.internal.annotations.VisibleForTesting;
+
 import javax.annotation.concurrent.ThreadSafe;
 
 /** AdServicesLogger that delegate to the appropriate Logger Implementations. */
@@ -29,6 +31,11 @@ public class AdServicesLoggerImpl implements AdServicesLogger {
 
     private AdServicesLoggerImpl() {
         mStatsdAdServicesLogger = StatsdAdServicesLogger.getInstance();
+    }
+
+    @VisibleForTesting
+    AdServicesLoggerImpl(StatsdAdServicesLogger statsdAdServicesLogger) {
+        mStatsdAdServicesLogger = statsdAdServicesLogger;
     }
 
     /** Returns an instance of AdServicesLogger. */
@@ -77,5 +84,37 @@ public class AdServicesLoggerImpl implements AdServicesLogger {
     public void logMeasurementRegistrationsResponseSize(
             MeasurementRegistrationResponseStats stats) {
         mStatsdAdServicesLogger.logMeasurementRegistrationsResponseSize(stats);
+    }
+
+    @Override
+    public void logRunAdSelectionProcessReportedStats(RunAdSelectionProcessReportedStats stats) {
+        mStatsdAdServicesLogger.logRunAdSelectionProcessReportedStats(stats);
+    }
+
+    @Override
+    public void logRunAdBiddingProcessReportedStats(RunAdBiddingProcessReportedStats stats) {
+        mStatsdAdServicesLogger.logRunAdBiddingProcessReportedStats(stats);
+    }
+
+    @Override
+    public void logRunAdScoringProcessReportedStats(RunAdScoringProcessReportedStats stats) {
+        mStatsdAdServicesLogger.logRunAdScoringProcessReportedStats(stats);
+    }
+
+    @Override
+    public void logRunAdBiddingPerCAProcessReportedStats(
+            RunAdBiddingPerCAProcessReportedStats stats) {
+        mStatsdAdServicesLogger.logRunAdBiddingPerCAProcessReportedStats(stats);
+    }
+
+    @Override
+    public void logBackgroundFetchProcessReportedStats(BackgroundFetchProcessReportedStats stats) {
+        mStatsdAdServicesLogger.logBackgroundFetchProcessReportedStats(stats);
+    }
+
+    @Override
+    public void logUpdateCustomAudienceProcessReportedStats(
+            UpdateCustomAudienceProcessReportedStats stats) {
+        mStatsdAdServicesLogger.logUpdateCustomAudienceProcessReportedStats(stats);
     }
 }

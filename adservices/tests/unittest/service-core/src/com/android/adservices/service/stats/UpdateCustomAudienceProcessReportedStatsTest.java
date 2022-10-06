@@ -24,11 +24,11 @@ import org.junit.Test;
 
 /** Unit tests for {@link UpdateCustomAudienceProcessReportedStats}. */
 public class UpdateCustomAudienceProcessReportedStatsTest {
-    private static final int LATENCY_IN_MILLIS = 10;
-    private static final int RESULT_CODE =
+    static final int LATENCY_IN_MILLIS = 10;
+    static final int RESULT_CODE =
             RUN_AD_BIDDING_PROCESS_REPORTED__RUN_AD_BIDDING_RESULT_CODE__RUN_AD_SELECTION_STATUS_SUCCESS;
-    private static final int DATA_SIZE_OF_ADS_IN_BYTES = 10;
-    private static final int NUM_OF_ADS = 5;
+    static final int DATA_SIZE_OF_ADS_IN_BYTES = 10;
+    static final int NUM_OF_ADS = 5;
 
     @Test
     public void testBuilderCreateSuccess() {

@@ -25,18 +25,18 @@ import org.junit.Test;
 
 /** Unit tests for {@link RunAdBiddingProcessReportedStats}. */
 public class RunAdBiddingProcessReportedStatsTest {
-    private static final int GET_BUYERS_CUSTOM_AUDIENCE_LATENCY_IN_MILLIS = 10;
-    private static final int NUM_BUYERS_REQUESTED = 5;
-    private static final int NUM_BUYERS_FETCHED = 3;
-    private static final int NUM_OF_ADS_ENTERING_BIDDING = 20;
-    private static final int NUM_OF_CAS_ENTERING_BIDDING = 10;
-    private static final int NUM_OF_CAS_POSTING_BIDDING = 2;
-    private static final float RATIO_OF_CAS_SELECTING_RMKT_ADS = 0.80f;
-    private static final int RUN_AD_BIDDING_LATENCY_IN_MILLIS = 10;
-    private static final int TOTAL_AD_BIDDING_STAGE_LATENCY_IN_MILLIS = 20;
-    private static final int GET_BUYERS_CUSTOM_AUDIENCE_RESULT_CODE =
+    static final int GET_BUYERS_CUSTOM_AUDIENCE_LATENCY_IN_MILLIS = 10;
+    static final int NUM_BUYERS_REQUESTED = 5;
+    static final int NUM_BUYERS_FETCHED = 3;
+    static final int NUM_OF_ADS_ENTERING_BIDDING = 20;
+    static final int NUM_OF_CAS_ENTERING_BIDDING = 10;
+    static final int NUM_OF_CAS_POSTING_BIDDING = 2;
+    static final float RATIO_OF_CAS_SELECTING_RMKT_ADS = 0.80f;
+    static final int RUN_AD_BIDDING_LATENCY_IN_MILLIS = 10;
+    static final int TOTAL_AD_BIDDING_STAGE_LATENCY_IN_MILLIS = 20;
+    static final int GET_BUYERS_CUSTOM_AUDIENCE_RESULT_CODE =
             RUN_AD_BIDDING_PROCESS_REPORTED__GET_BUYERS_CUSTOM_AUDIENCE_RESULT_CODE__RUN_AD_SELECTION_STATUS_SUCCESS;
-    private static final int RUN_AD_BIDDING_RESULT_CODE =
+    static final int RUN_AD_BIDDING_RESULT_CODE =
             RUN_AD_BIDDING_PROCESS_REPORTED__RUN_AD_BIDDING_RESULT_CODE__RUN_AD_SELECTION_STATUS_SUCCESS;
 
     @Test

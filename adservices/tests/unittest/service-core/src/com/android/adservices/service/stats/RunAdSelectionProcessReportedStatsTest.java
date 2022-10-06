@@ -25,13 +25,13 @@ import org.junit.Test;
 
 /** Unit tests for {@link RunAdSelectionProcessReportedStats}. */
 public class RunAdSelectionProcessReportedStatsTest {
-    private static final boolean IS_RMKT_ADS_WON = true;
-    private static final int AD_SELECTION_ENTRY_SIZE_IN_BYTES = 100;
-    private static final int PERSIST_AD_SELECTION_LATENCY_IN_MILLIS = 10;
-    private static final int RUN_AD_SELECTION_LATENCY_IN_MILLIS = 10;
-    private static final int PERSIST_AD_SELECTION_RESULT_CODE =
+    static final boolean IS_RMKT_ADS_WON = true;
+    static final int AD_SELECTION_ENTRY_SIZE_IN_BYTES = 100;
+    static final int PERSIST_AD_SELECTION_LATENCY_IN_MILLIS = 10;
+    static final int RUN_AD_SELECTION_LATENCY_IN_MILLIS = 10;
+    static final int PERSIST_AD_SELECTION_RESULT_CODE =
             RUN_AD_SELECTION_PROCESS_REPORTED__PERSIST_AD_SELECTION_RESULT_CODE__RUN_AD_SELECTION_STATUS_SUCCESS;
-    private static final int RUN_AD_SELECTION_RESULT_CODE =
+    static final int RUN_AD_SELECTION_RESULT_CODE =
             RUN_AD_BIDDING_PROCESS_REPORTED__RUN_AD_BIDDING_RESULT_CODE__RUN_AD_SELECTION_STATUS_SUCCESS;
 
     @Test

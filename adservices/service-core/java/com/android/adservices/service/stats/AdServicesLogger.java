@@ -32,4 +32,39 @@ public interface AdServicesLogger {
 
     /** Logs measurement registrations response size. */
     void logMeasurementRegistrationsResponseSize(MeasurementRegistrationResponseStats stats);
+
+    /**
+     * Logs the runAdSelection process stats as an {@link RunAdSelectionProcessReportedStats}
+     * object.
+     */
+    void logRunAdSelectionProcessReportedStats(RunAdSelectionProcessReportedStats stats);
+
+    /**
+     * Logs the runAdBidding process stats as an {@link RunAdBiddingProcessReportedStats} object.
+     */
+    void logRunAdBiddingProcessReportedStats(RunAdBiddingProcessReportedStats stats);
+
+    /**
+     * Logs the runAdScoring process stats as an {@link RunAdScoringProcessReportedStats} object.
+     */
+    void logRunAdScoringProcessReportedStats(RunAdScoringProcessReportedStats stats);
+
+    /**
+     * Logs the runAdBiddingPerCA process stats as an {@link RunAdBiddingPerCAProcessReportedStats}
+     * object.
+     */
+    void logRunAdBiddingPerCAProcessReportedStats(RunAdBiddingPerCAProcessReportedStats stats);
+
+    /**
+     * Logs the backgroundFetch process stats as an {@link BackgroundFetchProcessReportedStats}
+     * object.
+     */
+    void logBackgroundFetchProcessReportedStats(BackgroundFetchProcessReportedStats stats);
+
+    /**
+     * Logs the updateCustomAudience process stats as an {@link
+     * com.android.adservices.service.stats.UpdateCustomAudienceProcessReportedStats} objects.
+     */
+    void logUpdateCustomAudienceProcessReportedStats(
+            UpdateCustomAudienceProcessReportedStats stats);
 }
