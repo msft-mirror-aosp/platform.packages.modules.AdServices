@@ -98,7 +98,7 @@ public class PreviewApiTest {
                 new AdvertisingTopicsClient.Builder()
                         .setContext(sContext)
                         .setSdkName("sdk2")
-                        .setRecordObservation(false)
+                        .setShouldRecordObservation(false)
                         .setExecutor(CALLBACK_EXECUTOR)
                         .build();
 
