@@ -302,7 +302,7 @@ public final class AdSelectionRunner {
                         public void onSuccess(DBAdSelection result) {
                             notifySuccessToCaller(result, callback);
                             // TODO(242280808): Schedule a clear for stale data instead of this hack
-                            clearExpiredAdSelectionData();
+                            clearExpiredAdSelectionDataAndBuyerDecisionLogic();
                         }
 
                         @Override
@@ -315,7 +315,7 @@ public final class AdSelectionRunner {
                                 notifyFailureToCaller(callback, t);
                             }
                             // TODO(242280808): Schedule a clear for stale data instead of this hack
-                            clearExpiredAdSelectionData();
+                            clearExpiredAdSelectionDataAndBuyerDecisionLogic();
                         }
                     },
                     mLightweightExecutorService);
@@ -799,8 +799,9 @@ public final class AdSelectionRunner {
         return null;
     }
 
-    private void clearExpiredAdSelectionData() {
+    private void clearExpiredAdSelectionDataAndBuyerDecisionLogic() {
         Instant expirationTime = mClock.instant().minusSeconds(DAY_IN_SECONDS);
         mAdSelectionEntryDao.removeExpiredAdSelection(expirationTime);
+        mAdSelectionEntryDao.removeExpiredBuyerDecisionLogic();
     }
 }

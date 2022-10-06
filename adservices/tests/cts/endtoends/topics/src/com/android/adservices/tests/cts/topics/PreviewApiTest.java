@@ -40,17 +40,18 @@ import org.junit.runners.JUnit4;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 @RunWith(JUnit4.class)
-public class TopicsManagerTest {
-    private static final String TAG = "TopicsManagerTest";
+public class PreviewApiTest {
+    private static final String TAG = "PreviewApiTest";
     // The JobId of the Epoch Computation.
     private static final int EPOCH_JOB_ID = 2;
 
     // Override the Epoch Job Period to this value to speed up the epoch computation.
-    private static final long TEST_EPOCH_JOB_PERIOD_MS = 3000;
+    private static final long TEST_EPOCH_JOB_PERIOD_MS = 3_000;
 
     // Default Epoch Period.
     private static final long TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000; // 7 days.
@@ -81,9 +82,9 @@ public class TopicsManagerTest {
     }
 
     @Test
-    public void testTopicsManager() throws Exception {
-        // The Test App has 2 SDKs: sdk1 calls the Topics API and sdk2 does not.
-        // Sdk1 calls the Topics API.
+    public void testRecordObservation() throws ExecutionException, InterruptedException {
+        // The Test app has 2 SDKs: sdk1 calls the Topics API. This will record the usage for Sdk1
+        // by default, recordObservation is true.
         AdvertisingTopicsClient advertisingTopicsClient1 =
                 new AdvertisingTopicsClient.Builder()
                         .setContext(sContext)
@@ -91,9 +92,23 @@ public class TopicsManagerTest {
                         .setExecutor(CALLBACK_EXECUTOR)
                         .build();
 
+        // Sdk2 calls the Topics API and set the Record Observation to false. This will not record
+        // the usage for sdk2.
+        AdvertisingTopicsClient advertisingTopicsClient2 =
+                new AdvertisingTopicsClient.Builder()
+                        .setContext(sContext)
+                        .setSdkName("sdk2")
+                        .setRecordObservation(false)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
         // At beginning, Sdk1 receives no topic.
         GetTopicsResponse sdk1Result = advertisingTopicsClient1.getTopics().get();
         assertThat(sdk1Result.getTopics()).isEmpty();
+
+        // At beginning, Sdk2 receives no topic.
+        GetTopicsResponse sdk2Result = advertisingTopicsClient2.getTopics().get();
+        assertThat(sdk2Result.getTopics()).isEmpty();
 
         // Now force the Epoch Computation Job. This should be done in the same epoch for
         // callersCanLearnMap to have the entry for processing.
@@ -116,21 +131,14 @@ public class TopicsManagerTest {
         Topic topic = sdk1Result.getTopics().get(0);
 
         // topic is one of the 5 classification topics of the Test App.
-        assertThat(topic.getTopicId()).isIn(Arrays.asList(10147,10253,10175,10254,10333));
-
+        assertThat(topic.getTopicId()).isIn(Arrays.asList(10147, 10253, 10175, 10254, 10333));
         assertThat(topic.getModelVersion()).isAtLeast(1L);
         assertThat(topic.getTaxonomyVersion()).isAtLeast(1L);
 
-        // Sdk 2 did not call getTopics API. So it should not receive any topic.
-        AdvertisingTopicsClient advertisingTopicsClient2 =
-                new AdvertisingTopicsClient.Builder()
-                        .setContext(sContext)
-                        .setSdkName("sdk2")
-                        .setExecutor(CALLBACK_EXECUTOR)
-                        .build();
-
-        GetTopicsResponse sdk2Result2 = advertisingTopicsClient2.getTopics().get();
-        assertThat(sdk2Result2.getTopics()).isEmpty();
+        // Sdk2 can not get any topics in this epoch because sdk2 sets not to record
+        // observation in previous epoch.
+        sdk2Result = advertisingTopicsClient2.getTopics().get();
+        assertThat(sdk2Result.getTopics()).isEmpty();
     }
 
     private void overridingBeforeTest() {
@@ -147,8 +155,6 @@ public class TopicsManagerTest {
 
         // Turn off MDD to avoid model mismatching
         disableMddBackgroundTasks(true);
-
-        overrideAdservicesGlobalKillSwitch(true);
     }
 
     private void overridingAfterTest() {
@@ -157,7 +163,6 @@ public class TopicsManagerTest {
         overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
         disableMddBackgroundTasks(false);
         overridingAdservicesLoggingLevel("INFO");
-        overrideAdservicesGlobalKillSwitch(false);
     }
 
     // Switch on/off for MDD service. Default value is false, which means MDD is enabled.
@@ -199,15 +204,6 @@ public class TopicsManagerTest {
 
     private void overridingAdservicesLoggingLevel(String loggingLevel) {
         ShellUtils.runShellCommand("setprop log.tag.adservices %s", loggingLevel);
-    }
-
-    // Override global_kill_switch to ignore the effect of actual PH values.
-    // If isOverride = true, override global_kill_switch to OFF to allow adservices
-    // If isOverride = false, override global_kill_switch to meaningless value so that PhFlags will
-    // use the default value.
-    private void overrideAdservicesGlobalKillSwitch(boolean isOverride) {
-        String overrideString = isOverride ? "false" : "null";
-        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
     }
 
     // Used to get the package name. Copied over from com.android.adservices.AndroidServiceBinder
