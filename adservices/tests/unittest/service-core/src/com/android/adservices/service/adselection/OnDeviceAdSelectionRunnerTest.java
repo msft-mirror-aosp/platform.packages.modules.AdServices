@@ -24,6 +24,7 @@ import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_CA_AVAILABLE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_VALID_BIDS_FOR_SCORING;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_WINNING_AD_FOUND;
+import static com.android.adservices.service.adselection.AdSelectionRunner.JS_SANDBOX_IS_NOT_AVAILABLE;
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_SELECT_ADS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
@@ -40,6 +41,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import android.adservices.adselection.AdBiddingOutcomeFixture;
@@ -59,6 +61,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Process;
 import android.os.RemoteException;
+import android.webkit.WebView;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
@@ -81,6 +84,7 @@ import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -92,6 +96,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.function.ThrowingRunnable;
 import org.mockito.Mock;
 import org.mockito.MockitoSession;
 import org.mockito.Spy;
@@ -192,6 +197,7 @@ public class OnDeviceAdSelectionRunnerTest {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
+                        .spyStatic(WebView.class)
                         .strictness(Strictness.LENIENT)
                         .initMocks(this)
                         .startMocking();
@@ -254,7 +260,6 @@ public class OnDeviceAdSelectionRunnerTest {
         when(mClock.instant()).thenReturn(Clock.systemUTC().instant());
         doReturn(mFlags).when(FlagsFactory::getFlags);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
-        // Creating ad selection config for happy case with all the buyers in place
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
         // Populating the Custom Audience DB
@@ -1547,6 +1552,35 @@ public class OnDeviceAdSelectionRunnerTest {
                 "Error response code mismatch",
                 AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED,
                 response.getStatusCode());
+    }
+
+    @Test
+    public void testAdSelectionRunnerInstanceNotCreatedIfJSSandboxNotInWebView() {
+        doReturn(null).when(WebView::getCurrentWebViewPackage);
+
+        ThrowingRunnable initializeAdSelectionRunner =
+                () ->
+                        new OnDeviceAdSelectionRunner(
+                                mContext,
+                                mCustomAudienceDao,
+                                mAdSelectionEntryDao,
+                                mAdServicesHttpsClient,
+                                mLightweightExecutorService,
+                                mBackgroundExecutorService,
+                                mScheduledExecutor,
+                                mConsentManagerMock,
+                                mAdServicesLoggerMock,
+                                DevContext.createForDevOptionsDisabled(),
+                                mAppImportanceFilter,
+                                mFlags,
+                                mThrottlerSupplier,
+                                CALLER_UID,
+                                mFledgeAuthorizationFilter,
+                                mFledgeAllowListsFilter);
+
+        Throwable throwable =
+                assertThrows(IllegalArgumentException.class, initializeAdSelectionRunner);
+        verifyErrorMessageIsCorrect(throwable.getMessage(), JS_SANDBOX_IS_NOT_AVAILABLE);
     }
 
     private void verifyErrorMessageIsCorrect(
