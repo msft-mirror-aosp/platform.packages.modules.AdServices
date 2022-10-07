@@ -116,8 +116,8 @@ import java.util.function.Supplier;
  * This test covers strictly the unit of {@link AdSelectionRunner} The dependencies in this test are
  * mocked and provide expected mock responses when invoked with desired input
  */
-public class AdSelectionRunnerTest {
-    private static final String TAG = AdSelectionRunnerTest.class.getName();
+public class OnDeviceAdSelectionRunnerTest {
+    private static final String TAG = OnDeviceAdSelectionRunnerTest.class.getName();
 
     private static final AdTechIdentifier BUYER_1 = AdSelectionConfigFixture.BUYER_1;
     private static final AdTechIdentifier BUYER_2 = AdSelectionConfigFixture.BUYER_2;
@@ -321,7 +321,7 @@ public class AdSelectionRunnerTest {
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
 
         mAdSelectionRunner =
-                new AdSelectionRunner(
+                new OnDeviceAdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
@@ -405,7 +405,7 @@ public class AdSelectionRunnerTest {
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
 
         mAdSelectionRunner =
-                new AdSelectionRunner(
+                new OnDeviceAdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
@@ -515,7 +515,7 @@ public class AdSelectionRunnerTest {
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
 
         mAdSelectionRunner =
-                new AdSelectionRunner(
+                new OnDeviceAdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
@@ -589,7 +589,7 @@ public class AdSelectionRunnerTest {
         verifyZeroInteractions(mMockAdsScoreGenerator);
 
         mAdSelectionRunner =
-                new AdSelectionRunner(
+                new OnDeviceAdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
@@ -637,7 +637,7 @@ public class AdSelectionRunnerTest {
                         CALLER_UID, AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, null);
 
         mAdSelectionRunner =
-                new AdSelectionRunner(
+                new OnDeviceAdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
@@ -685,7 +685,7 @@ public class AdSelectionRunnerTest {
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
         mAdSelectionRunner =
-                new AdSelectionRunner(
+                new OnDeviceAdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
@@ -769,7 +769,7 @@ public class AdSelectionRunnerTest {
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
 
         mAdSelectionRunner =
-                new AdSelectionRunner(
+                new OnDeviceAdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
@@ -899,7 +899,7 @@ public class AdSelectionRunnerTest {
         verifyZeroInteractions(mMockAdsScoreGenerator);
 
         mAdSelectionRunner =
-                new AdSelectionRunner(
+                new OnDeviceAdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
@@ -999,7 +999,7 @@ public class AdSelectionRunnerTest {
                 .thenReturn((FluentFuture.from(Futures.immediateFuture(Collections.EMPTY_LIST))));
 
         mAdSelectionRunner =
-                new AdSelectionRunner(
+                new OnDeviceAdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
@@ -1106,7 +1106,7 @@ public class AdSelectionRunnerTest {
                 .thenReturn((FluentFuture.from(Futures.immediateFuture(negativeScoreOutcome))));
 
         mAdSelectionRunner =
-                new AdSelectionRunner(
+                new OnDeviceAdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
@@ -1215,7 +1215,7 @@ public class AdSelectionRunnerTest {
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
 
         mAdSelectionRunner =
-                new AdSelectionRunner(
+                new OnDeviceAdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
@@ -1349,7 +1349,7 @@ public class AdSelectionRunnerTest {
                 .thenThrow(new AdServicesException(ERROR_INVALID_JSON));
 
         mAdSelectionRunner =
-                new AdSelectionRunner(
+                new OnDeviceAdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
@@ -1469,7 +1469,7 @@ public class AdSelectionRunnerTest {
                                 new Returns(AD_SELECTION_ID)));
 
         mAdSelectionRunner =
-                new AdSelectionRunner(
+                new OnDeviceAdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
@@ -1516,7 +1516,7 @@ public class AdSelectionRunnerTest {
         when(mMockThrottler.tryAcquire(eq(FLEDGE_API_SELECT_ADS), anyString())).thenReturn(false);
 
         mAdSelectionRunner =
-                new AdSelectionRunner(
+                new OnDeviceAdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
