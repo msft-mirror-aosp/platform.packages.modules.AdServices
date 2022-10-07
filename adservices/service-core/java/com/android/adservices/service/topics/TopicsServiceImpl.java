@@ -137,7 +137,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
 
                         callback.onResult(mTopicsWorker.getTopics(packageName, sdkName));
 
-                        if (topicsParam.isRecordObservation()) {
+                        if (topicsParam.shouldRecordObservation()) {
                             mTopicsWorker.recordUsage(
                                     topicsParam.getAppPackageName(), topicsParam.getSdkName());
                         }

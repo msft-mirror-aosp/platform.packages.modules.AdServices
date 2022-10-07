@@ -98,7 +98,7 @@ public class PreviewApiTest {
                 new AdvertisingTopicsClient.Builder()
                         .setContext(sContext)
                         .setSdkName("sdk2")
-                        .setRecordObservation(false)
+                        .setShouldRecordObservation(false)
                         .setExecutor(CALLBACK_EXECUTOR)
                         .build();
 
@@ -155,6 +155,8 @@ public class PreviewApiTest {
 
         // Turn off MDD to avoid model mismatching
         disableMddBackgroundTasks(true);
+
+        overrideAdservicesGlobalKillSwitch(true);
     }
 
     private void overridingAfterTest() {
@@ -163,6 +165,7 @@ public class PreviewApiTest {
         overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
         disableMddBackgroundTasks(false);
         overridingAdservicesLoggingLevel("INFO");
+        overrideAdservicesGlobalKillSwitch(false);
     }
 
     // Switch on/off for MDD service. Default value is false, which means MDD is enabled.
@@ -204,6 +207,15 @@ public class PreviewApiTest {
 
     private void overridingAdservicesLoggingLevel(String loggingLevel) {
         ShellUtils.runShellCommand("setprop log.tag.adservices %s", loggingLevel);
+    }
+
+    // Override global_kill_switch to ignore the effect of actual PH values.
+    // If isOverride = true, override global_kill_switch to OFF to allow adservices
+    // If isOverride = false, override global_kill_switch to meaningless value so that PhFlags will
+    // use the default value.
+    private void overrideAdservicesGlobalKillSwitch(boolean isOverride) {
+        String overrideString = isOverride ? "false" : "null";
+        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
     }
 
     // Used to get the package name. Copied over from com.android.adservices.AndroidServiceBinder

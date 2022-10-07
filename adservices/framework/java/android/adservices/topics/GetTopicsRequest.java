@@ -41,7 +41,7 @@ public final class GetTopicsRequest {
     }
 
     /** Get Record Observation. */
-    public boolean isRecordObservation() {
+    public boolean shouldRecordObservation() {
         return mRecordObservation;
     }
 
@@ -83,7 +83,7 @@ public final class GetTopicsRequest {
          *     in the next epoch.
          */
         @NonNull
-        public Builder setRecordObservation(boolean recordObservation) {
+        public Builder setShouldRecordObservation(boolean recordObservation) {
             mRecordObservation = recordObservation;
             return this;
         }
