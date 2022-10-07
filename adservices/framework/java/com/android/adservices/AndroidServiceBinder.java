@@ -117,7 +117,7 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
                         mServiceConnection = null;
                         return null;
                     } else {
-                        LogUtil.d("bindService() succeeded...");
+                        LogUtil.d("bindService() started...");
                     }
                 } catch (Exception e) {
                     LogUtil.e(
@@ -127,7 +127,7 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
                     return null;
                 }
             } else {
-                LogUtil.d("bindService() already pending...");
+                LogUtil.d("There is already a pending connection!");
             }
         }
 
@@ -177,7 +177,7 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
 
         @Override
         public void onNullBinding(ComponentName name) {
-            LogUtil.e("onNullBinding shouldn't happen: " + mServiceIntentAction);
+            LogUtil.e("onNullBinding " + mServiceIntentAction);
             unbindFromService();
             mConnectionCountDownLatch.countDown();
         }
@@ -230,12 +230,10 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
     @Override
     public void unbindFromService() {
         synchronized (mLock) {
-            if (mService == null || mServiceConnection == null) {
-                return; // Nothing to release.
+            if (mServiceConnection != null) {
+                LogUtil.d("unbinding...");
+                mContext.unbindService(mServiceConnection);
             }
-
-            LogUtil.d("unbinding...");
-            mContext.unbindService(mServiceConnection);
             mServiceConnection = null;
             mService = null;
         }

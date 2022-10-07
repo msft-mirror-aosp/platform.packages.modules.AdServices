@@ -52,7 +52,7 @@ public final class PrivacyParams {
 
     /**
      * Rate limit window for (Source Site, Destination Site, Reporting Site, Window) privacy unit.
-     * 28 days.
+     * 30 days.
      */
     public static final long RATE_LIMIT_WINDOW_MILLISECONDS = TimeUnit.DAYS.toMillis(30);
 

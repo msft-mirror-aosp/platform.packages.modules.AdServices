@@ -18,6 +18,8 @@ package com.android.adservices.tests.cts.topics;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertThrows;
+
 import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.Topic;
@@ -45,13 +47,16 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 @RunWith(JUnit4.class)
-public class PreviewApiTest {
-    private static final String TAG = "PreviewApiTest";
+public class TopicsConnectionTest {
+    private static final String TAG = "TopicsConnectionTest";
+
+    private static final String ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE = "Service is not available.";
+
     // The JobId of the Epoch Computation.
     private static final int EPOCH_JOB_ID = 2;
 
     // Override the Epoch Job Period to this value to speed up the epoch computation.
-    private static final long TEST_EPOCH_JOB_PERIOD_MS = 3_000;
+    private static final long TEST_EPOCH_JOB_PERIOD_MS = 3000;
 
     // Default Epoch Period.
     private static final long TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000; // 7 days.
@@ -69,10 +74,6 @@ public class PreviewApiTest {
 
     @Before
     public void setup() throws Exception {
-        // We need to skip 3 epochs so that if there is any usage from other test runs, it will
-        // not be used for epoch retrieval.
-        Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
-
         overridingBeforeTest();
     }
 
@@ -82,9 +83,12 @@ public class PreviewApiTest {
     }
 
     @Test
-    public void testRecordObservation() throws ExecutionException, InterruptedException {
-        // The Test app has 2 SDKs: sdk1 calls the Topics API. This will record the usage for Sdk1
-        // by default, recordObservation is true.
+    public void testEnableGlobalKillSwitch() throws Exception {
+        // First enable the Global Kill Switch and then connect to the TopicsService.
+        // The connection should fail with Exception.
+        enableGlobalKillSwitch(/* enabled */ true);
+
+        // Sdk1 calls the Topics API.
         AdvertisingTopicsClient advertisingTopicsClient1 =
                 new AdvertisingTopicsClient.Builder()
                         .setContext(sContext)
@@ -92,23 +96,19 @@ public class PreviewApiTest {
                         .setExecutor(CALLBACK_EXECUTOR)
                         .build();
 
-        // Sdk2 calls the Topics API and set the Record Observation to false. This will not record
-        // the usage for sdk2.
-        AdvertisingTopicsClient advertisingTopicsClient2 =
-                new AdvertisingTopicsClient.Builder()
-                        .setContext(sContext)
-                        .setSdkName("sdk2")
-                        .setShouldRecordObservation(false)
-                        .setExecutor(CALLBACK_EXECUTOR)
-                        .build();
+        // Due to global kill switch is enabled, we receive the IllegalStateException.
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class, () -> advertisingTopicsClient1.getTopics().get());
+        assertThat(exception).hasCauseThat().isInstanceOf(IllegalStateException.class);
+        assertThat(exception).hasMessageThat().contains(ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE);
+
+        // Now disable the Global Kill Switch, we should be able to connect to the Service normally.
+        enableGlobalKillSwitch(/* enabled */ false);
 
         // At beginning, Sdk1 receives no topic.
         GetTopicsResponse sdk1Result = advertisingTopicsClient1.getTopics().get();
         assertThat(sdk1Result.getTopics()).isEmpty();
-
-        // At beginning, Sdk2 receives no topic.
-        GetTopicsResponse sdk2Result = advertisingTopicsClient2.getTopics().get();
-        assertThat(sdk2Result.getTopics()).isEmpty();
 
         // Now force the Epoch Computation Job. This should be done in the same epoch for
         // callersCanLearnMap to have the entry for processing.
@@ -132,13 +132,9 @@ public class PreviewApiTest {
 
         // topic is one of the 5 classification topics of the Test App.
         assertThat(topic.getTopicId()).isIn(Arrays.asList(10147, 10253, 10175, 10254, 10333));
+
         assertThat(topic.getModelVersion()).isAtLeast(1L);
         assertThat(topic.getTaxonomyVersion()).isAtLeast(1L);
-
-        // Sdk2 can not get any topics in this epoch because sdk2 sets not to record
-        // observation in previous epoch.
-        sdk2Result = advertisingTopicsClient2.getTopics().get();
-        assertThat(sdk2Result.getTopics()).isEmpty();
     }
 
     private void overridingBeforeTest() {
@@ -166,6 +162,14 @@ public class PreviewApiTest {
         disableMddBackgroundTasks(false);
         overridingAdservicesLoggingLevel("INFO");
         overrideAdservicesGlobalKillSwitch(false);
+    }
+
+    // Override global_kill_switch to ignore the effect of actual PH values.
+    // If enabled = true, override global_kill_switch to ON to turn off Adservices.
+    // If enabled = false, the AdServices is enabled.
+    private void enableGlobalKillSwitch(boolean enabled) {
+        String overrideString = enabled ? "true" : "false";
+        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
     }
 
     // Switch on/off for MDD service. Default value is false, which means MDD is enabled.

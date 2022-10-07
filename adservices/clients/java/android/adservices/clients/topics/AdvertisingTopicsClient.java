@@ -70,7 +70,7 @@ public class AdvertisingTopicsClient {
     }
 
     /** Get Record Observation. */
-    public boolean isRecordObservation() {
+    public boolean shouldRecordObservation() {
         return mRecordObservation;
     }
 
@@ -83,7 +83,7 @@ public class AdvertisingTopicsClient {
                         builder = builder.setAdsSdkName(mSdkName);
                     }
                     if (!mRecordObservation) {
-                        builder.setRecordObservation(false);
+                        builder.setShouldRecordObservation(false);
                     }
                     GetTopicsRequest request = builder.build();
 
@@ -136,7 +136,7 @@ public class AdvertisingTopicsClient {
          *     host app or not. This will be used to determine if the caller can receive the topic
          *     in the next epoch.
          */
-        public @NonNull Builder setRecordObservation(boolean recordObservation) {
+        public @NonNull Builder setShouldRecordObservation(boolean recordObservation) {
             mRecordObservation = recordObservation;
             return this;
         }

@@ -167,7 +167,7 @@ public final class TopicsManager {
                             .setAppPackageName(appPackageName)
                             .setSdkName(sdkName)
                             .setSdkPackageName(sdkPackageName)
-                            .setRecordObservation(getTopicsRequest.isRecordObservation())
+                            .setShouldRecordObservation(getTopicsRequest.shouldRecordObservation())
                             .build(),
                     callerMetadata,
                     new IGetTopicsCallback.Stub() {
