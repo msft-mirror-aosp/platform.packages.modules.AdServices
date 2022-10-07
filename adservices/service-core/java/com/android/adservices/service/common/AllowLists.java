@@ -54,7 +54,9 @@ public class AllowLists {
 
         // TODO(b/237686242): Cache the AllowList so that we don't need to read from Flags and split
         // on every API call.
-        return Arrays.asList(allowList.split(SPLITTER)).contains(appPackageName);
+        return Arrays.stream(allowList.split(SPLITTER))
+                .map(String::trim)
+                .anyMatch(packageName -> packageName.equals(appPackageName));
     }
 
     /**
@@ -88,7 +90,9 @@ public class AllowLists {
 
         // TODO(b/237686242): Cache the AllowList so that we don't need to read from Flags and split
         // on every API call.
-        return Arrays.asList(signatureAllowList.split(SPLITTER)).contains(hexSignature);
+        return Arrays.stream(signatureAllowList.split(SPLITTER))
+                .map(String::trim)
+                .anyMatch(signature -> signature.equals(hexSignature));
     }
 
     /**
