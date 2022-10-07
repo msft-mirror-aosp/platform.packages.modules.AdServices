@@ -995,13 +995,13 @@ public class MeasurementDaoTest {
         reportList1.add(
                 new EventReport.Builder()
                         .setId("1")
-                        .setSourceId(new UnsignedLong(3L))
+                        .setSourceEventId(new UnsignedLong(3L))
                         .setEnrollmentId("1")
                         .build());
         reportList1.add(
                 new EventReport.Builder()
                         .setId("7")
-                        .setSourceId(new UnsignedLong(3L))
+                        .setSourceEventId(new UnsignedLong(3L))
                         .setEnrollmentId("1")
                         .build());
 
@@ -1010,13 +1010,13 @@ public class MeasurementDaoTest {
         reportList2.add(
                 new EventReport.Builder()
                         .setId("3")
-                        .setSourceId(new UnsignedLong(4L))
+                        .setSourceEventId(new UnsignedLong(4L))
                         .setEnrollmentId("1")
                         .build());
         reportList2.add(
                 new EventReport.Builder()
                         .setId("8")
-                        .setSourceId(new UnsignedLong(4L))
+                        .setSourceEventId(new UnsignedLong(4L))
                         .setEnrollmentId("1")
                         .build());
 
@@ -1025,25 +1025,25 @@ public class MeasurementDaoTest {
         reportList3.add(
                 new EventReport.Builder()
                         .setId("2")
-                        .setSourceId(new UnsignedLong(5L))
+                        .setSourceEventId(new UnsignedLong(5L))
                         .setEnrollmentId("1")
                         .build());
         reportList3.add(
                 new EventReport.Builder()
                         .setId("4")
-                        .setSourceId(new UnsignedLong(6L))
+                        .setSourceEventId(new UnsignedLong(6L))
                         .setEnrollmentId("1")
                         .build());
         reportList3.add(
                 new EventReport.Builder()
                         .setId("5")
-                        .setSourceId(new UnsignedLong(1L))
+                        .setSourceEventId(new UnsignedLong(1L))
                         .setEnrollmentId("1")
                         .build());
         reportList3.add(
                 new EventReport.Builder()
                         .setId("6")
-                        .setSourceId(new UnsignedLong(2L))
+                        .setSourceEventId(new UnsignedLong(2L))
                         .setEnrollmentId("1")
                         .build());
 
@@ -1063,8 +1063,9 @@ public class MeasurementDaoTest {
                         eventReport -> {
                             ContentValues values = new ContentValues();
                             values.put(EventReportContract.ID, eventReport.getId());
-                            values.put(EventReportContract.SOURCE_ID,
-                                    eventReport.getSourceId().getValue());
+                            values.put(
+                                    EventReportContract.SOURCE_EVENT_ID,
+                                    eventReport.getSourceEventId().getValue());
                             values.put(
                                     EventReportContract.ENROLLMENT_ID,
                                     eventReport.getEnrollmentId());
@@ -2072,14 +2073,14 @@ public class MeasurementDaoTest {
         reportList.add(
                 new EventReport.Builder()
                         .setId("1")
-                        .setSourceId(new UnsignedLong(1L))
+                        .setSourceEventId(new UnsignedLong(1L))
                         .setAttributionDestination(Uri.parse("android-app://app-destination-1"))
                         .setEnrollmentId("enrollment-id")
                         .build());
         reportList.add(
                 new EventReport.Builder()
                         .setId("2")
-                        .setSourceId(new UnsignedLong(2L))
+                        .setSourceEventId(new UnsignedLong(2L))
                         .setAttributionDestination(Uri.parse("android-app://app-destination-2"))
                         .setEnrollmentId("enrollment-id")
                         .build());
@@ -2087,7 +2088,9 @@ public class MeasurementDaoTest {
                 report -> {
                     ContentValues values = new ContentValues();
                     values.put(EventReportContract.ID, report.getId());
-                    values.put(EventReportContract.SOURCE_ID, report.getSourceId().toString());
+                    values.put(
+                            EventReportContract.SOURCE_EVENT_ID,
+                            report.getSourceEventId().toString());
                     values.put(
                             EventReportContract.ATTRIBUTION_DESTINATION,
                             report.getAttributionDestination().toString());
