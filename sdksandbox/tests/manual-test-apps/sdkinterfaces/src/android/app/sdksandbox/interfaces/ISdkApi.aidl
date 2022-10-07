@@ -16,4 +16,5 @@ package android.app.sdksandbox.interfaces;
 
 interface ISdkApi {
     String createFile(int sizeInMb);
+    String getSyncedSharedPreferencesString(String key);
 }
