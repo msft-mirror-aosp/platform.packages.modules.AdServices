@@ -51,11 +51,9 @@
                     android:layout_marginStart="0dp"
                     android:src="@drawable/ic_android_icon"
                     tools:ignore="ContentDescription" />
-
                 <TextView
                     android:text="@string/notificationUI_header_title_eu"
                     style="@style/MainStyle.H1" />
-
             </LinearLayout>
 
             <LinearLayout
@@ -65,7 +63,8 @@
                 android:layout_marginTop="16dp"
                 android:padding="24dp"
                 android:background="@drawable/ic_rounded_background"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:animateLayoutChanges="true">
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -80,28 +79,7 @@
                     android:layout_marginTop="12dp"
                     android:text="@string/notificationUI_container1_body_text_eu"
                     style="@style/MainStyle.Body1" />
-            </LinearLayout>
 
-            <LinearLayout
-                android:id="@+id/container2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:padding="24dp"
-                android:background="@drawable/ic_rounded_background"
-                android:orientation="vertical">
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/notificationUI_container2_title_eu"
-                    style="@style/MainStyle.H4"
-                    android:gravity="center_vertical"
-                    android:drawableStart="@drawable/ic_notification_icon_2"
-                    android:drawablePadding="24dp"/>
-                <TextView
-                    android:layout_marginTop="12dp"
-                    android:text="@string/notificationUI_container2_body_text_eu"
-                    style="@style/MainStyle.Body1" />
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
@@ -115,7 +93,6 @@
                     android:layout_marginTop="0dp"
                     android:text="@string/notificationUI_container1_control_text_eu"
                     style="@style/MainStyle.Body1" />
-
                 <LinearLayout
                     android:id="@+id/how_it_works_expanded_text"
                     android:layout_width="match_parent"
@@ -143,6 +120,27 @@
                 </LinearLayout>
             </LinearLayout>
 
+            <LinearLayout
+                android:id="@+id/container2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:padding="24dp"
+                android:background="@drawable/ic_rounded_background"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/notificationUI_container2_title_eu"
+                    style="@style/MainStyle.H4"
+                    android:gravity="center_vertical"
+                    android:drawableStart="@drawable/ic_notification_icon_2"
+                    android:drawablePadding="24dp"/>
+                <TextView
+                    android:layout_marginTop="12dp"
+                    android:text="@string/notificationUI_container2_body_text_eu"
+                    style="@style/MainStyle.Body1" />
+            </LinearLayout>
         </LinearLayout>
     </ScrollView>
 
