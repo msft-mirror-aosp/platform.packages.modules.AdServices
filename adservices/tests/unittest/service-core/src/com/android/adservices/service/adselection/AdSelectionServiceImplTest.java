@@ -31,12 +31,13 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES;
-import static com.android.adservices.stats.FledgeApiCallStatsMatcher.aCallStatForFledgeApiWithStatus;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.mock;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
@@ -328,12 +329,9 @@ public class AdSelectionServiceImplTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, STATUS_SUCCESS);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                STATUS_SUCCESS));
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
     }
 
     @Test
@@ -420,13 +418,9 @@ public class AdSelectionServiceImplTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                        STATUS_USER_CONSENT_REVOKED);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                STATUS_USER_CONSENT_REVOKED));
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_USER_CONSENT_REVOKED),
+                        anyInt());
     }
 
     @Test
@@ -524,12 +518,9 @@ public class AdSelectionServiceImplTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, STATUS_INTERNAL_ERROR);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                STATUS_INTERNAL_ERROR));
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_INTERNAL_ERROR),
+                        anyInt());
     }
 
     @Test
@@ -627,12 +618,9 @@ public class AdSelectionServiceImplTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, STATUS_INTERNAL_ERROR);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                STATUS_INTERNAL_ERROR));
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_INTERNAL_ERROR),
+                        anyInt());
     }
 
     @Test
@@ -736,12 +724,9 @@ public class AdSelectionServiceImplTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, STATUS_INTERNAL_ERROR);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                STATUS_INTERNAL_ERROR));
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_INTERNAL_ERROR),
+                        anyInt());
     }
 
     @Test
@@ -840,12 +825,9 @@ public class AdSelectionServiceImplTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, STATUS_INTERNAL_ERROR);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                STATUS_INTERNAL_ERROR));
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_INTERNAL_ERROR),
+                        anyInt());
     }
 
     @Test
@@ -939,13 +921,9 @@ public class AdSelectionServiceImplTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                        STATUS_INVALID_ARGUMENT);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                STATUS_INVALID_ARGUMENT));
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_INVALID_ARGUMENT),
+                        anyInt());
     }
 
     @Test
@@ -1038,12 +1016,9 @@ public class AdSelectionServiceImplTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, STATUS_INTERNAL_ERROR);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                STATUS_INTERNAL_ERROR));
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_INTERNAL_ERROR),
+                        anyInt());
     }
 
     @Test
@@ -1137,12 +1112,9 @@ public class AdSelectionServiceImplTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, STATUS_INTERNAL_ERROR);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                STATUS_INTERNAL_ERROR));
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_INTERNAL_ERROR),
+                        anyInt());
     }
 
     @Test
@@ -1257,12 +1229,9 @@ public class AdSelectionServiceImplTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, STATUS_SUCCESS);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                STATUS_SUCCESS));
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
     }
 
     @Test
@@ -1309,10 +1278,8 @@ public class AdSelectionServiceImplTest {
                                 adSelectionConfig),
                         TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerSpy).logFledgeApiCallStats(SHORT_API_NAME_OVERRIDE, STATUS_SUCCESS);
         verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(SHORT_API_NAME_OVERRIDE, STATUS_SUCCESS));
+                .logFledgeApiCallStats(eq(SHORT_API_NAME_OVERRIDE), eq(STATUS_SUCCESS), anyInt());
     }
 
     @Test
@@ -1362,11 +1329,8 @@ public class AdSelectionServiceImplTest {
                         TEST_PACKAGE_NAME));
 
         verify(mAdServicesLoggerSpy)
-                .logFledgeApiCallStats(SHORT_API_NAME_OVERRIDE, STATUS_USER_CONSENT_REVOKED);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                SHORT_API_NAME_OVERRIDE, STATUS_USER_CONSENT_REVOKED));
+                .logFledgeApiCallStats(
+                        eq(SHORT_API_NAME_OVERRIDE), eq(STATUS_USER_CONSENT_REVOKED), anyInt());
     }
 
     @Test
@@ -1411,11 +1375,8 @@ public class AdSelectionServiceImplTest {
                         TEST_PACKAGE_NAME));
 
         verify(mAdServicesLoggerSpy)
-                .logFledgeApiCallStats(SHORT_API_NAME_OVERRIDE, STATUS_INTERNAL_ERROR);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                SHORT_API_NAME_OVERRIDE, STATUS_INTERNAL_ERROR));
+                .logFledgeApiCallStats(
+                        eq(SHORT_API_NAME_OVERRIDE), eq(STATUS_INTERNAL_ERROR), anyInt());
     }
 
     @Test
@@ -1474,11 +1435,8 @@ public class AdSelectionServiceImplTest {
                         adSelectionConfigId, TEST_PACKAGE_NAME));
 
         verify(mAdServicesLoggerSpy)
-                .logFledgeApiCallStats(SHORT_API_NAME_REMOVE_OVERRIDE, STATUS_SUCCESS);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                SHORT_API_NAME_REMOVE_OVERRIDE, STATUS_SUCCESS));
+                .logFledgeApiCallStats(
+                        eq(SHORT_API_NAME_REMOVE_OVERRIDE), eq(STATUS_SUCCESS), anyInt());
     }
 
     @Test
@@ -1539,11 +1497,10 @@ public class AdSelectionServiceImplTest {
                         adSelectionConfigId, TEST_PACKAGE_NAME));
 
         verify(mAdServicesLoggerSpy)
-                .logFledgeApiCallStats(SHORT_API_NAME_REMOVE_OVERRIDE, STATUS_USER_CONSENT_REVOKED);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                SHORT_API_NAME_REMOVE_OVERRIDE, STATUS_USER_CONSENT_REVOKED));
+                .logFledgeApiCallStats(
+                        eq(SHORT_API_NAME_REMOVE_OVERRIDE),
+                        eq(STATUS_USER_CONSENT_REVOKED),
+                        anyInt());
     }
 
     @Test
@@ -1597,11 +1554,8 @@ public class AdSelectionServiceImplTest {
                         adSelectionConfigId, TEST_PACKAGE_NAME));
 
         verify(mAdServicesLoggerSpy)
-                .logFledgeApiCallStats(SHORT_API_NAME_REMOVE_OVERRIDE, STATUS_INTERNAL_ERROR);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                SHORT_API_NAME_REMOVE_OVERRIDE, STATUS_INTERNAL_ERROR));
+                .logFledgeApiCallStats(
+                        eq(SHORT_API_NAME_REMOVE_OVERRIDE), eq(STATUS_INTERNAL_ERROR), anyInt());
     }
 
     @Test
@@ -1663,11 +1617,8 @@ public class AdSelectionServiceImplTest {
                         adSelectionConfigId, TEST_PACKAGE_NAME));
 
         verify(mAdServicesLoggerSpy)
-                .logFledgeApiCallStats(SHORT_API_NAME_REMOVE_OVERRIDE, STATUS_SUCCESS);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                SHORT_API_NAME_REMOVE_OVERRIDE, STATUS_SUCCESS));
+                .logFledgeApiCallStats(
+                        eq(SHORT_API_NAME_REMOVE_OVERRIDE), eq(STATUS_SUCCESS), anyInt());
     }
 
     @Test
@@ -1773,11 +1724,8 @@ public class AdSelectionServiceImplTest {
                         adSelectionConfigId3, TEST_PACKAGE_NAME));
 
         verify(mAdServicesLoggerSpy)
-                .logFledgeApiCallStats(SHORT_API_NAME_RESET_ALL_OVERRIDES, STATUS_SUCCESS);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                SHORT_API_NAME_RESET_ALL_OVERRIDES, STATUS_SUCCESS));
+                .logFledgeApiCallStats(
+                        eq(SHORT_API_NAME_RESET_ALL_OVERRIDES), eq(STATUS_SUCCESS), anyInt());
     }
 
     @Test
@@ -1880,11 +1828,8 @@ public class AdSelectionServiceImplTest {
                         adSelectionConfigId3, TEST_PACKAGE_NAME));
 
         verify(mAdServicesLoggerSpy)
-                .logFledgeApiCallStats(SHORT_API_NAME_RESET_ALL_OVERRIDES, STATUS_SUCCESS);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                SHORT_API_NAME_RESET_ALL_OVERRIDES, STATUS_SUCCESS));
+                .logFledgeApiCallStats(
+                        eq(SHORT_API_NAME_RESET_ALL_OVERRIDES), eq(STATUS_SUCCESS), anyInt());
     }
 
     @Test
@@ -1990,11 +1935,9 @@ public class AdSelectionServiceImplTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        SHORT_API_NAME_RESET_ALL_OVERRIDES, STATUS_USER_CONSENT_REVOKED);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                SHORT_API_NAME_RESET_ALL_OVERRIDES, STATUS_USER_CONSENT_REVOKED));
+                        eq(SHORT_API_NAME_RESET_ALL_OVERRIDES),
+                        eq(STATUS_USER_CONSENT_REVOKED),
+                        anyInt());
     }
 
     @Test
@@ -2091,11 +2034,10 @@ public class AdSelectionServiceImplTest {
                         adSelectionConfigId3, TEST_PACKAGE_NAME));
 
         verify(mAdServicesLoggerSpy)
-                .logFledgeApiCallStats(SHORT_API_NAME_RESET_ALL_OVERRIDES, STATUS_INTERNAL_ERROR);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                SHORT_API_NAME_RESET_ALL_OVERRIDES, STATUS_INTERNAL_ERROR));
+                .logFledgeApiCallStats(
+                        eq(SHORT_API_NAME_RESET_ALL_OVERRIDES),
+                        eq(STATUS_INTERNAL_ERROR),
+                        anyInt());
     }
 
     @Test
@@ -2714,13 +2656,9 @@ public class AdSelectionServiceImplTest {
         // TODO(b/242139312): Remove atLeastOnce once this the double logging is addressed
         Mockito.verify(mAdServicesLoggerSpy, Mockito.atLeastOnce())
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                        STATUS_CALLER_NOT_ALLOWED);
-        verify(mAdServicesLoggerSpy, Mockito.atLeastOnce())
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                STATUS_CALLER_NOT_ALLOWED));
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_CALLER_NOT_ALLOWED),
+                        anyInt());
     }
 
     @Test
@@ -2821,13 +2759,9 @@ public class AdSelectionServiceImplTest {
         // TODO(b/242139312): Remove atLeastOnce once this the double logging is addressed
         Mockito.verify(mAdServicesLoggerSpy, Mockito.atLeastOnce())
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                        STATUS_CALLER_NOT_ALLOWED);
-        verify(mAdServicesLoggerSpy, Mockito.atLeastOnce())
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                STATUS_CALLER_NOT_ALLOWED));
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_CALLER_NOT_ALLOWED),
+                        anyInt());
     }
 
     @Test
@@ -2938,12 +2872,9 @@ public class AdSelectionServiceImplTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, STATUS_SUCCESS);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                STATUS_SUCCESS));
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
     }
 
     private AdSelectionOverrideTestCallback callAddOverride(
@@ -2962,7 +2893,9 @@ public class AdSelectionServiceImplTest {
                     resultLatch.countDown();
                     return null;
                 };
-        doAnswer(countDownAnswer).when(mAdServicesLoggerSpy).logApiCallStats(any());
+        doAnswer(countDownAnswer)
+                .when(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
 
         adSelectionService.overrideAdSelectionConfigRemoteInfo(
                 adSelectionConfig, decisionLogicJS, trustedScoringSignals, callback);
@@ -2983,7 +2916,9 @@ public class AdSelectionServiceImplTest {
                     resultLatch.countDown();
                     return null;
                 };
-        doAnswer(countDownAnswer).when(mAdServicesLoggerSpy).logApiCallStats(any());
+        doAnswer(countDownAnswer)
+                .when(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
 
         adSelectionService.removeAdSelectionConfigRemoteInfoOverride(adSelectionConfig, callback);
         resultLatch.await();
@@ -3079,13 +3014,9 @@ public class AdSelectionServiceImplTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                        STATUS_INVALID_ARGUMENT);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                STATUS_INVALID_ARGUMENT));
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_INVALID_ARGUMENT),
+                        anyInt());
     }
 
     @Test
@@ -3226,12 +3157,9 @@ public class AdSelectionServiceImplTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, STATUS_SUCCESS);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                STATUS_SUCCESS));
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
 
         assertFalse(callbackSubsequentCall.mIsSuccess);
         assertEquals(
@@ -3265,7 +3193,9 @@ public class AdSelectionServiceImplTest {
                     resultLatch.countDown();
                     return null;
                 };
-        doAnswer(countDownAnswer).when(mAdServicesLoggerSpy).logApiCallStats(any());
+        doAnswer(countDownAnswer)
+                .when(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
 
         adSelectionService.resetAllAdSelectionConfigRemoteOverrides(callback);
         resultLatch.await();
@@ -3285,7 +3215,9 @@ public class AdSelectionServiceImplTest {
                     resultLatch.countDown();
                     return null;
                 };
-        doAnswer(countDownAnswer).when(mAdServicesLoggerSpy).logApiCallStats(any());
+        doAnswer(countDownAnswer)
+                .when(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
 
         adSelectionService.reportImpression(requestParams, callback);
         resultLatch.await();
