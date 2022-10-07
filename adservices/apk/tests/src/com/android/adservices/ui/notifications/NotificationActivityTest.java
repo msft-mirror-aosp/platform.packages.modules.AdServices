@@ -30,7 +30,7 @@ import androidx.test.core.app.ActivityScenario;
 
 import com.android.adservices.api.R;
 import com.android.adservices.service.common.BackgroundJobsManager;
-import com.android.adservices.ui.settings.AdServicesSettingsActivity;
+import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.StaticMockitoSession;
@@ -72,7 +72,7 @@ public class NotificationActivityTest {
 
     /**
      * Test if {@link AdServicesSettingsMainFragment} is displayed in {@link
-     * AdServicesSettingsActivity}.
+     * AdServicesSettingsMainActivity}.
      */
     @Test
     public void test_FragmentContainer_isDisplayed() {
