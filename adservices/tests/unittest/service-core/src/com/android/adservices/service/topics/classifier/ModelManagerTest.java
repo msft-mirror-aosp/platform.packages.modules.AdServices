@@ -62,6 +62,8 @@ public class ModelManagerTest {
     private static final String TEST_APPS_FILE_PATH = "classifier/precomputed_test_app_list.csv";
     private static final String TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH =
             "classifier/classifier_test_assets_metadata.json";
+    private static final String TEST_CLASSIFIER_MODEL_PATH = "classifier/test_model.tflite";
+
     private static final String PRODUCTION_LABELS_FILE_PATH = "classifier/labels_topics.txt";
     private static final String PRODUCTION_APPS_FILE_PATH = "classifier/precomputed_app_list.csv";
     private static final String PRODUCTION_CLASSIFIER_ASSETS_METADATA_FILE_PATH =
@@ -106,10 +108,10 @@ public class ModelManagerTest {
         mProductionModelManager =
                 new ModelManager(
                         sContext,
-                        PRODUCTION_LABELS_FILE_PATH,
-                        PRODUCTION_APPS_FILE_PATH,
-                        PRODUCTION_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
-                        MODEL_FILE_PATH,
+                        TEST_LABELS_FILE_PATH,
+                        TEST_APPS_FILE_PATH,
+                        TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
+                        TEST_CLASSIFIER_MODEL_PATH,
                         mMockFileStorage,
                         mMockDownloadedFiles);
 
@@ -117,6 +119,23 @@ public class ModelManagerTest {
         // Check byteBuffer capacity greater than 0 when retrieveModel() finds bundled TFLite model
         // and loads file as a ByteBuffer.
         assertThat(byteBuffer.capacity()).isGreaterThan(0);
+    }
+
+    @Test
+    public void testRetrieveModel_noBundledModel() throws IOException {
+        mProductionModelManager =
+                new ModelManager(
+                        sContext,
+                        TEST_LABELS_FILE_PATH,
+                        TEST_APPS_FILE_PATH,
+                        TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
+                        "IncorrectPathWithNoModel",
+                        mMockFileStorage,
+                        mMockDownloadedFiles);
+
+        ByteBuffer byteBuffer = mProductionModelManager.retrieveModel();
+        // Check byteBuffer capacity is 0 when failed to read a model.
+        assertThat(byteBuffer.capacity()).isEqualTo(0);
     }
 
     @Test
@@ -337,7 +356,7 @@ public class ModelManagerTest {
         // The asset "labels_topics" should have attribution "asset_version" and its value should be
         // "34"
         assertThat(mTestClassifierAssetsMetadata.get("labels_topics").get("asset_version"))
-                .isEqualTo("34");
+                .isEqualTo("2");
 
         // The asset "labels_topics" should have attribution "path" and its value should be
         // "assets/classifier/labels_test_topics.txt"
@@ -506,6 +525,54 @@ public class ModelManagerTest {
         // its value should be "fb369d0b77d8b84a6256e9cc6a77f350a0afde5781626d499f996f2e01e7cc26"
         assertThat(mProductionClassifierAssetsMetadata.get("precomputed_app_list").get("checksum"))
                 .isEqualTo("fb369d0b77d8b84a6256e9cc6a77f350a0afde5781626d499f996f2e01e7cc26");
+    }
+
+    @Test
+    public void testIsModelAvailable_downloadedModelIsAvailable() {
+        mTestModelManager =
+                new ModelManager(
+                        sContext,
+                        TEST_LABELS_FILE_PATH,
+                        TEST_APPS_FILE_PATH,
+                        TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
+                        TEST_CLASSIFIER_MODEL_PATH,
+                        mMockFileStorage,
+                        mMockDownloadedFiles);
+
+        // If the downloaded model is available, return true.
+        assertThat(mTestModelManager.isModelAvailable()).isTrue();
+    }
+
+    @Test
+    public void testIsModelAvailable_nonNullBundledModel() {
+        mTestModelManager =
+                new ModelManager(
+                        sContext,
+                        TEST_LABELS_FILE_PATH,
+                        TEST_APPS_FILE_PATH,
+                        TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
+                        TEST_CLASSIFIER_MODEL_PATH,
+                        mMockFileStorage,
+                        null /*No downloaded files.*/);
+
+        // If the bundled model is available and non-null, return true.
+        assertThat(mTestModelManager.isModelAvailable()).isTrue();
+    }
+
+    @Test
+    public void testIsModelAvailable_nullBundledModel() {
+        mTestModelManager =
+                new ModelManager(
+                        sContext,
+                        TEST_LABELS_FILE_PATH,
+                        TEST_APPS_FILE_PATH,
+                        TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
+                        "ModelWrongPath",
+                        mMockFileStorage,
+                        null /*No downloaded files.*/);
+
+        // If the bundled model is available but null, return false.
+        assertThat(mTestModelManager.isModelAvailable()).isFalse();
     }
 
     @Test
