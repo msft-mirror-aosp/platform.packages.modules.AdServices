@@ -57,6 +57,7 @@ public class AllowListsTest {
     private static byte[] sSignature3;
     private static String sHexString1;
     private static String sHexString2;
+    private static String sHexString3;
 
     @Mock PackageManager mMockPackageManager;
     @Mock SigningInfo mMockSigningInfo;
@@ -103,12 +104,23 @@ public class AllowListsTest {
     }
 
     @Test
-    public void testAppCanUsePpapi_havingSpaceFail() {
-        String allowList = SOME_PACKAGE_NAME + ", AnotherPackageName";
-        assertThat(AllowLists.isPackageAllowListed(allowList, "notAllowedPackageName")).isFalse();
-        assertThat(AllowLists.isPackageAllowListed(allowList, SOME_PACKAGE_NAME)).isTrue();
-        // There is a space in the package name list.
-        assertThat(AllowLists.isPackageAllowListed(allowList, "AnotherPackageName")).isFalse();
+    public void testAppCanUsePpapi_havingSpaces() {
+        // Allow list contains leading/trailing spaces
+        String listWithSpace =
+                SOME_PACKAGE_NAME + ", PackageName1,PackageName2 ,  PackageName3    ";
+        assertThat(AllowLists.isPackageAllowListed(listWithSpace, SOME_PACKAGE_NAME)).isTrue();
+        assertThat(AllowLists.isPackageAllowListed(listWithSpace, "PackageName1")).isTrue();
+        assertThat(AllowLists.isPackageAllowListed(listWithSpace, "PackageName2")).isTrue();
+        assertThat(AllowLists.isPackageAllowListed(listWithSpace, "PackageName3")).isTrue();
+
+        // Allow list contains leading/trailing line separators
+        String listWithLineSeparator =
+                SOME_PACKAGE_NAME + ",\nPackageName1,PackageName2\n,\n\nPackageName3\n\n\n";
+        assertThat(AllowLists.isPackageAllowListed(listWithLineSeparator, SOME_PACKAGE_NAME))
+                .isTrue();
+        assertThat(AllowLists.isPackageAllowListed(listWithLineSeparator, "PackageName1")).isTrue();
+        assertThat(AllowLists.isPackageAllowListed(listWithLineSeparator, "PackageName2")).isTrue();
+        assertThat(AllowLists.isPackageAllowListed(listWithLineSeparator, "PackageName3")).isTrue();
     }
 
     @Test
@@ -152,18 +164,37 @@ public class AllowListsTest {
     }
 
     @Test
-    public void testSignatureAllowList_spaceBetweenSignatures() {
-        String signatureAllowList = sHexString1 + ", " + sHexString2;
+    public void testSignatureAllowList_havingSpace() {
+        // Allow list contains leading/trailing spaces
+        String listWithSpace = sHexString1 + " , " + sHexString2 + ",  " + sHexString3 + "   ";
+        mockSignature(sSignature1);
+        assertThat(AllowLists.isSignatureAllowListed(mContext, listWithSpace, SOME_PACKAGE_NAME))
+                .isTrue();
+        mockSignature(sSignature2);
+        assertThat(AllowLists.isSignatureAllowListed(mContext, listWithSpace, SOME_PACKAGE_NAME))
+                .isTrue();
+        mockSignature(sSignature3);
+        assertThat(AllowLists.isSignatureAllowListed(mContext, listWithSpace, SOME_PACKAGE_NAME))
+                .isTrue();
+
+        // Allow list contains leading/trailing line separators
+        String listWithLineSeparator =
+                sHexString1 + "\n,\n" + sHexString2 + ",\n\n" + sHexString3 + "\n\n\n";
         mockSignature(sSignature1);
         assertThat(
                         AllowLists.isSignatureAllowListed(
-                                mContext, signatureAllowList, SOME_PACKAGE_NAME))
+                                mContext, listWithLineSeparator, SOME_PACKAGE_NAME))
                 .isTrue();
         mockSignature(sSignature2);
         assertThat(
                         AllowLists.isSignatureAllowListed(
-                                mContext, signatureAllowList, SOME_PACKAGE_NAME))
-                .isFalse();
+                                mContext, listWithLineSeparator, SOME_PACKAGE_NAME))
+                .isTrue();
+        mockSignature(sSignature3);
+        assertThat(
+                        AllowLists.isSignatureAllowListed(
+                                mContext, listWithLineSeparator, SOME_PACKAGE_NAME))
+                .isTrue();
     }
 
     @Test
@@ -259,5 +290,6 @@ public class AllowListsTest {
 
         sHexString1 = "0000000000000000000000000000000000000001";
         sHexString2 = "0000000000000000000000000000000000000002";
+        sHexString3 = "0000000000000000000000000000000000000003";
     }
 }
