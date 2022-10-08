@@ -165,7 +165,7 @@ public class ImpressionReporter {
             throw e.rethrowFromSystemServer();
         } finally {
             mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, resultCode);
+                    AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, resultCode, 0);
         }
     }
 
@@ -181,7 +181,7 @@ public class ImpressionReporter {
             // TODO(b/233681870): Investigate implementation of actual failures in
             //  logs/metrics
             mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, resultCode);
+                    AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, resultCode, 0);
         }
     }
 

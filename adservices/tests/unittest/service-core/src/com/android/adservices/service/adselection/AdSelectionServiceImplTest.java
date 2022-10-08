@@ -31,12 +31,13 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES;
-import static com.android.adservices.stats.FledgeApiCallStatsMatcher.aCallStatForFledgeApiWithStatus;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.mock;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
@@ -169,7 +170,8 @@ public class AdSelectionServiceImplTest {
     private final int mBytesPerPeriod = 1;
     private final AdServicesHttpsClient mClient =
             new AdServicesHttpsClient(AdServicesExecutors.getBlockingExecutor());
-    @Spy private final AdServicesLogger mAdServicesLoggerSpy = AdServicesLoggerImpl.getInstance();
+    private final AdServicesLogger mAdServicesLoggerMock =
+            ExtendedMockito.mock(AdServicesLoggerImpl.class);
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
     // This object access some system APIs
     @Mock public DevContextFilter mDevContextFilter;
@@ -177,13 +179,13 @@ public class AdSelectionServiceImplTest {
 
     @Spy
     FledgeAuthorizationFilter mFledgeAuthorizationFilterSpy =
-            FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerSpy);
+            FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerMock);
 
     private Flags mFlags = new FlagsWithEnrollmentCheckEnabledSwitch(false);
 
     @Spy
     FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
-            new FledgeAllowListsFilter(mFlags, mAdServicesLoggerSpy);
+            new FledgeAllowListsFilter(mFlags, mAdServicesLoggerMock);
 
     private MockitoSession mStaticMockSession = null;
     @Mock private ConsentManager mConsentManagerMock;
@@ -196,7 +198,7 @@ public class AdSelectionServiceImplTest {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(JSScriptEngine.class)
-                        // mAdServicesLoggerSpy is not referenced in many tests
+                        // mAdServicesLoggerMock is not referenced in many tests
                         .strictness(Strictness.LENIENT)
                         .initMocks(this)
                         .startMocking();
@@ -303,7 +305,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -326,14 +328,11 @@ public class AdSelectionServiceImplTest {
 
         assertThat(notifications).containsExactly(mSellerReportingPath, mBuyerReportingPath);
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, STATUS_SUCCESS);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                STATUS_SUCCESS));
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
     }
 
     @Test
@@ -401,7 +400,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -418,15 +417,11 @@ public class AdSelectionServiceImplTest {
         assertTrue(callback.mIsSuccess);
         assertEquals(0, server.getRequestCount());
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                        STATUS_USER_CONSENT_REVOKED);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                STATUS_USER_CONSENT_REVOKED));
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_USER_CONSENT_REVOKED),
+                        anyInt());
     }
 
     @Test
@@ -504,7 +499,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -522,14 +517,11 @@ public class AdSelectionServiceImplTest {
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INTERNAL_ERROR);
         assertTrue(callback.mFledgeErrorResponse.getErrorMessage().contains(TIMEOUT_MESSAGE));
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, STATUS_INTERNAL_ERROR);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                STATUS_INTERNAL_ERROR));
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_INTERNAL_ERROR),
+                        anyInt());
     }
 
     @Test
@@ -607,7 +599,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -625,14 +617,11 @@ public class AdSelectionServiceImplTest {
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INTERNAL_ERROR);
         assertTrue(callback.mFledgeErrorResponse.getErrorMessage().contains(TIMEOUT_MESSAGE));
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, STATUS_INTERNAL_ERROR);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                STATUS_INTERNAL_ERROR));
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_INTERNAL_ERROR),
+                        anyInt());
     }
 
     @Test
@@ -716,7 +705,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -734,14 +723,11 @@ public class AdSelectionServiceImplTest {
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INTERNAL_ERROR);
         assertTrue(callback.mFledgeErrorResponse.getErrorMessage().contains(TIMEOUT_MESSAGE));
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, STATUS_INTERNAL_ERROR);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                STATUS_INTERNAL_ERROR));
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_INTERNAL_ERROR),
+                        anyInt());
     }
 
     @Test
@@ -820,7 +806,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -838,14 +824,11 @@ public class AdSelectionServiceImplTest {
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INTERNAL_ERROR);
         assertTrue(callback.mFledgeErrorResponse.getErrorMessage().contains(TIMEOUT_MESSAGE));
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, STATUS_INTERNAL_ERROR);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                STATUS_INTERNAL_ERROR));
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_INTERNAL_ERROR),
+                        anyInt());
     }
 
     @Test
@@ -919,7 +902,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -937,15 +920,11 @@ public class AdSelectionServiceImplTest {
         assertFalse(callback.mIsSuccess);
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INVALID_ARGUMENT);
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                        STATUS_INVALID_ARGUMENT);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                STATUS_INVALID_ARGUMENT));
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_INVALID_ARGUMENT),
+                        anyInt());
     }
 
     @Test
@@ -1018,7 +997,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1036,14 +1015,11 @@ public class AdSelectionServiceImplTest {
         assertFalse(callback.mIsSuccess);
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INTERNAL_ERROR);
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, STATUS_INTERNAL_ERROR);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                STATUS_INTERNAL_ERROR));
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_INTERNAL_ERROR),
+                        anyInt());
     }
 
     @Test
@@ -1117,7 +1093,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1135,14 +1111,11 @@ public class AdSelectionServiceImplTest {
         assertFalse(callback.mIsSuccess);
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INTERNAL_ERROR);
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, STATUS_INTERNAL_ERROR);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                STATUS_INTERNAL_ERROR));
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_INTERNAL_ERROR),
+                        anyInt());
     }
 
     @Test
@@ -1236,7 +1209,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1255,14 +1228,11 @@ public class AdSelectionServiceImplTest {
 
         assertThat(notifications).containsExactly(mSellerReportingPath, mBuyerReportingPath);
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, STATUS_SUCCESS);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                STATUS_SUCCESS));
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
     }
 
     @Test
@@ -1287,7 +1257,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1309,10 +1279,8 @@ public class AdSelectionServiceImplTest {
                                 adSelectionConfig),
                         TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerSpy).logFledgeApiCallStats(SHORT_API_NAME_OVERRIDE, STATUS_SUCCESS);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(SHORT_API_NAME_OVERRIDE, STATUS_SUCCESS));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(eq(SHORT_API_NAME_OVERRIDE), eq(STATUS_SUCCESS), anyInt());
     }
 
     @Test
@@ -1339,7 +1307,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1361,12 +1329,9 @@ public class AdSelectionServiceImplTest {
                                 adSelectionConfig),
                         TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerSpy)
-                .logFledgeApiCallStats(SHORT_API_NAME_OVERRIDE, STATUS_USER_CONSENT_REVOKED);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                SHORT_API_NAME_OVERRIDE, STATUS_USER_CONSENT_REVOKED));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(SHORT_API_NAME_OVERRIDE), eq(STATUS_USER_CONSENT_REVOKED), anyInt());
     }
 
     @Test
@@ -1387,7 +1352,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1410,12 +1375,9 @@ public class AdSelectionServiceImplTest {
                                 adSelectionConfig),
                         TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerSpy)
-                .logFledgeApiCallStats(SHORT_API_NAME_OVERRIDE, STATUS_INTERNAL_ERROR);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                SHORT_API_NAME_OVERRIDE, STATUS_INTERNAL_ERROR));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(SHORT_API_NAME_OVERRIDE), eq(STATUS_INTERNAL_ERROR), anyInt());
     }
 
     @Test
@@ -1440,7 +1402,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1473,12 +1435,9 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId, TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerSpy)
-                .logFledgeApiCallStats(SHORT_API_NAME_REMOVE_OVERRIDE, STATUS_SUCCESS);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                SHORT_API_NAME_REMOVE_OVERRIDE, STATUS_SUCCESS));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(SHORT_API_NAME_REMOVE_OVERRIDE), eq(STATUS_SUCCESS), anyInt());
     }
 
     @Test
@@ -1505,7 +1464,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1538,12 +1497,11 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId, TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerSpy)
-                .logFledgeApiCallStats(SHORT_API_NAME_REMOVE_OVERRIDE, STATUS_USER_CONSENT_REVOKED);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                SHORT_API_NAME_REMOVE_OVERRIDE, STATUS_USER_CONSENT_REVOKED));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(SHORT_API_NAME_REMOVE_OVERRIDE),
+                        eq(STATUS_USER_CONSENT_REVOKED),
+                        anyInt());
     }
 
     @Test
@@ -1564,7 +1522,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1596,12 +1554,9 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId, TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerSpy)
-                .logFledgeApiCallStats(SHORT_API_NAME_REMOVE_OVERRIDE, STATUS_INTERNAL_ERROR);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                SHORT_API_NAME_REMOVE_OVERRIDE, STATUS_INTERNAL_ERROR));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(SHORT_API_NAME_REMOVE_OVERRIDE), eq(STATUS_INTERNAL_ERROR), anyInt());
     }
 
     @Test
@@ -1629,7 +1584,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1662,12 +1617,9 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId, TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerSpy)
-                .logFledgeApiCallStats(SHORT_API_NAME_REMOVE_OVERRIDE, STATUS_SUCCESS);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                SHORT_API_NAME_REMOVE_OVERRIDE, STATUS_SUCCESS));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(SHORT_API_NAME_REMOVE_OVERRIDE), eq(STATUS_SUCCESS), anyInt());
     }
 
     @Test
@@ -1695,7 +1647,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1772,12 +1724,9 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId3, TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerSpy)
-                .logFledgeApiCallStats(SHORT_API_NAME_RESET_ALL_OVERRIDES, STATUS_SUCCESS);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                SHORT_API_NAME_RESET_ALL_OVERRIDES, STATUS_SUCCESS));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(SHORT_API_NAME_RESET_ALL_OVERRIDES), eq(STATUS_SUCCESS), anyInt());
     }
 
     @Test
@@ -1802,7 +1751,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1879,12 +1828,9 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId3, TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerSpy)
-                .logFledgeApiCallStats(SHORT_API_NAME_RESET_ALL_OVERRIDES, STATUS_SUCCESS);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                SHORT_API_NAME_RESET_ALL_OVERRIDES, STATUS_SUCCESS));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(SHORT_API_NAME_RESET_ALL_OVERRIDES), eq(STATUS_SUCCESS), anyInt());
     }
 
     @Test
@@ -1911,7 +1857,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1988,13 +1934,11 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId3, TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        SHORT_API_NAME_RESET_ALL_OVERRIDES, STATUS_USER_CONSENT_REVOKED);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                SHORT_API_NAME_RESET_ALL_OVERRIDES, STATUS_USER_CONSENT_REVOKED));
+                        eq(SHORT_API_NAME_RESET_ALL_OVERRIDES),
+                        eq(STATUS_USER_CONSENT_REVOKED),
+                        anyInt());
     }
 
     @Test
@@ -2015,7 +1959,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -2090,12 +2034,11 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId3, TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerSpy)
-                .logFledgeApiCallStats(SHORT_API_NAME_RESET_ALL_OVERRIDES, STATUS_INTERNAL_ERROR);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                SHORT_API_NAME_RESET_ALL_OVERRIDES, STATUS_INTERNAL_ERROR));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(SHORT_API_NAME_RESET_ALL_OVERRIDES),
+                        eq(STATUS_INTERNAL_ERROR),
+                        anyInt());
     }
 
     @Test
@@ -2115,7 +2058,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -2151,7 +2094,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -2208,7 +2151,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         FlagsWithOverriddenFledgeChecks.createFlagsWithFledgeChecksDisabled(),
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -2261,7 +2204,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -2319,7 +2262,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         FlagsWithOverriddenFledgeChecks.createFlagsWithFledgeChecksDisabled(),
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -2366,7 +2309,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -2416,7 +2359,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         FlagsWithOverriddenFledgeChecks.createFlagsWithFledgeChecksDisabled(),
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -2460,7 +2403,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -2508,7 +2451,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         FlagsWithOverriddenFledgeChecks.createFlagsWithFledgeChecksDisabled(),
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -2592,7 +2535,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -2691,7 +2634,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -2712,15 +2655,11 @@ public class AdSelectionServiceImplTest {
                 callback.mFledgeErrorResponse.getErrorMessage());
 
         // TODO(b/242139312): Remove atLeastOnce once this the double logging is addressed
-        Mockito.verify(mAdServicesLoggerSpy, Mockito.atLeastOnce())
+        Mockito.verify(mAdServicesLoggerMock, Mockito.atLeastOnce())
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                        STATUS_CALLER_NOT_ALLOWED);
-        verify(mAdServicesLoggerSpy, Mockito.atLeastOnce())
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                STATUS_CALLER_NOT_ALLOWED));
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_CALLER_NOT_ALLOWED),
+                        anyInt());
     }
 
     @Test
@@ -2798,7 +2737,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -2819,15 +2758,11 @@ public class AdSelectionServiceImplTest {
                 callback.mFledgeErrorResponse.getErrorMessage());
 
         // TODO(b/242139312): Remove atLeastOnce once this the double logging is addressed
-        Mockito.verify(mAdServicesLoggerSpy, Mockito.atLeastOnce())
+        Mockito.verify(mAdServicesLoggerMock, Mockito.atLeastOnce())
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                        STATUS_CALLER_NOT_ALLOWED);
-        verify(mAdServicesLoggerSpy, Mockito.atLeastOnce())
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                STATUS_CALLER_NOT_ALLOWED));
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_CALLER_NOT_ALLOWED),
+                        anyInt());
     }
 
     @Test
@@ -2913,7 +2848,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -2936,14 +2871,11 @@ public class AdSelectionServiceImplTest {
 
         assertThat(notifications).containsExactly(mSellerReportingPath, mBuyerReportingPath);
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, STATUS_SUCCESS);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                STATUS_SUCCESS));
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
     }
 
     private AdSelectionOverrideTestCallback callAddOverride(
@@ -2962,7 +2894,9 @@ public class AdSelectionServiceImplTest {
                     resultLatch.countDown();
                     return null;
                 };
-        doAnswer(countDownAnswer).when(mAdServicesLoggerSpy).logApiCallStats(any());
+        doAnswer(countDownAnswer)
+                .when(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
 
         adSelectionService.overrideAdSelectionConfigRemoteInfo(
                 adSelectionConfig, decisionLogicJS, trustedScoringSignals, callback);
@@ -2983,7 +2917,9 @@ public class AdSelectionServiceImplTest {
                     resultLatch.countDown();
                     return null;
                 };
-        doAnswer(countDownAnswer).when(mAdServicesLoggerSpy).logApiCallStats(any());
+        doAnswer(countDownAnswer)
+                .when(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
 
         adSelectionService.removeAdSelectionConfigRemoteInfoOverride(adSelectionConfig, callback);
         resultLatch.await();
@@ -3057,7 +2993,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -3077,15 +3013,11 @@ public class AdSelectionServiceImplTest {
         assertEquals(
                 "Error response code mismatch", STATUS_INVALID_ARGUMENT, response.getStatusCode());
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                        STATUS_INVALID_ARGUMENT);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                STATUS_INVALID_ARGUMENT));
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_INVALID_ARGUMENT),
+                        anyInt());
     }
 
     @Test
@@ -3199,7 +3131,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         flagsWithThrottling,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -3224,14 +3156,11 @@ public class AdSelectionServiceImplTest {
         RecordedRequest fetchRequest = server.takeRequest();
         assertEquals(mFetchJavaScriptPath, fetchRequest.getPath());
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, STATUS_SUCCESS);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                STATUS_SUCCESS));
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
 
         assertFalse(callbackSubsequentCall.mIsSuccess);
         assertEquals(
@@ -3265,7 +3194,9 @@ public class AdSelectionServiceImplTest {
                     resultLatch.countDown();
                     return null;
                 };
-        doAnswer(countDownAnswer).when(mAdServicesLoggerSpy).logApiCallStats(any());
+        doAnswer(countDownAnswer)
+                .when(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
 
         adSelectionService.resetAllAdSelectionConfigRemoteOverrides(callback);
         resultLatch.await();
@@ -3285,7 +3216,9 @@ public class AdSelectionServiceImplTest {
                     resultLatch.countDown();
                     return null;
                 };
-        doAnswer(countDownAnswer).when(mAdServicesLoggerSpy).logApiCallStats(any());
+        doAnswer(countDownAnswer)
+                .when(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
 
         adSelectionService.reportImpression(requestParams, callback);
         resultLatch.await();
