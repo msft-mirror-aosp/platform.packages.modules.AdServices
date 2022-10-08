@@ -31,11 +31,11 @@ import org.junit.runner.RunWith;
 public class SdkSandboxDataIsolationHostTest extends BaseHostJUnit4Test {
 
     private static final String APP_PACKAGE = "com.android.sdksandbox.cts.app";
-    private static final String APP_APK = "SdkSandboxDataIsolationTestApp.apk";
+    private static final String APP_APK = "CtsSdkSandboxHostTestApp.apk";
     private static final String APP_TEST_CLASS = APP_PACKAGE + ".SdkSandboxDataIsolationTestApp";
 
     private static final String APP_2_PACKAGE = "com.android.sdksandbox.cts.app2";
-    private static final String APP_2_APK = "SdkSandboxDataIsolationTestApp2.apk";
+    private static final String APP_2_APK = "CtsSdkSandboxHostTestApp2.apk";
 
     /**
      * Runs the given phase of a test by calling into the device. Throws an exception if the test
