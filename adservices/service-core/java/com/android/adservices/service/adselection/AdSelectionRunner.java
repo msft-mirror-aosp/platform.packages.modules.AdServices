@@ -342,7 +342,7 @@ public final class AdSelectionRunner {
                     "Ad Selection with Id:%d completed, attempted notifying success",
                     result.getAdSelectionId());
             mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, resultCode);
+                    AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, resultCode, 0);
         }
     }
 
@@ -359,7 +359,7 @@ public final class AdSelectionRunner {
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } finally {
             mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, resultCode);
+                    AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, resultCode, 0);
         }
     }
 
@@ -400,7 +400,7 @@ public final class AdSelectionRunner {
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } finally {
             mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, resultCode);
+                    AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, resultCode, 0);
         }
     }
 

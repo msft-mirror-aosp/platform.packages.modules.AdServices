@@ -311,7 +311,7 @@ public class CustomAudienceOverrider {
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
             throw e.rethrowAsRuntimeException();
         } finally {
-            mAdServicesLogger.logFledgeApiCallStats(apiName, resultCode);
+            mAdServicesLogger.logFledgeApiCallStats(apiName, resultCode, 0);
         }
     }
 
@@ -329,7 +329,7 @@ public class CustomAudienceOverrider {
             resultCodeInt = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
             throw e.rethrowAsRuntimeException();
         } finally {
-            mAdServicesLogger.logFledgeApiCallStats(apiName, resultCodeInt);
+            mAdServicesLogger.logFledgeApiCallStats(apiName, resultCodeInt, 0);
         }
     }
 

@@ -17,7 +17,7 @@
 package com.android.adservices.service.stats;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__FLEDGE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN;
 import static com.android.adservices.service.stats.AdServicesStatsLog.BACKGROUND_FETCH_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PER_CA_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PROCESS_REPORTED;
@@ -74,18 +74,15 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
     }
 
     @Override
-    public void logFledgeApiCallStats(int apiName, int resultCode) {
-        // TODO(b/233628316): Implement latency measurement
-        logApiCallStats(
-                new ApiCallStats.Builder()
-                        .setCode(AD_SERVICES_API_CALLED)
-                        .setApiClass(AD_SERVICES_API_CALLED__API_CLASS__FLEDGE)
-                        .setApiName(apiName)
-                        .setResultCode(resultCode)
-                        // TODO(b/233629557): Implement app/SDK reporting
-                        .setSdkPackageName("")
-                        .setAppPackageName("")
-                        .build());
+    public void logFledgeApiCallStats(int apiName, int resultCode, int latencyMs) {
+        AdServicesStatsLog.write(
+                AD_SERVICES_API_CALLED,
+                AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN,
+                apiName,
+                "",
+                "",
+                latencyMs,
+                resultCode);
     }
 
     @Override
