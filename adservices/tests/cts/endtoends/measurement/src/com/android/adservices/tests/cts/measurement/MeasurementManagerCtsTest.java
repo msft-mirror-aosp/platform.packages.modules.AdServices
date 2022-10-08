@@ -88,6 +88,8 @@ public class MeasurementManagerCtsTest {
         // We need to turn the Consent Manager into debug mode
         overrideConsentManagerDebugMode();
 
+        overrideAdservicesGlobalKillSwitch(true);
+
         mMeasurementClient =
                 new MeasurementClient.Builder()
                         .setContext(sContext)
@@ -100,6 +102,7 @@ public class MeasurementManagerCtsTest {
         resetAllowSandboxPackageNameAccessMeasurementApis();
         resetOverrideConsentManagerDebugMode();
         resetOverrideDisableMeasurementEnrollmentCheck();
+        overrideAdservicesGlobalKillSwitch(false);
         TimeUnit.SECONDS.sleep(1);
     }
 
@@ -303,5 +306,14 @@ public class MeasurementManagerCtsTest {
     private void resetOverrideDisableMeasurementEnrollmentCheck() {
         ShellUtils.runShellCommand(
                 "setprop debug.adservices.disable_measurement_enrollment_check null");
+    }
+
+    // Override global_kill_switch to ignore the effect of actual PH values.
+    // If isOverride = true, override global_kill_switch to OFF to allow adservices
+    // If isOverride = false, override global_kill_switch to meaningless value so that PhFlags will
+    // use the default value.
+    private void overrideAdservicesGlobalKillSwitch(boolean isOverride) {
+        String overrideString = isOverride ? "false" : "null";
+        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
     }
 }

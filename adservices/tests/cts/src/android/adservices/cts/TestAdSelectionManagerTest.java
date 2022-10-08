@@ -44,6 +44,7 @@ import com.android.compatibility.common.util.ShellUtils;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
+import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
@@ -99,6 +100,12 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
         PhFlagsFixture.overrideIsolateMaxHeapSizeBytes(0);
         // We need to turn the Consent Manager into debug mode
         overrideConsentManagerDebugMode();
+        overrideAdservicesGlobalKillSwitch(true);
+    }
+
+    @After
+    public void teardown() {
+        overrideAdservicesGlobalKillSwitch(false);
     }
 
     // Override the Consent Manager behaviour - Consent Given
@@ -217,5 +224,14 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
                             result.get(10, TimeUnit.SECONDS);
                         });
         assertThat(exception.getCause()).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    // Override global_kill_switch to ignore the effect of actual PH values.
+    // If isOverride = true, override global_kill_switch to OFF to allow adservices
+    // If isOverride = false, override global_kill_switch to meaningless value so that PhFlags will
+    // use the default value
+    private void overrideAdservicesGlobalKillSwitch(boolean isOverride) {
+        String overrideString = isOverride ? "false" : "null";
+        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
     }
 }

@@ -366,6 +366,14 @@ public final class MeasurementImpl {
             LogUtil.d("insertSources: getTopLevelPublisher failed", topOriginUri);
             return;
         }
+        Optional<Long> numOfSourcesPerPublisher =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) -> dao.getNumSourcesPerPublisher(publisher.get(), publisherType));
+        if (!numOfSourcesPerPublisher.isPresent()) {
+            LogUtil.d("insertSources: getNumSourcesPerPublisher failed", publisher.get());
+            return;
+        }
+        long noOfSources = numOfSourcesPerPublisher.get();
         // Only first destination to avoid AdTechs change this
         Uri appDestination = sourceRegistrations.get(0).getAppDestination();
         Uri webDestination = sourceRegistrations.get(0).getWebDestination();
@@ -394,6 +402,13 @@ public final class MeasurementImpl {
                         webDestination);
                 continue;
             }
+
+            if (noOfSources >= SystemHealthParams.MAX_SOURCES_PER_PUBLISHER) {
+                LogUtil.d(
+                        "insertSources: Max limit of %s sources for publisher - %s reached.",
+                        SystemHealthParams.MAX_SOURCES_PER_PUBLISHER, publisher);
+                break;
+            }
             Source source =
                     createSource(
                             sourceEventTime,
@@ -405,7 +420,9 @@ public final class MeasurementImpl {
                             sourceType,
                             appDestination,
                             webDestination);
-            insertSource(source);
+            if (insertSource(source)) {
+                noOfSources++;
+            }
         }
     }
 
@@ -446,9 +463,9 @@ public final class MeasurementImpl {
     }
 
     @VisibleForTesting
-    void insertSource(Source source) {
+    boolean insertSource(Source source) {
         List<EventReport> fakeEventReports = generateFakeEventReports(source);
-        mDatastoreManager.runInTransaction(
+        return mDatastoreManager.runInTransaction(
                 (dao) -> {
                     dao.insertSource(source);
                     for (EventReport report : fakeEventReports) {

@@ -16,7 +16,10 @@
 
 package com.android.adservices.service.common;
 
-import static com.android.adservices.stats.FledgeApiCallStatsMatcher.aCallStatForFledgeApiWithStatus;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
+
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyNoMoreInteractions;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyZeroInteractions;
@@ -94,12 +97,7 @@ public class FledgeAllowListsFilterTest {
                 exception.getMessage());
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        API_NAME_LOGGING_ID, AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                API_NAME_LOGGING_ID,
-                                AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED));
+                        eq(API_NAME_LOGGING_ID), eq(STATUS_CALLER_NOT_ALLOWED), anyInt());
 
         verifyNoMoreInteractions(mAdServicesLoggerSpy);
     }
