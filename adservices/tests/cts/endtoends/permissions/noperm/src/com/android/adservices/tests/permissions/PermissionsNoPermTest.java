@@ -66,11 +66,13 @@ public class PermissionsNoPermTest {
     public void setup() {
         overrideConsentManagerDebugMode(true);
         overridingAdservicesLoggingLevel("VERBOSE");
+        overrideAdservicesGlobalKillSwitch(true);
     }
 
     @After
     public void teardown() {
         overrideConsentManagerDebugMode(false);
+        overrideAdservicesGlobalKillSwitch(false);
     }
 
     @Test
@@ -317,5 +319,14 @@ public class PermissionsNoPermTest {
     private void overrideConsentManagerDebugMode(boolean isGiven) {
         ShellUtils.runShellCommand(
                 "setprop debug.adservices.consent_manager_debug_mode " + isGiven);
+    }
+
+    // Override global_kill_switch to ignore the effect of actual PH values.
+    // If isOverride = true, override global_kill_switch to OFF to allow adservices
+    // If isOverride = false, override global_kill_switch to meaningless value so that PhFlags will
+    // use the default value.
+    private void overrideAdservicesGlobalKillSwitch(boolean isOverride) {
+        String overrideString = isOverride ? "false" : "null";
+        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
     }
 }

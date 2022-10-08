@@ -132,7 +132,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private final ArraySet<Pair<CallingInfo, String>> mSdksBeingLoaded = new ArraySet<>();
 
     @GuardedBy("mLock")
-    private final ArraySet<CallingInfo> mCallingInfosWithDeathRecipients = new ArraySet<>();
+    private final ArrayMap<CallingInfo, IBinder> mCallingInfosWithDeathRecipients =
+            new ArrayMap<>();
 
     @GuardedBy("mLock")
     private final Set<CallingInfo> mRunningInstrumentations = new ArraySet<>();
@@ -439,10 +440,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         // the app dies.
         try {
             synchronized (mLock) {
-                if (!mCallingInfosWithDeathRecipients.contains(callingInfo)) {
+                if (!mCallingInfosWithDeathRecipients.containsKey(callingInfo)) {
                     Log.d(TAG, "Registering " + callingInfo + " for death notification");
                     callback.asBinder().linkToDeath(() -> onAppDeath(callingInfo), 0);
-                    mCallingInfosWithDeathRecipients.add(callingInfo);
+                    mCallingInfosWithDeathRecipients.put(callingInfo, callback.asBinder());
                     mUidImportanceListener.startListening();
                 }
             }
@@ -1163,7 +1164,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         // the sandbox by uid.
         synchronized (mLock) {
             for (int i = 0; i < mCallingInfosWithDeathRecipients.size(); i++) {
-                final CallingInfo callingInfo = mCallingInfosWithDeathRecipients.valueAt(i);
+                final CallingInfo callingInfo = mCallingInfosWithDeathRecipients.keyAt(i);
                 if (callingInfo.getUid() == currentCallingInfo.getUid()) {
                     mServiceProvider.unbindService(callingInfo, true);
                 }
@@ -1712,7 +1713,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             final long timeSystemServerCalledApp = mInjector.getCurrentTime();
             SdkSandboxStatsLog.write(
                     SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                    SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK,
+                    SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE,
                     (int) (timeSystemServerCalledApp - timeSystemServerReceivedCallFromSandbox),
                     /*success=*/ true,
                     SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_SANDBOX_TO_APP);
@@ -2024,7 +2025,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
             synchronized (mLock) {
                 for (int i = 0; i < mCallingInfosWithDeathRecipients.size(); i++) {
-                    final CallingInfo callingInfo = mCallingInfosWithDeathRecipients.valueAt(i);
+                    final CallingInfo callingInfo = mCallingInfosWithDeathRecipients.keyAt(i);
                     if (callingInfo.getUid() == uid) {
                         // Stop the sandbox when the app goes to the background.
                         mServiceProvider.unbindService(callingInfo, false);

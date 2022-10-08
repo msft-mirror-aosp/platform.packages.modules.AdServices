@@ -583,12 +583,12 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public long getNumSourcesPerRegistrant(Uri registrant) throws DatastoreException {
+    public long getNumSourcesPerPublisher(Uri publisherUri, @EventSurfaceType int publisherType)
+            throws DatastoreException {
         return DatabaseUtils.queryNumEntries(
                 mSQLTransaction.getDatabase(),
                 MeasurementTables.SourceContract.TABLE,
-                MeasurementTables.SourceContract.REGISTRANT + " = ? ",
-                new String[]{registrant.toString()});
+                getPublisherWhereStatement(publisherUri, publisherType));
     }
 
     @Override

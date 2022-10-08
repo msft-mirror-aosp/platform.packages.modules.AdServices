@@ -1002,6 +1002,8 @@ public interface Flags extends Dumpable {
                     + "com.example.adservices.samples.fledge.sampleapp2,"
                     + "com.example.adservices.samples.fledge.sampleapp3,"
                     + "com.example.adservices.samples.fledge.sampleapp4,"
+                    + "com.example.measurement.sampleapp,"
+                    + "com.example.measurement.sampleapp2,"
                     + "com.android.adservices.tests.cts.endtoendtest.measurement";
 
     /**
