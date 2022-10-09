@@ -48,6 +48,8 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Η ενεργοποίηση του προγράμματος beta επιτρέπει στις εφαρμογές να δοκιμάσουν αυτούς τους νέους πιο ιδιωτικούς τρόπους για την εμφάνιση διαφημίσεων. Μπορείτε να απενεργοποιήσετε το πρόγραμμα beta οποιαδήποτε στιγμή στις ρυθμίσεις απορρήτου."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Όχι, ευχαριστώ"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Ενεργοποίηση"</string>
+    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
+    <skip />
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Σας ευχαριστούμε για τη συμμετοχή σας"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Συμμετέχετε στο πρόγραμμα beta απορρήτου διαφημίσεων του Android. Το Πλαίσιο ιδιωτικότητας είναι ενεργοποιημένο για τη συσκευή σας.\n\nΜπορείτε να μάθετε περισσότερα ή να απενεργοποιήσετε το πρόγραμμα beta οποιαδήποτε στιγμή στις ρυθμίσεις απορρήτου."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Επιλέξατε να μην συμμετάσχετε"</string>
@@ -87,44 +89,25 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Πλαίσιο ιδιωτικότητας"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Το πρόγραμμα beta απορρήτου διαφημίσεων του Android παρέχει νέες λειτουργίες τις οποίες μπορούν να χρησιμοποιούν οι εφαρμογές για να εμφανίζουν διαφημίσεις που μπορεί να σας αρέσουν. Αυτές οι τεχνολογίες δεν χρησιμοποιούν αναγνωριστικά συσκευών.\n\nΟι εφαρμογές μπορούν να εκτιμήσουν τα είδη διαφημίσεων που μπορεί να σας ενδιαφέρουν και να αποθηκεύσουν αυτά τα ενδιαφέροντα προσωρινά στη συσκευή σας. Αυτό επιτρέπει στις εφαρμογές να εμφανίζουν διαφημίσεις που είναι συναφείς για εσάς, χωρίς να παρακολουθούν τη δραστηριότητά σας σε ιστοτόπους και εφαρμογές από άλλους προγραμματιστές."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Δεν έχετε αποκλεισμένες εφαρμογές"</string>
-    <!-- no translation found for settingsUI_dialog_negative_text (3014088254631375852) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_opt_out_title (1862069591629418291) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_opt_out_message (5696012172835241848) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_opt_out_positive_text (5344259263448028614) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_block_topic_title (5744004384480280782) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_block_topic_message (2474902516721078270) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_block_topic_positive_text (2626152417590300510) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_unblock_topic_title (7361000923920947234) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_unblock_topic_message (4058967523591550460) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_unblock_topic_positive_text (2192452325573789737) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_topic_title (1949146936958849544) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (8099126076667244456) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_topic_positive_text (8345697359799280761) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_block_app_title (421160714549264414) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_block_app_message (4703493174054204149) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_unblock_app_title (4360730780049298286) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_unblock_app_message (7858109719986236041) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_title (7193520707240514769) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_message (1967554695864827385) -->
-    <skip />
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Ακύρωση"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Να απενεργοποιηθεί το Πλαίσιο ιδιωτικότητας;"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Εάν αλλάξετε γνώμη ή θέλετε να μάθετε περισσότερα σχετικά με την έκδοση beta απορρήτου διαφημίσεων του Android, μεταβείτε στις ρυθμίσεις απορρήτου."</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Απενεργοποίηση"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Να αποκλειστεί το θέμα <xliff:g id="TOPIC">%1$s</xliff:g>;"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Το συγκεκριμένο ενδιαφέρον θα αποκλειστεί και δεν θα προστεθεί ξανά στη λίστα, εκτός και αν το προσθέσετε πάλι. Ενδέχεται να συνεχίσετε να βλέπετε μερικές σχετικές διαφημίσεις."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Αποκλεισμός"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"Ο αποκλεισμός του θέματος <xliff:g id="TOPIC">%1$s</xliff:g> καταργήθηκε"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Το Android ενδέχεται να προσθέσει ξανά αυτό το ενδιαφέρον στη λίστα, αλλά μπορεί να μην εμφανιστεί αμέσως."</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Να γίνει επαναφορά όλων των ενδιαφερόντων;"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"Η λίστα θα διαγραφεί και, στη συνέχεια, θα ανανεώνεται με την πάροδο του χρόνου."</string>
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Επαναφορά"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Να αποκλειστεί η εφαρμογή <xliff:g id="APP">%1$s</xliff:g>;"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Η συγκεκριμένη εφαρμογή δεν θα κάνει εκτιμήσεις για ενδιαφέροντα για το Πλαίσιο ιδιωτικότητας και δεν θα προστεθεί ξανά στη λίστα, εκτός και αν καταργήσετε τον αποκλεισμό της.\n\nΤα ενδιαφέροντα για τα οποία έχει ήδη κάνει εκτιμήσεις αυτή η εφαρμογή θα διαγραφούν, αλλά μπορεί να εξακολουθήσετε να βλέπετε ορισμένες σχετικές διαφημίσεις."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Ο αποκλεισμός της εφαρμογής <xliff:g id="APP">%1$s</xliff:g> καταργήθηκε"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Η συγκεκριμένη εφαρμογή θα μπορεί να κάνει ξανά εκτιμήσεις για ενδιαφέροντα, αλλά ενδέχεται να μην εμφανιστούν αμέσως στη λίστα. Ενδέχεται να χρειαστεί κάποιος χρόνος για να δείτε σχετικές διαφημίσεις."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Να γίνει επαναφορά των ενδιαφερόντων που δημιουργούνται από εφαρμογές;"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"Η λίστα θα διαγραφεί και, στη συνέχεια, θα ανανεώνεται με την πάροδο του χρόνου."</string>
     <string name="topic10001" msgid="1636806320891333775">"Τέχνες και ψυχαγωγία"</string>
     <string name="topic10002" msgid="1226367977754287428">"Ηθοποιία και θέατρο"</string>
     <string name="topic10003" msgid="6949890838957814881">"Ανιμέ και Manga"</string>

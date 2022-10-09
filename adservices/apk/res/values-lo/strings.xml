@@ -48,6 +48,8 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"ການເປີດໃຊ້ເວີຊັນເບຕ້າຈະອະນຸຍາດໃຫ້ແອັບຕ່າງໆທົດສອບການສະແດງໂຄສະນາແບບໃໝ່ທີ່ມີຄວາມເປັນສ່ວນຕົວຫຼາຍຂຶ້ນເຫຼົ່ານີ້ໃຫ້ທ່ານໄດ້. ທ່ານສາມາດປິດເວີຊັນເບຕ້າຕອນໃດກໍໄດ້ຢູ່ການຕັ້ງຄ່າຄວາມເປັນສ່ວນຕົວຂອງທ່ານ."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"ບໍ່, ຂອບໃຈ"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"ເປີດໃຊ້"</string>
+    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
+    <skip />
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"ຂໍຂອບໃຈທີ່ທ່ານເຂົ້າຮ່ວມ"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"ທ່ານເປັນສ່ວນໜຶ່ງຂອງເວີຊັນເບຕ້າຂອງຄວາມເປັນສ່ວນຕົວສຳລັບໂຄສະນາໃນ Android. Privacy Sandbox ຖືກເປີດໄວ້ສຳລັບອຸປະກອນຂອງທ່ານ.\n\nທ່ານສາມາດສຶກສາເພີ່ມເຕີມ ຫຼື ປິດໃຊ້ເວີຊັນເບຕ້າຕອນໃດກໍໄດ້ໃນການຕັ້ງຄ່າຄວາມເປັນສ່ວນຕົວຂອງທ່ານ."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"ທ່ານໄດ້ເລືອກທີ່ຈະບໍ່ເຂົ້າຮ່ວມ"</string>
@@ -87,44 +89,25 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"ເວີຊັນເບຕ້າຂອງຄວາມເປັນສ່ວນຕົວສຳລັບໂຄສະນາໃນ Android ມີຄຸນສົມບັດໃໝ່ໆທີ່ແອັບສາມາດໃຊ້ເພື່ອສະແດງໂຄສະນາທີ່ທ່ານອາດມັກໃຫ້ແກ່ທ່ານ. ເທັກໂນໂລຢີເຫຼົ່ານີ້ບໍ່ໄດ້ໃຊ້ຕົວລະບຸອຸປະກອນ.\n\nແອັບສາມາດຄາດການປະເພດຂອງໂຄສະນາທີ່ທ່ານອາດສົນໃຈ ແລະ ບັນທຶກຄວາມສົນໃຈເຫຼົ່ານີ້ໄວ້ຢູ່ອຸປະກອນຂອງທ່ານຊົ່ວຄາວ. ສິ່ງນີ້ຊ່ວຍໃຫ້ແອັບຕ່າງໆສະແດງໂຄສະນາທີ່ກ່ຽວຂ້ອງໃຫ້ແກ່ທ່ານໂດຍທີ່ບໍ່ຕ້ອງຕິດຕາມການເຄື່ອນໄຫວຂອງທ່ານຢູ່ເວັບໄຊ ແລະ ແອັບຈາກນັກພັດທະນາອື່ນໆ."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"ທ່ານບໍ່ມີແອັບໃດຖືກບລັອກ"</string>
-    <!-- no translation found for settingsUI_dialog_negative_text (3014088254631375852) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_opt_out_title (1862069591629418291) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_opt_out_message (5696012172835241848) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_opt_out_positive_text (5344259263448028614) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_block_topic_title (5744004384480280782) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_block_topic_message (2474902516721078270) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_block_topic_positive_text (2626152417590300510) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_unblock_topic_title (7361000923920947234) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_unblock_topic_message (4058967523591550460) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_unblock_topic_positive_text (2192452325573789737) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_topic_title (1949146936958849544) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (8099126076667244456) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_topic_positive_text (8345697359799280761) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_block_app_title (421160714549264414) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_block_app_message (4703493174054204149) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_unblock_app_title (4360730780049298286) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_unblock_app_message (7858109719986236041) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_title (7193520707240514769) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_message (1967554695864827385) -->
-    <skip />
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"ຍົກເລີກ"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"ປິດ Privacy Sandbox ໄວ້ບໍ?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"ຫາກທ່ານປ່ຽນໃຈ ຫຼື ຕ້ອງການສຶກສາເພີ່ມເຕີມກ່ຽວກັບຄວາມເປັນສ່ວນຕົວໂຄສະນາຂອງ Android (ເບຕ້າ), ໃຫ້ເຂົ້າໄປການຕັ້ງຄ່າຄວາມເປັນສ່ວນຕົວຂອງທ່ານ"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"ປິດໄວ້"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"ບລັອກ <xliff:g id="TOPIC">%1$s</xliff:g> ບໍ?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"ຄວາມສົນໃຈນີ້ຈະຖືກບລັອກ ແລະ ຈະບໍ່ຖືກເພີ່ມໄປໃສ່ລາຍຊື່ຂອງທ່ານຄືນໃໝ່, ເວັ້ນແຕ່ທ່ານຈະແອດມັນກັບໄປ. ທ່ານອາດຈະຍັງເຫັນໂຄສະນາທີ່ກ່ຽວຂ້ອງບາງຢ່າງ."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"ບລັອກ"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"ປົດບລັອກ <xliff:g id="TOPIC">%1$s</xliff:g> ແລ້ວ"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android ອາດເພີ່ມຄວາມສົນໃຈນີ້ໄປໃສ່ລາຍຊື່ຂອງທ່ານຄືນໃໝ່, ແຕ່ມັນອາດບໍ່ປາກົດໃນທັນທີ"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"ຕົກລົງ"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"ຣີເຊັດຄວາມສົນໃຈທັງໝົດຂອງທ່ານບໍ?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"ລາຍຊື່ຂອງທ່ານຈະຖືກລຶບລ້າງ, ຈາກນັ້ນຈະມີການໂຫຼດຂໍ້ມູນຄືນໃໝ່ເມື່ອເວລາຜ່ານໄປ"</string>
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"ຣີເຊັດ"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"ບລັອກ <xliff:g id="APP">%1$s</xliff:g> ບໍ?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"ແອັບນີ້ຈະບໍ່ຄາດການຄວາມສົນໃຈສຳລັບ Privacy Sandbox ແລະ ຈະບໍ່ຖືກເພີ່ມໃສ່ລາຍຊື່ຂອງທ່ານຄືນໃໝ່, ເວັ້ນແຕ່ທ່ານຈະປົດບລັອກມັນ.\n\nຄວາມສົນໃຈທີ່ຖືກຄາດການໂດຍແອັບນີ້ໄປກ່ອນແລ້ວຈະຖືກລຶບອອກ, ແຕ່ທ່ານອາດຍັງຄົງເຫັນບາງແອັບທີ່ກ່ຽວຂ້ອງຢູ່."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"ປົດບລັອກ <xliff:g id="APP">%1$s</xliff:g> ແລ້ວ"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"ແອັບນີ້ສາມາດຄາດການຄວາມສົນໃຈໃຫ້ທ່ານຄືນໃໝ່ໄດ້, ແຕ່ມັນອາດບໍ່ປາກົດຢູ່ລາຍຊື່ຂອງທ່ານໃນທັນທີ. ມັນອາດໃຊ້ເວລາໄລຍະໜຶ່ງເພື່ອໃຫ້ທ່ານເຫັນໂຄສະນາທີ່ກ່ຽວຂ້ອງ."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"ຣີເຊັດຄວາມສົນໃຈທີ່ແອັບສ້າງຂຶ້ນບໍ?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"ລາຍຊື່ຂອງທ່ານຈະຖືກລຶບລ້າງ, ຈາກນັ້ນຈະມີການໂຫຼດຂໍ້ມູນຄືນໃໝ່ເມື່ອເວລາຜ່ານໄປ"</string>
     <string name="topic10001" msgid="1636806320891333775">"ສິນລະປະ ແລະ ການບັນເທີງ"</string>
     <string name="topic10002" msgid="1226367977754287428">"ການສະແດງ ແລະ ໂຮງຮູບເງົາ"</string>
     <string name="topic10003" msgid="6949890838957814881">"ອະນິເມະ ແລະ ມັງງະ"</string>
