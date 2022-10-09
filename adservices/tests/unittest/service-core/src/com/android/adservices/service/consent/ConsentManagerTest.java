@@ -38,10 +38,12 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import android.app.job.JobScheduler;
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.SystemClock;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.core.content.pm.ApplicationInfoBuilder;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.data.common.BooleanFileDatastore;
@@ -85,6 +87,7 @@ import org.mockito.Spy;
 import org.mockito.quality.Strictness;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -474,6 +477,20 @@ public class ConsentManagerTest {
         mDatastore.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
         mDatastore.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, false);
         mDatastore.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
+        List<ApplicationInfo> applicationsInstalled =
+                Arrays.asList(
+                        ApplicationInfoBuilder.newBuilder()
+                                .setPackageName(AppConsentDaoFixture.APP10_PACKAGE_NAME)
+                                .build(),
+                        ApplicationInfoBuilder.newBuilder()
+                                .setPackageName(AppConsentDaoFixture.APP20_PACKAGE_NAME)
+                                .build(),
+                        ApplicationInfoBuilder.newBuilder()
+                                .setPackageName(AppConsentDaoFixture.APP30_PACKAGE_NAME)
+                                .build());
+        doReturn(applicationsInstalled)
+                .when(mPackageManagerMock)
+                .getInstalledApplications(any(PackageManager.ApplicationInfoFlags.class));
 
         ImmutableList<App> knownAppsWithConsent = mConsentManager.getKnownAppsWithConsent();
         ImmutableList<App> appsWithRevokedConsent = mConsentManager.getAppsWithRevokedConsent();
@@ -502,6 +519,20 @@ public class ConsentManagerTest {
         mDatastore.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
         mDatastore.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, false);
         mDatastore.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
+        List<ApplicationInfo> applicationsInstalled =
+                Arrays.asList(
+                        ApplicationInfoBuilder.newBuilder()
+                                .setPackageName(AppConsentDaoFixture.APP10_PACKAGE_NAME)
+                                .build(),
+                        ApplicationInfoBuilder.newBuilder()
+                                .setPackageName(AppConsentDaoFixture.APP20_PACKAGE_NAME)
+                                .build(),
+                        ApplicationInfoBuilder.newBuilder()
+                                .setPackageName(AppConsentDaoFixture.APP30_PACKAGE_NAME)
+                                .build());
+        doReturn(applicationsInstalled)
+                .when(mPackageManagerMock)
+                .getInstalledApplications(any(PackageManager.ApplicationInfoFlags.class));
         App app = App.create(AppConsentDaoFixture.APP10_PACKAGE_NAME);
 
         // revoke consent for first app
@@ -539,6 +570,20 @@ public class ConsentManagerTest {
         mDatastore.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, false);
         mDatastore.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
         App app = App.create(AppConsentDaoFixture.APP10_PACKAGE_NAME);
+        List<ApplicationInfo> applicationsInstalled =
+                Arrays.asList(
+                        ApplicationInfoBuilder.newBuilder()
+                                .setPackageName(AppConsentDaoFixture.APP10_PACKAGE_NAME)
+                                .build(),
+                        ApplicationInfoBuilder.newBuilder()
+                                .setPackageName(AppConsentDaoFixture.APP20_PACKAGE_NAME)
+                                .build(),
+                        ApplicationInfoBuilder.newBuilder()
+                                .setPackageName(AppConsentDaoFixture.APP30_PACKAGE_NAME)
+                                .build());
+        doReturn(applicationsInstalled)
+                .when(mPackageManagerMock)
+                .getInstalledApplications(any(PackageManager.ApplicationInfoFlags.class));
 
         // revoke consent for first app
         mConsentManager.revokeConsentForApp(app);
@@ -617,6 +662,20 @@ public class ConsentManagerTest {
         mDatastore.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
         mDatastore.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
         mDatastore.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
+        List<ApplicationInfo> applicationsInstalled =
+                Arrays.asList(
+                        ApplicationInfoBuilder.newBuilder()
+                                .setPackageName(AppConsentDaoFixture.APP10_PACKAGE_NAME)
+                                .build(),
+                        ApplicationInfoBuilder.newBuilder()
+                                .setPackageName(AppConsentDaoFixture.APP20_PACKAGE_NAME)
+                                .build(),
+                        ApplicationInfoBuilder.newBuilder()
+                                .setPackageName(AppConsentDaoFixture.APP30_PACKAGE_NAME)
+                                .build());
+        doReturn(applicationsInstalled)
+                .when(mPackageManagerMock)
+                .getInstalledApplications(any(PackageManager.ApplicationInfoFlags.class));
 
         // Verify population was successful
         ImmutableList<App> knownAppsWithConsent = mConsentManager.getKnownAppsWithConsent();
@@ -656,6 +715,20 @@ public class ConsentManagerTest {
         mDatastore.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
         mDatastore.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
         mDatastore.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
+        List<ApplicationInfo> applicationsInstalled =
+                Arrays.asList(
+                        ApplicationInfoBuilder.newBuilder()
+                                .setPackageName(AppConsentDaoFixture.APP10_PACKAGE_NAME)
+                                .build(),
+                        ApplicationInfoBuilder.newBuilder()
+                                .setPackageName(AppConsentDaoFixture.APP20_PACKAGE_NAME)
+                                .build(),
+                        ApplicationInfoBuilder.newBuilder()
+                                .setPackageName(AppConsentDaoFixture.APP30_PACKAGE_NAME)
+                                .build());
+        doReturn(applicationsInstalled)
+                .when(mPackageManagerMock)
+                .getInstalledApplications(any(PackageManager.ApplicationInfoFlags.class));
 
         // Verify population was successful
         ImmutableList<App> knownAppsWithConsentBeforeReset =

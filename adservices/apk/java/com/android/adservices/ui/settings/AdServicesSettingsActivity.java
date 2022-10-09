@@ -71,6 +71,14 @@ public class AdServicesSettingsActivity extends CollapsingToolbarBaseActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+
+        getViewModelProvider().get(TopicsViewModel.class).refresh();
+        getViewModelProvider().get(AppsViewModel.class).refresh();
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
