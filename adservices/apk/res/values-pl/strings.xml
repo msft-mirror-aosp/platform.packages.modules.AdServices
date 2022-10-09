@@ -48,6 +48,8 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Włączenie wersji beta umożliwia testowanie w aplikacjach nowych sposobów wyświetlania Ci reklam – z lepszą ochroną prywatności. W każdej chwili możesz wyłączyć wersję beta w ustawieniach prywatności."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Nie, dziękuję"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Włącz"</string>
+    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
+    <skip />
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Dziękujemy za udział w programie"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Bierzesz udział w testach wersji beta ustawień prywatności w reklamach na Androidzie. Masz na urządzeniu włączoną Piaskownicę prywatności.\n\nW ustawieniach prywatności możesz dowiedzieć się więcej i wyłączyć wersję beta."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Nie zamierzasz brać udziału w programie"</string>
@@ -79,8 +81,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Obecnie nie można wyświetlić żadnych zainteresowań"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Piaskownica prywatności"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Wersja beta ustawień prywatności w reklamach na Androidzie oferuje nowe funkcje, których aplikacje mogą używać do wyświetlania Ci trafnie dobranych reklam. Te technologie nie korzystają z identyfikatorów urządzeń.\n\nAndroid może oszacować, jakie rodzaje reklam będą Ci odpowiadać, i tymczasowo zapisać Twoje zainteresowania na urządzeniu. Dzięki temu reklamy w aplikacjach będą lepiej dobrane, a Twoja aktywność na stronach internetowych i w aplikacjach innych deweloperów nie będzie śledzona."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Nie masz zablokowanych zainteresowań"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Aplikacje mogą szacować Twoje zainteresowania i tymczasowo zapisywać je na Androidzie. Następnie inna aplikacja może pokazać Ci reklamy na tej podstawie.\n\nZablokowane aplikacje nie będą już szacować zainteresowań. Dopóki ich nie odblokujesz, nie pojawią się na liście aplikacji. Zainteresowania określone wcześniej przez te aplikacje zostaną usunięte, ale możliwe, że wciąż będą Ci się wyświetlać reklamy powiązane z tymi obszarami."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Zablokowane przez Ciebie aplikacje"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Zresetuj zainteresowania oszacowane przez aplikacje"</string>
@@ -88,7 +89,25 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Piaskownica prywatności"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Wersja beta ustawień prywatności w reklamach na Androidzie oferuje nowe funkcje, których aplikacje mogą używać do wyświetlania Ci trafnie dobranych reklam. Te technologie nie korzystają z identyfikatorów urządzeń.\n\nAplikacje mogą oszacować, jakie rodzaje reklam będą Ci odpowiadać, i tymczasowo zapisać Twoje zainteresowania na urządzeniu. Dzięki temu reklamy w aplikacjach będą lepiej dobrane, a Twoja aktywność na stronach internetowych i w aplikacjach innych deweloperów nie będzie śledzona."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Nie masz zablokowanych aplikacji"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Nie masz zablokowanych zainteresowań"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Anuluj"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Wyłączyć Piaskownicę prywatności?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Jeśli zmienisz zdanie lub zechcesz dowiedzieć się więcej o wersji beta prywatności w reklamach na Androidzie, otwórz ustawienia prywatności"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Wyłącz"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Zablokować temat <xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Te zainteresowania zostaną zablokowane i nie zostaną ponownie dodane do listy, chyba że zrobisz to samodzielnie. Wciąż możesz widzieć pewne powiązane reklamy."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Zablokuj"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"Temat <xliff:g id="TOPIC">%1$s</xliff:g> jest odblokowany"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android może ponownie dodać te zainteresowania do Twojej listy, ale możliwe, że nie pojawią się na niej od razu"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Zresetować wszystkie Twoje zainteresowania?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"Lista zostanie wyczyszczona, a z czasem odświeżona"</string>
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Resetuj"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Zablokować aplikację <xliff:g id="APP">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Ta aplikacja nie będzie szacować Twoich zainteresowań na potrzeby Piaskownicy prywatności i nie zostanie ponownie dodana do listy, dopóki jej nie odblokujesz.\n\nZainteresowania wcześniej oszacowane przez tę aplikację zostaną usunięte, ale wciąż możesz widzieć pewne powiązane reklamy."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Aplikacja <xliff:g id="APP">%1$s</xliff:g> jest odblokowana"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Ta aplikacja ponownie może szacować Twoje zainteresowania, ale możliwe, że nie pojawi się od razu na liście. Zanim zobaczysz powiązane reklamy, może minąć trochę czasu."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Zresetować zainteresowania wygenerowane przez aplikacje?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"Lista zostanie wyczyszczona, a z czasem odświeżona"</string>
     <string name="topic10001" msgid="1636806320891333775">"Sztuka i rozrywka"</string>
     <string name="topic10002" msgid="1226367977754287428">"Aktorstwo i teatr"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime i manga"</string>

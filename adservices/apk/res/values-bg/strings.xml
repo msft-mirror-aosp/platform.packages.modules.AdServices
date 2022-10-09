@@ -48,6 +48,8 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Ако включите бета-версията, разрешавате на приложенията да изпробват тези нови по-поверителни начини за показване на реклами. Имате възможност да изключите бета-версията по всяко време от настройките си за поверителност."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Не, благодаря"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Включване"</string>
+    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
+    <skip />
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Благодарим ви за участието"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Участвате в бета-версията на Android за поверителността при рекламите Технологията Privacy Sandbox е включена за устройството ви.\n\nМожете да научите повече или да изключите бета-версията по всяко време от настройките си за поверителност."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Избрахте да не участвате"</string>
@@ -79,8 +81,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"В момента няма интереси, които да бъдат показани"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Бета-версията на Android за поверителността при рекламите осигурява нови функции, които приложенията могат да ползват, за да ви показват реклами, които е възможно да харесате. Тези технологии не използват идентификатори на устройството.\n\nAndroid може да определя типовете реклами, които е възможно да ви заинтересуват, и временно да ги запазва на устройството ви. Това дава възможност на приложенията да ви показват подходящи реклами, без да проследяват активността ви в уебсайтовете и приложенията от други програмисти."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Няма блокирани интереси"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Приложенията могат да определят интересите ви и временно да ги запазят на устройството ви с Android. Възможно е по-късно друго приложение да ви покаже реклама въз основа на тези интереси.\n\nАко блокирате дадено приложение, то повече няма да определя интереси и няма да бъде добавено отново към списъка с приложения, докато не го отблокирате. Определените от него интереси ще бъдат изтрити, но е възможно да продължите да виждате свързани с тях реклами."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Приложения, които сте блокирали"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Нулиране на интересите, определени от приложения"</string>
@@ -88,7 +89,25 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Бета-версията на Android за поверителността при рекламите осигурява нови функции, които приложенията могат да ползват, за да ви показват реклами, които е възможно да харесате. Тези технологии не използват идентификатори на устройството.\n\nПриложенията могат да определят типовете реклами, които може да ви заинтересуват, и временно да запазят съответните интереси на устройството ви. Това дава възможност на приложенията да ви показват подходящи реклами, без да проследяват активността ви в уебсайтовете и приложенията от други програмисти."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Няма блокирани приложения"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Няма блокирани интереси"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Отказ"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Искате ли да изключите Privacy Sandbox?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Ако промените решението си или искате да научите повече за бета-версията на Android за поверителността при рекламите, отворете настройките за поверителност"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Изключване"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Да се блокира ли <xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Този интерес ще бъде блокиран и няма да бъде включен отново в списъка ви, освен ако не го добавите ръчно. Възможно е да продължите да виждате свързани с него реклами."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Блокиране"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"Темата <xliff:g id="TOPIC">%1$s</xliff:g> е отблокирана"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Този интерес може да бъде добавен отново към списъка ви, но е възможно да не се покаже веднага"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Да се нулират ли всичките ви интереси?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"Списъкът ви ще бъде изчистен, след което ще се опресни с течение на времето"</string>
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Нулиране"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Да се блокира ли <xliff:g id="APP">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Това приложение няма да определя интереси за Privacy Sandbox и няма да бъде добавено отново към списъка ви, освен ако не го отблокирате.\n\nОпределените от приложението интереси ще бъдат изтрити, но е възможно да продължите да виждате свързани с тях реклами."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Приложението <xliff:g id="APP">%1$s</xliff:g> е отблокирано"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Това приложение може отново да определя интересите ви, но е възможно да не се покаже веднага в списъка ви. Може да мине известно време, докато започнете да виждате свързани реклами."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Да се нулират ли интересите, генерирани от приложенията?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"Списъкът ви ще бъде изчистен, след което ще се опресни с течение на времето"</string>
     <string name="topic10001" msgid="1636806320891333775">"Изкуства и развлечения"</string>
     <string name="topic10002" msgid="1226367977754287428">"Актьорско майсторство и театър"</string>
     <string name="topic10003" msgid="6949890838957814881">"Аниме и манга"</string>
