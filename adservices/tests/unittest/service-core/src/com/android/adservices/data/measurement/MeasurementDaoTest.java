@@ -88,11 +88,20 @@ public class MeasurementDaoTest {
     private static final Uri APP_TWO_SOURCES = Uri.parse("android-app://com.example1.two-sources");
     private static final Uri APP_ONE_SOURCE = Uri.parse("android-app://com.example2.one-source");
     private static final Uri APP_NO_SOURCE = Uri.parse("android-app://com.example3.no-sources");
+    private static final Uri APP_TWO_PUBLISHER =
+            Uri.parse("android-app://com.publisher2.two-sources");
+    private static final Uri APP_ONE_PUBLISHER =
+            Uri.parse("android-app://com.publisher1.one-source");
+    private static final Uri APP_NO_PUBLISHER =
+            Uri.parse("android-app://com.publisher3.no-sources");
     private static final Uri APP_TWO_TRIGGERS =
             Uri.parse("android-app://com.example1.two-triggers");
     private static final Uri APP_ONE_TRIGGER = Uri.parse("android-app://com.example1.one-trigger");
     private static final Uri APP_NO_TRIGGERS = Uri.parse("android-app://com.example1.no-triggers");
     private static final Uri INSTALLED_PACKAGE = Uri.parse("android-app://com.example.installed");
+    private static final Uri WEB_PUBLISHER_ONE = Uri.parse("https://not.example.com");
+    private static final Uri WEB_PUBLISHER_TWO = Uri.parse("https://notexample.com");
+    private static final Uri WEB_PUBLISHER_THREE = Uri.parse("http://not.example.com");
 
     @After
     public void cleanup() {
@@ -253,20 +262,56 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void testGetNumSourcesPerRegistrant() {
+    public void testGetNumSourcesPerPublisher_publisherTypeApp() {
         setupSourceAndTriggerData();
         DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
         dm.runInTransaction(
                 measurementDao -> {
-                    assertEquals(2, measurementDao.getNumSourcesPerRegistrant(APP_TWO_SOURCES));
+                    assertEquals(
+                            2,
+                            measurementDao.getNumSourcesPerPublisher(
+                                    APP_TWO_PUBLISHER, EventSurfaceType.APP));
                 });
         dm.runInTransaction(
                 measurementDao -> {
-                    assertEquals(1, measurementDao.getNumSourcesPerRegistrant(APP_ONE_SOURCE));
+                    assertEquals(
+                            1,
+                            measurementDao.getNumSourcesPerPublisher(
+                                    APP_ONE_PUBLISHER, EventSurfaceType.APP));
                 });
         dm.runInTransaction(
                 measurementDao -> {
-                    assertEquals(0, measurementDao.getNumSourcesPerRegistrant(APP_NO_SOURCE));
+                    assertEquals(
+                            0,
+                            measurementDao.getNumSourcesPerPublisher(
+                                    APP_NO_PUBLISHER, EventSurfaceType.APP));
+                });
+    }
+
+    @Test
+    public void testGetNumSourcesPerPublisher_publisherTypeWeb() {
+        setupSourceDataForPublisherTypeWeb();
+        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
+        dm.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            1,
+                            measurementDao.getNumSourcesPerPublisher(
+                                    WEB_PUBLISHER_ONE, EventSurfaceType.WEB));
+                });
+        dm.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            1,
+                            measurementDao.getNumSourcesPerPublisher(
+                                    WEB_PUBLISHER_TWO, EventSurfaceType.WEB));
+                });
+        dm.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            1,
+                            measurementDao.getNumSourcesPerPublisher(
+                                    WEB_PUBLISHER_THREE, EventSurfaceType.WEB));
                 });
     }
 
@@ -1935,16 +1980,34 @@ public class MeasurementDaoTest {
     private void setupSourceAndTriggerData() {
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         List<Source> sourcesList = new ArrayList<>();
-        sourcesList.add(SourceFixture.getValidSourceBuilder()
-                .setId("S1").setRegistrant(APP_TWO_SOURCES).build());
-        sourcesList.add(SourceFixture.getValidSourceBuilder()
-                .setId("S2").setRegistrant(APP_TWO_SOURCES).build());
-        sourcesList.add(SourceFixture.getValidSourceBuilder()
-                .setId("S3").setRegistrant(APP_ONE_SOURCE).build());
+        sourcesList.add(
+                SourceFixture.getValidSourceBuilder()
+                        .setId("S1")
+                        .setRegistrant(APP_TWO_SOURCES)
+                        .setPublisher(APP_TWO_PUBLISHER)
+                        .setPublisherType(EventSurfaceType.APP)
+                        .build());
+        sourcesList.add(
+                SourceFixture.getValidSourceBuilder()
+                        .setId("S2")
+                        .setRegistrant(APP_TWO_SOURCES)
+                        .setPublisher(APP_TWO_PUBLISHER)
+                        .setPublisherType(EventSurfaceType.APP)
+                        .build());
+        sourcesList.add(
+                SourceFixture.getValidSourceBuilder()
+                        .setId("S3")
+                        .setRegistrant(APP_ONE_SOURCE)
+                        .setPublisher(APP_ONE_PUBLISHER)
+                        .setPublisherType(EventSurfaceType.APP)
+                        .build());
         for (Source source : sourcesList) {
             ContentValues values = new ContentValues();
             values.put("_id", source.getId());
             values.put("registrant", source.getRegistrant().toString());
+            values.put("publisher", source.getPublisher().toString());
+            values.put("publisher_type", source.getPublisherType());
+
             long row = db.insert("msmt_source", null, values);
             Assert.assertNotEquals("Source insertion failed", -1, row);
         }
@@ -1961,6 +2024,38 @@ public class MeasurementDaoTest {
             values.put("registrant", trigger.getRegistrant().toString());
             long row = db.insert("msmt_trigger", null, values);
             Assert.assertNotEquals("Trigger insertion failed", -1, row);
+        }
+    }
+
+    private void setupSourceDataForPublisherTypeWeb() {
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        List<Source> sourcesList = new ArrayList<>();
+        sourcesList.add(
+                SourceFixture.getValidSourceBuilder()
+                        .setId("W1")
+                        .setPublisher(WEB_PUBLISHER_ONE)
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .build());
+        sourcesList.add(
+                SourceFixture.getValidSourceBuilder()
+                        .setId("W2")
+                        .setPublisher(WEB_PUBLISHER_TWO)
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .build());
+        sourcesList.add(
+                SourceFixture.getValidSourceBuilder()
+                        .setId("S3")
+                        .setPublisher(WEB_PUBLISHER_THREE)
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .build());
+        for (Source source : sourcesList) {
+            ContentValues values = new ContentValues();
+            values.put("_id", source.getId());
+            values.put("publisher", source.getPublisher().toString());
+            values.put("publisher_type", source.getPublisherType());
+
+            long row = db.insert("msmt_source", null, values);
+            Assert.assertNotEquals("Source insertion failed", -1, row);
         }
     }
 

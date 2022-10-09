@@ -33,6 +33,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.compatibility.common.util.ShellUtils;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -62,6 +63,12 @@ public class CustomAudienceManagerTest {
         PhFlagsFixture.overrideSdkRequestPermitsPerSecond(Integer.MAX_VALUE);
         // This test is running in background
         PhFlagsFixture.overrideForegroundStatusForFledgeCustomAudience(false);
+        overrideAdservicesGlobalKillSwitch(true);
+    }
+
+    @After
+    public void teardown() {
+        overrideAdservicesGlobalKillSwitch(false);
     }
 
     private void measureJoinCustomAudience(String label) throws Exception {
@@ -155,5 +162,14 @@ public class CustomAudienceManagerTest {
         measureJoinCustomAudience("with-kill, 2nd call");
         measureLeaveCustomAudience("with-kill, 1st call");
         measureLeaveCustomAudience("with-kill, 2nd call");
+    }
+
+    // Override global_kill_switch to ignore the effect of actual PH values.
+    // If isOverride = true, override global_kill_switch to OFF to allow adservices
+    // If isOverride = false, override global_kill_switch to meaningless value so that PhFlags will
+    // use the default value
+    private void overrideAdservicesGlobalKillSwitch(boolean isOverride) {
+        String overrideString = isOverride ? "false" : "null";
+        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
     }
 }

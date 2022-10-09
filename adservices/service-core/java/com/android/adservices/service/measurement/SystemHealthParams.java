@@ -28,20 +28,15 @@ public class SystemHealthParams {
     }
 
     /**
-     * Max number of sources an app can register.
-     */
-    public static final int MAX_SOURCE_REGISTERS_PER_REGISTRANT = 1600; // placeholder value
-
-    /**
      * Max number of triggers an app can register.
      */
     public static final int MAX_TRIGGER_REGISTERS_PER_REGISTRANT = 1000; // placeholder value
 
-    /**
-     * Delay for attribution job triggering.
-     */
-    public static final long ATTRIBUTION_JOB_TRIGGERING_DELAY_MS =
-            TimeUnit.MINUTES.toMillis(2);
+    /** Max number of sources per publisher. */
+    public static final long MAX_SOURCES_PER_PUBLISHER = 1024L;
+
+    /** Delay for attribution job triggering. */
+    public static final long ATTRIBUTION_JOB_TRIGGERING_DELAY_MS = TimeUnit.MINUTES.toMillis(2);
 
     /**
      * Max number of {@link Trigger} to process per job for {@link AttributionJobService}

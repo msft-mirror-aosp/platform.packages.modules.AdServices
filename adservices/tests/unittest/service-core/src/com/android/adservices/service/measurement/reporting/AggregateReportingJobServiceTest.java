@@ -58,7 +58,7 @@ import java.util.concurrent.TimeUnit;
  * Unit test for {@link AggregateReportingJobService
  */
 public class AggregateReportingJobServiceTest {
-    private static final long WAIT_IN_MILLIS = 50L;
+    private static final long WAIT_IN_MILLIS = 1_000L;
 
     private DatastoreManager mMockDatastoreManager;
     private JobScheduler mMockJobScheduler;

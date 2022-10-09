@@ -16,6 +16,7 @@
 package android.adservices.topics;
 
 import static android.adservices.topics.TopicsManager.EMPTY_SDK;
+import static android.adservices.topics.TopicsManager.RECORD_OBSERVATION_DEFAULT;
 
 import android.annotation.NonNull;
 
@@ -25,8 +26,12 @@ public final class GetTopicsRequest {
     /** Name of Ads SDK that is involved in this request. */
     private final String mAdsSdkName;
 
+    /** Whether to record that the caller has observed the topics of the host app or not. */
+    private final boolean mRecordObservation;
+
     private GetTopicsRequest(@NonNull Builder builder) {
         mAdsSdkName = builder.mAdsSdkName;
+        mRecordObservation = builder.mRecordObservation;
     }
 
     /** Get the Sdk Name. */
@@ -35,9 +40,15 @@ public final class GetTopicsRequest {
         return mAdsSdkName;
     }
 
+    /** Get Record Observation. */
+    public boolean shouldRecordObservation() {
+        return mRecordObservation;
+    }
+
     /** Builder for {@link GetTopicsRequest} objects. */
     public static final class Builder {
         private String mAdsSdkName = EMPTY_SDK;
+        private boolean mRecordObservation = RECORD_OBSERVATION_DEFAULT;
 
         /** Creates a {@link Builder} for {@link GetTopicsRequest} objects. */
         public Builder() {}
@@ -61,6 +72,19 @@ public final class GetTopicsRequest {
             }
 
             mAdsSdkName = adsSdkName;
+            return this;
+        }
+
+        /**
+         * Set the Record Observation.
+         *
+         * @param recordObservation whether to record that the caller has observed the topics of the
+         *     host app or not. This will be used to determine if the caller can receive the topic
+         *     in the next epoch.
+         */
+        @NonNull
+        public Builder setShouldRecordObservation(boolean recordObservation) {
+            mRecordObservation = recordObservation;
             return this;
         }
 

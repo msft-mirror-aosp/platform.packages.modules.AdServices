@@ -16,7 +16,12 @@
 
 package com.android.adservices.service.common;
 
-import static com.android.adservices.stats.FledgeApiCallStatsMatcher.aCallStatForFledgeApiWithStatus;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
+
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyNoMoreInteractions;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyZeroInteractions;
@@ -44,7 +49,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoSession;
-import org.mockito.Spy;
 
 public class FledgeAuthorizationFilterTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
@@ -59,7 +63,8 @@ public class FledgeAuthorizationFilterTest {
 
     @Mock private PackageManager mPackageManager;
     @Mock private EnrollmentDao mEnrollmentDao;
-    @Spy private final AdServicesLogger mAdServicesLoggerSpy = AdServicesLoggerImpl.getInstance();
+    private final AdServicesLogger mAdServicesLoggerMock =
+            ExtendedMockito.mock(AdServicesLoggerImpl.class);
 
     public MockitoSession mMockitoSession;
 
@@ -75,7 +80,7 @@ public class FledgeAuthorizationFilterTest {
                         .startMocking();
         mChecker =
                 new FledgeAuthorizationFilter(
-                        mPackageManager, mEnrollmentDao, mAdServicesLoggerSpy);
+                        mPackageManager, mEnrollmentDao, mAdServicesLoggerMock);
     }
 
     @After
@@ -92,7 +97,7 @@ public class FledgeAuthorizationFilterTest {
 
         verify(mPackageManager).getPackagesForUid(UID);
         verifyNoMoreInteractions(mPackageManager);
-        verifyZeroInteractions(mAdServicesLoggerSpy, mEnrollmentDao);
+        verifyZeroInteractions(mAdServicesLoggerMock, mEnrollmentDao);
     }
 
     @Test
@@ -101,7 +106,7 @@ public class FledgeAuthorizationFilterTest {
                 NullPointerException.class,
                 () -> mChecker.assertCallingPackageName(null, UID, API_NAME_LOGGING_ID));
 
-        verifyZeroInteractions(mPackageManager, mAdServicesLoggerSpy, mEnrollmentDao);
+        verifyZeroInteractions(mPackageManager, mAdServicesLoggerMock, mEnrollmentDao);
     }
 
     @Test
@@ -119,14 +124,9 @@ public class FledgeAuthorizationFilterTest {
                 AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE,
                 exception.getMessage());
         verify(mPackageManager).getPackagesForUid(UID);
-        verify(mAdServicesLoggerSpy)
-                .logFledgeApiCallStats(
-                        API_NAME_LOGGING_ID, AdServicesStatusUtils.STATUS_UNAUTHORIZED);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                API_NAME_LOGGING_ID, AdServicesStatusUtils.STATUS_UNAUTHORIZED));
-        verifyNoMoreInteractions(mPackageManager, mAdServicesLoggerSpy, mEnrollmentDao);
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(eq(API_NAME_LOGGING_ID), eq(STATUS_UNAUTHORIZED), anyInt());
+        verifyNoMoreInteractions(mPackageManager, mAdServicesLoggerMock, mEnrollmentDao);
     }
 
     @Test
@@ -144,14 +144,9 @@ public class FledgeAuthorizationFilterTest {
                 AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE,
                 exception.getMessage());
         verify(mPackageManager).getPackagesForUid(UID);
-        verify(mAdServicesLoggerSpy)
-                .logFledgeApiCallStats(
-                        API_NAME_LOGGING_ID, AdServicesStatusUtils.STATUS_UNAUTHORIZED);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                API_NAME_LOGGING_ID, AdServicesStatusUtils.STATUS_UNAUTHORIZED));
-        verifyNoMoreInteractions(mPackageManager, mEnrollmentDao, mAdServicesLoggerSpy);
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(eq(API_NAME_LOGGING_ID), eq(STATUS_UNAUTHORIZED), anyInt());
+        verifyNoMoreInteractions(mPackageManager, mEnrollmentDao, mAdServicesLoggerMock);
     }
 
     @Test
@@ -160,7 +155,7 @@ public class FledgeAuthorizationFilterTest {
 
         mChecker.assertAppDeclaredPermission(CONTEXT, API_NAME_LOGGING_ID);
 
-        verifyZeroInteractions(mPackageManager, mEnrollmentDao, mAdServicesLoggerSpy);
+        verifyZeroInteractions(mPackageManager, mEnrollmentDao, mAdServicesLoggerMock);
     }
 
     @Test
@@ -175,15 +170,10 @@ public class FledgeAuthorizationFilterTest {
         assertEquals(
                 AdServicesStatusUtils.SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE,
                 exception.getMessage());
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        API_NAME_LOGGING_ID, AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                API_NAME_LOGGING_ID,
-                                AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED));
-        verifyNoMoreInteractions(mAdServicesLoggerSpy);
+                        eq(API_NAME_LOGGING_ID), eq(STATUS_PERMISSION_NOT_REQUESTED), anyInt());
+        verifyNoMoreInteractions(mAdServicesLoggerMock);
         verifyZeroInteractions(mPackageManager, mEnrollmentDao);
     }
 
@@ -193,7 +183,7 @@ public class FledgeAuthorizationFilterTest {
                 NullPointerException.class,
                 () -> mChecker.assertAppDeclaredPermission(null, API_NAME_LOGGING_ID));
 
-        verifyZeroInteractions(mPackageManager, mEnrollmentDao, mAdServicesLoggerSpy);
+        verifyZeroInteractions(mPackageManager, mEnrollmentDao, mAdServicesLoggerMock);
     }
 
     @Test
@@ -210,7 +200,7 @@ public class FledgeAuthorizationFilterTest {
         verify(mEnrollmentDao)
                 .getEnrollmentDataForFledgeByAdTechIdentifier(CommonFixture.VALID_BUYER_1);
         verifyNoMoreInteractions(mEnrollmentDao);
-        verifyZeroInteractions(mPackageManager, mAdServicesLoggerSpy);
+        verifyZeroInteractions(mPackageManager, mAdServicesLoggerMock);
     }
 
     @Test
@@ -234,15 +224,10 @@ public class FledgeAuthorizationFilterTest {
                 exception.getMessage());
         verify(mEnrollmentDao)
                 .getEnrollmentDataForFledgeByAdTechIdentifier(CommonFixture.VALID_BUYER_1);
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        API_NAME_LOGGING_ID, AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                API_NAME_LOGGING_ID,
-                                AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED));
-        verifyNoMoreInteractions(mEnrollmentDao, mAdServicesLoggerSpy);
+                        eq(API_NAME_LOGGING_ID), eq(STATUS_CALLER_NOT_ALLOWED), anyInt());
+        verifyNoMoreInteractions(mEnrollmentDao, mAdServicesLoggerMock);
         verifyZeroInteractions(mPackageManager);
     }
 
@@ -270,15 +255,10 @@ public class FledgeAuthorizationFilterTest {
                 exception.getMessage());
         verify(mEnrollmentDao)
                 .getEnrollmentDataForFledgeByAdTechIdentifier(CommonFixture.VALID_BUYER_1);
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        API_NAME_LOGGING_ID, AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED);
-        verify(mAdServicesLoggerSpy)
-                .logApiCallStats(
-                        aCallStatForFledgeApiWithStatus(
-                                API_NAME_LOGGING_ID,
-                                AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED));
-        verifyNoMoreInteractions(mEnrollmentDao, mAdServicesLoggerSpy);
+                        eq(API_NAME_LOGGING_ID), eq(STATUS_CALLER_NOT_ALLOWED), anyInt());
+        verifyNoMoreInteractions(mEnrollmentDao, mAdServicesLoggerMock);
         verifyZeroInteractions(mPackageManager);
     }
 
@@ -293,7 +273,7 @@ public class FledgeAuthorizationFilterTest {
                                 CommonFixture.VALID_BUYER_1,
                                 API_NAME_LOGGING_ID));
 
-        verifyZeroInteractions(mPackageManager, mEnrollmentDao, mAdServicesLoggerSpy);
+        verifyZeroInteractions(mPackageManager, mEnrollmentDao, mAdServicesLoggerMock);
     }
 
     @Test
@@ -304,7 +284,7 @@ public class FledgeAuthorizationFilterTest {
                         mChecker.assertAdTechAllowed(
                                 CONTEXT, null, CommonFixture.VALID_BUYER_1, API_NAME_LOGGING_ID));
 
-        verifyZeroInteractions(mPackageManager, mEnrollmentDao, mAdServicesLoggerSpy);
+        verifyZeroInteractions(mPackageManager, mEnrollmentDao, mAdServicesLoggerMock);
     }
 
     @Test
@@ -315,6 +295,6 @@ public class FledgeAuthorizationFilterTest {
                         mChecker.assertAdTechAllowed(
                                 CONTEXT, PACKAGE_NAME, null, API_NAME_LOGGING_ID));
 
-        verifyZeroInteractions(mPackageManager, mEnrollmentDao, mAdServicesLoggerSpy);
+        verifyZeroInteractions(mPackageManager, mEnrollmentDao, mAdServicesLoggerMock);
     }
 }
