@@ -182,15 +182,15 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
     @Test
     public void testSandboxIsKilledWhenKillswitchEnabled() throws Exception {
         try {
-            getDevice().executeShellCommand(
-                    "device_config put sdk_sandbox disable_sdk_sandbox false");
+            getDevice()
+                    .executeShellCommand("device_config put adservices disable_sdk_sandbox false");
             startActivity(APP_PACKAGE, APP_ACTIVITY);
             String processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
             assertThat(processDump).contains(APP_PACKAGE);
             assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
 
             getDevice().executeShellCommand(
-                    "device_config put sdk_sandbox disable_sdk_sandbox true");
+                    "device_config put adservices disable_sdk_sandbox true");
             processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
             assertThat(processDump).contains(APP_PACKAGE);
             assertThat(processDump).doesNotContain(SANDBOX_1_PROCESS_NAME);
