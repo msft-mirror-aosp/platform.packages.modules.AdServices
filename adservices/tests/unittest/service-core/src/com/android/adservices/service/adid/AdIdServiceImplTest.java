@@ -218,7 +218,7 @@ public class AdIdServiceImplTest {
         when(mPackageManager.checkPermission(ACCESS_ADSERVICES_AD_ID, SDK_PACKAGE_NAME))
                 .thenReturn(PackageManager.PERMISSION_DENIED);
         when(Binder.getCallingUidOrThrow()).thenReturn(SANDBOX_UID);
-        invokeGetAdIdAndVerifyError(mMockSdkContext, STATUS_UNAUTHORIZED);
+        invokeGetAdIdAndVerifyError(mMockSdkContext, STATUS_PERMISSION_NOT_REQUESTED);
     }
 
     @Test
