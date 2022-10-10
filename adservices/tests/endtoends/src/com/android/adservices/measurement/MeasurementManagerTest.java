@@ -48,7 +48,6 @@ import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.stubbing.Answer;
@@ -75,15 +74,8 @@ public class MeasurementManagerTest {
                     "sdkName",
                     /* sdkCeDataDir = */ null,
                     /* sdkDeDataDir = */ null);
-
-    @Before
-    public void setup() {
-        overrideAdservicesGlobalKillSwitch(true);
-    }
-
     @After
     public void tearDown() {
-        overrideAdservicesGlobalKillSwitch(false);
         resetOverrideConsentManagerDebugMode();
     }
 
@@ -522,14 +514,5 @@ public class MeasurementManagerTest {
 
     private void resetOverrideConsentManagerDebugMode() {
         ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode null");
-    }
-
-    // Override global_kill_switch to ignore the effect of actual PH values.
-    // If isOverride = true, override global_kill_switch to OFF to allow adservices
-    // If isOverride = false, override global_kill_switch to meaningless value so that PhFlags will
-    // use the default value
-    private void overrideAdservicesGlobalKillSwitch(boolean isOverride) {
-        String overrideString = isOverride ? "false" : "null";
-        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
     }
 }
