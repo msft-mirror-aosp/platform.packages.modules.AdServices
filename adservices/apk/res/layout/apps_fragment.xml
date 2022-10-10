@@ -58,6 +58,15 @@
                     android:gravity="center"
                     android:text="@string/settingsUI_apps_view_no_apps_text"
                     android:textAppearance="@style/TextAppearance.Body2.Bold" />
+                <Button
+                    android:id="@+id/blocked_apps_when_empty_state_button"
+                    style="@style/MainStyle.PrimaryButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:text="@string/settingsUI_blocked_apps_title"
+                    android:textAllCaps="false"
+                    android:textColor="@color/button_text_color"/>
             </LinearLayout>
 
             <androidx.recyclerview.widget.RecyclerView

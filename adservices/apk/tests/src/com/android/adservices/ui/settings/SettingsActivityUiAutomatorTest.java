@@ -207,6 +207,33 @@ public class SettingsActivityUiAutomatorTest {
         return sDevice.findObject(new UiSelector().text(getString(resId)).instance(index));
     }
 
+    /**
+     * Test for the Button to show blocked topics when the list of Topics is Empty The Button should
+     * be disabled if blocked topics is empty
+     *
+     * @throws UiObjectNotFoundException
+     */
+    @Test
+    public void blockedTopicsWhenEmptyStateButtonTest() throws UiObjectNotFoundException {
+        // Return an empty topics list
+        doReturn(ImmutableList.of()).when(sConsentManager).getKnownTopicsWithConsent();
+        // Return a non-empty blocked topics list
+        List<Topic> tempList = new ArrayList<>();
+        tempList.add(Topic.create(10004, 1, 1));
+        tempList.add(Topic.create(10005, 1, 1));
+        ImmutableList<Topic> blockedTopicsList = ImmutableList.copyOf(tempList);
+        doReturn(blockedTopicsList).when(sConsentManager).getTopicsWithRevokedConsent();
+        // navigate to topics page
+        scrollToAndClick(R.string.settingsUI_topics_title);
+        UiObject blockedTopicsWhenEmptyStateButton =
+                sDevice.findObject(
+                        new UiSelector()
+                                .className("android.widget.Button")
+                                .text(getString(R.string.settingsUI_blocked_topics_title)));
+
+        assertThat(blockedTopicsWhenEmptyStateButton.isEnabled()).isTrue();
+    }
+
     @Test
     public void optOutDialogTest() throws UiObjectNotFoundException {
         UiObject mainSwitch =
