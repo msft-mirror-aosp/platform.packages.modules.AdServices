@@ -16,6 +16,8 @@
 
 package com.android.adservices.data.adselection;
 
+import android.net.Uri;
+
 import androidx.annotation.Nullable;
 import androidx.room.Dao;
 import androidx.room.Insert;
@@ -70,6 +72,18 @@ public interface AdSelectionEntryDao {
             "SELECT EXISTS(SELECT 1 FROM ad_selection WHERE ad_selection_id = :adSelectionId LIMIT"
                     + " 1)")
     boolean doesAdSelectionIdExist(long adSelectionId);
+
+    /**
+     * Checks if there is a row in the buyer decision logic data with the unique key
+     * bidding_logic_uri
+     *
+     * @param biddingLogicUri which is the key to query the corresponding buyer decision logic data.
+     * @return true if row exists, false otherwise
+     */
+    @Query(
+            "SELECT EXISTS(SELECT 1 FROM buyer_decision_logic WHERE bidding_logic_uri ="
+                    + " :biddingLogicUri LIMIT 1)")
+    boolean doesBuyerDecisionLogicExist(Uri biddingLogicUri);
 
     /**
      * Checks if there is a row in the ad selection override data with the unique key

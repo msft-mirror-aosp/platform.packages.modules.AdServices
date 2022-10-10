@@ -18,6 +18,8 @@ package android.adservices.measurement;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION;
 
 import android.adservices.AdServicesState;
+import android.adservices.adid.AdId;
+import android.adservices.adid.AdIdManager;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
 import android.annotation.CallbackExecutor;
@@ -42,6 +44,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Objects;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 /**
  * MeasurementManager.
@@ -50,9 +53,9 @@ public class MeasurementManager {
     /** @hide */
     public static final String MEASUREMENT_SERVICE = "measurement_service";
 
-     /**
-     * This state indicates that Measurement APIs are unavailable.
-     * Invoking them will result in an {@link UnsupportedOperationException}.
+    /**
+     * This state indicates that Measurement APIs are unavailable. Invoking them will result in an
+     * {@link UnsupportedOperationException}.
      */
     public static final int MEASUREMENT_API_STATE_DISABLED = 0;
 
@@ -63,14 +66,18 @@ public class MeasurementManager {
 
     /** @hide */
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef(prefix = "MEASUREMENT_API_STATE_", value = {
-            MEASUREMENT_API_STATE_DISABLED,
-            MEASUREMENT_API_STATE_ENABLED,
-    })
+    @IntDef(
+            prefix = "MEASUREMENT_API_STATE_",
+            value = {
+                MEASUREMENT_API_STATE_DISABLED,
+                MEASUREMENT_API_STATE_ENABLED,
+            })
     public @interface MeasurementApiState {}
 
-    private final Context mContext;
-    private final ServiceBinder<IMeasurementService> mServiceBinder;
+    private Context mContext;
+    private ServiceBinder<IMeasurementService> mServiceBinder;
+    private AdIdManager mAdIdManager;
+    private Executor mAdIdExecutor = Executors.newCachedThreadPool();
 
     /**
      * Create MeasurementManager.
@@ -78,11 +85,29 @@ public class MeasurementManager {
      * @hide
      */
     public MeasurementManager(Context context) {
+        // In case the MeasurementManager is initiated from inside a sdk_sandbox process the
+        // fields will be immediately rewritten by the initialize method below.
+        initialize(context);
+    }
+
+    /**
+     * Initializes {@link MeasurementManager} with the given {@code context}.
+     *
+     * <p>This method is called by the {@link SandboxedSdkContext} to propagate the correct context.
+     * For more information check the javadoc on the {@link
+     * android.app.sdksandbox.SdkSandboxSystemServiceRegistry}.
+     *
+     * @hide
+     * @see android.app.sdksandbox.SdkSandboxSystemServiceRegistry
+     */
+    public MeasurementManager initialize(@NonNull Context context) {
         mContext = context;
         mServiceBinder = ServiceBinder.getServiceBinder(
                 context,
                 AdServicesCommon.ACTION_MEASUREMENT_SERVICE,
                 IMeasurementService.Stub::asInterface);
+        mAdIdManager = new AdIdManager(mContext);
+        return this;
     }
 
     /**
@@ -98,6 +123,11 @@ public class MeasurementManager {
             throw new IllegalStateException("Unable to find the service");
         }
         return service;
+    }
+
+    /** Checks if Ad ID permission is enabled. */
+    private boolean isAdIdPermissionEnabled(AdId adId) {
+        return !AdId.ZERO_OUT.equals(adId.getAdId());
     }
 
     /**
@@ -161,16 +191,36 @@ public class MeasurementManager {
             @Nullable OutcomeReceiver<Object, Exception> callback) {
 
         Objects.requireNonNull(attributionSource);
-        register(
+
+        RegistrationRequest.Builder builder =
                 new RegistrationRequest.Builder()
                         .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
                         .setRegistrationUri(attributionSource)
                         .setInputEvent(inputEvent)
                         .setPackageName(getPackageName())
-                        .setRequestTime(SystemClock.uptimeMillis())
-                        .build(),
-                executor,
-                callback);
+                        .setRequestTime(SystemClock.uptimeMillis());
+
+        mAdIdManager.getAdId(
+                mAdIdExecutor,
+                new OutcomeReceiver<AdId, Exception>() {
+                    @Override
+                    public void onResult(AdId adId) {
+                        register(
+                                builder.setAdIdPermissionGranted(isAdIdPermissionEnabled(adId))
+                                        .build(),
+                                executor,
+                                callback);
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        LogUtil.e(error, "Failed to get Ad ID");
+                        register(
+                                builder.setAdIdPermissionGranted(false).build(),
+                                executor,
+                                callback);
+                    }
+                });
     }
 
     /**
@@ -192,33 +242,70 @@ public class MeasurementManager {
             @Nullable Executor executor,
             @Nullable OutcomeReceiver<Object, Exception> callback) {
         Objects.requireNonNull(request);
+
+        CallerMetadata callerMetadata = generateCallerMetadataWithCurrentTime();
+        IMeasurementCallback measurementCallback =
+                new IMeasurementCallback.Stub() {
+                    @Override
+                    public void onResult() {
+                        if (callback != null && executor != null) {
+                            executor.execute(() -> callback.onResult(new Object()));
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(MeasurementErrorResponse failureParcel) {
+                        if (callback != null && executor != null) {
+                            executor.execute(
+                                    () ->
+                                            callback.onError(
+                                                    AdServicesStatusUtils.asException(
+                                                            failureParcel)));
+                        }
+                    }
+                };
+
+        WebSourceRegistrationRequestInternal.Builder builder =
+                new WebSourceRegistrationRequestInternal.Builder(
+                        request, getPackageName(), SystemClock.uptimeMillis());
+
+        mAdIdManager.getAdId(
+                mAdIdExecutor,
+                new OutcomeReceiver<AdId, Exception>() {
+                    @Override
+                    public void onResult(AdId adId) {
+                        registerWebSourceWrapper(
+                                builder.setAdIdPermissionGranted(isAdIdPermissionEnabled(adId))
+                                        .build(),
+                                executor,
+                                callerMetadata,
+                                measurementCallback,
+                                callback);
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        LogUtil.e(error, "Failed to get Ad ID");
+                        registerWebSourceWrapper(
+                                builder.setAdIdPermissionGranted(false).build(),
+                                executor,
+                                callerMetadata,
+                                measurementCallback,
+                                callback);
+                    }
+                });
+    }
+
+    /** Wrapper method for registerWebSource. */
+    private void registerWebSourceWrapper(
+            @NonNull WebSourceRegistrationRequestInternal request,
+            @Nullable Executor executor,
+            @NonNull CallerMetadata callerMetadata,
+            @NonNull IMeasurementCallback measurementCallback,
+            @Nullable OutcomeReceiver<Object, Exception> callback) {
         final IMeasurementService service = getService();
-
         try {
-            service.registerWebSource(
-                    new WebSourceRegistrationRequestInternal.Builder(
-                                    request, getPackageName(), SystemClock.uptimeMillis())
-                            .build(),
-                    generateCallerMetadataWithCurrentTime(),
-                    new IMeasurementCallback.Stub() {
-                        @Override
-                        public void onResult() {
-                            if (callback != null && executor != null) {
-                                executor.execute(() -> callback.onResult(new Object()));
-                            }
-                        }
-
-                        @Override
-                        public void onFailure(MeasurementErrorResponse failureParcel) {
-                            if (callback != null && executor != null) {
-                                executor.execute(
-                                        () ->
-                                                callback.onError(
-                                                        AdServicesStatusUtils.asException(
-                                                                failureParcel)));
-                            }
-                        }
-                    });
+            service.registerWebSource(request, callerMetadata, measurementCallback);
         } catch (RemoteException e) {
             LogUtil.e(e, "RemoteException");
             if (callback != null && executor != null) {
@@ -245,32 +332,69 @@ public class MeasurementManager {
             @Nullable Executor executor,
             @Nullable OutcomeReceiver<Object, Exception> callback) {
         Objects.requireNonNull(request);
+
+        CallerMetadata callerMetadata = generateCallerMetadataWithCurrentTime();
+        IMeasurementCallback measurementCallback =
+                new IMeasurementCallback.Stub() {
+                    @Override
+                    public void onResult() {
+                        if (callback != null && executor != null) {
+                            executor.execute(() -> callback.onResult(new Object()));
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(MeasurementErrorResponse failureParcel) {
+                        if (callback != null && executor != null) {
+                            executor.execute(
+                                    () ->
+                                            callback.onError(
+                                                    AdServicesStatusUtils.asException(
+                                                            failureParcel)));
+                        }
+                    }
+                };
+
+        WebTriggerRegistrationRequestInternal.Builder builder =
+                new WebTriggerRegistrationRequestInternal.Builder(request, getPackageName());
+
+        mAdIdManager.getAdId(
+                mAdIdExecutor,
+                new OutcomeReceiver<AdId, Exception>() {
+                    @Override
+                    public void onResult(AdId adId) {
+                        registerWebTriggerWrapper(
+                                builder.setAdIdPermissionGranted(isAdIdPermissionEnabled(adId))
+                                        .build(),
+                                executor,
+                                callerMetadata,
+                                measurementCallback,
+                                callback);
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        LogUtil.e(error, "Failed to get Ad ID");
+                        registerWebTriggerWrapper(
+                                builder.setAdIdPermissionGranted(false).build(),
+                                executor,
+                                callerMetadata,
+                                measurementCallback,
+                                callback);
+                    }
+                });
+    }
+
+    /** Wrapper method for registerWebTrigger. */
+    private void registerWebTriggerWrapper(
+            @NonNull WebTriggerRegistrationRequestInternal request,
+            @Nullable Executor executor,
+            @NonNull CallerMetadata callerMetadata,
+            @NonNull IMeasurementCallback measurementCallback,
+            @Nullable OutcomeReceiver<Object, Exception> callback) {
         final IMeasurementService service = getService();
-
         try {
-            service.registerWebTrigger(
-                    new WebTriggerRegistrationRequestInternal.Builder(request, getPackageName())
-                            .build(),
-                    generateCallerMetadataWithCurrentTime(),
-                    new IMeasurementCallback.Stub() {
-                        @Override
-                        public void onResult() {
-                            if (callback != null && executor != null) {
-                                executor.execute(() -> callback.onResult(new Object()));
-                            }
-                        }
-
-                        @Override
-                        public void onFailure(MeasurementErrorResponse failureParcel) {
-                            if (callback != null && executor != null) {
-                                executor.execute(
-                                        () ->
-                                                callback.onError(
-                                                        AdServicesStatusUtils.asException(
-                                                                failureParcel)));
-                            }
-                        }
-                    });
+            service.registerWebTrigger(request, callerMetadata, measurementCallback);
         } catch (RemoteException e) {
             LogUtil.e(e, "RemoteException");
             if (callback != null && executor != null) {
@@ -294,14 +418,34 @@ public class MeasurementManager {
             @Nullable OutcomeReceiver<Object, Exception> callback) {
 
         Objects.requireNonNull(trigger);
-        register(
+
+        RegistrationRequest.Builder builder =
                 new RegistrationRequest.Builder()
                         .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
                         .setRegistrationUri(trigger)
-                        .setPackageName(getPackageName())
-                        .build(),
-                executor,
-                callback);
+                        .setPackageName(getPackageName());
+
+        mAdIdManager.getAdId(
+                mAdIdExecutor,
+                new OutcomeReceiver<AdId, Exception>() {
+                    @Override
+                    public void onResult(AdId adId) {
+                        register(
+                                builder.setAdIdPermissionGranted(isAdIdPermissionEnabled(adId))
+                                        .build(),
+                                executor,
+                                callback);
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        LogUtil.e(error, "Failed to get Ad ID");
+                        register(
+                                builder.setAdIdPermissionGranted(false).build(),
+                                executor,
+                                callback);
+                    }
+                });
     }
 
     /**
@@ -396,6 +540,7 @@ public class MeasurementManager {
 
         try {
             service.getMeasurementApiStatus(
+                    new StatusParam.Builder(getPackageName()).build(),
                     generateCallerMetadataWithCurrentTime(),
                     new IMeasurementApiStatusCallback.Stub() {
                         @Override
@@ -410,10 +555,11 @@ public class MeasurementManager {
     }
 
     /**
-     * If the service is in an APK (as opposed to the system service), unbind it from the service
-     * to allow the APK process to die.
-     * @hide Not sure if we'll need this functionality in the final API. For now, we need it
-     * for performance testing to simulate "cold-start" situations.
+     * If the service is in an APK (as opposed to the system service), unbind it from the service to
+     * allow the APK process to die.
+     *
+     * @hide Not sure if we'll need this functionality in the final API. For now, we need it for
+     *     performance testing to simulate "cold-start" situations.
      */
     @VisibleForTesting
     public void unbindFromService() {
@@ -431,7 +577,7 @@ public class MeasurementManager {
 
     private CallerMetadata generateCallerMetadataWithCurrentTime() {
         return new CallerMetadata.Builder()
-                .setBinderElapsedTimestamp(System.currentTimeMillis())
+                .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
                 .build();
     }
 }

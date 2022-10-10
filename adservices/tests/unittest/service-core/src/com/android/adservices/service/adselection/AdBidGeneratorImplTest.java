@@ -83,6 +83,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class AdBidGeneratorImplTest {
     public static final List<Double> BIDS =
@@ -121,6 +122,7 @@ public class AdBidGeneratorImplTest {
     private ListeningExecutorService mLightweightExecutorService;
     private ListeningExecutorService mBackgroundExecutorService;
     private ListeningExecutorService mBlockingExecutorService;
+    private ScheduledThreadPoolExecutor mScheduledExecutor;
     private final Context mContext = ApplicationProvider.getApplicationContext();
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
     @Mock AdSelectionScriptEngine mAdSelectionScriptEngine;
@@ -150,6 +152,7 @@ public class AdBidGeneratorImplTest {
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mBlockingExecutorService = AdServicesExecutors.getBlockingExecutor();
+        mScheduledExecutor = AdServicesExecutors.getScheduler();
         mAdServicesHttpsClient =
                 new AdServicesHttpsClient(AdServicesExecutors.getBlockingExecutor());
         mCustomAudienceDao =
@@ -162,8 +165,8 @@ public class AdBidGeneratorImplTest {
         mBuyerDecisionLogicJs =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
                         + " contextual_signals, custom_audience_signals) { \n"
-                        + " return {'status': 0, 'results': {'reporting_url': '"
-                        + " buyerReportingUrl "
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
+                        + " buyerReportingUri "
                         + "' } };\n"
                         + "}";
 
@@ -174,12 +177,12 @@ public class AdBidGeneratorImplTest {
         mTrustedBiddingData =
                 new DBTrustedBiddingData.Builder()
                         .setKeys(mTrustedBiddingKeys)
-                        .setUrl(mTrustedBiddingUri)
+                        .setUri(mTrustedBiddingUri)
                         .build();
 
         mCustomAudienceWithAds =
                 DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
-                        .setBiddingLogicUrl(mDecisionLogicUri)
+                        .setBiddingLogicUri(mDecisionLogicUri)
                         .setTrustedBiddingData(mTrustedBiddingData)
                         .build();
 
@@ -226,6 +229,7 @@ public class AdBidGeneratorImplTest {
                         mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
+                        mScheduledExecutor,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
@@ -318,6 +322,7 @@ public class AdBidGeneratorImplTest {
                         mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
+                        mScheduledExecutor,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
@@ -380,6 +385,7 @@ public class AdBidGeneratorImplTest {
                         mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
+                        mScheduledExecutor,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
@@ -446,6 +452,7 @@ public class AdBidGeneratorImplTest {
                         mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
+                        mScheduledExecutor,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
@@ -503,6 +510,7 @@ public class AdBidGeneratorImplTest {
                         mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
+                        mScheduledExecutor,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
@@ -566,12 +574,12 @@ public class AdBidGeneratorImplTest {
         DBTrustedBiddingData trustedBiddingData =
                 new DBTrustedBiddingData.Builder()
                         .setKeys(emptyTrustedBiddingKeys)
-                        .setUrl(mTrustedBiddingUri)
+                        .setUri(mTrustedBiddingUri)
                         .build();
 
         DBCustomAudience customAudienceWithAds =
                 DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
-                        .setBiddingLogicUrl(mDecisionLogicUri)
+                        .setBiddingLogicUri(mDecisionLogicUri)
                         .setTrustedBiddingData(trustedBiddingData)
                         .build();
 
@@ -587,6 +595,7 @@ public class AdBidGeneratorImplTest {
                         mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
+                        mScheduledExecutor,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
@@ -664,6 +673,7 @@ public class AdBidGeneratorImplTest {
                         mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
+                        mScheduledExecutor,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
@@ -712,6 +722,7 @@ public class AdBidGeneratorImplTest {
                         mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
+                        mScheduledExecutor,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
@@ -746,6 +757,7 @@ public class AdBidGeneratorImplTest {
                         mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
+                        mScheduledExecutor,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
@@ -792,6 +804,7 @@ public class AdBidGeneratorImplTest {
                         mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
+                        mScheduledExecutor,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,

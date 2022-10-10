@@ -18,6 +18,7 @@ package com.android.adservices.customaudience;
 
 import static org.junit.Assert.assertTrue;
 
+import android.Manifest;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudience;
@@ -32,16 +33,15 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.compatibility.common.util.ShellUtils;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeoutException;
 
 public class CustomAudienceManagerTest {
-    private static final String WRITE_DEVICE_CONFIG_PERMISSION =
-            "android.permission.WRITE_DEVICE_CONFIG";
-
     private static final String TAG = "CustomAudienceManagerTest";
     private static final String SERVICE_APK_NAME = "com.android.adservices.api";
     private static final int MAX_RETRY = 50;
@@ -54,16 +54,27 @@ public class CustomAudienceManagerTest {
 
     private static final int DELAY_TO_AVOID_THROTTLE_MS = 1001;
 
+    @Before
+    public void setUp() throws TimeoutException {
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+        // Disable API throttling
+        PhFlagsFixture.overrideSdkRequestPermitsPerSecond(Integer.MAX_VALUE);
+        // This test is running in background
+        PhFlagsFixture.overrideForegroundStatusForFledgeCustomAudience(false);
+        overrideAdservicesGlobalKillSwitch(true);
+    }
+
+    @After
+    public void teardown() {
+        overrideAdservicesGlobalKillSwitch(false);
+    }
+
     private void measureJoinCustomAudience(String label) throws Exception {
         Log.i(TAG, "Calling joinCustomAudience()");
         Thread.sleep(DELAY_TO_AVOID_THROTTLE_MS);
         final long start = System.currentTimeMillis();
-
-        InstrumentationRegistry.getInstrumentation()
-                .getUiAutomation()
-                .adoptShellPermissionIdentity(WRITE_DEVICE_CONFIG_PERMISSION);
-        // This test is running in background
-        PhFlagsFixture.overrideForegroundStatusForFledgeCustomAudience(false);
 
         AdvertisingCustomAudienceClient client =
                 new AdvertisingCustomAudienceClient.Builder()
@@ -91,21 +102,12 @@ public class CustomAudienceManagerTest {
                         .build();
 
         client.leaveCustomAudience(
-                        CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
                         CustomAudienceFixture.VALID_NAME)
                 .get();
 
         final long duration = System.currentTimeMillis() - start;
         Log.i(TAG, "joinCustomAudience() took " + duration + " ms: " + label);
-    }
-
-    @Before
-    public void setUp() throws Exception {
-        InstrumentationRegistry.getInstrumentation()
-                .getUiAutomation()
-                .adoptShellPermissionIdentity(WRITE_DEVICE_CONFIG_PERMISSION);
-        PhFlagsFixture.overrideSdkRequestPermitsPerSecond(Integer.MAX_VALUE);
     }
 
     @Test
@@ -141,12 +143,6 @@ public class CustomAudienceManagerTest {
         // Kill the service process.
         ShellUtils.runShellCommand("su 0 killall -9 " + SERVICE_APK_NAME);
 
-        InstrumentationRegistry.getInstrumentation()
-                .getUiAutomation()
-                .adoptShellPermissionIdentity(WRITE_DEVICE_CONFIG_PERMISSION);
-        // This test is running in background
-        PhFlagsFixture.overrideForegroundStatusForFledgeCustomAudience(false);
-
         // TODO(b/230873929): Extract to util method.
         int count = 0;
         boolean succeed = false;
@@ -166,5 +162,14 @@ public class CustomAudienceManagerTest {
         measureJoinCustomAudience("with-kill, 2nd call");
         measureLeaveCustomAudience("with-kill, 1st call");
         measureLeaveCustomAudience("with-kill, 2nd call");
+    }
+
+    // Override global_kill_switch to ignore the effect of actual PH values.
+    // If isOverride = true, override global_kill_switch to OFF to allow adservices
+    // If isOverride = false, override global_kill_switch to meaningless value so that PhFlags will
+    // use the default value
+    private void overrideAdservicesGlobalKillSwitch(boolean isOverride) {
+        String overrideString = isOverride ? "false" : "null";
+        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
     }
 }

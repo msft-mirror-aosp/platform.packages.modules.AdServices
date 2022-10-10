@@ -25,6 +25,8 @@ import android.net.Uri;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.service.measurement.util.UnsignedLong;
+
 import org.junit.Test;
 
 
@@ -33,17 +35,15 @@ import org.junit.Test;
  */
 @SmallTest
 public final class SourceRegistrationTest {
-    private static final Uri TOP_ORIGIN = Uri.parse("https://foo.com");
-    private static final Uri REGISTRATION_URI = Uri.parse("https://bar.com");
-    private static final Long DEBUG_KEY = 2376843L;
+    private static final String ENROLLMENT_ID = "enrollment-id";
+    private static final UnsignedLong DEBUG_KEY = new UnsignedLong(2376843L);
 
     private SourceRegistration createExampleResponse() {
 
         return new SourceRegistration.Builder()
-                .setTopOrigin(TOP_ORIGIN)
-                .setRegistrationUri(REGISTRATION_URI)
+                .setEnrollmentId(ENROLLMENT_ID)
                 .setAppDestination(Uri.parse("android-app://baz.com"))
-                .setSourceEventId(1234567)
+                .setSourceEventId(new UnsignedLong(1234567L))
                 .setExpiry(2345678)
                 .setSourcePriority(345678)
                 .setAggregateSource(
@@ -55,10 +55,9 @@ public final class SourceRegistrationTest {
     }
 
     void verifyExampleResponse(SourceRegistration response) {
-        assertEquals("https://foo.com", response.getTopOrigin().toString());
-        assertEquals("https://bar.com", response.getRegistrationUri().toString());
+        assertEquals(ENROLLMENT_ID, response.getEnrollmentId());
         assertEquals("android-app://baz.com", response.getAppDestination().toString());
-        assertEquals(1234567, response.getSourceEventId());
+        assertEquals(new UnsignedLong(1234567L), response.getSourceEventId());
         assertEquals(2345678, response.getExpiry());
         assertEquals(345678, response.getSourcePriority());
         assertEquals(DEBUG_KEY, response.getDebugKey());
@@ -80,15 +79,13 @@ public final class SourceRegistrationTest {
         Uri destination = Uri.parse("android-app://baz.com");
         SourceRegistration response =
                 new SourceRegistration.Builder()
-                        .setTopOrigin(TOP_ORIGIN)
-                        .setRegistrationUri(REGISTRATION_URI)
+                        .setEnrollmentId(ENROLLMENT_ID)
                         .setAppDestination(destination)
                         .build();
-        assertEquals(TOP_ORIGIN, response.getTopOrigin());
-        assertEquals(REGISTRATION_URI, response.getRegistrationUri());
+        assertEquals(ENROLLMENT_ID, response.getEnrollmentId());
         assertEquals(destination, response.getAppDestination());
         assertNull(response.getWebDestination());
-        assertEquals(0, response.getSourceEventId());
+        assertEquals(null, response.getSourceEventId());
         assertEquals(MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS, response.getExpiry());
         assertEquals(0, response.getSourcePriority());
         assertNull(response.getAggregateSource());
@@ -100,15 +97,13 @@ public final class SourceRegistrationTest {
         Uri destination = Uri.parse("https://baz.com");
         SourceRegistration response =
                 new SourceRegistration.Builder()
-                        .setTopOrigin(TOP_ORIGIN)
-                        .setRegistrationUri(REGISTRATION_URI)
+                        .setEnrollmentId(ENROLLMENT_ID)
                         .setWebDestination(destination)
                         .build();
-        assertEquals(TOP_ORIGIN, response.getTopOrigin());
-        assertEquals(REGISTRATION_URI, response.getRegistrationUri());
+        assertEquals(ENROLLMENT_ID, response.getEnrollmentId());
         assertEquals(destination, response.getWebDestination());
         assertNull(response.getAppDestination());
-        assertEquals(0, response.getSourceEventId());
+        assertEquals(null, response.getSourceEventId());
         assertEquals(MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS, response.getExpiry());
         assertEquals(0, response.getSourcePriority());
         assertNull(response.getAggregateSource());
@@ -121,16 +116,14 @@ public final class SourceRegistrationTest {
         Uri destination = Uri.parse("android-app://baz.com");
         SourceRegistration response =
                 new SourceRegistration.Builder()
-                        .setTopOrigin(TOP_ORIGIN)
-                        .setRegistrationUri(REGISTRATION_URI)
+                        .setEnrollmentId(ENROLLMENT_ID)
                         .setAppDestination(destination)
                         .setWebDestination(webDestination)
                         .build();
-        assertEquals(TOP_ORIGIN, response.getTopOrigin());
-        assertEquals(REGISTRATION_URI, response.getRegistrationUri());
+        assertEquals(ENROLLMENT_ID, response.getEnrollmentId());
         assertEquals(webDestination, response.getWebDestination());
         assertEquals(destination, response.getAppDestination());
-        assertEquals(0, response.getSourceEventId());
+        assertEquals(null, response.getSourceEventId());
         assertEquals(MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS, response.getExpiry());
         assertEquals(0, response.getSourcePriority());
         assertNull(response.getAggregateSource());

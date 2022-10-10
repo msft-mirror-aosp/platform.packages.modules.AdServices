@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.adselection;
 
-import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
-
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__FLEDGE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
@@ -33,7 +31,6 @@ import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
-import android.annotation.RequiresPermission;
 import android.content.Context;
 
 import com.android.adservices.LogUtil;
@@ -63,6 +60,7 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
  * Implementation of {@link AdSelectionService}.
@@ -76,6 +74,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull private final ExecutorService mLightweightExecutor;
     @NonNull private final ExecutorService mBackgroundExecutor;
+    @NonNull private final ScheduledThreadPoolExecutor mScheduledExecutor;
     @NonNull private final Context mContext;
     @NonNull private final ConsentManager mConsentManager;
     @NonNull private final DevContextFilter mDevContextFilter;
@@ -99,6 +98,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull ExecutorService lightweightExecutorService,
             @NonNull ExecutorService backgroundExecutorService,
+            @NonNull ScheduledThreadPoolExecutor scheduledExecutor,
             @NonNull Context context,
             ConsentManager consentManager,
             @NonNull AdServicesLogger adServicesLogger,
@@ -114,6 +114,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         Objects.requireNonNull(appImportanceFilter);
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(backgroundExecutorService);
+        Objects.requireNonNull(scheduledExecutor);
         Objects.requireNonNull(consentManager);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(flags);
@@ -127,6 +128,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         mAppImportanceFilter = appImportanceFilter;
         mLightweightExecutor = lightweightExecutorService;
         mBackgroundExecutor = backgroundExecutorService;
+        mScheduledExecutor = scheduledExecutor;
         mContext = context;
         mConsentManager = consentManager;
         mAdServicesLogger = adServicesLogger;
@@ -154,6 +156,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         () -> FlagsFactory.getFlags().getForegroundStatuslLevelForValidation()),
                 AdServicesExecutors.getLightWeightExecutor(),
                 AdServicesExecutors.getBackgroundExecutor(),
+                AdServicesExecutors.getScheduler(),
                 context,
                 ConsentManager.getInstance(context),
                 AdServicesLoggerImpl.getInstance(),
@@ -166,7 +169,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
     // TODO(b/233116758): Validate all the fields inside the adSelectionConfig.
     @Override
-    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void runAdSelection(
             @NonNull AdSelectionInput inputParams, @NonNull AdSelectionCallback callback) {
         int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
@@ -179,7 +181,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
+                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -194,6 +196,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mAdServicesHttpsClient,
                         mLightweightExecutor,
                         mBackgroundExecutor,
+                        mScheduledExecutor,
                         mConsentManager,
                         mAdServicesLogger,
                         devContext,
@@ -208,7 +211,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     }
 
     @Override
-    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void reportImpression(
             @NonNull ReportImpressionInput requestParams,
             @NonNull ReportImpressionCallback callback) {
@@ -222,7 +224,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
+                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -234,6 +236,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mContext,
                         mLightweightExecutor,
                         mBackgroundExecutor,
+                        mScheduledExecutor,
                         mAdSelectionEntryDao,
                         mAdServicesHttpsClient,
                         mConsentManager,
@@ -249,7 +252,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     }
 
     @Override
-    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void overrideAdSelectionConfigRemoteInfo(
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJS,
@@ -266,7 +268,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
+                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -275,7 +277,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         if (!devContext.getDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
+                    apiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -300,13 +302,12 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             return mCallingAppUidSupplier.getCallingAppUid();
         } catch (IllegalStateException illegalStateException) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiNameLoggingId, AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
+                    apiNameLoggingId, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, 0);
             throw illegalStateException;
         }
     }
 
     @Override
-    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void removeAdSelectionConfigRemoteInfoOverride(
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull AdSelectionOverrideCallback callback) {
@@ -322,7 +323,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
+                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -331,7 +332,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         if (!devContext.getDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
+                    apiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -352,7 +353,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     }
 
     @Override
-    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void resetAllAdSelectionConfigRemoteOverrides(
             @NonNull AdSelectionOverrideCallback callback) {
         // Auto-generated variable name is too long for lint check
@@ -366,7 +366,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
+                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -375,7 +375,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         if (!devContext.getDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
+                    apiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 

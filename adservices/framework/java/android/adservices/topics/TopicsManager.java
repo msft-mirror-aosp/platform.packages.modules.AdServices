@@ -15,12 +15,14 @@
  */
 package android.adservices.topics;
 
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_TOPICS;
 import static android.adservices.common.AdServicesStatusUtils.ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
+import android.annotation.RequiresPermission;
 import android.annotation.TestApi;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
@@ -28,6 +30,7 @@ import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 import android.os.SystemClock;
+import android.text.TextUtils;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
@@ -56,6 +59,9 @@ public final class TopicsManager {
 
     // When an app calls the Topics API directly, it sets the SDK name to empty string.
     static final String EMPTY_SDK = "";
+
+    // Default value is true to record SDK's Observation when it calls Topics API.
+    static final boolean RECORD_OBSERVATION_DEFAULT = true;
 
     private Context mContext;
     private ServiceBinder<ITopicsService> mServiceBinder;
@@ -111,6 +117,7 @@ public final class TopicsManager {
      * @throws LimitExceededException if rate limit was reached.
      */
     @NonNull
+    @RequiresPermission(ACCESS_ADSERVICES_TOPICS)
     public void getTopics(
             @NonNull GetTopicsRequest getTopicsRequest,
             @NonNull @CallbackExecutor Executor executor,
@@ -133,7 +140,7 @@ public final class TopicsManager {
             sdkPackageName = sandboxedSdkContext.getSdkPackageName();
             appPackageName = sandboxedSdkContext.getClientPackageName();
 
-            if (sdkName != null) {
+            if (!TextUtils.isEmpty(sdkName)) {
                 throw new IllegalArgumentException(
                         "When calling Topics API from Sandbox, caller should not set Ads Sdk Name");
             }
@@ -160,6 +167,7 @@ public final class TopicsManager {
                             .setAppPackageName(appPackageName)
                             .setSdkName(sdkName)
                             .setSdkPackageName(sdkPackageName)
+                            .setShouldRecordObservation(getTopicsRequest.shouldRecordObservation())
                             .build(),
                     callerMetadata,
                     new IGetTopicsCallback.Stub() {

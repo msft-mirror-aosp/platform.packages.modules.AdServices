@@ -227,9 +227,11 @@ public class CustomAudienceServiceEndToEndTest {
         ResultCapturingCallback callback = new ResultCapturingCallback();
         assertThrows(
                 IllegalStateException.class,
-                () -> {
-                    mService.joinCustomAudience(CUSTOM_AUDIENCE_PK1_1, callback);
-                });
+                () ->
+                        mService.joinCustomAudience(
+                                CUSTOM_AUDIENCE_PK1_1,
+                                CustomAudienceFixture.VALID_OWNER,
+                                callback));
         assertNull(
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
@@ -241,9 +243,8 @@ public class CustomAudienceServiceEndToEndTest {
     public void testJoinCustomAudience_callerPackageNameMismatch_fail() {
         ResultCapturingCallback callback = new ResultCapturingCallback();
         mService.joinCustomAudience(
-                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
-                        .setOwnerPackageName("other_owner")
-                        .build(),
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build(),
+                "other_owner",
                 callback);
 
         assertFalse(callback.isSuccess());
@@ -268,7 +269,8 @@ public class CustomAudienceServiceEndToEndTest {
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
 
         ResultCapturingCallback callback = new ResultCapturingCallback();
-        mService.joinCustomAudience(CUSTOM_AUDIENCE_PK1_1, callback);
+        mService.joinCustomAudience(
+                CUSTOM_AUDIENCE_PK1_1, CustomAudienceFixture.VALID_OWNER, callback);
         assertTrue(callback.isSuccess());
         assertEquals(
                 DB_CUSTOM_AUDIENCE_PK1_1,
@@ -278,7 +280,8 @@ public class CustomAudienceServiceEndToEndTest {
                         CustomAudienceFixture.VALID_NAME));
 
         callback = new ResultCapturingCallback();
-        mService.joinCustomAudience(CUSTOM_AUDIENCE_PK1_2, callback);
+        mService.joinCustomAudience(
+                CUSTOM_AUDIENCE_PK1_2, CustomAudienceFixture.VALID_OWNER, callback);
         assertTrue(callback.isSuccess());
         assertEquals(
                 DB_CUSTOM_AUDIENCE_PK1_2,
@@ -297,11 +300,12 @@ public class CustomAudienceServiceEndToEndTest {
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
 
         ResultCapturingCallback callback = new ResultCapturingCallback();
-        mService.joinCustomAudience(CUSTOM_AUDIENCE_PK1_1, callback);
+        mService.joinCustomAudience(
+                CUSTOM_AUDIENCE_PK1_1, CustomAudienceFixture.VALID_OWNER, callback);
         assertTrue(callback.isSuccess());
         assertNull(
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
-                        CUSTOM_AUDIENCE_PK1_1.getOwnerPackageName(),
+                        CustomAudienceFixture.VALID_OWNER,
                         CUSTOM_AUDIENCE_PK1_1.getBuyer(),
                         CUSTOM_AUDIENCE_PK1_1.getName()));
     }
@@ -313,7 +317,10 @@ public class CustomAudienceServiceEndToEndTest {
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
 
         ResultCapturingCallback callback = new ResultCapturingCallback();
-        mService.joinCustomAudience(CUSTOM_AUDIENCE_PK1_BEYOND_MAX_EXPIRATION_TIME, callback);
+        mService.joinCustomAudience(
+                CUSTOM_AUDIENCE_PK1_BEYOND_MAX_EXPIRATION_TIME,
+                CustomAudienceFixture.VALID_OWNER,
+                callback);
         assertFalse(callback.isSuccess());
         assertTrue(callback.getException() instanceof IllegalArgumentException);
         assertNull(
@@ -358,13 +365,12 @@ public class CustomAudienceServiceEndToEndTest {
         ResultCapturingCallback callback = new ResultCapturingCallback();
         assertThrows(
                 IllegalStateException.class,
-                () -> {
-                    mService.leaveCustomAudience(
-                            CustomAudienceFixture.VALID_OWNER,
-                            CommonFixture.VALID_BUYER_1,
-                            CustomAudienceFixture.VALID_NAME,
-                            callback);
-                });
+                () ->
+                        mService.leaveCustomAudience(
+                                CustomAudienceFixture.VALID_OWNER,
+                                CommonFixture.VALID_BUYER_1,
+                                CustomAudienceFixture.VALID_NAME,
+                                callback));
     }
 
     @Test
@@ -394,7 +400,8 @@ public class CustomAudienceServiceEndToEndTest {
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
 
         ResultCapturingCallback callback = new ResultCapturingCallback();
-        mService.joinCustomAudience(CUSTOM_AUDIENCE_PK1_1, callback);
+        mService.joinCustomAudience(
+                CUSTOM_AUDIENCE_PK1_1, CustomAudienceFixture.VALID_OWNER, callback);
         assertTrue(callback.isSuccess());
         assertEquals(
                 DB_CUSTOM_AUDIENCE_PK1_1,
@@ -428,18 +435,19 @@ public class CustomAudienceServiceEndToEndTest {
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
 
         ResultCapturingCallback callback = new ResultCapturingCallback();
-        mService.joinCustomAudience(CUSTOM_AUDIENCE_PK1_1, callback);
+        mService.joinCustomAudience(
+                CUSTOM_AUDIENCE_PK1_1, CustomAudienceFixture.VALID_OWNER, callback);
         assertTrue(callback.isSuccess());
         assertEquals(
                 DB_CUSTOM_AUDIENCE_PK1_1,
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
-                        CUSTOM_AUDIENCE_PK1_1.getOwnerPackageName(),
+                        CustomAudienceFixture.VALID_OWNER,
                         CUSTOM_AUDIENCE_PK1_1.getBuyer(),
                         CUSTOM_AUDIENCE_PK1_1.getName()));
 
         callback = new ResultCapturingCallback();
         mService.leaveCustomAudience(
-                CUSTOM_AUDIENCE_PK1_1.getOwnerPackageName(),
+                CustomAudienceFixture.VALID_OWNER,
                 CUSTOM_AUDIENCE_PK1_1.getBuyer(),
                 CUSTOM_AUDIENCE_PK1_1.getName(),
                 callback);
@@ -447,7 +455,7 @@ public class CustomAudienceServiceEndToEndTest {
         assertEquals(
                 DB_CUSTOM_AUDIENCE_PK1_1,
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
-                        CUSTOM_AUDIENCE_PK1_1.getOwnerPackageName(),
+                        CustomAudienceFixture.VALID_OWNER,
                         CUSTOM_AUDIENCE_PK1_1.getBuyer(),
                         CUSTOM_AUDIENCE_PK1_1.getName()));
     }
@@ -950,11 +958,13 @@ public class CustomAudienceServiceEndToEndTest {
 
         // The first call should succeed
         ResultCapturingCallback callbackFirstCall = new ResultCapturingCallback();
-        customAudienceService.joinCustomAudience(CUSTOM_AUDIENCE_PK1_1, callbackFirstCall);
+        customAudienceService.joinCustomAudience(
+                CUSTOM_AUDIENCE_PK1_1, CustomAudienceFixture.VALID_OWNER, callbackFirstCall);
 
         // The immediate subsequent call should be throttled
         ResultCapturingCallback callbackSubsequentCall = new ResultCapturingCallback();
-        customAudienceService.joinCustomAudience(CUSTOM_AUDIENCE_PK1_1, callbackSubsequentCall);
+        customAudienceService.joinCustomAudience(
+                CUSTOM_AUDIENCE_PK1_1, CustomAudienceFixture.VALID_OWNER, callbackSubsequentCall);
 
         assertTrue(callbackFirstCall.isSuccess());
         assertEquals(

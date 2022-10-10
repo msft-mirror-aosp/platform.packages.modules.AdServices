@@ -17,7 +17,7 @@
 package com.android.adservices.service.adselection;
 
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.MISSING_TRUSTED_SCORING_SIGNALS;
-import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.QUERY_PARAM_RENDER_URLS;
+import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.QUERY_PARAM_RENDER_URIS;
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.SCORING_TIMED_OUT;
 
 import static org.junit.Assert.assertEquals;
@@ -70,6 +70,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.stream.Collectors;
 
 public class AdsScoreGeneratorImplTest {
@@ -86,6 +87,7 @@ public class AdsScoreGeneratorImplTest {
     private ListeningExecutorService mLightweightExecutorService;
     private ListeningExecutorService mBackgroundExecutorService;
     private ListeningExecutorService mBlockingExecutorService;
+    private ScheduledThreadPoolExecutor mSchedulingExecutor;
     private AdServicesHttpsClient mWebClient;
     private String mSellerDecisionLogicJs;
 
@@ -114,6 +116,7 @@ public class AdsScoreGeneratorImplTest {
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mBlockingExecutorService = AdServicesExecutors.getBlockingExecutor();
+        mSchedulingExecutor = AdServicesExecutors.getScheduler();
         mWebClient = new AdServicesHttpsClient(AdServicesExecutors.getBlockingExecutor());
 
         mAdBiddingOutcomeBuyer1 =
@@ -123,10 +126,10 @@ public class AdsScoreGeneratorImplTest {
         mAdBiddingOutcomeList = ImmutableList.of(mAdBiddingOutcomeBuyer1, mAdBiddingOutcomeBuyer2);
 
         mSellerDecisionLogicJs =
-                "function reportResult(ad_selection_config, render_url, bid, contextual_signals) {"
+                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
                         + " \n"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
                         + " /reporting/seller "
                         + "' } };\n"
                         + "}";
@@ -154,7 +157,7 @@ public class AdsScoreGeneratorImplTest {
         mTrustedScoringParams =
                 String.format(
                         "?%s=%s",
-                        QUERY_PARAM_RENDER_URLS,
+                        QUERY_PARAM_RENDER_URIS,
                         Uri.encode(String.join(",", mTrustedScoringSignalsKeys)));
 
         mTrustedScoringSignals =
@@ -165,13 +168,13 @@ public class AdsScoreGeneratorImplTest {
                                         .getAdData()
                                         .getRenderUri()
                                         .getEncodedPath()
-                                + ": signalsForUrl1,\n"
+                                + ": signalsForUri1,\n"
                                 + mAdBiddingOutcomeBuyer2
                                         .getAdWithBid()
                                         .getAdData()
                                         .getRenderUri()
                                         .getEncodedPath()
-                                + ": signalsForUrl2,\n"
+                                + ": signalsForUri2,\n"
                                 + "}");
 
         mDefaultDispatcher =
@@ -203,6 +206,7 @@ public class AdsScoreGeneratorImplTest {
                         mMockAdSelectionScriptEngine,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
+                        mSchedulingExecutor,
                         mWebClient,
                         mDevContext,
                         mAdSelectionEntryDao,
@@ -327,10 +331,10 @@ public class AdsScoreGeneratorImplTest {
 
         // Different seller decision logic JS to simulate different different override from server
         String differentSellerDecisionLogicJs =
-                "function reportResult(ad_selection_config, render_url, bid, contextual_signals) {"
+                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
                         + " \n"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " '{\"signals_for_buyer\":2}', 'reporting_url': '"
+                        + " '{\"signals_for_buyer\":2}', 'reporting_uri': '"
                         + " /reporting/seller "
                         + "' } };\n"
                         + "}";
@@ -367,6 +371,7 @@ public class AdsScoreGeneratorImplTest {
                         mMockAdSelectionScriptEngine,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
+                        mSchedulingExecutor,
                         mWebClient,
                         mDevContext,
                         mAdSelectionEntryDao,
@@ -467,6 +472,7 @@ public class AdsScoreGeneratorImplTest {
                         mMockAdSelectionScriptEngine,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
+                        mSchedulingExecutor,
                         mWebClient,
                         mDevContext,
                         mAdSelectionEntryDao,

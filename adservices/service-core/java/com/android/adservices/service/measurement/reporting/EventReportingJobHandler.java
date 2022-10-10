@@ -23,8 +23,10 @@ import android.adservices.common.AdServicesStatusUtils;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.service.measurement.EventReport;
+import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementReportsStats;
 import com.android.internal.annotations.VisibleForTesting;
@@ -42,9 +44,11 @@ import java.util.Optional;
  */
 public class EventReportingJobHandler {
 
+    private final EnrollmentDao mEnrollmentDao;
     private final DatastoreManager mDatastoreManager;
 
-    EventReportingJobHandler(DatastoreManager datastoreManager) {
+    EventReportingJobHandler(EnrollmentDao enrollmentDao, DatastoreManager datastoreManager) {
+        mEnrollmentDao = enrollmentDao;
         mDatastoreManager = datastoreManager;
     }
 
@@ -76,36 +80,6 @@ public class EventReportingJobHandler {
     }
 
     /**
-     * Finds all event reports for an app, these event reports have a status {@link
-     * EventReport.Status#PENDING} and attempts to upload them individually.
-     *
-     * @param appName the given app name corresponding to the registrant field in Source table.
-     * @return always return true to signal to JobScheduler that the task is done.
-     */
-    synchronized boolean performAllPendingReportsForGivenApp(Uri appName) {
-        LogUtil.d("EventReportingJobHandler: performAllPendingReportsForGivenApp");
-        Optional<List<String>> pendingEventReportsForGivenApp = mDatastoreManager
-                .runInTransactionWithResult((dao) ->
-                        dao.getPendingEventReportIdsForGivenApp(appName));
-
-        if (!pendingEventReportsForGivenApp.isPresent()) {
-            // Failure during event report retrieval
-            return true;
-        }
-
-        List<String> pendingEventReportForGivenApp = pendingEventReportsForGivenApp.get();
-        for (String eventReportId : pendingEventReportForGivenApp) {
-            @AdServicesStatusUtils.StatusCode int result = performReport(eventReportId);
-            if (result != AdServicesStatusUtils.STATUS_SUCCESS) {
-                LogUtil.i("Perform report status is %s for app : %s",
-                        result, String.valueOf(appName));
-            }
-            logReportingStats(result);
-        }
-        return true;
-    }
-
-    /**
      * Perform reporting by finding the relevant {@link EventReport} and making an HTTP POST request
      * to the specified report to URL with the report data as a JSON in the body.
      *
@@ -124,9 +98,15 @@ public class EventReportingJobHandler {
             return AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
         }
         try {
+            Optional<Uri> reportingOrigin = Enrollment.maybeGetReportingOrigin(
+                    eventReport.getEnrollmentId(), mEnrollmentDao);
+            if (!reportingOrigin.isPresent()) {
+                // We do not know here what the cause is of the failure to retrieve the reporting
+                // origin. INTERNAL_ERROR seems the closest to a "catch-all" error code.
+                return AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+            }
             JSONObject eventReportJsonPayload = createReportJsonPayload(eventReport);
-            int returnCode = makeHttpPostRequest(eventReport.getAdTechDomain(),
-                    eventReportJsonPayload);
+            int returnCode = makeHttpPostRequest(reportingOrigin.get(), eventReportJsonPayload);
 
             if (returnCode >= HttpURLConnection.HTTP_OK
                     && returnCode <= 299) {
@@ -153,11 +133,13 @@ public class EventReportingJobHandler {
     JSONObject createReportJsonPayload(EventReport eventReport) throws JSONException {
         return new EventReportPayload.Builder()
                 .setReportId(eventReport.getId())
-                .setSourceEventId(String.valueOf(eventReport.getSourceId()))
+                .setSourceEventId(eventReport.getSourceId())
                 .setAttributionDestination(eventReport.getAttributionDestination().toString())
-                .setTriggerData(String.valueOf(eventReport.getTriggerData()))
+                .setTriggerData(eventReport.getTriggerData())
                 .setSourceType(eventReport.getSourceType().getValue())
                 .setRandomizedTriggerRate(eventReport.getRandomizedTriggerRate())
+                .setSourceDebugKey(eventReport.getSourceDebugKey())
+                .setTriggerDebugKey(eventReport.getTriggerDebugKey())
                 .build()
                 .toJson();
     }

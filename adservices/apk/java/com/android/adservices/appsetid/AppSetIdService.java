@@ -15,6 +15,8 @@
  */
 package com.android.adservices.appsetid;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__APPSETID;
+
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
@@ -23,6 +25,8 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.appsetid.AppSetIdServiceImpl;
 import com.android.adservices.service.appsetid.AppSetIdWorker;
+import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.Clock;
 
@@ -45,13 +49,23 @@ public class AppSetIdService extends Service {
             return;
         }
 
+        AppImportanceFilter appImportanceFilter =
+                AppImportanceFilter.create(
+                        this,
+                        AD_SERVICES_API_CALLED__API_CLASS__APPSETID,
+                        () -> FlagsFactory.getFlags().getForegroundStatuslLevelForValidation());
+
         if (mAppSetIdService == null) {
             mAppSetIdService =
                     new AppSetIdServiceImpl(
                             this,
                             AppSetIdWorker.getInstance(this),
                             AdServicesLoggerImpl.getInstance(),
-                            Clock.SYSTEM_CLOCK);
+                            Clock.SYSTEM_CLOCK,
+                            FlagsFactory.getFlags(),
+                            Throttler.getInstance(
+                                    FlagsFactory.getFlags().getSdkRequestPermitsPerSecond()),
+                            appImportanceFilter);
         }
     }
 

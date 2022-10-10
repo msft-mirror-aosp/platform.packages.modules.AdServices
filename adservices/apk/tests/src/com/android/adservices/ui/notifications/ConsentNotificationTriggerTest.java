@@ -35,7 +35,6 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.api.R;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.topics.classifier.ModelManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.Before;
@@ -52,7 +51,6 @@ public class ConsentNotificationTriggerTest {
 
     @Mock private NotificationManagerCompat mNotificationManagerCompat;
     @Mock private ConsentManager mConsentManager;
-    @Mock private ModelManager mModelManager;
     private NotificationManager mNotificationManager;
     private Context mContext;
 
@@ -68,12 +66,10 @@ public class ConsentNotificationTriggerTest {
         MockitoAnnotations.initMocks(this);
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
-                        .spyStatic(ModelManager.class)
                         .strictness(Strictness.WARN)
                         .initMocks(this)
                         .startMocking();
         try {
-            doReturn(mModelManager).when(() -> ModelManager.getInstance(any(Context.class)));
             mNotificationManager = mContext.getSystemService(NotificationManager.class);
             final String expectedTitle =
                     mContext.getString(R.string.notificationUI_notification_title_eu);
@@ -102,12 +98,12 @@ public class ConsentNotificationTriggerTest {
         MockitoAnnotations.initMocks(this);
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
-                        .spyStatic(ModelManager.class)
+                        .spyStatic(ConsentManager.class)
                         .strictness(Strictness.WARN)
                         .initMocks(this)
                         .startMocking();
         try {
-            doReturn(mModelManager).when(() -> ModelManager.getInstance(any(Context.class)));
+            doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any(Context.class)));
             mNotificationManager = mContext.getSystemService(NotificationManager.class);
             final String expectedTitle =
                     mContext.getString(R.string.notificationUI_notification_title);
@@ -117,6 +113,9 @@ public class ConsentNotificationTriggerTest {
             ConsentNotificationTrigger.showConsentNotification(mContext, false);
             Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
 
+            verify(mConsentManager).enable(any(Context.class));
+            verify(mConsentManager).recordNotificationDisplayed(any(PackageManager.class));
+            verifyNoMoreInteractions(mConsentManager);
             assertThat(mNotificationManager.getActiveNotifications()).hasLength(1);
             final Notification notification =
                     mNotificationManager.getActiveNotifications()[0].getNotification();

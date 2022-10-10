@@ -22,6 +22,6 @@ import android.app.sdksandbox.LoadSdkException;
 
 /** @hide */
 interface ILoadSdkCallback {
-    oneway void onLoadSdkSuccess(in SandboxedSdk sandboxedSdkParcel);
-    oneway void onLoadSdkFailure(in LoadSdkException exception);
+    oneway void onLoadSdkSuccess(in SandboxedSdk sandboxedSdkParcel, long timeSystemServerCalledApp);
+    oneway void onLoadSdkFailure(in LoadSdkException exception, long timeSystemServerCalledApp);
 }

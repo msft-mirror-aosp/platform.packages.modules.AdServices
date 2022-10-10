@@ -16,7 +16,6 @@
 
 package android.adservices.debuggablects;
 
-import android.Manifest;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
@@ -24,18 +23,15 @@ import android.adservices.adselection.RemoveAdSelectionOverrideRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.adselection.TestAdSelectionClient;
 import android.adservices.common.AdSelectionSignals;
-import android.content.Context;
 import android.os.Process;
 
-import androidx.test.core.app.ApplicationProvider;
-import androidx.test.platform.app.InstrumentationRegistry;
-
-import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.compatibility.common.util.ShellUtils;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
+import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,16 +40,15 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class AdSelectionManagerDebuggableTest {
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
+public class AdSelectionManagerDebuggableTest extends ForegroundDebuggableCtsTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private static final String DECISION_LOGIC_JS = "function test() { return \"hello world\"; }";
     private static final AdSelectionSignals TRUSTED_SCORING_SIGNALS =
             AdSelectionSignals.fromString(
                     "{\n"
-                            + "\t\"render_url_1\": \"signals_for_1\",\n"
-                            + "\t\"render_url_2\": \"signals_for_2\"\n"
+                            + "\t\"render_uri_1\": \"signals_for_1\",\n"
+                            + "\t\"render_uri_2\": \"signals_for_2\"\n"
                             + "}");
     private static final AdSelectionConfig AD_SELECTION_CONFIG =
             AdSelectionConfigFixture.anAdSelectionConfig();
@@ -67,6 +62,8 @@ public class AdSelectionManagerDebuggableTest {
 
     @Before
     public void setup() {
+        assertForegroundActivityStarted();
+
         mAdSelectionClient =
                 new AdSelectionClient.Builder()
                         .setContext(sContext)
@@ -86,14 +83,12 @@ public class AdSelectionManagerDebuggableTest {
                 String.format("Debuggable: %b\n", isDebuggable)
                         + String.format("Developer options on: %b", isDeveloperMode);
 
-        // Tests are running in background
-        InstrumentationRegistry.getInstrumentation()
-                .getUiAutomation()
-                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+        overrideAdservicesGlobalKillSwitch(true);
+    }
 
-        PhFlagsFixture.overrideForegroundStatusForFledgeReportImpression(false);
-        PhFlagsFixture.overrideForegroundStatusForFledgeRunAdSelection(false);
-        PhFlagsFixture.overrideForegroundStatusForFledgeOverrides(false);
+    @After
+    public void teardown() {
+        overrideAdservicesGlobalKillSwitch(false);
     }
 
     @Test
@@ -164,5 +159,14 @@ public class AdSelectionManagerDebuggableTest {
 
         // Asserting no exception since there is no returned value
         result.get(10, TimeUnit.SECONDS);
+    }
+
+    // Override global_kill_switch to ignore the effect of actual PH values.
+    // If isOverride = true, override global_kill_switch to OFF to allow adservices
+    // If isOverride = false, override global_kill_switch to meaningless value so that PhFlags will
+    // use the default value
+    private void overrideAdservicesGlobalKillSwitch(boolean isOverride) {
+        String overrideString = isOverride ? "false" : "null";
+        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
     }
 }

@@ -18,11 +18,14 @@ package com.android.adservices.service.measurement.reporting;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.android.adservices.HpkeJni;
+import com.android.adservices.service.measurement.aggregation.AggregateCryptoConverter;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -49,6 +52,8 @@ public class AggregateReportBodyTest {
     private static final String SCHEDULED_REPORT_TIME = "1246174158155";
     private static final String VERSION = "12";
     private static final String REPORT_ID = "A1";
+    private static final UnsignedLong SOURCE_DEBUG_KEY = new UnsignedLong(27628792L);
+    private static final UnsignedLong TRIGGER_DEBUG_KEY = new UnsignedLong(23443234L);
     private static final String REPORTING_ORIGIN = "https://adtech.domain";
     private static final String DEBUG_CLEARTEXT_PAYLOAD = "{\"operation\":\"histogram\","
             + "\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,"
@@ -63,6 +68,48 @@ public class AggregateReportBodyTest {
                 .setReportId(REPORT_ID)
                 .setReportingOrigin(REPORTING_ORIGIN)
                 .setDebugCleartextPayload(DEBUG_CLEARTEXT_PAYLOAD)
+                .setSourceDebugKey(SOURCE_DEBUG_KEY)
+                .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                .build();
+    }
+
+    private AggregateReportBody createAggregateReportBodyExampleWithNullDebugKeys() {
+        return new AggregateReportBody.Builder()
+                .setAttributionDestination(ATTRIBUTION_DESTINATION)
+                .setSourceRegistrationTime(SOURCE_REGISTRATION_TIME)
+                .setScheduledReportTime(SCHEDULED_REPORT_TIME)
+                .setApiVersion(VERSION)
+                .setReportId(REPORT_ID)
+                .setReportingOrigin(REPORTING_ORIGIN)
+                .setDebugCleartextPayload(DEBUG_CLEARTEXT_PAYLOAD)
+                .setSourceDebugKey(null)
+                .setTriggerDebugKey(null)
+                .build();
+    }
+
+    private AggregateReportBody createAggregateReportBodyExampleWithSingleTriggerDebugKey() {
+        return new AggregateReportBody.Builder()
+                .setAttributionDestination(ATTRIBUTION_DESTINATION)
+                .setSourceRegistrationTime(SOURCE_REGISTRATION_TIME)
+                .setScheduledReportTime(SCHEDULED_REPORT_TIME)
+                .setApiVersion(VERSION)
+                .setReportId(REPORT_ID)
+                .setReportingOrigin(REPORTING_ORIGIN)
+                .setDebugCleartextPayload(DEBUG_CLEARTEXT_PAYLOAD)
+                .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                .build();
+    }
+
+    private AggregateReportBody createAggregateReportBodyExampleWithSingleSourceDebugKey() {
+        return new AggregateReportBody.Builder()
+                .setAttributionDestination(ATTRIBUTION_DESTINATION)
+                .setSourceRegistrationTime(SOURCE_REGISTRATION_TIME)
+                .setScheduledReportTime(SCHEDULED_REPORT_TIME)
+                .setApiVersion(VERSION)
+                .setReportId(REPORT_ID)
+                .setReportingOrigin(REPORTING_ORIGIN)
+                .setDebugCleartextPayload(DEBUG_CLEARTEXT_PAYLOAD)
+                .setSourceDebugKey(SOURCE_DEBUG_KEY)
                 .build();
     }
 
@@ -70,6 +117,7 @@ public class AggregateReportBodyTest {
     public void testSharedInfoJsonSerialization() throws JSONException {
         AggregateReportBody aggregateReport = createAggregateReportBodyExample1();
         JSONObject sharedInfoJson = aggregateReport.sharedInfoToJson();
+        JSONObject aggregateJson = aggregateReport.toJson(AggregateCryptoFixture.getKey());
 
         assertEquals(SCHEDULED_REPORT_TIME, sharedInfoJson.get("scheduled_report_time"));
         assertEquals(VERSION, sharedInfoJson.get("version"));
@@ -77,6 +125,58 @@ public class AggregateReportBodyTest {
         assertEquals(REPORTING_ORIGIN, sharedInfoJson.get("reporting_origin"));
         assertEquals(ATTRIBUTION_DESTINATION, sharedInfoJson.get("attribution_destination"));
         assertEquals(SOURCE_REGISTRATION_TIME, sharedInfoJson.get("source_registration_time"));
+        assertEquals(SOURCE_DEBUG_KEY.toString(), aggregateJson.get("source_debug_key"));
+        assertEquals(TRIGGER_DEBUG_KEY.toString(), aggregateJson.get("trigger_debug_key"));
+    }
+
+    @Test
+    public void testJsonSerializationWithNullDebugKeys() throws JSONException {
+        AggregateReportBody aggregateReport = createAggregateReportBodyExampleWithNullDebugKeys();
+        JSONObject sharedInfoJson = aggregateReport.sharedInfoToJson();
+        JSONObject aggregateJson = aggregateReport.toJson(AggregateCryptoFixture.getKey());
+
+        assertEquals(SCHEDULED_REPORT_TIME, sharedInfoJson.get("scheduled_report_time"));
+        assertEquals(VERSION, sharedInfoJson.get("version"));
+        assertEquals(REPORT_ID, sharedInfoJson.get("report_id"));
+        assertEquals(REPORTING_ORIGIN, sharedInfoJson.get("reporting_origin"));
+        assertEquals(ATTRIBUTION_DESTINATION, sharedInfoJson.get("attribution_destination"));
+        assertEquals(SOURCE_REGISTRATION_TIME, sharedInfoJson.get("source_registration_time"));
+        assertNull(aggregateJson.opt("source_debug_key"));
+        assertNull(aggregateJson.opt("trigger_debug_key"));
+    }
+
+    @Test
+    public void testJsonSerializationWithSingleSourceDebugKeys() throws JSONException {
+        AggregateReportBody aggregateReport =
+                createAggregateReportBodyExampleWithSingleSourceDebugKey();
+        JSONObject sharedInfoJson = aggregateReport.sharedInfoToJson();
+        JSONObject aggregateJson = aggregateReport.toJson(AggregateCryptoFixture.getKey());
+
+        assertEquals(SCHEDULED_REPORT_TIME, sharedInfoJson.get("scheduled_report_time"));
+        assertEquals(VERSION, sharedInfoJson.get("version"));
+        assertEquals(REPORT_ID, sharedInfoJson.get("report_id"));
+        assertEquals(REPORTING_ORIGIN, sharedInfoJson.get("reporting_origin"));
+        assertEquals(ATTRIBUTION_DESTINATION, sharedInfoJson.get("attribution_destination"));
+        assertEquals(SOURCE_REGISTRATION_TIME, sharedInfoJson.get("source_registration_time"));
+        assertEquals(SOURCE_DEBUG_KEY.toString(), aggregateJson.get("source_debug_key"));
+        assertNull(aggregateJson.opt("trigger_debug_key"));
+    }
+
+    @Test
+    public void testJsonSerializationWithSingleTriggerDebugKeys() throws JSONException {
+        AggregateReportBody aggregateReport =
+                createAggregateReportBodyExampleWithSingleTriggerDebugKey();
+        JSONObject sharedInfoJson = aggregateReport.sharedInfoToJson();
+        JSONObject aggregateJson = aggregateReport.toJson(AggregateCryptoFixture.getKey());
+
+        assertEquals(SCHEDULED_REPORT_TIME, sharedInfoJson.get("scheduled_report_time"));
+        assertEquals(VERSION, sharedInfoJson.get("version"));
+        assertEquals(REPORT_ID, sharedInfoJson.get("report_id"));
+        assertEquals(REPORTING_ORIGIN, sharedInfoJson.get("reporting_origin"));
+        assertEquals(ATTRIBUTION_DESTINATION, sharedInfoJson.get("attribution_destination"));
+        assertEquals(SOURCE_REGISTRATION_TIME, sharedInfoJson.get("source_registration_time"));
+        assertNull(aggregateJson.opt("source_debug_key"));
+        assertEquals(TRIGGER_DEBUG_KEY.toString(), aggregateJson.get("trigger_debug_key"));
     }
 
     @Test
@@ -94,13 +194,50 @@ public class AggregateReportBodyTest {
         assertEncryptedPayload(aggregateServicePayloads);
     }
 
-    private void assertEncodedDebugPayload(JSONObject aggregateServicePayloads) throws Exception {
-        final String encodedPayloadBase64 =
-                (String) aggregateServicePayloads.get("debug_cleartext_payload");
-        assertNotNull(encodedPayloadBase64);
+    @Test
+    public void testAggregationServicePayloadsJsonSerializationWithDebugKey() throws Exception {
+        AggregateReportBody aggregateReport =
+                createAggregateReportBodyExampleWithSingleTriggerDebugKey();
 
-        final byte[] cborEncodedPayload = Base64.getDecoder().decode(encodedPayloadBase64);
-        assertCborEncoded(cborEncodedPayload);
+        AggregateEncryptionKey key = AggregateCryptoFixture.getKey();
+        JSONArray aggregationServicePayloadsJson =
+                aggregateReport.aggregationServicePayloadsToJson(/* sharedInfo = */ null, key);
+
+        JSONObject aggregateServicePayloads = aggregationServicePayloadsJson.getJSONObject(0);
+
+        assertEquals(key.getKeyId(), aggregateServicePayloads.get("key_id"));
+        assertEquals(
+                AggregateCryptoConverter.encode(DEBUG_CLEARTEXT_PAYLOAD),
+                aggregateServicePayloads.opt("debug_cleartext_payload"));
+        assertEncodedDebugPayload(aggregateServicePayloads);
+        assertEncryptedPayload(aggregateServicePayloads);
+    }
+
+    @Test
+    public void testAggregationServicePayloadsJsonSerializationWithoutDebugKey() throws Exception {
+        AggregateReportBody aggregateReport = createAggregateReportBodyExampleWithNullDebugKeys();
+
+        AggregateEncryptionKey key = AggregateCryptoFixture.getKey();
+        JSONArray aggregationServicePayloadsJson =
+                aggregateReport.aggregationServicePayloadsToJson(/* sharedInfo = */ null, key);
+
+        JSONObject aggregateServicePayloads = aggregationServicePayloadsJson.getJSONObject(0);
+
+        assertEquals(key.getKeyId(), aggregateServicePayloads.get("key_id"));
+        assertNull(aggregateServicePayloads.opt("debug_cleartext_payload"));
+        assertEncodedDebugPayload(aggregateServicePayloads);
+        assertEncryptedPayload(aggregateServicePayloads);
+    }
+
+    private void assertEncodedDebugPayload(JSONObject aggregateServicePayloads) throws Exception {
+        if (!aggregateServicePayloads.isNull("debug_cleartext_payload")) {
+            final String encodedPayloadBase64 =
+                    (String) aggregateServicePayloads.get("debug_cleartext_payload");
+            assertNotNull(encodedPayloadBase64);
+
+            final byte[] cborEncodedPayload = Base64.getDecoder().decode(encodedPayloadBase64);
+            assertCborEncoded(cborEncodedPayload);
+        }
     }
 
     private void assertEncryptedPayload(JSONObject aggregateServicePayloads) throws Exception {

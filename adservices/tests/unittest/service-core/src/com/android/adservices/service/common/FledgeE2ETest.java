@@ -112,6 +112,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.function.Supplier;
 
 public class FledgeE2ETest {
@@ -129,7 +130,7 @@ public class FledgeE2ETest {
             "?keys=example%2Cvalid%2Clist%2Cof%2Ckeys";
     private static final String SELLER_DECISION_LOGIC_URI_PATH = "/ssp/decision/logic/";
     private static final String SELLER_TRUSTED_SIGNAL_URI_PATH = "/kv/seller/signals/";
-    private static final String SELLER_TRUSTED_SIGNAL_PARAMS = "?renderurls=";
+    private static final String SELLER_TRUSTED_SIGNAL_PARAMS = "?renderuris=";
     private static final String SELLER_REPORTING_PATH = "/reporting/seller";
     private static final String BUYER_REPORTING_PATH = "/reporting/buyer";
     private static final AdSelectionSignals TRUSTED_BIDDING_SIGNALS =
@@ -144,8 +145,8 @@ public class FledgeE2ETest {
     private static final AdSelectionSignals TRUSTED_SCORING_SIGNALS =
             AdSelectionSignals.fromString(
                     "{\n"
-                            + "\t\"render_url_1\": \"signals_for_1\",\n"
-                            + "\t\"render_url_2\": \"signals_for_2\"\n"
+                            + "\t\"render_uri_1\": \"signals_for_1\",\n"
+                            + "\t\"render_uri_2\": \"signals_for_2\"\n"
                             + "}");
     private static final List<Double> BIDS_FOR_BUYER_1 = ImmutableList.of(1.1, 2.2);
     private static final List<Double> BIDS_FOR_BUYER_2 = ImmutableList.of(4.5, 6.7, 10.0);
@@ -164,6 +165,7 @@ public class FledgeE2ETest {
     private AdSelectionEntryDao mAdSelectionEntryDao;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
+    private ScheduledThreadPoolExecutor mScheduledExecutor;
     private CustomAudienceServiceImpl mCustomAudienceService;
     private AdSelectionServiceImpl mAdSelectionService;
 
@@ -201,6 +203,7 @@ public class FledgeE2ETest {
 
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
+        mScheduledExecutor = AdServicesExecutors.getScheduler();
 
         mAdServicesHttpsClient =
                 new AdServicesHttpsClient(AdServicesExecutors.getBlockingExecutor());
@@ -239,6 +242,7 @@ public class FledgeE2ETest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
+                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLogger,
@@ -296,10 +300,10 @@ public class FledgeE2ETest {
                         + " custom_audience_signal) { \n"
                         + "  return {'status': 0, 'score': bid };\n"
                         + "}\n"
-                        + "function reportResult(ad_selection_config, render_url, bid,"
+                        + "function reportResult(ad_selection_config, render_uri, bid,"
                         + " contextual_signals) { \n"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
                         + SELLER_REPORTING_PATH
                         + "' } };\n"
                         + "}";
@@ -311,7 +315,7 @@ public class FledgeE2ETest {
                         + "}\n"
                         + "function reportWin(ad_selection_signals, per_buyer_signals,"
                         + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
-                        + " return {'status': 0, 'results': {'reporting_url': '"
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
                         + BUYER_REPORTING_PATH
                         + "' } };\n"
                         + "}";
@@ -336,12 +340,14 @@ public class FledgeE2ETest {
 
         // Join first custom audience
         ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience1, joinCallback1);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
         assertTrue(joinCallback1.isSuccess());
 
         // Join second custom audience
         ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience2, joinCallback2);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
         assertTrue(joinCallback2.isSuccess());
 
         verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
@@ -359,7 +365,7 @@ public class FledgeE2ETest {
         // Add Custom Audience Overrides
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback1 =
                 callAddCustomAudienceOverride(
-                        customAudience1.getOwnerPackageName(),
+                        CommonFixture.TEST_PACKAGE_NAME,
                         customAudience1.getBuyer(),
                         customAudience1.getName(),
                         biddingLogicJs,
@@ -370,7 +376,7 @@ public class FledgeE2ETest {
 
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback2 =
                 callAddCustomAudienceOverride(
-                        customAudience2.getOwnerPackageName(),
+                        CommonFixture.TEST_PACKAGE_NAME,
                         customAudience2.getBuyer(),
                         customAudience2.getName(),
                         biddingLogicJs,
@@ -442,10 +448,10 @@ public class FledgeE2ETest {
                         + " custom_audience_signal) { \n"
                         + "  return {'status': 0, 'score': bid };\n"
                         + "}\n"
-                        + "function reportResult(ad_selection_config, render_url, bid,"
+                        + "function reportResult(ad_selection_config, render_uri, bid,"
                         + " contextual_signals) { \n"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
                         + SELLER_REPORTING_PATH
                         + "' } };\n"
                         + "}";
@@ -457,7 +463,7 @@ public class FledgeE2ETest {
                         + "}\n"
                         + "function reportWin(ad_selection_signals, per_buyer_signals,"
                         + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
-                        + " return {'status': 0, 'results': {'reporting_url': '"
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
                         + BUYER_REPORTING_PATH
                         + "' } };\n"
                         + "}";
@@ -479,12 +485,14 @@ public class FledgeE2ETest {
 
         // Join first custom audience
         ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience1, joinCallback1);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
         assertTrue(joinCallback1.isSuccess());
 
         // Join second custom audience
         ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience2, joinCallback2);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
         assertTrue(joinCallback2.isSuccess());
 
         // Add AdSelection Override
@@ -500,7 +508,7 @@ public class FledgeE2ETest {
         // Add Custom Audience Overrides
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback1 =
                 callAddCustomAudienceOverride(
-                        customAudience1.getOwnerPackageName(),
+                        CommonFixture.TEST_PACKAGE_NAME,
                         customAudience1.getBuyer(),
                         customAudience1.getName(),
                         biddingLogicJs,
@@ -511,7 +519,7 @@ public class FledgeE2ETest {
 
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback2 =
                 callAddCustomAudienceOverride(
-                        customAudience2.getOwnerPackageName(),
+                        CommonFixture.TEST_PACKAGE_NAME,
                         customAudience2.getBuyer(),
                         customAudience2.getName(),
                         biddingLogicJs,
@@ -577,6 +585,7 @@ public class FledgeE2ETest {
                         mAppImportanceFilter,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
+                        mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
                         mAdServicesLogger,
@@ -631,10 +640,10 @@ public class FledgeE2ETest {
                         + " custom_audience_signal) { \n"
                         + "  return {'status': 0, 'score': bid };\n"
                         + "}\n"
-                        + "function reportResult(ad_selection_config, render_url, bid,"
+                        + "function reportResult(ad_selection_config, render_uri, bid,"
                         + " contextual_signals) { \n"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
                         + SELLER_REPORTING_PATH
                         + "' } };\n"
                         + "}";
@@ -646,7 +655,7 @@ public class FledgeE2ETest {
                         + "}\n"
                         + "function reportWin(ad_selection_signals, per_buyer_signals,"
                         + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
-                        + " return {'status': 0, 'results': {'reporting_url': '"
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
                         + BUYER_REPORTING_PATH
                         + "' } };\n"
                         + "}";
@@ -669,12 +678,14 @@ public class FledgeE2ETest {
 
         // Join first custom audience
         ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience1, joinCallback1);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
         assertTrue(joinCallback1.isSuccess());
 
         // Join second custom audience
         ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience2, joinCallback2);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
         assertTrue(joinCallback2.isSuccess());
 
         verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
@@ -692,7 +703,7 @@ public class FledgeE2ETest {
         // Add Custom Audience Overrides
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback1 =
                 callAddCustomAudienceOverride(
-                        customAudience1.getOwnerPackageName(),
+                        CommonFixture.TEST_PACKAGE_NAME,
                         customAudience1.getBuyer(),
                         customAudience1.getName(),
                         biddingLogicJs,
@@ -703,7 +714,7 @@ public class FledgeE2ETest {
 
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback2 =
                 callAddCustomAudienceOverride(
-                        customAudience2.getOwnerPackageName(),
+                        CommonFixture.TEST_PACKAGE_NAME,
                         customAudience2.getBuyer(),
                         customAudience2.getName(),
                         biddingLogicJs,
@@ -775,10 +786,10 @@ public class FledgeE2ETest {
                         + " custom_audience_signal) { \n"
                         + "  return {'status': 0, 'score': bid };\n"
                         + "}\n"
-                        + "function reportResult(ad_selection_config, render_url, bid,"
+                        + "function reportResult(ad_selection_config, render_uri, bid,"
                         + " contextual_signals) { \n"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
                         + SELLER_REPORTING_PATH
                         + "' } };\n"
                         + "}";
@@ -790,7 +801,7 @@ public class FledgeE2ETest {
                         + "}\n"
                         + "function reportWin(ad_selection_signals, per_buyer_signals,"
                         + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
-                        + " return {'status': 0, 'results': {'reporting_url': '"
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
                         + BUYER_REPORTING_PATH
                         + "' } };\n"
                         + "}";
@@ -818,12 +829,14 @@ public class FledgeE2ETest {
 
         // Join first custom audience
         ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience1, joinCallback1);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
         assertTrue(joinCallback1.isSuccess());
 
         // Join second custom audience
         ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience2, joinCallback2);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
         assertTrue(joinCallback2.isSuccess());
 
         verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
@@ -841,7 +854,7 @@ public class FledgeE2ETest {
         // Add Custom Audience Overrides
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback1 =
                 callAddCustomAudienceOverride(
-                        customAudience1.getOwnerPackageName(),
+                        CommonFixture.TEST_PACKAGE_NAME,
                         customAudience1.getBuyer(),
                         customAudience1.getName(),
                         biddingLogicJs,
@@ -852,7 +865,7 @@ public class FledgeE2ETest {
 
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback2 =
                 callAddCustomAudienceOverride(
-                        customAudience2.getOwnerPackageName(),
+                        CommonFixture.TEST_PACKAGE_NAME,
                         customAudience2.getBuyer(),
                         customAudience2.getName(),
                         biddingLogicJs,
@@ -925,10 +938,10 @@ public class FledgeE2ETest {
                         + " custom_audience_signal) { \n"
                         + "  return {'status': 0, 'score': bid };\n"
                         + "}\n"
-                        + "function reportResult(ad_selection_config, render_url, bid,"
+                        + "function reportResult(ad_selection_config, render_uri, bid,"
                         + " contextual_signals) { \n"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
                         + SELLER_REPORTING_PATH
                         + "' } };\n"
                         + "}";
@@ -940,7 +953,7 @@ public class FledgeE2ETest {
                         + "}\n"
                         + "function reportWin(ad_selection_signals, per_buyer_signals,"
                         + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
-                        + " return {'status': 0, 'results': {'reporting_url': '"
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
                         + BUYER_REPORTING_PATH
                         + "' } };\n"
                         + "}";
@@ -965,12 +978,14 @@ public class FledgeE2ETest {
 
         // Join first custom audience
         ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience1, joinCallback1);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
         assertTrue(joinCallback1.isSuccess());
 
         // Join second custom audience
         ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience2, joinCallback2);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
         assertTrue(joinCallback2.isSuccess());
 
         // Add AdSelection Override
@@ -986,7 +1001,7 @@ public class FledgeE2ETest {
         // Add Custom Audience Overrides
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback1 =
                 callAddCustomAudienceOverride(
-                        customAudience1.getOwnerPackageName(),
+                        CommonFixture.TEST_PACKAGE_NAME,
                         customAudience1.getBuyer(),
                         customAudience1.getName(),
                         biddingLogicJs,
@@ -997,7 +1012,7 @@ public class FledgeE2ETest {
 
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback2 =
                 callAddCustomAudienceOverride(
-                        customAudience2.getOwnerPackageName(),
+                        CommonFixture.TEST_PACKAGE_NAME,
                         customAudience2.getBuyer(),
                         customAudience2.getName(),
                         biddingLogicJs,
@@ -1038,8 +1053,8 @@ public class FledgeE2ETest {
                 .when(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
 
-        Uri sellerReportingUrl = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
-        Uri buyerReportingUrl = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
         mLocalhostBuyerDomain = Uri.parse(mMockWebServerRule.getServerBaseAddress());
 
         mAdSelectionConfig =
@@ -1070,11 +1085,11 @@ public class FledgeE2ETest {
                         + " custom_audience_signal) { \n"
                         + "  return {'status': 0, 'score': bid };\n"
                         + "}\n"
-                        + "function reportResult(ad_selection_config, render_url, bid,"
+                        + "function reportResult(ad_selection_config, render_uri, bid,"
                         + " contextual_signals) { \n"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
-                        + sellerReportingUrl
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
+                        + sellerReportingUri
                         + "' } };\n"
                         + "}";
         String biddingLogicJs =
@@ -1085,8 +1100,8 @@ public class FledgeE2ETest {
                         + "}\n"
                         + "function reportWin(ad_selection_signals, per_buyer_signals,"
                         + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
-                        + " return {'status': 0, 'results': {'reporting_url': '"
-                        + buyerReportingUrl
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
+                        + buyerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -1136,12 +1151,14 @@ public class FledgeE2ETest {
 
         // Join first custom audience
         ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience1, joinCallback1);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
         assertTrue(joinCallback1.isSuccess());
 
         // Join second custom audience
         ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience2, joinCallback2);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
         assertTrue(joinCallback2.isSuccess());
 
         verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
@@ -1193,8 +1210,8 @@ public class FledgeE2ETest {
                 .thenReturn(false)
                 .thenReturn(true);
 
-        Uri sellerReportingUrl = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
-        Uri buyerReportingUrl = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
         mLocalhostBuyerDomain = Uri.parse(mMockWebServerRule.getServerBaseAddress());
 
         mAdSelectionConfig =
@@ -1225,11 +1242,11 @@ public class FledgeE2ETest {
                         + " custom_audience_signal) { \n"
                         + "  return {'status': 0, 'score': bid };\n"
                         + "}\n"
-                        + "function reportResult(ad_selection_config, render_url, bid,"
+                        + "function reportResult(ad_selection_config, render_uri, bid,"
                         + " contextual_signals) { \n"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
-                        + sellerReportingUrl
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
+                        + sellerReportingUri
                         + "' } };\n"
                         + "}";
         String biddingLogicJs =
@@ -1240,8 +1257,8 @@ public class FledgeE2ETest {
                         + "}\n"
                         + "function reportWin(ad_selection_signals, per_buyer_signals,"
                         + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
-                        + " return {'status': 0, 'results': {'reporting_url': '"
-                        + buyerReportingUrl
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
+                        + buyerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -1290,12 +1307,14 @@ public class FledgeE2ETest {
 
         // Join first custom audience
         ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience1, joinCallback1);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
         assertTrue(joinCallback1.isSuccess());
 
         // Join second custom audience
         ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience2, joinCallback2);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
         assertTrue(joinCallback2.isSuccess());
 
         // Run Ad Selection
@@ -1385,12 +1404,14 @@ public class FledgeE2ETest {
 
         // Join first custom audience
         ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience1, joinCallback1);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
         assertTrue(joinCallback1.isSuccess());
 
         // Join second custom audience
         ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience2, joinCallback2);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
         assertTrue(joinCallback2.isSuccess());
 
         // Run Ad Selection
@@ -1426,8 +1447,8 @@ public class FledgeE2ETest {
                 .when(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
 
-        Uri sellerReportingUrl = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
-        Uri buyerReportingUrl = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
         mLocalhostBuyerDomain = Uri.parse(mMockWebServerRule.getServerBaseAddress());
 
         mAdSelectionConfig =
@@ -1458,11 +1479,11 @@ public class FledgeE2ETest {
                         + " custom_audience_signal) { \n"
                         + "  return {'status': 0, 'score': bid };\n"
                         + "}\n"
-                        + "function reportResult(ad_selection_config, render_url, bid,"
+                        + "function reportResult(ad_selection_config, render_uri, bid,"
                         + " contextual_signals) { \n"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
-                        + sellerReportingUrl
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
+                        + sellerReportingUri
                         + "' } };\n"
                         + "}";
         String biddingLogicJs =
@@ -1473,8 +1494,8 @@ public class FledgeE2ETest {
                         + "}\n"
                         + "function reportWin(ad_selection_signals, per_buyer_signals,"
                         + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
-                        + " return {'status': 0, 'results': {'reporting_url': '"
-                        + buyerReportingUrl
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
+                        + buyerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -1523,12 +1544,14 @@ public class FledgeE2ETest {
 
         // Join first custom audience
         ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience1, joinCallback1);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
         assertTrue(joinCallback1.isSuccess());
 
         // Join second custom audience
         ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience2, joinCallback2);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
         assertTrue(joinCallback2.isSuccess());
 
         verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
@@ -1580,8 +1603,8 @@ public class FledgeE2ETest {
                 .when(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
 
-        Uri sellerReportingUrl = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
-        Uri buyerReportingUrl = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
         mLocalhostBuyerDomain = Uri.parse(mMockWebServerRule.getServerBaseAddress());
 
         mAdSelectionConfig =
@@ -1612,11 +1635,11 @@ public class FledgeE2ETest {
                         + " custom_audience_signal) { \n"
                         + "  return {'status': 0, 'score': bid };\n"
                         + "}\n"
-                        + "function reportResult(ad_selection_config, render_url, bid,"
+                        + "function reportResult(ad_selection_config, render_uri, bid,"
                         + " contextual_signals) { \n"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
-                        + sellerReportingUrl
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
+                        + sellerReportingUri
                         + "' } };\n"
                         + "}";
         String biddingLogicJs =
@@ -1627,8 +1650,8 @@ public class FledgeE2ETest {
                         + "}\n"
                         + "function reportWin(ad_selection_signals, per_buyer_signals,"
                         + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
-                        + " return {'status': 0, 'results': {'reporting_url': '"
-                        + buyerReportingUrl
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
+                        + buyerReportingUri
                         + "' } };\n"
                         + "}";
 
@@ -1661,7 +1684,8 @@ public class FledgeE2ETest {
 
         // Join custom audience
         ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(customAudience1, joinCallback1);
+        mCustomAudienceService.joinCustomAudience(
+                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
         assertTrue(joinCallback1.isSuccess());
 
         // Run Ad Selection
@@ -1778,7 +1802,7 @@ public class FledgeE2ETest {
         // Generate ads for with bids provided
         List<AdData> ads = new ArrayList<>();
 
-        // Create ads with the buyer name and bid number as the ad URL
+        // Create ads with the buyer name and bid number as the ad URI
         // Add the bid value to the metadata
         for (int i = 0; i < bids.size(); i++) {
             ads.add(
@@ -1792,7 +1816,6 @@ public class FledgeE2ETest {
         }
 
         return new CustomAudience.Builder()
-                .setOwnerPackageName(CommonFixture.TEST_PACKAGE_NAME)
                 .setBuyer(AdTechIdentifier.fromString(buyerDomain.getHost()))
                 .setName(
                         buyerDomain.getHost()
@@ -1800,20 +1823,20 @@ public class FledgeE2ETest {
                                 + CustomAudienceFixture.VALID_NAME)
                 .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
                 .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
-                .setDailyUpdateUrl(
+                .setDailyUpdateUri(
                         CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
                                 AdTechIdentifier.fromString(buyerDomain.getAuthority())))
                 .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                 .setTrustedBiddingData(
                         new TrustedBiddingData.Builder()
-                                .setTrustedBiddingUrl(
+                                .setTrustedBiddingUri(
                                         CommonFixture.getUri(
                                                 buyerDomain.getAuthority(),
                                                 BUYER_TRUSTED_SIGNAL_URI_PATH))
                                 .setTrustedBiddingKeys(
                                         TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_KEYS)
                                 .build())
-                .setBiddingLogicUrl(
+                .setBiddingLogicUri(
                         CommonFixture.getUri(
                                 buyerDomain.getAuthority(),
                                 BUYER_BIDDING_LOGIC_URI_PATH + customAudienceSeq))
@@ -1970,6 +1993,11 @@ public class FledgeE2ETest {
         public float getSdkRequestPermitsPerSecond() {
             // Unlimited rate for unit tests to avoid flake in tests due to rate limiting
             return -1;
+        }
+
+        @Override
+        public boolean getDisableFledgeEnrollmentCheck() {
+            return true;
         }
     }
 }

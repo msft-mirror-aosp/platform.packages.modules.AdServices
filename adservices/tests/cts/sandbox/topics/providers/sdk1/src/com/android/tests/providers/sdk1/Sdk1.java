@@ -48,28 +48,10 @@ public class Sdk1 extends SandboxedSdkProvider {
     // Set of classification topics for the Test App. The returned topic should be one of these
     // Topics.
     private static final ImmutableSet<Integer> TOPIC_ID_SET =
-            ImmutableSet.of(10009, 10225, 10249, 10223, 10253);
+            ImmutableSet.of(10147, 10253, 10175, 10254, 10333);
 
     @Override
     public SandboxedSdk onLoadSdk(Bundle params) throws LoadSdkException {
-        try {
-            // The first call to the Topics API. This will record the usage of the test app to
-            // the Topics API.
-            GetTopicsResponse unUsedResponse = callTopicsApi();
-        } catch (Exception e) {
-            Log.e(TAG, e.getMessage());
-
-            // Trigger the error callback to tell the Test App that the first Topics API call
-            // finished with an error.
-            throw new LoadSdkException(e, new Bundle());
-        }
-
-        try {
-            // Wait until the next epoch.
-            Thread.sleep(TEST_EPOCH_JOB_PERIOD_MS);
-        } catch (InterruptedException e) {
-            Log.e(TAG, e.getMessage());
-        }
         try {
             // Make the second call to the Topics API. Since we called the Topics API in the
             // previous epoch, we should have some returned topic now.
@@ -112,9 +94,6 @@ public class Sdk1 extends SandboxedSdkProvider {
     public View getView(Context windowContext, Bundle params, int width, int height) {
         return null;
     }
-
-    @Override
-    public void onDataReceived(Bundle data, DataReceivedCallback callback) {}
 
     private GetTopicsResponse callTopicsApi() throws Exception {
         AdvertisingTopicsClient advertisingTopicsClient =

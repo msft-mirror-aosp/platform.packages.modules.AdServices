@@ -23,7 +23,6 @@ import static android.app.sdksandbox.SdkSandboxManager.EXTRA_SURFACE_PACKAGE;
 import static android.app.sdksandbox.SdkSandboxManager.EXTRA_WIDTH_IN_PIXELS;
 import static android.app.sdksandbox.SdkSandboxManager.LOAD_SDK_NOT_FOUND;
 import static android.app.sdksandbox.SdkSandboxManager.REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR;
-import static android.app.sdksandbox.SdkSandboxManager.SEND_DATA_INTERNAL_ERROR;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -33,7 +32,6 @@ import static org.junit.Assert.assertTrue;
 
 import android.app.sdksandbox.testutils.FakeOutcomeReceiver;
 import android.content.Context;
-import android.content.pm.SharedLibraryInfo;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.OutcomeReceiver;
@@ -107,7 +105,9 @@ public class SdkSandboxManagerUnitTest {
         Assert.assertTrue(callingTimeArgumentCaptor.getValue() <= afterCallingTimeStamp);
 
         // Simulate the success callback
-        callbackArgumentCaptor.getValue().onLoadSdkSuccess(new SandboxedSdk(new Binder()));
+        callbackArgumentCaptor
+                .getValue()
+                .onLoadSdkSuccess(new SandboxedSdk(new Binder()), System.currentTimeMillis());
         ArgumentCaptor<SandboxedSdk> sandboxedSdkCapture =
                 ArgumentCaptor.forClass(SandboxedSdk.class);
         Mockito.verify(outcomeReceiver).onResult(sandboxedSdkCapture.capture());
@@ -136,7 +136,9 @@ public class SdkSandboxManagerUnitTest {
         // Simulate the error callback
         callbackArgumentCaptor
                 .getValue()
-                .onLoadSdkFailure(new LoadSdkException(LOAD_SDK_NOT_FOUND, ERROR_MSG));
+                .onLoadSdkFailure(
+                        new LoadSdkException(LOAD_SDK_NOT_FOUND, ERROR_MSG),
+                        System.currentTimeMillis());
         ArgumentCaptor<LoadSdkException> exceptionCapture =
                 ArgumentCaptor.forClass(LoadSdkException.class);
         Mockito.verify(outcomeReceiver).onError(exceptionCapture.capture());
@@ -144,18 +146,19 @@ public class SdkSandboxManagerUnitTest {
 
         assertThat(exception.getLoadSdkErrorCode()).isEqualTo(LOAD_SDK_NOT_FOUND);
         assertThat(exception.getMessage()).isEqualTo(ERROR_MSG);
+        assertNotNull(exception.getExtraInformation());
+        assertTrue(exception.getExtraInformation().isEmpty());
     }
 
     @Test
-    public void testGetLoadedSdkLibrariesInfo() throws Exception {
-        List<SharedLibraryInfo> sharedLibraries = List.of();
-        Mockito.when(mBinder.getLoadedSdkLibrariesInfo(Mockito.anyString(), Mockito.anyLong()))
-                .thenReturn(sharedLibraries);
+    public void testGetSandboxedSdks() throws Exception {
+        List<SandboxedSdk> sandboxedSdks = List.of();
+        Mockito.when(mBinder.getSandboxedSdks(Mockito.anyString(), Mockito.anyLong()))
+                .thenReturn(sandboxedSdks);
 
-        assertThat(mSdkSandboxManager.getLoadedSdkLibrariesInfo()).isEqualTo(sharedLibraries);
+        assertThat(mSdkSandboxManager.getSandboxedSdks()).isSameInstanceAs(sandboxedSdks);
         Mockito.verify(mBinder)
-                .getLoadedSdkLibrariesInfo(
-                        Mockito.eq(mContext.getPackageName()), Mockito.anyLong());
+                .getSandboxedSdks(Mockito.eq(mContext.getPackageName()), Mockito.anyLong());
     }
 
     @Test
@@ -252,6 +255,8 @@ public class SdkSandboxManagerUnitTest {
         assertThat(exception.getRequestSurfacePackageErrorCode())
                 .isEqualTo(REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR);
         assertThat(exception.getMessage()).isEqualTo(ERROR_MSG);
+        assertNotNull(exception.getExtraErrorInformation());
+        assertTrue(exception.getExtraErrorInformation().isEmpty());
     }
 
     @Test
@@ -383,6 +388,61 @@ public class SdkSandboxManagerUnitTest {
     }
 
     @Test
+    public void testLoadSdk_latencySystemServerToAppLogged_success() throws Exception {
+        final Bundle params = new Bundle();
+
+        mSdkSandboxManager.loadSdk(SDK_NAME, params, Runnable::run, new FakeOutcomeReceiver<>());
+
+        final ArgumentCaptor<ILoadSdkCallback> callbackArgumentCaptor =
+                ArgumentCaptor.forClass(ILoadSdkCallback.class);
+        Mockito.verify(mBinder)
+                .loadSdk(
+                        Mockito.eq(mContext.getPackageName()),
+                        Mockito.eq(SDK_NAME),
+                        Mockito.anyLong(),
+                        Mockito.eq(params),
+                        callbackArgumentCaptor.capture());
+
+        // Simulate the success callback
+        callbackArgumentCaptor
+                .getValue()
+                .onLoadSdkSuccess(new SandboxedSdk(new Binder()), System.currentTimeMillis());
+
+        Mockito.verify(mBinder, Mockito.times(1))
+                .logLatencyFromSystemServerToApp(
+                        Mockito.eq(ISdkSandboxManager.LOAD_SDK), Mockito.anyInt());
+    }
+
+    @Test
+    public void testLoadSdk_latencySystemServerToAppLogged_failed() throws Exception {
+        final Bundle params = new Bundle();
+
+        mSdkSandboxManager.loadSdk(
+                SDK_NAME, params, Runnable::run, new FakeOutcomeReceiver<>());
+
+        ArgumentCaptor<ILoadSdkCallback> callbackArgumentCaptor =
+                ArgumentCaptor.forClass(ILoadSdkCallback.class);
+        Mockito.verify(mBinder)
+                .loadSdk(
+                        Mockito.eq(mContext.getPackageName()),
+                        Mockito.eq(SDK_NAME),
+                        Mockito.anyLong(),
+                        Mockito.eq(params),
+                        callbackArgumentCaptor.capture());
+
+        // Simulate the error callback
+        callbackArgumentCaptor
+                .getValue()
+                .onLoadSdkFailure(
+                        new LoadSdkException(LOAD_SDK_NOT_FOUND, ERROR_MSG),
+                        System.currentTimeMillis());
+
+        Mockito.verify(mBinder, Mockito.times(1))
+                .logLatencyFromSystemServerToApp(
+                        Mockito.eq(ISdkSandboxManager.LOAD_SDK), Mockito.anyInt());
+    }
+
+    @Test
     public void requestSurfacePackageWithMissingWidthParam() {
         Bundle params = new Bundle();
         params.putInt(EXTRA_HEIGHT_IN_PIXELS, 500);
@@ -486,62 +546,6 @@ public class SdkSandboxManagerUnitTest {
         params.putInt(EXTRA_DISPLAY_ID, 0);
         params.putBinder(EXTRA_HOST_TOKEN, null);
         ensureIllegalArgumentExceptionOnRequestSurfacePackage(params, EXTRA_HOST_TOKEN);
-    }
-
-    @Test
-    public void testSendDataSuccess() throws Exception {
-        final Bundle params = new Bundle();
-
-        OutcomeReceiver<SendDataResponse, SendDataException> outcomeReceiver =
-                Mockito.spy(new FakeOutcomeReceiver<>());
-        mSdkSandboxManager.sendData(SDK_NAME, params, Runnable::run, outcomeReceiver);
-
-        ArgumentCaptor<ISendDataCallback> callbackArgumentCaptor =
-                ArgumentCaptor.forClass(ISendDataCallback.class);
-        Mockito.verify(mBinder)
-                .sendData(
-                        Mockito.eq(mContext.getPackageName()),
-                        Mockito.eq(SDK_NAME),
-                        Mockito.eq(params),
-                        callbackArgumentCaptor.capture());
-
-        // Simulate the success callback
-        final Bundle extraInfo = new Bundle();
-        callbackArgumentCaptor.getValue().onSendDataSuccess(extraInfo);
-        ArgumentCaptor<SendDataResponse> responseCapture =
-                ArgumentCaptor.forClass(SendDataResponse.class);
-        Mockito.verify(outcomeReceiver).onResult(responseCapture.capture());
-
-        final SendDataResponse response = responseCapture.getValue();
-        assertThat(response.getExtraInformation()).isEqualTo(extraInfo);
-    }
-
-    @Test
-    public void testSendDataFailure() throws Exception {
-        final Bundle params = new Bundle();
-
-        OutcomeReceiver<SendDataResponse, SendDataException> outcomeReceiver =
-                Mockito.spy(new FakeOutcomeReceiver<>());
-        mSdkSandboxManager.sendData(SDK_NAME, params, Runnable::run, outcomeReceiver);
-
-        ArgumentCaptor<ISendDataCallback> callbackArgumentCaptor =
-                ArgumentCaptor.forClass(ISendDataCallback.class);
-        Mockito.verify(mBinder)
-                .sendData(
-                        Mockito.eq(mContext.getPackageName()),
-                        Mockito.eq(SDK_NAME),
-                        Mockito.eq(params),
-                        callbackArgumentCaptor.capture());
-
-        // Simulate the error callback
-        callbackArgumentCaptor.getValue().onSendDataError(SEND_DATA_INTERNAL_ERROR, ERROR_MSG);
-        ArgumentCaptor<SendDataException> responseCapture =
-                ArgumentCaptor.forClass(SendDataException.class);
-        Mockito.verify(outcomeReceiver).onError(responseCapture.capture());
-
-        SendDataException exception = responseCapture.getValue();
-        assertThat(exception.getSendDataErrorCode()).isEqualTo(SEND_DATA_INTERNAL_ERROR);
-        assertThat(exception.getMessage()).isEqualTo(ERROR_MSG);
     }
 
     private void ensureIllegalArgumentExceptionOnRequestSurfacePackage(

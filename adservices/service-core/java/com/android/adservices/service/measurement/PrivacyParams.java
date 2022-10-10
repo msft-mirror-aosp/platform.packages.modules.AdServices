@@ -52,7 +52,7 @@ public final class PrivacyParams {
 
     /**
      * Rate limit window for (Source Site, Destination Site, Reporting Site, Window) privacy unit.
-     * 28 days.
+     * 30 days.
      */
     public static final long RATE_LIMIT_WINDOW_MILLISECONDS = TimeUnit.DAYS.toMillis(30);
 
@@ -172,11 +172,6 @@ public final class PrivacyParams {
      */
     public static final int MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE = 65536;
 
-    /**
-     * Maximum number of aggregation keys allowed during source or trigger registration.
-     */
-    public static final int MAX_AGGREGATE_KEYS_PER_REGISTRATION = 50;
-
     /** Amount of bytes allocated for aggregate histogram bucket */
     public static final int AGGREGATE_HISTOGRAM_BUCKET_BYTE_SIZE = 16;
 
@@ -184,19 +179,23 @@ public final class PrivacyParams {
     public static final int AGGREGATE_HISTOGRAM_VALUE_BYTE_SIZE = 4;
 
     /**
-     * Max distinct ad-techs for attribution per { Advertiser X Publisher X TimePeriod }.
+     * Max distinct enrollments for attribution per { Advertiser X Publisher X TimePeriod }.
      */
-    public static final int MAX_DISTINCT_AD_TECHS_PER_PUBLISHER_X_DESTINATION_IN_ATTRIBUTION = 10;
+    public static final int MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_ATTRIBUTION =
+            10;
 
     /**
-     * Max distinct advertisers with pending impressions per { Publisher X TimePeriod }.
+     * Max distinct advertisers with pending impressions per
+     * { Publisher X Enrollment X TimePeriod }.
      */
-    public static final int MAX_DISTINCT_DESTINATIONS_PER_PUBLISHER_IN_ACTIVE_SOURCE = 100;
+    public static final int MAX_DISTINCT_DESTINATIONS_PER_PUBLISHER_X_ENROLLMENT_IN_ACTIVE_SOURCE =
+            100;
 
     /**
-     * Max distinct ad-techs with source registration per { Publisher X Advertiser X TimePeriod }.
+     * Max distinct enrollments with source registration per
+     * { Publisher X Advertiser X TimePeriod }.
      */
-    public static final int MAX_DISTINCT_AD_TECHS_PER_PUBLISHER_X_DESTINATION_IN_SOURCE = 100;
+    public static final int MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_SOURCE = 100;
 
     private PrivacyParams() {
     }

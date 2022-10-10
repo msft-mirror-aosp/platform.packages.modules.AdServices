@@ -26,6 +26,7 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -219,14 +220,16 @@ public class DbState {
     private Source getSourceFrom(JSONObject sJSON) throws JSONException {
         return new Source.Builder()
                 .setId(sJSON.getString("id"))
-                .setEventId(sJSON.getLong("eventId"))
+                .setEventId(new UnsignedLong(sJSON.getString("eventId")))
                 .setSourceType(
                         Source.SourceType.valueOf(
                                 sJSON.getString("sourceType").toUpperCase(Locale.ENGLISH)))
                 .setPublisher(Uri.parse(sJSON.getString("publisher")))
                 .setPublisherType(sJSON.optInt("publisherType"))
                 .setAppDestination(Uri.parse(sJSON.getString("appDestination")))
-                .setAdTechDomain(Uri.parse(sJSON.getString("adTechDomain")))
+                .setWebDestination(parseIfNonNull(sJSON.optString("webDestination", null)))
+                .setAggregateSource(sJSON.optString("aggregationKeys", null))
+                .setAggregateContributions(sJSON.optInt("aggregateContributions"))
                 .setEnrollmentId(sJSON.getString("enrollmentId"))
                 .setEventTime(sJSON.getLong("eventTime"))
                 .setExpiryTime(sJSON.getLong("expiryTime"))
@@ -248,9 +251,10 @@ public class DbState {
                 .setId(tJSON.getString("id"))
                 .setAttributionDestination(Uri.parse(tJSON.getString("attributionDestination")))
                 .setDestinationType(tJSON.optInt("destinationType"))
-                .setAdTechDomain(Uri.parse(tJSON.getString("adTechDomain")))
                 .setEnrollmentId(tJSON.getString("enrollmentId"))
                 .setEventTriggers(tJSON.getString("eventTriggers"))
+                .setAggregateTriggerData(tJSON.optString("aggregatableTriggerData", null))
+                .setAggregateValues(tJSON.optString("aggregatableValues", null))
                 .setTriggerTime(tJSON.getLong("triggerTime"))
                 .setStatus(tJSON.getInt("status"))
                 .setRegistrant(Uri.parse(tJSON.getString("registrant")))
@@ -261,11 +265,10 @@ public class DbState {
     private EventReport getEventReportFrom(JSONObject rJSON) throws JSONException {
         return new EventReport.Builder()
                 .setId(rJSON.getString("id"))
-                .setSourceId(rJSON.getLong("sourceId"))
+                .setSourceId(new UnsignedLong(rJSON.getString("sourceId")))
                 .setAttributionDestination(Uri.parse(rJSON.getString("attributionDestination")))
-                .setAdTechDomain(Uri.parse(rJSON.getString("adTechDomain")))
                 .setEnrollmentId(rJSON.getString("enrollmentId"))
-                .setTriggerData(rJSON.getLong("triggerData"))
+                .setTriggerData(new UnsignedLong(rJSON.getString("triggerData")))
                 .setTriggerTime(rJSON.getLong("triggerTime"))
                 .setReportTime(rJSON.getLong("reportTime"))
                 .setTriggerPriority(rJSON.getLong("triggerPriority"))
@@ -285,7 +288,6 @@ public class DbState {
                 .setSourceOrigin(attrJSON.getString("sourceOrigin"))
                 .setDestinationSite(attrJSON.getString("destinationSite"))
                 .setDestinationOrigin(attrJSON.getString("destinationOrigin"))
-                .setAdTechDomain(attrJSON.getString("adTechDomain"))
                 .setEnrollmentId(attrJSON.getString("enrollmentId"))
                 .setTriggerTime(attrJSON.getLong("triggerTime"))
                 .setRegistrant(attrJSON.getString("registrant"))
@@ -323,10 +325,6 @@ public class DbState {
                         cursor.getString(
                                 cursor.getColumnIndex(
                                         MeasurementTables.AttributionContract.DESTINATION_ORIGIN)))
-                .setAdTechDomain(
-                        cursor.getString(
-                                cursor.getColumnIndex(
-                                        MeasurementTables.AttributionContract.AD_TECH_DOMAIN)))
                 .setEnrollmentId(
                         cursor.getString(
                                 cursor.getColumnIndex(
@@ -350,10 +348,17 @@ public class DbState {
                 .setAttributionDestination(Uri.parse(rJSON.getString("attributionDestination")))
                 .setSourceRegistrationTime(rJSON.getLong("sourceRegistrationTime"))
                 .setScheduledReportTime(rJSON.getLong("scheduledReportTime"))
-                .setAdTechDomain(Uri.parse(rJSON.getString("adTechDomain")))
                 .setEnrollmentId(rJSON.getString("enrollmentId"))
                 .setDebugCleartextPayload(rJSON.getString("debugCleartextPayload"))
                 .setStatus(rJSON.getInt("status"))
+                .setApiVersion(rJSON.optString("apiVersion", null))
                 .build();
+    }
+
+    private Uri parseIfNonNull(String s) {
+        if (s == null) {
+            return null;
+        }
+        return Uri.parse(s);
     }
 }

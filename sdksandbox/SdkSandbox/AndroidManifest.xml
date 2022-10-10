@@ -30,9 +30,6 @@
     <permission android:name="com.android.app.sdksandbox.permission.STOP_SDK_SANDBOX"
                 android:protectionLevel="normal" />
 
-    <!-- Allows SdkSandbox to start activities. -->
-    <!-- TODO(b/209599396): temporary workaround, remove once proper solution is implemented. -->
-    <uses-permission android:name="android.permission.START_ACTIVITIES_FROM_BACKGROUND"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
@@ -41,7 +38,10 @@
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_ATTRIBUTION" />
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE" />
 
-    <application android:usesNonSdkApi="false" android:forceQueryable="true">
+    <application
+          android:usesNonSdkApi="false"
+          android:forceQueryable="true"
+          android:allowBackup="false">
         <service android:name=".SdkSandboxServiceImpl" android:exported="true">
             <intent-filter>
                 <action android:name="com.android.sdksandbox.SdkSandboxService"/>

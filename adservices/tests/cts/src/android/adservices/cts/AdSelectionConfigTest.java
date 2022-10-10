@@ -111,7 +111,7 @@ public class AdSelectionConfigTest {
     }
 
     @Test
-    public void testBuildAdSelectionConfigUnsetDecisionLogicUrlFailure() {
+    public void testBuildAdSelectionConfigUnsetDecisionLogicUriFailure() {
         assertThrows(
                 NullPointerException.class,
                 () -> {

@@ -5,7 +5,6 @@
       {
         "registration_request": {
           "attribution_src_url": "https://www.ad-tech1.com",
-          "source_origin": "android-app://example.1s1.com",
           "source_type": "navigation",
           "registrant": "example.1s1.com"
         },
@@ -27,7 +26,6 @@
       {
         "registration_request": {
           "attribution_src_url": "https://www.ad-tech1.com",
-          "source_origin": "android-app://example.1s1.com",
           "source_type": "navigation",
           "registrant": "example.1s1.com"
         },
@@ -44,12 +42,11 @@
             "Attribution-Reporting-Redirect": null
           }
         }],
-        "timestamp": "800000000002"
+        "timestamp": "800000600001"
       },
       {
         "registration_request": {
           "attribution_src_url": "https://www.ad-tech1.com",
-          "source_origin": "android-app://example.1s1.com",
           "source_type": "navigation",
           "registrant": "example.1s1.com"
         },
@@ -66,14 +63,13 @@
             "Attribution-Reporting-Redirect": null
           }
         }],
-        "timestamp": "800000000003"
+        "timestamp": "800001200001"
       }
     ],
     "triggers": [
       {
         "registration_request": {
           "attribution_src_url": "https://www.ad-tech1.com",
-          "destination_origin": "android-app://example.2d1.com",
           "registrant": "example.2d1.com"
         },
         "responses": [{
@@ -92,12 +88,11 @@
               "Attribution-Reporting-Redirect": null
             }
         }],
-        "timestamp": "800000000004"
+        "timestamp": "800001800001"
       },
       {
         "registration_request": {
           "attribution_src_url": "https://www.ad-tech1.com",
-          "destination_origin": "android-app://example.2d1.com",
           "registrant": "example.2d1.com"
         },
         "responses": [{
@@ -116,12 +111,11 @@
               "Attribution-Reporting-Redirect": null
             }
         }],
-        "timestamp": "800000000005"
+        "timestamp": "800002400001"
       },
       {
         "registration_request": {
           "attribution_src_url": "https://www.ad-tech1.com",
-          "destination_origin": "android-app://example.2d1.com",
           "registrant": "example.2d1.com"
         },
         "responses": [{
@@ -140,14 +134,14 @@
               "Attribution-Reporting-Redirect": null
             }
         }],
-        "timestamp": "800000000006"
+        "timestamp": "800003000001"
       }
     ]
   },
   "output": {
     "event_level_results": [
       {
-        "report_time": "800176400002",
+        "report_time": "800177000001",
         "report_url": "https://www.ad-tech1.com",
         "payload": {
           "attribution_destination": "android-app://example.2d1.com",
@@ -158,7 +152,7 @@
         }
       },
       {
-        "report_time": "800176400002",
+        "report_time": "800177000001",
         "report_url": "https://www.ad-tech1.com",
         "payload": {
           "attribution_destination": "android-app://example.2d1.com",

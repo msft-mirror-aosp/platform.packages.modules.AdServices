@@ -83,24 +83,34 @@ public abstract class CustomAudienceDao {
      * <p>If a custom audience already exists, it is overwritten completely.
      *
      * <p>Background fetch data is also created based on the given {@code customAudience} and {@code
-     * dailyUpdateUrl} and overwrites any existing background fetch data. This method assumes the
+     * dailyUpdateUri} and overwrites any existing background fetch data. This method assumes the
      * input parameters have already been validated and are correct.
      */
     public void insertOrOverwriteCustomAudience(
-            @NonNull DBCustomAudience customAudience, @NonNull Uri dailyUpdateUrl) {
+            @NonNull DBCustomAudience customAudience, @NonNull Uri dailyUpdateUri) {
         Objects.requireNonNull(customAudience);
-        Objects.requireNonNull(dailyUpdateUrl);
+        Objects.requireNonNull(dailyUpdateUri);
+
+        Instant eligibleUpdateTime;
+        if (customAudience.getUserBiddingSignals() == null
+                || customAudience.getTrustedBiddingData() == null
+                || customAudience.getAds() == null
+                || customAudience.getAds().isEmpty()) {
+            eligibleUpdateTime = Instant.EPOCH;
+        } else {
+            eligibleUpdateTime =
+                    DBCustomAudienceBackgroundFetchData
+                            .computeNextEligibleUpdateTimeAfterSuccessfulUpdate(
+                                    customAudience.getCreationTime());
+        }
 
         DBCustomAudienceBackgroundFetchData fetchData =
                 DBCustomAudienceBackgroundFetchData.builder()
                         .setOwner(customAudience.getOwner())
                         .setBuyer(customAudience.getBuyer())
                         .setName(customAudience.getName())
-                        .setDailyUpdateUrl(dailyUpdateUrl)
-                        .setEligibleUpdateTime(
-                                DBCustomAudienceBackgroundFetchData
-                                        .computeNextEligibleUpdateTimeAfterSuccessfulUpdate(
-                                                customAudience.getCreationTime()))
+                        .setDailyUpdateUri(dailyUpdateUri)
+                        .setEligibleUpdateTime(eligibleUpdateTime)
                         .build();
 
         insertOrOverwriteCustomAudienceAndBackgroundFetchData(customAudience, fetchData);
@@ -223,7 +233,7 @@ public abstract class CustomAudienceDao {
             "SELECT bidding_logic FROM custom_audience_overrides WHERE owner = :owner "
                     + "AND buyer = :buyer AND name = :name AND app_package_name= :appPackageName")
     @Nullable
-    public abstract String getBiddingLogicUrlOverride(
+    public abstract String getBiddingLogicUriOverride(
             @NonNull String owner,
             @NonNull AdTechIdentifier buyer,
             @NonNull String name,
@@ -408,7 +418,7 @@ public abstract class CustomAudienceDao {
                     + " (:currentTime) AND (:currentTime) < expiration_time AND"
                     + " (last_ads_and_bidding_data_updated_time + (:activeWindowTimeMs)) >="
                     + " (:currentTime) AND user_bidding_signals IS NOT NULL AND"
-                    + " trusted_bidding_data_url IS NOT NULL AND ads IS NOT NULL ")
+                    + " trusted_bidding_data_uri IS NOT NULL AND ads IS NOT NULL ")
     @Nullable
     public abstract List<DBCustomAudience> getActiveCustomAudienceByBuyers(
             List<AdTechIdentifier> buyers, Instant currentTime, long activeWindowTimeMs);

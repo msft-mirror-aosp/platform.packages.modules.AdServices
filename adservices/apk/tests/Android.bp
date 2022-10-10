@@ -19,6 +19,7 @@ android_test {
     name: "AdServicesApkUITests",
     srcs: [
         "src/**/*.java",
+        ":adservicesapk-filegroup",
     ],
     certificate: "platform",
     privileged: true,
@@ -40,7 +41,7 @@ android_test {
         "SettingsLibSettingsTheme",
         "SettingsLibCollapsingToolbarBaseActivity",
         "SettingsLibMainSwitchPreference",
-        "AdServicesApkLib",
+        "androidx.test.uiautomator_uiautomator",
     ],
     libs: [
         "android.test.base",

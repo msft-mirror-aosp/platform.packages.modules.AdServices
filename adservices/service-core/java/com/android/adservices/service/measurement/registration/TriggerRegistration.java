@@ -17,8 +17,8 @@ package com.android.adservices.service.measurement.registration;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
-import android.net.Uri;
 
+import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Validation;
 
 import java.util.Objects;
@@ -27,25 +27,22 @@ import java.util.Objects;
  * A registration for a trigger of attribution.
  */
 public final class TriggerRegistration {
-    private final Uri mTopOrigin;
-    private final Uri mRegistrationUri;
+    private final String mEnrollmentId;
     private final String mAggregateTriggerData;
     private final String mAggregateValues;
     private final String mFilters;
     private final String mEventTriggers;
-    @Nullable private final Long mDebugKey;
+    @Nullable private final UnsignedLong mDebugKey;
 
     /** Create a trigger registration. */
     private TriggerRegistration(
-            @NonNull Uri topOrigin,
-            @NonNull Uri registrationUri,
+            @NonNull String enrollmentId,
             @NonNull String eventTriggers,
             @Nullable String aggregateTriggerData,
             @Nullable String aggregateValues,
             @Nullable String filters,
-            @Nullable Long debugKey) {
-        mTopOrigin = topOrigin;
-        mRegistrationUri = registrationUri;
+            @Nullable UnsignedLong debugKey) {
+        mEnrollmentId = enrollmentId;
         mAggregateTriggerData = aggregateTriggerData;
         mAggregateValues = aggregateValues;
         mFilters = filters;
@@ -58,8 +55,7 @@ public final class TriggerRegistration {
         if (this == o) return true;
         if (!(o instanceof TriggerRegistration)) return false;
         TriggerRegistration that = (TriggerRegistration) o;
-        return Objects.equals(mTopOrigin, that.mTopOrigin)
-                && Objects.equals(mRegistrationUri, that.mRegistrationUri)
+        return Objects.equals(mEnrollmentId, that.mEnrollmentId)
                 && Objects.equals(mAggregateTriggerData, that.mAggregateTriggerData)
                 && Objects.equals(mAggregateValues, that.mAggregateValues)
                 && Objects.equals(mFilters, that.mFilters)
@@ -70,8 +66,7 @@ public final class TriggerRegistration {
     @Override
     public int hashCode() {
         return Objects.hash(
-                mTopOrigin,
-                mRegistrationUri,
+                mEnrollmentId,
                 mAggregateTriggerData,
                 mAggregateValues,
                 mFilters,
@@ -79,16 +74,10 @@ public final class TriggerRegistration {
                 mDebugKey);
     }
 
-    /** Top level origin. */
+    /** Enrollment ID associated with this registration. */
     @NonNull
-    public Uri getTopOrigin() {
-        return mTopOrigin;
-    }
-
-    /** Uri used to request this registration. */
-    @NonNull
-    public Uri getRegistrationUri() {
-        return mRegistrationUri;
+    public String getEnrollmentId() {
+        return mEnrollmentId;
     }
 
     /** Event triggers - contains trigger data, priority, de-dup key and event-level filters. */
@@ -116,7 +105,7 @@ public final class TriggerRegistration {
         return mFilters;
     }
     /** Trigger Debug Key. */
-    public @Nullable Long getDebugKey() {
+    public @Nullable UnsignedLong getDebugKey() {
         return mDebugKey;
     }
 
@@ -124,27 +113,17 @@ public final class TriggerRegistration {
      * A builder for {@link TriggerRegistration}.
      */
     public static final class Builder {
-        private Uri mTopOrigin;
-        private Uri mRegistrationUri;
+        private String mEnrollmentId;
         private String mEventTriggers;
         private String mAggregateTriggerData;
         private String mAggregateValues;
         private String mFilters;
-        private @Nullable Long mDebugKey;
+        private @Nullable UnsignedLong mDebugKey;
 
-        /** See {@link TriggerRegistration#getTopOrigin}. */
+        /** See {@link TriggerRegistration#getEnrollmentId}. */
         @NonNull
-        public Builder setTopOrigin(@NonNull Uri origin) {
-            Validation.validateUri(origin);
-            mTopOrigin = origin;
-            return this;
-        }
-
-        /** See {@link TriggerRegistration#getRegistrationUri}. */
-        @NonNull
-        public Builder setRegistrationUri(@NonNull Uri registrationUri) {
-            Validation.validateUri(registrationUri);
-            mRegistrationUri = registrationUri;
+        public Builder setEnrollmentId(@NonNull String enrollmentId) {
+            mEnrollmentId = enrollmentId;
             return this;
         }
 
@@ -178,7 +157,7 @@ public final class TriggerRegistration {
         }
 
         /** See {@link TriggerRegistration#getDebugKey()}. */
-        public Builder setDebugKey(@Nullable Long debugKey) {
+        public Builder setDebugKey(@Nullable UnsignedLong debugKey) {
             mDebugKey = debugKey;
             return this;
         }
@@ -186,11 +165,10 @@ public final class TriggerRegistration {
         /** Build the TriggerRegistration. */
         @NonNull
         public TriggerRegistration build() {
-            Validation.validateNonNull(mTopOrigin, mRegistrationUri);
+            Validation.validateNonNull(mEnrollmentId);
 
             return new TriggerRegistration(
-                    mTopOrigin,
-                    mRegistrationUri,
+                    mEnrollmentId,
                     mEventTriggers,
                     mAggregateTriggerData,
                     mAggregateValues,

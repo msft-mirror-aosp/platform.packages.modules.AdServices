@@ -30,12 +30,13 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
+import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.LogUtil;
 import com.android.compatibility.common.util.ShellUtils;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -150,17 +151,18 @@ public class AppUpdateTest {
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
 
+        overridingBeforeTest();
+
         registerTopicResponseReceiver();
+    }
+
+    @After
+    public void tearDown() {
+        overridingAfterTest();
     }
 
     @Test
     public void testAppUpdate() throws Exception {
-        overrideDisableTopicsEnrollmentCheck("1");
-        overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
-
-        // We need to turn off random topic so that we can verify the returned topic.
-        overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
-
         // Invoke Topics API once to compute top topics so that following installed test apps are
         // able to get top topics assigned when getting installed.
         AdvertisingTopicsClient advertisingTopicsClient =
@@ -225,11 +227,6 @@ public class AppUpdateTest {
         // Finally, assert that the number of received broadcasts matches with expectation
         assertThat(mExpectedTopicResponseBroadCastIndex)
                 .isEqualTo(EXPECTED_TOPIC_RESPONSE_BROADCASTS.length);
-
-        // Reset back the original values.
-        overrideDisableTopicsEnrollmentCheck("0");
-        overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
-        overridePercentageForRandomTopic(DEFAULT_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
     }
 
     // Broadcast Receiver to receive getTopicResponse broadcast from test apps
@@ -280,6 +277,39 @@ public class AppUpdateTest {
         sContext.registerReceiver(mTopicsResponseReceiver, topicResponseIntentFilter);
     }
 
+    private void overridingBeforeTest() {
+        overrideAdservicesGlobalKillSwitch(true);
+        overridingAdservicesLoggingLevel("VERBOSE");
+
+        overrideDisableTopicsEnrollmentCheck("1");
+        overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
+
+        // We need to turn off random topic so that we can verify the returned topic.
+        overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+
+        // We need to turn the Consent Manager into debug mode
+        overrideConsentManagerDebugMode();
+
+        // Turn off MDD to avoid model mismatching
+        disableMddBackgroundTasks(true);
+    }
+
+    // Reset back the original values.
+    private void overridingAfterTest() {
+        overrideDisableTopicsEnrollmentCheck("0");
+        overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
+        overridePercentageForRandomTopic(DEFAULT_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+        disableMddBackgroundTasks(false);
+        overridingAdservicesLoggingLevel("INFO");
+        overrideAdservicesGlobalKillSwitch(false);
+    }
+
+    // Switch on/off for MDD service. Default value is false, which means MDD is enabled.
+    private void disableMddBackgroundTasks(boolean isSwitchedOff) {
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.mdd_background_task_kill_switch " + isSwitchedOff);
+    }
+
     // Install test sample app 1 and verify the installation.
     private void installTestSampleApp() {
         String installMessage = ShellUtils.runShellCommand("pm install -r " + TEST_APK_PATH);
@@ -311,6 +341,11 @@ public class AppUpdateTest {
                         + overridePercentage);
     }
 
+    // Override the Consent Manager behaviour - Consent Given
+    private void overrideConsentManagerDebugMode() {
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
+    }
+
     // Forces JobScheduler to run the Epoch Computation job.
     private void forceEpochComputationJob() {
         ShellUtils.runShellCommand(
@@ -327,6 +362,19 @@ public class AppUpdateTest {
                         + MAINTENANCE_JOB_ID);
     }
 
+    private void overridingAdservicesLoggingLevel(String loggingLevel) {
+        ShellUtils.runShellCommand("setprop log.tag.adservices %s", loggingLevel);
+    }
+
+    // Override global_kill_switch to ignore the effect of actual PH values.
+    // If isOverride = true, override global_kill_switch to OFF to allow adservices
+    // If isOverride = false, override global_kill_switch to meaningless value so that PhFlags will
+    // use the default value.
+    private void overrideAdservicesGlobalKillSwitch(boolean isOverride) {
+        String overrideString = isOverride ? "false" : "null";
+        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
+    }
+
     // Used to get the package name. Copied over from com.android.adservices.AndroidServiceBinder
     private static String getAdServicesPackageName() {
         final Intent intent = new Intent(TOPICS_SERVICE_NAME);
@@ -335,22 +383,25 @@ public class AppUpdateTest {
                         .queryIntentServices(intent, PackageManager.MATCH_SYSTEM_ONLY);
 
         if (resolveInfos == null || resolveInfos.isEmpty()) {
-            LogUtil.e(
+            Log.e(
+                    TAG,
                     "Failed to find resolveInfo for adServices service. Intent action: "
                             + TOPICS_SERVICE_NAME);
             return null;
         }
 
         if (resolveInfos.size() > 1) {
-            LogUtil.e(
-                    "Found multiple services (%1$s) for the same intent action (%2$s)",
-                    TOPICS_SERVICE_NAME, resolveInfos.toString());
+            Log.e(
+                    TAG,
+                    String.format(
+                            "Found multiple services (%1$s) for the same intent action (%2$s)",
+                            TOPICS_SERVICE_NAME, resolveInfos));
             return null;
         }
 
         final ServiceInfo serviceInfo = resolveInfos.get(0).serviceInfo;
         if (serviceInfo == null) {
-            LogUtil.e("Failed to find serviceInfo for adServices service");
+            Log.e(TAG, "Failed to find serviceInfo for adServices service");
             return null;
         }
 

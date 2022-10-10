@@ -36,6 +36,7 @@ java_test_host {
         ":SdkSandboxTestSharedApp1",
         ":SdkSandboxTestSharedApp2",
     ],
+    compile_multilib: "both",
 }
 
 java_test_host {
@@ -69,6 +70,8 @@ android_test_helper_app {
         "androidx.test.ext.junit",
         "SdkSandboxTestUtils",
     ],
+    min_sdk_version: "33",
+    target_sdk_version: "33",
 }
 
 android_test_helper_app {
@@ -86,6 +89,8 @@ android_test_helper_app {
         "androidx.core_core",
         "SdkSandboxTestUtils",
     ],
+    min_sdk_version: "33",
+    target_sdk_version: "33",
 }
 
 android_test_helper_app {
@@ -103,6 +108,8 @@ android_test_helper_app {
         "androidx.core_core",
         "SdkSandboxTestUtils",
     ],
+    min_sdk_version: "33",
+    target_sdk_version: "33",
 }
 
 android_test_helper_app {
@@ -121,6 +128,8 @@ android_test_helper_app {
         "SdkSandboxTestUtils",
     ],
     platform_apis: true,
+    min_sdk_version: "33",
+    target_sdk_version: "33",
 }
 
 android_test_helper_app {
@@ -128,6 +137,7 @@ android_test_helper_app {
     manifest: "app/SdkSandboxTestSharedApp2Manifest.xml",
     srcs: [
         "app/src/**/SdkSandboxTestSharedApp2.java",
+        "app/src/**/shared/app2/SdkSandboxEmptyActivity.java",
         ":framework-sdksandbox-sources",
         ":sdksandbox_aidl",
         ":sdksandbox-sources",
@@ -135,10 +145,13 @@ android_test_helper_app {
     test_suites: ["general-tests"],
     static_libs: [
         "androidx.core_core",
+        "androidx.test.ext.junit",
         "compatibility-device-util-axt",
         "SdkSandboxTestUtils",
     ],
     platform_apis: true,
+    min_sdk_version: "33",
+    target_sdk_version: "33",
 }
 
 android_test_helper_app {
@@ -151,6 +164,8 @@ android_test_helper_app {
        ":framework-sdksandbox-sources",
     ],
     platform_apis: true,
+    min_sdk_version: "33",
+    target_sdk_version: "33",
 }
 
 android_test_helper_app {
@@ -163,4 +178,6 @@ android_test_helper_app {
        ":framework-sdksandbox-sources",
     ],
     platform_apis: true,
+    min_sdk_version: "33",
+    target_sdk_version: "33",
 }

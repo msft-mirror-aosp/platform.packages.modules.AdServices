@@ -22,6 +22,7 @@ import android.net.Uri;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.android.adservices.service.measurement.AsyncRegistration;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
@@ -59,9 +60,14 @@ public interface IMeasurementDao {
     Trigger getTrigger(String triggerId) throws DatastoreException;
 
     /**
-     * Gets the number of sources a registrant has registered.
+     * Gets the number of sources associated to a publisher.
+     *
+     * @param publisherUri Uri for the publisher
+     * @param publisherType PublisherType App/Web
+     * @return Number of sources registered for the given publisher
      */
-    long getNumSourcesPerRegistrant(Uri registrant) throws DatastoreException;
+    long getNumSourcesPerPublisher(Uri publisherUri, @EventSurfaceType int publisherType)
+            throws DatastoreException;
 
     /**
      * Gets the number of triggers a registrant has registered.
@@ -69,28 +75,28 @@ public interface IMeasurementDao {
     long getNumTriggersPerRegistrant(Uri registrant) throws DatastoreException;
 
     /**
-     * Gets the count of distinct Uri's of ad-techs in the Attribution table in a time window with
-     * matching publisher and destination, excluding a given ad-tech.
+     * Gets the count of distinct IDs of enrollments in the Attribution table in a time window
+     * with matching publisher and destination, excluding a given enrollment ID.
      */
-    Integer countDistinctAdTechsPerPublisherXDestinationInAttribution(Uri sourceSite,
-            Uri destination, Uri excludedAdTech, long windowStartTime, long windowEndTime)
+    Integer countDistinctEnrollmentsPerPublisherXDestinationInAttribution(Uri sourceSite,
+            Uri destination, String excludedEnrollmentId, long windowStartTime, long windowEndTime)
             throws DatastoreException;
 
     /**
      * Gets the count of distinct Uri's of destinations in the Source table in a time window with
-     * matching publisher and ACTIVE status, excluding a given destination.
+     * matching publisher, enrollment, and ACTIVE status, excluding a given destination.
      */
-    Integer countDistinctDestinationsPerPublisherXAdTechInActiveSource(Uri publisher,
-            @EventSurfaceType int publisherType, Uri adTechDomain, Uri excludedDestination,
+    Integer countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(Uri publisher,
+            @EventSurfaceType int publisherType, String enrollmentId, Uri excludedDestination,
             @EventSurfaceType int destinationType, long windowStartTime, long windowEndTime)
             throws DatastoreException;
 
     /**
-     * Gets the count of distinct Uri's of ad-techs in the Source table in a time window with
-     * matching publisher and destination, excluding a given ad-tech.
+     * Gets the count of distinct IDs of enrollments in the Source table in a time window with
+     * matching publisher and destination, excluding a given enrollment ID.
      */
-    Integer countDistinctAdTechsPerPublisherXDestinationInSource(Uri publisher,
-            @EventSurfaceType int publisherType, Uri destination, Uri excludedAdTech,
+    Integer countDistinctEnrollmentsPerPublisherXDestinationInSource(Uri publisher,
+            @EventSurfaceType int publisherType, Uri destination, String enrollmentId,
             long windowStartTime, long windowEndTime) throws DatastoreException;
 
      /**
@@ -297,4 +303,37 @@ public interface IMeasurementDao {
      *     delete every table.
      */
     void deleteAllMeasurementData(List<String> tablesToExclude) throws DatastoreException;
+
+    /**
+     * Insert a record into the Async Registration Table.
+     *
+     * @param asyncRegistration a {@link AsyncRegistration} to insert into the Async Registration
+     *     table
+     */
+    void insertAsyncRegistration(@NonNull AsyncRegistration asyncRegistration)
+            throws DatastoreException;
+
+    /**
+     * Delete a record from the AsyncRegistration table.
+     *
+     * @param id a {@link String} id of the record to delete from the AsyncRegistration table.
+     */
+    void deleteAsyncRegistration(@NonNull String id) throws DatastoreException;
+
+    /**
+     * Get the record with the earliest request time and a valid retry count.
+     *
+     * @param retryLimit a long that is used for determining the next valid record to be serviced
+     * @param failedAdTechEnrollmentIds a String that contains the Ids of records that have been
+     *     serviced during the current run
+     */
+    AsyncRegistration fetchNextQueuedAsyncRegistration(
+            short retryLimit, List<String> failedAdTechEnrollmentIds) throws DatastoreException;
+
+    /**
+     * Update the retry count for a record in the Async Registration table.
+     *
+     * @param asyncRegistration a {@link AsyncRegistration} for which the retryCount will be updated
+     */
+    void updateRetryCount(@NonNull AsyncRegistration asyncRegistration) throws DatastoreException;
 }

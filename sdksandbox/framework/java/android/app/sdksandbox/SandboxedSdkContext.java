@@ -36,9 +36,6 @@ import java.io.File;
  * <p>It is a wrapper of the client application (which loading SDK to the sandbox) context, to
  * represent the context of the SDK loaded by that application.
  *
- * <p>This context contains methods that an SDK loaded into sdk sandbox can use to interact with the
- * sdk sandbox process, or other SDKs loaded into the same sdk sandbox process.
- *
  * <p>An instance of the {@link SandboxedSdkContext} will be created by the SDK sandbox, and then
  * attached to the {@link SandboxedSdkProvider} after the SDK is loaded.
  *
@@ -59,9 +56,11 @@ public final class SandboxedSdkContext extends ContextWrapper {
     @Nullable private final File mCeDataDir;
     @Nullable private final File mDeDataDir;
     private final SdkSandboxSystemServiceRegistry mSdkSandboxSystemServiceRegistry;
+    private final ClassLoader mClassLoader;
 
     public SandboxedSdkContext(
             @NonNull Context baseContext,
+            @NonNull ClassLoader classLoader,
             @NonNull String clientPackageName,
             @NonNull ApplicationInfo info,
             @NonNull String sdkName,
@@ -69,6 +68,7 @@ public final class SandboxedSdkContext extends ContextWrapper {
             @Nullable String sdkDeDataDir) {
         this(
                 baseContext,
+                classLoader,
                 clientPackageName,
                 info,
                 sdkName,
@@ -80,6 +80,7 @@ public final class SandboxedSdkContext extends ContextWrapper {
     @VisibleForTesting
     public SandboxedSdkContext(
             @NonNull Context baseContext,
+            @NonNull ClassLoader classLoader,
             @NonNull String clientPackageName,
             @NonNull ApplicationInfo info,
             @NonNull String sdkName,
@@ -108,6 +109,7 @@ public final class SandboxedSdkContext extends ContextWrapper {
         mDeDataDir = (sdkDeDataDir != null) ? new File(sdkDeDataDir) : null;
 
         mSdkSandboxSystemServiceRegistry = sdkSandboxSystemServiceRegistry;
+        mClassLoader = classLoader;
     }
 
     /**
@@ -122,6 +124,7 @@ public final class SandboxedSdkContext extends ContextWrapper {
         Context newBaseContext = getBaseContext().createCredentialProtectedStorageContext();
         return new SandboxedSdkContext(
                 newBaseContext,
+                mClassLoader,
                 mClientPackageName,
                 mSdkProviderInfo,
                 mSdkName,
@@ -141,6 +144,7 @@ public final class SandboxedSdkContext extends ContextWrapper {
         Context newBaseContext = getBaseContext().createDeviceProtectedStorageContext();
         return new SandboxedSdkContext(
                 newBaseContext,
+                mClassLoader,
                 mClientPackageName,
                 mSdkProviderInfo,
                 mSdkName,
@@ -217,5 +221,10 @@ public final class SandboxedSdkContext extends ContextWrapper {
             service = serviceMutator.setContext(service, this);
         }
         return service;
+    }
+
+    @Override
+    public ClassLoader getClassLoader() {
+        return mClassLoader;
     }
 }

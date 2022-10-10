@@ -34,8 +34,10 @@ import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.DbHelper;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
+import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.InstallApp;
 import com.android.adservices.service.measurement.actions.RegisterSource;
@@ -46,6 +48,7 @@ import com.android.adservices.service.measurement.actions.ReportObjects;
 import com.android.adservices.service.measurement.actions.ReportingJob;
 import com.android.adservices.service.measurement.actions.UninstallApp;
 import com.android.adservices.service.measurement.attribution.AttributionJobHandlerWrapper;
+import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import com.google.common.collect.ImmutableList;
 
@@ -53,6 +56,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -69,6 +73,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -79,10 +84,52 @@ import java.util.concurrent.TimeUnit;
  * Consider @RunWith(Parameterized.class)
  */
 public abstract class E2ETest {
+    @Rule
+    public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
+            new TestableDeviceConfig.TestableDeviceConfigRule();
+
     // Used to fuzzy-match expected report (not delivery) time
     private static final long REPORT_TIME_EPSILON = TimeUnit.HOURS.toMillis(2);
+    private static final EnrollmentData AD_TECH_1 =
+            new EnrollmentData.Builder()
+                    .setEnrollmentId(UUID.randomUUID().toString())
+                    .setCompanyId("ad-tech-1")
+                    .setSdkNames("sdk")
+                    .setAttributionSourceRegistrationUrl(Arrays.asList("https://www.ad-tech1.com"))
+                    .setAttributionTriggerRegistrationUrl(Arrays.asList("https://www.ad-tech1.com"))
+                    .setAttributionReportingUrl(Arrays.asList("https://www.ad-tech1.com"))
+                    .setRemarketingResponseBasedRegistrationUrl(
+                            Arrays.asList("https://www.ad-tech1.com"))
+                    .setEncryptionKeyUrl(Arrays.asList("https://www.ad-tech1.com/keys"))
+                    .build();
+    private static final EnrollmentData AD_TECH_2 =
+            new EnrollmentData.Builder()
+                    .setEnrollmentId(UUID.randomUUID().toString())
+                    .setCompanyId("ad-tech-2")
+                    .setSdkNames("sdk")
+                    .setAttributionSourceRegistrationUrl(Arrays.asList("https://www.ad-tech2.com"))
+                    .setAttributionTriggerRegistrationUrl(Arrays.asList("https://www.ad-tech2.com"))
+                    .setAttributionReportingUrl(Arrays.asList("https://www.ad-tech2.com"))
+                    .setRemarketingResponseBasedRegistrationUrl(
+                            Arrays.asList("https://www.ad-tech2.com"))
+                    .setEncryptionKeyUrl(Arrays.asList("https://www.ad-tech2.com/keys"))
+                    .build();
+    private static final EnrollmentData AD_TECH_3 =
+            new EnrollmentData.Builder()
+                    .setEnrollmentId(UUID.randomUUID().toString())
+                    .setCompanyId("ad-tech-3")
+                    .setSdkNames("sdk")
+                    .setAttributionSourceRegistrationUrl(Arrays.asList("https://www.ad-tech3.com"))
+                    .setAttributionTriggerRegistrationUrl(Arrays.asList("https://www.ad-tech3.com"))
+                    .setAttributionReportingUrl(Arrays.asList("https://www.ad-tech3.com"))
+                    .setRemarketingResponseBasedRegistrationUrl(
+                            Arrays.asList("https://www.ad-tech3.com"))
+                    .setEncryptionKeyUrl(Arrays.asList("https://www.ad-tech3.com/keys"))
+                    .build();
 
     static final Context sContext = ApplicationProvider.getApplicationContext();
+    static final EnrollmentDao sEnrollmentDao = EnrollmentDao.getInstance(
+            ApplicationProvider.getApplicationContext());
     static final DatastoreManager sDatastoreManager = DatastoreManagerFactory.getDatastoreManager(
             ApplicationProvider.getApplicationContext());
     private final Collection<Action> mActionsList;
@@ -106,6 +153,8 @@ public abstract class E2ETest {
     interface AggregateReportPayloadKeys {
         String ATTRIBUTION_DESTINATION = "attribution_destination";
         String HISTOGRAMS = "histograms";
+        String SOURCE_DEBUG_KEY = "source_debug_key";
+        String TRIGGER_DEBUG_KEY = "trigger_debug_key";
     }
 
     interface AggregateHistogramKeys {
@@ -145,7 +194,6 @@ public abstract class E2ETest {
         String REPORT_TIME_KEY = "report_time";
         String REPORT_TO_KEY = "report_url";
         String PAYLOAD_KEY = "payload";
-        String DEBUG_KEY = "debug_key";
     }
 
     static Collection<Object[]> data(String testDirName) throws IOException, JSONException {
@@ -239,6 +287,8 @@ public abstract class E2ETest {
     @Test
     public void runTest() throws IOException, JSONException {
         clearDatabase();
+        unseedEnrollment();
+        seedEnrollment();
         for (Action action : mActionsList) {
             if (action instanceof RegisterSource) {
                 processAction((RegisterSource) action);
@@ -258,6 +308,7 @@ public abstract class E2ETest {
         }
         evaluateResults();
         clearDatabase();
+        unseedEnrollment();
     }
 
     /**
@@ -300,7 +351,7 @@ public abstract class E2ETest {
     }
 
     private static int hashForAggregateReportObject(JSONObject obj) {
-        Object[] objArray = new Object[3];
+        Object[] objArray = new Object[5];
         // We cannot use report time due to fuzzy matching between actual and expected output.
         objArray[0] = obj.optString(TestFormatJsonMapping.REPORT_TO_KEY, "");
         JSONObject payload = obj.optJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
@@ -308,6 +359,8 @@ public abstract class E2ETest {
         // To compare histograms, we already converted them to an ordered string of value pairs.
         objArray[2] = getComparableHistograms(
                 payload.optJSONArray(AggregateReportPayloadKeys.HISTOGRAMS));
+        objArray[3] = payload.optString(AggregateReportPayloadKeys.SOURCE_DEBUG_KEY, "");
+        objArray[4] = payload.optString(AggregateReportPayloadKeys.TRIGGER_DEBUG_KEY, "");
         return Arrays.hashCode(objArray);
     }
 
@@ -351,6 +404,14 @@ public abstract class E2ETest {
         JSONObject payload2 = obj2.getJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
         if (!payload1.optString(AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION, "").equals(
                 payload2.optString(AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION, ""))) {
+            return false;
+        }
+        if (!payload1.optString(AggregateReportPayloadKeys.SOURCE_DEBUG_KEY, "")
+                .equals(payload2.optString(AggregateReportPayloadKeys.SOURCE_DEBUG_KEY, ""))) {
+            return false;
+        }
+        if (!payload1.optString(AggregateReportPayloadKeys.TRIGGER_DEBUG_KEY, "")
+                .equals(payload2.optString(AggregateReportPayloadKeys.TRIGGER_DEBUG_KEY, ""))) {
             return false;
         }
         JSONArray histograms1 = payload1.optJSONArray(AggregateReportPayloadKeys.HISTOGRAMS);
@@ -672,6 +733,18 @@ public abstract class E2ETest {
         }
 
         return new ReportObjects(eventReportObjects, aggregateReportObjects);
+    }
+
+    private static void seedEnrollment() {
+        sEnrollmentDao.insert(AD_TECH_1);
+        sEnrollmentDao.insert(AD_TECH_2);
+        sEnrollmentDao.insert(AD_TECH_3);
+    }
+
+    private static void unseedEnrollment() {
+        sEnrollmentDao.delete(AD_TECH_1.getEnrollmentId());
+        sEnrollmentDao.delete(AD_TECH_2.getEnrollmentId());
+        sEnrollmentDao.delete(AD_TECH_3.getEnrollmentId());
     }
 
     /**

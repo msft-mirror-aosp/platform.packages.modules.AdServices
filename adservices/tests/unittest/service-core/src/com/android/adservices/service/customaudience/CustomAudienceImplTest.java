@@ -70,7 +70,7 @@ public class CustomAudienceImplTest {
 
         when(mClock.instant()).thenReturn(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
 
-        mImpl.joinCustomAudience(VALID_CUSTOM_AUDIENCE);
+        mImpl.joinCustomAudience(VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER);
 
         verify(mCustomAudienceDao)
                 .insertOrOverwriteCustomAudience(
@@ -78,7 +78,8 @@ public class CustomAudienceImplTest {
                         CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
                                 CommonFixture.VALID_BUYER_1));
         verify(mClock).instant();
-        verify(mCustomAudienceQuantityChecker).check(VALID_CUSTOM_AUDIENCE);
+        verify(mCustomAudienceQuantityChecker)
+                .check(VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER);
         verify(mCustomAudienceValidator).validate(VALID_CUSTOM_AUDIENCE);
         verifyNoMoreInteractions(mClock, mCustomAudienceDao, mCustomAudienceValidator);
     }

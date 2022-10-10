@@ -24,8 +24,11 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
+import android.os.Bundle;
 import android.test.mock.MockContext;
+import android.view.View;
 
+import androidx.annotation.NonNull;
 import androidx.test.InstrumentationRegistry;
 
 import org.junit.Before;
@@ -64,6 +67,7 @@ public class SandboxedSdkContextUnitTest {
         mSandboxedSdkContext =
                 new SandboxedSdkContext(
                         InstrumentationRegistry.getContext(),
+                        getClass().getClassLoader(),
                         CLIENT_PACKAGE_NAME,
                         info,
                         SDK_NAME,
@@ -107,6 +111,18 @@ public class SandboxedSdkContextUnitTest {
     }
 
     @Test
+    public void testExposureThroughSandboxedSdkProvider() throws Exception {
+        TestSdkProvider sdkProvider = new TestSdkProvider();
+        sdkProvider.attachContext(mSandboxedSdkContext);
+        assertThat(sdkProvider.getContext()).isSameInstanceAs(mSandboxedSdkContext);
+    }
+
+    @Test
+    public void testClassLoader() {
+        assertThat(mSandboxedSdkContext.getClassLoader()).isEqualTo(getClass().getClassLoader());
+    }
+
+    @Test
     public void testGetDataDir_CredentialEncrypted() throws Exception {
         assertThat(mSandboxedSdkContext.getDataDir().toString()).isEqualTo(SDK_CE_DATA_DIR);
 
@@ -143,6 +159,7 @@ public class SandboxedSdkContextUnitTest {
         SandboxedSdkContext sandboxedSdkContext =
                 new SandboxedSdkContext(
                         testContext,
+                        getClass().getClassLoader(),
                         CLIENT_PACKAGE_NAME,
                         info,
                         SDK_NAME,
@@ -169,6 +186,7 @@ public class SandboxedSdkContextUnitTest {
         SandboxedSdkContext sandboxedSdkContext =
                 new SandboxedSdkContext(
                         testContext,
+                        getClass().getClassLoader(),
                         CLIENT_PACKAGE_NAME,
                         info,
                         SDK_NAME,
@@ -194,6 +212,7 @@ public class SandboxedSdkContextUnitTest {
                 new SandboxedSdkContext(
                         InstrumentationRegistry.getContext()
                                 .createCredentialProtectedStorageContext(),
+                        getClass().getClassLoader(),
                         CLIENT_PACKAGE_NAME,
                         info,
                         SDK_NAME,
@@ -203,6 +222,7 @@ public class SandboxedSdkContextUnitTest {
                 new SandboxedSdkContext(
                         InstrumentationRegistry.getContext()
                                 .createCredentialProtectedStorageContext(),
+                        getClass().getClassLoader(),
                         CLIENT_PACKAGE_NAME,
                         info,
                         SDK_NAME,
@@ -241,6 +261,21 @@ public class SandboxedSdkContextUnitTest {
             mInitialized = true;
             mCtx = ctx;
             return this;
+        }
+    }
+
+    private static class TestSdkProvider extends SandboxedSdkProvider {
+        @NonNull
+        @Override
+        public SandboxedSdk onLoadSdk(@NonNull Bundle params) throws LoadSdkException {
+            return null;
+        }
+
+        @NonNull
+        @Override
+        public View getView(
+                @NonNull Context windowContext, @NonNull Bundle params, int width, int height) {
+            return null;
         }
     }
 }

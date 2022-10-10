@@ -27,6 +27,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsAppsFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsTopicsFragment;
+import com.android.settingslib.widget.MainSwitchBar;
 
 /**
  * View model for the main view of the AdServices Settings App. This view model is responsible
@@ -74,7 +75,7 @@ public class MainViewModel extends AndroidViewModel {
      */
     public void setConsent(Boolean newConsentValue) {
         if (newConsentValue) {
-            mConsentManager.enable(getApplication().getPackageManager());
+            mConsentManager.enable(getApplication());
         } else {
             mConsentManager.disable(getApplication());
         }
@@ -104,11 +105,16 @@ public class MainViewModel extends AndroidViewModel {
         mEventTrigger.postValue(MainViewModelUiEvent.DISPLAY_APPS_FRAGMENT);
     }
 
-    /** Triggers {@link AdServicesSettingsTopicsFragment}. */
-    public void consentSwitchClickHandler(Boolean newConsentValue) {
-        if (newConsentValue) {
+    /**
+     * Triggers opt out process for Privacy Sandbox. Also reverts the switch state, since
+     * confirmation dialog will handle switch change.
+     */
+    public void consentSwitchClickHandler(MainSwitchBar mainSwitchBar) {
+        if (mainSwitchBar.isChecked()) {
+            mainSwitchBar.setChecked(false);
             mEventTrigger.postValue(MainViewModelUiEvent.SWITCH_ON_PRIVACY_SANDBOX_BETA);
         } else {
+            mainSwitchBar.setChecked(true);
             mEventTrigger.postValue(MainViewModelUiEvent.SWITCH_OFF_PRIVACY_SANDBOX_BETA);
         }
     }

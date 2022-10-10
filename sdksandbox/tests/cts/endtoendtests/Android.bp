@@ -19,7 +19,7 @@ package {
 android_test {
     name: "SdkSandboxManagerTests",
     srcs: [
-        "src/**/*.java",
+        "src/**/*endtoend/*.java",
     ],
     static_libs: [
         "androidx.test.ext.junit",
@@ -34,14 +34,44 @@ android_test {
     ],
     data: [
       ":LoadSdkSuccessfullySdkProvider",
+      ":LoadSdkAndCheckClassloaderSdkProvider",
       ":GetLoadedSdkLibInfoSuccessfully",
       ":LoadSdkSuccessfullySdkProviderTwo",
       ":LoadSdkWithInternalErrorSdkProvider",
       ":RequestSurfacePackageSuccessfullySdkProvider",
       ":RequestSurfacePackageWithInternalErrorSdkProvider",
-      ":SendDataSdkProvider",
       ":CodeProviderWithResources",
     ],
+    min_sdk_version: "Tiramisu",
+    target_sdk_version: "Tiramisu",
+    test_suites: [
+        "cts",
+        "mts-adservices",
+        "general-tests",
+    ],
+}
+
+android_test {
+    name: "SdkSandboxManagerDisabledTests",
+    srcs: [
+        "src/**/*disablede2e/*.java",
+    ],
+    static_libs: [
+        "androidx.test.ext.junit",
+        "androidx.test.runner",
+        "truth-prebuilt",
+        "SdkSandboxTestUtils",
+    ],
+    libs: [
+        "android.test.base",
+        "android.test.mock",
+        "android.test.runner",
+    ],
+    data: [
+      ":LoadSdkSuccessfullySdkProvider",
+    ],
+    test_config: "DisabledAndroidTest.xml",
+    manifest: "DisabledAndroidManifest.xml",
     min_sdk_version: "Tiramisu",
     target_sdk_version: "current",
     test_suites: [

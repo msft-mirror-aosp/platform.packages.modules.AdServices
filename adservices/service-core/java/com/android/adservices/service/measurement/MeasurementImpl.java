@@ -94,8 +94,8 @@ public final class MeasurementImpl {
         mContext = context;
         mContentResolver = context.getContentResolver();
         mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
-        mSourceFetcher = new SourceFetcher();
-        mTriggerFetcher = new TriggerFetcher();
+        mSourceFetcher = new SourceFetcher(context);
+        mTriggerFetcher = new TriggerFetcher(context);
         mClickVerifier = new ClickVerifier(context);
         mFlags = FlagsFactory.getFlags();
     }
@@ -142,7 +142,7 @@ public final class MeasurementImpl {
      * @param eventTime  time when the package was installed.
      */
     public void doInstallAttribution(@NonNull Uri packageUri, long eventTime) {
-        LogUtil.i("Attributing installation for: " + packageUri);
+        LogUtil.d("Attributing installation for: " + packageUri);
         Uri appUri = getAppUri(packageUri);
         mReadWriteLock.readLock().lock();
         try {
@@ -187,7 +187,8 @@ public final class MeasurementImpl {
         mReadWriteLock.readLock().lock();
         try {
             Optional<List<SourceRegistration>> fetch =
-                    mSourceFetcher.fetchWebSources(sourceRegistrationRequest);
+                    mSourceFetcher.fetchWebSources(
+                            sourceRegistrationRequest, request.isAdIdPermissionGranted());
             LogUtil.d("MeasurementImpl: registerWebSource: success=" + fetch.isPresent());
             if (fetch.isPresent()) {
                 insertSources(
@@ -223,7 +224,8 @@ public final class MeasurementImpl {
         mReadWriteLock.readLock().lock();
         try {
             Optional<List<TriggerRegistration>> fetch =
-                    mTriggerFetcher.fetchWebTriggers(triggerRegistrationRequest);
+                    mTriggerFetcher.fetchWebTriggers(
+                            triggerRegistrationRequest, request.isAdIdPermissionGranted());
             LogUtil.d("MeasurementImpl: registerWebTrigger: success=" + fetch.isPresent());
             if (fetch.isPresent()) {
                 insertTriggers(
@@ -326,7 +328,7 @@ public final class MeasurementImpl {
             insertTriggers(
                     fetch.get(),
                     requestTime,
-                    request.getTopOriginUri(),
+                    getPublisher(request),
                     getRegistrant(request.getPackageName()),
                     EventSurfaceType.APP);
             return STATUS_SUCCESS;
@@ -342,7 +344,7 @@ public final class MeasurementImpl {
             insertSources(
                     fetch.get(),
                     requestTime,
-                    request.getTopOriginUri(),
+                    getPublisher(request),
                     EventSurfaceType.APP,
                     getRegistrant(request.getPackageName()),
                     getSourceType(request.getInputEvent(), request.getRequestTime()));
@@ -364,6 +366,14 @@ public final class MeasurementImpl {
             LogUtil.d("insertSources: getTopLevelPublisher failed", topOriginUri);
             return;
         }
+        Optional<Long> numOfSourcesPerPublisher =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) -> dao.getNumSourcesPerPublisher(publisher.get(), publisherType));
+        if (!numOfSourcesPerPublisher.isPresent()) {
+            LogUtil.d("insertSources: getNumSourcesPerPublisher failed", publisher.get());
+            return;
+        }
+        long noOfSources = numOfSourcesPerPublisher.get();
         // Only first destination to avoid AdTechs change this
         Uri appDestination = sourceRegistrations.get(0).getAppDestination();
         Uri webDestination = sourceRegistrations.get(0).getWebDestination();
@@ -371,13 +381,13 @@ public final class MeasurementImpl {
             if (!isDestinationWithinPrivacyBounds(
                     publisher.get(),
                     publisherType,
-                    registration.getRegistrationUri(),
+                    registration.getEnrollmentId(),
                     sourceEventTime,
                     appDestination,
                     webDestination)) {
                 LogUtil.d("insertSources: destination exceeds privacy bound. %s %s %s %s",
                         appDestination, webDestination, publisher.get(),
-                        registration.getRegistrationUri());
+                        registration.getEnrollmentId());
                 continue;
             }
             if (!isAdTechWithinPrivacyBounds(
@@ -386,29 +396,40 @@ public final class MeasurementImpl {
                     sourceEventTime,
                     appDestination,
                     webDestination,
-                    registration.getRegistrationUri())) {
+                    registration.getEnrollmentId())) {
                 LogUtil.d("insertSources: ad-tech exceeds privacy bound. %s %s %s %s",
-                        registration.getRegistrationUri(), publisher.get(), appDestination,
+                        registration.getEnrollmentId(), publisher.get(), appDestination,
                         webDestination);
                 continue;
+            }
+
+            if (noOfSources >= SystemHealthParams.MAX_SOURCES_PER_PUBLISHER) {
+                LogUtil.d(
+                        "insertSources: Max limit of %s sources for publisher - %s reached.",
+                        SystemHealthParams.MAX_SOURCES_PER_PUBLISHER, publisher);
+                break;
             }
             Source source =
                     createSource(
                             sourceEventTime,
                             registration,
+                            registration.getEnrollmentId(),
                             topOriginUri,
                             publisherType,
                             registrant,
                             sourceType,
                             appDestination,
                             webDestination);
-            insertSource(source);
+            if (insertSource(source)) {
+                noOfSources++;
+            }
         }
     }
 
     private Source createSource(
             long sourceEventTime,
             SourceRegistration registration,
+            String enrollmentId,
             Uri topOriginUri,
             @EventSurfaceType int publisherType,
             Uri registrant,
@@ -421,7 +442,7 @@ public final class MeasurementImpl {
                 .setPublisherType(publisherType)
                 .setAppDestination(destination)
                 .setWebDestination(webDestination)
-                .setAdTechDomain(getBaseUri(registration.getRegistrationUri()))
+                .setEnrollmentId(enrollmentId)
                 .setRegistrant(registrant)
                 .setSourceType(sourceType)
                 .setPriority(registration.getSourcePriority())
@@ -442,9 +463,9 @@ public final class MeasurementImpl {
     }
 
     @VisibleForTesting
-    void insertSource(Source source) {
+    boolean insertSource(Source source) {
         List<EventReport> fakeEventReports = generateFakeEventReports(source);
-        mDatastoreManager.runInTransaction(
+        return mDatastoreManager.runInTransaction(
                 (dao) -> {
                     dao.insertSource(source);
                     for (EventReport report : fakeEventReports) {
@@ -484,7 +505,7 @@ public final class MeasurementImpl {
                                         .setReportTime(fakeReport.getReportingTime())
                                         .setTriggerData(fakeReport.getTriggerData())
                                         .setAttributionDestination(fakeReport.getDestination())
-                                        .setAdTechDomain(source.getAdTechDomain())
+                                        .setEnrollmentId(source.getEnrollmentId())
                                         // The query for attribution check is from
                                         // (triggerTime - 30 days) to triggerTime and max expiry is
                                         // 30 days, so it's safe to choose triggerTime as source
@@ -522,7 +543,12 @@ public final class MeasurementImpl {
             @EventSurfaceType int destinationType) {
         for (TriggerRegistration registration : responseBasedRegistrations) {
             Trigger trigger = createTrigger(
-                    registration, triggerTime, topOrigin, registrant, destinationType);
+                    registration,
+                    registration.getEnrollmentId(),
+                    triggerTime,
+                    topOrigin,
+                    registrant,
+                    destinationType);
             mDatastoreManager.runInTransaction((dao) -> dao.insertTrigger(trigger));
         }
         notifyTriggerContentProvider();
@@ -541,6 +567,7 @@ public final class MeasurementImpl {
 
     private Trigger createTrigger(
             TriggerRegistration registration,
+            String enrollmentId,
             long triggerTime,
             Uri topOrigin,
             Uri registrant,
@@ -548,7 +575,7 @@ public final class MeasurementImpl {
         return new Trigger.Builder()
                 .setAttributionDestination(topOrigin)
                 .setDestinationType(destinationType)
-                .setAdTechDomain(getBaseUri(registration.getRegistrationUri()))
+                .setEnrollmentId(enrollmentId)
                 .setRegistrant(registrant)
                 .setTriggerTime(triggerTime)
                 .setEventTriggers(registration.getEventTriggers())
@@ -561,6 +588,10 @@ public final class MeasurementImpl {
 
     private Uri getRegistrant(String packageName) {
         return Uri.parse(ANDROID_APP_SCHEME + "://" + packageName);
+    }
+
+    private Uri getPublisher(RegistrationRequest request) {
+        return Uri.parse(ANDROID_APP_SCHEME + "://" + request.getPackageName());
     }
 
     private Uri getAppUri(Uri packageUri) {
@@ -661,7 +692,7 @@ public final class MeasurementImpl {
                 .setSourceOrigin(BaseUriExtractor.getBaseUri(source.getPublisher()).toString())
                 .setDestinationSite(triggerDestinationTopPrivateDomain)
                 .setDestinationOrigin(BaseUriExtractor.getBaseUri(destination).toString())
-                .setAdTechDomain(source.getAdTechDomain().toString())
+                .setEnrollmentId(source.getEnrollmentId())
                 .setTriggerTime(source.getEventTime())
                 .setRegistrant(source.getRegistrant().toString())
                 .build();
@@ -694,7 +725,7 @@ public final class MeasurementImpl {
     private boolean isDestinationWithinPrivacyBounds(
             Uri publisher,
             @EventSurfaceType int publisherType,
-            Uri registrationUri,
+            String enrollmentId,
             long requestTime,
             @Nullable Uri appDestination,
             @Nullable Uri webDestination) {
@@ -702,7 +733,7 @@ public final class MeasurementImpl {
         if (appDestination != null && !isDestinationWithinPrivacyBounds(
                 publisher,
                 publisherType,
-                registrationUri,
+                enrollmentId,
                 appDestination,
                 EventSurfaceType.APP,
                 windowStartTime,
@@ -712,7 +743,7 @@ public final class MeasurementImpl {
         if (webDestination != null && !isDestinationWithinPrivacyBounds(
                 publisher,
                 publisherType,
-                registrationUri,
+                enrollmentId,
                 webDestination,
                 EventSurfaceType.WEB,
                 windowStartTime,
@@ -725,17 +756,17 @@ public final class MeasurementImpl {
     private boolean isDestinationWithinPrivacyBounds(
             Uri publisher,
             @EventSurfaceType int publisherType,
-            Uri registrationUri,
+            String enrollmentId,
             Uri destination,
             @EventSurfaceType int destinationType,
             long windowStartTime,
             long requestTime) {
         Optional<Integer> destinationCount =
                 mDatastoreManager.runInTransactionWithResult((dao) ->
-                        dao.countDistinctDestinationsPerPublisherXAdTechInActiveSource(
+                        dao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
                                 publisher,
                                 publisherType,
-                                registrationUri,
+                                enrollmentId,
                                 destination,
                                 destinationType,
                                 windowStartTime,
@@ -743,12 +774,12 @@ public final class MeasurementImpl {
 
         if (destinationCount.isPresent()) {
             return destinationCount.get() < PrivacyParams
-                    .MAX_DISTINCT_DESTINATIONS_PER_PUBLISHER_IN_ACTIVE_SOURCE;
+                    .MAX_DISTINCT_DESTINATIONS_PER_PUBLISHER_X_ENROLLMENT_IN_ACTIVE_SOURCE;
         } else {
             LogUtil.e("isDestinationWithinPrivacyBounds: "
-                    + "dao.countDistinctDestinationsPerPublisherXAdTechInActiveSource not present."
-                    + " %s ::: %s ::: %s ::: %s", publisher, destination, windowStartTime,
-                    requestTime);
+                    + "dao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource not "
+                    + "present. %s ::: %s ::: %s ::: %s ::: %s", publisher, enrollmentId,
+                    destination, windowStartTime, requestTime);
             return false;
         }
     }
@@ -759,14 +790,13 @@ public final class MeasurementImpl {
             long requestTime,
             @Nullable Uri appDestination,
             @Nullable Uri webDestination,
-            Uri registrationUri) {
+            String enrollmentId) {
         long windowStartTime = requestTime - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS;
         if (appDestination != null && !isAdTechWithinPrivacyBounds(
                 publisher,
                 publisherType,
                 appDestination,
-                // TODO: will be replaced with enrollment ID
-                registrationUri,
+                enrollmentId,
                 windowStartTime,
                 requestTime)) {
             return false;
@@ -775,8 +805,7 @@ public final class MeasurementImpl {
                 publisher,
                 publisherType,
                 webDestination,
-                // TODO: will be replaced with enrollment ID
-                registrationUri,
+                enrollmentId,
                 windowStartTime,
                 requestTime)) {
             return false;
@@ -788,28 +817,27 @@ public final class MeasurementImpl {
             Uri publisher,
             @EventSurfaceType int publisherType,
             Uri destination,
-            Uri registrationUri,
+            String enrollmentId,
             long windowStartTime,
             long requestTime) {
         Optional<Integer> adTechCount =
                 mDatastoreManager.runInTransactionWithResult((dao) ->
-                        dao.countDistinctAdTechsPerPublisherXDestinationInSource(
+                        dao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
                                 publisher,
                                 publisherType,
                                 destination,
-                                // TODO: will be replaced with enrollment ID
-                                registrationUri,
+                                enrollmentId,
                                 windowStartTime,
                                 requestTime));
 
         if (adTechCount.isPresent()) {
             return adTechCount.get() < PrivacyParams
-                    .MAX_DISTINCT_AD_TECHS_PER_PUBLISHER_X_DESTINATION_IN_SOURCE;
+                    .MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_SOURCE;
         } else {
             LogUtil.e("isAdTechWithinPrivacyBounds: "
-                    + "dao.countDistinctAdTechsPerPublisherXDestinationInSource not present"
-                    + ". %s ::: %s ::: %s ::: %s ::: $s", publisher, destination,
-                    registrationUri, windowStartTime, requestTime);
+                    + "dao.countDistinctEnrollmentsPerPublisherXDestinationInSource not present"
+                    + ". %s ::: %s ::: %s ::: %s ::: $s", publisher, destination, enrollmentId,
+                    windowStartTime, requestTime);
             return false;
         }
     }

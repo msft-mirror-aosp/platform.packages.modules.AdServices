@@ -21,6 +21,7 @@ import android.net.Uri;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -35,9 +36,7 @@ public final class TriggerFixture {
     public static Trigger.Builder getValidTriggerBuilder() {
         return new Trigger.Builder()
             .setAttributionDestination(ValidTriggerParams.ATTRIBUTION_DESTINATION)
-            .setAdTechDomain(ValidTriggerParams.AD_TECH_DOMAIN)
-            // TODO (b/238924528): uncomment when enforcing enrollment
-            //.setEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+            .setEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
             .setRegistrant(ValidTriggerParams.REGISTRANT);
     }
 
@@ -46,7 +45,6 @@ public final class TriggerFixture {
     public static Trigger getValidTrigger() {
         return new Trigger.Builder()
                 .setAttributionDestination(ValidTriggerParams.ATTRIBUTION_DESTINATION)
-                .setAdTechDomain(ValidTriggerParams.AD_TECH_DOMAIN)
                 .setEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
                 .setRegistrant(ValidTriggerParams.REGISTRANT)
                 .setTriggerTime(ValidTriggerParams.TRIGGER_TIME)
@@ -62,7 +60,6 @@ public final class TriggerFixture {
         public static final Uri ATTRIBUTION_DESTINATION =
                 Uri.parse("android-app://com.destination");
         public static final Uri REGISTRANT = Uri.parse("android-app://com.registrant");
-        public static final Uri AD_TECH_DOMAIN = Uri.parse("https://com.example");
         public static final String ENROLLMENT_ID = "enrollment-id";
         public static final String TOP_LEVEL_FILTERS_JSON_STRING =
                 "{\n"
@@ -104,7 +101,7 @@ public final class TriggerFixture {
                     + "\"geoValue\":1664"
                 + "}";
 
-        public static final Long DEBUG_KEY = 27836L;
+        public static final UnsignedLong DEBUG_KEY = new UnsignedLong(27836L);
 
         public static final AggregatableAttributionTrigger buildAggregatableAttributionTrigger() {
             final AggregateFilterData filter =

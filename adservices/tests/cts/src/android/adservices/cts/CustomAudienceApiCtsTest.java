@@ -16,13 +16,17 @@
 
 package android.adservices.cts;
 
+import static android.adservices.common.AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import android.Manifest;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
 import android.adservices.clients.customaudience.TestAdvertisingCustomAudienceClient;
+import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
@@ -30,19 +34,20 @@ import android.adservices.customaudience.AddCustomAudienceOverrideRequest;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.RemoveCustomAudienceOverrideRequest;
-import android.content.Context;
 import android.os.Process;
 
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.compatibility.common.util.ShellUtils;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 
+import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,45 +55,55 @@ import org.junit.Test;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-public class CustomAudienceApiCtsTest {
-
-    private static final String WRITE_DEVICE_CONFIG_PERMISSION =
-            "android.permission.WRITE_DEVICE_CONFIG";
-
+public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
     private AdvertisingCustomAudienceClient mClient;
     private TestAdvertisingCustomAudienceClient mTestClient;
 
-    private static final String OWNER = "owner";
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("buyer");
     private static final String NAME = "name";
     private static final String BIDDING_LOGIC_JS = "function test() { return \"hello world\"; }";
     private static final AdSelectionSignals TRUSTED_BIDDING_DATA =
             AdSelectionSignals.fromString("{\"trusted_bidding_data\":1}");
-    private static final int DELAY_TO_AVOID_THROTTLE_MS = 1001;
 
     private boolean mIsDebugMode;
 
     @Before
     public void setup() {
-        Context context = ApplicationProvider.getApplicationContext();
+        assertForegroundActivityStarted();
+
         mClient =
                 new AdvertisingCustomAudienceClient.Builder()
-                        .setContext(context)
+                        .setContext(sContext)
                         .setExecutor(MoreExecutors.directExecutor())
                         .build();
         mTestClient =
                 new TestAdvertisingCustomAudienceClient.Builder()
-                        .setContext(context)
+                        .setContext(sContext)
                         .setExecutor(MoreExecutors.directExecutor())
                         .build();
-        DevContext devContext = DevContextFilter.create(context).createDevContext(Process.myUid());
+        DevContext devContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
         mIsDebugMode = devContext.getDevOptionsEnabled();
 
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
-                .adoptShellPermissionIdentity(WRITE_DEVICE_CONFIG_PERMISSION);
-        // This test is running in background
-        PhFlagsFixture.overrideForegroundStatusForFledgeCustomAudience(false);
+                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+        // Override rate limiting throttle on API calls
+        PhFlagsFixture.overrideSdkRequestPermitsPerSecond(Integer.MAX_VALUE);
+        // Disable the enrollment check, by default
+        PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
+        // We need to turn the Consent Manager into debug mode
+        overrideConsentManagerDebugMode();
+        overrideAdservicesGlobalKillSwitch(true);
+    }
+
+    @After
+    public void teardown() {
+        overrideAdservicesGlobalKillSwitch(false);
+    }
+
+    // Override the Consent Manager behaviour - Consent Given
+    private void overrideConsentManagerDebugMode() {
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
     }
 
     @Test
@@ -101,18 +116,110 @@ public class CustomAudienceApiCtsTest {
     }
 
     @Test
-    public void testJoinCustomAudience_ownerIsNotCallingApp_fail() {
+    public void testJoinCustomAudience_withMissingEnrollment_fail() {
+        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
+
         Exception exception =
                 assertThrows(
                         ExecutionException.class,
                         () ->
                                 mClient.joinCustomAudience(
                                                 CustomAudienceFixture.getValidBuilderForBuyer(
-                                                                CommonFixture.VALID_BUYER_1)
-                                                        .setOwnerPackageName("Invalid_owner")
+                                                                CommonFixture.NOT_ENROLLED_BUYER)
                                                         .build())
                                         .get());
-        assertTrue(exception.getCause() instanceof SecurityException);
+        assertThat(exception).hasCauseThat().isInstanceOf(SecurityException.class);
+        assertThat(exception)
+                .hasCauseThat()
+                .hasMessageThat()
+                .isEqualTo(SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE);
+    }
+
+    @Test
+    public void testJoinCustomAudience_invalidAdsMetadata_fail() {
+        CustomAudience customAudienceWithInvalidAdDataMetadata =
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+                        .setAds(AdDataFixture.getInvalidAdsByBuyer(CommonFixture.VALID_BUYER_1))
+                        .build();
+
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                mClient.joinCustomAudience(customAudienceWithInvalidAdDataMetadata)
+                                        .get());
+        assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
+        assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
+    }
+
+    @Test
+    public void testJoinCustomAudience_invalidAdsRenderUris_fail() {
+        CustomAudience customAudienceWithInvalidAdDataRenderUris =
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+                        .setAds(
+                                AdDataFixture.getInvalidAdsByBuyer(
+                                        AdTechIdentifier.fromString(
+                                                "!\\@#\"$#@NOTAREALURI$%487\\")))
+                        .build();
+
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                mClient.joinCustomAudience(
+                                                customAudienceWithInvalidAdDataRenderUris)
+                                        .get());
+        assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
+        assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
+    }
+
+    @Test
+    public void testJoinCustomAudience_invalidNumberOfAds_fail() {
+        PhFlagsFixture.overrideFledgeCustomAudienceMaxNumAds(2);
+        try {
+            CustomAudience customAudienceWithInvalidNumberOfAds =
+                    CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+                            .setAds(
+                                    ImmutableList.of(
+                                            AdDataFixture.getValidAdDataByBuyer(
+                                                    CommonFixture.VALID_BUYER_1, 1),
+                                            AdDataFixture.getValidAdDataByBuyer(
+                                                    CommonFixture.VALID_BUYER_1, 2),
+                                            AdDataFixture.getValidAdDataByBuyer(
+                                                    CommonFixture.VALID_BUYER_1, 3)))
+                            .build();
+
+            Exception exception =
+                    assertThrows(
+                            ExecutionException.class,
+                            () ->
+                                    mClient.joinCustomAudience(customAudienceWithInvalidNumberOfAds)
+                                            .get());
+            assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
+            assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
+        } finally {
+            PhFlagsFixture.overrideFledgeCustomAudienceMaxNumAds(100);
+        }
+    }
+
+    @Test
+    public void testJoinCustomAudience_mismatchDailyFetchUriDomain_fail() {
+        CustomAudience customAudienceWithMismatchedDailyFetchUriDomain =
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+                        .setDailyUpdateUri(
+                                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
+                                        CommonFixture.VALID_BUYER_2))
+                        .build();
+
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                mClient.joinCustomAudience(
+                                                customAudienceWithMismatchedDailyFetchUriDomain)
+                                        .get());
+        assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
+        assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
     }
 
     @Test
@@ -126,19 +233,85 @@ public class CustomAudienceApiCtsTest {
                         ExecutionException.class,
                         () -> mClient.joinCustomAudience(customAudience).get());
         assertTrue(exception.getCause() instanceof IllegalArgumentException);
+        assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
+    }
+
+    @Test
+    public void testJoinCustomAudience_maxTotalCustomAudiences_fail() {
+        PhFlagsFixture.overrideFledgeCustomAudienceMaxCount(2);
+        PhFlagsFixture.overrideFledgeCustomAudiencePerAppMaxCount(1000);
+        PhFlagsFixture.overrideFledgeCustomAudienceMaxOwnerCount(1000);
+        try {
+            CustomAudience customAudience1 =
+                    CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+                            .setName("CA1")
+                            .build();
+            CustomAudience customAudience2 =
+                    CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+                            .setName("CA2")
+                            .build();
+            CustomAudience customAudience3 =
+                    CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+                            .setName("CA3")
+                            .build();
+
+            Exception exception =
+                    assertThrows(
+                            ExecutionException.class,
+                            () -> {
+                                mClient.joinCustomAudience(customAudience1).get();
+                                mClient.joinCustomAudience(customAudience2).get();
+                                mClient.joinCustomAudience(customAudience3).get();
+                            });
+            assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
+            assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
+        } finally {
+            PhFlagsFixture.overrideFledgeCustomAudienceMaxCount(4000);
+        }
+    }
+
+    @Test
+    public void testJoinCustomAudience_maxCustomAudiencesPerApp_fail() {
+        PhFlagsFixture.overrideFledgeCustomAudienceMaxCount(4000);
+        PhFlagsFixture.overrideFledgeCustomAudiencePerAppMaxCount(2);
+        PhFlagsFixture.overrideFledgeCustomAudienceMaxOwnerCount(1000);
+        try {
+            CustomAudience customAudience1 =
+                    CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+                            .setName("CA1")
+                            .build();
+            CustomAudience customAudience2 =
+                    CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+                            .setName("CA2")
+                            .build();
+            CustomAudience customAudience3 =
+                    CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+                            .setName("CA3")
+                            .build();
+
+            Exception exception =
+                    assertThrows(
+                            ExecutionException.class,
+                            () -> {
+                                mClient.joinCustomAudience(customAudience1).get();
+                                mClient.joinCustomAudience(customAudience2).get();
+                                mClient.joinCustomAudience(customAudience3).get();
+                            });
+            assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
+            assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
+        } finally {
+            PhFlagsFixture.overrideFledgeCustomAudiencePerAppMaxCount(1000);
+        }
     }
 
     @Test
     public void testLeaveCustomAudience_joinedCustomAudience_success()
             throws ExecutionException, InterruptedException {
-        Thread.sleep(DELAY_TO_AVOID_THROTTLE_MS);
         mClient.joinCustomAudience(
                         CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .build())
                 .get();
-        Thread.sleep(DELAY_TO_AVOID_THROTTLE_MS);
         mClient.leaveCustomAudience(
-                        CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
                         CustomAudienceFixture.VALID_NAME)
                 .get();
@@ -148,34 +321,36 @@ public class CustomAudienceApiCtsTest {
     public void testLeaveCustomAudience_notJoinedCustomAudience_doesNotFail()
             throws ExecutionException, InterruptedException {
         mClient.leaveCustomAudience(
-                        CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
                         "not_exist_name")
                 .get();
     }
 
     @Test
-    public void testLeaveCustomAudience_ownerNotCallingApp_fail()
-            throws ExecutionException, InterruptedException {
+    public void testLeaveCustomAudience_withMissingEnrollment_fail() {
+        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
+
         Exception exception =
                 assertThrows(
                         ExecutionException.class,
                         () ->
                                 mClient.leaveCustomAudience(
-                                                "Invalid_owner",
-                                                CommonFixture.VALID_BUYER_1,
+                                                CommonFixture.NOT_ENROLLED_BUYER,
                                                 CustomAudienceFixture.VALID_NAME)
                                         .get());
-        assertTrue(exception.getCause() instanceof SecurityException);
+        assertThat(exception).hasCauseThat().isInstanceOf(SecurityException.class);
+        assertThat(exception)
+                .hasCauseThat()
+                .hasMessageThat()
+                .isEqualTo(SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE);
     }
 
     @Test
-    public void testAddOverrideFailsWithDebugModeDisabled() throws Exception {
+    public void testAddOverrideFailsWithDebugModeDisabled() {
         Assume.assumeFalse(mIsDebugMode);
 
         AddCustomAudienceOverrideRequest request =
                 new AddCustomAudienceOverrideRequest.Builder()
-                        .setOwnerPackageName(OWNER)
                         .setBuyer(BUYER)
                         .setName(NAME)
                         .setBiddingLogicJs(BIDDING_LOGIC_JS)
@@ -185,21 +360,16 @@ public class CustomAudienceApiCtsTest {
         ListenableFuture<Void> result = mTestClient.overrideCustomAudienceRemoteInfo(request);
 
         Exception exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> {
-                            result.get(10, TimeUnit.SECONDS);
-                        });
+                assertThrows(ExecutionException.class, () -> result.get(10, TimeUnit.SECONDS));
         assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
     }
 
     @Test
-    public void testRemoveOverrideFailsWithDebugModeDisabled() throws Exception {
+    public void testRemoveOverrideFailsWithDebugModeDisabled() {
         Assume.assumeFalse(mIsDebugMode);
 
         RemoveCustomAudienceOverrideRequest request =
                 new RemoveCustomAudienceOverrideRequest.Builder()
-                        .setOwnerPackageName(OWNER)
                         .setBuyer(BUYER)
                         .setName(NAME)
                         .build();
@@ -207,26 +377,27 @@ public class CustomAudienceApiCtsTest {
         ListenableFuture<Void> result = mTestClient.removeCustomAudienceRemoteInfoOverride(request);
 
         Exception exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> {
-                            result.get(10, TimeUnit.SECONDS);
-                        });
+                assertThrows(ExecutionException.class, () -> result.get(10, TimeUnit.SECONDS));
         assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
     }
 
     @Test
-    public void testResetAllOverridesFailsWithDebugModeDisabled() throws Exception {
+    public void testResetAllOverridesFailsWithDebugModeDisabled() {
         Assume.assumeFalse(mIsDebugMode);
 
         ListenableFuture<Void> result = mTestClient.resetAllCustomAudienceOverrides();
 
         Exception exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> {
-                            result.get(10, TimeUnit.SECONDS);
-                        });
+                assertThrows(ExecutionException.class, () -> result.get(10, TimeUnit.SECONDS));
         assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
+    }
+
+    // Override global_kill_switch to ignore the effect of actual PH values.
+    // If isOverride = true, override global_kill_switch to OFF to allow adservices
+    // If isOverride = false, override global_kill_switch to meaningless value so that PhFlags will
+    // use the default value.
+    private void overrideAdservicesGlobalKillSwitch(boolean isOverride) {
+        String overrideString = isOverride ? "false" : "null";
+        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
     }
 }
