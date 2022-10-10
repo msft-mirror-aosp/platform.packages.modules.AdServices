@@ -402,13 +402,19 @@ public class ModelManagerTest {
         // The property of metadata in production metadata should contain 4 attributions:
         // "taxonomy_type", "taxonomy_version", "updated_date".
         // The key name of property is "version_info"
-        assertThat(mProductionClassifierAssetsMetadata.get("version_info")).hasSize(3);
+        assertThat(mProductionClassifierAssetsMetadata.get("version_info")).hasSize(4);
         assertThat(mProductionClassifierAssetsMetadata.get("version_info").keySet())
-                .containsExactly("taxonomy_type", "taxonomy_version", "updated_date");
+                .containsExactly("taxonomy_type", "taxonomy_version", "build_id", "updated_date");
 
         // The property "version_info" should have attribution "taxonomy_version"
         // and its value should be "2".
         assertThat(mProductionClassifierAssetsMetadata.get("version_info").get("taxonomy_version"))
+                .isEqualTo("2");
+
+        // The property "version_info" should have attribution "build_id"
+        // and its value should be "2". This is used for comparing the model version with MDD
+        // downloaded model.
+        assertThat(mProductionClassifierAssetsMetadata.get("version_info").get("build_id"))
                 .isEqualTo("2");
 
         // The property "version_info" should have attribution "taxonomy_type"
@@ -477,13 +483,19 @@ public class ModelManagerTest {
         // The property of metadata in production metadata should contain 4 attributions:
         // "taxonomy_type", "taxonomy_version", "updated_date".
         // The key name of property is "version_info"
-        assertThat(mProductionClassifierAssetsMetadata.get("version_info")).hasSize(3);
+        assertThat(mProductionClassifierAssetsMetadata.get("version_info")).hasSize(4);
         assertThat(mProductionClassifierAssetsMetadata.get("version_info").keySet())
-                .containsExactly("taxonomy_type", "taxonomy_version", "updated_date");
+                .containsExactly("taxonomy_type", "taxonomy_version", "build_id", "updated_date");
 
         // The property "version_info" should have attribution "taxonomy_version"
         // and its value should be "2".
         assertThat(mProductionClassifierAssetsMetadata.get("version_info").get("taxonomy_version"))
+                .isEqualTo("2");
+
+        // The property "version_info" should have attribution "build_id"
+        // and its value should be "2". This is used for comparing the model version with MDD
+        // downloaded model.
+        assertThat(mProductionClassifierAssetsMetadata.get("version_info").get("build_id"))
                 .isEqualTo("2");
 
         // The property "version_info" should have attribution "taxonomy_type"
