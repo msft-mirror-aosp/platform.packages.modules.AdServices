@@ -17,7 +17,7 @@ package {
 }
 
 android_test {
-    name: "CtsAdServicesEndToEndTests",
+    name: "CtsAdServicesTopicsAppUpdateTests",
     srcs: [
         "src/**/*.java",
     ],
@@ -38,6 +38,10 @@ android_test {
         "cts",
         "general-tests",
         "mts-adservices"
+    ],
+    data: [
+        // Sample App will be installed and uninstalled in the test.
+        ":CtsSampleTopicsApp1",
     ],
     // To fix Pre-submit warning, suggested by farivar@
     javacflags: ["-parameters"],
