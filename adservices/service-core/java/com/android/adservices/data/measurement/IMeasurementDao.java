@@ -60,9 +60,14 @@ public interface IMeasurementDao {
     Trigger getTrigger(String triggerId) throws DatastoreException;
 
     /**
-     * Gets the number of sources a registrant has registered.
+     * Gets the number of sources associated to a publisher.
+     *
+     * @param publisherUri Uri for the publisher
+     * @param publisherType PublisherType App/Web
+     * @return Number of sources registered for the given publisher
      */
-    long getNumSourcesPerRegistrant(Uri registrant) throws DatastoreException;
+    long getNumSourcesPerPublisher(Uri publisherUri, @EventSurfaceType int publisherType)
+            throws DatastoreException;
 
     /**
      * Gets the number of triggers a registrant has registered.
@@ -331,4 +336,13 @@ public interface IMeasurementDao {
      * @param asyncRegistration a {@link AsyncRegistration} for which the retryCount will be updated
      */
     void updateRetryCount(@NonNull AsyncRegistration asyncRegistration) throws DatastoreException;
+
+    /**
+     * Deletes all records in measurement tables that correspond with a Uri not in the provided
+     * list.
+     *
+     * @param uriList a {@link List} of Uris whos related records won't be deleted.
+     * @throws DatastoreException
+     */
+    void deleteAppRecordsNotPresent(List<Uri> uriList) throws DatastoreException;
 }

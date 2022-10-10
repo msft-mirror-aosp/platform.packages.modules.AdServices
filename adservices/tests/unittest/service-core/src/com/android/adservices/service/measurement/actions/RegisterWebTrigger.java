@@ -61,7 +61,9 @@ public final class RegisterWebTrigger implements Action {
         mRegistrationRequest =
                 new WebTriggerRegistrationRequestInternal.Builder(
                                 registrationRequest, attributionSource.getPackageName())
-                        .setAdIdPermissionGranted(true)
+                        .setAdIdPermissionGranted(
+                                regParamsJson.optBoolean(
+                                        TestFormatJsonMapping.IS_ADID_PERMISSION_GRANTED_KEY, true))
                         .build();
 
         mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);

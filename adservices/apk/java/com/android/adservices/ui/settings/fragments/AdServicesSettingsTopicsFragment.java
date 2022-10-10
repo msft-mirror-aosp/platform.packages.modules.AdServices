@@ -67,17 +67,40 @@ public class AdServicesSettingsTopicsFragment extends Fragment {
 
         View noTopicsMessage = rootView.findViewById(R.id.no_topics_message);
         View emptyTopicsHiddenSection = rootView.findViewById(R.id.empty_topics_hidden_section);
+        View blockedTopicsButton = rootView.findViewById(R.id.blocked_topics_button);
 
+        // "Empty State": the state when the non-blocked list of apps/topics is empty.
+        // blocked_apps_when_empty_state_button is added to noTopicsMessage
+        // noTopicsMessages is visible only when Empty State
+        // blocked_topics_when_empty_state_button differs from blocked_topics_button
+        // in style with rounded corners, centered, blueish
         viewModel
                 .getTopics()
                 .observe(
                         getViewLifecycleOwner(),
                         topicsList -> {
-                            noTopicsMessage.setVisibility(
-                                    topicsList.isEmpty() ? View.VISIBLE : View.GONE);
-                            emptyTopicsHiddenSection.setVisibility(
-                                    topicsList.isEmpty() ? View.GONE : View.VISIBLE);
+                            if (topicsList.isEmpty()) {
+                                noTopicsMessage.setVisibility(View.VISIBLE);
+                                emptyTopicsHiddenSection.setVisibility(View.GONE);
+                                blockedTopicsButton.setVisibility(View.GONE);
+                            } else {
+                                noTopicsMessage.setVisibility(View.GONE);
+                                emptyTopicsHiddenSection.setVisibility(View.VISIBLE);
+                                blockedTopicsButton.setVisibility(View.VISIBLE);
+                            }
                             adapter.notifyDataSetChanged();
+                        });
+
+        // locked_topics_when_empty_state_button is disabled if there is no blocked topics
+        View blockedTopicsWhenEmptyStateButton =
+                rootView.findViewById(R.id.blocked_topics_when_empty_state_button);
+        viewModel
+                .getBlockedTopics()
+                .observe(
+                        getViewLifecycleOwner(),
+                        blockedTopicsList -> {
+                            blockedTopicsWhenEmptyStateButton.setEnabled(
+                                    blockedTopicsList.isEmpty() ? false : true);
                         });
     }
 }

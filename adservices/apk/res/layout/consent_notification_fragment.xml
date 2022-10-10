@@ -23,6 +23,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
     <ScrollView
+        android:id="@+id/notification_fragment_scrollview"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:scrollbars="vertical"
@@ -64,7 +65,8 @@
                 android:layout_marginTop="16dp"
                 android:padding="24dp"
                 android:background="@drawable/ic_rounded_background"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:animateLayoutChanges="true">
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -79,29 +81,7 @@
                     android:layout_marginTop="12dp"
                     android:text="@string/notificationUI_container1_body_text"
                     style="@style/MainStyle.Body1" />
-            </LinearLayout>
 
-            <LinearLayout
-                android:animateLayoutChanges="true"
-                android:id="@+id/container2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:padding="24dp"
-                android:background="@drawable/ic_rounded_background"
-                android:orientation="vertical">
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/notificationUI_container2_title"
-                    style="@style/MainStyle.H4"
-                    android:gravity="center_vertical"
-                    android:drawableStart="@drawable/ic_notification_icon_2"
-                    android:drawablePadding="24dp"/>
-                <TextView
-                    android:layout_marginTop="12dp"
-                    android:text="@string/notificationUI_container2_body_text"
-                    style="@style/MainStyle.Body1" />
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
@@ -115,7 +95,6 @@
                     android:layout_marginTop="0dp"
                     android:text="@string/notificationUI_container1_control_text"
                     style="@style/MainStyle.Body1" />
-
                 <LinearLayout
                     android:id="@+id/how_it_works_expanded_text"
                     android:layout_width="match_parent"
@@ -143,6 +122,28 @@
                 </LinearLayout>
             </LinearLayout>
 
+            <LinearLayout
+                android:id="@+id/container2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:padding="24dp"
+                android:background="@drawable/ic_rounded_background"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/notificationUI_container2_title"
+                    style="@style/MainStyle.H4"
+                    android:gravity="center_vertical"
+                    android:drawableStart="@drawable/ic_notification_icon_2"
+                    android:drawablePadding="24dp"/>
+                <TextView
+                    android:layout_marginTop="12dp"
+                    android:text="@string/notificationUI_container2_body_text"
+                    style="@style/MainStyle.Body1" />
+            </LinearLayout>
+
         </LinearLayout>
     </ScrollView>
 
@@ -163,7 +164,7 @@
             app:layout_constraintTop_toTopOf="parent" />
         <Button
             android:id="@+id/leftControlButton"
-            style="@style/MainStyle.NotificationPrimaryButton"
+            style="@style/MainStyle.PrimaryButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/notificationUI_left_control_button_text"
@@ -172,7 +173,7 @@
             app:layout_constraintTop_toTopOf="parent" />
         <Button
             android:id="@+id/rightControlButton"
-            style="@style/MainStyle.NotificationPrimaryButton"
+            style="@style/MainStyle.PrimaryButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/notificationUI_right_control_button_text"

@@ -98,6 +98,7 @@ public class TriggerFetcher {
         List<String> field;
         field = headers.get("Attribution-Reporting-Register-Trigger");
         if (field == null || field.size() != 1) {
+            LogUtil.d("Invalid Attribution-Reporting-Register-Trigger header");
             return false;
         }
         try {

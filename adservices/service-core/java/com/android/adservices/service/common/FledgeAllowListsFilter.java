@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.common;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
+
 import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
 
@@ -55,8 +57,7 @@ public class FledgeAllowListsFilter {
             LogUtil.v(
                     "App package name \"%s\" not authorized to call API %d",
                     appPackageName, apiNameLoggingId);
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiNameLoggingId, AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED);
+            mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_CALLER_NOT_ALLOWED, 0);
             throw new AppNotAllowedException();
         }
     }

@@ -20,6 +20,7 @@ import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREG
 
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__ADD_SDK_SANDBOX_LIFECYCLE_CALLBACK;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__REMOVE_SDK_SANDBOX_LIFECYCLE_CALLBACK;
+import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SANDBOX_TO_SYSTEM_SERVER;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_SANDBOX_TO_APP;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_SANDBOX;
@@ -1210,8 +1211,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 () ->
                         SdkSandboxStatsLog.write(
                                 SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                                SdkSandboxStatsLog
-                                        .SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE,
+                                SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE,
                                 (int)
                                         (TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP
                                                 - TIME_APP_CALLED_SYSTEM_SERVER),
@@ -1604,8 +1604,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 () ->
                         SdkSandboxStatsLog.write(
                                 SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                                SdkSandboxStatsLog
-                                        .SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE,
+                                SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE,
                                 (int)
                                         (TIME_SYSTEM_SERVER_CALLED_SANDBOX
                                                 - TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP),
@@ -1617,9 +1616,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 () ->
                         SdkSandboxStatsLog.write(
                                 Mockito.eq(SdkSandboxStatsLog.SANDBOX_API_CALLED),
-                                Mockito.eq(
-                                        SdkSandboxStatsLog
-                                                .SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE),
+                                Mockito.eq(SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE),
                                 Mockito.anyInt(),
                                 Mockito.eq(/*success=*/ true),
                                 Mockito.eq(SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_SANDBOX)));
@@ -1628,9 +1625,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 () ->
                         SdkSandboxStatsLog.write(
                                 Mockito.eq(SdkSandboxStatsLog.SANDBOX_API_CALLED),
-                                Mockito.eq(
-                                        SdkSandboxStatsLog
-                                                .SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE),
+                                Mockito.eq(SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE),
                                 Mockito.anyInt(),
                                 Mockito.eq(/*success=*/ true),
                                 Mockito.eq(SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SANDBOX)));
@@ -1639,9 +1634,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 () ->
                         SdkSandboxStatsLog.write(
                                 Mockito.eq(SdkSandboxStatsLog.SANDBOX_API_CALLED),
-                                Mockito.eq(
-                                        SdkSandboxStatsLog
-                                                .SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE),
+                                Mockito.eq(SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE),
                                 Mockito.anyInt(),
                                 Mockito.eq(/*success=*/ true),
                                 Mockito.eq(SANDBOX_API_CALLED__STAGE__SANDBOX_TO_SYSTEM_SERVER)));
@@ -1683,8 +1676,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 () ->
                         SdkSandboxStatsLog.write(
                                 SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                                SdkSandboxStatsLog
-                                        .SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE,
+                                SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE,
                                 (int)
                                         (TIME_SYSTEM_SERVER_CALLED_SANDBOX
                                                 - TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP),
@@ -1696,9 +1688,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 () ->
                         SdkSandboxStatsLog.write(
                                 Mockito.eq(SdkSandboxStatsLog.SANDBOX_API_CALLED),
-                                Mockito.eq(
-                                        SdkSandboxStatsLog
-                                                .SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE),
+                                Mockito.eq(SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE),
                                 Mockito.anyInt(),
                                 Mockito.eq(/*success=*/ true),
                                 Mockito.eq(SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_SANDBOX)));
@@ -1707,9 +1697,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 () ->
                         SdkSandboxStatsLog.write(
                                 Mockito.eq(SdkSandboxStatsLog.SANDBOX_API_CALLED),
-                                Mockito.eq(
-                                        SdkSandboxStatsLog
-                                                .SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE),
+                                Mockito.eq(SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE),
                                 Mockito.anyInt(),
                                 Mockito.eq(/*success=*/ true),
                                 Mockito.eq(SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SANDBOX)));
@@ -1718,9 +1706,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 () ->
                         SdkSandboxStatsLog.write(
                                 Mockito.eq(SdkSandboxStatsLog.SANDBOX_API_CALLED),
-                                Mockito.eq(
-                                        SdkSandboxStatsLog
-                                                .SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE),
+                                Mockito.eq(SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE),
                                 Mockito.anyInt(),
                                 Mockito.eq(/*success=*/ true),
                                 Mockito.eq(SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SDK)));
@@ -1729,12 +1715,55 @@ public class SdkSandboxManagerServiceUnitTest {
                 () ->
                         SdkSandboxStatsLog.write(
                                 Mockito.eq(SdkSandboxStatsLog.SANDBOX_API_CALLED),
-                                Mockito.eq(
-                                        SdkSandboxStatsLog
-                                                .SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE),
+                                Mockito.eq(SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE),
                                 Mockito.anyInt(),
                                 Mockito.eq(/*success=*/ true),
                                 Mockito.eq(SANDBOX_API_CALLED__STAGE__SANDBOX_TO_SYSTEM_SERVER)));
+    }
+
+    @Test
+    public void testLatencyMetrics_SystemServerSandboxToApp_RequestSurfacePackage()
+            throws RemoteException {
+        Mockito.when(mInjector.getCurrentTime())
+                .thenReturn(
+                        TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
+                        START_TIME_TO_LOAD_SANDBOX,
+                        END_TIME_TO_LOAD_SANDBOX,
+                        TIME_SYSTEM_SERVER_CALLED_SANDBOX,
+                        TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_SANDBOX,
+                        TIME_SYSTEM_SERVER_CALLED_APP,
+                        TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
+                        TIME_SYSTEM_SERVER_CALLED_SANDBOX,
+                        TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_SANDBOX,
+                        TIME_SYSTEM_SERVER_CALLED_APP);
+        loadSdk(SDK_NAME);
+
+        // 2. Call request package
+        FakeRequestSurfacePackageCallbackBinder surfacePackageCallback =
+                new FakeRequestSurfacePackageCallbackBinder();
+        mService.requestSurfacePackage(
+                TEST_PACKAGE,
+                SDK_NAME,
+                new Binder(),
+                0,
+                500,
+                500,
+                TIME_APP_CALLED_SYSTEM_SERVER,
+                new Bundle(),
+                surfacePackageCallback);
+        mSdkSandboxService.sendSurfacePackageReady(
+                new SandboxLatencyInfo(TIME_SYSTEM_SERVER_CALLED_SANDBOX));
+
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                                SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE,
+                                (int)
+                                        (TIME_SYSTEM_SERVER_CALLED_APP
+                                                - TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_SANDBOX),
+                                /*success=*/ true,
+                                SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_SANDBOX_TO_APP));
     }
 
     @Test
@@ -1767,8 +1796,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 () ->
                         SdkSandboxStatsLog.write(
                                 SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                                SdkSandboxStatsLog
-                                        .SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE,
+                                SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE,
                                 /*latency=*/ 1,
                                 /*success=*/ true,
                                 SdkSandboxStatsLog
@@ -1809,12 +1837,12 @@ public class SdkSandboxManagerServiceUnitTest {
         assertThat(listener.isKillSwitchEnabled()).isFalse();
         listener.onPropertiesChanged(
                 new DeviceConfig.Properties(
-                        DeviceConfig.NAMESPACE_SDK_SANDBOX,
+                        DeviceConfig.NAMESPACE_ADSERVICES,
                         Map.of(PROPERTY_DISABLE_SANDBOX, "true")));
         assertThat(listener.isKillSwitchEnabled()).isTrue();
         listener.onPropertiesChanged(
                 new DeviceConfig.Properties(
-                        DeviceConfig.NAMESPACE_SDK_SANDBOX,
+                        DeviceConfig.NAMESPACE_ADSERVICES,
                         Map.of(PROPERTY_DISABLE_SANDBOX, "false")));
         assertThat(listener.isKillSwitchEnabled()).isTrue();
     }
@@ -1826,13 +1854,13 @@ public class SdkSandboxManagerServiceUnitTest {
                 mService.getSdkSandboxSettingsListener();
         listener.onPropertiesChanged(
                 new DeviceConfig.Properties(
-                        DeviceConfig.NAMESPACE_SDK_SANDBOX,
+                        DeviceConfig.NAMESPACE_ADSERVICES,
                         Map.of(PROPERTY_DISABLE_SANDBOX, "false")));
         mService.getSdkSandboxSettingsListener().reset();
         loadSdk(SDK_NAME);
         listener.onPropertiesChanged(
                 new DeviceConfig.Properties(
-                        DeviceConfig.NAMESPACE_SDK_SANDBOX,
+                        DeviceConfig.NAMESPACE_ADSERVICES,
                         Map.of(PROPERTY_DISABLE_SANDBOX, "true")));
         int callingUid = Binder.getCallingUid();
         final CallingInfo callingInfo = new CallingInfo(callingUid, TEST_PACKAGE);
@@ -1848,7 +1876,7 @@ public class SdkSandboxManagerServiceUnitTest {
         listener.reset();
         listener.onPropertiesChanged(
                 new DeviceConfig.Properties(
-                        DeviceConfig.NAMESPACE_SDK_SANDBOX,
+                        DeviceConfig.NAMESPACE_ADSERVICES,
                         Map.of(PROPERTY_DISABLE_SANDBOX, "true")));
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         mService.loadSdk(
@@ -1884,8 +1912,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 () ->
                         SdkSandboxStatsLog.write(
                                 SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                                SdkSandboxStatsLog
-                                        .SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE,
+                                SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE,
                                 (int)
                                         (TIME_FAILURE_HANDLED
                                                 - TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP),

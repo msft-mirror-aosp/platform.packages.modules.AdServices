@@ -583,12 +583,12 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public long getNumSourcesPerRegistrant(Uri registrant) throws DatastoreException {
+    public long getNumSourcesPerPublisher(Uri publisherUri, @EventSurfaceType int publisherType)
+            throws DatastoreException {
         return DatabaseUtils.queryNumEntries(
                 mSQLTransaction.getDatabase(),
                 MeasurementTables.SourceContract.TABLE,
-                MeasurementTables.SourceContract.REGISTRANT + " = ? ",
-                new String[]{registrant.toString()});
+                getPublisherWhereStatement(publisherUri, publisherType));
     }
 
     @Override
@@ -716,6 +716,7 @@ class MeasurementDao implements IMeasurementDao {
                         MeasurementTables.SourceContract.ENROLLMENT_ID,
                         MeasurementTables.SourceContract.REGISTRANT),
                 new String[] {uriStr});
+
         // EventReport table
         db.delete(MeasurementTables.EventReportContract.TABLE,
                 MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION + " = ?",
@@ -750,6 +751,105 @@ class MeasurementDao implements IMeasurementDao {
                 MeasurementTables.AttributionContract.SOURCE_SITE + " = ? OR "
                         + MeasurementTables.AttributionContract.DESTINATION_SITE + " = ?",
                 new String[]{uriStr, uriStr});
+    }
+
+    @Override
+    public void deleteAppRecordsNotPresent(List<Uri> uriList) throws DatastoreException {
+        SQLiteDatabase db = mSQLTransaction.getDatabase();
+
+        String inQuery = constructDeleteQueryAppsNotPresent(uriList);
+
+        // For all Source records not in the given list
+        // as REGISTRANT, obtains EventReport records who's SOURCE_ID
+        // matches a Source records' EVENT_ID.
+        db.delete(
+                MeasurementTables.EventReportContract.TABLE,
+                String.format(
+                        Locale.ENGLISH,
+                        "%1$s IN ("
+                                + "SELECT e.%1$s FROM %2$s e"
+                                + " INNER JOIN %3$s s"
+                                + " ON (e.%4$s = s.%5$s AND e.%6$s = s.%7$s AND e.%8$s = s.%9$s)"
+                                + " WHERE s.%10$s NOT IN "
+                                + inQuery.toString()
+                                + ")",
+                        MeasurementTables.EventReportContract.ID,
+                        MeasurementTables.EventReportContract.TABLE,
+                        MeasurementTables.SourceContract.TABLE,
+                        MeasurementTables.EventReportContract.SOURCE_ID,
+                        MeasurementTables.SourceContract.EVENT_ID,
+                        MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
+                        MeasurementTables.SourceContract.APP_DESTINATION,
+                        MeasurementTables.EventReportContract.ENROLLMENT_ID,
+                        MeasurementTables.SourceContract.ENROLLMENT_ID,
+                        MeasurementTables.SourceContract.REGISTRANT),
+                /* whereArgs */ null);
+
+        // Event Report table
+        db.delete(
+                MeasurementTables.EventReportContract.TABLE,
+                MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION
+                        + " NOT IN "
+                        + inQuery.toString(),
+                /* whereArgs */ null);
+
+        // AggregateReport table
+        db.delete(
+                MeasurementTables.AggregateReport.TABLE,
+                MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION
+                        + " NOT IN "
+                        + inQuery.toString()
+                        + " OR "
+                        + MeasurementTables.AggregateReport.PUBLISHER
+                        + " NOT IN "
+                        + inQuery.toString(),
+                /* whereArgs */ null);
+
+        // Source table
+        db.delete(
+                MeasurementTables.SourceContract.TABLE,
+                "(("
+                        + MeasurementTables.SourceContract.REGISTRANT
+                        + " NOT IN "
+                        + inQuery.toString()
+                        + ") OR ("
+                        + MeasurementTables.SourceContract.STATUS
+                        + " = ? AND "
+                        + MeasurementTables.SourceContract.APP_DESTINATION
+                        + " NOT IN "
+                        + inQuery.toString()
+                        + "))",
+                new String[] {String.valueOf(Source.Status.IGNORED)});
+
+        // Trigger table
+        db.delete(
+                MeasurementTables.TriggerContract.TABLE,
+                MeasurementTables.TriggerContract.REGISTRANT + " NOT IN " + inQuery.toString(),
+                /* whereArgs */ null);
+
+        // Attribution table
+        db.delete(
+                MeasurementTables.AttributionContract.TABLE,
+                MeasurementTables.AttributionContract.SOURCE_SITE
+                        + " NOT IN "
+                        + inQuery.toString()
+                        + " OR "
+                        + MeasurementTables.AttributionContract.DESTINATION_SITE
+                        + " NOT IN "
+                        + inQuery.toString(),
+                /* whereArgs */ null);
+    }
+
+    private String constructDeleteQueryAppsNotPresent(List<Uri> uriList) {
+        // Construct query, as list of all packages present on the device
+        StringBuilder inQuery = new StringBuilder();
+        inQuery.append("(");
+        inQuery.append(
+                uriList.stream()
+                        .map((uri) -> DatabaseUtils.sqlEscapeString(uri.toString()))
+                        .collect(Collectors.joining(", ")));
+        inQuery.append(")");
+        return inQuery.toString();
     }
 
     @Override

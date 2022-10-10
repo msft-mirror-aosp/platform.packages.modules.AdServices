@@ -182,6 +182,7 @@ public abstract class E2ETest {
         String SOURCE_WEB_DESTINATION_URI_KEY = "web_destination";
         String SOURCE_VERIFIED_DESTINATION_URI_KEY = "verified_destination";
         String REGISTRATION_URI_KEY = "attribution_src_url";
+        String IS_ADID_PERMISSION_GRANTED_KEY = "is_adid_permission_granted";
         String INPUT_EVENT_KEY = "source_type";
         String SOURCE_VIEW_TYPE = "event";
         String TIMESTAMP_KEY = "timestamp";

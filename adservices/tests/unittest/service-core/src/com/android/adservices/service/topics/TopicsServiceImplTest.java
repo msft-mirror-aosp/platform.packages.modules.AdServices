@@ -103,6 +103,7 @@ public class TopicsServiceImplTest {
     private static final String INVALID_PACKAGE_NAME = "com.do_not_exists";
     private static final String SOME_SDK_NAME = "SomeSdkName";
     private static final int BINDER_CONNECTION_TIMEOUT_MS = 5_000;
+    private static final int RECORD_USAGE_CALLED_LATCH_TIMEOUT_MS = 1_000;
     private static final String SDK_PACKAGE_NAME = "test_package_name";
     private static final String ALLOWED_SDK_ID = "1234567";
     // This is not allowed per the ad_services_config.xml manifest config.
@@ -119,6 +120,7 @@ public class TopicsServiceImplTest {
     private CountDownLatch mGetTopicsCallbackLatch;
     private CallerMetadata mCallerMetadata;
     private TopicsWorker mTopicsWorker;
+    private TopicsWorker mSpyTopicsWorker;
     private BlockedTopicsManager mBlockedTopicsManager;
     private TopicsDao mTopicsDao;
     private GetTopicsParam mRequest;
@@ -157,6 +159,16 @@ public class TopicsServiceImplTest {
                         mBlockedTopicsManager,
                         appUpdateManager,
                         mMockFlags);
+        // Used for verifying recordUsage method invocations.
+        mSpyTopicsWorker =
+                Mockito.spy(
+                        new TopicsWorker(
+                                mMockEpochManager,
+                                cacheManager,
+                                mBlockedTopicsManager,
+                                appUpdateManager,
+                                mMockFlags));
+
         when(mClock.elapsedRealtime()).thenReturn(150L, 200L);
         mCallerMetadata = new CallerMetadata.Builder().setBinderElapsedTimestamp(100L).build();
         mRequest =
@@ -174,6 +186,7 @@ public class TopicsServiceImplTest {
 
         // Allow all for signature allow list check
         when(mMockFlags.getPpapiAppSignatureAllowList()).thenReturn(AllowLists.ALLOW_ALL);
+        when(mMockFlags.getTopicsEpochJobPeriodMs()).thenReturn(Flags.TOPICS_EPOCH_JOB_PERIOD_MS);
 
         // Initialize enrollment data.
         EnrollmentData fakeEnrollmentData =
@@ -626,16 +639,18 @@ public class TopicsServiceImplTest {
         // Topic impl service use a background executor to run the task,
         // use a countdownLatch and set the countdown in the logging call operation
         final CountDownLatch logOperationCalledLatch = new CountDownLatch(1);
-        Mockito.doAnswer(new Answer<Object>() {
-            @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                // The method logAPiCallStats is called.
-                invocation.callRealMethod();
-                logOperationCalledLatch.countDown();
-                return null;
-            }
-        }).when(mAdServicesLogger).logApiCallStats(
-                ArgumentMatchers.any(ApiCallStats.class));
+        Mockito.doAnswer(
+                        new Answer<Object>() {
+                            @Override
+                            public Object answer(InvocationOnMock invocation) throws Throwable {
+                                // The method logAPiCallStats is called.
+                                invocation.callRealMethod();
+                                logOperationCalledLatch.countDown();
+                                return null;
+                            }
+                        })
+                .when(mAdServicesLogger)
+                .logApiCallStats(ArgumentMatchers.any(ApiCallStats.class));
 
         // Setting up the timestamp for latency calculation, we passing in a client side call
         // timestamp as a parameter to the call (100 in the below code), in topic service, it
@@ -754,6 +769,142 @@ public class TopicsServiceImplTest {
                         mGetTopicsCallbackLatch.await(
                                 BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
                 .isTrue();
+    }
+
+    @Test
+    public void testGetTopics_recordObservation() throws InterruptedException {
+        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        // To capture result in inner class, we have to declare final.
+        final GetTopicsResult[] capturedResponseParcel = new GetTopicsResult[1];
+
+        final long currentEpochId = 4L;
+        final int numberOfLookBackEpochs = 3;
+
+        when(mConsentManager.getConsent(any(PackageManager.class)))
+                .thenReturn(AdServicesApiConsent.GIVEN);
+        when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
+        when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
+
+        TopicsServiceImpl topicsService = createTestTopicsServiceImplInstance_spyTopicsWorker();
+
+        // Not setting isRecordObservation explicitly will make isRecordObservation to have
+        // default value which is true.
+        mRequest =
+                new GetTopicsParam.Builder()
+                        .setAppPackageName(TEST_APP_PACKAGE_NAME)
+                        .setSdkName(SOME_SDK_NAME)
+                        .setSdkPackageName(SOME_SDK_NAME)
+                        .build();
+
+        // Use a countDownLatch to set the countdown in mSpyTopicsWorker.recordUsage method.
+        final CountDownLatch recordUsageCalledLatch = new CountDownLatch(1);
+        Mockito.doAnswer(
+                        invocation -> {
+                            invocation.callRealMethod();
+                            recordUsageCalledLatch.countDown();
+                            return null;
+                        })
+                .when(mSpyTopicsWorker)
+                .recordUsage(
+                        ArgumentMatchers.eq(TEST_APP_PACKAGE_NAME),
+                        ArgumentMatchers.eq(SOME_SDK_NAME));
+
+        topicsService.getTopics(
+                mRequest,
+                mCallerMetadata,
+                new IGetTopicsCallback() {
+                    @Override
+                    public void onResult(GetTopicsResult responseParcel) {
+                        capturedResponseParcel[0] = responseParcel;
+                    }
+
+                    @Override
+                    public void onFailure(int resultCode) {
+                        Assert.fail();
+                    }
+
+                    @Override
+                    public IBinder asBinder() {
+                        return null;
+                    }
+                });
+
+        // Wait until the recordUsage method completed.
+        assertThat(
+                        recordUsageCalledLatch.await(
+                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+                .isTrue();
+
+        // Record the call from App and Sdk to usage history only when isRecordObservation is true.
+        verify(mSpyTopicsWorker, Mockito.times(1))
+                .recordUsage(TEST_APP_PACKAGE_NAME, SOME_SDK_NAME);
+    }
+
+    @Test
+    public void testGetTopics_notRecordObservation() throws InterruptedException {
+        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        // To capture result in inner class, we have to declare final.
+        final GetTopicsResult[] capturedResponseParcel = new GetTopicsResult[1];
+
+        final long currentEpochId = 4L;
+        final int numberOfLookBackEpochs = 3;
+
+        when(mConsentManager.getConsent(any(PackageManager.class)))
+                .thenReturn(AdServicesApiConsent.GIVEN);
+        when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
+        when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
+
+        TopicsServiceImpl topicsService = createTestTopicsServiceImplInstance_spyTopicsWorker();
+
+        // Use a countDownLatch to set the countdown in mSpyTopicsWorker.recordUsage method.
+        final CountDownLatch recordUsageCalledLatch = new CountDownLatch(1);
+        Mockito.doAnswer(
+                        invocation -> {
+                            invocation.callRealMethod();
+                            recordUsageCalledLatch.countDown();
+                            return null;
+                        })
+                .when(mSpyTopicsWorker)
+                .recordUsage(
+                        ArgumentMatchers.eq(TEST_APP_PACKAGE_NAME),
+                        ArgumentMatchers.eq(SOME_SDK_NAME));
+
+        mRequest =
+                new GetTopicsParam.Builder()
+                        .setAppPackageName(TEST_APP_PACKAGE_NAME)
+                        .setSdkName(SOME_SDK_NAME)
+                        .setSdkPackageName(SOME_SDK_NAME)
+                        .setShouldRecordObservation(false)
+                        .build();
+
+        topicsService.getTopics(
+                mRequest,
+                mCallerMetadata,
+                new IGetTopicsCallback() {
+                    @Override
+                    public void onResult(GetTopicsResult responseParcel) {
+                        capturedResponseParcel[0] = responseParcel;
+                    }
+
+                    @Override
+                    public void onFailure(int resultCode) {
+                        Assert.fail();
+                    }
+
+                    @Override
+                    public IBinder asBinder() {
+                        return null;
+                    }
+                });
+
+        // recordUsage method will not be triggered.
+        assertThat(
+                        recordUsageCalledLatch.await(
+                                RECORD_USAGE_CALLED_LATCH_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+                .isFalse();
+
+        // Not record the call from App and Sdk to usage history when isRecordObservation is false.
+        verify(mSpyTopicsWorker, never()).recordUsage(anyString(), anyString());
     }
 
     private void invokeGetTopicsAndVerifyError(Context context, int expectedResultCode)
@@ -909,6 +1060,20 @@ public class TopicsServiceImplTest {
         return new TopicsServiceImpl(
                 mMockSdkContext,
                 mTopicsWorker,
+                mConsentManager,
+                mAdServicesLogger,
+                mClock,
+                mMockFlags,
+                mMockThrottler,
+                mEnrollmentDao,
+                mMockAppImportanceFilter);
+    }
+
+    @NonNull
+    private TopicsServiceImpl createTestTopicsServiceImplInstance_spyTopicsWorker() {
+        return new TopicsServiceImpl(
+                mContext,
+                mSpyTopicsWorker,
                 mConsentManager,
                 mAdServicesLogger,
                 mClock,

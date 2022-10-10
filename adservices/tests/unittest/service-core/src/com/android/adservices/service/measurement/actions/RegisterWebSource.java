@@ -80,7 +80,9 @@ public final class RegisterWebSource implements Action {
         mRegistrationRequest =
                 new WebSourceRegistrationRequestInternal.Builder(
                                 registrationRequest, attributionSource.getPackageName(), 2000L)
-                        .setAdIdPermissionGranted(true)
+                        .setAdIdPermissionGranted(
+                                regParamsJson.optBoolean(
+                                        TestFormatJsonMapping.IS_ADID_PERMISSION_GRANTED_KEY, true))
                         .build();
 
         mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);

@@ -91,7 +91,8 @@ public class ModelManager {
     private static final String ASSET_ELEMENT_NAME = "asset_name";
     // The attributions of assets property in classifier_assets_metadata.json
     private static final Set<String> ASSETS_PROPERTY_ATTRIBUTIONS =
-            new HashSet(Arrays.asList("taxonomy_type", "taxonomy_version", "updated_date"));
+            new HashSet(
+                    Arrays.asList("taxonomy_type", "taxonomy_version", "build_id", "updated_date"));
     // The attributions of assets metadata in classifier_assets_metadata.json
     private static final Set<String> ASSETS_NORMAL_ATTRIBUTIONS =
             new HashSet(Arrays.asList("asset_version", "path", "checksum", "updated_date"));
@@ -179,7 +180,7 @@ public class ModelManager {
         return downloadedFiles;
     }
 
-    // Return true if Model Manager should uses downloaded model. Otherwise, use bundled model.
+    // Return true if Model Manager should use downloaded model. Otherwise, use bundled model.
     private boolean useDownloadedFiles() {
         return mDownloadedFiles != null && mDownloadedFiles.size() > 0;
     }
@@ -205,14 +206,36 @@ public class ModelManager {
                 return buffer;
             }
         } else {
-            // Use bundled files.
-            AssetFileDescriptor fileDescriptor = mAssetManager.openFd(mModelFilePath);
-            FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
-            FileChannel fileChannel = inputStream.getChannel();
+            try {
+                // Use bundled files.
+                AssetFileDescriptor fileDescriptor = mAssetManager.openFd(mModelFilePath);
+                FileInputStream inputStream =
+                        new FileInputStream(fileDescriptor.getFileDescriptor());
+                FileChannel fileChannel = inputStream.getChannel();
 
-            long startOffset = fileDescriptor.getStartOffset();
-            long declaredLength = fileDescriptor.getDeclaredLength();
-            return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
+                long startOffset = fileDescriptor.getStartOffset();
+                long declaredLength = fileDescriptor.getDeclaredLength();
+                return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
+            } catch (IOException | NullPointerException e) {
+                LogUtil.e(e, "Error loading the bundled classifier model");
+                return ByteBuffer.allocate(0);
+            }
+        }
+    }
+
+    /** Returns true if the classifier model is available for classification. */
+    public boolean isModelAvailable() {
+        if (useDownloadedFiles()) {
+            // Downloaded model is always expected to be available.
+            return true;
+        } else {
+            // Check if the non-zero model file is present in the apk assets.
+            try {
+                return mAssetManager.openFd(mModelFilePath).getLength() > 0;
+            } catch (IOException e) {
+                LogUtil.e(e, "[ML] No classifier model available.");
+                return false;
+            }
         }
     }
 
