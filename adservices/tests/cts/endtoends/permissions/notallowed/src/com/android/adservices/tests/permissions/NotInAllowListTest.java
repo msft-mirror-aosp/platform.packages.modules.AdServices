@@ -45,18 +45,27 @@ public class NotInAllowListTest {
     private static final String CALLER_NOT_ALLOWED =
             "java.lang.SecurityException: Caller is not authorized to call this API. "
                     + "Caller is not allowed.";
+    private static final String SIGNATURE_ALLOWLIST =
+            "6cecc50e34ae31bfb5678986d6d6d3736c571ded2f2459527793e1f054eb0c9b,"
+                    + "a40da80a59d170caa950cf15c18c454d47a39b26989d8b640ecd745ba71bf5dc,"
+                    + "301aa3cb081134501c45f1422abc66c24224fd5ded5fdc8f17e697176fd866aa,"
+                    + "c8a2e9bccf597c2fb6dc66bee293fc13f2fc47ec77bc6b2b0d52c11f51192ab8";
 
     @Before
     public void setup() {
+        overrideDisableTopicsEnrollmentCheck("1");
         overrideConsentManagerDebugMode(true);
         overridingAdservicesLoggingLevel("VERBOSE");
         overrideAdservicesGlobalKillSwitch(true);
+        overrideSignatureAllowListToEmpty(true);
     }
 
     @After
     public void teardown() {
+        overrideDisableTopicsEnrollmentCheck("0");
         overrideConsentManagerDebugMode(false);
         overrideAdservicesGlobalKillSwitch(false);
+        overrideSignatureAllowListToEmpty(false);
     }
 
     @Test
@@ -91,5 +100,19 @@ public class NotInAllowListTest {
     private void overrideAdservicesGlobalKillSwitch(boolean isOverride) {
         String overrideString = isOverride ? "false" : "null";
         ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
+    }
+
+    // Override the flag to disable Topics enrollment check.
+    private void overrideDisableTopicsEnrollmentCheck(String val) {
+        // Setting it to 1 here disables the Topics' enrollment check.
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.disable_topics_enrollment_check " + val);
+    }
+
+    // Override Signature Allow List to deny the signature of this test
+    public void overrideSignatureAllowListToEmpty(boolean isEmpty) {
+        String overrideString = isEmpty ? "empty" : SIGNATURE_ALLOWLIST;
+        ShellUtils.runShellCommand(
+                "device_config put adservices ppapi_app_signature_allow_list %s", overrideString);
     }
 }

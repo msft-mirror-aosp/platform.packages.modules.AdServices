@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.tests.cts.topics;
+package com.android.adservices.tests.cts.topics.connection;
 
 import static com.google.common.truth.Truth.assertThat;
 
