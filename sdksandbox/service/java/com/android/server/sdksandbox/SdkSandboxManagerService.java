@@ -1076,7 +1076,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         private void registerObserver() {
             DeviceConfig.addOnPropertiesChangedListener(
-                    DeviceConfig.NAMESPACE_SDK_SANDBOX, mContext.getMainExecutor(), this);
+                    DeviceConfig.NAMESPACE_ADSERVICES, mContext.getMainExecutor(), this);
         }
 
         @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
@@ -1090,7 +1090,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         void reset() {
             synchronized (mLock) {
                 DeviceConfig.setProperty(
-                        DeviceConfig.NAMESPACE_SDK_SANDBOX,
+                        DeviceConfig.NAMESPACE_ADSERVICES,
                         PROPERTY_DISABLE_SDK_SANDBOX,
                         "false",
                         false);
