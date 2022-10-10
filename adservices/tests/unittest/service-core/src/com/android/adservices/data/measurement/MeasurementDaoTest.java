@@ -27,10 +27,12 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 
@@ -1623,6 +1625,566 @@ public class MeasurementDaoTest {
                         .getCount());
     }
 
+    @Test
+    public void testDeleteAppRecordsNotPresentForSources() {
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+
+        List<Source> sourceList = new ArrayList<>();
+        // Source registrant is still installed, record is not deleted.
+        sourceList.add(
+                new Source.Builder()
+                        .setId("1")
+                        .setEventId(new UnsignedLong(1L))
+                        .setAppDestination(Uri.parse("android-app://installed-app-destination"))
+                        .setEnrollmentId("enrollment-id")
+                        .setRegistrant(Uri.parse("android-app://installed-registrant"))
+                        .setPublisher(Uri.parse("android-app://installed-registrant"))
+                        .setStatus(Source.Status.ACTIVE)
+                        .build());
+        // Source registrant is not installed, record is deleted.
+        sourceList.add(
+                new Source.Builder()
+                        .setId("2")
+                        .setEventId(new UnsignedLong(2L))
+                        .setAppDestination(Uri.parse("android-app://installed-app-destination"))
+                        .setEnrollmentId("enrollment-id")
+                        .setRegistrant(Uri.parse("android-app://not-installed-registrant"))
+                        .setPublisher(Uri.parse("android-app://not-installed-registrant"))
+                        .setStatus(Source.Status.ACTIVE)
+                        .build());
+        // Source registrant is installed and status is active on not installed destination, record
+        // is not deleted.
+        sourceList.add(
+                new Source.Builder()
+                        .setId("3")
+                        .setEventId(new UnsignedLong(3L))
+                        .setAppDestination(Uri.parse("android-app://not-installed-app-destination"))
+                        .setEnrollmentId("enrollment-id")
+                        .setRegistrant(Uri.parse("android-app://installed-registrant"))
+                        .setPublisher(Uri.parse("android-app://installed-registrant"))
+                        .setStatus(Source.Status.ACTIVE)
+                        .build());
+
+        // Source registrant is installed and status is ignored on not installed destination, record
+        // is deleted.
+        sourceList.add(
+                new Source.Builder()
+                        .setId("4")
+                        .setEventId(new UnsignedLong(4L))
+                        .setAppDestination(Uri.parse("android-app://not-installed-app-destination"))
+                        .setEnrollmentId("enrollment-id")
+                        .setRegistrant(Uri.parse("android-app://installed-registrant"))
+                        .setPublisher(Uri.parse("android-app://installed-registrant"))
+                        .setStatus(Source.Status.IGNORED)
+                        .build());
+
+        // Source registrant is installed and status is ignored on installed destination, record is
+        // not deleted.
+        sourceList.add(
+                new Source.Builder()
+                        .setId("5")
+                        .setEventId(new UnsignedLong(5L))
+                        .setAppDestination(Uri.parse("android-app://installed-app-destination"))
+                        .setEnrollmentId("enrollment-id")
+                        .setRegistrant(Uri.parse("android-app://installed-registrant"))
+                        .setPublisher(Uri.parse("android-app://installed-registrant"))
+                        .setStatus(Source.Status.IGNORED)
+                        .build());
+
+        sourceList.forEach(
+                source -> {
+                    ContentValues values = new ContentValues();
+                    values.put(SourceContract.ID, source.getId());
+                    values.put(SourceContract.EVENT_ID, source.getEventId().toString());
+                    values.put(
+                            SourceContract.APP_DESTINATION, source.getAppDestination().toString());
+                    values.put(SourceContract.ENROLLMENT_ID, source.getEnrollmentId());
+                    values.put(SourceContract.REGISTRANT, source.getRegistrant().toString());
+                    values.put(SourceContract.PUBLISHER, source.getPublisher().toString());
+                    values.put(SourceContract.STATUS, source.getStatus());
+                    db.insert(SourceContract.TABLE, /* nullColumnHack */ null, values);
+                });
+
+        long count = DatabaseUtils.queryNumEntries(db, SourceContract.TABLE, /* selection */ null);
+        assertEquals(5, count);
+
+        List<Uri> installedUriList = new ArrayList<>();
+        installedUriList.add(Uri.parse("android-app://installed-registrant"));
+        installedUriList.add(Uri.parse("android-app://installed-app-destination"));
+
+        assertTrue(
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransaction(
+                                measurementDao ->
+                                        measurementDao.deleteAppRecordsNotPresent(
+                                                installedUriList)));
+
+        count = DatabaseUtils.queryNumEntries(db, SourceContract.TABLE, /* selection */ null);
+        assertEquals(3, count);
+
+        Cursor cursor =
+                db.query(
+                        SourceContract.TABLE,
+                        /* columns */ null,
+                        /* selection */ null,
+                        /* selectionArgs */ null,
+                        /* groupBy */ null,
+                        /* having */ null,
+                        /* orderBy */ null);
+        while (cursor.moveToNext()) {
+            Source source = SqliteObjectMapper.constructSourceFromCursor(cursor);
+            assertThat(Arrays.asList("1", "3", "5")).contains(source.getId());
+        }
+    }
+
+    @Test
+    public void testDeleteAppRecordsNotPresentForTriggers() {
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        List<Trigger> triggerList = new ArrayList<>();
+        // Trigger registrant is still installed, record will not be deleted.
+        triggerList.add(
+                new Trigger.Builder()
+                        .setId("1")
+                        .setAttributionDestination(
+                                Uri.parse("android-app://attribution-destination"))
+                        .setEnrollmentId("enrollment-id")
+                        .setRegistrant(Uri.parse("android-app://installed-registrant"))
+                        .build());
+
+        // Trigger registrant is not installed, record will be deleted.
+        triggerList.add(
+                new Trigger.Builder()
+                        .setId("2")
+                        .setAttributionDestination(
+                                Uri.parse("android-app://attribution-destination"))
+                        .setEnrollmentId("enrollment-id")
+                        .setRegistrant(Uri.parse("android-app://not-installed-registrant"))
+                        .build());
+
+        triggerList.forEach(
+                trigger -> {
+                    ContentValues values = new ContentValues();
+                    values.put(TriggerContract.ID, trigger.getId());
+                    values.put(
+                            TriggerContract.ATTRIBUTION_DESTINATION,
+                            trigger.getAttributionDestination().toString());
+                    values.put(TriggerContract.ENROLLMENT_ID, trigger.getEnrollmentId());
+                    values.put(TriggerContract.REGISTRANT, trigger.getRegistrant().toString());
+                    db.insert(TriggerContract.TABLE, /* nullColumnHack */ null, values);
+                });
+
+        long count = DatabaseUtils.queryNumEntries(db, TriggerContract.TABLE, /* selection */ null);
+        assertEquals(2, count);
+
+        List<Uri> installedUriList = new ArrayList<>();
+        installedUriList.add(Uri.parse("android-app://installed-registrant"));
+
+        assertTrue(
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransaction(
+                                measurementDao ->
+                                        measurementDao.deleteAppRecordsNotPresent(
+                                                installedUriList)));
+
+        count = DatabaseUtils.queryNumEntries(db, TriggerContract.TABLE, /* selection */ null);
+        assertEquals(1, count);
+
+        Cursor cursor =
+                db.query(
+                        TriggerContract.TABLE,
+                        /* columns */ null,
+                        /* selection */ null,
+                        /* selectionArgs */ null,
+                        /* groupBy */ null,
+                        /* having */ null,
+                        /* orderBy */ null);
+        while (cursor.moveToNext()) {
+            Trigger trigger = SqliteObjectMapper.constructTriggerFromCursor(cursor);
+            assertEquals("1", trigger.getId());
+        }
+    }
+
+    @Test
+    public void testDeleteAppRecordsNotPresentForEventReports() {
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        List<EventReport> eventReportList = new ArrayList<>();
+        // Event report attribution destination is still installed, record will not be deleted.
+        eventReportList.add(
+                new EventReport.Builder()
+                        .setId("1")
+                        .setAttributionDestination(
+                                Uri.parse("android-app://installed-attribution-destination"))
+                        .build());
+        // Event report attribution destination is not installed, record will be deleted.
+        eventReportList.add(
+                new EventReport.Builder()
+                        .setId("2")
+                        .setAttributionDestination(
+                                Uri.parse("android-app://not-installed-attribution-destination"))
+                        .build());
+        eventReportList.forEach(
+                eventReport -> {
+                    ContentValues values = new ContentValues();
+                    values.put(EventReportContract.ID, eventReport.getId());
+                    values.put(
+                            EventReportContract.ATTRIBUTION_DESTINATION,
+                            eventReport.getAttributionDestination().toString());
+                    db.insert(EventReportContract.TABLE, /* nullColumnHack */ null, values);
+                });
+
+        long count =
+                DatabaseUtils.queryNumEntries(db, EventReportContract.TABLE, /* selection */ null);
+        assertEquals(2, count);
+
+        List<Uri> installedUriList = new ArrayList<>();
+        installedUriList.add(Uri.parse("android-app://installed-attribution-destination"));
+
+        assertTrue(
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransaction(
+                                measurementDao ->
+                                        measurementDao.deleteAppRecordsNotPresent(
+                                                installedUriList)));
+
+        count = DatabaseUtils.queryNumEntries(db, EventReportContract.TABLE, /* selection */ null);
+        assertEquals(1, count);
+
+        Cursor cursor =
+                db.query(
+                        EventReportContract.TABLE,
+                        /* columns */ null,
+                        /* selection */ null,
+                        /* selectionArgs */ null,
+                        /* groupBy */ null,
+                        /* having */ null,
+                        /* orderBy */ null);
+        while (cursor.moveToNext()) {
+            EventReport eventReport = SqliteObjectMapper.constructEventReportFromCursor(cursor);
+            assertEquals("1", eventReport.getId());
+        }
+    }
+
+    @Test
+    public void testDeleteAppRecordsNotPresentForAggregateReports() {
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        List<AggregateReport> aggregateReportList = new ArrayList<>();
+        // Aggregate report attribution destination and publisher is still installed, record will
+        // not be deleted.
+        aggregateReportList.add(
+                new AggregateReport.Builder()
+                        .setId("1")
+                        .setAttributionDestination(
+                                Uri.parse("android-app://installed-attribution-destination"))
+                        .setPublisher(Uri.parse("android-app://installed-publisher"))
+                        .build());
+        // Aggregate report attribution destination is not installed, record will be deleted.
+        aggregateReportList.add(
+                new AggregateReport.Builder()
+                        .setId("2")
+                        .setAttributionDestination(
+                                Uri.parse("android-app://not-installed-attribution-destination"))
+                        .setPublisher(Uri.parse("android-app://installed-publisher"))
+                        .build());
+        // Aggregate report publisher is not installed, record will be deleted.
+        aggregateReportList.add(
+                new AggregateReport.Builder()
+                        .setId("3")
+                        .setAttributionDestination(
+                                Uri.parse("android-app://installed-attribution-destination"))
+                        .setPublisher(Uri.parse("android-app://not-installed-publisher"))
+                        .build());
+        aggregateReportList.forEach(
+                aggregateReport -> {
+                    ContentValues values = new ContentValues();
+                    values.put(MeasurementTables.AggregateReport.ID, aggregateReport.getId());
+                    values.put(
+                            MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION,
+                            aggregateReport.getAttributionDestination().toString());
+                    values.put(
+                            MeasurementTables.AggregateReport.PUBLISHER,
+                            aggregateReport.getPublisher().toString());
+                    db.insert(
+                            MeasurementTables.AggregateReport.TABLE, /* nullColumnHack */
+                            null,
+                            values);
+                });
+
+        long count =
+                DatabaseUtils.queryNumEntries(
+                        db, MeasurementTables.AggregateReport.TABLE, /* selection */ null);
+        assertEquals(3, count);
+
+        List<Uri> installedUriList = new ArrayList<>();
+        installedUriList.add(Uri.parse("android-app://installed-attribution-destination"));
+        installedUriList.add(Uri.parse("android-app://installed-publisher"));
+
+        assertTrue(
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransaction(
+                                measurementDao ->
+                                        measurementDao.deleteAppRecordsNotPresent(
+                                                installedUriList)));
+
+        count =
+                DatabaseUtils.queryNumEntries(
+                        db, MeasurementTables.AggregateReport.TABLE, /* selection */ null);
+        assertEquals(1, count);
+
+        Cursor cursor =
+                db.query(
+                        MeasurementTables.AggregateReport.TABLE,
+                        /* columns */ null,
+                        /* selection */ null,
+                        /* selectionArgs */ null,
+                        /* groupBy */ null,
+                        /* having */ null,
+                        /* orderBy */ null);
+        while (cursor.moveToNext()) {
+            AggregateReport aggregateReport = SqliteObjectMapper.constructAggregateReport(cursor);
+            assertEquals("1", aggregateReport.getId());
+        }
+    }
+
+    @Test
+    public void testDeleteAppRecordsNotPresentForAttributions() {
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        List<Attribution> attributionList = new ArrayList<>();
+        // Attribution has source site and destination site still installed, record will not be
+        // deleted.
+        attributionList.add(
+                new Attribution.Builder()
+                        .setId("1")
+                        .setSourceSite("android-app://installed-source-site")
+                        .setSourceOrigin("android-app://installed-source-site")
+                        .setDestinationSite("android-app://installed-destination-site")
+                        .setDestinationOrigin("android-app://installed-destination-site")
+                        .setRegistrant("android-app://installed-source-site")
+                        .setEnrollmentId("enrollment-id")
+                        .build());
+        // Attribution has source site not installed, record will be deleted.
+        attributionList.add(
+                new Attribution.Builder()
+                        .setId("2")
+                        .setSourceSite("android-app://not-installed-source-site")
+                        .setSourceOrigin("android-app://not-installed-source-site")
+                        .setDestinationSite("android-app://installed-destination-site")
+                        .setDestinationOrigin("android-app://installed-destination-site")
+                        .setRegistrant("android-app://installed-source-site")
+                        .setEnrollmentId("enrollment-id")
+                        .build());
+        // Attribution has destination site not installed, record will be deleted.
+        attributionList.add(
+                new Attribution.Builder()
+                        .setId("3")
+                        .setSourceSite("android-app://installed-source-site")
+                        .setSourceOrigin("android-app://installed-source-site")
+                        .setDestinationSite("android-app://not-installed-destination-site")
+                        .setDestinationOrigin("android-app://not-installed-destination-site")
+                        .setRegistrant("android-app://installed-source-site")
+                        .setEnrollmentId("enrollment-id")
+                        .build());
+        attributionList.forEach(
+                attribution -> {
+                    ContentValues values = new ContentValues();
+                    values.put(AttributionContract.ID, attribution.getId());
+                    values.put(AttributionContract.SOURCE_SITE, attribution.getSourceSite());
+                    values.put(AttributionContract.SOURCE_ORIGIN, attribution.getSourceOrigin());
+                    values.put(
+                            AttributionContract.DESTINATION_SITE, attribution.getDestinationSite());
+                    values.put(
+                            AttributionContract.DESTINATION_ORIGIN,
+                            attribution.getDestinationOrigin());
+                    values.put(AttributionContract.REGISTRANT, attribution.getRegistrant());
+                    values.put(AttributionContract.ENROLLMENT_ID, attribution.getEnrollmentId());
+                    db.insert(AttributionContract.TABLE, /* nullColumnHack */ null, values);
+                });
+
+        long count =
+                DatabaseUtils.queryNumEntries(db, AttributionContract.TABLE, /* selection */ null);
+        assertEquals(3, count);
+
+        List<Uri> installedUriList = new ArrayList<>();
+        installedUriList.add(Uri.parse("android-app://installed-source-site"));
+        installedUriList.add(Uri.parse("android-app://installed-destination-site"));
+
+        assertTrue(
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransaction(
+                                measurementDao ->
+                                        measurementDao.deleteAppRecordsNotPresent(
+                                                installedUriList)));
+
+        count = DatabaseUtils.queryNumEntries(db, AttributionContract.TABLE, /* selection */ null);
+        assertEquals(1, count);
+
+        Cursor cursor =
+                db.query(
+                        AttributionContract.TABLE,
+                        /* columns */ null,
+                        /* selection */ null,
+                        /* selectionArgs */ null,
+                        /* groupBy */ null,
+                        /* having */ null,
+                        /* orderBy */ null);
+        while (cursor.moveToNext()) {
+            Attribution attribution = constructAttributionFromCursor(cursor);
+            assertEquals("1", attribution.getId());
+        }
+    }
+
+    @Test
+    public void testDeleteAppRecordsNotPresentForEventReportsFromSources() {
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+
+        List<Source> sourceList = new ArrayList<>();
+        sourceList.add(
+                new Source.Builder()
+                        .setId("1")
+                        .setEventId(new UnsignedLong(1L))
+                        .setAppDestination(Uri.parse("android-app://app-destination-1"))
+                        .setEnrollmentId("enrollment-id")
+                        .setRegistrant(Uri.parse("android-app://uninstalled-app"))
+                        .setPublisher(Uri.parse("android-app://uninstalled-app"))
+                        .build());
+        sourceList.add(
+                new Source.Builder()
+                        .setId("2")
+                        .setEventId(new UnsignedLong(2L))
+                        .setAppDestination(Uri.parse("android-app://app-destination-2"))
+                        .setEnrollmentId("enrollment-id")
+                        .setRegistrant(Uri.parse("android-app://installed-app"))
+                        .setPublisher(Uri.parse("android-app://installed-app"))
+                        .build());
+        sourceList.forEach(
+                source -> {
+                    ContentValues values = new ContentValues();
+                    values.put(SourceContract.ID, source.getId());
+                    values.put(SourceContract.EVENT_ID, source.getEventId().toString());
+                    values.put(
+                            SourceContract.APP_DESTINATION, source.getAppDestination().toString());
+                    values.put(SourceContract.ENROLLMENT_ID, source.getEnrollmentId());
+                    values.put(SourceContract.REGISTRANT, source.getRegistrant().toString());
+                    values.put(SourceContract.PUBLISHER, source.getPublisher().toString());
+                    db.insert(SourceContract.TABLE, /* nullColumnHack */ null, values);
+                });
+
+        List<EventReport> reportList = new ArrayList<>();
+        reportList.add(
+                new EventReport.Builder()
+                        .setId("1")
+                        .setSourceId(new UnsignedLong(1L))
+                        .setAttributionDestination(Uri.parse("android-app://app-destination-1"))
+                        .setEnrollmentId("enrollment-id")
+                        .build());
+        reportList.add(
+                new EventReport.Builder()
+                        .setId("2")
+                        .setSourceId(new UnsignedLong(2L))
+                        .setAttributionDestination(Uri.parse("android-app://app-destination-2"))
+                        .setEnrollmentId("enrollment-id")
+                        .build());
+        reportList.forEach(
+                report -> {
+                    ContentValues values = new ContentValues();
+                    values.put(EventReportContract.ID, report.getId());
+                    values.put(EventReportContract.SOURCE_ID, report.getSourceId().toString());
+                    values.put(
+                            EventReportContract.ATTRIBUTION_DESTINATION,
+                            report.getAttributionDestination().toString());
+                    values.put(EventReportContract.ENROLLMENT_ID, report.getEnrollmentId());
+                    db.insert(EventReportContract.TABLE, /* nullColumnHack */ null, values);
+                });
+
+        long count =
+                DatabaseUtils.queryNumEntries(db, EventReportContract.TABLE, /* selection */ null);
+        assertEquals(2, count);
+
+        List<Uri> installedUriList = new ArrayList<>();
+        installedUriList.add(Uri.parse("android-app://installed-app"));
+        installedUriList.add(Uri.parse("android-app://app-destination-1"));
+        installedUriList.add(Uri.parse("android-app://app-destination-2"));
+
+        assertTrue(
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransaction(
+                                measurementDao ->
+                                        measurementDao.deleteAppRecordsNotPresent(
+                                                installedUriList)));
+
+        count = DatabaseUtils.queryNumEntries(db, EventReportContract.TABLE, /* selection */ null);
+        assertEquals(1, count);
+
+        Cursor cursor =
+                db.query(
+                        EventReportContract.TABLE,
+                        /* columns */ null,
+                        /* selection */ null,
+                        /* selectionArgs */ null,
+                        /* groupBy */ null,
+                        /* having */ null,
+                        /* orderBy */ null);
+        while (cursor.moveToNext()) {
+            EventReport eventReport = SqliteObjectMapper.constructEventReportFromCursor(cursor);
+            assertEquals("2", eventReport.getId());
+        }
+    }
+
+    @Test
+    public void testDeleteAppRecordsNotPresentForLargeAppList() {
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        List<Source> sourceList = new ArrayList<>();
+
+        int limit = 5000;
+        sourceList.add(
+                new Source.Builder()
+                        .setId("1")
+                        .setEventId(new UnsignedLong(1L))
+                        .setAppDestination(Uri.parse("android-app://app-destination-1"))
+                        .setEnrollmentId("enrollment-id")
+                        .setRegistrant(Uri.parse("android-app://installed-app" + limit))
+                        .setPublisher(Uri.parse("android-app://installed-app" + limit))
+                        .build());
+        sourceList.add(
+                new Source.Builder()
+                        .setId("2")
+                        .setEventId(new UnsignedLong(1L))
+                        .setAppDestination(Uri.parse("android-app://app-destination-1"))
+                        .setEnrollmentId("enrollment-id")
+                        .setRegistrant(Uri.parse("android-app://installed-app" + (limit + 1)))
+                        .setPublisher(Uri.parse("android-app://installed-app" + (limit + 1)))
+                        .build());
+        sourceList.forEach(
+                source -> {
+                    ContentValues values = new ContentValues();
+                    values.put(SourceContract.ID, source.getId());
+                    values.put(SourceContract.EVENT_ID, source.getEventId().toString());
+                    values.put(
+                            SourceContract.APP_DESTINATION, source.getAppDestination().toString());
+                    values.put(SourceContract.ENROLLMENT_ID, source.getEnrollmentId());
+                    values.put(SourceContract.REGISTRANT, source.getRegistrant().toString());
+                    values.put(SourceContract.PUBLISHER, source.getPublisher().toString());
+                    db.insert(SourceContract.TABLE, /* nullColumnHack */ null, values);
+                });
+
+        long count = DatabaseUtils.queryNumEntries(db, SourceContract.TABLE, /* selection */ null);
+        assertEquals(2, count);
+
+        List<Uri> installedUriList = new ArrayList<>();
+        for (int i = 0; i <= limit; i++) {
+            installedUriList.add(Uri.parse("android-app://installed-app" + i));
+        }
+
+        Assert.assertTrue(
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransaction(
+                                measurementDao ->
+                                        measurementDao.deleteAppRecordsNotPresent(
+                                                installedUriList)));
+
+        count = DatabaseUtils.queryNumEntries(db, SourceContract.TABLE, /* selection */ null);
+        assertEquals(1, count);
+    }
+
     private static List<Source> getSourcesWithDifferentDestinations(
             int numSources,
             boolean hasAppDestination,
@@ -2097,5 +2659,43 @@ public class MeasurementDaoTest {
                 SourceContract.TABLE,
                 SourceContract.ID + " IN ( ? )",
                 new String[] {String.join(",", dbIds)});
+    }
+
+    /** Create {@link Attribution} object from SQLite datastore. */
+    private static Attribution constructAttributionFromCursor(Cursor cursor) {
+        Attribution.Builder builder = new Attribution.Builder();
+        int index = cursor.getColumnIndex(MeasurementTables.AttributionContract.ID);
+        if (index > -1 && !cursor.isNull(index)) {
+            builder.setId(cursor.getString(index));
+        }
+        index = cursor.getColumnIndex(MeasurementTables.AttributionContract.SOURCE_SITE);
+        if (index > -1 && !cursor.isNull(index)) {
+            builder.setSourceSite(cursor.getString(index));
+        }
+        index = cursor.getColumnIndex(MeasurementTables.AttributionContract.SOURCE_ORIGIN);
+        if (index > -1 && !cursor.isNull(index)) {
+            builder.setSourceOrigin(cursor.getString(index));
+        }
+        index = cursor.getColumnIndex(MeasurementTables.AttributionContract.DESTINATION_SITE);
+        if (index > -1 && !cursor.isNull(index)) {
+            builder.setDestinationSite(cursor.getString(index));
+        }
+        index = cursor.getColumnIndex(MeasurementTables.AttributionContract.DESTINATION_ORIGIN);
+        if (index > -1 && !cursor.isNull(index)) {
+            builder.setDestinationOrigin(cursor.getString(index));
+        }
+        index = cursor.getColumnIndex(MeasurementTables.AttributionContract.ENROLLMENT_ID);
+        if (index > -1 && !cursor.isNull(index)) {
+            builder.setEnrollmentId(cursor.getString(index));
+        }
+        index = cursor.getColumnIndex(MeasurementTables.AttributionContract.TRIGGER_TIME);
+        if (index > -1 && !cursor.isNull(index)) {
+            builder.setTriggerTime(cursor.getLong(index));
+        }
+        index = cursor.getColumnIndex(MeasurementTables.AttributionContract.REGISTRANT);
+        if (index > -1 && !cursor.isNull(index)) {
+            builder.setRegistrant(cursor.getString(index));
+        }
+        return builder.build();
     }
 }
