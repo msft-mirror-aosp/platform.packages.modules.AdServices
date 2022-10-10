@@ -48,6 +48,8 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Вклучувањето на бета-верзијата им овозможува на апликациите да ги тестираат овие нови поприватни начини за прикажување реклами. Може да ја исклучите бета-верзијата во секое време во поставките за приватност."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Не, фала"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Вклучи"</string>
+    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
+    <skip />
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Благодариме за учеството"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Вие сте дел од бета-верзија за приватноста на рекламите на Android. Privacy Sandbox е вклучена за вашиот уред.\n\nМоже да дознаете повеќе или да ја исклучите бета-верзијата во секое време во вашите поставки за приватност."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Избравте да не учествувате"</string>
@@ -87,44 +89,25 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Бета-верзијата за приватноста на рекламите на Android обезбедува нови функции што апликациите може да ги користат за да ви прикажуваат реклами што можеби ќе ви се допаднат. Овие технологии не користат идентификатори на уреди.\n\nАпликациите може да ги проценат типовите реклами што можеби ве интересираат и привремено да ги зачуваат овие интереси на вашиот уред. Ова им овозможува на апликациите да ви прикажуваат релевантни реклами, без да ја следат вашата активност на веб-сајтови и апликации од други програмери."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Немате блокирани апликации"</string>
-    <!-- no translation found for settingsUI_dialog_negative_text (3014088254631375852) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_opt_out_title (1862069591629418291) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_opt_out_message (5696012172835241848) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_opt_out_positive_text (5344259263448028614) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_block_topic_title (5744004384480280782) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_block_topic_message (2474902516721078270) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_block_topic_positive_text (2626152417590300510) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_unblock_topic_title (7361000923920947234) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_unblock_topic_message (4058967523591550460) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_unblock_topic_positive_text (2192452325573789737) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_topic_title (1949146936958849544) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (8099126076667244456) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_topic_positive_text (8345697359799280761) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_block_app_title (421160714549264414) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_block_app_message (4703493174054204149) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_unblock_app_title (4360730780049298286) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_unblock_app_message (7858109719986236041) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_title (7193520707240514769) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_message (1967554695864827385) -->
-    <skip />
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Откажи"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Да се исклучи Privacy Sandbox?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Ако се премислите или сакате да дознаете повеќе за бета-верзијата за приватност на рекламите на Android, одете на поставките за приватност"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Исклучи"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Да се блокира <xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Интересов ќе се блокира и нема да се додаде во вашиот список повторно, освен ако го вратите. Можеби сѐ уште ќе ви се прикажуваат некои слични реклами."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Блокирај"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> е одблокирана"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android може да го врати интересов во списокот, но можеби нема да се прикаже веднаш"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"Во ред"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Да се ресетираат сите ваши интереси?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"Списокот ќе се исчисти и потоа ќе се освежува"</string>
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Ресетирај"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Да се блокира <xliff:g id="APP">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Апликацијава нема да ги процени интересите за Privacy Sandbox и нема да се додаде на вашиот список повторно, освен ако ја одблокирате.\n\nИнтересите што се веќе проценети од апликацијава ќе бидат избришани, но сепак може да ви се прикажуваат некои поврзани реклами."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> е одблокирана"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Апликацијава може да ги процени интересите за вас повторно, но можеби нема да се прикажат на списокот веднаш. Можеби ќе помине одредено време додека да ви се прикажат поврзани реклами."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Да се ресетираат интересите генерирани од апликации?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"Списокот ќе се исчисти и потоа ќе се освежува"</string>
     <string name="topic10001" msgid="1636806320891333775">"Уметност и забава"</string>
     <string name="topic10002" msgid="1226367977754287428">"Глума и театар"</string>
     <string name="topic10003" msgid="6949890838957814881">"Аниме и манга"</string>

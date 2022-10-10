@@ -48,6 +48,8 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Kun betaohjelma on päällä, sovellukset voivat kokeilla näitä uusia, aiempaa yksityisempiä tapoja näyttää sinulle mainoksia. Voit laittaa betaohjelman pois päältä milloin tahansa yksityisyysasetuksista."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Ei kiitos"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Laita päälle"</string>
+    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
+    <skip />
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Kiitos osallistumisesta"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Osallistut Androidin mainosyksityisyyden betaohjelmaan. Privacy Sandbox on päällä laitteellasi.\n\nVoit lukea lisää betaohjelmasta tai laittaa sen pois päältä milloin tahansa yksityisyysasetuksista."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Päätit olla osallistumatta"</string>
@@ -87,44 +89,25 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Androidin mainosyksityisyyden betaohjelma tarjoaa uusia ominaisuuksia, joiden avulla sovellukset voivat näyttää mainoksia, joista saatat pitää. Nämä teknologiat eivät käytä laitetunnisteita.\n\nSovellukset voivat arvioida, millaisista mainoksista voisit olla kiinnostunut, ja tallentaa kiinnostuksen kohteet väliaikaisesti laitteellesi. Näin sovellukset voivat näyttää osuvia mainoksia seuraamatta toimintaasi verkkosivustoilla ja muiden kehittäjien sovelluksissa."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Sinulla ei ole estettyjä sovelluksia"</string>
-    <!-- no translation found for settingsUI_dialog_negative_text (3014088254631375852) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_opt_out_title (1862069591629418291) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_opt_out_message (5696012172835241848) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_opt_out_positive_text (5344259263448028614) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_block_topic_title (5744004384480280782) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_block_topic_message (2474902516721078270) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_block_topic_positive_text (2626152417590300510) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_unblock_topic_title (7361000923920947234) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_unblock_topic_message (4058967523591550460) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_unblock_topic_positive_text (2192452325573789737) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_topic_title (1949146936958849544) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (8099126076667244456) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_topic_positive_text (8345697359799280761) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_block_app_title (421160714549264414) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_block_app_message (4703493174054204149) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_unblock_app_title (4360730780049298286) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_unblock_app_message (7858109719986236041) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_title (7193520707240514769) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_message (1967554695864827385) -->
-    <skip />
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Peru"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Laitetaanko Privacy Sandbox pois päältä?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Jos muutat mielesi tai haluat lukea lisää Androidin mainosyksityisyyden betaohjelmasta, avaa yksityisyysasetukset"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Laita pois päältä"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Estetäänkö <xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Kiinnostuksen kohde estetään, eikä sitä lisätä listallesi, ellet lisää sitä uudelleen. Saatat yhä nähdä joitakin aiheeseen liittyviä mainoksia."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Estä"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> on sallittu"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android voi lisätä tämän kiinnostuksen kohteen taas listallesi, mutta sitä ei ehkä näy heti"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Nollataanko kaikki kiinnostuksen kohteet?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"Listasi tyhjennetään, ja se päivittyy ajan myötä"</string>
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Nollaa"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Estetäänkö <xliff:g id="APP">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Tämä sovellus ei arvioi kiinnostuksen kohteita Privacy Sandboxia varten, eikä sitä lisätä listallesi, ellet kumoa estoa.\n\nSovelluksen aiemmin arvioimat kiinnostuksen kohteet poistetaan, mutta saatat yhä nähdä joitakin aiheeseen liittyviä mainoksia."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> on sallittu"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Sovellus voi taas arvioida kiinnostuksen kohteitasi, mutta niitä ei ehkä näy heti. Voi mennä jonkin aikaa, ennen kuin aiheeseen liittyviä mainoksia näkyy."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Nollataanko sovellusten luomat kiinnostuksen kohteet?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"Listasi tyhjennetään, ja se päivittyy ajan myötä"</string>
     <string name="topic10001" msgid="1636806320891333775">"Taide ja viihde"</string>
     <string name="topic10002" msgid="1226367977754287428">"Näytteleminen ja teatteri"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime ja manga"</string>
