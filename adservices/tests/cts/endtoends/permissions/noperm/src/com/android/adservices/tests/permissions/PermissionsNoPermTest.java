@@ -41,10 +41,6 @@ import android.net.Uri;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
-import com.android.compatibility.common.util.ShellUtils;
-
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -62,21 +58,8 @@ public class PermissionsNoPermTest {
             "java.lang.SecurityException: Caller is not authorized to call this API. "
                     + "Permission was not requested.";
 
-    @Before
-    public void setup() {
-        overrideConsentManagerDebugMode(true);
-        overridingAdservicesLoggingLevel("VERBOSE");
-        overrideAdservicesGlobalKillSwitch(true);
-    }
-
-    @After
-    public void teardown() {
-        overrideConsentManagerDebugMode(false);
-        overrideAdservicesGlobalKillSwitch(false);
-    }
-
     @Test
-    public void testNoPerm_topics() throws Exception {
+    public void testNoPerm_topics() {
         AdvertisingTopicsClient advertisingTopicsClient1 =
                 new AdvertisingTopicsClient.Builder()
                         .setContext(sContext)
@@ -309,24 +292,5 @@ public class PermissionsNoPermTest {
                             testAdSelectionClient.resetAllAdSelectionConfigRemoteOverrides().get();
                         });
         assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
-    }
-
-    private void overridingAdservicesLoggingLevel(String loggingLevel) {
-        ShellUtils.runShellCommand("setprop log.tag.adservices %s", loggingLevel);
-    }
-
-    // Override the Consent Manager behaviour - Consent Given
-    private void overrideConsentManagerDebugMode(boolean isGiven) {
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.consent_manager_debug_mode " + isGiven);
-    }
-
-    // Override global_kill_switch to ignore the effect of actual PH values.
-    // If isOverride = true, override global_kill_switch to OFF to allow adservices
-    // If isOverride = false, override global_kill_switch to meaningless value so that PhFlags will
-    // use the default value.
-    private void overrideAdservicesGlobalKillSwitch(boolean isOverride) {
-        String overrideString = isOverride ? "false" : "null";
-        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
     }
 }

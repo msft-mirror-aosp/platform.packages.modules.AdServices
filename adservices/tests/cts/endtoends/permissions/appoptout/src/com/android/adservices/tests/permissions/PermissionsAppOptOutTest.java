@@ -57,31 +57,24 @@ public class PermissionsAppOptOutTest {
     private static final String CALLER_NOT_AUTHORIZED =
             "java.lang.SecurityException: Caller is not authorized to call this API. "
                     + "Caller is not allowed.";
-
-    private static final int TEST_API_REQUEST_PER_SECOND = 2;
+    private static final int TEST_API_REQUEST_PER_SECOND = 5;
     private static final int DEFAULT_API_REQUEST_PER_SECOND = 1;
 
     @Before
     public void setup() {
-        overrideConsentManagerDebugMode(true);
-        overridingAdservicesLoggingLevel("VERBOSE");
-        overrideAPIRateLimit(TEST_API_REQUEST_PER_SECOND);
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
-        PhFlagsFixture.overrideSdkRequestPermitsPerSecond(Integer.MAX_VALUE);
-        overrideAdservicesGlobalKillSwitch(true);
+        overrideAPIRateLimit(TEST_API_REQUEST_PER_SECOND);
     }
 
     @After
     public void teardown() {
-        overrideConsentManagerDebugMode(false);
         overrideAPIRateLimit(DEFAULT_API_REQUEST_PER_SECOND);
-        overrideAdservicesGlobalKillSwitch(false);
     }
 
     @Test
-    public void testAppOptOut_topics() throws Exception {
+    public void testAppOptOut_topics() {
         overrideDisableTopicsEnrollmentCheck("0");
         AdvertisingTopicsClient advertisingTopicsClient1 =
                 new AdvertisingTopicsClient.Builder()
@@ -298,27 +291,8 @@ public class PermissionsAppOptOutTest {
                 "setprop debug.adservices.disable_topics_enrollment_check " + val);
     }
 
-    private void overridingAdservicesLoggingLevel(String loggingLevel) {
-        ShellUtils.runShellCommand("setprop log.tag.adservices %s", loggingLevel);
-    }
-
-    // Override the Consent Manager behaviour - Consent Given
-    private void overrideConsentManagerDebugMode(boolean isGiven) {
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.consent_manager_debug_mode " + isGiven);
-    }
-
     private void overrideAPIRateLimit(int requestPerSecond) {
         ShellUtils.runShellCommand(
                 "setprop debug.adservices.sdk_request_permits_per_second " + requestPerSecond);
-    }
-
-    // Override global_kill_switch to ignore the effect of actual PH values.
-    // If isOverride = true, override global_kill_switch to OFF to allow adservices
-    // If isOverride = false, override global_kill_switch to meaningless value so that PhFlags will
-    // use the default value.
-    private void overrideAdservicesGlobalKillSwitch(boolean isOverride) {
-        String overrideString = isOverride ? "false" : "null";
-        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
     }
 }
