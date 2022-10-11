@@ -74,12 +74,16 @@ public class TopicsConnectionTest {
 
     @Before
     public void setup() throws Exception {
-        overridingBeforeTest();
+        overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
+
+        // We need to turn off random topic so that we can verify the returned topic.
+        overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
     }
 
     @After
     public void teardown() {
-        overridingAfterTest();
+        overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
+        overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
     }
 
     @Test
@@ -88,7 +92,7 @@ public class TopicsConnectionTest {
         // The connection should fail with Exception.
         enableGlobalKillSwitch(/* enabled */ true);
 
-        // Sdk1 calls the Topics API.
+        // Sdk1 calls the Topics git .
         AdvertisingTopicsClient advertisingTopicsClient1 =
                 new AdvertisingTopicsClient.Builder()
                         .setContext(sContext)
@@ -137,49 +141,12 @@ public class TopicsConnectionTest {
         assertThat(topic.getTaxonomyVersion()).isAtLeast(1L);
     }
 
-    private void overridingBeforeTest() {
-        overridingAdservicesLoggingLevel("VERBOSE");
-
-        overrideDisableTopicsEnrollmentCheck("1");
-        overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
-
-        // We need to turn off random topic so that we can verify the returned topic.
-        overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
-
-        // We need to turn the Consent Manager into debug mode
-        overrideConsentManagerDebugMode();
-
-        // Turn off MDD to avoid model mismatching
-        disableMddBackgroundTasks(true);
-    }
-
-    private void overridingAfterTest() {
-        overrideDisableTopicsEnrollmentCheck("0");
-        overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
-        overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
-        disableMddBackgroundTasks(false);
-        overridingAdservicesLoggingLevel("INFO");
-    }
-
     // Override global_kill_switch to ignore the effect of actual PH values.
     // If enabled = true, override global_kill_switch to ON to turn off Adservices.
     // If enabled = false, the AdServices is enabled.
     private void enableGlobalKillSwitch(boolean enabled) {
         String overrideString = enabled ? "true" : "false";
         ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
-    }
-
-    // Switch on/off for MDD service. Default value is false, which means MDD is enabled.
-    private void disableMddBackgroundTasks(boolean isSwitchedOff) {
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.mdd_background_task_kill_switch " + isSwitchedOff);
-    }
-
-    // Override the flag to disable Topics enrollment check.
-    private void overrideDisableTopicsEnrollmentCheck(String val) {
-        // Setting it to 1 here disables the Topics' enrollment check.
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.disable_topics_enrollment_check " + val);
     }
 
     // Override the Epoch Period to shorten the Epoch Length in the test.
@@ -195,19 +162,10 @@ public class TopicsConnectionTest {
                         + overridePercentage);
     }
 
-    // Override the Consent Manager behaviour - Consent Given
-    private void overrideConsentManagerDebugMode() {
-        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
-    }
-
     /** Forces JobScheduler to run the Epoch Computation job */
     private void forceEpochComputationJob() {
         ShellUtils.runShellCommand(
                 "cmd jobscheduler run -f" + " " + ADSERVICES_PACKAGE_NAME + " " + EPOCH_JOB_ID);
-    }
-
-    private void overridingAdservicesLoggingLevel(String loggingLevel) {
-        ShellUtils.runShellCommand("setprop log.tag.adservices %s", loggingLevel);
     }
 
     // Used to get the package name. Copied over from com.android.adservices.AndroidServiceBinder
