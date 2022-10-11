@@ -48,6 +48,8 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"বিটা অন কৰাটোৱে এপক আপোনাক বিজ্ঞাপন দেখুৱাবলৈ এই নতুন অধিক গোপনীয় উপায়সমূহ পৰীক্ষা কৰি চাবলৈ অনুমতি দিয়ে। আপুনি যিকোনো সময়তে নিজৰ গোপনীয়তাৰ ছেটিঙত বিটা অফ কৰিব পাৰে।"</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"নালাগে, ধন্যবাদ"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"অন কৰক"</string>
+    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
+    <skip />
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"অংশগ্ৰহণ কৰাৰ বাবে ধন্যবাদ"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"আপুনি Androidৰ বিজ্ঞাপনৰ গোপনীয়তাৰ বিটা। আপোনাৰ ডিভাইচটোৰ বাবে প্ৰাইভেচি ছেণ্ডবক্স অন কৰা হৈছে।\n\nআপুনি অধিক জানিব পাৰে অথবা নিজৰ গোপনীয়তাৰ ছেটিঙত বিটাটো যিকোনো সময়তে অফ কৰিব পাৰে।"</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"আপুনি অংশগ্ৰহণ নকৰিবলৈ বাছনি কৰিছে"</string>
@@ -87,44 +89,25 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"প্ৰাইভেচি ছেণ্ডবক্স"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Androidৰ বিজ্ঞাপনৰ গোপনীয়তাৰ বিটায়ে নতুন সুবিধাসমূহ দিয়ে, যিসমূহ সুবিধা এপে আপোনাক আপুনি পচন্দ কৰিব পৰা ধৰণৰ বিজ্ঞাপন দেখুৱাবলৈ ব্যৱহাৰ কৰিব পাৰে। এই প্ৰযুক্তিসমূহে ডিভাইচ চিনাক্তকাৰী ব্যৱহাৰ নকৰে।\n\nএপে আপুনি আগ্ৰহী হ’ব পৰা ধৰণৰ বিজ্ঞাপন অনুমান কৰিব পাৰে আৰু আপোনাৰ ডিভাইচত অস্থায়ীভাৱে আগ্ৰহসমূহ ছেভ কৰিব পাৰে। এইটোৱে সমগ্ৰ ৱেবছাইট আৰু অন্য বিকাশকৰ্তাৰ এপত আপোনাৰ কাৰ্যকলাপ ট্ৰেক নকৰাকৈয়ে আপোনাৰ বাবে প্ৰাসংগিক বিজ্ঞাপন দেখুৱাবলৈ এপক অনুমতি দিয়ে।"</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"আপোনাৰ ওচৰত কোনো অৱৰোধিত এপ্ নাই"</string>
-    <!-- no translation found for settingsUI_dialog_negative_text (3014088254631375852) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_opt_out_title (1862069591629418291) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_opt_out_message (5696012172835241848) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_opt_out_positive_text (5344259263448028614) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_block_topic_title (5744004384480280782) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_block_topic_message (2474902516721078270) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_block_topic_positive_text (2626152417590300510) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_unblock_topic_title (7361000923920947234) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_unblock_topic_message (4058967523591550460) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_unblock_topic_positive_text (2192452325573789737) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_topic_title (1949146936958849544) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (8099126076667244456) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_topic_positive_text (8345697359799280761) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_block_app_title (421160714549264414) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_block_app_message (4703493174054204149) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_unblock_app_title (4360730780049298286) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_unblock_app_message (7858109719986236041) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_title (7193520707240514769) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_message (1967554695864827385) -->
-    <skip />
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"বাতিল কৰক"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"প্ৰাইভেচি ছেণ্ডবক্স অফ কৰিবনে?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"আপুনি যদি নিজৰ সিদ্ধান্ত সলনি কৰে অথবা Androidৰ বিজ্ঞাপনৰ গোপনীয়তা বিটাৰ বিষয়ে অধিক জানিবলৈ বিচাৰে, আপোনাৰ গোপনীয়তাৰ ছেটিঙলৈ যাওক"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"অফ কৰক"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"<xliff:g id="TOPIC">%1$s</xliff:g> অৱৰোধ কৰিবনে?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"এই আগ্ৰহটো অৱৰোধ কৰা হ’ব আৰু আপুনি ইয়াক পুনৰ যোগ নিদিয়া পৰ্যন্ত এইটো আপোনাৰ সূচীত পুনৰ যোগ দিয়া নহ’ব। আপুনি তথাপি কিছুমান প্ৰাসংগিক বিজ্ঞাপন দেখা পাব পাৰে।"</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"অৱৰোধ কৰক"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g>ক অৱৰোধৰ পৰা আঁতৰোৱা হ’ল"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Androidএ আপোনাৰ সূচীখনত এই আগ্ৰহটো পুনৰ যোগ দিব পাৰে, কিন্তু আপোনাৰ তৎক্ষণাৎ প্ৰদৰ্শিত নহ’ব পাৰে"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"ঠিক আছে"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"আপোনাৰ আটাইবোৰ আগ্ৰহ ৰিছেট কৰিবনে?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"আপোনাৰ সূচীখন মচা হ’ব, তাৰ পাছত সময়ৰ লগে লগে ৰিফ্ৰেশ্ব কৰা হ’ব"</string>
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"ৰিছেট কৰক"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> অৱৰোধ কৰিবনে?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"এই এপ্‌টোৱে প্ৰাইভেচি ছেণ্ডবক্সৰ বাবে আগ্ৰহসমূহ অনুমান নকৰে আৰু আপুনি ইয়াক অৱৰোধৰ পৰা আঁতৰাই নিদিয়ালৈকে ইয়াক আপোনাৰ সূচীখনত পুনৰ যোগ দিয়া নহ’ব।\n\nএই এপ্‌টোৱে ইতিমধ্যে অনুমান কৰা আগ্ৰহসমূহ মচা হ’ব কিন্তু আপুনি তথাপিও কিছুমান প্ৰাসংগিক বিজ্ঞাপন দেখা পাব পাৰে।"</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g>ক অৱৰোধৰ পৰা আঁতৰোৱা হ’ল"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"এপ্‌টোৱে পুনৰ আপোনাৰ বাবে আগ্ৰহসমূহ অনুমান কৰিব পাৰে, কিন্তু সেয়া আপোনাৰ সূচীখনত তৎক্ষণাৎ প্ৰদৰ্শিত নহ’ব পাৰে। আপুনি প্ৰাসংগিক বিজ্ঞাপনসমূহ দেখা পাবলৈ কিছু সময় লাগিব পাৰে।"</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"এপে সৃষ্টি কৰা আগ্ৰহসমূহ ৰিছেট কৰিবনে?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"আপোনাৰ সূচীখন মচা হ’ব, তাৰ পাছত সময়ৰ লগে লগে ৰিফ্ৰেশ্ব কৰা হ’ব"</string>
     <string name="topic10001" msgid="1636806320891333775">"কলা আৰু বিনোদন"</string>
     <string name="topic10002" msgid="1226367977754287428">"অভিনয় আৰু থিয়েটাৰ"</string>
     <string name="topic10003" msgid="6949890838957814881">"এনিমে’ আৰু মাংগা"</string>

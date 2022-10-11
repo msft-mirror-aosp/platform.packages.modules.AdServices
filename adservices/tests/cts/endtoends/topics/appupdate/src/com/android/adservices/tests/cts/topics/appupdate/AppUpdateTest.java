@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.tests.cts.topics;
+package com.android.adservices.tests.cts.topics.appupdate;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 
