@@ -331,11 +331,14 @@ public class ActionDelegate {
 
     private void configureBlockedTopicsFragmentButton(AdServicesSettingsTopicsFragment fragment) {
         View blockedTopicsButton = fragment.requireView().findViewById(R.id.blocked_topics_button);
+        View blockedTopicsWhenEmptyListButton =
+                fragment.requireView().findViewById(R.id.blocked_topics_when_empty_state_button);
 
         blockedTopicsButton.setOnClickListener(
-                view -> {
-                    mTopicsViewModel.blockedTopicsFragmentButtonClickHandler();
-                });
+                view -> mTopicsViewModel.blockedTopicsFragmentButtonClickHandler());
+
+        blockedTopicsWhenEmptyListButton.setOnClickListener(
+                view -> mTopicsViewModel.blockedTopicsFragmentButtonClickHandler());
     }
 
     private void configureResetTopicsButton(AdServicesSettingsTopicsFragment fragment) {
@@ -363,8 +366,13 @@ public class ActionDelegate {
 
     private void configureBlockedAppsFragmentButton(AdServicesSettingsAppsFragment fragment) {
         View blockedAppsButton = fragment.requireView().findViewById(R.id.blocked_apps_button);
-
+        View blockedAppsWhenEmptyListButton =
+                fragment.requireView().findViewById(R.id.blocked_apps_when_empty_state_button);
         blockedAppsButton.setOnClickListener(
+                view -> {
+                    mAppsViewModel.blockedAppsFragmentButtonClickHandler();
+                });
+        blockedAppsWhenEmptyListButton.setOnClickListener(
                 view -> {
                     mAppsViewModel.blockedAppsFragmentButtonClickHandler();
                 });
