@@ -107,7 +107,7 @@ public final class AggregatePayloadGeneratorTest {
         Map<String, BigInteger> aggregatableSource = new HashMap<>();
         aggregatableSource.put("campaignCounts", BigInteger.valueOf(345L));
         aggregatableSource.put("geoValue", BigInteger.valueOf(5L));
-        aggregatableSource.put("thirdSource", BigInteger.valueOf(100L));
+        aggregatableSource.put("thirdSource", BigInteger.valueOf(101L));
         Map<String, List<String>> sourceFilterMap = new HashMap<>();
         sourceFilterMap.put("conversion_subdomain",
                 Collections.singletonList("electronics.megastore"));
@@ -158,13 +158,16 @@ public final class AggregatePayloadGeneratorTest {
         assertTrue(aggregateHistogramContributions.isPresent());
         List<AggregateHistogramContribution> contributions = aggregateHistogramContributions.get();
 
-        assertEquals(contributions.size(), 2);
+        assertEquals(contributions.size(), 3);
         assertTrue(contributions.contains(
                 new AggregateHistogramContribution.Builder()
                         .setKey(BigInteger.valueOf(1369L)).setValue(32768).build()));
         assertTrue(contributions.contains(
                 new AggregateHistogramContribution.Builder()
                         .setKey(BigInteger.valueOf(2693L)).setValue(1664).build()));
+        assertTrue(contributions.contains(
+                new AggregateHistogramContribution.Builder()
+                        .setKey(BigInteger.valueOf(101L)).setValue(100).build()));
     }
 
     @Test

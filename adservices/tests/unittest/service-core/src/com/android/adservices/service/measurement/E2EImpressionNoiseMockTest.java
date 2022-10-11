@@ -94,7 +94,8 @@ public class E2EImpressionNoiseMockTest extends E2EMockTest {
         for (String key : mActualTriggerDataDistributions.keySet()) {
             if (!mExpectedTriggerDataDistributions.containsKey(key)) {
                 Assert.assertTrue(getTestFailureMessage(
-                        "Missing key in expected trigger data distributions"), false);
+                        "Missing key in expected trigger data distributions"
+                        + getDatastoreState()), false);
             }
         }
         boolean testPassed = false;

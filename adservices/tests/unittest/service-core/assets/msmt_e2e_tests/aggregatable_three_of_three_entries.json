@@ -1,5 +1,5 @@
 {
-  "description": "Given three entries in the \"Attribution-Reporting-Register-Aggregatable-Source\" header, generate an aggregate report with two contributions. One entry doesn't generate a contribution because it doesn't exist in the \"Attribution-Reporting-Register-Aggregatable-Trigger-Data\" header.",
+  "description": "Given three entries in the \"Attribution-Reporting-Register-Aggregatable-Source\" header, generate an aggregate report with three contributions. One contribution entry has no representation in filters.",
   "input": {
     "sources": [{
       "registration_request": {
@@ -117,14 +117,15 @@
       }
     }],
     "aggregatable_results": [{
-      "report_time": 800000600001,
+      "report_time": "800000600001",
       "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
       "payload": {
         "attribution_destination": "android-app://example.2d1.test",
         "source_site": "android-app://example.1s1.test",
         "histograms": [
           {"key": "0x559", "value": 32768},
-          {"key": "0xa85", "value": 1664}
+          {"key": "0xa85", "value": 1664},
+	  {"key":"0x100", "value":"100"}
         ]
       }
     }]
