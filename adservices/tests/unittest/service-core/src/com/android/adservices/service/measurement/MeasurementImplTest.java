@@ -1003,7 +1003,7 @@ public final class MeasurementImplTest {
                         eventTime + TimeUnit.DAYS.toMillis(8), EventSurfaceType.APP));
 
         for (EventReport report : fakeEventReports) {
-            Assert.assertEquals(source.getEventId(), report.getSourceId());
+            Assert.assertEquals(source.getEventId(), report.getSourceEventId());
             Assert.assertTrue(reportingTimes.stream().anyMatch(x -> x == report.getReportTime()));
             Assert.assertEquals(source.getEventTime(), report.getTriggerTime());
             Assert.assertEquals(0, report.getTriggerPriority());
