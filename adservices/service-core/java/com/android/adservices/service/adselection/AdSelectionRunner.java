@@ -25,6 +25,7 @@ import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.AdSelectionResponse;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
+import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
@@ -45,10 +46,10 @@ import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.js.JSSandboxIsNotAvailableException;
 import com.android.adservices.service.js.JSScriptEngine;
+import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.service.stats.ApiServiceLatencyCalculator;
+import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Preconditions;
@@ -108,8 +109,6 @@ public abstract class AdSelectionRunner {
                     ERROR_AD_SELECTION_FAILURE,
                     "JS Sandbox is not available");
 
-    public static final long DAY_IN_SECONDS = 60 * 60 * 24;
-
     @NonNull protected final Context mContext;
     @NonNull protected final CustomAudienceDao mCustomAudienceDao;
     @NonNull protected final AdSelectionEntryDao mAdSelectionEntryDao;
@@ -125,7 +124,7 @@ public abstract class AdSelectionRunner {
     @NonNull protected final Supplier<Throttler> mThrottlerSupplier;
     @NonNull protected final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
     @NonNull protected final FledgeAllowListsFilter mFledgeAllowListsFilter;
-    @NonNull protected final ApiServiceLatencyCalculator mApiServiceLatencyCalculator;
+    @NonNull protected final AdSelectionExecutionLogger mAdSelectionExecutionLogger;
     protected final int mCallerUid;
 
     /**
@@ -159,7 +158,7 @@ public abstract class AdSelectionRunner {
             int callerUid,
             @NonNull final FledgeAuthorizationFilter fledgeAuthorizationFilter,
             @NonNull final FledgeAllowListsFilter fledgeAllowListsFilter,
-            @NonNull final ApiServiceLatencyCalculator apiServiceLatencyCalculator) {
+            @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(adSelectionEntryDao);
@@ -175,7 +174,7 @@ public abstract class AdSelectionRunner {
         Preconditions.checkArgument(
                 JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable(),
                 JS_SANDBOX_IS_NOT_AVAILABLE);
-        Objects.requireNonNull(apiServiceLatencyCalculator);
+        Objects.requireNonNull(adSelectionExecutionLogger);
 
         mContext = context;
         mCustomAudienceDao = customAudienceDao;
@@ -193,7 +192,7 @@ public abstract class AdSelectionRunner {
         mCallerUid = callerUid;
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
         mFledgeAllowListsFilter = fledgeAllowListsFilter;
-        mApiServiceLatencyCalculator = apiServiceLatencyCalculator;
+        mAdSelectionExecutionLogger = adSelectionExecutionLogger;
     }
 
     @VisibleForTesting
@@ -214,7 +213,7 @@ public abstract class AdSelectionRunner {
             int callerUid,
             @NonNull final FledgeAuthorizationFilter fledgeAuthorizationFilter,
             @NonNull final FledgeAllowListsFilter fledgeAllowListsFilter,
-            @NonNull final ApiServiceLatencyCalculator apiServiceLatencyCalculator) {
+            @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(adSelectionEntryDao);
@@ -228,7 +227,7 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(appImportanceFilter);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(fledgeAuthorizationFilter);
-        Objects.requireNonNull(apiServiceLatencyCalculator);
+        Objects.requireNonNull(adSelectionExecutionLogger);
 
         mContext = context;
         mCustomAudienceDao = customAudienceDao;
@@ -246,7 +245,7 @@ public abstract class AdSelectionRunner {
         mCallerUid = callerUid;
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
         mFledgeAllowListsFilter = fledgeAllowListsFilter;
-        mApiServiceLatencyCalculator = apiServiceLatencyCalculator;
+        mAdSelectionExecutionLogger = adSelectionExecutionLogger;
     }
 
     /**
@@ -276,6 +275,16 @@ public abstract class AdSelectionRunner {
                                             orchestrateAdSelection(
                                                     inputParams.getAdSelectionConfig(),
                                                     inputParams.getCallerPackageName()),
+                                    mLightweightExecutorService)
+                            .transform(
+                                    this::closeSuccessfulAdSelection, mLightweightExecutorService)
+                            .catching(
+                                    RuntimeException.class,
+                                    this::closeFailedAdSelectionWithRuntimeException,
+                                    mLightweightExecutorService)
+                            .catching(
+                                    AdServicesException.class,
+                                    this::closeFailedAdSelectionWithAdServicesException,
                                     mLightweightExecutorService);
 
             Futures.addCallback(
@@ -293,7 +302,11 @@ public abstract class AdSelectionRunner {
                                         callback,
                                         AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED);
                             } else {
-                                notifyFailureToCaller(callback, t);
+                                if (t.getCause() instanceof AdServicesException) {
+                                    notifyFailureToCaller(callback, t.getCause());
+                                } else {
+                                    notifyFailureToCaller(callback, t);
+                                }
                             }
                         }
                     },
@@ -302,6 +315,31 @@ public abstract class AdSelectionRunner {
             LogUtil.v("run ad selection fails fast with exception %s.", t.toString());
             notifyFailureToCaller(callback, t);
         }
+    }
+
+    @Nullable
+    private DBAdSelection closeFailedAdSelectionWithRuntimeException(RuntimeException e) {
+        LogUtil.v("Close failed ad selection and rethrow the RuntimeException %s.", e.toString());
+        int resultCode = AdServicesLoggerUtil.getResultCodeFromException(e);
+        mAdSelectionExecutionLogger.close(null, resultCode);
+        throw e;
+    }
+
+    @Nullable
+    private DBAdSelection closeFailedAdSelectionWithAdServicesException(AdServicesException e) {
+        int resultCode = AdServicesLoggerUtil.getResultCodeFromException(e);
+        mAdSelectionExecutionLogger.close(null, resultCode);
+        LogUtil.v(
+                "Close failed ad selection and wrap the AdServicesException with"
+                        + " an RuntimeException with message: %s and log with resultCode : %d",
+                e.getMessage(), resultCode);
+        throw new RuntimeException(e.getMessage(), e.getCause());
+    }
+
+    @NonNull
+    private DBAdSelection closeSuccessfulAdSelection(@NonNull DBAdSelection dbAdSelection) {
+        mAdSelectionExecutionLogger.close(dbAdSelection, AdServicesStatusUtils.STATUS_SUCCESS);
+        return dbAdSelection;
     }
 
     private void notifySuccessToCaller(
@@ -318,7 +356,8 @@ public abstract class AdSelectionRunner {
             LogUtil.e(e, "Encountered exception during notifying AdSelection callback");
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } finally {
-            int overallLatencyMs = mApiServiceLatencyCalculator.getApiServiceOverallLatencyMs();
+            int overallLatencyMs =
+                    mAdSelectionExecutionLogger.getRunAdSelectionOverallLatencyInMs();
             LogUtil.v(
                     "Ad Selection with Id:%d completed with overall latency %d in ms, "
                             + "attempted notifying success",
@@ -342,7 +381,8 @@ public abstract class AdSelectionRunner {
             LogUtil.e(e, "Encountered exception during notifying AdSelection callback");
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } finally {
-            int overallLatencyMs = mApiServiceLatencyCalculator.getApiServiceOverallLatencyMs();
+            int overallLatencyMs =
+                    mAdSelectionExecutionLogger.getRunAdSelectionOverallLatencyInMs();
             LogUtil.v(
                     "Ad Selection with Id:%d completed with overall latency %d in ms, "
                             + "attempted notifying success for a silent failure",
@@ -358,25 +398,7 @@ public abstract class AdSelectionRunner {
             @NonNull AdSelectionCallback callback, @NonNull Throwable t) {
         int resultCode = AdServicesStatusUtils.STATUS_UNSET;
         try {
-            if (t instanceof WrongCallingApplicationStateException) {
-                resultCode = AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
-            } else if (t instanceof UncheckedTimeoutException) {
-                resultCode = AdServicesStatusUtils.STATUS_TIMEOUT;
-            } else if (t instanceof FledgeAuthorizationFilter.AdTechNotAllowedException
-                    || t instanceof FledgeAllowListsFilter.AppNotAllowedException) {
-                resultCode = AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
-            } else if (t instanceof FledgeAuthorizationFilter.CallerMismatchException) {
-                resultCode = AdServicesStatusUtils.STATUS_UNAUTHORIZED;
-            } else if (t instanceof IllegalArgumentException) {
-                resultCode = AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
-            } else if (t instanceof LimitExceededException) {
-                resultCode = AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
-            } else if (t instanceof JSSandboxIsNotAvailableException) {
-                resultCode = AdServicesStatusUtils.STATUS_JS_SANDBOX_UNAVAILABLE;
-            } else {
-                resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
-            }
-
+            resultCode = AdServicesLoggerUtil.getResultCodeFromException(t);
             FledgeErrorResponse selectionFailureResponse =
                     new FledgeErrorResponse.Builder()
                             .setErrorMessage(
@@ -392,7 +414,8 @@ public abstract class AdSelectionRunner {
             LogUtil.e(e, "Encountered exception during notifying AdSelection callback");
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } finally {
-            int overallLatencyMs = mApiServiceLatencyCalculator.getApiServiceOverallLatencyMs();
+            int overallLatencyMs =
+                    mAdSelectionExecutionLogger.getRunAdSelectionOverallLatencyInMs();
             LogUtil.v("Ad Selection failed with overall latency %d in ms", overallLatencyMs);
             // TODO(b//253522566): When including logging data from bidding & auction server side
             //  should be able to differentiate the data from the on-device telemetry.
@@ -419,12 +442,11 @@ public abstract class AdSelectionRunner {
                 orchestrateAdSelection(adSelectionConfig, callerPackageName, buyerCustomAudience);
 
         AsyncFunction<AdSelectionOrchestrationResult, DBAdSelection> saveResultToPersistence =
-                adSelectionAndJs -> {
-                    return persistAdSelection(
-                            adSelectionAndJs.mDbAdSelectionBuilder,
-                            adSelectionAndJs.mBuyerDecisionLogicJs,
-                            callerPackageName);
-                };
+                adSelectionAndJs ->
+                        persistAdSelection(
+                                adSelectionAndJs.mDbAdSelectionBuilder,
+                                adSelectionAndJs.mBuyerDecisionLogicJs,
+                                callerPackageName);
 
         return FluentFuture.from(dbAdSelection)
                 .transformAsync(saveResultToPersistence, mLightweightExecutorService)
@@ -485,12 +507,14 @@ public abstract class AdSelectionRunner {
                             .setCreationTimestamp(mClock.instant())
                             .setCallerPackageName(callerPackageName);
                     dbAdSelection = dbAdSelectionBuilder.build();
+                    mAdSelectionExecutionLogger.startPersistAdSelection();
                     mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
                     mAdSelectionEntryDao.persistBuyerDecisionLogic(
                             new DBBuyerDecisionLogic.Builder()
                                     .setBuyerDecisionLogicJs(buyerDecisionLogicJS)
                                     .setBiddingLogicUri(dbAdSelection.getBiddingLogicUri())
                                     .build());
+                    mAdSelectionExecutionLogger.endPersistAdSelection();
                     return dbAdSelection;
                 });
     }
