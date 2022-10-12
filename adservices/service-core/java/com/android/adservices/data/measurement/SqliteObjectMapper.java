@@ -43,8 +43,10 @@ public class SqliteObjectMapper {
         EventReport.Builder builder = new EventReport.Builder();
         setTextColumn(cursor, MeasurementTables.EventReportContract.ID,
                 builder::setId);
-        setUnsignedLongColumn(cursor, MeasurementTables.EventReportContract.SOURCE_ID,
-                builder::setSourceId);
+        setUnsignedLongColumn(
+                cursor,
+                MeasurementTables.EventReportContract.SOURCE_EVENT_ID,
+                builder::setSourceEventId);
         setLongColumn(cursor, MeasurementTables.EventReportContract.TRIGGER_PRIORITY,
                 builder::setTriggerPriority);
         setIntColumn(cursor, MeasurementTables.EventReportContract.STATUS,

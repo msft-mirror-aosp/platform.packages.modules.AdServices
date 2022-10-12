@@ -500,7 +500,7 @@ public final class MeasurementImpl {
                 .map(
                         fakeReport ->
                                 new EventReport.Builder()
-                                        .setSourceId(source.getEventId())
+                                        .setSourceEventId(source.getEventId())
                                         .setReportTime(fakeReport.getReportingTime())
                                         .setTriggerData(fakeReport.getTriggerData())
                                         .setAttributionDestination(fakeReport.getDestination())
