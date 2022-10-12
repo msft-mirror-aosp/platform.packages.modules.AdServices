@@ -16,8 +16,10 @@
 
 package com.android.apiimplementation;
 
+import android.app.sdksandbox.SdkSandboxController;
 import android.app.sdksandbox.interfaces.ISdkApi;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.RemoteException;
 
 import java.io.File;
@@ -48,5 +50,14 @@ public class SdkApi extends ISdkApi.Stub {
         } catch (IOException e) {
             throw new RemoteException(e);
         }
+    }
+
+    @Override
+    public String getSyncedSharedPreferencesString(String key) {
+        return getClientSharedPreferences().getString(key, "");
+    }
+
+    private SharedPreferences getClientSharedPreferences() {
+        return mContext.getSystemService(SdkSandboxController.class).getClientSharedPreferences();
     }
 }

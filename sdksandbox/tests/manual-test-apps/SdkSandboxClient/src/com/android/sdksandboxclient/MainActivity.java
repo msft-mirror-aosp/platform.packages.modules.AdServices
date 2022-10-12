@@ -30,12 +30,14 @@ import android.app.sdksandbox.RequestSurfacePackageException;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.interfaces.ISdkApi;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
+import android.preference.PreferenceManager;
 import android.text.InputType;
 import android.util.Log;
 import android.view.SurfaceControlViewHost.SurfacePackage;
@@ -43,7 +45,10 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Toast;
+
+import java.util.Set;
 
 public class MainActivity extends Activity {
     private static final String SDK_NAME = "com.android.sdksandboxcode";
@@ -64,6 +69,7 @@ public class MainActivity extends Activity {
     private Button mRenderButton;
     private Button mCreateFileButton;
     private Button mPlayVideoButton;
+    private Button mSyncKeysButton;
 
     private SurfaceView mRenderedView;
 
@@ -88,11 +94,13 @@ public class MainActivity extends Activity {
         mRenderButton = findViewById(R.id.request_surface_button);
         mCreateFileButton = findViewById(R.id.create_file_button);
         mPlayVideoButton = findViewById(R.id.play_video_button);
+        mSyncKeysButton = findViewById(R.id.sync_keys_button);
 
         registerLoadSdkProviderButton();
         registerLoadSurfacePackageButton();
         registerCreateFileButton();
         registerPlayVideoButton();
+        registerSyncKeysButton();
     }
 
     private void registerLoadSdkProviderButton() {
@@ -210,6 +218,66 @@ public class MainActivity extends Activity {
                     } else {
                         makeToast("Sdk is not loaded");
                     }
+                });
+    }
+
+    private void registerSyncKeysButton() {
+        mSyncKeysButton.setOnClickListener(
+                v -> {
+                    if (!mSdkLoaded) {
+                        makeToast("Sdk is not loaded");
+                        return;
+                    }
+
+                    final AlertDialog.Builder alert = new AlertDialog.Builder(this);
+
+                    alert.setTitle("Set the key and value to sync");
+                    LinearLayout linearLayout = new LinearLayout(this);
+                    linearLayout.setOrientation(1); // 1 is for vertical orientation
+                    final EditText inputKey = new EditText(this);
+                    final EditText inputValue = new EditText(this);
+                    linearLayout.addView(inputKey);
+                    linearLayout.addView(inputValue);
+                    alert.setView(linearLayout);
+
+                    alert.setPositiveButton(
+                            "Sync",
+                            (dialog, which) -> {
+                                sHandler.post(
+                                        () -> {
+                                            final SharedPreferences pref =
+                                                    PreferenceManager.getDefaultSharedPreferences(
+                                                            getApplicationContext());
+                                            String keyToSync = inputKey.getText().toString();
+                                            String valueToSync = inputValue.getText().toString();
+                                            pref.edit().putString(keyToSync, valueToSync).commit();
+                                            mSdkSandboxManager.addSyncedSharedPreferencesKeys(
+                                                    Set.of(keyToSync));
+                                            IBinder binder = mSandboxedSdk.getInterface();
+                                            ISdkApi sdkApi = ISdkApi.Stub.asInterface(binder);
+                                            try {
+                                                // Allow some time for data to sync
+                                                Thread.sleep(1000);
+                                                String syncedKeysValue =
+                                                        sdkApi.getSyncedSharedPreferencesString(
+                                                                keyToSync);
+                                                if (syncedKeysValue.equals(valueToSync)) {
+                                                    makeToast(
+                                                            "Key was synced successfully\n"
+                                                                    + "Key is : "
+                                                                    + keyToSync
+                                                                    + " Value is : "
+                                                                    + syncedKeysValue);
+                                                } else {
+                                                    makeToast("Key was not synced");
+                                                }
+                                            } catch (Exception e) {
+                                                throw new RuntimeException(e);
+                                            }
+                                        });
+                            });
+                    alert.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+                    alert.show();
                 });
     }
 
