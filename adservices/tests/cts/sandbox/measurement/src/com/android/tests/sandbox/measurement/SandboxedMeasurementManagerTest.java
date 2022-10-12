@@ -54,15 +54,10 @@ public class SandboxedMeasurementManagerTest {
         // Start a foreground activity
         SimpleActivity.startAndWaitForSimpleActivity(sContext, Duration.ofMillis(1000));
 
-        // We need to turn the Consent Manager into debug mode to simulate grant Consent
-        overrideConsentManagerDebugMode();
-
         enforceMeasurementEnrollmentCheck(true);
 
         // Allow sandbox package name to be able to execute Measurement APIs
         allowSandboxPackageNameAccessMeasurementApis();
-
-        overrideAdservicesGlobalKillSwitch(true);
     }
 
     @After
@@ -71,9 +66,6 @@ public class SandboxedMeasurementManagerTest {
 
         // Reset back the original values.
         resetAllowSandboxPackageNameAccessMeasurementApis();
-        resetOverrideConsentManagerDebugMode();
-
-        overrideAdservicesGlobalKillSwitch(false);
     }
 
     @Test
@@ -120,17 +112,9 @@ public class SandboxedMeasurementManagerTest {
                 "device_config put adservices web_context_client_allow_list " + sdkSbxName);
     }
 
-    private void overrideConsentManagerDebugMode() {
-        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
-    }
-
     private void resetAllowSandboxPackageNameAccessMeasurementApis() {
         ShellUtils.runShellCommand(
                 "device_config put adservices web_context_client_allow_list null");
-    }
-
-    private void resetOverrideConsentManagerDebugMode() {
-        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode null");
     }
 
     // Override global_kill_switch to ignore the effect of actual PH values.

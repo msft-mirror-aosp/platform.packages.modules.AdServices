@@ -80,12 +80,27 @@ public class SandboxedTopicsManagerTest {
 
         // Start a foreground activity
         SimpleActivity.startAndWaitForSimpleActivity(sContext, Duration.ofMillis(1000));
-        overridingBeforeTest();
+
+        // The setup for this test:
+        // SandboxedTopicsManagerTest is the test app. It will load the Sdk1 into the Sandbox.
+        // The Sdk1 (running within the Sandbox) will query Topics API and verify that the correct
+        // Topics are returned.
+        // After Sdk1 verifies the result, it will communicate back to the
+        // SandboxedTopicsManagerTest via the loadSdk's callback.
+        // In this test, we use the loadSdk's callback as a 2-way communications between the Test
+        // app (this class) and the Sdk running within the Sandbox process.
+
+        overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
+
+        // We need to turn off random topic so that we can verify the returned topic.
+        overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
     }
 
     @After
     public void shutDown() {
-        overridingAfterTest();
+        overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
+        overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+
         SimpleActivity.stopSimpleActivity(sContext);
     }
 
@@ -126,57 +141,10 @@ public class SandboxedTopicsManagerTest {
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
     }
 
-    private void overridingBeforeTest() {
-        overridingAdservicesLoggingLevel("VERBOSE");
-        // Turn off MDD to avoid model mismatching
-        disableMddBackgroundTasks(true);
-        overrideDisableTopicsEnrollmentCheck("1");
-        // The setup for this test:
-        // SandboxedTopicsManagerTest is the test app. It will load the Sdk1 into the Sandbox.
-        // The Sdk1 (running within the Sandbox) will query Topics API and verify that the correct
-        // Topics are returned.
-        // After Sdk1 verifies the result, it will communicate back to the
-        // SandboxedTopicsManagerTest via the loadSdk's callback.
-        // In this test, we use the loadSdk's callback as a 2-way communications between the Test
-        // app (this class) and the Sdk running within the Sandbox process.
-
-        // We need to turn the Consent Manager into debug mode
-        overrideConsentManagerDebugMode();
-
-        overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
-
-        // We need to turn off random topic so that we can verify the returned topic.
-        overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
-
-        overrideAdservicesGlobalKillSwitch(true);
-    }
-
-    // Reset back the original values.
-    private void overridingAfterTest() {
-        overrideDisableTopicsEnrollmentCheck("0");
-        overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
-        overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
-        disableMddBackgroundTasks(false);
-        overridingAdservicesLoggingLevel("INFO");
-        overrideAdservicesGlobalKillSwitch(false);
-    }
-
-    // Override the flag to disable Topics enrollment check.
-    private void overrideDisableTopicsEnrollmentCheck(String val) {
-        // Setting it to 1 here disables the Topics enrollment check.
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.disable_topics_enrollment_check " + val);
-    }
-
     // Override the Epoch Period to shorten the Epoch Length in the test.
     private void overrideEpochPeriod(long overrideEpochPeriod) {
         ShellUtils.runShellCommand(
                 "setprop debug.adservices.topics_epoch_job_period_ms " + overrideEpochPeriod);
-    }
-
-    // Override the Consent Manager behaviour - Consent Given
-    private void overrideConsentManagerDebugMode() {
-        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
     }
 
     // Override the Percentage For Random Topic in the test.
@@ -186,29 +154,10 @@ public class SandboxedTopicsManagerTest {
                         + overridePercentage);
     }
 
-    // Switch on/off for MDD service. Default value is false, which means MDD is enabled.
-    private void disableMddBackgroundTasks(boolean isSwitchedOff) {
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.mdd_background_task_kill_switch " + isSwitchedOff);
-    }
-
     /** Forces JobScheduler to run the Epoch Computation job */
     private void forceEpochComputationJob() {
         ShellUtils.runShellCommand(
                 "cmd jobscheduler run -f" + " " + getAdServicesPackageName() + " " + EPOCH_JOB_ID);
-    }
-
-    private void overridingAdservicesLoggingLevel(String loggingLevel) {
-        ShellUtils.runShellCommand("setprop log.tag.adservices %s", loggingLevel);
-    }
-
-    // Override global_kill_switch to ignore the effect of actual PH values.
-    // If isOverride = true, override global_kill_switch to OFF to allow adservices
-    // If isOverride = false, override global_kill_switch to meaningless value so that PhFlags will
-    // use the default value.
-    private void overrideAdservicesGlobalKillSwitch(boolean isOverride) {
-        String overrideString = isOverride ? "false" : "null";
-        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
     }
 
     // Used to get the package name. Copied over from com.android.adservices.AndroidServiceBinder

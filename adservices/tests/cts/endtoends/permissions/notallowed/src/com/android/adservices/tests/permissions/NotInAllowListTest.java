@@ -53,18 +53,11 @@ public class NotInAllowListTest {
 
     @Before
     public void setup() {
-        overrideDisableTopicsEnrollmentCheck("1");
-        overrideConsentManagerDebugMode(true);
-        overridingAdservicesLoggingLevel("VERBOSE");
-        overrideAdservicesGlobalKillSwitch(true);
         overrideSignatureAllowListToEmpty(true);
     }
 
     @After
     public void teardown() {
-        overrideDisableTopicsEnrollmentCheck("0");
-        overrideConsentManagerDebugMode(false);
-        overrideAdservicesGlobalKillSwitch(false);
         overrideSignatureAllowListToEmpty(false);
     }
 
@@ -81,32 +74,6 @@ public class NotInAllowListTest {
                 assertThrows(
                         ExecutionException.class, () -> advertisingTopicsClient1.getTopics().get());
         assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_ALLOWED);
-    }
-
-    private void overridingAdservicesLoggingLevel(String loggingLevel) {
-        ShellUtils.runShellCommand("setprop log.tag.adservices %s", loggingLevel);
-    }
-
-    // Override the Consent Manager behaviour - Consent Given
-    private void overrideConsentManagerDebugMode(boolean isGiven) {
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.consent_manager_debug_mode " + isGiven);
-    }
-
-    // Override global_kill_switch to ignore the effect of actual PH values.
-    // If isOverride = true, override global_kill_switch to OFF to allow adservices
-    // If isOverride = false, override global_kill_switch to meaningless value so that PhFlags will
-    // use the default value.
-    private void overrideAdservicesGlobalKillSwitch(boolean isOverride) {
-        String overrideString = isOverride ? "false" : "null";
-        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
-    }
-
-    // Override the flag to disable Topics enrollment check.
-    private void overrideDisableTopicsEnrollmentCheck(String val) {
-        // Setting it to 1 here disables the Topics' enrollment check.
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.disable_topics_enrollment_check " + val);
     }
 
     // Override Signature Allow List to deny the signature of this test
