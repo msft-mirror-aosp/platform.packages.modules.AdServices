@@ -54,6 +54,10 @@
       "name": "CtsAdServicesTopicsConnectionTests[com.google.android.adservices.apex]"
     },
     {
+      // Install com.google.android.adservices.apex and run CtsSandboxedAdIdManagerTests.
+      "name": "CtsSandboxedAdIdManagerTests[com.google.android.adservices.apex]"
+    },
+    {
       // Install com.google.android.adservices.apex and run CtsSandboxedTopicsManagerTests.
       "name": "CtsSandboxedTopicsManagerTests[com.google.android.adservices.apex]"
     },
