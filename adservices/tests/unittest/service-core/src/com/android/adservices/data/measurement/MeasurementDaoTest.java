@@ -46,6 +46,7 @@ import com.android.adservices.service.measurement.AsyncRegistrationFixture;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
+import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.Trigger;
@@ -336,6 +337,50 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void testCountDistinctEnrollmentsPerPublisherXDestinationInAttribution_atWindow() {
+        Uri sourceSite = Uri.parse("android-app://publisher.app");
+        Uri appDestination = Uri.parse("android-app://destination.app");
+        String registrant = "android-app://registrant.app";
+        List<Attribution> attributionsWithAppDestinations =
+                getAttributionsWithDifferentEnrollments(
+                        4, appDestination, 5000000001L, sourceSite, registrant);
+        for (Attribution attribution : attributionsWithAppDestinations) {
+            insertAttribution(attribution);
+        }
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        String excludedEnrollmentId = "enrollment-id-0";
+        datastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(Integer.valueOf(3), measurementDao
+                            .countDistinctEnrollmentsPerPublisherXDestinationInAttribution(
+                                    sourceSite, appDestination, excludedEnrollmentId,
+                                    5000000000L, 6000000000L));
+                });
+    }
+
+    @Test
+    public void testCountDistinctEnrollmentsPerPublisherXDestinationInAttribution_beyondWindow() {
+        Uri sourceSite = Uri.parse("android-app://publisher.app");
+        Uri appDestination = Uri.parse("android-app://destination.app");
+        String registrant = "android-app://registrant.app";
+        List<Attribution> attributionsWithAppDestinations =
+                getAttributionsWithDifferentEnrollments(
+                        4, appDestination, 5000000000L, sourceSite, registrant);
+        for (Attribution attribution : attributionsWithAppDestinations) {
+            insertAttribution(attribution);
+        }
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        String excludedEnrollmentId = "enrollment-id-0";
+        datastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(Integer.valueOf(0), measurementDao
+                            .countDistinctEnrollmentsPerPublisherXDestinationInAttribution(
+                                    sourceSite, appDestination, excludedEnrollmentId,
+                                    5000000000L, 6000000000L));
+                });
+    }
+
+    @Test
     public void testCountDistinctEnrollmentsPerPublisherXDestinationInAttribution_appDestination() {
         Uri sourceSite = Uri.parse("android-app://publisher.app");
         Uri webDestination = Uri.parse("https://web-destination.com");
@@ -414,6 +459,56 @@ public class MeasurementDaoTest {
                             .countDistinctEnrollmentsPerPublisherXDestinationInAttribution(
                                     sourceSite, webDestination, excludedEnrollmentId,
                                     4000000000L, 6000000000L));
+                });
+    }
+
+    @Test
+    public void testCountDistinctDestinationsPerPublisherInActiveSource_atWindow() {
+        Uri publisher = Uri.parse("android-app://publisher.app");
+        List<Source> activeSourcesWithAppAndWebDestinations =
+                getSourcesWithDifferentDestinations(
+                        4, true, true, 4500000001L, publisher,
+                        SourceFixture.ValidSourceParams.ENROLLMENT_ID, Source.Status.ACTIVE);
+        for (Source source : activeSourcesWithAppAndWebDestinations) {
+            insertSource(source);
+        }
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        Uri excludedDestination = Uri.parse("https://web-destination-2.com");
+        datastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            Integer.valueOf(3),
+                            measurementDao
+                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                            publisher, EventSurfaceType.APP,
+                                            SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                                            excludedDestination, EventSurfaceType.WEB,
+                                            4500000000L, 6000000000L));
+                });
+    }
+
+    @Test
+    public void testCountDistinctDestinationsPerPublisherInActiveSource_beyondWindow() {
+        Uri publisher = Uri.parse("android-app://publisher.app");
+        List<Source> activeSourcesWithAppAndWebDestinations =
+                getSourcesWithDifferentDestinations(
+                        4, true, true, 4500000000L, publisher,
+                        SourceFixture.ValidSourceParams.ENROLLMENT_ID, Source.Status.ACTIVE);
+        for (Source source : activeSourcesWithAppAndWebDestinations) {
+            insertSource(source);
+        }
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        Uri excludedDestination = Uri.parse("https://web-destination-2.com");
+        datastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            Integer.valueOf(0),
+                            measurementDao
+                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                            publisher, EventSurfaceType.APP,
+                                            SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                                            excludedDestination, EventSurfaceType.WEB,
+                                            4500000000L, 6000000000L));
                 });
     }
 
@@ -683,6 +778,54 @@ public class MeasurementDaoTest {
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                                             excludedDestination, EventSurfaceType.WEB,
                                             4000000000L, 6000000000L));
+                });
+    }
+
+    @Test
+    public void testCountDistinctEnrollmentsPerPublisherXDestinationInSource_atWindow() {
+        Uri publisher = Uri.parse("android-app://publisher.app");
+        Uri webDestination = Uri.parse("https://web-destination.com");
+        Uri appDestination = Uri.parse("android-app://destination.app");
+        List<Source> activeSourcesWithAppAndWebDestinations =
+                getSourcesWithDifferentEnrollments(
+                        2, appDestination, webDestination, 4500000001L, publisher,
+                        Source.Status.ACTIVE);
+        for (Source source : activeSourcesWithAppAndWebDestinations) {
+            insertSource(source);
+        }
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        String excludedEnrollmentId = "enrollment-id-1";
+        datastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            Integer.valueOf(1),
+                            measurementDao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
+                                    publisher, EventSurfaceType.APP, appDestination,
+                                    excludedEnrollmentId, 4500000000L, 6000000000L));
+                });
+    }
+
+    @Test
+    public void testCountDistinctEnrollmentsPerPublisherXDestinationInSource_beyondWindow() {
+        Uri publisher = Uri.parse("android-app://publisher.app");
+        Uri webDestination = Uri.parse("https://web-destination.com");
+        Uri appDestination = Uri.parse("android-app://destination.app");
+        List<Source> activeSourcesWithAppAndWebDestinations =
+                getSourcesWithDifferentEnrollments(
+                        2, appDestination, webDestination, 4500000000L, publisher,
+                        Source.Status.ACTIVE);
+        for (Source source : activeSourcesWithAppAndWebDestinations) {
+            insertSource(source);
+        }
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        String excludedEnrollmentId = "enrollment-id-1";
+        datastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            Integer.valueOf(0),
+                            measurementDao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
+                                    publisher, EventSurfaceType.APP, appDestination,
+                                    excludedEnrollmentId, 4500000000L, 6000000000L));
                 });
     }
 
@@ -1573,7 +1716,7 @@ public class MeasurementDaoTest {
                         .setSourceOrigin(source.getPublisher().toString())
                         .setSourceSite(source.getPublisher().toString())
                         .setRegistrant(source.getRegistrant().toString())
-                        .setTriggerTime(source.getEventTime())
+                        .setTriggerTime(trigger.getTriggerTime())
                         .build();
         DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
 
@@ -1591,6 +1734,80 @@ public class MeasurementDaoTest {
                 });
 
         assertEquals(1L, attributionsCount.get());
+    }
+
+    @Test
+    public void testGetAttributionsPerRateLimitWindow_atTimeWindow() {
+        // Setup
+        Source source = SourceFixture.getValidSource();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setTriggerTime(source.getEventTime() + TimeUnit.HOURS.toMillis(1))
+                        .build();
+        Attribution attribution =
+                new Attribution.Builder()
+                        .setEnrollmentId(source.getEnrollmentId())
+                        .setDestinationOrigin(source.getWebDestination().toString())
+                        .setDestinationSite(source.getAppDestination().toString())
+                        .setSourceOrigin(source.getPublisher().toString())
+                        .setSourceSite(source.getPublisher().toString())
+                        .setRegistrant(source.getRegistrant().toString())
+                        .setTriggerTime(trigger.getTriggerTime()
+                                - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS + 1)
+                        .build();
+        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
+
+        // Execution
+        dm.runInTransaction(
+                (dao) -> {
+                    dao.insertAttribution(attribution);
+                });
+
+        // Assertion
+        AtomicLong attributionsCount = new AtomicLong();
+        dm.runInTransaction(
+                (dao) -> {
+                    attributionsCount.set(dao.getAttributionsPerRateLimitWindow(source, trigger));
+                });
+
+        assertEquals(1L, attributionsCount.get());
+    }
+
+    @Test
+    public void testGetAttributionsPerRateLimitWindow_beyondTimeWindow() {
+        // Setup
+        Source source = SourceFixture.getValidSource();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setTriggerTime(source.getEventTime() + TimeUnit.HOURS.toMillis(1))
+                        .build();
+        Attribution attribution =
+                new Attribution.Builder()
+                        .setEnrollmentId(source.getEnrollmentId())
+                        .setDestinationOrigin(source.getWebDestination().toString())
+                        .setDestinationSite(source.getAppDestination().toString())
+                        .setSourceOrigin(source.getPublisher().toString())
+                        .setSourceSite(source.getPublisher().toString())
+                        .setRegistrant(source.getRegistrant().toString())
+                        .setTriggerTime(trigger.getTriggerTime()
+                                - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS)
+                        .build();
+        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
+
+        // Execution
+        dm.runInTransaction(
+                (dao) -> {
+                    dao.insertAttribution(attribution);
+                });
+
+        // Assertion
+        AtomicLong attributionsCount = new AtomicLong();
+        dm.runInTransaction(
+                (dao) -> {
+                    attributionsCount.set(dao.getAttributionsPerRateLimitWindow(source, trigger));
+                });
+
+        assertEquals(0L, attributionsCount.get());
     }
 
     @Test
