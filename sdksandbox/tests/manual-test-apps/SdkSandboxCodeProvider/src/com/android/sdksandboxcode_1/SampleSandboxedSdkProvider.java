@@ -18,6 +18,8 @@ package com.android.sdksandboxcode_1;
 
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkProvider;
+import android.app.sdksandbox.SdkSandboxController;
+import android.app.sdksandbox.interfaces.ISdkApi;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Canvas;
@@ -26,7 +28,9 @@ import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Looper;
+import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -34,6 +38,7 @@ import android.widget.VideoView;
 
 import com.android.apiimplementation.SdkApi;
 
+import java.util.List;
 import java.util.Random;
 
 public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
@@ -43,6 +48,8 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
     private static final String VIEW_TYPE_KEY = "view-type";
     private static final String VIDEO_VIEW_VALUE = "video-view";
     private static final String VIDEO_URL_KEY = "video-url";
+    // TODO(b/253202014): Add toggle button
+    private static final boolean SDK_SDK_COMM_ENABLED = true;
 
     @Override
     public SandboxedSdk onLoadSdk(Bundle params) {
@@ -66,6 +73,7 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
 
     private static class TestView extends View {
 
+        private static final CharSequence MEDIATEE_SDK = "com.android.sdksandboxcode_mediatee";
         private Context mSdkContext;
 
         TestView(Context windowContext, Context sdkContext) {
@@ -82,7 +90,37 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
             paint.setColor(Color.WHITE);
             paint.setTextSize(50);
             Random random = new Random();
-            String message = mSdkContext.getResources().getString(R.string.view_message);
+            String message;
+            if (SDK_SDK_COMM_ENABLED) {
+                SandboxedSdk mediateeSdk;
+                try {
+                    // get message from another sandboxed SDK
+                    List<SandboxedSdk> sandboxedSdks =
+                            mSdkContext
+                                    .getSystemService(SdkSandboxController.class)
+                                    .getSandboxedSdks();
+                    mediateeSdk =
+                            sandboxedSdks.stream()
+                                    .filter(
+                                            s ->
+                                                    s.getSharedLibraryInfo()
+                                                            .getName()
+                                                            .contains(MEDIATEE_SDK))
+                                    .findAny()
+                                    .get();
+                } catch (Exception e) {
+                    throw new RuntimeException("Error in sdk-sdk communication ", e);
+                }
+                try {
+                    IBinder binder = mediateeSdk.getInterface();
+                    ISdkApi sdkApi = ISdkApi.Stub.asInterface(binder);
+                    message = sdkApi.getMessage();
+                } catch (RemoteException e) {
+                    throw new RuntimeException(e);
+                }
+            } else {
+                message = mSdkContext.getResources().getString(R.string.view_message);
+            }
             int c = Color.rgb(random.nextInt(256), random.nextInt(256), random.nextInt(256));
             canvas.drawColor(c);
             canvas.drawText(message, 75, 75, paint);
