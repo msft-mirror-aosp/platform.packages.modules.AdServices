@@ -18,6 +18,7 @@ package android.app.sdksandbox;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.Context;
 import android.os.Bundle;
 import android.view.SurfaceControlViewHost.SurfacePackage;
