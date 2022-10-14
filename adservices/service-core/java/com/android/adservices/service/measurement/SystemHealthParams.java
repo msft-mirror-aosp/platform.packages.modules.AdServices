@@ -43,6 +43,12 @@ public class SystemHealthParams {
      */
     public static final int MAX_ATTRIBUTIONS_PER_INVOCATION = 100;
 
+    /** Max number of aggregate reports in storage per destination */
+    public static final long MAX_AGGREGATE_REPORTS_PER_DESTINATION = 1024;
+
+    /** Max number of event reports in storage per destination */
+    public static final long MAX_EVENT_REPORTS_PER_DESTINATION = 1024;
+
     /**
      * Maximum event report upload retry window.
      */
