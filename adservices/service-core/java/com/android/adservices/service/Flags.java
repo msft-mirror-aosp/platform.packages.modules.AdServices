@@ -993,6 +993,8 @@ public interface Flags extends Dumpable {
                     + "com.android.adservices.tests.permissions.valid,"
                     + "com.android.adservices.tests.adid,"
                     + "com.android.adservices.tests.appsetid,"
+                    + "com.android.sdksandboxclient,"
+                    + "com.android.tests.sandbox.adid,"
                     + "com.android.tests.sandbox.fledge,"
                     + "com.android.tests.sandbox.measurement,"
                     + "com.example.adservices.samples.adid.app,"
