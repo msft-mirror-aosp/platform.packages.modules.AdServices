@@ -18,10 +18,10 @@ package com.android.adservices.service.measurement.actions;
 
 import java.util.Objects;
 
-public final class ReportingJob implements Action {
+public final class AggregateReportingJob implements Action {
     public final long mTimestamp;
 
-    public ReportingJob(long timestamp) {
+    public AggregateReportingJob(long timestamp) {
         mTimestamp = timestamp;
     }
 
@@ -32,8 +32,8 @@ public final class ReportingJob implements Action {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof ReportingJob)) return false;
-        ReportingJob that = (ReportingJob) o;
+        if (!(o instanceof AggregateReportingJob)) return false;
+        AggregateReportingJob that = (AggregateReportingJob) o;
         return mTimestamp == that.mTimestamp;
     }
 
