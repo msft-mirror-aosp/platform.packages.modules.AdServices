@@ -27,12 +27,13 @@ import com.android.adservices.HpkeJni;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.actions.Action;
+import com.android.adservices.service.measurement.actions.AggregateReportingJob;
+import com.android.adservices.service.measurement.actions.EventReportingJob;
 import com.android.adservices.service.measurement.actions.RegisterSource;
 import com.android.adservices.service.measurement.actions.RegisterTrigger;
 import com.android.adservices.service.measurement.actions.RegisterWebSource;
 import com.android.adservices.service.measurement.actions.RegisterWebTrigger;
 import com.android.adservices.service.measurement.actions.ReportObjects;
-import com.android.adservices.service.measurement.actions.ReportingJob;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.registration.SourceFetcher;
@@ -139,16 +140,8 @@ public abstract class E2EMockTest extends E2ETest {
     }
 
     @Override
-    void processAction(ReportingJob reportingJob) throws IOException, JSONException {
+    void processAction(EventReportingJob reportingJob) throws IOException, JSONException {
         Object[] eventCaptures = EventReportingJobHandlerWrapper
-                .spyPerformScheduledPendingReportsInWindow(
-                        sEnrollmentDao,
-                        sDatastoreManager,
-                        reportingJob.mTimestamp
-                                - SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
-                        reportingJob.mTimestamp);
-
-        Object[] aggregateCaptures = AggregateReportingJobHandlerWrapper
                 .spyPerformScheduledPendingReportsInWindow(
                         sEnrollmentDao,
                         sDatastoreManager,
@@ -160,6 +153,17 @@ public abstract class E2EMockTest extends E2ETest {
                 (List<EventReport>) eventCaptures[0],
                 (List<Uri>) eventCaptures[1],
                 (List<JSONObject>) eventCaptures[2]);
+    }
+
+    @Override
+    void processAction(AggregateReportingJob reportingJob) throws IOException, JSONException {
+        Object[] aggregateCaptures = AggregateReportingJobHandlerWrapper
+                .spyPerformScheduledPendingReportsInWindow(
+                        sEnrollmentDao,
+                        sDatastoreManager,
+                        reportingJob.mTimestamp
+                                - SystemHealthParams.MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS,
+                        reportingJob.mTimestamp);
 
         processAggregateReports(
                 (List<Uri>) aggregateCaptures[0],
