@@ -52,6 +52,7 @@ import org.json.JSONObject;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -143,6 +144,20 @@ class AttributionJobHandler {
 
     private boolean maybeGenerateAggregateReport(Source source, Trigger trigger,
             IMeasurementDao measurementDao) throws DatastoreException {
+        int numReports =
+                measurementDao.getNumAggregateReportsPerDestination(
+                        trigger.getAttributionDestination(), trigger.getDestinationType());
+
+        if (numReports >= SystemHealthParams.MAX_AGGREGATE_REPORTS_PER_DESTINATION) {
+            LogUtil.d(
+                    String.format(Locale.ENGLISH,
+                            "Aggregate reports for destination %1$s exceeds system health limit of"
+                                    + " %2$d.",
+                            trigger.getAttributionDestination(),
+                            SystemHealthParams.MAX_AGGREGATE_REPORTS_PER_DESTINATION));
+            return false;
+        }
+
         try {
             Optional<AggregatableAttributionSource> aggregateAttributionSource =
                     source.parseAggregateSource();
@@ -235,6 +250,20 @@ class AttributionJobHandler {
     private boolean maybeGenerateEventReport(
             Source source, Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
+        int numReports =
+                measurementDao.getNumEventReportsPerDestination(
+                        trigger.getAttributionDestination(), trigger.getDestinationType());
+
+        if (numReports >= SystemHealthParams.MAX_EVENT_REPORTS_PER_DESTINATION) {
+            LogUtil.d(
+                    String.format(Locale.ENGLISH,
+                            "Event reports for destination %1$s exceeds system health limit of"
+                                    + " %2$d.",
+                            trigger.getAttributionDestination(),
+                            SystemHealthParams.MAX_EVENT_REPORTS_PER_DESTINATION));
+            return false;
+        }
+
         // Do not generate event reports for source which have attributionMode != Truthfully.
         // TODO: Handle attribution rate limit consideration for non-truthful cases.
         if (source.getAttributionMode() != Source.AttributionMode.TRUTHFULLY) {

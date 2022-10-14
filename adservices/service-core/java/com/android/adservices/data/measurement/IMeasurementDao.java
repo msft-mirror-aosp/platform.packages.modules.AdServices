@@ -60,6 +60,28 @@ public interface IMeasurementDao {
     Trigger getTrigger(String triggerId) throws DatastoreException;
 
     /**
+     * Fetches the count of aggregate reports for the provided destination.
+     *
+     * @param attributionDestination Uri for the destination
+     * @param destinationType DestinationType App/Web
+     * @return number of aggregate reports in the database attributed to the provided destination
+     */
+    int getNumAggregateReportsPerDestination(
+            @NonNull Uri attributionDestination, @EventSurfaceType int destinationType)
+            throws DatastoreException;
+
+    /**
+     * Fetches the count of event reports for the provided destination.
+     *
+     * @param attributionDestination Uri for the destination
+     * @param destinationType DestinationType App/Web
+     * @return number of event reports in the database attributed to the provided destination
+     */
+    int getNumEventReportsPerDestination(
+            @NonNull Uri attributionDestination, @EventSurfaceType int destinationType)
+            throws DatastoreException;
+
+    /**
      * Gets the number of sources associated to a publisher.
      *
      * @param publisherUri Uri for the publisher
