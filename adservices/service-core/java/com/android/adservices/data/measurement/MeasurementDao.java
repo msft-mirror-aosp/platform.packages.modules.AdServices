@@ -570,7 +570,7 @@ class MeasurementDao implements IMeasurementDao {
                         + MeasurementTables.AttributionContract.ENROLLMENT_ID
                         + " = ? AND "
                         + MeasurementTables.AttributionContract.TRIGGER_TIME
-                        + " >= ? AND "
+                        + " > ? AND "
                         + MeasurementTables.AttributionContract.TRIGGER_TIME
                         + " <= ? ",
                 new String[] {
@@ -610,7 +610,7 @@ class MeasurementDao implements IMeasurementDao {
                         Locale.ENGLISH,
                         "SELECT COUNT(DISTINCT %1$s) FROM %2$s "
                                 + "WHERE %3$s = ? AND %4$s = ? AND %1s != ? "
-                                + "AND %5$s < ? AND %5$s >= ?",
+                                + "AND %5$s > ? AND %5$s <= ?",
                         MeasurementTables.AttributionContract.ENROLLMENT_ID,
                         MeasurementTables.AttributionContract.TABLE,
                         MeasurementTables.AttributionContract.SOURCE_SITE,
@@ -624,8 +624,8 @@ class MeasurementDao implements IMeasurementDao {
                             sourceSite.toString(),
                             destinationSite.toString(),
                             excludedEnrollmentId,
-                            String.valueOf(windowEndTime),
-                            String.valueOf(windowStartTime)
+                            String.valueOf(windowStartTime),
+                            String.valueOf(windowEndTime)
                         });
     }
 
@@ -642,7 +642,7 @@ class MeasurementDao implements IMeasurementDao {
                         Locale.ENGLISH,
                         "SELECT COUNT(DISTINCT %1$s) FROM %2$s "
                                 + "WHERE %3$s AND %4$s = ? AND %5$s = ? AND %1$s != ? "
-                                + "AND %6$s < ? AND %6$s >= ?",
+                                + "AND %6$s > ? AND %6$s <= ?",
                         destinationColumn,
                         MeasurementTables.SourceContract.TABLE,
                         getPublisherWhereStatement(publisher, publisherType),
@@ -656,8 +656,8 @@ class MeasurementDao implements IMeasurementDao {
                         enrollmentId,
                         String.valueOf(Source.Status.ACTIVE),
                         excludedDestination.toString(),
-                        String.valueOf(windowEndTime),
-                        String.valueOf(windowStartTime) });
+                        String.valueOf(windowStartTime),
+                        String.valueOf(windowEndTime) });
     }
 
     @Override
@@ -669,7 +669,7 @@ class MeasurementDao implements IMeasurementDao {
                         Locale.ENGLISH,
                         "SELECT COUNT(DISTINCT %1$s) FROM %2$s "
                                 + "WHERE %3$s AND (%4$s = ? OR %5$s = ?) AND %1s != ? "
-                                + "AND %6$s < ? AND %6$s >= ?",
+                                + "AND %6$s > ? AND %6$s <= ?",
                         MeasurementTables.SourceContract.ENROLLMENT_ID,
                         MeasurementTables.SourceContract.TABLE,
                         getPublisherWhereStatement(publisher, publisherType),
@@ -684,8 +684,8 @@ class MeasurementDao implements IMeasurementDao {
                             destination.toString(),
                             destination.toString(),
                             excludedEnrollmentId,
-                            String.valueOf(windowEndTime),
-                            String.valueOf(windowStartTime)
+                            String.valueOf(windowStartTime),
+                            String.valueOf(windowEndTime)
                         });
     }
 
