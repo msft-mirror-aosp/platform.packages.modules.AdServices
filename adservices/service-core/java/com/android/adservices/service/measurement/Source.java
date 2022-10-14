@@ -620,6 +620,7 @@ public class Source {
      */
     public Optional<AggregatableAttributionSource> parseAggregateSource()
             throws JSONException, NumberFormatException {
+
         if (this.mAggregateSource == null) {
             return Optional.empty();
         }

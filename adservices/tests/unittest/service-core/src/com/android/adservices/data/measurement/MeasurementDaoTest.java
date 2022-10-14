@@ -80,6 +80,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class MeasurementDaoTest {
@@ -1108,6 +1109,134 @@ public class MeasurementDaoTest {
                                         measurementDao.undoInstallAttribution(INSTALLED_PACKAGE)));
         // Should set installAttributed = false for id=IA1
         Assert.assertFalse(getInstallAttributionStatus("IA1", db));
+    }
+
+    @Test
+    public void getNumAggregateReportsPerDestination_returnsExpected() {
+        List<AggregateReport> reportsWithPlainDestination =
+                Arrays.asList(generateMockAggregateReport("https://destination-1.com", 1));
+        List<AggregateReport> reportsWithPlainAndSubDomainDestination =
+                Arrays.asList(
+                        generateMockAggregateReport("https://destination-2.com", 2),
+                        generateMockAggregateReport("https://subdomain.destination-2.com", 3));
+        List<AggregateReport> reportsWithPlainAndPathDestination =
+                Arrays.asList(
+                        generateMockAggregateReport("https://subdomain.destination-3.com", 4),
+                        generateMockAggregateReport("https://subdomain.destination-3.com/abcd", 5));
+        List<AggregateReport> reportsWithAll3Types =
+                Arrays.asList(
+                        generateMockAggregateReport("https://destination-4.com", 6),
+                        generateMockAggregateReport("https://subdomain.destination-4.com", 7),
+                        generateMockAggregateReport("https://subdomain.destination-4.com/abcd", 8));
+        List<AggregateReport> reportsWithAndroidAppDestination =
+                Arrays.asList(generateMockAggregateReport("android-app://destination-5.app", 9));
+
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+        Stream.of(
+                        reportsWithPlainDestination,
+                        reportsWithPlainAndSubDomainDestination,
+                        reportsWithPlainAndPathDestination,
+                        reportsWithAll3Types,
+                        reportsWithAndroidAppDestination)
+                .flatMap(Collection::stream)
+                .forEach(
+                        aggregateReport -> {
+                            ContentValues values = new ContentValues();
+                            values.put(
+                                    MeasurementTables.AggregateReport.ID, aggregateReport.getId());
+                            values.put(
+                                    MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION,
+                                    aggregateReport.getAttributionDestination().toString());
+                            db.insert(MeasurementTables.AggregateReport.TABLE, null, values);
+                        });
+
+        List<String> attributionDestinations1 = createWebDestinationVariants(1);
+        List<String> attributionDestinations2 = createWebDestinationVariants(2);
+        List<String> attributionDestinations3 = createWebDestinationVariants(3);
+        List<String> attributionDestinations4 = createWebDestinationVariants(4);
+        List<String> attributionDestinations5 = createAppDestinationVariants(5);
+
+        // expected query return values for attribution destination variants
+        List<Integer> destination1ExpectedCounts = Arrays.asList(1, 1, 1, 1, 0);
+        List<Integer> destination2ExpectedCounts = Arrays.asList(2, 2, 2, 2, 0);
+        List<Integer> destination3ExpectedCounts = Arrays.asList(2, 2, 2, 2, 0);
+        List<Integer> destination4ExpectedCounts = Arrays.asList(3, 3, 3, 3, 0);
+        List<Integer> destination5ExpectedCounts = Arrays.asList(0, 0, 1, 1, 0);
+        assertAggregateReportCount(
+                attributionDestinations1, EventSurfaceType.WEB, destination1ExpectedCounts);
+        assertAggregateReportCount(
+                attributionDestinations2, EventSurfaceType.WEB, destination2ExpectedCounts);
+        assertAggregateReportCount(
+                attributionDestinations3, EventSurfaceType.WEB, destination3ExpectedCounts);
+        assertAggregateReportCount(
+                attributionDestinations4, EventSurfaceType.WEB, destination4ExpectedCounts);
+        assertAggregateReportCount(
+                attributionDestinations5, EventSurfaceType.APP, destination5ExpectedCounts);
+    }
+
+    @Test
+    public void getNumEventReportsPerDestination_returnsExpected() {
+        List<EventReport> reportsWithPlainDestination =
+                Arrays.asList(generateMockEventReport("https://destination-1.com", 1));
+        List<EventReport> reportsWithPlainAndSubDomainDestination =
+                Arrays.asList(
+                        generateMockEventReport("https://destination-2.com", 2),
+                        generateMockEventReport("https://subdomain.destination-2.com", 3));
+        List<EventReport> reportsWithPlainAndPathDestination =
+                Arrays.asList(
+                        generateMockEventReport("https://subdomain.destination-3.com", 4),
+                        generateMockEventReport("https://subdomain.destination-3.com/abcd", 5));
+        List<EventReport> reportsWithAll3Types =
+                Arrays.asList(
+                        generateMockEventReport("https://destination-4.com", 6),
+                        generateMockEventReport("https://subdomain.destination-4.com", 7),
+                        generateMockEventReport("https://subdomain.destination-4.com/abcd", 8));
+        List<EventReport> reportsWithAndroidAppDestination =
+                Arrays.asList(generateMockEventReport("android-app://destination-5.app", 9));
+
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+        Stream.of(
+                        reportsWithPlainDestination,
+                        reportsWithPlainAndSubDomainDestination,
+                        reportsWithPlainAndPathDestination,
+                        reportsWithAll3Types,
+                        reportsWithAndroidAppDestination)
+                .flatMap(Collection::stream)
+                .forEach(
+                        eventReport -> {
+                            ContentValues values = new ContentValues();
+                            values.put(
+                                    MeasurementTables.EventReportContract.ID, eventReport.getId());
+                            values.put(
+                                    MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
+                                    eventReport.getAttributionDestination().toString());
+                            db.insert(MeasurementTables.EventReportContract.TABLE, null, values);
+                        });
+
+        List<String> attributionDestinations1 = createWebDestinationVariants(1);
+        List<String> attributionDestinations2 = createWebDestinationVariants(2);
+        List<String> attributionDestinations3 = createWebDestinationVariants(3);
+        List<String> attributionDestinations4 = createWebDestinationVariants(4);
+        List<String> attributionDestinations5 = createAppDestinationVariants(5);
+
+        // expected query return values for attribution destination variants
+        List<Integer> destination1ExpectedCounts = Arrays.asList(1, 1, 1, 1, 0);
+        List<Integer> destination2ExpectedCounts = Arrays.asList(2, 2, 2, 2, 0);
+        List<Integer> destination3ExpectedCounts = Arrays.asList(2, 2, 2, 2, 0);
+        List<Integer> destination4ExpectedCounts = Arrays.asList(3, 3, 3, 3, 0);
+        List<Integer> destination5ExpectedCounts = Arrays.asList(0, 0, 1, 1, 0);
+        assertEventReportCount(
+                attributionDestinations1, EventSurfaceType.WEB, destination1ExpectedCounts);
+        assertEventReportCount(
+                attributionDestinations2, EventSurfaceType.WEB, destination2ExpectedCounts);
+        assertEventReportCount(
+                attributionDestinations3, EventSurfaceType.WEB, destination3ExpectedCounts);
+        assertEventReportCount(
+                attributionDestinations4, EventSurfaceType.WEB, destination4ExpectedCounts);
+        assertEventReportCount(
+                attributionDestinations5, EventSurfaceType.APP, destination5ExpectedCounts);
     }
 
     @Test
@@ -2857,6 +2986,66 @@ public class MeasurementDaoTest {
                                         eventTimePastDays == -1 ? 10 : eventTimePastDays))
                 .setPriority(priority == -1 ? 100 : priority)
                 .build();
+    }
+
+    private AggregateReport generateMockAggregateReport(String attributionDestination, int id) {
+        return new AggregateReport.Builder()
+                .setId(String.valueOf(id))
+                .setAttributionDestination(Uri.parse(attributionDestination))
+                .build();
+    }
+
+    private EventReport generateMockEventReport(String attributionDestination, int id) {
+        return new EventReport.Builder()
+                .setId(String.valueOf(id))
+                .setAttributionDestination(Uri.parse(attributionDestination))
+                .build();
+    }
+
+    private void assertAggregateReportCount(
+            List<String> attributionDestinations,
+            int destinationType,
+            List<Integer> expectedCounts) {
+        IntStream.range(0, attributionDestinations.size())
+                .forEach(i -> Assert.assertEquals(expectedCounts.get(i),
+                        DatastoreManagerFactory.getDatastoreManager(sContext)
+                                .runInTransactionWithResult(measurementDao ->
+                                        measurementDao.getNumAggregateReportsPerDestination(
+                                                Uri.parse(attributionDestinations.get(i)),
+                                                destinationType))
+                                .orElseThrow()));
+    }
+
+    private void assertEventReportCount(
+            List<String> attributionDestinations,
+            int destinationType,
+            List<Integer> expectedCounts) {
+        IntStream.range(0, attributionDestinations.size())
+                .forEach(i -> Assert.assertEquals(expectedCounts.get(i),
+                        DatastoreManagerFactory.getDatastoreManager(sContext)
+                                .runInTransactionWithResult(measurementDao ->
+                                        measurementDao.getNumEventReportsPerDestination(
+                                                Uri.parse(attributionDestinations.get(i)),
+                                                destinationType))
+                                .orElseThrow()));
+    }
+
+    private List<String> createAppDestinationVariants(int destinationNum) {
+        return Arrays.asList(
+                "android-app://subdomain.destination-" + destinationNum + ".app/abcd",
+                "android-app://subdomain.destination-" + destinationNum + ".app",
+                "android-app://destination-" + destinationNum + ".app/abcd",
+                "android-app://destination-" + destinationNum + ".app",
+                "android-app://destination-" + destinationNum + ".ap");
+    }
+
+    private List<String> createWebDestinationVariants(int destinationNum) {
+        return Arrays.asList(
+                "https://subdomain.destination-" + destinationNum + ".com/abcd",
+                "https://subdomain.destination-" + destinationNum + ".com",
+                "https://destination-" + destinationNum + ".com/abcd",
+                "https://destination-" + destinationNum + ".com",
+                "https://destination-" + destinationNum + ".co");
     }
 
     private boolean getInstallAttributionStatus(String sourceDbId, SQLiteDatabase db) {
