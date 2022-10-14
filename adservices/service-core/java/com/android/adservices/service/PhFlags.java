@@ -210,6 +210,8 @@ public final class PhFlags implements Flags {
             "measurement_job_attribution_kill_switch";
     static final String KEY_MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH =
             "measurement_job_delete_expired_kill_switch";
+    static final String KEY_MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH =
+            "measurement_job_delete_uninstalled_kill_switch";
     static final String KEY_MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH =
             "measurement_job_event_fallback_reporting_kill_switch";
     static final String KEY_MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH =
@@ -1042,6 +1044,22 @@ public final class PhFlags implements Flags {
                                 DeviceConfig.NAMESPACE_ADSERVICES,
                                 /* flagName */ KEY_MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH,
                                 /* defaultValue */ MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH));
+    }
+
+    @Override
+    public boolean getMeasurementJobDeleteUninstalledKillSwitch() {
+        // We check the Global Killswitch first then Measurement Killswitch.
+        // As a result, it overrides all other killswitches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(KEY_MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                /* flagName */ KEY_MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH,
+                                /* defaultValue */ MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH));
     }
 
     @Override
