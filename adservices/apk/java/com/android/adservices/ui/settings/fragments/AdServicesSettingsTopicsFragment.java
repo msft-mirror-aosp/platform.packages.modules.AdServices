@@ -99,8 +99,15 @@ public class AdServicesSettingsTopicsFragment extends Fragment {
                 .observe(
                         getViewLifecycleOwner(),
                         blockedTopicsList -> {
-                            blockedTopicsWhenEmptyStateButton.setEnabled(
-                                    blockedTopicsList.isEmpty() ? false : true);
+                            if (blockedTopicsList.isEmpty()) {
+                                blockedTopicsWhenEmptyStateButton.setEnabled(false);
+                                blockedTopicsWhenEmptyStateButton.setAlpha(
+                                        getResources().getFloat(R.dimen.disabled_button_alpha));
+                            } else {
+                                blockedTopicsWhenEmptyStateButton.setEnabled(true);
+                                blockedTopicsWhenEmptyStateButton.setAlpha(
+                                        getResources().getFloat(R.dimen.enabled_button_alpha));
+                            }
                         });
     }
 }
