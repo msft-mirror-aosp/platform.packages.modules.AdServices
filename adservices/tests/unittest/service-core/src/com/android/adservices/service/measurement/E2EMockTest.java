@@ -258,13 +258,13 @@ public abstract class E2EMockTest extends E2ETest {
                         new JSONObject()
                                 .put(
                                         AggregateHistogramKeys.BUCKET,
-                                        new BigInteger(
+                                        "0x" + new BigInteger(
                                                         ((ByteString)
                                                                         m.get(
                                                                                 new UnicodeString(
                                                                                         "bucket")))
                                                                 .getBytes())
-                                                .toString())
+                                                .toString(16))
                                 .put(
                                         AggregateHistogramKeys.VALUE,
                                         new BigInteger(

@@ -365,7 +365,7 @@ class MeasurementDao implements IMeasurementDao {
                         .query(
                                 MeasurementTables.EventReportContract.TABLE,
                                 /*columns=*/ null,
-                                MeasurementTables.EventReportContract.SOURCE_ID
+                                MeasurementTables.EventReportContract.SOURCE_EVENT_ID
                                         + " = ? "
                                         + " AND "
                                         + MeasurementTables.EventReportContract.ENROLLMENT_ID
@@ -432,7 +432,7 @@ class MeasurementDao implements IMeasurementDao {
                                         MeasurementTables.EventReportContract.ID,
                                         MeasurementTables.EventReportContract.TABLE,
                                         MeasurementTables.SourceContract.TABLE,
-                                        MeasurementTables.EventReportContract.SOURCE_ID,
+                                        MeasurementTables.EventReportContract.SOURCE_EVENT_ID,
                                         MeasurementTables.SourceContract.EVENT_ID,
                                         MeasurementTables.EventReportContract.STATUS,
                                         MeasurementTables.SourceContract.REGISTRANT),
@@ -453,8 +453,9 @@ class MeasurementDao implements IMeasurementDao {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.EventReportContract.ID,
                 UUID.randomUUID().toString());
-        values.put(MeasurementTables.EventReportContract.SOURCE_ID,
-                eventReport.getSourceId().getValue());
+        values.put(
+                MeasurementTables.EventReportContract.SOURCE_EVENT_ID,
+                eventReport.getSourceEventId().getValue());
         values.put(MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
                 eventReport.getAttributionDestination().toString());
         values.put(MeasurementTables.EventReportContract.TRIGGER_TIME,
@@ -708,7 +709,7 @@ class MeasurementDao implements IMeasurementDao {
                         MeasurementTables.EventReportContract.ID,
                         MeasurementTables.EventReportContract.TABLE,
                         MeasurementTables.SourceContract.TABLE,
-                        MeasurementTables.EventReportContract.SOURCE_ID,
+                        MeasurementTables.EventReportContract.SOURCE_EVENT_ID,
                         MeasurementTables.SourceContract.EVENT_ID,
                         MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
                         MeasurementTables.SourceContract.APP_DESTINATION,
@@ -776,7 +777,7 @@ class MeasurementDao implements IMeasurementDao {
                         MeasurementTables.EventReportContract.ID,
                         MeasurementTables.EventReportContract.TABLE,
                         MeasurementTables.SourceContract.TABLE,
-                        MeasurementTables.EventReportContract.SOURCE_ID,
+                        MeasurementTables.EventReportContract.SOURCE_EVENT_ID,
                         MeasurementTables.SourceContract.EVENT_ID,
                         MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
                         MeasurementTables.SourceContract.APP_DESTINATION,
@@ -995,7 +996,7 @@ class MeasurementDao implements IMeasurementDao {
                         + MeasurementTables.SourceContract.TABLE
                         + " s "
                         + "ON (e."
-                        + MeasurementTables.EventReportContract.SOURCE_ID
+                        + MeasurementTables.EventReportContract.SOURCE_EVENT_ID
                         + " = "
                         + " s."
                         + MeasurementTables.SourceContract.EVENT_ID

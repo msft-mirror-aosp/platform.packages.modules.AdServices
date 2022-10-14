@@ -55,13 +55,18 @@ public final class PermissionHelper {
     /** @return {@code true} if the caller has the permission to invoke AdID APIs. */
     public static boolean hasAdIdPermission(
             @NonNull Context context, boolean useSandboxCheck, @NonNull String sdkName) {
+
+        boolean callerPerm =
+                context.checkCallingOrSelfPermission(AdServicesPermissions.ACCESS_ADSERVICES_AD_ID)
+                        == PackageManager.PERMISSION_GRANTED;
         // Note: Checking permission declared by Sdk running in Sandbox is only for accounting
         // purposes and should not be used as a security measure.
         if (useSandboxCheck) {
-            // TODO(b/240718367): Add check for SDK permission.
+            return callerPerm
+                    && checkSdkPermission(
+                            context, sdkName, AdServicesPermissions.ACCESS_ADSERVICES_AD_ID);
         }
-        return (context.checkCallingOrSelfPermission(AdServicesPermissions.ACCESS_ADSERVICES_AD_ID)
-                == PackageManager.PERMISSION_GRANTED);
+        return callerPerm;
     }
 
     /** @return {@code true} if the caller has the permission to invoke Attribution APIs. */
