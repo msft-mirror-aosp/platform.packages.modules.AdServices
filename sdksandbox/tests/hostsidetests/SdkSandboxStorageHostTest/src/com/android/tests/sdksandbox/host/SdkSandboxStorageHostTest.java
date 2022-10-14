@@ -1307,8 +1307,6 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
         private final BaseHostJUnit4Test mTest;
 
-        private boolean mIsDeviceLocked = false;
-
         DeviceLockUtils(BaseHostJUnit4Test test) {
             mTest = test;
         }
@@ -1334,8 +1332,6 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
             // Follow DirectBootHostTest, reboot system into known state with keys ejected
             mTest.getDevice().rebootUntilOnline();
             waitForBootCompleted(mTest.getDevice());
-
-            mIsDeviceLocked = true;
         }
 
         public void clearScreenLock() throws Exception {
@@ -1354,14 +1350,13 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         }
 
         public void unlockDevice() throws Exception {
-            if (!mIsDeviceLocked) return;
-            assertThat(
-                            mTest.runDeviceTests(
-                                    "com.android.cts.appdataisolation.appa",
-                                    "com.android.cts.appdataisolation.appa.AppATests",
-                                    "testUnlockDevice"))
-                    .isTrue();
-            mIsDeviceLocked = false;
+            try {
+                mTest.runDeviceTests(
+                        "com.android.cts.appdataisolation.appa",
+                        "com.android.cts.appdataisolation.appa.AppATests",
+                        "testUnlockDevice");
+            } catch (Exception ignore) {
+            }
         }
     }
 }
