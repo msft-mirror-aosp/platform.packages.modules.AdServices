@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.measurement.attribution;
 
+import static com.android.adservices.service.measurement.PrivacyParams.AGGREGATE_MAX_REPORT_DELAY;
+import static com.android.adservices.service.measurement.PrivacyParams.AGGREGATE_MIN_REPORT_DELAY;
+
 import android.annotation.NonNull;
 import android.net.Uri;
 import android.util.Pair;
@@ -58,8 +61,6 @@ import java.util.stream.Collectors;
 class AttributionJobHandler {
 
     private static final String API_VERSION = "0.1";
-    private static final long MIN_TIME_MS = TimeUnit.MINUTES.toMillis(10L);
-    private static final long MAX_TIME_MS = TimeUnit.MINUTES.toMillis(60L);
     private final DatastoreManager mDatastoreManager;
 
     AttributionJobHandler(DatastoreManager datastoreManager) {
@@ -164,8 +165,9 @@ class AttributionJobHandler {
                         return false;
                     }
 
-                    long randomTime = (long) ((Math.random() * (MAX_TIME_MS - MIN_TIME_MS))
-                            + MIN_TIME_MS);
+                    long randomTime = (long) ((Math.random()
+                            * (AGGREGATE_MAX_REPORT_DELAY - AGGREGATE_MIN_REPORT_DELAY))
+                            + AGGREGATE_MIN_REPORT_DELAY);
                     AggregateReport aggregateReport =
                             new AggregateReport.Builder()
                                     // TODO: Unused field, incorrect value; cleanup
