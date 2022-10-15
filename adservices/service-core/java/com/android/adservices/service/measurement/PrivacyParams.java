@@ -145,7 +145,7 @@ public final class PrivacyParams {
 
     /** Min expiration value in seconds for attribution reporting register source. */
     public static final long MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS =
-            TimeUnit.DAYS.toSeconds(2);
+            TimeUnit.DAYS.toSeconds(1);
 
     /**
      * Max expiration value in seconds for attribution reporting register source. This value is also
@@ -157,7 +157,7 @@ public final class PrivacyParams {
     /**
      * Minimum limit of duration to determine attribution for a verified installation.
      */
-    public static final long MIN_INSTALL_ATTRIBUTION_WINDOW = TimeUnit.DAYS.toSeconds(2);
+    public static final long MIN_INSTALL_ATTRIBUTION_WINDOW = TimeUnit.DAYS.toSeconds(1);
 
     /**
      * Maximum limit of duration to determine attribution for a verified installation.
