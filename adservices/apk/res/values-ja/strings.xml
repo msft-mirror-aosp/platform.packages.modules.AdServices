@@ -48,8 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"ベータ版を ON にすると、アプリは広告の表示でプライバシー保護を強化したこれらの新しい方法をテストできます。ベータ版はプライバシー設定でいつでも OFF にできます。"</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"利用しない"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"ON にする"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"その他"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"ご参加ありがとうございます"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Android の広告のプライバシー（ベータ版）にご参加いただきありがとうございます。プライバシー サンドボックスはこのデバイスで ON になっています。\n\nベータ版はプライバシー設定でいつでも OFF にできます。詳しくは、プライバシー設定をご覧ください。"</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"参加を取り消しました"</string>

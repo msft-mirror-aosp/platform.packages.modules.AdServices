@@ -48,8 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Ativar a versão beta permite que as apps testem estas novas formas mais privadas de lhe mostrar anúncios. Pode desativar a versão beta em qualquer altura nas suas definições de privacidade."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Não"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Ativar"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Mais"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Agradecemos a sua participação"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Faz parte da versão beta da privacidade de anúncios do Android O Privacy Sandbox está ativado para o seu dispositivo.\n\nPode saber mais ou desativar a versão beta em qualquer altura nas suas definições de privacidade."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Optou por não participar"</string>
