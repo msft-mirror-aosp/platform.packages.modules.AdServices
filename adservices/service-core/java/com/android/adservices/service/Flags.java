@@ -147,6 +147,19 @@ public interface Flags extends Dumpable {
         return CLASSIFIER_DESCRIPTION_MAX_LENGTH;
     }
 
+    // TODO(b/243829477): Remove this flag when flow of pushing models is refined.
+    /**
+     * Whether classifier should force using bundled files. This flag is mainly used in CTS tests to
+     * force using precomputed_app_list to avoid model mismatch due to update. Default value is
+     * false which means to use downloaded files.
+     */
+    boolean CLASSIFIER_FORCE_USE_BUNDLED_FILES = false;
+
+    /** Returns whether to force using bundled files */
+    default boolean getClassifierForceUseBundledFiles() {
+        return CLASSIFIER_FORCE_USE_BUNDLED_FILES;
+    }
+
     /* The default period for the Maintenance job. */
     long MAINTENANCE_JOB_PERIOD_MS = 86_400_000; // 1 day.
 
