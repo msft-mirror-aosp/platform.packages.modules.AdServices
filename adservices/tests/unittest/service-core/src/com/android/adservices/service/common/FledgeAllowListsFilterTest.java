@@ -38,12 +38,12 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.MockitoSession;
-import org.mockito.Spy;
 
 public class FledgeAllowListsFilterTest {
     private static final int API_NAME_LOGGING_ID = 1;
 
-    @Spy private final AdServicesLogger mAdServicesLoggerSpy = AdServicesLoggerImpl.getInstance();
+    private final AdServicesLogger mAdServicesLoggerMock =
+            ExtendedMockito.mock(AdServicesLoggerImpl.class);
 
     private FledgeAllowListsFilter mFledgeAllowListsFilter;
 
@@ -57,7 +57,7 @@ public class FledgeAllowListsFilterTest {
                         .initMocks(this)
                         .startMocking();
         mFledgeAllowListsFilter =
-                new FledgeAllowListsFilter(CommonFixture.FLAGS_FOR_TEST, mAdServicesLoggerSpy);
+                new FledgeAllowListsFilter(CommonFixture.FLAGS_FOR_TEST, mAdServicesLoggerMock);
     }
 
     @After
@@ -75,7 +75,7 @@ public class FledgeAllowListsFilterTest {
         mFledgeAllowListsFilter.assertAppCanUsePpapi(
                 CommonFixture.TEST_PACKAGE_NAME, API_NAME_LOGGING_ID);
 
-        verifyZeroInteractions(mAdServicesLoggerSpy);
+        verifyZeroInteractions(mAdServicesLoggerMock);
     }
 
     @Test
@@ -95,11 +95,11 @@ public class FledgeAllowListsFilterTest {
         assertEquals(
                 AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE,
                 exception.getMessage());
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(API_NAME_LOGGING_ID), eq(STATUS_CALLER_NOT_ALLOWED), anyInt());
 
-        verifyNoMoreInteractions(mAdServicesLoggerSpy);
+        verifyNoMoreInteractions(mAdServicesLoggerMock);
     }
 
     @Test
@@ -108,6 +108,6 @@ public class FledgeAllowListsFilterTest {
                 NullPointerException.class,
                 () -> mFledgeAllowListsFilter.assertAppCanUsePpapi(null, API_NAME_LOGGING_ID));
 
-        verifyZeroInteractions(mAdServicesLoggerSpy);
+        verifyZeroInteractions(mAdServicesLoggerMock);
     }
 }

@@ -178,6 +178,12 @@ public final class PrivacyParams {
     /** Amount of bytes allocated for aggregate histogram value */
     public static final int AGGREGATE_HISTOGRAM_VALUE_BYTE_SIZE = 4;
 
+    /** Minimum time an aggregate report is delayed after trigger */
+    public static final long AGGREGATE_MIN_REPORT_DELAY = TimeUnit.MINUTES.toMillis(10L);
+
+    /** Maximum time an aggregate report is delayed after trigger */
+    public static final long AGGREGATE_MAX_REPORT_DELAY = TimeUnit.MINUTES.toMillis(60L);
+
     /**
      * Max distinct enrollments for attribution per { Advertiser X Publisher X TimePeriod }.
      */

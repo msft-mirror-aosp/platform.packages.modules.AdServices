@@ -33,24 +33,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTestBase {
 
     @Test
-    public void performMigration_success() {
-        // Setup
-        DbHelper dbHelper = getDbHelper(1);
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-
-        // Execution
-        new MeasurementDbMigratorV3().performMigration(db, 1, 3);
-        // To mimic real onUpgrade behaviour. Without closing the db, changes don't reflect.
-        db.close();
-
-        // Verify
-        db = dbHelper.getReadableDatabase();
-        assertTrue(
-                doesTableExistAndColumnCountMatch(
-                        db, MeasurementTables.AsyncRegistrationContract.TABLE, 15));
-    }
-
-    @Test
     public void performMigration_success_v2ToV3() {
         // Setup
         DbHelper dbHelper = getDbHelper(1);
@@ -67,6 +49,14 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
         assertTrue(
                 doesTableExistAndColumnCountMatch(
                         db, MeasurementTables.AsyncRegistrationContract.TABLE, 15));
+        assertTrue(
+                doesTableExistAndColumnCountMatch(
+                        db, MeasurementTables.EventReportContract.TABLE, 16));
+        assertTrue(
+                doesTableExistAndColumnCountMatch(db, MeasurementTables.AggregateReport.TABLE, 13));
+        assertTrue(
+                doesTableExistAndColumnCountMatch(
+                        db, MeasurementTables.AttributionContract.TABLE, 10));
     }
 
     @Override

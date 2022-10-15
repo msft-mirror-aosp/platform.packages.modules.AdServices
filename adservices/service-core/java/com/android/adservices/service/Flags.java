@@ -147,6 +147,19 @@ public interface Flags extends Dumpable {
         return CLASSIFIER_DESCRIPTION_MAX_LENGTH;
     }
 
+    // TODO(b/243829477): Remove this flag when flow of pushing models is refined.
+    /**
+     * Whether classifier should force using bundled files. This flag is mainly used in CTS tests to
+     * force using precomputed_app_list to avoid model mismatch due to update. Default value is
+     * false which means to use downloaded files.
+     */
+    boolean CLASSIFIER_FORCE_USE_BUNDLED_FILES = false;
+
+    /** Returns whether to force using bundled files */
+    default boolean getClassifierForceUseBundledFiles() {
+        return CLASSIFIER_FORCE_USE_BUNDLED_FILES;
+    }
+
     /* The default period for the Maintenance job. */
     long MAINTENANCE_JOB_PERIOD_MS = 86_400_000; // 1 day.
 
@@ -496,6 +509,16 @@ public interface Flags extends Dumpable {
         return FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
     }
 
+    // 24 hours in seconds
+    long FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S = 60 * 60 * 24;
+
+    /**
+     * Returns the amount of time in seconds after which ad selection data is considered expired.
+     */
+    default long getAdSelectionExpirationWindowS() {
+        return FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S;
+    }
+
     boolean ADSERVICES_ENABLED = false;
 
     default boolean getAdServicesEnabled() {
@@ -808,6 +831,24 @@ public interface Flags extends Dumpable {
     }
 
     /**
+     * Measurement Job Delete Uninstalled Kill Switch. The default value is false which means Delete
+     * Uninstalled Job is enabled. This flag is used for emergency turning off the Delete
+     * Uninstalled Job.
+     */
+    boolean MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Measurement Job Delete Uninstalled. The API will be
+     * disabled if either the Global Kill Switch, Measurement Kill Switch, or the Measurement Job
+     * Delete Uninstalled Kill Switch value is true.
+     */
+    default boolean getMeasurementJobDeleteUninstalledKillSwitch() {
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH;
+    }
+
+    /**
      * Measurement Job Event Fallback Reporting Kill Switch. The default value is false which means
      * Event Fallback Reporting Job is enabled. This flag is used for emergency turning off the
      * Event Fallback Reporting Job.
@@ -993,6 +1034,8 @@ public interface Flags extends Dumpable {
                     + "com.android.adservices.tests.permissions.valid,"
                     + "com.android.adservices.tests.adid,"
                     + "com.android.adservices.tests.appsetid,"
+                    + "com.android.sdksandboxclient,"
+                    + "com.android.tests.sandbox.adid,"
                     + "com.android.tests.sandbox.fledge,"
                     + "com.android.tests.sandbox.measurement,"
                     + "com.example.adservices.samples.adid.app,"

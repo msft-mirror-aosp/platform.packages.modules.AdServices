@@ -48,6 +48,8 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Beta-bertsioa aktibatuz gero, iragarkiak erakusteko modu berriak eta pribatuagoak probatzeko baimena izango dute aplikazioek. Beta-bertsioa desaktibatzeko, joan pribatutasun-ezarpenetara."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Ez, eskerrik asko"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Aktibatu"</string>
+    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
+    <skip />
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Eskerrik asko parte hartzeagatik"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Android-eko iragarkien pribatutasunaren beta-bertsioa probatzen ari zara. Privacy Sandbox-a aktibatuta dago gailuan.\n\nInformazio gehiago lortu edo beta-bertsioa probatzeari utzi nahi izanez gero, joan pribatutasun-ezarpenetara."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Ez parte hartzea aukeratu duzu"</string>
@@ -79,8 +81,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Une honetan ez dago interesik erakusteko"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox-a"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Eginbide berriak eskaintzen ditu Android-eko iragarkien pribatutasunaren beta-bertsioak; eginbide horiei esker, aplikazioek agian gustatuko zaizkizun iragarkiak erakutsiko dizkizute. Teknologia horiek ez dute erabiltzen gailuaren identifikatzailerik.\n\nAgian interesatuko zaizkizun iragarki motak igar ditzake Android-ek, eta interesak gailuan aldi baterako gorde. Hala, aplikazioek iragarki egokiak erakutsiko dizkizute beste garatzaile batzuen webgune eta aplikazioetan egindako jardueren jarraipena egin gabe."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Ez daukazu blokeatutako interesik"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Aplikazioek zure interesak igar ditzakete, eta Android-en aldi baterako gorde. Geroago, interes horietan oinarrituta, baliteke beste aplikazio batek iragarki bat erakustea.\n\nAplikazio bat blokeatzen baduzu, ez du interes gehiagorik igarriko. Aplikazioa ez da berriz gehituko aplikazioen zerrenda honetan baldin eta aplikazio hori desblokeatzen ez baduzu. Aplikazioak igarritako interesak ezabatuko dira; hala ere, baliteke haiekin erlazionatutako iragarki batzuk ikusten jarraitzea."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Blokeatu dituzun aplikazioak"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Berrezarri aplikazioek igarritako interesak"</string>
@@ -88,7 +89,25 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox-a"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Eginbide berriak eskaintzen ditu Android-eko iragarkien pribatutasunaren beta-bertsioak; eginbide horiei esker, aplikazioek agian gustatuko zaizkizun iragarkiak erakutsiko dizkizute. Teknologia horiek ez dute erabiltzen gailuaren identifikatzailerik.\n\nAgian interesatuko zaizkizun iragarki motak igar ditzakete aplikazioek, eta interesak gailuan aldi baterako gorde. Hala, aplikazioek iragarki egokiak erakutsiko dizkizute beste garatzaile batzuen webgune eta aplikazioetan egindako jardueren jarraipena egin gabe."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Ez daukazu blokeatutako aplikaziorik"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Ez daukazu blokeatutako interesik"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Utzi"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Privacy Sandbox-a desaktibatu nahi duzu?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Iritziz aldatzen bazara edo Android-eko iragarkien pribatutasunaren beta-bertsioari buruzko informazio gehiago lortu nahi baduzu, joan pribatutasun-ezarpenetara"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Desaktibatu"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"<xliff:g id="TOPIC">%1$s</xliff:g> blokeatu nahi duzu?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Interes hau blokeatu egingo da eta ez da gehituko berriro zerrendan, zeuk gehitzen ez baduzu. Hala ere, baliteke harekin erlazionatutako iragarki batzuk ikusten jarraitzea."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Blokeatu"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"Desblokeatu da <xliff:g id="TOPIC">%1$s</xliff:g>"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android-ek zure interesa berriro gehi dezake zerrendan, baina baliteke berehala ez agertzea"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"Ados"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Interes guztiak berrezarri nahi dituzu?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"Zerrenda garbitu egingo da, eta denboran zehar freskatuko"</string>
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Berrezarri"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> blokeatu nahi duzu?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Aplikazio honek ez ditu ondorioztatuko Privacy Sandbox-erako interesak, eta ez da gehituko berriro zerrendan, desblokeatzen ez baduzu.\n\nAplikazioak dagoeneko ondorioztatu dituen interesak ezabatu egingo dira, baina baliteke haiekin erlazionatutako iragarki batzuk ikusten jarraitzea."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Desblokeatu da <xliff:g id="APP">%1$s</xliff:g>"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Aplikazio honek interesak berriro ondoriozta ditzake, baina baliteke berehala ez agertzea zerrendan. Baliteke tarte bat behar izatea erlazionatutako iragarkiak ikusten hasteko."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Aplikazioek sortutako interesak berrezarri nahi dituzu?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"Zerrenda garbitu egingo da, eta denboran zehar freskatuko"</string>
     <string name="topic10001" msgid="1636806320891333775">"Artea eta aisia"</string>
     <string name="topic10002" msgid="1226367977754287428">"Interpretazioa eta antzerkia"</string>
     <string name="topic10003" msgid="6949890838957814881">"Animea eta manga"</string>
@@ -369,7 +388,7 @@
     <string name="topic10278" msgid="873251714192341707">"Mezu elektronikoak eta mezularitza"</string>
     <string name="topic10279" msgid="6514296374139842600">"Posta elektronikoa"</string>
     <string name="topic10280" msgid="7976787187115018267">"Testu-mezuak eta istanteko mezularitza"</string>
-    <string name="topic10281" msgid="4013341162811169339">"Ahots- eta bideo-txatak"</string>
+    <string name="topic10281" msgid="4013341162811169339">"Ahots- eta bideodeiak"</string>
     <string name="topic10282" msgid="7810462611906257564">"Interneteko zerbitzu-hornitzaileak"</string>
     <string name="topic10283" msgid="3958287780718485172">"Telefono-zerbitzuen hornitzaileak"</string>
     <string name="topic10284" msgid="2415044270290467935">"Mugikorretarako tonuak eta gaiak"</string>

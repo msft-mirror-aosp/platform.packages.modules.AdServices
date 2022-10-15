@@ -122,6 +122,7 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -163,14 +164,16 @@ public class AdSelectionServiceImplTest {
             AdServicesExecutors.getScheduler();
     private final String mSellerReportingPath = "/reporting/seller";
     private final String mBuyerReportingPath = "/reporting/buyer";
-    private final String mFetchJavaScriptPath = "/fetchJavascript/";
+    private final String mFetchJavaScriptPathSeller = "/fetchJavascript/seller";
+    private final String mFetchJavaScriptPathBuyer = "/fetchJavascript/buyer";
     private final String mFetchTrustedScoringSignalsPath = "/fetchTrustedSignals/";
     private final AdTechIdentifier mContextualSignals =
             AdTechIdentifier.fromString("{\"contextual_signals\":1}");
     private final int mBytesPerPeriod = 1;
     private final AdServicesHttpsClient mClient =
             new AdServicesHttpsClient(AdServicesExecutors.getBlockingExecutor());
-    @Spy private final AdServicesLogger mAdServicesLoggerSpy = AdServicesLoggerImpl.getInstance();
+    private final AdServicesLogger mAdServicesLoggerMock =
+            ExtendedMockito.mock(AdServicesLoggerImpl.class);
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
     // This object access some system APIs
     @Mock public DevContextFilter mDevContextFilter;
@@ -178,13 +181,13 @@ public class AdSelectionServiceImplTest {
 
     @Spy
     FledgeAuthorizationFilter mFledgeAuthorizationFilterSpy =
-            FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerSpy);
+            FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLoggerMock);
 
     private Flags mFlags = new FlagsWithEnrollmentCheckEnabledSwitch(false);
 
     @Spy
     FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
-            new FledgeAllowListsFilter(mFlags, mAdServicesLoggerSpy);
+            new FledgeAllowListsFilter(mFlags, mAdServicesLoggerMock);
 
     private MockitoSession mStaticMockSession = null;
     @Mock private ConsentManager mConsentManagerMock;
@@ -192,12 +195,15 @@ public class AdSelectionServiceImplTest {
     private AdSelectionEntryDao mAdSelectionEntryDao;
     private AdSelectionConfig.Builder mAdSelectionConfigBuilder;
 
+    private Uri mBiddingLogicUri;
+    private CustomAudienceSignals mCustomAudienceSignals;
+
     @Before
     public void setUp() {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(JSScriptEngine.class)
-                        // mAdServicesLoggerSpy is not referenced in many tests
+                        // mAdServicesLoggerMock is not referenced in many tests
                         .strictness(Strictness.LENIENT)
                         .initMocks(this)
                         .startMocking();
@@ -213,16 +219,36 @@ public class AdSelectionServiceImplTest {
                         .build()
                         .adSelectionEntryDao();
 
+        mBiddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
+
+        mCustomAudienceSignals =
+                CustomAudienceSignalsFixture.aCustomAudienceSignalsBuilder()
+                        .setBuyer(AdTechIdentifier.fromString(mBiddingLogicUri.getHost()))
+                        .build();
+
+        Map<AdTechIdentifier, AdSelectionSignals> perBuyerSignals =
+                Map.of(
+                        AdTechIdentifier.fromString("test.com"),
+                        AdSelectionSignals.fromString("{\"buyer_signals\":1}"),
+                        AdTechIdentifier.fromString("test2.com"),
+                        AdSelectionSignals.fromString("{\"buyer_signals\":2}"),
+                        AdTechIdentifier.fromString("test3.com"),
+                        AdSelectionSignals.fromString("{\"buyer_signals\":3}"),
+                        AdTechIdentifier.fromString(mBiddingLogicUri.getHost()),
+                        AdSelectionSignals.fromString("{\"buyer_signals\":0}"));
+
         mAdSelectionConfigBuilder =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setSeller(
                                 AdTechIdentifier.fromString(
                                         mMockWebServerRule
-                                                .uriForPath(mFetchJavaScriptPath)
+                                                .uriForPath(mFetchJavaScriptPathSeller)
                                                 .getHost()))
-                        .setDecisionLogicUri(mMockWebServerRule.uriForPath(mFetchJavaScriptPath))
+                        .setDecisionLogicUri(
+                                mMockWebServerRule.uriForPath(mFetchJavaScriptPathSeller))
                         .setTrustedScoringSignalsUri(
-                                mMockWebServerRule.uriForPath(mFetchTrustedScoringSignalsPath));
+                                mMockWebServerRule.uriForPath(mFetchTrustedScoringSignalsPath))
+                        .setPerBuyerSignals(perBuyerSignals);
     }
 
     @After
@@ -238,6 +264,8 @@ public class AdSelectionServiceImplTest {
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+
+        Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
 
         String sellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
@@ -265,19 +293,16 @@ public class AdSelectionServiceImplTest {
 
         DBBuyerDecisionLogic dbBuyerDecisionLogic =
                 new DBBuyerDecisionLogic.Builder()
-                        .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
+                        .setBiddingLogicUri(biddingLogicUri)
                         .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                         .build();
-
-        CustomAudienceSignals customAudienceSignals =
-                CustomAudienceSignalsFixture.aCustomAudienceSignals();
 
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
-                        .setCustomAudienceSignals(customAudienceSignals)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
-                        .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
+                        .setBiddingLogicUri(biddingLogicUri)
                         .setWinningAdRenderUri(RENDER_URI)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
@@ -304,7 +329,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -320,14 +345,14 @@ public class AdSelectionServiceImplTest {
 
         assertTrue(callback.mIsSuccess);
         RecordedRequest fetchRequest = server.takeRequest();
-        assertEquals(mFetchJavaScriptPath, fetchRequest.getPath());
+        assertEquals(mFetchJavaScriptPathSeller, fetchRequest.getPath());
 
         List<String> notifications =
                 ImmutableList.of(server.takeRequest().getPath(), server.takeRequest().getPath());
 
         assertThat(notifications).containsExactly(mSellerReportingPath, mBuyerReportingPath);
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
                         eq(STATUS_SUCCESS),
@@ -364,13 +389,10 @@ public class AdSelectionServiceImplTest {
                         .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                         .build();
 
-        CustomAudienceSignals customAudienceSignals =
-                CustomAudienceSignalsFixture.aCustomAudienceSignals();
-
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
-                        .setCustomAudienceSignals(customAudienceSignals)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URI)
@@ -399,7 +421,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -416,7 +438,7 @@ public class AdSelectionServiceImplTest {
         assertTrue(callback.mIsSuccess);
         assertEquals(0, server.getRequestCount());
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
                         eq(STATUS_USER_CONSENT_REVOKED),
@@ -463,13 +485,10 @@ public class AdSelectionServiceImplTest {
                         .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                         .build();
 
-        CustomAudienceSignals customAudienceSignals =
-                CustomAudienceSignalsFixture.aCustomAudienceSignals();
-
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
-                        .setCustomAudienceSignals(customAudienceSignals)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URI)
@@ -498,7 +517,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -516,7 +535,7 @@ public class AdSelectionServiceImplTest {
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INTERNAL_ERROR);
         assertTrue(callback.mFledgeErrorResponse.getErrorMessage().contains(TIMEOUT_MESSAGE));
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
                         eq(STATUS_INTERNAL_ERROR),
@@ -563,13 +582,10 @@ public class AdSelectionServiceImplTest {
                         .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                         .build();
 
-        CustomAudienceSignals customAudienceSignals =
-                CustomAudienceSignalsFixture.aCustomAudienceSignals();
-
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
-                        .setCustomAudienceSignals(customAudienceSignals)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URI)
@@ -598,7 +614,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -616,7 +632,7 @@ public class AdSelectionServiceImplTest {
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INTERNAL_ERROR);
         assertTrue(callback.mFledgeErrorResponse.getErrorMessage().contains(TIMEOUT_MESSAGE));
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
                         eq(STATUS_INTERNAL_ERROR),
@@ -669,13 +685,10 @@ public class AdSelectionServiceImplTest {
                         .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                         .build();
 
-        CustomAudienceSignals customAudienceSignals =
-                CustomAudienceSignalsFixture.aCustomAudienceSignals();
-
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
-                        .setCustomAudienceSignals(customAudienceSignals)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URI)
@@ -704,7 +717,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -722,7 +735,7 @@ public class AdSelectionServiceImplTest {
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INTERNAL_ERROR);
         assertTrue(callback.mFledgeErrorResponse.getErrorMessage().contains(TIMEOUT_MESSAGE));
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
                         eq(STATUS_INTERNAL_ERROR),
@@ -770,13 +783,10 @@ public class AdSelectionServiceImplTest {
                         .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                         .build();
 
-        CustomAudienceSignals customAudienceSignals =
-                CustomAudienceSignalsFixture.aCustomAudienceSignals();
-
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
-                        .setCustomAudienceSignals(customAudienceSignals)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URI)
@@ -805,7 +815,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -823,7 +833,7 @@ public class AdSelectionServiceImplTest {
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INTERNAL_ERROR);
         assertTrue(callback.mFledgeErrorResponse.getErrorMessage().contains(TIMEOUT_MESSAGE));
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
                         eq(STATUS_INTERNAL_ERROR),
@@ -866,13 +876,10 @@ public class AdSelectionServiceImplTest {
                         .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                         .build();
 
-        CustomAudienceSignals customAudienceSignals =
-                CustomAudienceSignalsFixture.aCustomAudienceSignals();
-
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
-                        .setCustomAudienceSignals(customAudienceSignals)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URI)
@@ -901,7 +908,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -919,7 +926,7 @@ public class AdSelectionServiceImplTest {
         assertFalse(callback.mIsSuccess);
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INVALID_ARGUMENT);
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
                         eq(STATUS_INVALID_ARGUMENT),
@@ -962,13 +969,10 @@ public class AdSelectionServiceImplTest {
                         .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                         .build();
 
-        CustomAudienceSignals customAudienceSignals =
-                CustomAudienceSignalsFixture.aCustomAudienceSignals();
-
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
-                        .setCustomAudienceSignals(customAudienceSignals)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URI)
@@ -996,7 +1000,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1014,7 +1018,7 @@ public class AdSelectionServiceImplTest {
         assertFalse(callback.mIsSuccess);
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INTERNAL_ERROR);
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
                         eq(STATUS_INTERNAL_ERROR),
@@ -1057,13 +1061,10 @@ public class AdSelectionServiceImplTest {
                         .setBuyerDecisionLogicJs(inValidBuyerDecisionLogicJsMissingCurlyBracket)
                         .build();
 
-        CustomAudienceSignals customAudienceSignals =
-                CustomAudienceSignalsFixture.aCustomAudienceSignals();
-
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
-                        .setCustomAudienceSignals(customAudienceSignals)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URI)
@@ -1092,7 +1093,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1110,7 +1111,7 @@ public class AdSelectionServiceImplTest {
         assertFalse(callback.mIsSuccess);
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INTERNAL_ERROR);
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
                         eq(STATUS_INTERNAL_ERROR),
@@ -1153,13 +1154,10 @@ public class AdSelectionServiceImplTest {
                         .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                         .build();
 
-        CustomAudienceSignals customAudienceSignals =
-                CustomAudienceSignalsFixture.aCustomAudienceSignals();
-
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
-                        .setCustomAudienceSignals(customAudienceSignals)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URI)
@@ -1208,7 +1206,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1227,7 +1225,7 @@ public class AdSelectionServiceImplTest {
 
         assertThat(notifications).containsExactly(mSellerReportingPath, mBuyerReportingPath);
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
                         eq(STATUS_SUCCESS),
@@ -1256,7 +1254,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1278,7 +1276,7 @@ public class AdSelectionServiceImplTest {
                                 adSelectionConfig),
                         TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(eq(SHORT_API_NAME_OVERRIDE), eq(STATUS_SUCCESS), anyInt());
     }
 
@@ -1306,7 +1304,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1328,7 +1326,7 @@ public class AdSelectionServiceImplTest {
                                 adSelectionConfig),
                         TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(SHORT_API_NAME_OVERRIDE), eq(STATUS_USER_CONSENT_REVOKED), anyInt());
     }
@@ -1351,7 +1349,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1374,7 +1372,7 @@ public class AdSelectionServiceImplTest {
                                 adSelectionConfig),
                         TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(SHORT_API_NAME_OVERRIDE), eq(STATUS_INTERNAL_ERROR), anyInt());
     }
@@ -1401,7 +1399,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1434,7 +1432,7 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId, TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(SHORT_API_NAME_REMOVE_OVERRIDE), eq(STATUS_SUCCESS), anyInt());
     }
@@ -1463,7 +1461,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1496,7 +1494,7 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId, TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(SHORT_API_NAME_REMOVE_OVERRIDE),
                         eq(STATUS_USER_CONSENT_REVOKED),
@@ -1521,7 +1519,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1553,7 +1551,7 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId, TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(SHORT_API_NAME_REMOVE_OVERRIDE), eq(STATUS_INTERNAL_ERROR), anyInt());
     }
@@ -1583,7 +1581,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1616,7 +1614,7 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId, TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(SHORT_API_NAME_REMOVE_OVERRIDE), eq(STATUS_SUCCESS), anyInt());
     }
@@ -1646,7 +1644,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1723,7 +1721,7 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId3, TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(SHORT_API_NAME_RESET_ALL_OVERRIDES), eq(STATUS_SUCCESS), anyInt());
     }
@@ -1750,7 +1748,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1827,7 +1825,7 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId3, TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(SHORT_API_NAME_RESET_ALL_OVERRIDES), eq(STATUS_SUCCESS), anyInt());
     }
@@ -1856,7 +1854,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1933,7 +1931,7 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId3, TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(SHORT_API_NAME_RESET_ALL_OVERRIDES),
                         eq(STATUS_USER_CONSENT_REVOKED),
@@ -1958,7 +1956,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -2033,7 +2031,7 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId3, TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(SHORT_API_NAME_RESET_ALL_OVERRIDES),
                         eq(STATUS_INTERNAL_ERROR),
@@ -2057,7 +2055,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -2093,7 +2091,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -2150,7 +2148,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         FlagsWithOverriddenFledgeChecks.createFlagsWithFledgeChecksDisabled(),
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -2203,7 +2201,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -2261,7 +2259,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         FlagsWithOverriddenFledgeChecks.createFlagsWithFledgeChecksDisabled(),
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -2308,7 +2306,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -2358,7 +2356,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         FlagsWithOverriddenFledgeChecks.createFlagsWithFledgeChecksDisabled(),
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -2402,7 +2400,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -2450,7 +2448,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         FlagsWithOverriddenFledgeChecks.createFlagsWithFledgeChecksDisabled(),
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -2499,13 +2497,10 @@ public class AdSelectionServiceImplTest {
                         .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                         .build();
 
-        CustomAudienceSignals customAudienceSignals =
-                CustomAudienceSignalsFixture.aCustomAudienceSignals();
-
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
-                        .setCustomAudienceSignals(customAudienceSignals)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URI)
@@ -2534,7 +2529,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -2598,13 +2593,10 @@ public class AdSelectionServiceImplTest {
                         .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                         .build();
 
-        CustomAudienceSignals customAudienceSignals =
-                CustomAudienceSignalsFixture.aCustomAudienceSignals();
-
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
-                        .setCustomAudienceSignals(customAudienceSignals)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URI)
@@ -2633,7 +2625,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -2654,7 +2646,7 @@ public class AdSelectionServiceImplTest {
                 callback.mFledgeErrorResponse.getErrorMessage());
 
         // TODO(b/242139312): Remove atLeastOnce once this the double logging is addressed
-        Mockito.verify(mAdServicesLoggerSpy, Mockito.atLeastOnce())
+        Mockito.verify(mAdServicesLoggerMock, Mockito.atLeastOnce())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
                         eq(STATUS_CALLER_NOT_ALLOWED),
@@ -2701,13 +2693,10 @@ public class AdSelectionServiceImplTest {
                         .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                         .build();
 
-        CustomAudienceSignals customAudienceSignals =
-                CustomAudienceSignalsFixture.aCustomAudienceSignals();
-
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
-                        .setCustomAudienceSignals(customAudienceSignals)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URI)
@@ -2736,7 +2725,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -2757,7 +2746,7 @@ public class AdSelectionServiceImplTest {
                 callback.mFledgeErrorResponse.getErrorMessage());
 
         // TODO(b/242139312): Remove atLeastOnce once this the double logging is addressed
-        Mockito.verify(mAdServicesLoggerSpy, Mockito.atLeastOnce())
+        Mockito.verify(mAdServicesLoggerMock, Mockito.atLeastOnce())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
                         eq(STATUS_CALLER_NOT_ALLOWED),
@@ -2804,13 +2793,10 @@ public class AdSelectionServiceImplTest {
                         .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                         .build();
 
-        CustomAudienceSignals customAudienceSignals =
-                CustomAudienceSignalsFixture.aCustomAudienceSignals();
-
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
-                        .setCustomAudienceSignals(customAudienceSignals)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URI)
@@ -2847,7 +2833,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -2863,14 +2849,14 @@ public class AdSelectionServiceImplTest {
 
         assertTrue(callback.mIsSuccess);
         RecordedRequest fetchRequest = server.takeRequest();
-        assertEquals(mFetchJavaScriptPath, fetchRequest.getPath());
+        assertEquals(mFetchJavaScriptPathSeller, fetchRequest.getPath());
 
         List<String> notifications =
                 ImmutableList.of(server.takeRequest().getPath(), server.takeRequest().getPath());
 
         assertThat(notifications).containsExactly(mSellerReportingPath, mBuyerReportingPath);
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
                         eq(STATUS_SUCCESS),
@@ -2894,7 +2880,7 @@ public class AdSelectionServiceImplTest {
                     return null;
                 };
         doAnswer(countDownAnswer)
-                .when(mAdServicesLoggerSpy)
+                .when(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
 
         adSelectionService.overrideAdSelectionConfigRemoteInfo(
@@ -2917,7 +2903,7 @@ public class AdSelectionServiceImplTest {
                     return null;
                 };
         doAnswer(countDownAnswer)
-                .when(mAdServicesLoggerSpy)
+                .when(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
 
         adSelectionService.removeAdSelectionConfigRemoteInfoOverride(adSelectionConfig, callback);
@@ -2955,13 +2941,10 @@ public class AdSelectionServiceImplTest {
                         .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                         .build();
 
-        CustomAudienceSignals customAudienceSignals =
-                CustomAudienceSignalsFixture.aCustomAudienceSignals();
-
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
-                        .setCustomAudienceSignals(customAudienceSignals)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URI)
@@ -2992,7 +2975,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -3012,7 +2995,7 @@ public class AdSelectionServiceImplTest {
         assertEquals(
                 "Error response code mismatch", STATUS_INVALID_ARGUMENT, response.getStatusCode());
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
                         eq(STATUS_INVALID_ARGUMENT),
@@ -3056,13 +3039,10 @@ public class AdSelectionServiceImplTest {
                         .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                         .build();
 
-        CustomAudienceSignals customAudienceSignals =
-                CustomAudienceSignalsFixture.aCustomAudienceSignals();
-
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
-                        .setCustomAudienceSignals(customAudienceSignals)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
                         .setContextualSignals(mContextualSignals.toString())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URI)
@@ -3130,7 +3110,7 @@ public class AdSelectionServiceImplTest {
                         mScheduledExecutor,
                         CONTEXT,
                         mConsentManagerMock,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLoggerMock,
                         flagsWithThrottling,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -3153,9 +3133,9 @@ public class AdSelectionServiceImplTest {
 
         assertTrue(callbackFirstCall.mIsSuccess);
         RecordedRequest fetchRequest = server.takeRequest();
-        assertEquals(mFetchJavaScriptPath, fetchRequest.getPath());
+        assertEquals(mFetchJavaScriptPathSeller, fetchRequest.getPath());
 
-        verify(mAdServicesLoggerSpy)
+        verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
                         eq(STATUS_SUCCESS),
@@ -3169,6 +3149,312 @@ public class AdSelectionServiceImplTest {
                 callbackSubsequentCall.mFledgeErrorResponse.getErrorMessage(),
                 REPORT_IMPRESSION_THROTTLED);
         resetThrottlerToNoRateLimits();
+    }
+
+    @Test
+    public void testReportImpressionDoestNotReportWhenUrisDoNotMatchDomain() throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+
+        // Instantiate a server with different domain from buyer and seller for reporting
+        MockWebServer reportingServer = new MockWebServer();
+        reportingServer.play();
+        Uri sellerReportingUri = Uri.parse(reportingServer.getUrl(mSellerReportingPath).toString());
+        Uri buyerReportingUri = Uri.parse(reportingServer.getUrl(mBuyerReportingPath).toString());
+
+        Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
+
+        String sellerDecisionLogicJs =
+                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
+                        + " \n"
+                        + " return {'status': 0, 'results': {'signals_for_buyer':"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
+                        + sellerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        String buyerDecisionLogicJs =
+                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
+                        + " contextual_signals, custom_audience_signals) { \n"
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
+                        + buyerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(new MockResponse().setBody(sellerDecisionLogicJs)));
+
+        DBBuyerDecisionLogic dbBuyerDecisionLogic =
+                new DBBuyerDecisionLogic.Builder()
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
+                        .build();
+
+        DBAdSelection dbAdSelection =
+                new DBAdSelection.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setContextualSignals(mContextualSignals.toString())
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setWinningAdRenderUri(RENDER_URI)
+                        .setWinningAdBid(BID)
+                        .setCreationTimestamp(ACTIVATION_TIME)
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
+
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mAppImportanceFilter,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        CONTEXT,
+                        mConsentManagerMock,
+                        mAdServicesLoggerMock,
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAllowListsFilterSpy);
+
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .build();
+        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
+        assertTrue(callback.mIsSuccess);
+        RecordedRequest fetchRequest = server.takeRequest();
+        assertEquals(mFetchJavaScriptPathSeller, fetchRequest.getPath());
+
+        // Assert that reporting didn't happen
+        assertEquals(reportingServer.getRequestCount(), 0);
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
+    }
+
+    @Test
+    public void testReportImpressionOnlyReportsBuyerWhenSellerReportingUriDoesNotMatchDomain()
+            throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+
+        // Instantiate a server with a different domain than seller
+        MockWebServer sellerServer = new MockWebServer();
+        sellerServer.play();
+        Uri sellerReportingUri = Uri.parse(sellerServer.getUrl(mSellerReportingPath).toString());
+
+        Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
+
+        String sellerDecisionLogicJs =
+                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
+                        + " \n"
+                        + " return {'status': 0, 'results': {'signals_for_buyer':"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
+                        + sellerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        String buyerDecisionLogicJs =
+                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
+                        + " contextual_signals, custom_audience_signals) { \n"
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
+                        + buyerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse().setBody(sellerDecisionLogicJs),
+                                new MockResponse()));
+
+        DBBuyerDecisionLogic dbBuyerDecisionLogic =
+                new DBBuyerDecisionLogic.Builder()
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
+                        .build();
+
+        DBAdSelection dbAdSelection =
+                new DBAdSelection.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setContextualSignals(mContextualSignals.toString())
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setWinningAdRenderUri(RENDER_URI)
+                        .setWinningAdBid(BID)
+                        .setCreationTimestamp(ACTIVATION_TIME)
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
+
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mAppImportanceFilter,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        CONTEXT,
+                        mConsentManagerMock,
+                        mAdServicesLoggerMock,
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAllowListsFilterSpy);
+
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .build();
+        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
+        assertTrue(callback.mIsSuccess);
+        RecordedRequest fetchRequest = server.takeRequest();
+        assertEquals(mFetchJavaScriptPathSeller, fetchRequest.getPath());
+
+        assertEquals(mBuyerReportingPath, server.takeRequest().getPath());
+
+        // Assert that buyer reporting didn't happen
+        assertEquals(sellerServer.getRequestCount(), 0);
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
+    }
+
+    @Test
+    public void testReportImpressionOnlyReportsSellerWhenBuyerReportingUriDoesNotMatchDomain()
+            throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
+
+        // Instantiate a server with a different domain than buyer
+        MockWebServer buyerServer = new MockWebServer();
+        buyerServer.play();
+        Uri buyerReportingUri = Uri.parse(buyerServer.getUrl(mBuyerReportingPath).toString());
+
+        Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
+
+        String sellerDecisionLogicJs =
+                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
+                        + " \n"
+                        + " return {'status': 0, 'results': {'signals_for_buyer':"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
+                        + sellerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        String buyerDecisionLogicJs =
+                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
+                        + " contextual_signals, custom_audience_signals) { \n"
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
+                        + buyerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse().setBody(sellerDecisionLogicJs),
+                                new MockResponse()));
+
+        DBBuyerDecisionLogic dbBuyerDecisionLogic =
+                new DBBuyerDecisionLogic.Builder()
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
+                        .build();
+
+        DBAdSelection dbAdSelection =
+                new DBAdSelection.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setContextualSignals(mContextualSignals.toString())
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setWinningAdRenderUri(RENDER_URI)
+                        .setWinningAdBid(BID)
+                        .setCreationTimestamp(ACTIVATION_TIME)
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
+
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mAppImportanceFilter,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        CONTEXT,
+                        mConsentManagerMock,
+                        mAdServicesLoggerMock,
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAllowListsFilterSpy);
+
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .build();
+        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
+        assertTrue(callback.mIsSuccess);
+        RecordedRequest fetchRequest = server.takeRequest();
+        assertEquals(mFetchJavaScriptPathSeller, fetchRequest.getPath());
+
+        assertEquals(mSellerReportingPath, server.takeRequest().getPath());
+
+        // Assert that buyer reporting didn't happen
+        assertEquals(buyerServer.getRequestCount(), 0);
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
     }
 
     /**
@@ -3194,7 +3480,7 @@ public class AdSelectionServiceImplTest {
                     return null;
                 };
         doAnswer(countDownAnswer)
-                .when(mAdServicesLoggerSpy)
+                .when(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
 
         adSelectionService.resetAllAdSelectionConfigRemoteOverrides(callback);
@@ -3216,7 +3502,7 @@ public class AdSelectionServiceImplTest {
                     return null;
                 };
         doAnswer(countDownAnswer)
-                .when(mAdServicesLoggerSpy)
+                .when(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
 
         adSelectionService.reportImpression(requestParams, callback);

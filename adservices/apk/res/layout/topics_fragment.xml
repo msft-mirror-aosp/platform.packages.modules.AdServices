@@ -48,7 +48,7 @@
                 <ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:src="@drawable/ic_placeholder_icon"
+                    android:src="@drawable/ic_placeholder_icon_for_empty_topics_list"
                     tools:ignore="ContentDescription" />
                 <TextView
                     android:layout_width="match_parent"
@@ -58,6 +58,16 @@
                     android:gravity="center"
                     android:text="@string/settingsUI_topics_view_no_topics_text"
                     android:textAppearance="@style/TextAppearance.Body2.Bold" />
+
+                <Button
+                    android:id="@+id/blocked_topics_when_empty_state_button"
+                    style="@style/MainStyle.PrimaryButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:text="@string/settingsUI_blocked_topics_title"
+                    android:textAllCaps="false"
+                    android:textColor="@color/button_text_color"/>
             </LinearLayout>
 
             <androidx.recyclerview.widget.RecyclerView

@@ -20,8 +20,7 @@
         <item name="android:fontFamily">@*android:string/config_bodyFontFamilyMedium</item>
     </style>
 
-<!--    <style name="MainStyle.NotificationPrimaryButton" parent="android:Widget.Material.Button">-->
-    <style name="MainStyle.NotificationPrimaryButton">
+    <style name="MainStyle.PrimaryButton">
         <item name="android:theme">@style/RoundedCornerThemeOverlay</item>
         <item name="android:textSize">16sp</item>
         <item name="android:fontFamily">@*android:string/config_bodyFontFamilyMedium</item>

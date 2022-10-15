@@ -265,7 +265,7 @@ public class DbState {
     private EventReport getEventReportFrom(JSONObject rJSON) throws JSONException {
         return new EventReport.Builder()
                 .setId(rJSON.getString("id"))
-                .setSourceId(new UnsignedLong(rJSON.getString("sourceId")))
+                .setSourceEventId(new UnsignedLong(rJSON.getString("sourceId")))
                 .setAttributionDestination(Uri.parse(rJSON.getString("attributionDestination")))
                 .setEnrollmentId(rJSON.getString("enrollmentId"))
                 .setTriggerData(new UnsignedLong(rJSON.getString("triggerData")))

@@ -40,6 +40,8 @@ import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.RemoteException;
 import android.view.InputEvent;
@@ -56,7 +58,6 @@ import com.android.adservices.service.measurement.registration.SourceFetcher;
 import com.android.adservices.service.measurement.registration.SourceRegistration;
 import com.android.adservices.service.measurement.registration.TriggerFetcher;
 import com.android.adservices.service.measurement.registration.TriggerRegistration;
-import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Web;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -321,6 +322,28 @@ public final class MeasurementImpl {
         }
     }
 
+    /** Delete all data generated from apps that are not currently installed. */
+    public void deleteAllUninstalledMeasurementData() {
+        List<Uri> installedApplicationsList = getCurrentInstalledApplicationsList(mContext);
+        mReadWriteLock.writeLock().lock();
+        try {
+            mDatastoreManager.runInTransaction(
+                    (dao) -> dao.deleteAppRecordsNotPresent(installedApplicationsList));
+        } finally {
+            mReadWriteLock.writeLock().unlock();
+        }
+    }
+
+    private List<Uri> getCurrentInstalledApplicationsList(Context context) {
+        PackageManager packageManager = context.getPackageManager();
+        List<ApplicationInfo> applicationInfoList =
+                packageManager.getInstalledApplications(
+                        PackageManager.ApplicationInfoFlags.of(PackageManager.GET_META_DATA));
+        return applicationInfoList.stream()
+                .map(applicationInfo -> Uri.parse("android-app://" + applicationInfo.packageName))
+                .collect(Collectors.toList());
+    }
+
     private int fetchAndInsertTriggers(RegistrationRequest request, long requestTime) {
         Optional<List<TriggerRegistration>> fetch = mTriggerFetcher.fetchTrigger(request);
         LogUtil.d("MeasurementImpl: register: success=" + fetch.isPresent());
@@ -501,7 +524,7 @@ public final class MeasurementImpl {
                 .map(
                         fakeReport ->
                                 new EventReport.Builder()
-                                        .setSourceId(source.getEventId())
+                                        .setSourceEventId(source.getEventId())
                                         .setReportTime(fakeReport.getReportingTime())
                                         .setTriggerData(fakeReport.getTriggerData())
                                         .setAttributionDestination(fakeReport.getDestination())
@@ -674,10 +697,10 @@ public final class MeasurementImpl {
      * @return a fake {@link Attribution}
      */
     private Attribution createFakeAttributionRateLimit(Source source, Uri destination) {
-        Optional<Uri> publisherBaseUri = extractBaseUri(source.getPublisher());
-        Optional<Uri> destinationBaseUri = extractBaseUri(destination);
+        Optional<Uri> topLevelPublisher =
+                getTopLevelPublisher(source.getPublisher(), source.getPublisherType());
 
-        if (!publisherBaseUri.isPresent() || !destinationBaseUri.isPresent()) {
+        if (!topLevelPublisher.isPresent()) {
             throw new IllegalArgumentException(
                     String.format(
                             "insertAttributionRateLimit: getSourceAndDestinationTopPrivateDomains"
@@ -685,13 +708,11 @@ public final class MeasurementImpl {
                             source.getPublisher(), destination));
         }
 
-        String publisherTopPrivateDomain = publisherBaseUri.get().toString();
-        String triggerDestinationTopPrivateDomain = destinationBaseUri.get().toString();
         return new Attribution.Builder()
-                .setSourceSite(publisherTopPrivateDomain)
-                .setSourceOrigin(BaseUriExtractor.getBaseUri(source.getPublisher()).toString())
-                .setDestinationSite(triggerDestinationTopPrivateDomain)
-                .setDestinationOrigin(BaseUriExtractor.getBaseUri(destination).toString())
+                .setSourceSite(topLevelPublisher.get().toString())
+                .setSourceOrigin(source.getPublisher().toString())
+                .setDestinationSite(destination.toString())
+                .setDestinationOrigin(destination.toString())
                 .setEnrollmentId(source.getEnrollmentId())
                 .setTriggerTime(source.getEventTime())
                 .setRegistrant(source.getRegistrant().toString())
@@ -705,17 +726,6 @@ public final class MeasurementImpl {
 
     private static String getTargetPackageFromPlayStoreUri(Uri uri) {
         return uri.getQueryParameter("id");
-    }
-
-    private static Optional<Uri> extractBaseUri(Uri uri) {
-        return hasAndroidAppScheme(uri)
-                ? Optional.of(BaseUriExtractor.getBaseUri(uri))
-                : Web.topPrivateDomainAndScheme(uri);
-    }
-
-    private static boolean hasAndroidAppScheme(Uri uri) {
-        String scheme = uri.getScheme();
-        return scheme != null && scheme.equals(ANDROID_APP_SCHEME);
     }
 
     private interface AppVendorPackages {
