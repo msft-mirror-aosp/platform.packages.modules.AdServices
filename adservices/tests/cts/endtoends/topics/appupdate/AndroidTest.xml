@@ -39,21 +39,22 @@
     </target_preparer>
 
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
-        <!-- Disable global_kill_switch to ignore the effect of actual PH values. -->
+        <!-- Disable global/topics kill_switch to ignore the effect of actual PH values. -->
         <option name="run-command" value="device_config put adservices global_kill_switch false" />
+        <option name="run-command" value="device_config put adservices topics_kill_switch false" />
         <!-- Override Consent Manager to debug mode to grant user consent -->
         <option name="run-command" value="setprop debug.adservices.consent_manager_debug_mode true" />
         <option name="run-command" value="setprop log.tag.adservices VERBOSE" />
         <!-- Override the flag to disable Topics enrollment check. -->
         <option name="run-command" value="setprop debug.adservices.disable_topics_enrollment_check true" />
-        <!-- Switch on/off for MDD service. Default value is false, which means MDD is enabled. -->
-        <option name="run-command" value="setprop debug.adservices.mdd_background_task_kill_switch true" />
         <!-- Create place to store tests apks that will be installed/uninstalled in the test. -->
         <option name="run-command" value="mkdir -p /data/local/tmp/cts/install" />
+        <!-- Forces using bundled model files. -->
+        <option name="run-command" value="device_config put adservices classifier_use_downloaded_files false" />
 
         <option name="teardown-command" value="setprop debug.adservices.consent_manager_debug_mode false"/>
         <option name="teardown-command" value="setprop debug.adservices.disable_topics_enrollment_check false" />
-        <option name="teardown-command" value="setprop debug.adservices.mdd_background_task_kill_switch false" />
+        <option name="teardown-command" value="device_config put adservices classifier_use_downloaded_files true" />
 
         <option name="teardown-command" value="rm -rf /data/local/tmp/cts"/>
         <!-- Uninstall the test app anyway in case failed test skips the uninstallation -->

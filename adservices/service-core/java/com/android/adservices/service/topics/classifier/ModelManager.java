@@ -182,7 +182,9 @@ public class ModelManager {
 
     // Return true if Model Manager should use downloaded model. Otherwise, use bundled model.
     private boolean useDownloadedFiles() {
-        return mDownloadedFiles != null && mDownloadedFiles.size() > 0;
+        return mDownloadedFiles != null
+                && mDownloadedFiles.size() > 0
+                && !FlagsFactory.getFlags().getClassifierForceUseBundledFiles();
     }
 
     /**

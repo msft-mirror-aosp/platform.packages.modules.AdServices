@@ -21,6 +21,7 @@ import static com.android.adservices.service.Flags.ADSERVICES_ENABLED;
 import static com.android.adservices.service.Flags.APPSETID_KILL_SWITCH;
 import static com.android.adservices.service.Flags.CLASSIFIER_DESCRIPTION_MAX_LENGTH;
 import static com.android.adservices.service.Flags.CLASSIFIER_DESCRIPTION_MAX_WORDS;
+import static com.android.adservices.service.Flags.CLASSIFIER_FORCE_USE_BUNDLED_FILES;
 import static com.android.adservices.service.Flags.CLASSIFIER_NUMBER_OF_TOP_LABELS;
 import static com.android.adservices.service.Flags.CLASSIFIER_THRESHOLD;
 import static com.android.adservices.service.Flags.DEFAULT_CLASSIFIER_TYPE;
@@ -38,6 +39,7 @@ import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_TOP
 import static com.android.adservices.service.Flags.ENFORCE_ISOLATE_MAX_HEAP_SIZE;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT;
+import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S;
@@ -124,6 +126,7 @@ import static com.android.adservices.service.PhFlags.KEY_ADSERVICES_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_APPSETID_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_DESCRIPTION_MAX_LENGTH;
 import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_DESCRIPTION_MAX_WORDS;
+import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES;
 import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS;
 import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_THRESHOLD;
 import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_TYPE;
@@ -137,6 +140,7 @@ import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STAT
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT;
+import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S;
@@ -509,6 +513,23 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getClassifierDescriptionMaxLength()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetClassifierForceUseBundledFiles() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getClassifierForceUseBundledFiles())
+                .isEqualTo(CLASSIFIER_FORCE_USE_BUNDLED_FILES);
+
+        boolean phOverridingValue = true;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getClassifierForceUseBundledFiles()).isEqualTo(phOverridingValue);
     }
 
     @Test
@@ -2965,6 +2986,23 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getOffDeviceAdSelectionEnabled()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testgetFledgeAdselectionExpirationWindow() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getAdSelectionExpirationWindowS())
+                .isEqualTo(FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S);
+
+        final int phOverridingValue = 4;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S,
+                Integer.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getAdSelectionExpirationWindowS()).isEqualTo(phOverridingValue);
     }
 
     @Test
