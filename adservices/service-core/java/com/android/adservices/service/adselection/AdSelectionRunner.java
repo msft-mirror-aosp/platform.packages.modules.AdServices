@@ -62,7 +62,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 
 import java.time.Clock;
-import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -264,8 +263,6 @@ public abstract class AdSelectionRunner {
                         @Override
                         public void onSuccess(DBAdSelection result) {
                             notifySuccessToCaller(result, callback);
-                            // TODO(242280808): Schedule a clear for stale data instead of this hack
-                            clearExpiredAdSelectionDataAndBuyerDecisionLogic();
                         }
 
                         @Override
@@ -277,8 +274,6 @@ public abstract class AdSelectionRunner {
                             } else {
                                 notifyFailureToCaller(callback, t);
                             }
-                            // TODO(242280808): Schedule a clear for stale data instead of this hack
-                            clearExpiredAdSelectionDataAndBuyerDecisionLogic();
                         }
                     },
                     mLightweightExecutorService);
@@ -608,12 +603,6 @@ public abstract class AdSelectionRunner {
         validateAdSelectionConfig(adSelectionConfig);
 
         return null;
-    }
-
-    private void clearExpiredAdSelectionDataAndBuyerDecisionLogic() {
-        Instant expirationTime = mClock.instant().minusSeconds(DAY_IN_SECONDS);
-        mAdSelectionEntryDao.removeExpiredAdSelection(expirationTime);
-        mAdSelectionEntryDao.removeExpiredBuyerDecisionLogic();
     }
 
     static class AdSelectionOrchestrationResult {
