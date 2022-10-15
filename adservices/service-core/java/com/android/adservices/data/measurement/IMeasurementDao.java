@@ -60,6 +60,28 @@ public interface IMeasurementDao {
     Trigger getTrigger(String triggerId) throws DatastoreException;
 
     /**
+     * Fetches the count of aggregate reports for the provided destination.
+     *
+     * @param attributionDestination Uri for the destination
+     * @param destinationType DestinationType App/Web
+     * @return number of aggregate reports in the database attributed to the provided destination
+     */
+    int getNumAggregateReportsPerDestination(
+            @NonNull Uri attributionDestination, @EventSurfaceType int destinationType)
+            throws DatastoreException;
+
+    /**
+     * Fetches the count of event reports for the provided destination.
+     *
+     * @param attributionDestination Uri for the destination
+     * @param destinationType DestinationType App/Web
+     * @return number of event reports in the database attributed to the provided destination
+     */
+    int getNumEventReportsPerDestination(
+            @NonNull Uri attributionDestination, @EventSurfaceType int destinationType)
+            throws DatastoreException;
+
+    /**
      * Gets the number of sources associated to a publisher.
      *
      * @param publisherUri Uri for the publisher
@@ -336,4 +358,13 @@ public interface IMeasurementDao {
      * @param asyncRegistration a {@link AsyncRegistration} for which the retryCount will be updated
      */
     void updateRetryCount(@NonNull AsyncRegistration asyncRegistration) throws DatastoreException;
+
+    /**
+     * Deletes all records in measurement tables that correspond with a Uri not in the provided
+     * list.
+     *
+     * @param uriList a {@link List} of Uris whos related records won't be deleted.
+     * @throws DatastoreException
+     */
+    void deleteAppRecordsNotPresent(List<Uri> uriList) throws DatastoreException;
 }

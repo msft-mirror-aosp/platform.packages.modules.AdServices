@@ -94,7 +94,7 @@ class TestObjectProvider {
                         source.setAttributionMode(Source.AttributionMode.FALSELY);
                         return Collections.singletonList(
                                 new EventReport.Builder()
-                                        .setSourceId(source.getEventId())
+                                        .setSourceEventId(source.getEventId())
                                         .setReportTime(source.getExpiryTime() + ONE_HOUR_IN_MILLIS)
                                         .setTriggerData(new UnsignedLong(0L))
                                         .setAttributionDestination(source.getAppDestination())

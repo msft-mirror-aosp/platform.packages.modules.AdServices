@@ -50,17 +50,6 @@ import java.util.Set;
 
 /** A class to manage Epoch computation. */
 public class EpochManager implements Dumpable {
-    // TODO(b/223915674): make this configurable.
-    // The Top Topics will have 6 topics.
-    // The first 5 topics are the Top Topics derived by ML, and the 6th is a random topic from
-    // taxonomy.
-    // The index starts from 0.
-    private static final int RANDOM_TOPIC_INDEX = 5;
-
-    // TODO(b/223916172): make this configurable.
-    // The number of top Topics not including the random one.
-    private static final int NUM_TOP_TOPICS_NOT_INCLUDING_RANDOM_ONE = 5;
-
     // The tables to do garbage collection for old epochs
     // and its corresponding epoch_id column name.
     // Pair<Table Name, Column Name>
@@ -412,14 +401,16 @@ public class EpochManager implements Dumpable {
                                 + mFlags.getTopicsNumberOfRandomTopics());
         int random = mRandom.nextInt(100);
 
+        // First random topic would be after numberOfTopTopics.
+        int randomTopicIndex = mFlags.getTopicsNumberOfTopTopics();
         // For 5%, get the random topic.
         if (random < mFlags.getTopicsPercentageForRandomTopic()) {
             // The random topic is the last one on the list.
-            return topTopics.get(RANDOM_TOPIC_INDEX);
+            return topTopics.get(randomTopicIndex);
         }
 
-        // For 95%, pick randomly one out of 5 top topics.
-        return topTopics.get(random % NUM_TOP_TOPICS_NOT_INCLUDING_RANDOM_ONE);
+        // For 95%, pick randomly one out of first n top topics.
+        return topTopics.get(random % randomTopicIndex);
     }
 
     // To garbage collect data for old epochs.

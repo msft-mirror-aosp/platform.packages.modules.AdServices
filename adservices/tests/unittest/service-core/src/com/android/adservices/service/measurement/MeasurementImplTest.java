@@ -68,6 +68,7 @@ import android.view.InputEvent;
 import android.view.MotionEvent;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.core.content.pm.ApplicationInfoBuilder;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -229,7 +230,6 @@ public final class MeasurementImplTest {
             new WebTriggerParams.Builder(REGISTRATION_URI_2).setDebugKeyAllowed(false).build();
 
     private static final long REQUEST_TIME = 10000L;
-
     @Spy
     private DatastoreManager mDatastoreManager =
             DatastoreManagerFactory.getDatastoreManager(DEFAULT_CONTEXT);
@@ -1003,7 +1003,7 @@ public final class MeasurementImplTest {
                         eventTime + TimeUnit.DAYS.toMillis(8), EventSurfaceType.APP));
 
         for (EventReport report : fakeEventReports) {
-            Assert.assertEquals(source.getEventId(), report.getSourceId());
+            Assert.assertEquals(source.getEventId(), report.getSourceEventId());
             Assert.assertTrue(reportingTimes.stream().anyMatch(x -> x == report.getReportTime()));
             Assert.assertEquals(source.getEventTime(), report.getTriggerTime());
             Assert.assertEquals(0, report.getTriggerPriority());
@@ -1089,8 +1089,61 @@ public final class MeasurementImplTest {
     }
 
     @Test
-    public void testRegisterWebSource_sourceFetchSuccess()
-            throws RemoteException, DatastoreException {
+    public void testDeleteAllUninstalledMeasurementData() throws DatastoreException {
+        ArgumentCaptor<ThrowingCheckedConsumer> consumerArgumentCaptor =
+                ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
+
+        PackageManager mockPackageManager =
+                new MockPackageManager() {
+
+                    @Override
+                    public List<ApplicationInfo> getInstalledApplications(
+                            PackageManager.ApplicationInfoFlags flags) {
+                        return Arrays.asList(
+                                ApplicationInfoBuilder.newBuilder()
+                                        .setPackageName("com.app.name.1")
+                                        .build(),
+                                ApplicationInfoBuilder.newBuilder()
+                                        .setPackageName("com.app.name.2")
+                                        .build(),
+                                ApplicationInfoBuilder.newBuilder()
+                                        .setPackageName("com.app.name.3")
+                                        .build());
+                    }
+                };
+
+        MockContext mockContext =
+                new MockContext() {
+                    @Override
+                    public PackageManager getPackageManager() {
+                        return mockPackageManager;
+                    }
+                };
+        MeasurementImpl measurement =
+                spy(
+                        new MeasurementImpl(
+                                mockContext,
+                                mContentResolver,
+                                mDatastoreManager,
+                                mSourceFetcher,
+                                mTriggerFetcher,
+                                mClickVerifier));
+
+        // Execution
+        measurement.deleteAllUninstalledMeasurementData();
+        verify(mDatastoreManager).runInTransaction(consumerArgumentCaptor.capture());
+
+        consumerArgumentCaptor.getValue().accept(mMeasurementDao);
+        verify(mMeasurementDao, times(1))
+                .deleteAppRecordsNotPresent(
+                        Arrays.asList(
+                                Uri.parse("android-app://com.app.name.1"),
+                                Uri.parse("android-app://com.app.name.2"),
+                                Uri.parse("android-app://com.app.name.3")));
+    }
+
+    @Test
+    public void registerWebSource_sourceFetchSuccess() throws RemoteException, DatastoreException {
         // setup
         List<SourceRegistration> sourceRegistrationsOut =
                 Arrays.asList(VALID_SOURCE_REGISTRATION_1, VALID_SOURCE_REGISTRATION_2);

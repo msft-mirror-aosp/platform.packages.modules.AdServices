@@ -48,6 +48,8 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Kapag na-on ang beta, magbibigay-daan ito sa mga app na subukan ang mga bago at karagdagang pribadong paraang ito para magpakita sa iyo ng mga ad. Puwede mong i-off ang beta anumang oras sa iyong mga setting ng privacy."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Huwag na lang"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"I-on"</string>
+    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
+    <skip />
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Salamat sa paglahok"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Bahagi ka ng beta ng privacy sa mga ad ng Android. Naka-on ang Privacy Sandbox para sa device mo.\n\nPuwede kang matuto pa o puwede mong i-off ang beta kahit kailan sa iyong mga setting ng privacy."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Pinili mong hindi makilahok"</string>
@@ -79,8 +81,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Walang interes na maipapakita sa ngayon"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Nagbibigay ang beta ng privacy sa mga ad ng Android ng mga bagong feature na magagamit ng mga app para magpakita sa iyo ng mga ad na posibleng magustuhan mo. Hindi gumagamit ang mga teknolohiyang ito ng mga identifier ng device.\n\nMatatantya ng Android ang mga uri ng mga ad kung saan ka posibleng may interes, at pansamantalang sine-save ang mga interes sa device mo. Nagbibigay-daan ito sa mga app na magpakita sa iyo ng mga may kaugnayang ad, nang hindi sinusubaybayan ang aktibidad mo sa mga website at app mula sa iba pang developer."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Wala kang naka-block na interes"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Puwedeng tantyahin ng mga app ang iyong mga interes at pansamantalang i-save ang mga ito sa Android. Sa pagtagal, puwedeng may ibang app na magpakita sa iyo ng ad batay sa mga interes na ito.\n\nKung iba-block mo ang isang app, hindi na ito magtatantya ng mga interes. Hindi ito idaragdag ulit sa listahan ng mga app na ito maliban na lang kung i-unblock mo ito. Made-delete ang mga interes na tinatantya na ng app, pero posibleng makakita ka pa rin ng ilang nauugnay na ad."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Mga app na na-block mo"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"I-reset ang mga interes na tinatantya ng mga app"</string>
@@ -88,7 +89,25 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Nagbibigay ang beta ng privacy sa mga ad ng Android ng mga bagong feature na magagamit ng mga app para magpakita sa iyo ng mga ad na posibleng magustuhan mo. Hindi gumagamit ang mga teknolohiyang ito ng mga identifier ng device.\n\nMatatantya ng mga app ang mga uri ng mga ad kung saan posibleng interesado ka, at pansamantalang sine-save ang mga interes sa device mo. Nagbibigay-daan ito sa mga app na magpakita sa iyo ng mga may kaugnayang ad, nang hindi sinusubaybayan ang aktibidad mo sa mga website at app mula sa iba pang developer."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Wala kang naka-block na app"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Wala kang naka-block na interes"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Kanselahin"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"I-off ang Privacy Sandbox?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Kung magbabago ka ng isip o kung gusto mong matuto pa tungkol sa beta ng privacy sa mga ad ng Android, pumunta sa iyong mga setting ng privacy"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"I-off"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"I-block ang <xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Iba-block ang interes na ito at hindi na ito idaragdag ulit sa iyong listahan, maliban kung idaragdag mo ito ulit. Posibleng makakita ka pa rin ng ilang nauugnay na ad."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"I-block"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"Na-unblock ang <xliff:g id="TOPIC">%1$s</xliff:g>"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Puwedeng idagdag ulit ng Android ang interes na ito sa iyong listahan, pero posibleng hindi ito kaagad lumabas."</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"I-reset ang lahat ng iyong interes?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"Iki-clear ang listahan mo, at ire-refresh ito sa paglipas ng panahon"</string>
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"I-reset"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"I-block ang <xliff:g id="APP">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Hindi tatantyahin ng app na ito ang mga interes para sa Privacy Sandbox at hindi na ito idaragdag ulit sa iyong listahan, maliban kung ia-unblock mo ito.\n\nIde-delete ang mga interes na natantya na ng app na ito, pero posibleng makakita ka pa rin ng ilang nauugnay na ad."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Na-unblock ang <xliff:g id="APP">%1$s</xliff:g>"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Makakapagtantya ulit ang app na ito ng mga interes para sa iyo, pero posibleng hindi ito kaagad lumabas sa listahan mo. Posibleng matagalan bago ka makakita ng mga nauugnay na ad."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"I-reset ang mga interes na nabuo ng mga app?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"Iki-clear ang listahan mo, at ire-refresh ito sa paglipas ng panahon"</string>
     <string name="topic10001" msgid="1636806320891333775">"Sining at Entertainment"</string>
     <string name="topic10002" msgid="1226367977754287428">"Pag-arte at Teatro"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime at Manga"</string>

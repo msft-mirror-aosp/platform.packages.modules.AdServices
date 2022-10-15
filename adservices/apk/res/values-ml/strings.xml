@@ -48,6 +48,8 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"ബീറ്റ ഓണാക്കുന്നത്, നിങ്ങളെ പരസ്യങ്ങൾ കാണിക്കുന്നതിന് പുതിയതും കൂടുതൽ സ്വകാര്യവുമായ ഈ വഴികൾ പരീക്ഷിക്കാൻ ആപ്പുകളെ അനുവദിക്കും. നിങ്ങളുടെ സ്വകാര്യതാ ക്രമീകരണത്തിൽ ഏതുസമയത്തും ബീറ്റ ഓഫാക്കാം."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"വേണ്ട"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"ഓണാക്കുക"</string>
+    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
+    <skip />
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"പങ്കെടുത്തതിന് നന്ദി"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"നിങ്ങൾ Android-ന്റെ പരസ്യ സ്വകാര്യതാ ബീറ്റയുടെ ഭാഗമാണ്. നിങ്ങളുടെ ഉപകരണത്തിൽ സ്വകാര്യതാ സാൻഡ്ബോക്‌സ് ഓണാക്കിയിരിക്കുന്നു.\n\nനിങ്ങളുടെ സ്വകാര്യതാ ക്രമീകരണത്തിൽ ഏതുസമയത്തും ബീറ്റയെക്കുറിച്ച് കൂടുതലറിയാനോ ബീറ്റ ഓഫാക്കാനോ കഴിയും."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"പങ്കെടുക്കേണ്ടതില്ലെന്ന് നിങ്ങൾ തിരഞ്ഞെടുത്തു"</string>
@@ -79,8 +81,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"ഇപ്പോൾ കാണിക്കാൻ താൽപ്പര്യങ്ങളൊന്നുമില്ല"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"സ്വകാര്യതാ സാൻഡ്ബോക്‌സ്"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"നിങ്ങൾക്ക് ഇഷ്ടപ്പെടാനിടയുള്ള പരസ്യങ്ങൾ കാണിക്കാൻ ആപ്പുകൾക്ക് ഉപയോഗിക്കാനാകുന്ന പുതിയ ഫീച്ചറുകൾ Android-ന്റെ പരസ്യ സ്വകാര്യതാ ബീറ്റ നൽകുന്നു. ഈ സാങ്കേതികവിദ്യകൾ ഉപകരണ ഐഡന്റിഫയറുകൾ ഉപയോഗിക്കുന്നില്ല.\n\nAndroid-ന് നിങ്ങൾക്ക് താൽപ്പര്യമുണ്ടാകാനിടയുള്ള പരസ്യങ്ങൾ കണക്കാക്കാനും നിങ്ങളുടെ ഉപകരണത്തിൽ താൽപ്പര്യങ്ങൾ താൽക്കാലികമായി സംരക്ഷിക്കാനും കഴിയും. മറ്റ് ഡെവലപ്പർമാരിൽ നിന്നുള്ള വെബ്‌സൈറ്റുകളിലും ആപ്പുകളിലും ഉടനീളമുള്ള നിങ്ങളുടെ ആക്റ്റിവിറ്റി ട്രാക്ക് ചെയ്യാതെ തന്നെ, പ്രസക്തമായ പരസ്യങ്ങൾ നിങ്ങളെ കാണിക്കാൻ ഇത് ആപ്പുകളെ അനുവദിക്കുന്നു."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"നിങ്ങൾക്ക് ബ്ലോക്ക് ചെയ്തിരിക്കുന്ന താൽപ്പര്യങ്ങളൊന്നുമില്ല"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"ആപ്പുകൾക്ക് നിങ്ങളുടെ താൽപ്പര്യങ്ങൾ കണക്കാക്കാനും Android-ൽ അവ താൽക്കാലികമായി സംരക്ഷിക്കാനും കഴിയും. പിന്നീട്, മറ്റൊരു ആപ്പിന് ഈ താൽപ്പര്യങ്ങളെ അടിസ്ഥാനമാക്കി നിങ്ങളെ പരസ്യം കാണിക്കാനാകും.\n\nനിങ്ങൾ ഒരു ആപ്പ് ബ്ലോക്ക് ചെയ്യുകയാണെങ്കിൽ, അത് തുടർന്ന് താൽപ്പര്യം കണക്കാക്കില്ല. നിങ്ങൾ അൺബ്ലോക്ക് ചെയ്യുന്നത് വരെ അത് വീണ്ടും ഈ ആപ്പുകളുടെ ലിസ്റ്റിലേക്ക് ചേർക്കില്ല. ആപ്പ് ഇതിനകം കണക്കാക്കിയ താൽപ്പര്യങ്ങൾ ഇല്ലാതാക്കും, എന്നാൽ നിങ്ങൾ തുടർന്നും അനുബന്ധ പരസ്യങ്ങൾ കണ്ടേക്കാം."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"നിങ്ങൾ ബ്ലോക്ക് ചെയ്‌ത ആപ്പുകൾ"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"ആപ്പുകൾ കണക്കാക്കിയ താൽപ്പര്യങ്ങൾ റീസെറ്റ് ചെയ്യുക"</string>
@@ -88,7 +89,25 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"സ്വകാര്യതാ സാൻഡ്ബോക്‌സ്"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"നിങ്ങൾക്ക് ഇഷ്ടപ്പെടാനിടയുള്ള പരസ്യങ്ങൾ കാണിക്കാൻ ആപ്പുകൾക്ക് ഉപയോഗിക്കാനാകുന്ന പുതിയ ഫീച്ചറുകൾ Android-ന്റെ പരസ്യ സ്വകാര്യതാ ബീറ്റ നൽകുന്നു. ഈ സാങ്കേതികവിദ്യകൾ ഉപകരണ ഐഡന്റിഫയറുകൾ ഉപയോഗിക്കുന്നില്ല.\n\nആപ്പുകൾക്ക് നിങ്ങൾക്ക് താൽപ്പര്യമുണ്ടാകാനിടയുള്ള പരസ്യങ്ങൾ കണക്കാക്കാനും നിങ്ങളുടെ ഉപകരണത്തിൽ താൽപ്പര്യങ്ങൾ താൽക്കാലികമായി സംരക്ഷിക്കാനും കഴിയും. മറ്റ് ഡെവലപ്പർമാരിൽ നിന്നുള്ള വെബ്‌സൈറ്റുകളിലും ആപ്പുകളിലും ഉടനീളമുള്ള നിങ്ങളുടെ ആക്റ്റിവിറ്റി ട്രാക്ക് ചെയ്യാതെ തന്നെ, പ്രസക്തമായ പരസ്യങ്ങൾ നിങ്ങളെ കാണിക്കാൻ ഇത് ആപ്പുകളെ അനുവദിക്കുന്നു."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"നിങ്ങൾക്ക് ബ്ലോക്ക് ചെയ്‌ത ആപ്പുകളൊന്നുമില്ല"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"നിങ്ങൾക്ക് ബ്ലോക്ക് ചെയ്തിരിക്കുന്ന താൽപ്പര്യങ്ങളൊന്നുമില്ല"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"റദ്ദാക്കുക"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"സ്വകാര്യതാ സാൻഡ്ബോക്‌സ് ഓഫാക്കണോ?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"നിങ്ങൾ തീരുമാനം മാറ്റുകയാണെങ്കിലോ Android പരസ്യ സ്വകാര്യതാ ബീറ്റയെ കുറിച്ച് കൂടുതലറിയണമെന്നുണ്ടെങ്കിലോ നിങ്ങളുടെ സ്വകാര്യതാ ക്രമീകരണത്തിലേക്ക് പോകുക"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"ഓഫാക്കുക"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"<xliff:g id="TOPIC">%1$s</xliff:g> ബ്ലോക്ക് ചെയ്യണോ?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"ഈ താൽപ്പര്യം ബ്ലോക്ക് ചെയ്യും, നിങ്ങൾ അത് വീണ്ടും ചേർക്കുന്നില്ലെങ്കിൽ നിങ്ങളുടെ ലിസ്‌റ്റിലേക്ക് ചേർക്കുകയുമില്ല. നിങ്ങൾ തുടർന്നും ചില അനുബന്ധ പരസ്യങ്ങൾ കണ്ടേക്കാം."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"ബ്ലോക്ക് ചെയ്യുക"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> അൺബ്ലോക്ക് ചെയ്‌തു"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android ഈ താൽപ്പര്യം നിങ്ങളുടെ ലിസ്റ്റിലേക്ക് വീണ്ടും ചേർത്തേക്കാം, പക്ഷേ അത് ഉടനടി ദൃശ്യമാകണമെന്നില്ല"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"ശരി"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"നിങ്ങളുടെ താൽപ്പര്യങ്ങളെല്ലാം റീസെറ്റ് ചെയ്യണോ?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"നിങ്ങളുടെ ലിസ്റ്റ് മായ്‌ക്കും, തുടർന്ന് കാലക്രമേണ റീഫ്രഷ് ചെയ്യും"</string>
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"റീസെറ്റ് ചെയ്യുക"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> ബ്ലോക്ക് ചെയ്യണോ?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"ഈ ആപ്പ് ഇനി സ്വകാര്യതാ സാൻഡ്‌ബോക്‌സിനായി താൽപ്പര്യം നിർണ്ണയിക്കില്ല, നിങ്ങൾ ഇത് അൺബ്ലോക്ക് ചെയ്യുന്നില്ലെങ്കിൽ വീണ്ടും നിങ്ങളുടെ ലിസ്റ്റിലേക്ക് ചേർക്കുകയുമില്ല.\n\nഈ ആപ്പ് ഇതിനകം നിർണ്ണയിച്ച താൽപ്പര്യങ്ങൾ ഇല്ലാതാക്കും, എന്നാൽ നിങ്ങൾ തുടർന്നും ചില അനുബന്ധ പരസ്യങ്ങൾ കണ്ടേക്കാം."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> അൺബ്ലോക്ക് ചെയ്‌തു"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"ഈ ആപ്പിന് നിങ്ങളുടെ താൽപ്പര്യങ്ങൾ വീണ്ടും നിർണ്ണയിക്കാൻ കഴിയും, എന്നാൽ ഇത് നിങ്ങളുടെ ലിസ്റ്റിൽ ഉടനടി ദൃശ്യമായേക്കില്ല. അനുബന്ധ പരസ്യങ്ങൾ കാണാൻ അൽപ്പസമയം എടുത്തേക്കാം."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"ആപ്പുകൾ സൃഷ്‌ടിച്ച താൽപ്പര്യങ്ങൾ റീസെറ്റ് ചെയ്യണോ?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"നിങ്ങളുടെ ലിസ്റ്റ് മായ്‌ക്കും, തുടർന്ന് കാലക്രമേണ റീഫ്രഷ് ചെയ്യും"</string>
     <string name="topic10001" msgid="1636806320891333775">"കലയും വിനോദവും"</string>
     <string name="topic10002" msgid="1226367977754287428">"അഭിനയവും തീയറ്ററും"</string>
     <string name="topic10003" msgid="6949890838957814881">"ആനിമേയും മാങ്കയും"</string>

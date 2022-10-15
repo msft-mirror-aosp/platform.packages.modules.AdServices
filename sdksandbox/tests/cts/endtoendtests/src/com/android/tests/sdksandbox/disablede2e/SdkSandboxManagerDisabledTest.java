@@ -59,7 +59,7 @@ public class SdkSandboxManagerDisabledTest {
     @Test
     public void testSdkSandboxDisabledErrorCode() throws Exception {
         DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_SDK_SANDBOX, "disable_sdk_sandbox", "true", false);
+                DeviceConfig.NAMESPACE_ADSERVICES, "disable_sdk_sandbox", "true", false);
         // Allow time for DeviceConfig change to propagate
         Thread.sleep(1000);
         final String sdkName = "com.android.loadSdkSuccessfullySdkProvider";

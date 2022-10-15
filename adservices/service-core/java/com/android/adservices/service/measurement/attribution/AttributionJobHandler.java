@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.measurement.attribution;
 
+import static com.android.adservices.service.measurement.PrivacyParams.AGGREGATE_MAX_REPORT_DELAY;
+import static com.android.adservices.service.measurement.PrivacyParams.AGGREGATE_MIN_REPORT_DELAY;
+
 import android.annotation.NonNull;
 import android.net.Uri;
 import android.util.Pair;
@@ -49,6 +52,7 @@ import org.json.JSONObject;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -58,8 +62,6 @@ import java.util.stream.Collectors;
 class AttributionJobHandler {
 
     private static final String API_VERSION = "0.1";
-    private static final long MIN_TIME_MS = TimeUnit.MINUTES.toMillis(10L);
-    private static final long MAX_TIME_MS = TimeUnit.MINUTES.toMillis(60L);
     private final DatastoreManager mDatastoreManager;
 
     AttributionJobHandler(DatastoreManager datastoreManager) {
@@ -142,6 +144,20 @@ class AttributionJobHandler {
 
     private boolean maybeGenerateAggregateReport(Source source, Trigger trigger,
             IMeasurementDao measurementDao) throws DatastoreException {
+        int numReports =
+                measurementDao.getNumAggregateReportsPerDestination(
+                        trigger.getAttributionDestination(), trigger.getDestinationType());
+
+        if (numReports >= SystemHealthParams.MAX_AGGREGATE_REPORTS_PER_DESTINATION) {
+            LogUtil.d(
+                    String.format(Locale.ENGLISH,
+                            "Aggregate reports for destination %1$s exceeds system health limit of"
+                                    + " %2$d.",
+                            trigger.getAttributionDestination(),
+                            SystemHealthParams.MAX_AGGREGATE_REPORTS_PER_DESTINATION));
+            return false;
+        }
+
         try {
             Optional<AggregatableAttributionSource> aggregateAttributionSource =
                     source.parseAggregateSource();
@@ -164,8 +180,9 @@ class AttributionJobHandler {
                         return false;
                     }
 
-                    long randomTime = (long) ((Math.random() * (MAX_TIME_MS - MIN_TIME_MS))
-                            + MIN_TIME_MS);
+                    long randomTime = (long) ((Math.random()
+                            * (AGGREGATE_MAX_REPORT_DELAY - AGGREGATE_MIN_REPORT_DELAY))
+                            + AGGREGATE_MIN_REPORT_DELAY);
                     AggregateReport aggregateReport =
                             new AggregateReport.Builder()
                                     // TODO: Unused field, incorrect value; cleanup
@@ -233,6 +250,20 @@ class AttributionJobHandler {
     private boolean maybeGenerateEventReport(
             Source source, Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
+        int numReports =
+                measurementDao.getNumEventReportsPerDestination(
+                        trigger.getAttributionDestination(), trigger.getDestinationType());
+
+        if (numReports >= SystemHealthParams.MAX_EVENT_REPORTS_PER_DESTINATION) {
+            LogUtil.d(
+                    String.format(Locale.ENGLISH,
+                            "Event reports for destination %1$s exceeds system health limit of"
+                                    + " %2$d.",
+                            trigger.getAttributionDestination(),
+                            SystemHealthParams.MAX_EVENT_REPORTS_PER_DESTINATION));
+            return false;
+        }
+
         // Do not generate event reports for source which have attributionMode != Truthfully.
         // TODO: Handle attribution rate limit consideration for non-truthful cases.
         if (source.getAttributionMode() != Source.AttributionMode.TRUTHFULLY) {

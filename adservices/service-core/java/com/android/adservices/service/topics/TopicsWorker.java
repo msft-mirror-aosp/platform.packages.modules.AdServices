@@ -307,6 +307,7 @@ public class TopicsWorker {
             loadCache();
         } finally {
             mReadWriteLock.writeLock().unlock();
+            LogUtil.d("App Update Reconciliation is done!");
         }
     }
 

@@ -39,13 +39,14 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.actions.Action;
+import com.android.adservices.service.measurement.actions.AggregateReportingJob;
+import com.android.adservices.service.measurement.actions.EventReportingJob;
 import com.android.adservices.service.measurement.actions.InstallApp;
 import com.android.adservices.service.measurement.actions.RegisterSource;
 import com.android.adservices.service.measurement.actions.RegisterTrigger;
 import com.android.adservices.service.measurement.actions.RegisterWebSource;
 import com.android.adservices.service.measurement.actions.RegisterWebTrigger;
 import com.android.adservices.service.measurement.actions.ReportObjects;
-import com.android.adservices.service.measurement.actions.ReportingJob;
 import com.android.adservices.service.measurement.actions.UninstallApp;
 import com.android.adservices.service.measurement.attribution.AttributionJobHandlerWrapper;
 import com.android.modules.utils.testing.TestableDeviceConfig;
@@ -182,6 +183,7 @@ public abstract class E2ETest {
         String SOURCE_WEB_DESTINATION_URI_KEY = "web_destination";
         String SOURCE_VERIFIED_DESTINATION_URI_KEY = "verified_destination";
         String REGISTRATION_URI_KEY = "attribution_src_url";
+        String IS_ADID_PERMISSION_GRANTED_KEY = "is_adid_permission_granted";
         String INPUT_EVENT_KEY = "source_type";
         String SOURCE_VIEW_TYPE = "event";
         String TIMESTAMP_KEY = "timestamp";
@@ -298,8 +300,10 @@ public abstract class E2ETest {
                 processAction((RegisterWebSource) action);
             } else if (action instanceof RegisterWebTrigger) {
                 processAction((RegisterWebTrigger) action);
-            } else if (action instanceof ReportingJob) {
-                processAction((ReportingJob) action);
+            } else if (action instanceof EventReportingJob) {
+                processAction((EventReportingJob) action);
+            } else if (action instanceof AggregateReportingJob) {
+                processAction((AggregateReportingJob) action);
             } else if (action instanceof InstallApp) {
                 processAction((InstallApp) action);
             } else if (action instanceof UninstallApp) {
@@ -315,7 +319,14 @@ public abstract class E2ETest {
      * The reporting job may be handled differently depending on whether network requests are mocked
      * or a test server is used.
      */
-    abstract void processAction(ReportingJob reportingJob) throws IOException, JSONException;
+    abstract void processAction(EventReportingJob reportingJob) throws IOException, JSONException;
+
+    /**
+     * The reporting job may be handled differently depending on whether network requests are mocked
+     * or a test server is used.
+     */
+    abstract void processAction(AggregateReportingJob reportingJob)
+            throws IOException, JSONException;
 
     /**
      * Override with HTTP response mocks, for example.
@@ -567,7 +578,7 @@ public abstract class E2ETest {
         return expiryTimes;
     }
 
-    private static Set<Action> maybeAddReportingJobTimes(
+    private static Set<Action> maybeAddEventReportingJobTimes(
             long sourceTime, Collection<List<Map<String, List<String>>>> responseHeaders)
             throws JSONException {
         Set<Action> reportingJobsActions = new HashSet<>();
@@ -580,7 +591,7 @@ public abstract class E2ETest {
                 validExpiry = PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
             }
             long jobTime = sourceTime + 1000 * validExpiry + 3600000L;
-            reportingJobsActions.add(new ReportingJob(jobTime));
+            reportingJobsActions.add(new EventReportingJob(jobTime));
         }
 
         return reportingJobsActions;
@@ -613,7 +624,7 @@ public abstract class E2ETest {
             List<Action> actions = new ArrayList<>();
 
             actions.addAll(createSourceBasedActions(input));
-            actions.addAll(createTriggerActions(input));
+            actions.addAll(createTriggerBasedActions(input));
             actions.addAll(createInstallActions(input));
             actions.addAll(createUninstallActions(input));
 
@@ -630,7 +641,7 @@ public abstract class E2ETest {
     private static List<Action> createSourceBasedActions(JSONObject input) throws JSONException {
         List<Action> actions = new ArrayList<>();
         // Set avoids duplicate reporting times across sources to do attribution upon.
-        Set<Action> reportingJobActions = new HashSet<>();
+        Set<Action> eventReportingJobActions = new HashSet<>();
         if (!input.isNull(TestFormatJsonMapping.SOURCE_REGISTRATIONS_KEY)) {
             JSONArray sourceRegistrationArray = input.getJSONArray(
                     TestFormatJsonMapping.SOURCE_REGISTRATIONS_KEY);
@@ -639,8 +650,8 @@ public abstract class E2ETest {
                         new RegisterSource(sourceRegistrationArray.getJSONObject(j));
                 actions.add(sourceRegistration);
                 // Add corresponding reporting job time actions
-                reportingJobActions.addAll(
-                        maybeAddReportingJobTimes(
+                eventReportingJobActions.addAll(
+                        maybeAddEventReportingJobTimes(
                                 sourceRegistration.mTimestamp,
                                 sourceRegistration.mUriToResponseHeadersMap.values()));
             }
@@ -654,18 +665,20 @@ public abstract class E2ETest {
                         new RegisterWebSource(webSourceRegistrationArray.getJSONObject(j));
                 actions.add(webSource);
                 // Add corresponding reporting job time actions
-                reportingJobActions.addAll(
-                        maybeAddReportingJobTimes(
+                eventReportingJobActions.addAll(
+                        maybeAddEventReportingJobTimes(
                                 webSource.mTimestamp, webSource.mUriToResponseHeadersMap.values()));
             }
         }
 
-        actions.addAll(reportingJobActions);
+        actions.addAll(eventReportingJobActions);
         return actions;
     }
 
-    private static List<Action> createTriggerActions(JSONObject input) throws JSONException {
+    private static List<Action> createTriggerBasedActions(JSONObject input) throws JSONException {
         List<Action> actions = new ArrayList<>();
+        long firstTriggerTime = Long.MAX_VALUE;
+        long lastTriggerTime = -1;
         if (!input.isNull(TestFormatJsonMapping.TRIGGER_KEY)) {
             JSONArray triggerRegistrationArray =
                     input.getJSONArray(TestFormatJsonMapping.TRIGGER_KEY);
@@ -673,6 +686,8 @@ public abstract class E2ETest {
                 RegisterTrigger triggerRegistration =
                         new RegisterTrigger(triggerRegistrationArray.getJSONObject(j));
                 actions.add(triggerRegistration);
+                firstTriggerTime = Math.min(firstTriggerTime, triggerRegistration.mTimestamp);
+                lastTriggerTime = Math.max(lastTriggerTime, triggerRegistration.mTimestamp);
             }
         }
 
@@ -683,9 +698,31 @@ public abstract class E2ETest {
                 RegisterWebTrigger webTrigger =
                         new RegisterWebTrigger(webTriggerRegistrationArray.getJSONObject(j));
                 actions.add(webTrigger);
+                firstTriggerTime = Math.min(firstTriggerTime, webTrigger.mTimestamp);
+                lastTriggerTime = Math.max(lastTriggerTime, webTrigger.mTimestamp);
             }
         }
 
+        // Aggregate reports are scheduled close to trigger time. Add aggregate report jobs to cover
+        // the time span outlined by triggers.
+        List<Action> aggregateReportingJobActions = new ArrayList<>();
+        long window = SystemHealthParams.MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS - 10;
+        long t = firstTriggerTime;
+
+        do {
+            t += window;
+            aggregateReportingJobActions.add(new AggregateReportingJob(t));
+        } while (t <= lastTriggerTime);
+
+        // Account for edge case of t between lastTriggerTime and the latter's max report delay.
+        if (t <= lastTriggerTime + PrivacyParams.AGGREGATE_MAX_REPORT_DELAY) {
+            // t must be greater than lastTriggerTime so adding max report
+            // delay should be beyond the report delay for lastTriggerTime.
+            aggregateReportingJobActions.add(new AggregateReportingJob(t
+                    + PrivacyParams.AGGREGATE_MAX_REPORT_DELAY));
+        }
+
+        actions.addAll(aggregateReportingJobActions);
         return actions;
     }
 

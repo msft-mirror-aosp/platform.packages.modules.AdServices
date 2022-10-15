@@ -70,17 +70,39 @@ public class AdServicesSettingsAppsFragment extends Fragment {
 
         View noAppsMessage = rootView.findViewById(R.id.no_apps_message);
         View emptyAppsHiddenSection = rootView.findViewById(R.id.empty_apps_hidden_section);
+        View blockedAppsBtn = rootView.findViewById(R.id.blocked_apps_button);
 
+        // "Empty State": the state when the non-blocked list of apps/topics is empty.
+        // blocked_apps_when_empty_state_button is added to noAppsMessage
+        // noAppsMessages is visible only when Empty State
+        // blocked_apps_when_empty_state_button differs from blocked_apps_button
+        // in style with rounded corners, centered, blue/grey
         viewModel
                 .getApps()
                 .observe(
                         getViewLifecycleOwner(),
                         appsList -> {
-                            noAppsMessage.setVisibility(
-                                    appsList.isEmpty() ? View.VISIBLE : View.GONE);
-                            emptyAppsHiddenSection.setVisibility(
-                                    appsList.isEmpty() ? View.GONE : View.VISIBLE);
+                            if (appsList.isEmpty()) {
+                                noAppsMessage.setVisibility(View.VISIBLE);
+                                emptyAppsHiddenSection.setVisibility(View.GONE);
+                                blockedAppsBtn.setVisibility(View.GONE);
+                            } else {
+                                noAppsMessage.setVisibility(View.GONE);
+                                emptyAppsHiddenSection.setVisibility(View.VISIBLE);
+                                blockedAppsBtn.setVisibility(View.VISIBLE);
+                            }
                             adapter.notifyDataSetChanged();
+                        });
+
+        View blockedAppsWhenEmptyStateButton =
+                rootView.findViewById(R.id.blocked_apps_when_empty_state_button);
+        viewModel
+                .getBlockedApps()
+                .observe(
+                        getViewLifecycleOwner(),
+                        blockedAppsList -> {
+                            blockedAppsWhenEmptyStateButton.setEnabled(
+                                    blockedAppsList.isEmpty() ? false : true);
                         });
     }
 }
