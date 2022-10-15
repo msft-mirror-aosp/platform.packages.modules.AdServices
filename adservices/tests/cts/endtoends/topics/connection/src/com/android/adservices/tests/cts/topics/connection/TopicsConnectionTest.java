@@ -74,6 +74,10 @@ public class TopicsConnectionTest {
 
     @Before
     public void setup() throws Exception {
+        // We need to skip 3 epochs so that if there is any usage from other test runs, it will
+        // not be used for epoch retrieval.
+        Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
+
         overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
 
         // We need to turn off random topic so that we can verify the returned topic.

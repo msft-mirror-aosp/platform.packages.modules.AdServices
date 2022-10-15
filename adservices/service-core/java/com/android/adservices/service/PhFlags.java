@@ -55,6 +55,8 @@ public final class PhFlags implements Flags {
     static final String KEY_CLASSIFIER_THRESHOLD = "classifier_threshold";
     static final String KEY_CLASSIFIER_DESCRIPTION_MAX_WORDS = "classifier_description_max_words";
     static final String KEY_CLASSIFIER_DESCRIPTION_MAX_LENGTH = "classifier_description_max_length";
+    static final String KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES =
+            "classifier_force_use_bundled_files";
 
     // Measurement keys
     static final String KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS =
@@ -428,6 +430,15 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_CLASSIFIER_DESCRIPTION_MAX_LENGTH,
                 /* defaultValue */ CLASSIFIER_DESCRIPTION_MAX_LENGTH);
+    }
+
+    @Override
+    public boolean getClassifierForceUseBundledFiles() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES,
+                /* defaultValue */ CLASSIFIER_FORCE_USE_BUNDLED_FILES);
     }
 
     @Override
@@ -1621,6 +1632,7 @@ public final class PhFlags implements Flags {
                         + " = "
                         + getTopicsNumberOfLookBackEpochs());
 
+        writer.println("==== AdServices PH Flags Dump Topics Classifier related flags ====");
         writer.println(
                 "\t"
                         + KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS
@@ -1628,6 +1640,21 @@ public final class PhFlags implements Flags {
                         + getClassifierNumberOfTopLabels());
         writer.println("\t" + KEY_CLASSIFIER_TYPE + " = " + getClassifierType());
         writer.println("\t" + KEY_CLASSIFIER_THRESHOLD + " = " + getClassifierThreshold());
+        writer.println(
+                "\t"
+                        + KEY_CLASSIFIER_DESCRIPTION_MAX_LENGTH
+                        + " = "
+                        + getClassifierDescriptionMaxLength());
+        writer.println(
+                "\t"
+                        + KEY_CLASSIFIER_DESCRIPTION_MAX_WORDS
+                        + " = "
+                        + getClassifierDescriptionMaxWords());
+        writer.println(
+                "\t"
+                        + KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES
+                        + " = "
+                        + getClassifierForceUseBundledFiles());
 
         writer.println(
                 "\t"
