@@ -52,8 +52,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"הפעלת תוכנית הבטא מאפשרת לאפליקציות לבדוק איך להציג לך מודעות בדרכים חדשות ופרטיות יותר. אפשר להשבית את תוכנית הבטא בכל שלב בהגדרות הפרטיות."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"לא תודה"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"הפעלה"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"עוד"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"תודה על השתתפותך"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"‏הצטרפת לתוכנית הבטא של פרטיות במודעות ב-Android. ארגז החול לפרטיות מופעל במכשיר.\n\nאפשר לקרוא מידע נוסף או להשבית את תוכנית הבטא בכל שלב בהגדרות הפרטיות."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"בחרת שלא להשתתף"</string>

@@ -48,8 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Tindakan menghidupkan beta membolehkan apl menguji cara baharu yang lebih peribadi ini untuk memaparkan iklan kepada anda. Anda boleh mematikan beta pada bila-bila masa dalam tetapan privasi anda."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Tidak perlu"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Hidupkan"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Lagi"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Terima kasih kerana mengambil bahagian"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Anda merupakan sebahagian daripada beta privasi iklan Android. Kotak Pasir Privasi telah dihidupkan untuk peranti anda.\n\nAnda boleh mengetahui lebih lanjut atau mematikan beta pada bila-bila masa dalam tetapan privasi anda."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Anda telah memilih untuk tidak mengambil bahagian"</string>

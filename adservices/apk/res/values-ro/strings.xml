@@ -48,8 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Dacă activezi versiunea beta, aplicațiile pot testa noile modalități mai private de a-ți afișa anunțuri. Poți să dezactivezi oricând versiunea beta în setările de confidențialitate."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Nu, mulțumesc"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Activează"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Mai mult"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Mulțumim pentru participare"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Te-ai înscris în versiunea beta pentru confidențialitatea anunțurilor Android. Privacy Sandbox este activat pentru dispozitivul tău.\n\nPoți să afli mai multe sau să dezactivezi oricând versiunea beta în setările de confidențialitate."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Ai ales să nu participi"</string>
