@@ -39,6 +39,7 @@ import static com.android.adservices.service.Flags.ENFORCE_ISOLATE_MAX_HEAP_SIZE
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S;
+import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S;
@@ -139,6 +140,7 @@ import static com.android.adservices.service.PhFlags.KEY_ENFORCE_ISOLATE_MAX_HEA
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S;
+import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S;
@@ -657,6 +659,22 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getAdSelectionOverallTimeoutMs()).isEqualTo(phOverrideValue);
+    }
+
+    @Test
+    public void testGetOffDeviceAdSelectionOverallTimeoutMs() {
+        assertThat(FlagsFactory.getFlags().getAdSelectionOffDeviceOverallTimeoutMs())
+                .isEqualTo(FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS);
+
+        final int phOverrideValue = 4;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS,
+                Integer.toString(phOverrideValue),
+                false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getAdSelectionOffDeviceOverallTimeoutMs()).isEqualTo(phOverrideValue);
     }
 
     @Test
