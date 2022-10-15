@@ -239,6 +239,12 @@
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
+        <!-- Measurement Deletion Uninstalled Apps Job. -->
+        <service android:name=
+                     "com.android.adservices.service.measurement.DeleteUninstalledJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
         <!-- FLEDGE Background Fetch Job -->
         <service android:name=
                      "com.android.adservices.service.customaudience.BackgroundFetchJobService"
