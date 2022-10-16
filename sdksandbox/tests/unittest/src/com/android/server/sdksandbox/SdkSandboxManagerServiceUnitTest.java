@@ -1837,12 +1837,12 @@ public class SdkSandboxManagerServiceUnitTest {
         assertThat(listener.isKillSwitchEnabled()).isFalse();
         listener.onPropertiesChanged(
                 new DeviceConfig.Properties(
-                        DeviceConfig.NAMESPACE_SDK_SANDBOX,
+                        DeviceConfig.NAMESPACE_ADSERVICES,
                         Map.of(PROPERTY_DISABLE_SANDBOX, "true")));
         assertThat(listener.isKillSwitchEnabled()).isTrue();
         listener.onPropertiesChanged(
                 new DeviceConfig.Properties(
-                        DeviceConfig.NAMESPACE_SDK_SANDBOX,
+                        DeviceConfig.NAMESPACE_ADSERVICES,
                         Map.of(PROPERTY_DISABLE_SANDBOX, "false")));
         assertThat(listener.isKillSwitchEnabled()).isTrue();
     }
@@ -1854,13 +1854,13 @@ public class SdkSandboxManagerServiceUnitTest {
                 mService.getSdkSandboxSettingsListener();
         listener.onPropertiesChanged(
                 new DeviceConfig.Properties(
-                        DeviceConfig.NAMESPACE_SDK_SANDBOX,
+                        DeviceConfig.NAMESPACE_ADSERVICES,
                         Map.of(PROPERTY_DISABLE_SANDBOX, "false")));
         mService.getSdkSandboxSettingsListener().reset();
         loadSdk(SDK_NAME);
         listener.onPropertiesChanged(
                 new DeviceConfig.Properties(
-                        DeviceConfig.NAMESPACE_SDK_SANDBOX,
+                        DeviceConfig.NAMESPACE_ADSERVICES,
                         Map.of(PROPERTY_DISABLE_SANDBOX, "true")));
         int callingUid = Binder.getCallingUid();
         final CallingInfo callingInfo = new CallingInfo(callingUid, TEST_PACKAGE);
@@ -1876,7 +1876,7 @@ public class SdkSandboxManagerServiceUnitTest {
         listener.reset();
         listener.onPropertiesChanged(
                 new DeviceConfig.Properties(
-                        DeviceConfig.NAMESPACE_SDK_SANDBOX,
+                        DeviceConfig.NAMESPACE_ADSERVICES,
                         Map.of(PROPERTY_DISABLE_SANDBOX, "true")));
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         mService.loadSdk(

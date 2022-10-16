@@ -48,6 +48,8 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"ベータ版を ON にすると、アプリは広告の表示でプライバシー保護を強化したこれらの新しい方法をテストできます。ベータ版はプライバシー設定でいつでも OFF にできます。"</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"利用しない"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"ON にする"</string>
+    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
+    <skip />
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"ご参加ありがとうございます"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Android の広告のプライバシー（ベータ版）にご参加いただきありがとうございます。プライバシー サンドボックスはこのデバイスで ON になっています。\n\nベータ版はプライバシー設定でいつでも OFF にできます。詳しくは、プライバシー設定をご覧ください。"</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"参加を取り消しました"</string>
@@ -79,8 +81,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"現在、興味 / 関心はありません"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"プライバシー サンドボックス"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android の広告のプライバシー（ベータ版）は、アプリがユーザーにおすすめの広告を表示する場合に役立つ新しい機能を提供しています。これらの技術でデバイス識別子が使用されることはありません。\n\nAndroid により、ユーザーが興味や関心を持ちそうな広告の種類が推定され、その興味 / 関心がデバイスに一時的に保存されます。これにより、アプリは、他のデベロッパーのウェブサイトやアプリでユーザーのアクティビティを追跡することなく、関連性の高い広告を表示できます。"</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"ブロック中の興味 / 関心はありません"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"アプリはユーザーの興味 / 関心を推定し、Android で一時的に保存することができます。後で、別のアプリがこれらの興味 / 関心に基づいて広告を表示することができます。\n\nブロックしたアプリは、今後、興味 / 関心を推定しなくなります。ブロックを解除しない限り、そのアプリがこのアプリのリストに再び追加されることはありません。ブロックしたアプリですでに推定された興味 / 関心は削除されますが、一部の関連する広告は引き続き表示されることがあります。"</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"ブロックしたアプリ"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"アプリが推定した興味 / 関心をリセット"</string>
@@ -88,7 +89,25 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"プライバシー サンドボックス"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android の広告のプライバシー（ベータ版）は、アプリがユーザーにおすすめの広告を表示する場合に役立つ新しい機能を提供しています。これらの技術でデバイス識別子が使用されることはありません。\n\nアプリにより、ユーザーが興味や関心を持ちそうな広告の種類が推定され、その興味 / 関心がデバイスに一時的に保存されます。これにより、アプリは、他のデベロッパーのウェブサイトやアプリでユーザーのアクティビティを追跡することなく、関連性の高い広告を表示できます。"</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"ブロック中のアプリはありません"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"ブロック中の興味 / 関心はありません"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"キャンセル"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"プライバシー サンドボックスを OFF にしますか？"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"改めて参加される場合や、Android の広告のプライバシーのベータ版について詳細をご覧になりたい場合は、プライバシー設定にアクセスしてください。"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"OFF にする"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"「<xliff:g id="TOPIC">%1$s</xliff:g>」をブロックしますか？"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"この興味 / 関心はブロックされ、ご自身で再び追加しない限り、リストに再び追加されることはありません。なお、一部の関連する広告は引き続き表示されることがあります。"</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"ブロック"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"「<xliff:g id="TOPIC">%1$s</xliff:g>」のブロックを解除しました"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"この興味 / 関心は Android によって再びリストに追加されることがありますが、すぐには反映されない可能性があります"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"興味 / 関心をすべてリセットしますか？"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"リストは内容が削除された後、徐々に更新されます"</string>
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"リセット"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> をブロックしますか？"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"このアプリは、ブロックを解除しない限り、プライバシー サンドボックスで興味 / 関心を推定することはありません。また、リストに再び追加されることもありません。\n\nこのアプリですでに推定された興味 / 関心は削除されますが、一部の関連する広告は引き続き表示されることがあります。"</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> のブロックを解除しました"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"このアプリはあなたの興味 / 関心を再び推定できるようになりますが、すぐにはリストに反映されない可能性があります。関連する広告が表示されるまで時間がかかることがあります。"</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"アプリで生成された興味 / 関心をリセットしますか？"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"リストは内容が削除された後、徐々に更新されます"</string>
     <string name="topic10001" msgid="1636806320891333775">"アート、エンターテインメント"</string>
     <string name="topic10002" msgid="1226367977754287428">"劇場、映画館"</string>
     <string name="topic10003" msgid="6949890838957814881">"アニメ、漫画"</string>

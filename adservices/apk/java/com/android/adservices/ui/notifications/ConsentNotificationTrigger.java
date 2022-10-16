@@ -80,7 +80,16 @@ public class ConsentNotificationTrigger {
                 .setStyle(textStyle)
                 .setPriority(NOTIFICATION_PRIORITY)
                 .setAutoCancel(true)
-                .setContentIntent(pendingIntent);
+                .setContentIntent(pendingIntent)
+                .addAction(
+                        isEuDevice
+                                ? R.string.notificationUI_notification_cta_eu
+                                : R.string.notificationUI_notification_cta,
+                        context.getString(
+                                isEuDevice
+                                        ? R.string.notificationUI_notification_cta_eu
+                                        : R.string.notificationUI_notification_cta),
+                        pendingIntent);
     }
 
     /**

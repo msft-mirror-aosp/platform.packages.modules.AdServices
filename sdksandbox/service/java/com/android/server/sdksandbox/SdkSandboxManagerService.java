@@ -1064,7 +1064,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         private final Object mLock = new Object();
 
         @GuardedBy("mLock")
-        private boolean mIsKillSwitchEnabled = false;
+        private boolean mIsKillSwitchEnabled =
+                DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_DISABLE_SDK_SANDBOX, false);
 
         // This is required so that the sandbox is not re-enabled in the same boot.
         @GuardedBy("mLock")
@@ -1076,7 +1078,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         private void registerObserver() {
             DeviceConfig.addOnPropertiesChangedListener(
-                    DeviceConfig.NAMESPACE_SDK_SANDBOX, mContext.getMainExecutor(), this);
+                    DeviceConfig.NAMESPACE_ADSERVICES, mContext.getMainExecutor(), this);
         }
 
         @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
@@ -1090,7 +1092,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         void reset() {
             synchronized (mLock) {
                 DeviceConfig.setProperty(
-                        DeviceConfig.NAMESPACE_SDK_SANDBOX,
+                        DeviceConfig.NAMESPACE_ADSERVICES,
                         PROPERTY_DISABLE_SDK_SANDBOX,
                         "false",
                         false);

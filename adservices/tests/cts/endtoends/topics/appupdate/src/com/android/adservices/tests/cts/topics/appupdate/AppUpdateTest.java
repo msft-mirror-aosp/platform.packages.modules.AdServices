@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.tests.cts.topics;
+package com.android.adservices.tests.cts.topics.appupdate;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 
@@ -151,14 +151,17 @@ public class AppUpdateTest {
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
 
-        overridingBeforeTest();
+        overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
+        // We need to turn off random topic so that we can verify the returned topic.
+        overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
 
         registerTopicResponseReceiver();
     }
 
     @After
     public void tearDown() {
-        overridingAfterTest();
+        overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
+        overridePercentageForRandomTopic(DEFAULT_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
     }
 
     @Test
@@ -277,39 +280,6 @@ public class AppUpdateTest {
         sContext.registerReceiver(mTopicsResponseReceiver, topicResponseIntentFilter);
     }
 
-    private void overridingBeforeTest() {
-        overrideAdservicesGlobalKillSwitch(true);
-        overridingAdservicesLoggingLevel("VERBOSE");
-
-        overrideDisableTopicsEnrollmentCheck("1");
-        overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
-
-        // We need to turn off random topic so that we can verify the returned topic.
-        overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
-
-        // We need to turn the Consent Manager into debug mode
-        overrideConsentManagerDebugMode();
-
-        // Turn off MDD to avoid model mismatching
-        disableMddBackgroundTasks(true);
-    }
-
-    // Reset back the original values.
-    private void overridingAfterTest() {
-        overrideDisableTopicsEnrollmentCheck("0");
-        overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
-        overridePercentageForRandomTopic(DEFAULT_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
-        disableMddBackgroundTasks(false);
-        overridingAdservicesLoggingLevel("INFO");
-        overrideAdservicesGlobalKillSwitch(false);
-    }
-
-    // Switch on/off for MDD service. Default value is false, which means MDD is enabled.
-    private void disableMddBackgroundTasks(boolean isSwitchedOff) {
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.mdd_background_task_kill_switch " + isSwitchedOff);
-    }
-
     // Install test sample app 1 and verify the installation.
     private void installTestSampleApp() {
         String installMessage = ShellUtils.runShellCommand("pm install -r " + TEST_APK_PATH);
@@ -321,11 +291,10 @@ public class AppUpdateTest {
         ShellUtils.runShellCommand("pm uninstall --user 0 " + TEST_PKG_NAME);
     }
 
-    // Override the flag to disable Topics enrollment check.
-    private void overrideDisableTopicsEnrollmentCheck(String val) {
-        // Setting it to 1 here disables the Topics enrollment check.
+    /** Forces JobScheduler to run the Epoch Computation job */
+    private void forceEpochComputationJob() {
         ShellUtils.runShellCommand(
-                "setprop debug.adservices.disable_topics_enrollment_check " + val);
+                "cmd jobscheduler run -f" + " " + ADSERVICES_PACKAGE_NAME + " " + EPOCH_JOB_ID);
     }
 
     // Override the Epoch Period to shorten the Epoch Length in the test.
@@ -341,17 +310,6 @@ public class AppUpdateTest {
                         + overridePercentage);
     }
 
-    // Override the Consent Manager behaviour - Consent Given
-    private void overrideConsentManagerDebugMode() {
-        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
-    }
-
-    // Forces JobScheduler to run the Epoch Computation job.
-    private void forceEpochComputationJob() {
-        ShellUtils.runShellCommand(
-                "cmd jobscheduler run -f" + " " + ADSERVICES_PACKAGE_NAME + " " + EPOCH_JOB_ID);
-    }
-
     // Forces JobScheduler to run the Maintenance job.
     private void forceMaintenanceJob() {
         ShellUtils.runShellCommand(
@@ -360,19 +318,6 @@ public class AppUpdateTest {
                         + ADSERVICES_PACKAGE_NAME
                         + " "
                         + MAINTENANCE_JOB_ID);
-    }
-
-    private void overridingAdservicesLoggingLevel(String loggingLevel) {
-        ShellUtils.runShellCommand("setprop log.tag.adservices %s", loggingLevel);
-    }
-
-    // Override global_kill_switch to ignore the effect of actual PH values.
-    // If isOverride = true, override global_kill_switch to OFF to allow adservices
-    // If isOverride = false, override global_kill_switch to meaningless value so that PhFlags will
-    // use the default value.
-    private void overrideAdservicesGlobalKillSwitch(boolean isOverride) {
-        String overrideString = isOverride ? "false" : "null";
-        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
     }
 
     // Used to get the package name. Copied over from com.android.adservices.AndroidServiceBinder

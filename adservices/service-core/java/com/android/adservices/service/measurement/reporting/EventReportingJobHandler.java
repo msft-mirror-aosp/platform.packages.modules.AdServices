@@ -133,7 +133,7 @@ public class EventReportingJobHandler {
     JSONObject createReportJsonPayload(EventReport eventReport) throws JSONException {
         return new EventReportPayload.Builder()
                 .setReportId(eventReport.getId())
-                .setSourceEventId(eventReport.getSourceId())
+                .setSourceEventId(eventReport.getSourceEventId())
                 .setAttributionDestination(eventReport.getAttributionDestination().toString())
                 .setTriggerData(eventReport.getTriggerData())
                 .setSourceType(eventReport.getSourceType().getValue())

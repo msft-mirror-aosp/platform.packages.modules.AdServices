@@ -349,8 +349,9 @@ public abstract class AbstractDbIntegrationTest {
             throws SQLiteException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.EventReportContract.ID, report.getId());
-        values.put(MeasurementTables.EventReportContract.SOURCE_ID,
-                report.getSourceId().getValue());
+        values.put(
+                MeasurementTables.EventReportContract.SOURCE_EVENT_ID,
+                report.getSourceEventId().getValue());
         values.put(MeasurementTables.EventReportContract.ENROLLMENT_ID, report.getEnrollmentId());
         values.put(MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
                 report.getAttributionDestination().toString());
