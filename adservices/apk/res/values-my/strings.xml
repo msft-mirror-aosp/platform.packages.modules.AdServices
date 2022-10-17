@@ -48,18 +48,17 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"စမ်းသပ်အစီအစဉ် ဖွင့်ခြင်းဖြင့် ကြော်ငြာပြရန်အတွက် ကိုယ်ရေးအချက်အလက် ပိုမိုလုံခြုံသောနည်းလမ်းသစ်များအား စမ်းသပ်ရန် အက်ပ်များကို ခွင့်ပြုရာရောက်သည်။ စမ်းသပ်အစီအစဉ်ကို ကိုယ်ရေးအချက်အလက်လုံခြုံမှု ဆက်တင်များတွင် အချိန်မရွေး ပိတ်နိုင်သည်။"</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"မလိုပါ"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"ဖွင့်ရန်"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"ပိုပြပါ"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"ပါဝင်ပေး၍ ကျေးဇူးတင်ပါသည်"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Android ၏ ကြော်ငြာဆိုင်ရာ ကိုယ်ရေးအချက်လုံခြုံမှု စမ်းသပ်အစီအစဉ်တွင် သင်ပါဝင်သည်။ Privacy Sandbox ကို သင့်စက်အတွက် ဖွင့်လိုက်သည်။\n\nကိုယ်ရေးအချက်အလက်လုံခြုံမှု ဆက်တင်များတွင် စမ်းသပ်အစီအစဉ်အကြောင်း ပိုမိုလေ့လာနိုင်သည် (သို့) ၎င်းကို အချိန်မရွေး ပိတ်နိုင်သည်။"</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"မပါဝင်ရန် သင်ရွေးချယ်ထားပါသည်"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="4194388733937808440">"ဖြေကြားမှုအတွက် ကျေးဇူးတင်ပါသည်။ Privacy Sandbox ကို သင့်စက်အတွက် ပိတ်လိုက်သည်။\n\nသင်စိတ်ပြောင်းသွားပါက (သို့) ပိုမိုလေ့လာလိုပါက ကိုယ်ရေးအချက်အလက်လုံခြုံမှု ဆက်တင်များသို့ သွားပါ။"</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"ကိုယ်ရေးအချက်အလက်လုံခြုံမှု ဆက်တင်များ"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"ရပြီ"</string>
+    <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"နားလည်ပြီ"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"စမ်းသပ်အစီအစဉ်တွင် သင်ပါဝင်သည်"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Privacy Sandbox ကို သင့်စက်အတွက်ဖွင့်ထားပြီး ကြော်ငြာပြရန် ကိုယ်ရေးအချက်အလက် ပိုမိုလုံခြုံသောနည်းလမ်းသစ်များကို အက်ပ်များက စမ်းသပ်နိုင်သည်။ စမ်းသပ်အစီအစဉ်ကို ကိုယ်ရေးအချက်အလက်လုံခြုံမှု ဆက်တင်များတွင် အချိန်မရွေး ပိတ်နိုင်သည်။"</string>
     <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"ကိုယ်ရေးအချက်အလက်လုံခြုံမှု ဆက်တင်များ စီမံရန်"</string>
-    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"ရပြီ"</string>
+    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"နားလည်ပြီ"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Android ၏ Privacy Sandbox သည် သင်နှစ်သက်နိုင်မည့် ကြော်ငြာများပြရန် အက်ပ်များအသုံးပြုနိုင်သော ဝန်ဆောင်မှုသစ်များကို ပံ့ပိုးသည်။ ဤနည်းပညာများသည် စက်ပစ္စည်း သတ်မှတ်မှုစနစ်များကို အသုံးမပြုပါ။\n\nAndroid နှင့် သင့်အက်ပ်များက သင်နှစ်သက်နိုင်မည့် ကြော်ငြာအမျိုးအစားများကို ခန့်မှန်းနိုင်ပြီး သင့်စက်တွင် စိတ်ဝင်စားမှုများကို ယာယီသိမ်းနိုင်သည်။ ၎င်းက သင့်လုပ်ဆောင်ချက်များအား ဝဘ်ဆိုက်နှင့် အခြားဆော့ဖ်ဝဲရေးသူများ၏ အက်ပ်များတွင် ခြေရာခံစရာမလိုဘဲ သင်နှစ်သက်နိုင်မည့် ကြော်ငြာများအား အက်ပ်များကို ပြခွင့်ပေးသည်။"</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"Privacy Sandbox ဖြင့် ကြော်ငြာများ စိတ်ကြိုက်သတ်မှတ်ခြင်း"</string>
     <string name="notificationUI_how_it_works_expanded_text3" msgid="603165966360369018">"•  Android က ခန့်မှန်းထားသည့် စိတ်ဝင်စားမှုများ"</string>

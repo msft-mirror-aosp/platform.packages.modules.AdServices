@@ -48,8 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Ukuvula i-beta kuvumela ama-app ukuthi ahlole lezi zindlela ezintsha, zokugodliwe zokukubonisa izikhangiso. Ungakwazi ukuvala i-beta noma nini kumasethingi akho obumfihlo."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Cha ngiyabonga"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Vula"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Okwengeziwe"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Siyabonga ngokubamba iqhaza"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Uyingxenye ye-beta yobumfihlo yezikhangiso ze-Android. I-Privacy Sandbox ivuliwe kudivayisi yakho.\n\nUngafunda kabanzi noma uvale i-beta noma nini kumasethingi akho obumfihlo."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Ukhethe ukungabambi iqhaza"</string>

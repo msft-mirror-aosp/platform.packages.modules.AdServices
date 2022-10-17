@@ -48,8 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"베타를 사용 설정하면 앱에서 개인 정보 보호를 강화하면서 광고를 표시하는 새로운 방법을 테스트할 수 있게 됩니다. 언제든지 개인 정보 보호 설정에서 베타 참여를 중단할 수 있습니다."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"아니요"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"사용 설정"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"더보기"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"참여해 주셔서 감사합니다"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Android 광고 개인 정보 보호 베타에 참여 중입니다. 기기에 개인 정보 보호 샌드박스가 사용 설정되어 있습니다\n\n개인 정보 보호 설정에서 언제든지 자세히 알아보거나 베타 참여를 중단할 수 있습니다"</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"참여하지 않기로 선택했습니다"</string>
