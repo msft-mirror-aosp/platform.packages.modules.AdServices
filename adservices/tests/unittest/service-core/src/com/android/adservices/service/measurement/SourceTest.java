@@ -634,7 +634,7 @@ public class SourceTest {
                 .setSourceType(Source.SourceType.NAVIGATION)
                 .build();
         assertEquals(
-                PrivacyParams.NAVIGATION_TRIGGER_DATA_CARDINALITY,
+                PrivacyParams.getNavigationTriggerDataCardinality(),
                 navigationSource.getTriggerDataCardinality());
     }
 
@@ -799,7 +799,7 @@ public class SourceTest {
                                 .setWebDestination(null)
                                 .setExpiryTime(expiry)
                                 .build()),
-                PrivacyParams.NAVIGATION_TRIGGER_DATA_CARDINALITY);
+                PrivacyParams.getNavigationTriggerDataCardinality());
 
         // Single (Web) destination, EVENT type
         verifyAlgorithmicFakeReportGeneration(
@@ -821,7 +821,7 @@ public class SourceTest {
                                 .setAppDestination(null)
                                 .setWebDestination(SourceFixture.ValidSourceParams.WEB_DESTINATION)
                                 .build()),
-                PrivacyParams.NAVIGATION_TRIGGER_DATA_CARDINALITY);
+                PrivacyParams.getNavigationTriggerDataCardinality());
 
         // Both destinations set, EVENT type
         verifyAlgorithmicFakeReportGeneration(
@@ -845,7 +845,7 @@ public class SourceTest {
                                         SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATION)
                                 .setWebDestination(SourceFixture.ValidSourceParams.WEB_DESTINATION)
                                 .build()),
-                PrivacyParams.NAVIGATION_TRIGGER_DATA_CARDINALITY);
+                PrivacyParams.getNavigationTriggerDataCardinality());
 
         // App destination with cooldown window
         verifyAlgorithmicFakeReportGeneration(

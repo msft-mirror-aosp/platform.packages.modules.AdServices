@@ -18,6 +18,8 @@ package com.android.adservices.service.measurement.reporting;
 
 import android.net.Uri;
 
+import com.android.internal.annotations.VisibleForTesting;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -26,7 +28,8 @@ import java.net.URL;
  */
 public class AggregateReportSender extends MeasurementReportSender {
 
-    private static final String AGGREGATE_ATTRIBUTION_REPORT_URI_PATH =
+    @VisibleForTesting
+    public static final String AGGREGATE_ATTRIBUTION_REPORT_URI_PATH =
             ".well-known/attribution-reporting/report-aggregate-attribution";
 
     /**
