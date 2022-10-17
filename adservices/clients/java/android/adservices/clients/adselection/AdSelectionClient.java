@@ -60,14 +60,9 @@ public class AdSelectionClient {
                             adSelectionConfig,
                             mExecutor,
                             new OutcomeReceiver<AdSelectionOutcome, Exception>() {
-
                                 @Override
                                 public void onResult(@NonNull AdSelectionOutcome result) {
-                                    completer.set(
-                                            new AdSelectionOutcome.Builder()
-                                                    .setAdSelectionId(result.getAdSelectionId())
-                                                    .setRenderUri(result.getRenderUri())
-                                                    .build());
+                                    completer.set(result);
                                 }
 
                                 @Override
