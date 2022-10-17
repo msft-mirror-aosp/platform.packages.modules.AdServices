@@ -33,14 +33,21 @@
     </target_preparer>
 
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
-        <!-- Disable global/topics kill_switch to ignore the effect of actual PH values. -->
-        <option name="run-command" value="device_config put adservices global_kill_switch false" />
+        <!-- Disable kill switches to ignore the effect of actual PH values. -->
+        <option name="run-command" value="setprop debug.adservices.global_kill_switch false" />
+        <option name="run-command" value="setprop debug.adservices.fledge_select_ads_kill_switch false" />
+        <option name="run-command" value="setprop debug.adservices.fledge_custom_audience_service_kill_switch false" />
         <option name="run-command" value="device_config put adservices topics_kill_switch false" />
+
         <!-- Override Consent Manager to debug mode to grant user consent -->
         <option name="run-command" value="setprop debug.adservices.consent_manager_debug_mode true" />
+        <option name="teardown-command" value="setprop debug.adservices.consent_manager_debug_mode false"/>
+
         <option name="run-command" value="setprop log.tag.adservices VERBOSE" />
 
-        <option name="teardown-command" value="setprop debug.adservices.consent_manager_debug_mode false"/>
+        <!-- Increase the allowed API queries per second -->
+        <option name="run-command" value="setprop debug.adservices.sdk_request_permits_per_second 1000" />
+        <option name="teardown-command" value="setprop debug.adservices.sdk_request_permits_per_second 1" />
     </target_preparer>
 
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
