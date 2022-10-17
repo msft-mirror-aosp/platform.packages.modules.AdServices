@@ -15,47 +15,49 @@
   ~ limitations under the License.
   -->
 <configuration description="Config for Cts Ad Services E2E tests">
-<option name="test-suite-tag" value="cts" />
-<option name="test-tag" value="CtsAdServicesEndToEndTests" />
-<option name="config-descriptor:metadata" key="component" value="framework"/>
-<option name="config-descriptor:metadata" key="parameter" value="not_instant_app" />
-<option name="config-descriptor:metadata" key="parameter" value="not_multi_abi" />
-<option name="config-descriptor:metadata" key="parameter" value="secondary_user" />
+    <option name="test-suite-tag" value="cts" />
+    <option name="test-tag" value="CtsAdServicesEndToEndTests" />
+    <option name="config-descriptor:metadata" key="component" value="framework"/>
+    <option name="config-descriptor:metadata" key="parameter" value="not_instant_app" />
+    <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi" />
+    <option name="config-descriptor:metadata" key="parameter" value="secondary_user" />
 
-<target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
-    <option name="cleanup-apks" value="true"/>
-    <!-- The test apps to be installed and uninstalled -->
-    <option name="test-file-name" value="CtsAdServicesEndToEndTests.apk"/>
-</target_preparer>
+    <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
+        <option name="cleanup-apks" value="true"/>
+        <!-- The test apps to be installed and uninstalled -->
+        <option name="test-file-name" value="CtsAdServicesEndToEndTests.apk"/>
+    </target_preparer>
 
-<test class="com.android.tradefed.testtype.AndroidJUnitTest">
-    <option name="hidden-api-checks" value="false" /> <!-- Allow hidden API uses -->
-    <option name="package" value="com.android.adservices.tests.cts.endtoendtest"/>
-</test>
+    <test class="com.android.tradefed.testtype.AndroidJUnitTest">
+        <option name="hidden-api-checks" value="false" /> <!-- Allow hidden API uses -->
+        <option name="package" value="com.android.adservices.tests.cts.endtoendtest"/>
+    </test>
 
-<target_preparer class="com.android.tradefed.targetprep.DeviceSetup" >
-    <option name="force-skip-system-props" value="true" />
-    <option name="disable-device-config-sync" value="true" />
-</target_preparer>
+    <target_preparer class="com.android.tradefed.targetprep.DeviceSetup" >
+        <option name="force-skip-system-props" value="true" />
+        <option name="disable-device-config-sync" value="true" />
+    </target_preparer>
 
-<!-- Create place to store tests apks that will be installed/uninstalled in the test. -->
-<target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
-    <option name="run-command" value="mkdir -p /data/local/tmp/cts/install" />
-    <option name="teardown-command" value="rm -rf /data/local/tmp/cts"/>
-    <!-- Uninstall the test app anyway in case failed test skips the uninstallation -->
-    <option name="teardown-command"
-            value="pm uninstall --user 0 com.android.adservices.tests.cts.topics.testapp1" />
-</target_preparer>
+    <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
+        <!-- Disable global/topics kill_switch to ignore the effect of actual PH values. -->
+        <option name="run-command" value="device_config put adservices global_kill_switch false" />
+        <option name="run-command" value="device_config put adservices topics_kill_switch false" />
+        <!-- Override Consent Manager to debug mode to grant user consent -->
+        <option name="run-command" value="setprop debug.adservices.consent_manager_debug_mode true" />
+        <option name="run-command" value="setprop log.tag.adservices VERBOSE" />
+        <!-- Override the flag to disable Topics enrollment check. -->
+        <option name="run-command" value="setprop debug.adservices.disable_topics_enrollment_check true" />
+        <!-- Forces using bundled model files. -->
+        <option name="run-command" value="device_config put adservices classifier_use_downloaded_files false" />
 
-<!-- Push compiled APK file of test apps to a local place for installation -->
-<target_preparer class="com.android.compatibility.common.tradefed.targetprep.FilePusher">
-    <option name="push"
-            value="CtsSampleTopicsApp1.apk->/data/local/tmp/cts/install/CtsSampleTopicsApp1.apk" />
-</target_preparer>
+        <option name="teardown-command" value="setprop debug.adservices.consent_manager_debug_mode false"/>
+        <option name="teardown-command" value="setprop debug.adservices.disable_topics_enrollment_check false" />
+        <option name="teardown-command" value="device_config put adservices classifier_use_downloaded_files true" />
+    </target_preparer>
 
-<object type="module_controller"
-        class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController">
-    <option name="mainline-module-package-name" value="com.google.android.adservices"/>
-</object>
-<option name="config-descriptor:metadata" key="mainline-param" value="com.google.android.adservices.apex" />
+    <object type="module_controller"
+            class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController">
+        <option name="mainline-module-package-name" value="com.google.android.adservices"/>
+    </object>
+    <option name="config-descriptor:metadata" key="mainline-param" value="com.google.android.adservices.apex" />
 </configuration>

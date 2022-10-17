@@ -30,7 +30,6 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
-import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
 import org.junit.Assume;
@@ -75,11 +74,8 @@ public class SandboxedFledgeManagerTest {
         PhFlagsFixture.overrideEnforceIsolateMaxHeapSize(false);
         PhFlagsFixture.overrideIsolateMaxHeapSizeBytes(0);
 
-        PhFlagsFixture.overrideSdkRequestPermitsPerSecond(Integer.MAX_VALUE);
         makeTestProcessForeground();
         PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
-        overrideConsentManagerDebugMode(true);
-        overrideAdservicesGlobalKillSwitch(true);
     }
 
     /**
@@ -93,8 +89,6 @@ public class SandboxedFledgeManagerTest {
     @After
     public void shutDown() {
         SimpleActivity.stopSimpleActivity(sContext);
-        overrideConsentManagerDebugMode(false);
-        overrideAdservicesGlobalKillSwitch(false);
     }
 
     @Test
@@ -114,19 +108,5 @@ public class SandboxedFledgeManagerTest {
                                 : "Callback failed with message " + callback.getLoadSdkErrorMsg())
                 .that(callback.isLoadSdkSuccessful())
                 .isTrue();
-    }
-
-    private void overrideConsentManagerDebugMode(boolean enable) {
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.consent_manager_debug_mode %s", enable);
-    }
-
-    // Override global_kill_switch to ignore the effect of actual PH values.
-    // If isOverride = true, override global_kill_switch to OFF to allow adservices
-    // If isOverride = false, override global_kill_switch to meaningless value so that PhFlags will
-    // use the default value.
-    private void overrideAdservicesGlobalKillSwitch(boolean isOverride) {
-        String overrideString = isOverride ? "false" : "null";
-        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
     }
 }

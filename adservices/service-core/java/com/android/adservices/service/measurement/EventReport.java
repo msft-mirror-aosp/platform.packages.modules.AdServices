@@ -33,7 +33,7 @@ import java.util.Objects;
 public class EventReport {
 
     private String mId;
-    private UnsignedLong mSourceId;
+    private UnsignedLong mSourceEventId;
     private long mReportTime;
     private long mTriggerTime;
     private long mTriggerPriority;
@@ -73,7 +73,7 @@ public class EventReport {
                 && Objects.equals(mEnrollmentId, eventReport.mEnrollmentId)
                 && mTriggerTime == eventReport.mTriggerTime
                 && Objects.equals(mTriggerData, eventReport.mTriggerData)
-                && Objects.equals(mSourceId, eventReport.mSourceId)
+                && Objects.equals(mSourceEventId, eventReport.mSourceEventId)
                 && mTriggerPriority == eventReport.mTriggerPriority
                 && Objects.equals(mTriggerDedupKey, eventReport.mTriggerDedupKey)
                 && mSourceType == eventReport.mSourceType
@@ -91,7 +91,7 @@ public class EventReport {
                 mEnrollmentId,
                 mTriggerTime,
                 mTriggerData,
-                mSourceId,
+                mSourceEventId,
                 mTriggerPriority,
                 mTriggerDedupKey,
                 mSourceType,
@@ -107,11 +107,9 @@ public class EventReport {
         return mId;
     }
 
-    /**
-     * Identifier of the associated {@link Source} event.
-     */
-    public UnsignedLong getSourceId() {
-        return mSourceId;
+    /** Identifier of the associated {@link Source} event. */
+    public UnsignedLong getSourceEventId() {
+        return mSourceEventId;
     }
 
     /**
@@ -213,11 +211,9 @@ public class EventReport {
             return this;
         }
 
-        /**
-         * See {@link EventReport#getSourceId()}
-         */
-        public Builder setSourceId(UnsignedLong sourceId) {
-            mBuilding.mSourceId = sourceId;
+        /** See {@link EventReport#getSourceEventId()} */
+        public Builder setSourceEventId(UnsignedLong sourceEventId) {
+            mBuilding.mSourceEventId = sourceEventId;
             return this;
         }
 
@@ -321,7 +317,7 @@ public class EventReport {
             // truncate trigger data to 3-bit or 1-bit based on {@link Source.SourceType}
             mBuilding.mTriggerData = getTruncatedTriggerData(source, eventTrigger);
             mBuilding.mTriggerTime = trigger.getTriggerTime();
-            mBuilding.mSourceId = source.getEventId();
+            mBuilding.mSourceEventId = source.getEventId();
             mBuilding.mEnrollmentId = source.getEnrollmentId();
             mBuilding.mStatus = Status.PENDING;
             mBuilding.mAttributionDestination = trigger.getAttributionDestination();

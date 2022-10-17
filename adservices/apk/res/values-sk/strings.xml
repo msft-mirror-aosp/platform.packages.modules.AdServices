@@ -48,6 +48,8 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Ak zapnete beta verziu, aplikácie budú môcť testovať tieto nové spôsoby zobrazovania reklám s vyššou ochranou súkromia. Beta verziu môžete kedykoľvek vypnúť v nastaveniach ochrany súkromia."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Nie, vďaka"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Zapnúť"</string>
+    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
+    <skip />
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Ďakujeme vám za účasť"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Ste súčasťou beta verzie ochrany súkromia pri reklamách v Androide. Technológie Privacy Sandbox sú vo vašom zariadení zapnuté.\n\nViac sa dozviete v nastaveniach ochrany súkromia, kde môžete aj kedykoľvek vypnúť beta verziu."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Rozhodli ste sa nezúčastniť"</string>
@@ -79,8 +81,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Momentálne nie sú k dispozícii žiadne záujmy, ktoré by sme mohli zobraziť"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Beta verzia ochrany súkromia pri reklamách v Androide poskytuje nové funkcie pre aplikácie na zobrazovanie reklám, ktoré by sa vám mohli páčiť. Tieto technológie nepoužívajú identifikátory zariadenia.\n\nAndroid môže odhadnúť druhy reklám, ktoré by vás mohli zaujímať, a dočasne uložiť tieto záujmy vo vašom zariadení. Vďaka tomu vám môžu aplikácie zobrazovať relevantné reklamy bez sledovania vašej aktivity na weboch a v aplikáciách od iných vývojárov."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Nemáte žiadne blokované záujmy"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Aplikácie môžu odhadnúť vaše záujmy a dočasne ich uložiť v Androide. Neskôr vám iná aplikácia môže zobraziť reklamu na základe týchto záujmov.\n\nAk nejakú aplikáciu zablokujete, nebude odhadovať žiadne ďalšie záujmy. Do zoznamu aplikácií bude znova pridaná iba vtedy, keď ju odblokujete. Záujmy, ktoré boli danou aplikáciou odhadnuté, budú odstránené, ale môžu sa vám naďalej zobrazovať určité súvisiace reklamy."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Aplikácie, ktoré ste zablokovali"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Resetovať záujmy odhadnuté aplikáciami"</string>
@@ -88,7 +89,25 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Beta verzia ochrany súkromia pri reklamách v Androide poskytuje nové funkcie pre aplikácie na zobrazovanie reklám, ktoré by sa vám mohli páčiť. Tieto technológie nepoužívajú identifikátory zariadenia.\n\nAplikácie môžu odhadnúť druhy reklám, ktoré by vás mohli zaujímať, a dočasne uložiť tieto záujmy vo vašom zariadení. Vďaka tomu vám môžu aplikácie zobrazovať relevantné reklamy bez sledovania vašej aktivity na weboch a v aplikáciách od iných vývojárov."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Nemáte žiadne blokované aplikácie"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Nemáte žiadne blokované záujmy"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Zrušiť"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Chcete vypnúť Privacy Sandbox?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Ak zmeníte názor alebo sa budete chcieť o beta ochrane súkromia pri reklamách v Androide dozvedieť viac, prejdite do nastavení ochrany súkromia"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Vypnúť"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Chcete zablokovať tému <xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Tento záujem bude blokovaný a nebude znova pridaný do vášho zoznamu, pokiaľ ho nepridáte späť. Naďalej sa vám môžu zobrazovať určité súvisiace reklamy."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Blokovať"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"Téma <xliff:g id="TOPIC">%1$s</xliff:g> nie je blokovaná"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android môže pridať tento záujem znova do vášho zoznamu, ale nemusí sa zobraziť ihneď"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Chcete resetovať všetky záujmy?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"Váš zoznam bude vymazaný a postupne obnovený"</string>
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Resetovať"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Chcete zablokovať aplikáciu <xliff:g id="APP">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Táto aplikácia nebude odhadovať záujmy pre Privacy Sandbox a nebude znova pridaná do vášho zoznamu, pokiaľ ju neodblokujete.\n\nZáujmy, ktoré táto aplikácia už odhadla, budú odstránené, ale naďalej sa vám môžu zobrazovať určité súvisiace reklamy."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Aplikácia <xliff:g id="APP">%1$s</xliff:g> nie je blokovaná"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Táto aplikácia vám môže znova odhadovať záujmy, ale nemusí sa ihneď zobraziť vo vašom zozname. Môže chvíľu trvať, než sa vám začnú zobrazovať súvisiace reklamy."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Chcete resetovať záujmy generované aplikáciami?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"Váš zoznam bude vymazaný a postupne obnovený"</string>
     <string name="topic10001" msgid="1636806320891333775">"Umenie a zábava"</string>
     <string name="topic10002" msgid="1226367977754287428">"Herectvo a divadlo"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime a manga"</string>

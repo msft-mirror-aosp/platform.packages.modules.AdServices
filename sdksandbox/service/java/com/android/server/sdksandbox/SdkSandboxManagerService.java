@@ -1064,7 +1064,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         private final Object mLock = new Object();
 
         @GuardedBy("mLock")
-        private boolean mIsKillSwitchEnabled = false;
+        private boolean mIsKillSwitchEnabled =
+                DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_DISABLE_SDK_SANDBOX, false);
 
         // This is required so that the sandbox is not re-enabled in the same boot.
         @GuardedBy("mLock")

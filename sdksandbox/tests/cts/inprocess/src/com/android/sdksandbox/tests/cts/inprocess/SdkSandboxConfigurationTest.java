@@ -92,7 +92,7 @@ public class SdkSandboxConfigurationTest {
         assertThat(minSdkVersion).isEqualTo(33);
 
         int targetSdkVersion = info.applicationInfo.targetSdkVersion;
-        assertThat(targetSdkVersion).isEqualTo(33);
+        assertThat(targetSdkVersion).isAtLeast(33);
     }
 
     /**

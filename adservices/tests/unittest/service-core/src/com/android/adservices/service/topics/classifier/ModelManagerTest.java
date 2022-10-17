@@ -19,12 +19,16 @@ package com.android.adservices.service.topics.classifier;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -45,6 +49,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -69,6 +74,7 @@ public class ModelManagerTest {
     private static final String PRODUCTION_CLASSIFIER_ASSETS_METADATA_FILE_PATH =
             "classifier/classifier_assets_metadata.json";
     private static final String MODEL_FILE_PATH = "classifier/model.tflite";
+    private static final String DOWNLOADED_MODEL_FILE_ID = "model.tflite";
 
     @Mock SynchronousFileStorage mMockFileStorage;
     @Mock Map<String, ClientFile> mMockDownloadedFiles;
@@ -83,6 +89,8 @@ public class ModelManagerTest {
                         .initMocks(this)
                         .strictness(Strictness.WARN)
                         .startMocking();
+
+        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
     }
 
     @After
@@ -94,7 +102,6 @@ public class ModelManagerTest {
 
     @Test
     public void testGetInstance() {
-        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
         ModelManager firstInstance = ModelManager.getInstance(sContext);
         ModelManager secondInstance = ModelManager.getInstance(sContext);
 
@@ -104,7 +111,7 @@ public class ModelManagerTest {
     }
 
     @Test
-    public void testRetrieveModel_bundled() throws IOException {
+    public void testRetrieveModel_bundled_emptyDownloadedFiles() throws IOException {
         mProductionModelManager =
                 new ModelManager(
                         sContext,
@@ -122,7 +129,34 @@ public class ModelManagerTest {
     }
 
     @Test
-    public void testRetrieveModel_noBundledModel() throws IOException {
+    public void testRetrieveModel_bundled_forceUsingBundledFiles() throws IOException {
+        // Pass in a non-null and non-empty downloadedFiles to Model Manager.
+        Map<String, ClientFile> downloadedFiles = new HashMap<>();
+        downloadedFiles.put(DOWNLOADED_MODEL_FILE_ID, ClientFile.newBuilder().build());
+
+        Flags mockedFlags = mock(Flags.class);
+        doReturn(true).when(mockedFlags).getClassifierForceUseBundledFiles();
+        // Force using bundled file
+        ExtendedMockito.doReturn(mockedFlags).when(FlagsFactory::getFlags);
+
+        mProductionModelManager =
+                new ModelManager(
+                        sContext,
+                        TEST_LABELS_FILE_PATH,
+                        TEST_APPS_FILE_PATH,
+                        TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
+                        TEST_CLASSIFIER_MODEL_PATH,
+                        mMockFileStorage,
+                        downloadedFiles);
+
+        ByteBuffer byteBuffer = mProductionModelManager.retrieveModel();
+        // Check byteBuffer capacity greater than 0 when retrieveModel() finds bundled TFLite model
+        // and loads file as a ByteBuffer.
+        assertThat(byteBuffer.capacity()).isGreaterThan(0);
+    }
+
+    @Test
+    public void testRetrieveModel_bundled_incorrectFilePath() throws IOException {
         mProductionModelManager =
                 new ModelManager(
                         sContext,
@@ -136,6 +170,31 @@ public class ModelManagerTest {
         ByteBuffer byteBuffer = mProductionModelManager.retrieveModel();
         // Check byteBuffer capacity is 0 when failed to read a model.
         assertThat(byteBuffer.capacity()).isEqualTo(0);
+    }
+
+    @Test
+    public void testRetrieveModel_downloaded() throws IOException {
+        // Pass in a non-null and non-empty downloadedFiles to Model Manager
+        Map<String, ClientFile> downloadedFiles = new HashMap<>();
+        downloadedFiles.put(DOWNLOADED_MODEL_FILE_ID, ClientFile.newBuilder().build());
+
+        // Mock File Storage to return null when gets invoked.
+        doReturn(null).when(mMockFileStorage).open(any(), any());
+
+        mProductionModelManager =
+                new ModelManager(
+                        sContext,
+                        TEST_LABELS_FILE_PATH,
+                        TEST_APPS_FILE_PATH,
+                        TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
+                        TEST_CLASSIFIER_MODEL_PATH,
+                        mMockFileStorage,
+                        downloadedFiles);
+
+        // The invocation should return null according to above mock.
+        assertThat(mProductionModelManager.retrieveModel()).isNull();
+
+        verify(mMockFileStorage).open(any(), any());
     }
 
     @Test
@@ -402,13 +461,19 @@ public class ModelManagerTest {
         // The property of metadata in production metadata should contain 4 attributions:
         // "taxonomy_type", "taxonomy_version", "updated_date".
         // The key name of property is "version_info"
-        assertThat(mProductionClassifierAssetsMetadata.get("version_info")).hasSize(3);
+        assertThat(mProductionClassifierAssetsMetadata.get("version_info")).hasSize(4);
         assertThat(mProductionClassifierAssetsMetadata.get("version_info").keySet())
-                .containsExactly("taxonomy_type", "taxonomy_version", "updated_date");
+                .containsExactly("taxonomy_type", "taxonomy_version", "build_id", "updated_date");
 
         // The property "version_info" should have attribution "taxonomy_version"
         // and its value should be "2".
         assertThat(mProductionClassifierAssetsMetadata.get("version_info").get("taxonomy_version"))
+                .isEqualTo("2");
+
+        // The property "version_info" should have attribution "build_id"
+        // and its value should be "2". This is used for comparing the model version with MDD
+        // downloaded model.
+        assertThat(mProductionClassifierAssetsMetadata.get("version_info").get("build_id"))
                 .isEqualTo("2");
 
         // The property "version_info" should have attribution "taxonomy_type"
@@ -447,9 +512,9 @@ public class ModelManagerTest {
                 .isEqualTo("assets/classifier/topic_id_to_name.csv");
 
         // The asset "precomputed_app_list" should have attribution "checksum" and
-        // its value should be "fb369d0b77d8b84a6256e9cc6a77f350a0afde5781626d499f996f2e01e7cc26"
+        // its value should be "8749598423bb8baca59e0da508739d544e40f230e7edcdb92438e9e76f75e830"
         assertThat(mProductionClassifierAssetsMetadata.get("precomputed_app_list").get("checksum"))
-                .isEqualTo("fb369d0b77d8b84a6256e9cc6a77f350a0afde5781626d499f996f2e01e7cc26");
+                .isEqualTo("8749598423bb8baca59e0da508739d544e40f230e7edcdb92438e9e76f75e830");
     }
 
     @Test
@@ -477,13 +542,19 @@ public class ModelManagerTest {
         // The property of metadata in production metadata should contain 4 attributions:
         // "taxonomy_type", "taxonomy_version", "updated_date".
         // The key name of property is "version_info"
-        assertThat(mProductionClassifierAssetsMetadata.get("version_info")).hasSize(3);
+        assertThat(mProductionClassifierAssetsMetadata.get("version_info")).hasSize(4);
         assertThat(mProductionClassifierAssetsMetadata.get("version_info").keySet())
-                .containsExactly("taxonomy_type", "taxonomy_version", "updated_date");
+                .containsExactly("taxonomy_type", "taxonomy_version", "build_id", "updated_date");
 
         // The property "version_info" should have attribution "taxonomy_version"
         // and its value should be "2".
         assertThat(mProductionClassifierAssetsMetadata.get("version_info").get("taxonomy_version"))
+                .isEqualTo("2");
+
+        // The property "version_info" should have attribution "build_id"
+        // and its value should be "2". This is used for comparing the model version with MDD
+        // downloaded model.
+        assertThat(mProductionClassifierAssetsMetadata.get("version_info").get("build_id"))
                 .isEqualTo("2");
 
         // The property "version_info" should have attribution "taxonomy_type"
@@ -522,9 +593,9 @@ public class ModelManagerTest {
                 .isEqualTo("assets/classifier/topic_id_to_name.csv");
 
         // The asset "precomputed_app_list" should have attribution "checksum" and
-        // its value should be "fb369d0b77d8b84a6256e9cc6a77f350a0afde5781626d499f996f2e01e7cc26"
+        // its value should be "8749598423bb8baca59e0da508739d544e40f230e7edcdb92438e9e76f75e830"
         assertThat(mProductionClassifierAssetsMetadata.get("precomputed_app_list").get("checksum"))
-                .isEqualTo("fb369d0b77d8b84a6256e9cc6a77f350a0afde5781626d499f996f2e01e7cc26");
+                .isEqualTo("8749598423bb8baca59e0da508739d544e40f230e7edcdb92438e9e76f75e830");
     }
 
     @Test

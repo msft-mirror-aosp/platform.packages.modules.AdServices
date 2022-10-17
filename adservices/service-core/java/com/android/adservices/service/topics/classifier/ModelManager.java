@@ -91,7 +91,8 @@ public class ModelManager {
     private static final String ASSET_ELEMENT_NAME = "asset_name";
     // The attributions of assets property in classifier_assets_metadata.json
     private static final Set<String> ASSETS_PROPERTY_ATTRIBUTIONS =
-            new HashSet(Arrays.asList("taxonomy_type", "taxonomy_version", "updated_date"));
+            new HashSet(
+                    Arrays.asList("taxonomy_type", "taxonomy_version", "build_id", "updated_date"));
     // The attributions of assets metadata in classifier_assets_metadata.json
     private static final Set<String> ASSETS_NORMAL_ATTRIBUTIONS =
             new HashSet(Arrays.asList("asset_version", "path", "checksum", "updated_date"));
@@ -181,7 +182,9 @@ public class ModelManager {
 
     // Return true if Model Manager should use downloaded model. Otherwise, use bundled model.
     private boolean useDownloadedFiles() {
-        return mDownloadedFiles != null && mDownloadedFiles.size() > 0;
+        return mDownloadedFiles != null
+                && mDownloadedFiles.size() > 0
+                && !FlagsFactory.getFlags().getClassifierForceUseBundledFiles();
     }
 
     /**
