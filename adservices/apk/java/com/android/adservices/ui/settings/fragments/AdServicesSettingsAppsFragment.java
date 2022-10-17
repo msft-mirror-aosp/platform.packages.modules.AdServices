@@ -101,8 +101,15 @@ public class AdServicesSettingsAppsFragment extends Fragment {
                 .observe(
                         getViewLifecycleOwner(),
                         blockedAppsList -> {
-                            blockedAppsWhenEmptyStateButton.setEnabled(
-                                    blockedAppsList.isEmpty() ? false : true);
+                            if (blockedAppsList.isEmpty()) {
+                                blockedAppsWhenEmptyStateButton.setEnabled(false);
+                                blockedAppsWhenEmptyStateButton.setAlpha(
+                                        getResources().getFloat(R.dimen.disabled_button_alpha));
+                            } else {
+                                blockedAppsWhenEmptyStateButton.setEnabled(true);
+                                blockedAppsWhenEmptyStateButton.setAlpha(
+                                        getResources().getFloat(R.dimen.enabled_button_alpha));
+                            }
                         });
     }
 }

@@ -75,19 +75,13 @@
         <Button
                 android:id="@+id/leftControlButtonConfirmation"
                 style="@style/MainStyle.PrimaryButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
                 android:text="@string/notificationUI_confirmation_left_control_button_text"
-                android:textAllCaps="false"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
         <Button
                 android:id="@+id/rightControlButtonConfirmation"
                 style="@style/MainStyle.PrimaryButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
                 android:text="@string/notificationUI_confirmation_right_control_button_text"
-                android:textAllCaps="false"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
