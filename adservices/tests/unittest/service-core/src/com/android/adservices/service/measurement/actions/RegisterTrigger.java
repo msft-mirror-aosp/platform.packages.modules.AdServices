@@ -35,13 +35,18 @@ public final class RegisterTrigger implements Action {
     public final RegistrationRequest mRegistrationRequest;
     public final Map<String, List<Map<String, List<String>>>> mUriToResponseHeadersMap;
     public final long mTimestamp;
+    // Used in interop tests
+    public final String mDestination;
 
     public RegisterTrigger(JSONObject obj) throws JSONException {
         JSONObject regParamsJson = obj.getJSONObject(
                 TestFormatJsonMapping.REGISTRATION_REQUEST_KEY);
 
         AttributionSource attributionSource = getAttributionSource(
-                regParamsJson.optString(TestFormatJsonMapping.ATTRIBUTION_SOURCE_KEY));
+                regParamsJson.optString(TestFormatJsonMapping.ATTRIBUTION_SOURCE_KEY,
+                        TestFormatJsonMapping.ATTRIBUTION_SOURCE_DEFAULT));
+
+        mDestination = regParamsJson.optString(TestFormatJsonMapping.TRIGGER_TOP_ORIGIN_URI_KEY);
 
         mRegistrationRequest =
                 new RegistrationRequest.Builder()
@@ -60,7 +65,12 @@ public final class RegisterTrigger implements Action {
         mTimestamp = obj.getLong(TestFormatJsonMapping.TIMESTAMP_KEY);
     }
 
+    @Override
     public long getComparable() {
         return mTimestamp;
+    }
+
+    public String getDestination() {
+        return mDestination;
     }
 }

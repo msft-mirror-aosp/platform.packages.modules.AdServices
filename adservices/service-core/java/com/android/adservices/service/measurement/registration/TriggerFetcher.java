@@ -415,7 +415,7 @@ public class TriggerFetcher {
         return true;
     }
 
-    private boolean isValidAggregateValues(JSONObject aggregateValues) {
+    private static boolean isValidAggregateValues(JSONObject aggregateValues) {
         if (aggregateValues.length() > MAX_AGGREGATE_KEYS_PER_REGISTRATION) {
             LogUtil.d("Aggregate values have more keys than permitted. %s",
                     aggregateValues.length());
