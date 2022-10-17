@@ -250,6 +250,10 @@ class AttributionJobHandler {
     private boolean maybeGenerateEventReport(
             Source source, Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
+        if (trigger.getEventTriggers() == null) {
+            return false;
+        }
+
         int numReports =
                 measurementDao.getNumEventReportsPerDestination(
                         trigger.getAttributionDestination(), trigger.getDestinationType());
@@ -364,7 +368,7 @@ class AttributionJobHandler {
             IMeasurementDao measurementDao) throws DatastoreException {
         long attributionCount =
                 measurementDao.getAttributionsPerRateLimitWindow(source, trigger);
-        return attributionCount < PrivacyParams.MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
+        return attributionCount < PrivacyParams.getMaxAttributionPerRateLimitWindow();
     }
 
     private boolean isWithinReportLimit(
@@ -506,7 +510,7 @@ class AttributionJobHandler {
                             trigger.getTriggerTime());
 
             return count < PrivacyParams
-                    .MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_ATTRIBUTION;
+                    .getMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution();
         } else {
             LogUtil.d("isEnrollmentWithinPrivacyBounds: getPublisherAndDestinationTopPrivateDomains"
                     + " failed. %s %s", source.getPublisher(), trigger.getAttributionDestination());

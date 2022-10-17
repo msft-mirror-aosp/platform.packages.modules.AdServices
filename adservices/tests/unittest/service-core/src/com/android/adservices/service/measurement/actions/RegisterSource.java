@@ -36,13 +36,18 @@ public final class RegisterSource implements Action {
     public final RegistrationRequest mRegistrationRequest;
     public final Map<String, List<Map<String, List<String>>>> mUriToResponseHeadersMap;
     public final long mTimestamp;
+    // Used in interop tests
+    public final String mPublisher;
 
     public RegisterSource(JSONObject obj) throws JSONException {
         JSONObject regParamsJson = obj.getJSONObject(
                 TestFormatJsonMapping.REGISTRATION_REQUEST_KEY);
 
         AttributionSource attributionSource = getAttributionSource(
-                regParamsJson.optString(TestFormatJsonMapping.ATTRIBUTION_SOURCE_KEY));
+                regParamsJson.optString(TestFormatJsonMapping.ATTRIBUTION_SOURCE_KEY,
+                        TestFormatJsonMapping.ATTRIBUTION_SOURCE_DEFAULT));
+
+        mPublisher = regParamsJson.optString(TestFormatJsonMapping.SOURCE_TOP_ORIGIN_URI_KEY);
 
         mRegistrationRequest =
                 new RegistrationRequest.Builder()
@@ -69,5 +74,9 @@ public final class RegisterSource implements Action {
     @Override
     public long getComparable() {
         return mTimestamp;
+    }
+
+    public String getPublisher() {
+        return mPublisher;
     }
 }
