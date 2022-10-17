@@ -48,8 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Бета нұсқасын қосқан кезде, қолданбалар жарнама көрсетудің осындай жаңа әрі жеке жолдарын сынай алады. Бета нұсқасын кез келген уақытта құпиялылық параметрлерінен өшіруге болады."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Жоқ, рақмет"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Қосу"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Тағы"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Қатысқаныңызға рақмет!"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Сіз Android-тың жарнама құпиялылығына (бета нұсқасы) арналған бағдарламаның қатысушысыз. Құрылғыңызда Privacy Sandbox қосылған.\n\nТолық ақпарат алуға немесе бета нұсқасын кез келген уақытта құпиялылық параметрлерінде өшіруге болады."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Қатысудан бас тарттыңыз"</string>

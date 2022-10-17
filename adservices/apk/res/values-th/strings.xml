@@ -48,8 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"การใช้รุ่นเบต้าช่วยให้แอปทดสอบวิธีการแสดงโฆษณาแบบใหม่ที่มีความเป็นส่วนตัวมากขึ้นเหล่านี้ได้ คุณหยุดใช้รุ่นเบต้าได้ทุกเมื่อในการตั้งค่าความเป็นส่วนตัว"</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"ไม่เป็นไร"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"เปิด"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"เพิ่มเติม"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"ขอขอบคุณที่เข้าร่วม"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"คุณเป็นส่วนหนึ่งของโปรแกรมความเป็นส่วนตัวสำหรับโฆษณาใน Android (เบต้า) Privacy Sandbox เปิดใช้อยู่บนอุปกรณ์ของคุณ\n\nคุณดูข้อมูลเพิ่มเติมหรือหยุดใช้รุ่นเบต้าได้ทุกเมื่อในการตั้งค่าความเป็นส่วนตัว"</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"คุณเลือกที่จะไม่เข้าร่วม"</string>
