@@ -48,8 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"பீட்டாவை இயக்கினால், உங்களுக்கு விளம்பரங்களைக் காட்டுவதற்காக இந்தப் புதிய மற்றும் கூடுதலான தனிப்பட்ட வழிகளைப் பரிசோதனை செய்ய ஆப்ஸ் அனுமதிக்கப்படும். தனியுரிமை அமைப்புகளுக்குச் சென்று எப்போது வேண்டுமானாலும் பீட்டாவை முடக்கிக்கொள்ளலாம்."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"வேண்டாம்"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"இயக்கு"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"மேலும் காட்டு"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"பங்கேற்பதற்கு நன்றி"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"நீங்கள் Androidன் விளம்பரத் தனியுரிமை பீட்டா பதிப்பின் அங்கமாக உள்ளீர்கள். உங்கள் சாதனத்திற்குத் தனியுரிமை சாண்ட்பாக்ஸ் இயக்கப்பட்டுள்ளது.\n\nநீங்கள் மேலும் அறியலாம் அல்லது எப்போது வேண்டுமானாலும் தனியுரிமை அமைப்புகளுக்குச் சென்று பீட்டாவை முடக்கலாம்."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"பங்கேற்க வேண்டாம் எனத் தேர்வுசெய்துள்ளீர்கள்"</string>

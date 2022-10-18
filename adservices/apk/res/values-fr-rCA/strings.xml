@@ -48,8 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"L\'activation de la version bêta permet aux applications de tester ces nouvelles façons plus privées de vous montrer des annonces. Vous pouvez désactiver la version bêta à tout moment dans vos paramètres de confidentialité."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Non merci"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Activer"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Plus"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Merci de votre participation"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Vous participez à la version bêta des fonctionnalités de confidentialité relatives aux annonces sur Android. Le bac à sable de confidentialité est activé sur votre appareil.\n\nVous pouvez en savoir plus ou désactiver la version bêta à tout moment dans vos paramètres de confidentialité."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Vous avez choisi de ne pas participer"</string>
