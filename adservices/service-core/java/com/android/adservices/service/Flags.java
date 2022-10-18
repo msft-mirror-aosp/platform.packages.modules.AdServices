@@ -1239,7 +1239,7 @@ public interface Flags extends Dumpable {
     }
 
     /** UI Dialogs feature enabled. */
-    boolean UI_DIALOGS_FEATURE_ENABLED = true;
+    boolean UI_DIALOGS_FEATURE_ENABLED = false;
 
     /** Returns if the UI Dialogs feature is enabled. */
     default boolean getUIDialogsFeatureEnabled() {
