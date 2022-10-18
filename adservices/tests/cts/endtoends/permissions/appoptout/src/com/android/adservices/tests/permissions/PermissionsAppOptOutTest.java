@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
-import android.Manifest;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.ReportImpressionRequest;
@@ -34,13 +33,7 @@ import android.net.Uri;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
-import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.adservices.service.PhFlagsFixture;
-import com.android.compatibility.common.util.ShellUtils;
-
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -57,25 +50,9 @@ public class PermissionsAppOptOutTest {
     private static final String CALLER_NOT_AUTHORIZED =
             "java.lang.SecurityException: Caller is not authorized to call this API. "
                     + "Caller is not allowed.";
-    private static final int TEST_API_REQUEST_PER_SECOND = 5;
-    private static final int DEFAULT_API_REQUEST_PER_SECOND = 1;
-
-    @Before
-    public void setup() {
-        InstrumentationRegistry.getInstrumentation()
-                .getUiAutomation()
-                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
-        overrideAPIRateLimit(TEST_API_REQUEST_PER_SECOND);
-    }
-
-    @After
-    public void teardown() {
-        overrideAPIRateLimit(DEFAULT_API_REQUEST_PER_SECOND);
-    }
 
     @Test
     public void testAppOptOut_topics() {
-        overrideDisableTopicsEnrollmentCheck("0");
         AdvertisingTopicsClient advertisingTopicsClient1 =
                 new AdvertisingTopicsClient.Builder()
                         .setContext(sContext)
@@ -87,12 +64,10 @@ public class PermissionsAppOptOutTest {
                 assertThrows(
                         ExecutionException.class, () -> advertisingTopicsClient1.getTopics().get());
         assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
-        overrideDisableTopicsEnrollmentCheck("1");
     }
 
     @Test
     public void testNoEnrollment_fledgeJoinCustomAudience() {
-        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
         AdvertisingCustomAudienceClient customAudienceClient =
                 new AdvertisingCustomAudienceClient.Builder()
                         .setContext(sContext)
@@ -112,13 +87,11 @@ public class PermissionsAppOptOutTest {
                         ExecutionException.class,
                         () -> customAudienceClient.joinCustomAudience(customAudience).get());
         assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
-        PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
     }
 
     @Test
     public void testWithEnrollment_fledgeJoinCustomAudience()
             throws ExecutionException, InterruptedException {
-        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
         AdvertisingCustomAudienceClient customAudienceClient =
                 new AdvertisingCustomAudienceClient.Builder()
                         .setContext(sContext)
@@ -136,12 +109,10 @@ public class PermissionsAppOptOutTest {
 
         // When the ad tech is properly enrolled, just verify that no error is thrown
         customAudienceClient.joinCustomAudience(customAudience).get();
-        PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
     }
 
     @Test
     public void testNoEnrollment_fledgeLeaveCustomAudience() {
-        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
         AdvertisingCustomAudienceClient customAudienceClient =
                 new AdvertisingCustomAudienceClient.Builder()
                         .setContext(sContext)
@@ -158,13 +129,11 @@ public class PermissionsAppOptOutTest {
                                                 "exampleCustomAudience")
                                         .get());
         assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
-        PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
     }
 
     @Test
     public void testWithEnrollment_fledgeLeaveCustomAudience()
             throws ExecutionException, InterruptedException {
-        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
         AdvertisingCustomAudienceClient customAudienceClient =
                 new AdvertisingCustomAudienceClient.Builder()
                         .setContext(sContext)
@@ -177,13 +146,10 @@ public class PermissionsAppOptOutTest {
                 .leaveCustomAudience(
                         AdTechIdentifier.fromString("test.com"), "exampleCustomAudience")
                 .get();
-        PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
     }
 
     @Test
     public void testNoEnrollment_selectAds() {
-        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
-
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfig(
                         AdTechIdentifier.fromString("seller.example.com"));
@@ -199,13 +165,10 @@ public class PermissionsAppOptOutTest {
                         ExecutionException.class,
                         () -> mAdSelectionClient.selectAds(adSelectionConfig).get());
         assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
-        PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
     }
 
     @Test
     public void testWithEnrollment_selectAds() {
-        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
-
         // The "test.com" buyer is a pre-seeded enrolled ad tech
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfig(
@@ -224,13 +187,10 @@ public class PermissionsAppOptOutTest {
                         ExecutionException.class,
                         () -> mAdSelectionClient.selectAds(adSelectionConfig).get());
         assertThat(exception.getMessage()).isNotEqualTo(CALLER_NOT_AUTHORIZED);
-        PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
     }
 
     @Test
     public void testNoEnrollment_reportImpression() {
-        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
-
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfig(
                         AdTechIdentifier.fromString("seller.example.com"));
@@ -251,13 +211,10 @@ public class PermissionsAppOptOutTest {
                         ExecutionException.class,
                         () -> mAdSelectionClient.reportImpression(request).get());
         assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
-        PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
     }
 
     @Test
     public void testWithEnrollment_reportImpression() {
-        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
-
         // The "test.com" buyer is a pre-seeded enrolled ad tech
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfig(
@@ -281,18 +238,5 @@ public class PermissionsAppOptOutTest {
                         ExecutionException.class,
                         () -> mAdSelectionClient.reportImpression(request).get());
         assertThat(exception.getMessage()).isNotEqualTo(CALLER_NOT_AUTHORIZED);
-        PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
-    }
-
-    // Override the flag to disable Topics enrollment check.
-    private void overrideDisableTopicsEnrollmentCheck(String val) {
-        // Setting it to 1 here disables the Topics enrollment check.
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.disable_topics_enrollment_check " + val);
-    }
-
-    private void overrideAPIRateLimit(int requestPerSecond) {
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.sdk_request_permits_per_second " + requestPerSecond);
     }
 }
