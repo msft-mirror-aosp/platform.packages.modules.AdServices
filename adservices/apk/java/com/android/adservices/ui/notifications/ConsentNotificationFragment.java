@@ -40,7 +40,7 @@ import com.android.adservices.api.R;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.UIStats;
-import com.android.adservices.ui.settings.AdServicesSettingsActivity;
+import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 
 /** Fragment for the topics view of the AdServices Settings App. */
 public class ConsentNotificationFragment extends Fragment {
@@ -117,7 +117,7 @@ public class ConsentNotificationFragment extends Fragment {
                     } else {
                         // go to settings activity
                         Intent intent =
-                                new Intent(requireActivity(), AdServicesSettingsActivity.class);
+                                new Intent(requireActivity(), AdServicesSettingsMainActivity.class);
                         intent.addFlags(
                                 Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         startActivity(intent);

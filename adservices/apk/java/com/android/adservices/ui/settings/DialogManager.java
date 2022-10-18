@@ -96,7 +96,7 @@ public class DialogManager {
      * @param context Application context.
      * @param topic topic to unblock.
      */
-    public static void showUnlockTopicDialog(@NonNull Context context, Topic topic) {
+    public static void showUnblockTopicDialog(@NonNull Context context, Topic topic) {
         if (!sSemaphore.tryAcquire()) return;
         String topicName = context.getString(TopicsMapper.getResourceIdByTopic(topic, context));
         new AlertDialog.Builder(context)
