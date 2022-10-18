@@ -22,14 +22,18 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.adservices.api.R;
-import com.android.adservices.ui.settings.ActionDelegate;
-import com.android.adservices.ui.settings.AdServicesSettingsActivity;
+import com.android.adservices.data.topics.Topic;
+import com.android.adservices.ui.settings.activities.TopicsActivity;
+import com.android.adservices.ui.settings.delegates.TopicsActionDelegate;
 import com.android.adservices.ui.settings.viewadatpors.TopicsListViewAdapter;
 import com.android.adservices.ui.settings.viewmodels.TopicsViewModel;
+
+import java.util.function.Function;
 
 /** Fragment for the topics view of the AdServices Settings App. */
 public class AdServicesSettingsTopicsFragment extends Fragment {
@@ -48,21 +52,26 @@ public class AdServicesSettingsTopicsFragment extends Fragment {
 
     // initialize all action listeners except for actions in topics list
     private void initActionListeners() {
-        ActionDelegate actionDelegate =
-                ((AdServicesSettingsActivity) requireActivity()).getActionDelegate();
+        TopicsActionDelegate actionDelegate =
+                ((TopicsActivity) requireActivity()).getActionDelegate();
         actionDelegate.initTopicsFragment(this);
     }
 
     // initializes view model connection with topics list.
     // (Action listeners for each item in the list will be handled by the adapter)
     private void setupViewModel(View rootView) {
+        // create adapter
         TopicsViewModel viewModel =
-                ((AdServicesSettingsActivity) requireActivity())
-                        .getViewModelProvider()
-                        .get(TopicsViewModel.class);
+                new ViewModelProvider(requireActivity()).get(TopicsViewModel.class);
+        Function<Topic, View.OnClickListener> getOnclickListener =
+                topic -> view -> viewModel.revokeTopicConsentButtonClickHandler(topic);
+        TopicsListViewAdapter adapter =
+                new TopicsListViewAdapter(
+                        requireContext(), viewModel.getTopics(), getOnclickListener, false);
+
+        // set adapter for recyclerView
         RecyclerView recyclerView = rootView.findViewById(R.id.topics_list);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        TopicsListViewAdapter adapter = new TopicsListViewAdapter(viewModel, false);
         recyclerView.setAdapter(adapter);
 
         View noTopicsMessage = rootView.findViewById(R.id.no_topics_message);
@@ -73,7 +82,7 @@ public class AdServicesSettingsTopicsFragment extends Fragment {
         // blocked_apps_when_empty_state_button is added to noTopicsMessage
         // noTopicsMessages is visible only when Empty State
         // blocked_topics_when_empty_state_button differs from blocked_topics_button
-        // in style with rounded corners, centered, blueish
+        // in style with rounded corners, centered, colored
         viewModel
                 .getTopics()
                 .observe(
