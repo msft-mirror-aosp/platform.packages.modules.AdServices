@@ -19,6 +19,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -94,7 +95,7 @@ public class AdServicesSettingsAppsFragment extends Fragment {
                             adapter.notifyDataSetChanged();
                         });
 
-        View blockedAppsWhenEmptyStateButton =
+        Button blockedAppsWhenEmptyStateButton =
                 rootView.findViewById(R.id.blocked_apps_when_empty_state_button);
         viewModel
                 .getBlockedApps()
@@ -105,10 +106,14 @@ public class AdServicesSettingsAppsFragment extends Fragment {
                                 blockedAppsWhenEmptyStateButton.setEnabled(false);
                                 blockedAppsWhenEmptyStateButton.setAlpha(
                                         getResources().getFloat(R.dimen.disabled_button_alpha));
+                                blockedAppsWhenEmptyStateButton.setText(
+                                        R.string.settingsUI_apps_view_no_blocked_apps_text);
                             } else {
                                 blockedAppsWhenEmptyStateButton.setEnabled(true);
                                 blockedAppsWhenEmptyStateButton.setAlpha(
                                         getResources().getFloat(R.dimen.enabled_button_alpha));
+                                blockedAppsWhenEmptyStateButton.setText(
+                                        R.string.settingsUI_blocked_apps_title);
                             }
                         });
     }
