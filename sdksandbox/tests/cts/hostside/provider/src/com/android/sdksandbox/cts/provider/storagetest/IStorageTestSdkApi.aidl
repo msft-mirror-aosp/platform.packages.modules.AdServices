@@ -12,10 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.android.tests.codeprovider.storagetest_1;
+package com.android.sdksandbox.cts.provider.storagetest;
 
-interface IStorageTestSdk1Api {
-    void verifySharedStorageIsUsable();
-    void verifyPerSdkStorageIsUsable();
-    void createFilesInSharedStorage(int sizeInBytes, boolean inCacheDir);
+interface IStorageTestSdkApi {
+    String getSyncedSharedPreferencesString(in String key);
 }
