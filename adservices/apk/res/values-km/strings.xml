@@ -48,8 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"ការបើកកំណែបេតាអនុញ្ញាតឱ្យកម្មវិធីធ្វើតេស្តវិធីដែលកាន់តែមានលក្ខណៈឯកជនទាំងនេះ ដើម្បីបង្ហាញការផ្សាយពាណិជ្ជកម្មដល់អ្នក។ អ្នកអាចបិទកំណែបេតាបានគ្រប់ពេលនៅក្នុងការកំណត់ឯកជនភាពរបស់អ្នក។"</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"ទេ អរគុណ"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"បើក"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"ច្រើនទៀត"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"សូមអរគុណ​សម្រាប់​ការចូលរួម"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"អ្នកគឺជាផ្នែកនៃកំណែបេតានៃឯកជនភាពនៃការផ្សាយពាណិជ្ជកម្មរបស់ Android។ Privacy Sandbox ត្រូវបានបើកសម្រាប់ឧបករណ៍របស់អ្នក។\n\nអ្នកអាចស្វែងយល់បន្ថែម ឬបិទកំណែបេតាបានគ្រប់ពេលនៅក្នុងការកំណត់ឯកជនភាពរបស់អ្នក។"</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"អ្នកបានជ្រើសរើស​មិន​ចូលរួម"</string>

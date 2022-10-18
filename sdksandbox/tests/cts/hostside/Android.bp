@@ -38,7 +38,7 @@ android_test_helper_app {
     manifest: "app/AndroidManifest.xml",
     defaults: ["platform_app_defaults"],
     srcs: [
-        "app/src/**/*.java",
+        "app/src/**/app/*.java",
     ],
     libs: [
         "framework-sdksandbox.impl",
@@ -56,6 +56,9 @@ android_test_helper_app {
 android_test_helper_app {
     name: "SdkSandboxDataIsolationTestApp2",
     manifest: "app/AndroidManifest2.xml",
+    srcs: [
+        "app/src/**/app2/*.java",
+    ],
     defaults: ["platform_app_defaults"],
     min_sdk_version: "Tiramisu",
     target_sdk_version: "current",

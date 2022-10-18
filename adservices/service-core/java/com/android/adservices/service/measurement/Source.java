@@ -242,7 +242,7 @@ public class Source {
     public int getTriggerDataCardinality() {
         return mSourceType == SourceType.EVENT
                 ? PrivacyParams.EVENT_TRIGGER_DATA_CARDINALITY
-                : PrivacyParams.NAVIGATION_TRIGGER_DATA_CARDINALITY;
+                : PrivacyParams.getNavigationTriggerDataCardinality();
     }
 
     /**

@@ -48,8 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"বিটা চালু করার মাধ্যমে, অ্যাপগুলি আপনাকে বিজ্ঞাপন দেখাতে এইসব নতুন, আরও ব্যক্তিগত উপায় পরীক্ষা করার অনুমতি দেয়। আপনার গোপনীয়তা সেটিংসে যেকোনও সময় বিটা বন্ধ করতে পারবেন।"</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"না থাক"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"চালু করুন"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"আরও দেখুন"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"অংশগ্রহণ করার জন্য আপনাকে ধন্যবাদ"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"আপনি Android-এর বিজ্ঞাপন সম্পর্কিত গোপনীয়তা বিটার অংশ। আপনার ডিভাইসের জন্য প্রাইভেসি স্যান্ডবক্সটি চালু করা আছে।\n\nআপনি আরও জানতে পারেন বা আপনার গোপনীয়তা সেটিংস থেকে যেকোনও সময় বিটা বন্ধ করতে পারবেন।"</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"আপনি যোগ না দেওয়ার সিদ্ধান্ত নিয়েছেন"</string>

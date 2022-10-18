@@ -479,8 +479,9 @@ public interface Flags extends Dumpable {
     //  implementing a solution for more accurately scoped timeout
     long FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS = 5000;
     long FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS = 5000;
+    // For *on device* ad selection.
     long FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS = 10000;
-
+    long FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS = 10_000;
     long FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS = 2000;
 
     /** Returns the timeout constant in milliseconds that limits the bidding per CA */
@@ -494,11 +495,19 @@ public interface Flags extends Dumpable {
     }
 
     /**
-     * Returns the timeout constant in milliseconds that limits the overall ad selection
-     * orchestration
+     * Returns the timeout constant in milliseconds that limits the overall *on device* ad selection
+     * orchestration.
      */
     default long getAdSelectionOverallTimeoutMs() {
         return FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
+    }
+
+    /**
+     * Returns the timeout constant in milliseconds that limits the overall off device ad selection
+     * orchestration.
+     */
+    default long getAdSelectionOffDeviceOverallTimeoutMs() {
+        return FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS;
     }
 
     /**

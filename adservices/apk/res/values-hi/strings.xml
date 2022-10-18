@@ -48,8 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"बीटा प्रोग्राम को चालू करने का मतलब है कि आपके डिवाइस में मौजूद ऐप्लिकेशन, विज्ञापन दिखाने के लिए ज़्यादा निजता वाले इन नए तरीकों को आज़मा सकते हैं. निजता सेटिंग में जाकर, बीटा प्रोग्राम को कभी भी बंद किया जा सकता है."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"रहने दें"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"चालू करें"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"ज़्यादा देखें"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"इसमें हिस्सा लेने के लिए धन्यवाद"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"अब आप Android प्राइवसी सैंडबॉक्स के बीटा प्रोग्राम का हिस्सा हैं. आपके डिवाइस के लिए, प्राइवसी सैंडबॉक्स का बीटा प्रोग्राम चालू है.\n\nबीटा प्रोग्राम को कभी भी बंद करने या इसके बारे में ज़्यादा जानने के लिए निजता सेटिंग में जाएं."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"आपने इस प्रोग्राम में शामिल न होने का विकल्प चुना है"</string>

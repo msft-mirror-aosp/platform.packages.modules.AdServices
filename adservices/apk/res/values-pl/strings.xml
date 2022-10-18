@@ -48,8 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Włączenie wersji beta umożliwia testowanie w aplikacjach nowych sposobów wyświetlania Ci reklam – z lepszą ochroną prywatności. W każdej chwili możesz wyłączyć wersję beta w ustawieniach prywatności."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Nie, dziękuję"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Włącz"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Więcej"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Dziękujemy za udział w programie"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Bierzesz udział w testach wersji beta ustawień prywatności w reklamach na Androidzie. Masz na urządzeniu włączoną Piaskownicę prywatności.\n\nW ustawieniach prywatności możesz dowiedzieć się więcej i wyłączyć wersję beta."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Nie zamierzasz brać udziału w programie"</string>

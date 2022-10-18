@@ -784,7 +784,7 @@ public final class MeasurementImpl {
 
         if (destinationCount.isPresent()) {
             return destinationCount.get() < PrivacyParams
-                    .MAX_DISTINCT_DESTINATIONS_PER_PUBLISHER_X_ENROLLMENT_IN_ACTIVE_SOURCE;
+                    .getMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource();
         } else {
             LogUtil.e("isDestinationWithinPrivacyBounds: "
                     + "dao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource not "
@@ -842,7 +842,7 @@ public final class MeasurementImpl {
 
         if (adTechCount.isPresent()) {
             return adTechCount.get() < PrivacyParams
-                    .MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_SOURCE;
+                    .getMaxDistinctEnrollmentsPerPublisherXDestinationInSource();
         } else {
             LogUtil.e("isAdTechWithinPrivacyBounds: "
                     + "dao.countDistinctEnrollmentsPerPublisherXDestinationInSource not present"

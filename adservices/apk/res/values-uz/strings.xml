@@ -48,8 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Beta versiya yoqilsa, ilovalar sizga reklama chiqarishning yanada maxfiy usullarini sinay oladi. Beta versiyani istalgan vaqt maxfiylik sozlamalari orqali faolsizlashtirish mumkin."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Kerak emas"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Yoqish"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Yana"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Ishtirokingiz uchun rahmat"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Siz Android ichida chiqadigan reklamalar maxfiyligi beta dasturidasiz. Qurilmangiz uchun Privacy Sandbox funksiyasi yoqilgan.\n\nMaxfiylik sozlamalari orqali istalgan vaqtda beta versiya haqida batafsil axborot olish yoki uni faolsizlantirish mumkin."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Siz dasturda qatnashishni rad etdingiz"</string>
