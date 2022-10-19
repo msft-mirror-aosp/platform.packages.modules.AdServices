@@ -137,6 +137,30 @@ public class MockWebServerRule implements TestRule {
         mMockWebServer.play(mPort);
         return mMockWebServer;
     }
+
+    public MockWebServer createMockWebServer() throws Exception {
+        if (mPort == UNINITIALIZED) {
+            reserveServerListeningPort();
+        }
+
+        mMockWebServer = new MockWebServer();
+        if (useHttps()) {
+            mMockWebServer.useHttps(getTestingSslSocketFactory(), false);
+        }
+        return mMockWebServer;
+    }
+
+    public MockWebServer startCreatedMockWebServer(Dispatcher dispatcher) throws Exception {
+        if (mMockWebServer == null || mPort == UNINITIALIZED) {
+            throw new IllegalStateException(
+                    "MockWebServer is not created or the port is not reserved.");
+        }
+        mMockWebServer.setDispatcher(dispatcher);
+
+        mMockWebServer.play(mPort);
+        return mMockWebServer;
+    }
+
     /**
      * @return the mock web server for this rull and {@code null} if it hasn't been started yet by
      *     calling {@link #startMockWebServer(List)}.
