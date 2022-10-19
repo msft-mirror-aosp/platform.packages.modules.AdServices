@@ -30,6 +30,7 @@ import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallback;
 import android.os.Binder;
 import android.os.Bundle;
+import android.os.Process;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
@@ -50,6 +51,9 @@ public class SdkSandboxDataIsolationTestApp {
 
     private static final String APP_PKG = "com.android.sdksandbox.cts.app";
     private static final String APP_2_PKG = "com.android.sdksandbox.cts.app2";
+
+    private static final String CURRENT_USER_ID =
+            String.valueOf(Process.myUserHandle().getUserId(Process.myUid()));
 
     private static final String SDK_NAME = "com.android.sdksandbox.cts.provider";
 
@@ -95,13 +99,13 @@ public class SdkSandboxDataIsolationTestApp {
 
     @Test
     public void testAppCannotAccessAnySandboxDirectories() throws Exception {
-        assertFileAccessIsDenied("/data/misc_ce/0/sdksandbox/" + APP_PKG);
-        assertFileAccessIsDenied("/data/misc_ce/0/sdksandbox/" + APP_2_PKG);
-        assertFileAccessIsDenied("/data/misc_ce/0/sdksandbox/does.not.exist");
+        assertFileAccessIsDenied("/data/misc_ce/" + CURRENT_USER_ID + "/sdksandbox/" + APP_PKG);
+        assertFileAccessIsDenied("/data/misc_ce/" + CURRENT_USER_ID + "/sdksandbox/" + APP_2_PKG);
+        assertFileAccessIsDenied("/data/misc_ce/" + CURRENT_USER_ID + "/sdksandbox/does.not.exist");
 
-        assertFileAccessIsDenied("/data/misc_de/0/sdksandbox/" + APP_PKG);
-        assertFileAccessIsDenied("/data/misc_de/0/sdksandbox/" + APP_2_PKG);
-        assertFileAccessIsDenied("/data/misc_de/0/sdksandbox/does.not.exist");
+        assertFileAccessIsDenied("/data/misc_de/" + CURRENT_USER_ID + "/sdksandbox/" + APP_PKG);
+        assertFileAccessIsDenied("/data/misc_de/" + CURRENT_USER_ID + "/sdksandbox/" + APP_2_PKG);
+        assertFileAccessIsDenied("/data/misc_de/" + CURRENT_USER_ID + "/sdksandbox/does.not.exist");
     }
 
     @Test
