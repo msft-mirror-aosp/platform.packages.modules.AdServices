@@ -153,14 +153,23 @@ public final class PhFlags implements Flags {
             "fledge_ad_selection_scoring_timeout_ms";
     static final String KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS =
             "fledge_ad_selection_overall_timeout_ms";
-    static final String KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS =
-            "fledge_ad_selection_off_device_overall_timeout_ms";
     static final String KEY_FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S =
             "fledge_ad_selection_expiration_window_s";
     static final String KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS =
             "fledge_report_impression_overall_timeout_ms";
     static final String KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS =
             "fledge_ad_selection_bidding_timeout_per_buyer_ms";
+
+    // FLEDGE Off device ad selection keys
+    static final String KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS =
+            "fledge_ad_selection_off_device_overall_timeout_ms";
+    // Whether to call trusted servers for off device ad selection.
+    static final String KEY_FLEDE_AD_SELECTION_OFF_DEVICE_ENABLED =
+            "fledge_ad_selection_off_device_enabled";
+    // Whether to compress the request object when calling trusted servers for off device ad
+    // selection.
+    static final String KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED =
+            "fledge_ad_selection_off_device_request_compression_enabled";
 
     // Fledge invoking app status keys
     static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION =
@@ -1370,6 +1379,22 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getAdSelectionOffDeviceEnabled() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDE_AD_SELECTION_OFF_DEVICE_ENABLED,
+                FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED);
+    }
+
+    @Override
+    public boolean getAdSelectionOffDeviceRequestCompressionEnabled() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED,
+                FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED);
+    }
+
+    @Override
     public boolean isDisableTopicsEnrollmentCheck() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK),
@@ -1562,13 +1587,6 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES,
                 /* defaultValue */ MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES);
-    }
-
-    public boolean getOffDeviceAdSelectionEnabled() {
-        return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_OFF_DEVICE_AD_SELECTION_ENABLED,
-                OFF_DEVICE_AD_SELECTION_ENABLED);
     }
 
     @VisibleForTesting
@@ -1985,9 +2003,14 @@ public final class PhFlags implements Flags {
                         + getForegroundStatuslLevelForValidation());
         writer.println(
                 "\t"
-                        + KEY_OFF_DEVICE_AD_SELECTION_ENABLED
+                        + KEY_FLEDE_AD_SELECTION_OFF_DEVICE_ENABLED
                         + " = "
-                        + getOffDeviceAdSelectionEnabled());
+                        + getAdSelectionOffDeviceEnabled());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED
+                        + " = "
+                        + getAdSelectionOffDeviceRequestCompressionEnabled());
 
         writer.println(
                 "\t" + KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE + " = " + getEnforceIsolateMaxHeapSize());
