@@ -91,7 +91,6 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 scheduledExecutor,
                 consentManager,
                 adServicesLogger,
-                devContext,
                 appImportanceFilter,
                 flags,
                 throttlerSupplier,
