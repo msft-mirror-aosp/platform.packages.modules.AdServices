@@ -522,10 +522,9 @@ public abstract class E2ETest {
     private static void sortAggregateReportObjects(OutputType outputType,
             List<JSONObject> aggregateReportObjects) {
         aggregateReportObjects.sort(
-                // Report time can vary across implementations so cannot be included in the hash;
-                // they should be similarly ordered, however, so we can use them to sort.
-                Comparator.comparing(E2ETest::reportTimeFrom)
-                .thenComparing(obj -> hashForAggregateReportObject(outputType, obj)));
+                // We cannot use report time due to fuzzy matching between actual and expected
+                // output.
+                Comparator.comparing(obj -> hashForAggregateReportObject(outputType, obj)));
     }
 
     private static boolean areEqual(ReportObjects p1, ReportObjects p2) throws JSONException {
@@ -899,6 +898,7 @@ public abstract class E2ETest {
         db.delete("msmt_event_report", null, null);
         db.delete("msmt_attribution", null, null);
         db.delete("msmt_aggregate_report", null, null);
+        db.delete("enrollment_data", null, null);
     }
 
     abstract void processAction(RegisterSource sourceRegistration) throws IOException;
