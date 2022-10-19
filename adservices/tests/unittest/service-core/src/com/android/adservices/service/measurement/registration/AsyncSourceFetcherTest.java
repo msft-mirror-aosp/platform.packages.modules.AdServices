@@ -361,9 +361,9 @@ public final class AsyncSourceFetcherTest {
                                             + "  \"priority\": \"123\",\n"
                                             + "  \"expiry\": \"456789\",\n"
                                             + "  \"source_event_id\": \"987654321\",\n"
-                                                // Min value of attribution is 2 days or 172800
+                                                // Min value of attribution is 1 day or 172800
                                                 // seconds
-                                                + "  \"install_attribution_window\": \"172700\",\n"
+                                                + "  \"install_attribution_window\": \"86300\",\n"
                                                 // Max value of cooldown is 30 days or 2592000
                                                 // seconds
                                                 + "  \"post_install_exclusivity_window\":"
@@ -379,7 +379,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(456789, result.get(0).getExpiry());
         assertEquals(new UnsignedLong(987654321L), result.get(0).getSourceEventId());
         // Adjusted to minimum allowed value
-        assertEquals(172800, result.get(0).getInstallAttributionWindow());
+        assertEquals(86400, result.get(0).getInstallAttributionWindow());
         // Adjusted to maximum allowed value
         assertEquals(2592000L, result.get(0).getInstallCooldownWindow());
         verify(mUrlConnection).setRequestMethod("POST");
