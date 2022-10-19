@@ -49,6 +49,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.js.JSSandboxIsNotAvailableException;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.ApiServiceLatencyCalculator;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Preconditions;
@@ -125,6 +126,7 @@ public abstract class AdSelectionRunner {
     @NonNull protected final Supplier<Throttler> mThrottlerSupplier;
     @NonNull protected final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
     @NonNull protected final FledgeAllowListsFilter mFledgeAllowListsFilter;
+    @NonNull protected final ApiServiceLatencyCalculator mApiServiceLatencyCalculator;
     protected final int mCallerUid;
 
     public AdSelectionRunner(
@@ -142,7 +144,8 @@ public abstract class AdSelectionRunner {
             @NonNull final Supplier<Throttler> throttlerSupplier,
             int callerUid,
             @NonNull final FledgeAuthorizationFilter fledgeAuthorizationFilter,
-            @NonNull final FledgeAllowListsFilter fledgeAllowListsFilter) {
+            @NonNull final FledgeAllowListsFilter fledgeAllowListsFilter,
+            @NonNull final ApiServiceLatencyCalculator apiServiceLatencyCalculator) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(adSelectionEntryDao);
@@ -159,6 +162,7 @@ public abstract class AdSelectionRunner {
         Preconditions.checkArgument(
                 JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable(),
                 JS_SANDBOX_IS_NOT_AVAILABLE);
+        Objects.requireNonNull(apiServiceLatencyCalculator);
 
         mContext = context;
         mCustomAudienceDao = customAudienceDao;
@@ -176,6 +180,7 @@ public abstract class AdSelectionRunner {
         mCallerUid = callerUid;
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
         mFledgeAllowListsFilter = fledgeAllowListsFilter;
+        mApiServiceLatencyCalculator = apiServiceLatencyCalculator;
     }
 
     @VisibleForTesting
@@ -195,7 +200,8 @@ public abstract class AdSelectionRunner {
             @NonNull final Supplier<Throttler> throttlerSupplier,
             int callerUid,
             @NonNull final FledgeAuthorizationFilter fledgeAuthorizationFilter,
-            @NonNull final FledgeAllowListsFilter fledgeAllowListsFilter) {
+            @NonNull final FledgeAllowListsFilter fledgeAllowListsFilter,
+            @NonNull final ApiServiceLatencyCalculator apiServiceLatencyCalculator) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(adSelectionEntryDao);
@@ -209,6 +215,7 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(appImportanceFilter);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(fledgeAuthorizationFilter);
+        Objects.requireNonNull(apiServiceLatencyCalculator);
 
         mContext = context;
         mCustomAudienceDao = customAudienceDao;
@@ -226,6 +233,7 @@ public abstract class AdSelectionRunner {
         mCallerUid = callerUid;
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
         mFledgeAllowListsFilter = fledgeAllowListsFilter;
+        mApiServiceLatencyCalculator = apiServiceLatencyCalculator;
     }
 
     /**
@@ -278,6 +286,7 @@ public abstract class AdSelectionRunner {
                     },
                     mLightweightExecutorService);
         } catch (Throwable t) {
+            LogUtil.v("run ad selection fails fast with exception %s.", t.toString());
             notifyFailureToCaller(callback, t);
         }
     }
@@ -296,11 +305,15 @@ public abstract class AdSelectionRunner {
             LogUtil.e(e, "Encountered exception during notifying AdSelection callback");
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } finally {
+            int overallLatencyMs = mApiServiceLatencyCalculator.getApiServiceOverallLatencyMs();
             LogUtil.v(
-                    "Ad Selection with Id:%d completed, attempted notifying success",
-                    result.getAdSelectionId());
+                    "Ad Selection with Id:%d completed with overall latency %d in ms, "
+                            + "attempted notifying success",
+                    result.getAdSelectionId(), overallLatencyMs);
+            // TODO(b//253522566): When including logging data from bidding & auction server side
+            //  should be able to differentiate the data from the on-device telemetry.
             mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, resultCode, 0);
+                    AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, resultCode, overallLatencyMs);
         }
     }
 
@@ -316,8 +329,15 @@ public abstract class AdSelectionRunner {
             LogUtil.e(e, "Encountered exception during notifying AdSelection callback");
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } finally {
+            int overallLatencyMs = mApiServiceLatencyCalculator.getApiServiceOverallLatencyMs();
+            LogUtil.v(
+                    "Ad Selection with Id:%d completed with overall latency %d in ms, "
+                            + "attempted notifying success for a silent failure",
+                    mAdSelectionIdGenerator.generateId(), overallLatencyMs);
+            // TODO(b//253522566): When including logging data from bidding & auction server side
+            //  should be able to differentiate the data from the on-device telemetry.
             mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, resultCode, 0);
+                    AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, resultCode, overallLatencyMs);
         }
     }
 
@@ -359,8 +379,12 @@ public abstract class AdSelectionRunner {
             LogUtil.e(e, "Encountered exception during notifying AdSelection callback");
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } finally {
+            int overallLatencyMs = mApiServiceLatencyCalculator.getApiServiceOverallLatencyMs();
+            LogUtil.v("Ad Selection failed with overall latency %d in ms", overallLatencyMs);
+            // TODO(b//253522566): When including logging data from bidding & auction server side
+            //  should be able to differentiate the data from the on-device telemetry.
             mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, resultCode, 0);
+                    AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, resultCode, overallLatencyMs);
         }
     }
 

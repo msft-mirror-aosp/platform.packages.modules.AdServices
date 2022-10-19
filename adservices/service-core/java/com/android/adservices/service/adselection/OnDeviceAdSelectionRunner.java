@@ -38,6 +38,7 @@ import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.ApiServiceLatencyCalculator;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Function;
@@ -79,7 +80,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final Supplier<Throttler> throttlerSupplier,
             int callerUid,
             @NonNull final FledgeAuthorizationFilter fledgeAuthorizationFilter,
-            @NonNull final FledgeAllowListsFilter fledgeAllowListsFilter) {
+            @NonNull final FledgeAllowListsFilter fledgeAllowListsFilter,
+            @NonNull final ApiServiceLatencyCalculator apiServiceLatencyCalculator) {
         super(
                 context,
                 customAudienceDao,
@@ -95,7 +97,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 throttlerSupplier,
                 callerUid,
                 fledgeAuthorizationFilter,
-                fledgeAllowListsFilter);
+                fledgeAllowListsFilter,
+                apiServiceLatencyCalculator);
 
         Objects.requireNonNull(adServicesHttpsClient);
 
@@ -145,7 +148,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final Supplier<Throttler> throttlerSupplier,
             int callerUid,
             @NonNull final FledgeAuthorizationFilter fledgeAuthorizationFilter,
-            @NonNull final FledgeAllowListsFilter fledgeAllowListsFilter) {
+            @NonNull final FledgeAllowListsFilter fledgeAllowListsFilter,
+            @NonNull final ApiServiceLatencyCalculator apiServiceLatencyCalculator) {
         super(
                 context,
                 customAudienceDao,
@@ -162,7 +166,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 throttlerSupplier,
                 callerUid,
                 fledgeAuthorizationFilter,
-                fledgeAllowListsFilter);
+                fledgeAllowListsFilter,
+                apiServiceLatencyCalculator);
 
         Objects.requireNonNull(adsScoreGenerator);
         Objects.requireNonNull(adServicesHttpsClient);
