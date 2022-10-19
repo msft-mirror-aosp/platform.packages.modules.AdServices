@@ -58,6 +58,7 @@ import java.util.Objects;
 public class SdkSandboxServiceImpl extends Service {
 
     private static final String TAG = "SdkSandbox";
+    private static final boolean DEBUG = Log.isLoggable(TAG, Log.DEBUG);
 
     // Mapping from sdk name to its holder
     @GuardedBy("mHeldSdk")
@@ -115,18 +116,19 @@ public class SdkSandboxServiceImpl extends Service {
      * @param sdkToServiceCallback for initialization of {@link SdkSandboxLocalSingleton}
      */
     public void initialize(ISdkToServiceCallback sdkToServiceCallback) {
+        enforceCallerIsSystemServer();
+
         if (mInitialized) {
             Log.e(TAG, "Sandbox is already initialized");
             return;
         }
-
-        enforceCallerIsSystemServer();
 
         SdkSandboxLocalSingleton.initInstance(sdkToServiceCallback.asBinder());
 
         cleanUpSyncedSharedPreferencesData();
 
         mInitialized = true;
+        if (DEBUG) Log.d(TAG, "Sandbox initialized");
     }
 
     /** Loads SDK. */
@@ -181,6 +183,8 @@ public class SdkSandboxServiceImpl extends Service {
     /** Sync data from client. */
     public void syncDataFromClient(SharedPreferencesUpdate update) {
         enforceCallerIsSystemServer();
+
+        if (DEBUG) Log.d(TAG, "Syncing data from client");
 
         SharedPreferences pref = getClientSharedPreferences();
         SharedPreferences.Editor editor = pref.edit();
