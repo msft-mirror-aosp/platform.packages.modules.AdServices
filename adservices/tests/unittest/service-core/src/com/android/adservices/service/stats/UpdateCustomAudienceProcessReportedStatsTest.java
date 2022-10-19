@@ -16,17 +16,16 @@
 
 package com.android.adservices.service.stats;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PROCESS_REPORTED__RUN_AD_BIDDING_RESULT_CODE__RUN_AD_SELECTION_STATUS_SUCCESS;
-
 import static org.junit.Assert.assertEquals;
+
+import android.adservices.common.AdServicesStatusUtils;
 
 import org.junit.Test;
 
 /** Unit tests for {@link UpdateCustomAudienceProcessReportedStats}. */
 public class UpdateCustomAudienceProcessReportedStatsTest {
     static final int LATENCY_IN_MILLIS = 10;
-    static final int RESULT_CODE =
-            RUN_AD_BIDDING_PROCESS_REPORTED__RUN_AD_BIDDING_RESULT_CODE__RUN_AD_SELECTION_STATUS_SUCCESS;
+    static final int RESULT_CODE = AdServicesStatusUtils.STATUS_SUCCESS;
     static final int DATA_SIZE_OF_ADS_IN_BYTES = 10;
     static final int NUM_OF_ADS = 5;
 
