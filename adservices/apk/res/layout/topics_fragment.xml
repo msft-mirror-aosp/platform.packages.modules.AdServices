@@ -62,12 +62,8 @@
                 <Button
                     android:id="@+id/blocked_topics_when_empty_state_button"
                     style="@style/MainStyle.PrimaryButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
                     android:layout_marginTop="20dp"
-                    android:text="@string/settingsUI_blocked_topics_title"
-                    android:textAllCaps="false"
-                    android:textColor="@color/button_text_color"/>
+                    android:text="@string/settingsUI_blocked_topics_title"/>
             </LinearLayout>
 
             <androidx.recyclerview.widget.RecyclerView

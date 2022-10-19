@@ -31,5 +31,5 @@
 
     <instrumentation android:name="androidx.test.runner.AndroidJUnitRunner"
                      android:targetPackage="com.android.sdksandbox.cts.app2"
-                     android:label="SdkSandboxDataIsolationTestApp2"/>
+                     android:label="CtsSdkSandboxHostTestApp2"/>
 </manifest>

@@ -45,9 +45,6 @@ import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.common.BackgroundJobsManager;
 import com.android.adservices.service.consent.App;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.ui.settings.viewmodels.AppsViewModel;
-import com.android.adservices.ui.settings.viewmodels.MainViewModel;
-import com.android.adservices.ui.settings.viewmodels.TopicsViewModel;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
@@ -57,7 +54,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
@@ -67,82 +63,64 @@ import java.util.List;
 
 @RunWith(AndroidJUnit4.class)
 public class SettingsActivityUiAutomatorTest {
-    private static final String PRIVACY_SANDBOX_TEST_PACKAGE =
-            "android.test.adservices.ui.SETTINGS";
+    private static final String PRIVACY_SANDBOX_TEST_PACKAGE = "android.test.adservices.ui.MAIN";
     private static final int LAUNCH_TIMEOUT = 5000;
     private static UiDevice sDevice;
     static ViewModelProvider sViewModelProvider = Mockito.mock(ViewModelProvider.class);
     static ConsentManager sConsentManager;
     private MockitoSession mStaticMockSession;
     private PhFlags mPhFlags;
+    private ConsentManager mConsentManager;
 
-    /**
-     * This is used by {@link AdServicesSettingsActivityWrapper}. Provides a mocked {@link
-     * ViewModelProvider} that serves mocked view models, which use a mocked {@link ConsentManager},
-     * which gives mocked data.
-     *
-     * @return the mocked {@link ViewModelProvider}
-     */
-    public ViewModelProvider generateMockedViewModelProvider() {
-        sConsentManager =
+    @Before
+    public void setup() throws UiObjectNotFoundException, IOException {
+        // prepare objects used by static mocking
+        mConsentManager =
                 spy(ConsentManager.getInstance(ApplicationProvider.getApplicationContext()));
         List<Topic> tempList = new ArrayList<>();
         tempList.add(Topic.create(10001, 1, 1));
         tempList.add(Topic.create(10002, 1, 1));
         tempList.add(Topic.create(10003, 1, 1));
         ImmutableList<Topic> topicsList = ImmutableList.copyOf(tempList);
-        doReturn(topicsList).when(sConsentManager).getKnownTopicsWithConsent();
+        doReturn(topicsList).when(mConsentManager).getKnownTopicsWithConsent();
 
         tempList = new ArrayList<>();
         tempList.add(Topic.create(10004, 1, 1));
         tempList.add(Topic.create(10005, 1, 1));
         ImmutableList<Topic> blockedTopicsList = ImmutableList.copyOf(tempList);
-        doReturn(blockedTopicsList).when(sConsentManager).getTopicsWithRevokedConsent();
+        doReturn(blockedTopicsList).when(mConsentManager).getTopicsWithRevokedConsent();
 
         List<App> appTempList = new ArrayList<>();
         appTempList.add(App.create("app1"));
         appTempList.add(App.create("app2"));
         ImmutableList<App> appsList = ImmutableList.copyOf(appTempList);
-        doReturn(appsList).when(sConsentManager).getKnownAppsWithConsent();
+        doReturn(appsList).when(mConsentManager).getKnownAppsWithConsent();
 
         appTempList = new ArrayList<>();
         appTempList.add(App.create("app3"));
         ImmutableList<App> blockedAppsList = ImmutableList.copyOf(appTempList);
-        doReturn(blockedAppsList).when(sConsentManager).getAppsWithRevokedConsent();
+        doReturn(blockedAppsList).when(mConsentManager).getAppsWithRevokedConsent();
 
-        doNothing().when(sConsentManager).resetTopicsAndBlockedTopics();
-        doNothing().when(sConsentManager).resetTopics();
-        doNothing().when(sConsentManager).revokeConsentForTopic(any(Topic.class));
-        doNothing().when(sConsentManager).restoreConsentForTopic(any(Topic.class));
+        doNothing().when(mConsentManager).resetTopicsAndBlockedTopics();
+        doNothing().when(mConsentManager).resetTopics();
+        doNothing().when(mConsentManager).revokeConsentForTopic(any(Topic.class));
+        doNothing().when(mConsentManager).restoreConsentForTopic(any(Topic.class));
         try {
-            doNothing().when(sConsentManager).resetAppsAndBlockedApps();
-            doNothing().when(sConsentManager).resetApps();
-            doNothing().when(sConsentManager).revokeConsentForApp(any(App.class));
-            doNothing().when(sConsentManager).restoreConsentForApp(any(App.class));
+            doNothing().when(mConsentManager).resetAppsAndBlockedApps();
+            doNothing().when(mConsentManager).resetApps();
+            doNothing().when(mConsentManager).revokeConsentForApp(any(App.class));
+            doNothing().when(mConsentManager).restoreConsentForApp(any(App.class));
         } catch (IOException e) {
             e.printStackTrace();
         }
-        doNothing().when(sConsentManager).resetMeasurement();
+        doNothing().when(mConsentManager).resetMeasurement();
 
-        TopicsViewModel topicsViewModel =
-                new TopicsViewModel(ApplicationProvider.getApplicationContext(), sConsentManager);
-        AppsViewModel appsViewModel =
-                new AppsViewModel(ApplicationProvider.getApplicationContext(), sConsentManager);
-        MainViewModel mainViewModel =
-                new MainViewModel(ApplicationProvider.getApplicationContext(), sConsentManager);
-        doReturn(topicsViewModel).when(sViewModelProvider).get(TopicsViewModel.class);
-        doReturn(mainViewModel).when(sViewModelProvider).get(MainViewModel.class);
-        doReturn(appsViewModel).when(sViewModelProvider).get(AppsViewModel.class);
-        return sViewModelProvider;
-    }
-
-    @Before
-    public void setup() throws UiObjectNotFoundException, IOException {
-        MockitoAnnotations.initMocks(this);
+        // Static mocking
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(PhFlags.class)
                         .spyStatic(BackgroundJobsManager.class)
+                        .spyStatic(ConsentManager.class)
                         .strictness(Strictness.WARN)
                         .initMocks(this)
                         .startMocking();
@@ -151,6 +129,8 @@ public class SettingsActivityUiAutomatorTest {
         mPhFlags = spy(PhFlags.getInstance());
         doReturn(true).when(mPhFlags).getUIDialogsFeatureEnabled();
         ExtendedMockito.doReturn(mPhFlags).when(PhFlags::getInstance);
+        ExtendedMockito.doReturn(mConsentManager)
+                .when(() -> ConsentManager.getInstance(any(Context.class)));
 
         // Initialize UiDevice instance
         sDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
@@ -207,31 +187,8 @@ public class SettingsActivityUiAutomatorTest {
         return sDevice.findObject(new UiSelector().text(getString(resId)).instance(index));
     }
 
-    /**
-     * Test for the Button to show blocked topics when the list of Topics is Empty The Button should
-     * be disabled if blocked topics is empty
-     *
-     * @throws UiObjectNotFoundException
-     */
-    @Test
-    public void blockedTopicsWhenEmptyStateButtonTest() throws UiObjectNotFoundException {
-        // Return an empty topics list
-        doReturn(ImmutableList.of()).when(sConsentManager).getKnownTopicsWithConsent();
-        // Return a non-empty blocked topics list
-        List<Topic> tempList = new ArrayList<>();
-        tempList.add(Topic.create(10004, 1, 1));
-        tempList.add(Topic.create(10005, 1, 1));
-        ImmutableList<Topic> blockedTopicsList = ImmutableList.copyOf(tempList);
-        doReturn(blockedTopicsList).when(sConsentManager).getTopicsWithRevokedConsent();
-        // navigate to topics page
-        scrollToAndClick(R.string.settingsUI_topics_title);
-        UiObject blockedTopicsWhenEmptyStateButton =
-                sDevice.findObject(
-                        new UiSelector()
-                                .className("android.widget.Button")
-                                .text(getString(R.string.settingsUI_blocked_topics_title)));
-
-        assertThat(blockedTopicsWhenEmptyStateButton.isEnabled()).isTrue();
+    private String getString(int resourceId) {
+        return ApplicationProvider.getApplicationContext().getResources().getString(resourceId);
     }
 
     @Test
@@ -283,7 +240,7 @@ public class SettingsActivityUiAutomatorTest {
 
         // confirm
         positiveText.click();
-        verify(sConsentManager).revokeConsentForTopic(any(Topic.class));
+        verify(mConsentManager).revokeConsentForTopic(any(Topic.class));
         blockTopicText = getElement(R.string.settingsUI_block_topic_title, 0);
         assertThat(blockTopicText.exists()).isTrue();
 
@@ -296,7 +253,7 @@ public class SettingsActivityUiAutomatorTest {
 
         // cancel and verify it has still only been called once
         negativeText.click();
-        verify(sConsentManager).revokeConsentForTopic(any(Topic.class));
+        verify(mConsentManager).revokeConsentForTopic(any(Topic.class));
     }
 
     @Test
@@ -318,7 +275,7 @@ public class SettingsActivityUiAutomatorTest {
 
         // confirm
         positiveText.click();
-        verify(sConsentManager).restoreConsentForTopic(any(Topic.class));
+        verify(mConsentManager).restoreConsentForTopic(any(Topic.class));
         unblockTopicText = getElement(R.string.settingsUI_unblock_topic_title, 0);
         assertThat(unblockTopicText.exists()).isTrue();
     }
@@ -337,7 +294,7 @@ public class SettingsActivityUiAutomatorTest {
 
         // confirm
         positiveText.click();
-        verify(sConsentManager).resetTopics();
+        verify(mConsentManager).resetTopics();
 
         // click reset again
         scrollToAndClick(R.string.settingsUI_reset_topics_title);
@@ -348,7 +305,7 @@ public class SettingsActivityUiAutomatorTest {
 
         // cancel and verify it has still only been called once
         negativeText.click();
-        verify(sConsentManager).resetTopics();
+        verify(mConsentManager).resetTopics();
     }
 
     @Test
@@ -367,7 +324,7 @@ public class SettingsActivityUiAutomatorTest {
 
         // confirm
         positiveText.click();
-        verify(sConsentManager).revokeConsentForApp(any(App.class));
+        verify(mConsentManager).revokeConsentForApp(any(App.class));
         blockAppText = getElement(R.string.settingsUI_block_app_title, 0);
         assertThat(blockAppText.exists()).isTrue();
 
@@ -380,7 +337,7 @@ public class SettingsActivityUiAutomatorTest {
 
         // cancel and verify it has still only been called once
         negativeText.click();
-        verify(sConsentManager).revokeConsentForApp(any(App.class));
+        verify(mConsentManager).revokeConsentForApp(any(App.class));
     }
 
     @Test
@@ -402,7 +359,7 @@ public class SettingsActivityUiAutomatorTest {
 
         // confirm
         positiveText.click();
-        verify(sConsentManager).restoreConsentForApp(any(App.class));
+        verify(mConsentManager).restoreConsentForApp(any(App.class));
         unblockAppText = getElement(R.string.settingsUI_unblock_app_title, 0);
         assertThat(unblockAppText.exists()).isTrue();
     }
@@ -421,7 +378,7 @@ public class SettingsActivityUiAutomatorTest {
 
         // confirm
         positiveText.click();
-        verify(sConsentManager).resetApps();
+        verify(mConsentManager).resetApps();
 
         // click reset again
         scrollToAndClick(R.string.settingsUI_reset_apps_title);
@@ -432,7 +389,7 @@ public class SettingsActivityUiAutomatorTest {
 
         // cancel and verify it has still only been called once
         negativeText.click();
-        verify(sConsentManager).resetApps();
+        verify(mConsentManager).resetApps();
     }
 
     @Test
@@ -461,13 +418,13 @@ public class SettingsActivityUiAutomatorTest {
         blockTopicText.click();
         dialogTitle = getElement(R.string.settingsUI_dialog_block_topic_message);
         assertThat(dialogTitle.exists()).isFalse();
-        verify(sConsentManager).revokeConsentForTopic(any(Topic.class));
+        verify(mConsentManager).revokeConsentForTopic(any(Topic.class));
 
         // reset topic
         scrollToAndClick(R.string.settingsUI_reset_topics_title);
         dialogTitle = getElement(R.string.settingsUI_dialog_reset_topic_message);
         assertThat(dialogTitle.exists()).isFalse();
-        verify(sConsentManager).resetTopics();
+        verify(mConsentManager).resetTopics();
 
         // open unblock topic view
         scrollToAndClick(R.string.settingsUI_blocked_topics_title);
@@ -478,10 +435,33 @@ public class SettingsActivityUiAutomatorTest {
         unblockTopicText.click();
         dialogTitle = getElement(R.string.settingsUI_dialog_unblock_topic_message);
         assertThat(dialogTitle.exists()).isFalse();
-        verify(sConsentManager).restoreConsentForTopic(any(Topic.class));
+        verify(mConsentManager).restoreConsentForTopic(any(Topic.class));
     }
 
-    private String getString(int resourceId) {
-        return ApplicationProvider.getApplicationContext().getResources().getString(resourceId);
+    /**
+     * Test for the Button to show blocked topics when the list of Topics is Empty The Button should
+     * be disabled if blocked topics is empty
+     *
+     * @throws UiObjectNotFoundException
+     */
+    @Test
+    public void blockedTopicsWhenEmptyStateButtonTest() throws UiObjectNotFoundException {
+        // Return an empty topics list
+        doReturn(ImmutableList.of()).when(mConsentManager).getKnownTopicsWithConsent();
+        // Return a non-empty blocked topics list
+        List<Topic> tempList = new ArrayList<>();
+        tempList.add(Topic.create(10004, 1, 1));
+        tempList.add(Topic.create(10005, 1, 1));
+        ImmutableList<Topic> blockedTopicsList = ImmutableList.copyOf(tempList);
+        doReturn(blockedTopicsList).when(mConsentManager).getTopicsWithRevokedConsent();
+        // navigate to topics page
+        scrollToAndClick(R.string.settingsUI_topics_title);
+        UiObject blockedTopicsWhenEmptyStateButton =
+                sDevice.findObject(
+                        new UiSelector()
+                                .className("android.widget.Button")
+                                .text(getString(R.string.settingsUI_blocked_topics_title)));
+
+        assertThat(blockedTopicsWhenEmptyStateButton.isEnabled()).isTrue();
     }
 }

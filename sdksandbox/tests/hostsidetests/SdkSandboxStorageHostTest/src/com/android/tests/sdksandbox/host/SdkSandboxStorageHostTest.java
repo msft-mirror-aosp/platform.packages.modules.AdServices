@@ -1086,37 +1086,6 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         }
     }
 
-    @Test
-    public void testSharedPreferences_IsSyncedFromAppToSandbox() throws Exception {
-        installPackage(TEST_APP_STORAGE_APK);
-        runPhase("testSharedPreferences_IsSyncedFromAppToSandbox");
-    }
-
-    @Test
-    public void testSharedPreferences_SyncPropagatesUpdates() throws Exception {
-        installPackage(TEST_APP_STORAGE_APK);
-        runPhase("testSharedPreferences_SyncPropagatesUpdates");
-    }
-
-    @Test
-    public void testSharedPreferences_SyncStartedBeforeLoadingSdk() throws Exception {
-        installPackage(TEST_APP_STORAGE_APK);
-        runPhase("testSharedPreferences_SyncStartedBeforeLoadingSdk");
-    }
-
-    @Test
-    public void testSharedPreferences_SyncRemoveKeys() throws Exception {
-        installPackage(TEST_APP_STORAGE_APK);
-        runPhase("testSharedPreferences_SyncRemoveKeys");
-    }
-
-    @Test
-    public void testSharedPreferences_SyncedDataClearedOnSandboxRestart() throws Exception {
-        installPackage(TEST_APP_STORAGE_APK);
-        runPhase("testSharedPreferences_IsSyncedFromAppToSandbox");
-        runPhase("testSharedPreferences_SyncedDataClearedOnSandboxRestart");
-    }
-
     private String getAppDataPath(int userId, String packageName, boolean isCeData) {
         return getAppDataPath(/*volumeUuid=*/ null, userId, packageName, isCeData);
     }
