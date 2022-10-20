@@ -33,6 +33,7 @@ import com.android.adservices.data.common.BooleanFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
@@ -76,6 +77,7 @@ public class ConsentManager {
     private final TopicsWorker mTopicsWorker;
     private final BooleanFileDatastore mDatastore;
     private final AppConsentDao mAppConsentDao;
+    private final EnrollmentDao mEnrollmentDao;
     private final MeasurementImpl mMeasurementImpl;
     private final AdServicesLoggerImpl mAdServicesLoggerImpl;
     private int mDeviceLoggingRegion;
@@ -86,6 +88,7 @@ public class ConsentManager {
             @NonNull Context context,
             @NonNull TopicsWorker topicsWorker,
             @NonNull AppConsentDao appConsentDao,
+            @NonNull EnrollmentDao enrollmentDao,
             @NonNull MeasurementImpl measurementImpl,
             @NonNull AdServicesLoggerImpl adServicesLoggerImpl,
             @NonNull CustomAudienceDao customAudienceDao,
@@ -100,6 +103,7 @@ public class ConsentManager {
         mTopicsWorker = topicsWorker;
         mDatastore = new BooleanFileDatastore(context, STORAGE_XML_IDENTIFIER, STORAGE_VERSION);
         mAppConsentDao = appConsentDao;
+        mEnrollmentDao = enrollmentDao;
         mMeasurementImpl = measurementImpl;
         mAdServicesLoggerImpl = adServicesLoggerImpl;
         mCustomAudienceDao = customAudienceDao;
@@ -125,6 +129,7 @@ public class ConsentManager {
                                     context,
                                     TopicsWorker.getInstance(context),
                                     AppConsentDao.getInstance(context),
+                                    EnrollmentDao.getInstance(context),
                                     MeasurementImpl.getInstance(context),
                                     AdServicesLoggerImpl.getInstance(),
                                     CustomAudienceDatabase.getInstance(context).customAudienceDao(),
@@ -179,6 +184,7 @@ public class ConsentManager {
             resetTopicsAndBlockedTopics();
             resetAppsAndBlockedApps();
             resetMeasurement();
+            resetEnrollment();
 
             BackgroundJobsManager.unscheduleAllBackgroundJobs(
                     context.getSystemService(JobScheduler.class));
@@ -407,6 +413,11 @@ public class ConsentManager {
     /** Wipes out all the data gathered by Measurement API. */
     public void resetMeasurement() {
         mMeasurementImpl.deleteAllMeasurementData(List.of());
+    }
+
+    /** Wipes out all the Enrollment data */
+    private void resetEnrollment() {
+        mEnrollmentDao.deleteAll();
     }
 
     /**

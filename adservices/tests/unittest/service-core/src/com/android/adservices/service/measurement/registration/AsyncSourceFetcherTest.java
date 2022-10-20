@@ -77,15 +77,14 @@ import java.util.stream.IntStream;
 
 import javax.net.ssl.HttpsURLConnection;
 
-/** Unit tests for {@link SourceFetcher} */
+/** Unit tests for {@link AsyncSourceFetcher} */
 @RunWith(MockitoJUnitRunner.class)
 @SmallTest
-public final class SourceFetcherTest {
+public final class AsyncSourceFetcherTest {
     private static final String DEFAULT_REGISTRATION = "https://foo.com";
     private static final String ENROLLMENT_ID = "enrollment-id";
-    private static final EnrollmentData ENROLLMENT = new EnrollmentData.Builder()
-            .setEnrollmentId("enrollment-id")
-            .build();
+    private static final EnrollmentData ENROLLMENT =
+            new EnrollmentData.Builder().setEnrollmentId("enrollment-id").build();
     private static final String DEFAULT_TOP_ORIGIN =
             "android-app://com.android.adservices.servicecoretest";
     private static final String DEFAULT_DESTINATION = "android-app://com.myapps";
@@ -120,7 +119,7 @@ public final class SourceFetcherTest {
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getContext();
 
-    SourceFetcher mFetcher;
+    AsyncSourceFetcher mFetcher;
     @Mock HttpsURLConnection mUrlConnection;
 
     @Mock HttpsURLConnection mUrlConnection1;
@@ -131,7 +130,7 @@ public final class SourceFetcherTest {
 
     @Before
     public void setup() {
-        mFetcher = spy(new SourceFetcher(mEnrollmentDao, mFlags, mLogger));
+        mFetcher = spy(new AsyncSourceFetcher(mEnrollmentDao, mFlags, mLogger));
         // For convenience, return the same enrollment-ID since we're using many arbitrary
         // registration URIs and not yet enforcing uniqueness of enrollment.
         when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(any())).thenReturn(ENROLLMENT);
@@ -276,15 +275,18 @@ public final class SourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL("https://foo.com"));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
-                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
-                        List.of("{\n"
-                                + "  \"destination\": \"android-app://com.myapps\",\n"
-                                + "  \"priority\": \"123\",\n"
-                                + "  \"expiry\": \"456789\",\n"
-                                + "  \"source_event_id\": \"987654321\",\n"
-                                + "  \"install_attribution_window\": \"272800\",\n"
-                                + "  \"post_install_exclusivity_window\": \"987654\"\n"
-                                + "}\n")));
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                            + "  \"destination\": \"android-app://com.myapps\",\n"
+                                            + "  \"priority\": \"123\",\n"
+                                            + "  \"expiry\": \"456789\",\n"
+                                            + "  \"source_event_id\": \"987654321\",\n"
+                                            + "  \"install_attribution_window\": \"272800\",\n"
+                                            + "  \"post_install_exclusivity_window\": \"987654\"\n"
+                                            + "}\n")));
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertTrue(fetch.isPresent());
         List<SourceRegistration> result = fetch.get();
@@ -350,17 +352,23 @@ public final class SourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL("https://foo.com"));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
-                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
-                        List.of("{\n"
-                                + "  \"destination\": \"android-app://com.myapps\",\n"
-                                + "  \"priority\": \"123\",\n"
-                                + "  \"expiry\": \"456789\",\n"
-                                + "  \"source_event_id\": \"987654321\",\n"
-                                // Min value of attribution is 1 day or 86400 seconds
-                                + "  \"install_attribution_window\": \"86300\",\n"
-                                // Max value of cooldown is 30 days or 2592000 seconds
-                                + "  \"post_install_exclusivity_window\": \"9876543210\"\n"
-                                + "}\n")));
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                            + "  \"destination\": \"android-app://com.myapps\",\n"
+                                            + "  \"priority\": \"123\",\n"
+                                            + "  \"expiry\": \"456789\",\n"
+                                            + "  \"source_event_id\": \"987654321\",\n"
+                                                // Min value of attribution is 1 day or 172800
+                                                // seconds
+                                                + "  \"install_attribution_window\": \"86300\",\n"
+                                                // Max value of cooldown is 30 days or 2592000
+                                                // seconds
+                                                + "  \"post_install_exclusivity_window\":"
+                                                + " \"9876543210\"\n"
+                                                + "}\n")));
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertTrue(fetch.isPresent());
         List<SourceRegistration> result = fetch.get();
@@ -387,9 +395,9 @@ public final class SourceFetcherTest {
     @Test
     public void testBadSourceConnection() throws Exception {
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
-        doThrow(new IOException("Bad internet things")).when(mFetcher).openUrl(
-                new URL(DEFAULT_REGISTRATION)
-        );
+        doThrow(new IOException("Bad internet things"))
+                .when(mFetcher)
+                .openUrl(new URL(DEFAULT_REGISTRATION));
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertFalse(fetch.isPresent());
     }
@@ -400,9 +408,14 @@ public final class SourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
-                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
-                        List.of("{\n"
-                                + "\"source_event_id\": \"" + DEFAULT_EVENT_ID + "\"")));
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "\"source_event_id\": \""
+                                                + DEFAULT_EVENT_ID
+                                                + "\"")));
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection).setRequestMethod("POST");
@@ -427,9 +440,14 @@ public final class SourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
-                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
-                        List.of("{\n"
-                                + "\"destination\": \"" + DEFAULT_DESTINATION + "\"")));
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "\"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\"")));
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection).setRequestMethod("POST");
@@ -442,11 +460,18 @@ public final class SourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
-                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
-                        List.of("{\n"
-                                + "\"destination\": \"" + DEFAULT_DESTINATION + "\",\n"
-                                + "\"source_event_id\": \"" + DEFAULT_EVENT_ID + "\"\n"
-                                + "}\n")));
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "\"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\n"
+                                                + "\"source_event_id\": \""
+                                                + DEFAULT_EVENT_ID
+                                                + "\"\n"
+                                                + "}\n")));
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertTrue(fetch.isPresent());
         List<SourceRegistration> result = fetch.get();
@@ -466,9 +491,14 @@ public final class SourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
-                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
-                        List.of("{\"destination\":\"" + DEFAULT_DESTINATION + "\","
-                                + "\"source_event_id\":\"-35\"}")));
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "\"source_event_id\":\"-35\"}")));
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -481,9 +511,14 @@ public final class SourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
-                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
-                        List.of("{\"destination\":\"" + DEFAULT_DESTINATION + "\","
-                                + "\"source_event_id\":\"18446744073709551616\"}")));
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\"source_event_id\":\""
+                                                + "18446744073709551616\"}")));
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -496,9 +531,14 @@ public final class SourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
-                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
-                        List.of("{\"destination\":\"" + DEFAULT_DESTINATION + "\","
-                                + "\"source_event_id\":\"8l2\"}")));
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "\"source_event_id\":\"8l2\"}")));
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -511,9 +551,14 @@ public final class SourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
-                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
-                        List.of("{\"destination\":\"" + DEFAULT_DESTINATION + "\","
-                                + "\"source_event_id\":\"18446744073709551615\"}")));
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\"source_event_id\":\""
+                                                + "18446744073709551615\"}")));
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertTrue(fetch.isPresent());
         List<SourceRegistration> result = fetch.get();
@@ -533,10 +578,17 @@ public final class SourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
-                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
-                        List.of("{\"destination\":\"" + DEFAULT_DESTINATION + "\","
-                                + "\"source_event_id\":\"" + DEFAULT_EVENT_ID + "\","
-                                + "\"debug_key\":\"-18\"}")));
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "\"source_event_id\":\""
+                                                + DEFAULT_EVENT_ID
+                                                + "\","
+                                                + "\"debug_key\":\"-18\"}")));
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertTrue(fetch.isPresent());
         List<SourceRegistration> result = fetch.get();
@@ -557,10 +609,17 @@ public final class SourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
-                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
-                        List.of("{\"destination\":\"" + DEFAULT_DESTINATION + "\","
-                                + "\"source_event_id\":\"" + DEFAULT_EVENT_ID + "\","
-                                + "\"debug_key\":\"18446744073709551616\"}")));
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "\"source_event_id\":\""
+                                                + DEFAULT_EVENT_ID
+                                                + "\","
+                                                + "\"debug_key\":\"18446744073709551616\"}")));
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertTrue(fetch.isPresent());
         List<SourceRegistration> result = fetch.get();
@@ -581,10 +640,17 @@ public final class SourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
-                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
-                        List.of("{\"destination\":\"" + DEFAULT_DESTINATION + "\","
-                                + "\"source_event_id\":\"" + DEFAULT_EVENT_ID + "\","
-                                + "\"debug_key\":\"987fs\"}")));
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "\"source_event_id\":\""
+                                                + DEFAULT_EVENT_ID
+                                                + "\","
+                                                + "\"debug_key\":\"987fs\"}")));
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertTrue(fetch.isPresent());
         List<SourceRegistration> result = fetch.get();
@@ -605,10 +671,17 @@ public final class SourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
-                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
-                        List.of("{\"destination\":\"" + DEFAULT_DESTINATION + "\","
-                                + "\"source_event_id\":\"" + DEFAULT_EVENT_ID + "\","
-                                + "\"debug_key\":\"18446744073709551615\"}")));
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "\"source_event_id\":\""
+                                                + DEFAULT_EVENT_ID
+                                                + "\","
+                                                + "\"debug_key\":\"18446744073709551615\"}")));
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertTrue(fetch.isPresent());
         List<SourceRegistration> result = fetch.get();
@@ -634,13 +707,16 @@ public final class SourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL("https://foo.com"));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
-                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
-                        List.of("{\n"
-                                + "\"destination\": \"android-app://com.myapps\",\n"
-                                + "\"source_event_id\": \"123\",\n"
-                                + "\"priority\": null,\n"
-                                + "\"expiry\": null\n"
-                                + "}\n")));
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "\"destination\": \"android-app://com.myapps\",\n"
+                                                + "\"source_event_id\": \"123\",\n"
+                                                + "\"priority\": null,\n"
+                                                + "\"expiry\": null\n"
+                                                + "}\n")));
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertTrue(fetch.isPresent());
         List<SourceRegistration> result = fetch.get();
@@ -649,8 +725,8 @@ public final class SourceFetcherTest {
         assertEquals("android-app://com.myapps", result.get(0).getAppDestination().toString());
         assertEquals(new UnsignedLong(123L), result.get(0).getSourceEventId());
         assertEquals(0, result.get(0).getSourcePriority());
-        assertEquals(MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
-                result.get(0).getExpiry());
+        assertEquals(
+                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS, result.get(0).getExpiry());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -660,12 +736,19 @@ public final class SourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
-                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
-                        List.of("{\n"
-                                + "\"destination\": \"" + DEFAULT_DESTINATION + "\",\n"
-                                + "\"source_event_id\": \"" + DEFAULT_EVENT_ID + "\",\n"
-                                + "\"expiry\": 1"
-                                + "}\n")));
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "\"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\n"
+                                                + "\"source_event_id\": \""
+                                                + DEFAULT_EVENT_ID
+                                                + "\",\n"
+                                                + "\"expiry\": 1"
+                                                + "}\n")));
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertTrue(fetch.isPresent());
         List<SourceRegistration> result = fetch.get();
@@ -685,12 +768,19 @@ public final class SourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
-                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
-                        List.of("{\n"
-                                + "\"destination\": \"" + DEFAULT_DESTINATION + "\",\n"
-                                + "\"source_event_id\": \"" + DEFAULT_EVENT_ID + "\",\n"
-                                + "\"expiry\": 2678400"
-                                + "}\n")));
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "\"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\n"
+                                                + "\"source_event_id\": \""
+                                                + DEFAULT_EVENT_ID
+                                                + "\",\n"
+                                                + "\"expiry\": 2678400"
+                                                + "}\n")));
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertTrue(fetch.isPresent());
         List<SourceRegistration> result = fetch.get();
@@ -719,22 +809,41 @@ public final class SourceFetcherTest {
         when(mUrlConnection.getResponseCode()).thenReturn(200).thenReturn(500);
 
         Map<String, List<String>> headersFirstRequest = new HashMap<>();
-        headersFirstRequest.put("Attribution-Reporting-Register-Source", List.of("{\n"
-                + "\"destination\": \"" + DEFAULT_DESTINATION + "\",\n"
-                + "\"source_event_id\": \"" + DEFAULT_EVENT_ID + "\",\n"
-                + "\"expiry\": " + DEFAULT_EXPIRY + ""
-                + "}\n"));
+        headersFirstRequest.put(
+                "Attribution-Reporting-Register-Source",
+                List.of(
+                        "{\n"
+                                + "\"destination\": \""
+                                + DEFAULT_DESTINATION
+                                + "\",\n"
+                                + "\"source_event_id\": \""
+                                + DEFAULT_EVENT_ID
+                                + "\",\n"
+                                + "\"expiry\": "
+                                + DEFAULT_EXPIRY
+                                + ""
+                                + "}\n"));
         headersFirstRequest.put("Attribution-Reporting-Redirect", List.of("https://bar.com"));
 
         Map<String, List<String>> headersSecondRequest = new HashMap<>();
-        headersSecondRequest.put("Attribution-Reporting-Register-Source", List.of("{\n"
-                + "\"destination\": \"" + DEFAULT_DESTINATION + "\",\n"
-                + "\"source_event_id\": \"" + ALT_EVENT_ID + "\",\n"
-                + "\"expiry\": " + ALT_EXPIRY + ""
-                + "}\n"));
+        headersSecondRequest.put(
+                "Attribution-Reporting-Register-Source",
+                List.of(
+                        "{\n"
+                                + "\"destination\": \""
+                                + DEFAULT_DESTINATION
+                                + "\",\n"
+                                + "\"source_event_id\": \""
+                                + ALT_EVENT_ID
+                                + "\",\n"
+                                + "\"expiry\": "
+                                + ALT_EXPIRY
+                                + ""
+                                + "}\n"));
 
-        when(mUrlConnection.getHeaderFields()).thenReturn(headersFirstRequest).thenReturn(
-                headersSecondRequest);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(headersFirstRequest)
+                .thenReturn(headersSecondRequest);
 
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertTrue(fetch.isPresent());
@@ -759,14 +868,24 @@ public final class SourceFetcherTest {
         headersFirstRequest.put("Attribution-Reporting-Redirect", List.of("https://bar.com"));
 
         Map<String, List<String>> headersSecondRequest = new HashMap<>();
-        headersSecondRequest.put("Attribution-Reporting-Register-Source", List.of("{\n"
-                + "\"destination\": \"" + DEFAULT_DESTINATION + "\",\n"
-                + "\"source_event_id\": \"" + ALT_EVENT_ID + "\",\n"
-                + "\"expiry\": " + ALT_EXPIRY + ""
-                + "}\n"));
+        headersSecondRequest.put(
+                "Attribution-Reporting-Register-Source",
+                List.of(
+                        "{\n"
+                                + "\"destination\": \""
+                                + DEFAULT_DESTINATION
+                                + "\",\n"
+                                + "\"source_event_id\": \""
+                                + ALT_EVENT_ID
+                                + "\",\n"
+                                + "\"expiry\": "
+                                + ALT_EXPIRY
+                                + ""
+                                + "}\n"));
 
-        when(mUrlConnection.getHeaderFields()).thenReturn(headersFirstRequest).thenReturn(
-                headersSecondRequest);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(headersFirstRequest)
+                .thenReturn(headersSecondRequest);
 
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertFalse(fetch.isPresent());
@@ -781,24 +900,47 @@ public final class SourceFetcherTest {
         when(mUrlConnection.getResponseCode()).thenReturn(200);
 
         Map<String, List<String>> headersFirstRequest = new HashMap<>();
-        headersFirstRequest.put("Attribution-Reporting-Register-Source", List.of("{\n"
-                + "\"destination\": \"" + DEFAULT_DESTINATION + "\",\n"
-                + "\"source_event_id\": \"" + DEFAULT_EVENT_ID + "\",\n"
-                + "\"priority\": \"" + DEFAULT_PRIORITY + "\",\n"
-                + "\"expiry\": " + DEFAULT_EXPIRY + ""
-                + "}\n"));
+        headersFirstRequest.put(
+                "Attribution-Reporting-Register-Source",
+                List.of(
+                        "{\n"
+                                + "\"destination\": \""
+                                + DEFAULT_DESTINATION
+                                + "\",\n"
+                                + "\"source_event_id\": \""
+                                + DEFAULT_EVENT_ID
+                                + "\",\n"
+                                + "\"priority\": \""
+                                + DEFAULT_PRIORITY
+                                + "\",\n"
+                                + "\"expiry\": "
+                                + DEFAULT_EXPIRY
+                                + ""
+                                + "}\n"));
         headersFirstRequest.put("Attribution-Reporting-Redirect", List.of(ALT_REGISTRATION));
 
         Map<String, List<String>> headersSecondRequest = new HashMap<>();
-        headersSecondRequest.put("Attribution-Reporting-Register-Source", List.of("{\n"
-                + "\"destination\": \"" + ALT_DESTINATION + "\",\n"
-                + "\"source_event_id\": \"" + ALT_EVENT_ID + "\",\n"
-                + "\"priority\": \"" + ALT_PRIORITY + "\",\n"
-                + "\"expiry\": " + ALT_EXPIRY + ""
-                + "}\n"));
+        headersSecondRequest.put(
+                "Attribution-Reporting-Register-Source",
+                List.of(
+                        "{\n"
+                                + "\"destination\": \""
+                                + ALT_DESTINATION
+                                + "\",\n"
+                                + "\"source_event_id\": \""
+                                + ALT_EVENT_ID
+                                + "\",\n"
+                                + "\"priority\": \""
+                                + ALT_PRIORITY
+                                + "\",\n"
+                                + "\"expiry\": "
+                                + ALT_EXPIRY
+                                + ""
+                                + "}\n"));
 
-        when(mUrlConnection.getHeaderFields()).thenReturn(headersFirstRequest).thenReturn(
-                headersSecondRequest);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(headersFirstRequest)
+                .thenReturn(headersSecondRequest);
 
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertTrue(fetch.isPresent());
@@ -824,33 +966,57 @@ public final class SourceFetcherTest {
         when(mUrlConnection.getResponseCode()).thenReturn(200);
 
         Map<String, List<String>> headersFirstRequest = new HashMap<>();
-        headersFirstRequest.put("Attribution-Reporting-Register-Source", List.of("{\n"
-                + "\"destination\": \"" + DEFAULT_DESTINATION + "\",\n"
-                + "\"source_event_id\": \"" + DEFAULT_EVENT_ID + "\",\n"
-                + "\"priority\": 999,\n"
-                + "\"expiry\": " + DEFAULT_EXPIRY + ""
-                + "}\n"));
-        headersFirstRequest.put("Attribution-Reporting-Redirect",
-                List.of(ALT_REGISTRATION, ALT_REGISTRATION));
+        headersFirstRequest.put(
+                "Attribution-Reporting-Register-Source",
+                List.of(
+                        "{\n"
+                                + "\"destination\": \""
+                                + DEFAULT_DESTINATION
+                                + "\",\n"
+                                + "\"source_event_id\": \""
+                                + DEFAULT_EVENT_ID
+                                + "\",\n"
+                                + "\"priority\": 999,\n"
+                                + "\"expiry\": "
+                                + DEFAULT_EXPIRY
+                                + ""
+                                + "}\n"));
+        headersFirstRequest.put(
+                "Attribution-Reporting-Redirect", List.of(ALT_REGISTRATION, ALT_REGISTRATION));
 
         Map<String, List<String>> headersSecondRequest = new HashMap<>();
-        headersSecondRequest.put("Attribution-Reporting-Register-Source", List.of("{\n"
-                + "\"destination\": \"" + DEFAULT_DESTINATION + "\",\n"
-                + "\"source_event_id\": \"" + ALT_EVENT_ID + "\",\n"
-                + "\"priority\": 888,\n"
-                + "\"expiry\": " + ALT_EXPIRY + ""
-                + "}\n"));
+        headersSecondRequest.put(
+                "Attribution-Reporting-Register-Source",
+                List.of(
+                        "{\n"
+                                + "\"destination\": \""
+                                + DEFAULT_DESTINATION
+                                + "\",\n"
+                                + "\"source_event_id\": \""
+                                + ALT_EVENT_ID
+                                + "\",\n"
+                                + "\"priority\": 888,\n"
+                                + "\"expiry\": "
+                                + ALT_EXPIRY
+                                + ""
+                                + "}\n"));
 
         Map<String, List<String>> headersThirdRequest = new HashMap<>();
-        headersThirdRequest.put("Attribution-Reporting-Register-Source", List.of("{\n"
-                + "\"destination\": \"" + DEFAULT_DESTINATION + "\",\n"
-                + "\"source_event_id\": 777,\n"
-                + "\"priority\": 777,\n"
-                + "\"expiry\": 456791"
-                + "}\n"));
+        headersThirdRequest.put(
+                "Attribution-Reporting-Register-Source",
+                List.of(
+                        "{\n"
+                                + "\"destination\": \""
+                                + DEFAULT_DESTINATION
+                                + "\",\n"
+                                + "\"source_event_id\": 777,\n"
+                                + "\"priority\": 777,\n"
+                                + "\"expiry\": 456791"
+                                + "}\n"));
 
-        when(mUrlConnection.getHeaderFields()).thenReturn(headersFirstRequest).thenReturn(
-                headersSecondRequest, headersThirdRequest);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(headersFirstRequest)
+                .thenReturn(headersSecondRequest, headersThirdRequest);
 
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertTrue(fetch.isPresent());
@@ -884,45 +1050,62 @@ public final class SourceFetcherTest {
         Map<String, List<String>> headersFirstRequest =
                 buildRegisterSourceDefaultHeader(
                         DEFAULT_DESTINATION, DEFAULT_EVENT_ID, /* priority = */ 1, DEFAULT_EXPIRY);
-        headersFirstRequest.put("Attribution-Reporting-Redirect",
-                List.of("https://bar2.com",
+        headersFirstRequest.put(
+                "Attribution-Reporting-Redirect",
+                List.of(
+                        "https://bar2.com",
                         "https://bar3.com",
                         "https://bar4.com",
                         "https://bar5.com",
                         "https://bar6.com"));
 
-        Map<String, List<String>> headersSecondRequest = buildRegisterSourceDefaultHeader(
-                DEFAULT_DESTINATION, DEFAULT_EVENT_ID, /* priority = */ 2, DEFAULT_EXPIRY);
+        Map<String, List<String>> headersSecondRequest =
+                buildRegisterSourceDefaultHeader(
+                        DEFAULT_DESTINATION, DEFAULT_EVENT_ID, /* priority = */ 2, DEFAULT_EXPIRY);
 
-        Map<String, List<String>> headersThirdRequest = buildRegisterSourceDefaultHeader(
-                DEFAULT_DESTINATION, DEFAULT_EVENT_ID, /* priority = */ 3, DEFAULT_EXPIRY);
+        Map<String, List<String>> headersThirdRequest =
+                buildRegisterSourceDefaultHeader(
+                        DEFAULT_DESTINATION, DEFAULT_EVENT_ID, /* priority = */ 3, DEFAULT_EXPIRY);
 
-        Map<String, List<String>> headersFourthRequest = buildRegisterSourceDefaultHeader(
-                DEFAULT_DESTINATION, DEFAULT_EVENT_ID, /* priority = */ 4, DEFAULT_EXPIRY);
+        Map<String, List<String>> headersFourthRequest =
+                buildRegisterSourceDefaultHeader(
+                        DEFAULT_DESTINATION, DEFAULT_EVENT_ID, /* priority = */ 4, DEFAULT_EXPIRY);
 
-        Map<String, List<String>> headersFifthRequest = buildRegisterSourceDefaultHeader(
-                DEFAULT_DESTINATION, DEFAULT_EVENT_ID, /* priority = */ 5, DEFAULT_EXPIRY);
+        Map<String, List<String>> headersFifthRequest =
+                buildRegisterSourceDefaultHeader(
+                        DEFAULT_DESTINATION, DEFAULT_EVENT_ID, /* priority = */ 5, DEFAULT_EXPIRY);
 
-        Map<String, List<String>> headersSixthRequest = buildRegisterSourceDefaultHeader(
-                DEFAULT_DESTINATION, DEFAULT_EVENT_ID, /* priority = */ 6, DEFAULT_EXPIRY);
+        Map<String, List<String>> headersSixthRequest =
+                buildRegisterSourceDefaultHeader(
+                        DEFAULT_DESTINATION, DEFAULT_EVENT_ID, /* priority = */ 6, DEFAULT_EXPIRY);
 
-        when(mUrlConnection.getHeaderFields()).thenReturn(headersFirstRequest)
-                .thenAnswer(invocation -> {
-                    TimeUnit.MILLISECONDS.sleep(10);
-                    return headersSecondRequest;
-                }).thenAnswer(invocation -> {
-                    TimeUnit.MILLISECONDS.sleep(10);
-                    return headersThirdRequest;
-                }).thenAnswer(invocation -> {
-                    TimeUnit.MILLISECONDS.sleep(10);
-                    return headersFourthRequest;
-                }).thenAnswer(invocation -> {
-                    TimeUnit.MILLISECONDS.sleep(10);
-                    return headersFifthRequest;
-                }).thenAnswer(invocation -> {
-                    TimeUnit.MILLISECONDS.sleep(10);
-                    return headersSixthRequest;
-                });
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(headersFirstRequest)
+                .thenAnswer(
+                        invocation -> {
+                            TimeUnit.MILLISECONDS.sleep(10);
+                            return headersSecondRequest;
+                        })
+                .thenAnswer(
+                        invocation -> {
+                            TimeUnit.MILLISECONDS.sleep(10);
+                            return headersThirdRequest;
+                        })
+                .thenAnswer(
+                        invocation -> {
+                            TimeUnit.MILLISECONDS.sleep(10);
+                            return headersFourthRequest;
+                        })
+                .thenAnswer(
+                        invocation -> {
+                            TimeUnit.MILLISECONDS.sleep(10);
+                            return headersFifthRequest;
+                        })
+                .thenAnswer(
+                        invocation -> {
+                            TimeUnit.MILLISECONDS.sleep(10);
+                            return headersSixthRequest;
+                        });
 
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertTrue(fetch.isPresent());
@@ -946,14 +1129,17 @@ public final class SourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
-                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
-                        List.of("{\n"
-                                + "  \"destination\": \"android-app://com.myapps\",\n"
-                                + "  \"priority\": \"123\",\n"
-                                + "  \"expiry\": \"456789\",\n"
-                                + "  \"source_event_id\": \"987654321\",\n"
-                                + filterData
-                                + "}\n")));
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                            + "  \"destination\": \"android-app://com.myapps\",\n"
+                                            + "  \"priority\": \"123\",\n"
+                                            + "  \"expiry\": \"456789\",\n"
+                                            + "  \"source_event_id\": \"987654321\",\n"
+                                                + filterData
+                                                + "}\n")));
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertTrue(fetch.isPresent());
         List<SourceRegistration> result = fetch.get();
@@ -963,7 +1149,8 @@ public final class SourceFetcherTest {
         assertEquals(123, result.get(0).getSourcePriority());
         assertEquals(456789, result.get(0).getExpiry());
         assertEquals(new UnsignedLong(987654321L), result.get(0).getSourceEventId());
-        assertEquals("{\"product\":[\"1234\",\"2345\"],\"ctid\":[\"id\"]}",
+        assertEquals(
+                "{\"product\":[\"1234\",\"2345\"],\"ctid\":[\"id\"]}",
                 result.get(0).getAggregateFilterData());
         verify(mUrlConnection).setRequestMethod("POST");
     }
@@ -976,14 +1163,17 @@ public final class SourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
-                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
-                        List.of("{\n"
-                                + "  \"destination\": \"android-app://com.myapps\",\n"
-                                + "  \"priority\": \"123\",\n"
-                                + "  \"expiry\": \"456789\",\n"
-                                + "  \"source_event_id\": \"987654321\",\n"
-                                + filterData
-                                + "}\n")));
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                            + "  \"destination\": \"android-app://com.myapps\",\n"
+                                            + "  \"priority\": \"123\",\n"
+                                            + "  \"expiry\": \"456789\",\n"
+                                            + "  \"source_event_id\": \"987654321\",\n"
+                                                + filterData
+                                                + "}\n")));
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -994,22 +1184,26 @@ public final class SourceFetcherTest {
     public void testSourceRequest_aggregateFilterData_tooManyFilters() throws Exception {
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         StringBuilder filters = new StringBuilder("{");
-        filters.append(IntStream.range(0, MAX_ATTRIBUTION_FILTERS + 1)
-                .mapToObj(i -> "\"filter-string-" + i + "\": [\"filter-value\"]")
-                .collect(Collectors.joining(",")));
+        filters.append(
+                IntStream.range(0, MAX_ATTRIBUTION_FILTERS + 1)
+                        .mapToObj(i -> "\"filter-string-" + i + "\": [\"filter-value\"]")
+                        .collect(Collectors.joining(",")));
         filters.append("}");
         String filterData = "  \"filter_data\": " + filters + "\n";
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
-                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
-                        List.of("{\n"
-                                + "  \"destination\": \"android-app://com.myapps\",\n"
-                                + "  \"priority\": \"123\",\n"
-                                + "  \"expiry\": \"456789\",\n"
-                                + "  \"source_event_id\": \"987654321\",\n"
-                                + filterData
-                                + "}\n")));
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                            + "  \"destination\": \"android-app://com.myapps\",\n"
+                                            + "  \"priority\": \"123\",\n"
+                                            + "  \"expiry\": \"456789\",\n"
+                                            + "  \"source_event_id\": \"987654321\",\n"
+                                                + filterData
+                                                + "}\n")));
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -1020,19 +1214,23 @@ public final class SourceFetcherTest {
     public void testSourceRequest_aggregateFilterData_keyTooLong() throws Exception {
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         String filterData =
-                "  \"filter_data\": {\"product\":[\"1234\",\"2345\"], \"" + LONG_FILTER_STRING
-                + "\":[\"id\"]} \n";
+                "  \"filter_data\": {\"product\":[\"1234\",\"2345\"], \""
+                        + LONG_FILTER_STRING
+                        + "\":[\"id\"]} \n";
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
-                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
-                        List.of("{\n"
-                                + "  \"destination\": \"android-app://com.myapps\",\n"
-                                + "  \"priority\": \"123\",\n"
-                                + "  \"expiry\": \"456789\",\n"
-                                + "  \"source_event_id\": \"987654321\",\n"
-                                + filterData
-                                + "}\n")));
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                            + "  \"destination\": \"android-app://com.myapps\",\n"
+                                            + "  \"priority\": \"123\",\n"
+                                            + "  \"expiry\": \"456789\",\n"
+                                            + "  \"source_event_id\": \"987654321\",\n"
+                                                + filterData
+                                                + "}\n")));
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -1042,25 +1240,31 @@ public final class SourceFetcherTest {
     @Test
     public void testSourceRequest_aggregateFilterData_tooManyValues() throws Exception {
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
-        StringBuilder filters = new StringBuilder("{"
-                + "\"filter-string-1\": [\"filter-value-1\"],"
-                + "\"filter-string-2\": [");
-        filters.append(IntStream.range(0, MAX_VALUES_PER_ATTRIBUTION_FILTER + 1)
-                .mapToObj(i -> "\"filter-value-" + i + "\"")
-                .collect(Collectors.joining(",")));
+        StringBuilder filters =
+                new StringBuilder(
+                        "{"
+                                + "\"filter-string-1\": [\"filter-value-1\"],"
+                                + "\"filter-string-2\": [");
+        filters.append(
+                IntStream.range(0, MAX_VALUES_PER_ATTRIBUTION_FILTER + 1)
+                        .mapToObj(i -> "\"filter-value-" + i + "\"")
+                        .collect(Collectors.joining(",")));
         filters.append("]}");
         String filterData = "  \"filter_data\": " + filters + " \n";
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
-                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
-                        List.of("{\n"
-                                + "  \"destination\": \"android-app://com.myapps\",\n"
-                                + "  \"priority\": \"123\",\n"
-                                + "  \"expiry\": \"456789\",\n"
-                                + "  \"source_event_id\": \"987654321\",\n"
-                                + filterData
-                                + "}\n")));
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                            + "  \"destination\": \"android-app://com.myapps\",\n"
+                                            + "  \"priority\": \"123\",\n"
+                                            + "  \"expiry\": \"456789\",\n"
+                                            + "  \"source_event_id\": \"987654321\",\n"
+                                                + filterData
+                                                + "}\n")));
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -1071,19 +1275,23 @@ public final class SourceFetcherTest {
     public void testSourceRequest_aggregateFilterData_valueTooLong() throws Exception {
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         String filterData =
-                "  \"filter_data\": {\"product\":[\"1234\",\"" + LONG_FILTER_STRING
-                + "\"], \"ctid\":[\"id\"]} \n";
+                "  \"filter_data\": {\"product\":[\"1234\",\""
+                        + LONG_FILTER_STRING
+                        + "\"], \"ctid\":[\"id\"]} \n";
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
-                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
-                        List.of("{\n"
-                                + "  \"destination\": \"android-app://com.myapps\",\n"
-                                + "  \"priority\": \"123\",\n"
-                                + "  \"expiry\": \"456789\",\n"
-                                + "  \"source_event_id\": \"987654321\",\n"
-                                + filterData
-                                + "}\n")));
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                            + "  \"destination\": \"android-app://com.myapps\",\n"
+                                            + "  \"priority\": \"123\",\n"
+                                            + "  \"expiry\": \"456789\",\n"
+                                            + "  \"source_event_id\": \"987654321\",\n"
+                                                + filterData
+                                                + "}\n")));
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -1097,13 +1305,24 @@ public final class SourceFetcherTest {
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(Map.of("Attribution-Reporting-Redirect", List.of(ALT_REGISTRATION)))
-                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
-                        List.of("{\n"
-                                + "  \"destination\": \"" + DEFAULT_DESTINATION + "\",\n"
-                                + "  \"priority\": \"" + DEFAULT_PRIORITY + "\",\n"
-                                + "  \"expiry\": \"" + DEFAULT_EXPIRY + "\",\n"
-                                + "  \"source_event_id\": \"" + DEFAULT_EVENT_ID + "\"\n"
-                                + "}\n")));
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "  \"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\n"
+                                                + "  \"priority\": \""
+                                                + DEFAULT_PRIORITY
+                                                + "\",\n"
+                                                + "  \"expiry\": \""
+                                                + DEFAULT_EXPIRY
+                                                + "\",\n"
+                                                + "  \"source_event_id\": \""
+                                                + DEFAULT_EVENT_ID
+                                                + "\"\n"
+                                                + "}\n")));
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -1159,10 +1378,9 @@ public final class SourceFetcherTest {
                                             + "  \"priority\": \"123\",\n"
                                             + "  \"expiry\": \"456789\",\n"
                                             + "  \"source_event_id\": \"987654321\",\n"
-                                            + "\"aggregation_keys\": [\"id\" :"
-                                            + " \"campaignCounts\", \"key_piece\" :"
-                                            + " \"0x159\"},{\"id\" : \"geoValue\", \"key_piece\" :"
-                                            + " \"0x5\"}]\n"
+                                            + "\"aggregation_keys\": [\"id\" : \"campaignCounts\","
+                                            + " \"key_piece\" : \"0x159\"},{\"id\" : \"geoValue\","
+                                            + " \"key_piece\" : \"0x5\"}]\n"
                                             + "}\n")));
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertFalse(fetch.isPresent());
@@ -1174,8 +1392,8 @@ public final class SourceFetcherTest {
     public void testSourceRequestWithAggregateSource_tooManyKeys() throws Exception {
         StringBuilder tooManyKeys = new StringBuilder("[");
         for (int i = 0; i < MAX_AGGREGATE_KEYS_PER_REGISTRATION + 1; i++) {
-            tooManyKeys.append(String.format(
-                    "{\"id\": \"campaign-%1$s\", \"key_piece\": \"0x15%1$s\"}", i));
+            tooManyKeys.append(
+                    String.format("{\"id\": \"campaign-%1$s\", \"key_piece\": \"0x15%1$s\"}", i));
         }
         tooManyKeys.append("]");
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
@@ -1240,11 +1458,11 @@ public final class SourceFetcherTest {
                                             + "  \"priority\": \"123\",\n"
                                             + "  \"expiry\": \"456789\",\n"
                                             + "  \"source_event_id\": \"987654321\",\n"
-                                            + "\"aggregation_keys\": [{\"id\" :"
-                                            + " \"" + LONG_AGGREGATE_KEY_ID + "\", \"key_piece\" :"
-                                            + " \"0x159\"},{\"id\" : \"geoValue\", \"key_piece\" :"
-                                            + " \"0x5\"}]\n"
-                                            + "}\n")));
+                                            + "\"aggregation_keys\": [{\"id\" : \""
+                                                + LONG_AGGREGATE_KEY_ID
+                                                + "\", \"key_piece\" : \"0x159\"},{\"id\" :"
+                                                + " \"geoValue\", \"key_piece\" : \"0x5\"}]\n"
+                                                + "}\n")));
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -1279,8 +1497,7 @@ public final class SourceFetcherTest {
     }
 
     @Test
-    public void testSourceRequestWithAggregateSource_invalidKeyPiece_tooLong()
-            throws Exception {
+    public void testSourceRequestWithAggregateSource_invalidKeyPiece_tooLong() throws Exception {
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
@@ -1297,8 +1514,10 @@ public final class SourceFetcherTest {
                                             + "\"aggregation_keys\": [{\"id\" :"
                                             + " \"campaignCounts\", \"key_piece\" :"
                                             + " \"0x159\"},{\"id\" : \"geoValue\", \"key_piece\" :"
-                                            + " \"" + LONG_AGGREGATE_KEY_PIECE + "\"}]\n"
-                                            + "}\n")));
+                                            + " \""
+                                                + LONG_AGGREGATE_KEY_PIECE
+                                                + "\"}]\n"
+                                                + "}\n")));
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -2054,12 +2273,23 @@ public final class SourceFetcherTest {
     private Map<String, List<String>> buildRegisterSourceDefaultHeader(
             String destination, UnsignedLong eventId, long priority, long expiry) {
         Map<String, List<String>> headersFirstRequest = new HashMap<>();
-        headersFirstRequest.put("Attribution-Reporting-Register-Source", List.of("{\n"
-                + "\"destination\": \"" + destination + "\",\n"
-                + "\"source_event_id\": \"" + eventId + "\",\n"
-                + "\"priority\": \"" + priority + "\",\n"
-                + "\"expiry\": " + expiry + ""
-                + "}\n"));
+        headersFirstRequest.put(
+                "Attribution-Reporting-Register-Source",
+                List.of(
+                        "{\n"
+                                + "\"destination\": \""
+                                + destination
+                                + "\",\n"
+                                + "\"source_event_id\": \""
+                                + eventId
+                                + "\",\n"
+                                + "\"priority\": \""
+                                + priority
+                                + "\",\n"
+                                + "\"expiry\": "
+                                + expiry
+                                + ""
+                                + "}\n"));
         return headersFirstRequest;
     }
 }

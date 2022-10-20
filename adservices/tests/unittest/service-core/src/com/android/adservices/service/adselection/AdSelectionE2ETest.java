@@ -45,6 +45,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.AdditionalMatchers.geq;
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
@@ -53,6 +54,7 @@ import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.AdSelectionResponse;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.CallerMetadata;
 import android.adservices.common.CallingAppUidSupplierProcessImpl;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
@@ -62,6 +64,7 @@ import android.adservices.http.MockWebServerRule;
 import android.content.Context;
 import android.net.Uri;
 import android.os.RemoteException;
+import android.os.SystemClock;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
@@ -176,16 +179,18 @@ public class AdSelectionE2ETest {
             AdTechIdentifier.fromString("developer.android.com");
     private static final Uri DECISION_LOGIC_URI_INCONSISTENT =
             Uri.parse("https://developer%$android.com/test/decisions_logic_uris");
-
+    private static final long BINDER_ELAPSED_TIME_MS = 100L;
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final String MY_APP_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
     private final Flags mFlags = new AdSelectionE2ETestFlags();
+
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
     // Mocking DevContextFilter to test behavior with and without override api authorization
     @Mock DevContextFilter mDevContextFilter;
     @Mock AppImportanceFilter mAppImportanceFilter;
+    @Mock CallerMetadata mMockCallerMetadata;
 
     @Spy
     FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
@@ -239,7 +244,8 @@ public class AdSelectionE2ETest {
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
-
+        when(mMockCallerMetadata.getBinderElapsedTimestamp())
+                .thenReturn(SystemClock.elapsedRealtime() - BINDER_ELAPSED_TIME_MS);
         // Create an instance of AdSelection Service with real dependencies
         mAdSelectionService =
                 new AdSelectionServiceImpl(
@@ -366,7 +372,7 @@ public class AdSelectionE2ETest {
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(STATUS_SUCCESS),
-                        anyInt());
+                        geq((int) BINDER_ELAPSED_TIME_MS));
     }
 
     @Test
@@ -421,7 +427,7 @@ public class AdSelectionE2ETest {
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(STATUS_USER_CONSENT_REVOKED),
-                        anyInt());
+                        geq((int) BINDER_ELAPSED_TIME_MS));
     }
 
     @Test
@@ -1510,7 +1516,7 @@ public class AdSelectionE2ETest {
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(STATUS_INVALID_ARGUMENT),
-                        anyInt());
+                        geq((int) BINDER_ELAPSED_TIME_MS));
     }
 
     @Test
@@ -1757,13 +1763,13 @@ public class AdSelectionE2ETest {
                         AdSelectionRunner.ERROR_AD_SELECTION_FAILURE,
                         AdServicesStatusUtils
                                 .SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE));
-
-        // TODO(b/242139312): Remove atLeastOnce once this the double logging is addressed
+        // TODO(b/242139312): Remove atLeastOnce once this the double logging is addressed and
+        //  update third argument value.
         verify(mAdServicesLoggerMock, Mockito.atLeastOnce())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(STATUS_UNAUTHORIZED),
-                        anyInt());
+                        geq(0));
     }
 
     @Test
@@ -1832,13 +1838,13 @@ public class AdSelectionE2ETest {
                         AdSelectionRunner.AD_SELECTION_ERROR_PATTERN,
                         AdSelectionRunner.ERROR_AD_SELECTION_FAILURE,
                         AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE));
-
-        // TODO(b/242139312): Remove atLeastOnce once this the double logging is addressed
+        // TODO(b/242139312): Remove atLeastOnce once this the double logging is addressed and
+        //   update third argument value.
         verify(mAdServicesLoggerMock, Mockito.atLeastOnce())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(STATUS_CALLER_NOT_ALLOWED),
-                        anyInt());
+                        geq(0));
     }
 
     @Test
@@ -1923,13 +1929,13 @@ public class AdSelectionE2ETest {
                         AdSelectionRunner.AD_SELECTION_ERROR_PATTERN,
                         AdSelectionRunner.ERROR_AD_SELECTION_FAILURE,
                         AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE));
-
-        // TODO(b/242139312): Remove atLeastOnce once this the double logging is addressed
+        // TODO(b/242139312): Remove atLeastOnce once this the double logging is addressed and
+        //  update third argument value.
         verify(mAdServicesLoggerMock, Mockito.atLeastOnce())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(STATUS_CALLER_NOT_ALLOWED),
-                        anyInt());
+                        geq(0));
     }
 
     @Test
@@ -2155,7 +2161,7 @@ public class AdSelectionE2ETest {
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(STATUS_SUCCESS),
-                        anyInt());
+                        geq((int) BINDER_ELAPSED_TIME_MS));
     }
 
     /**
@@ -2262,7 +2268,7 @@ public class AdSelectionE2ETest {
                         .setCallerPackageName(callerPackageName)
                         .build();
 
-        adSelectionService.runAdSelection(input, adSelectionTestCallback);
+        adSelectionService.runAdSelection(input, mMockCallerMetadata, adSelectionTestCallback);
         adSelectionTestCallback.mCountDownLatch.await();
         return adSelectionTestCallback;
     }
