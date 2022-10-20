@@ -17,7 +17,7 @@
 package com.android.adservices.service.adselection;
 
 import android.adservices.adselection.AdSelectionConfig;
-import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
 import android.annotation.SuppressLint;
@@ -47,14 +47,13 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.time.Clock;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -225,68 +224,31 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
 
     private ListenableFuture<List<AdBiddingOutcome>> runAdBidding(
             @NonNull final List<DBCustomAudience> customAudiences,
-            @NonNull final AdSelectionConfig adSelectionConfig)
-            throws InterruptedException, ExecutionException {
+            @NonNull final AdSelectionConfig adSelectionConfig) {
         if (customAudiences.isEmpty()) {
             LogUtil.w("Cannot invoke bidding on empty list of CAs");
             return Futures.immediateFailedFuture(new Throwable("No CAs found for selection"));
         }
 
-        // TODO(b/237004875) : Use common thread pool for parallel execution if possible
-        ForkJoinPool customThreadPool = new ForkJoinPool(getParallelBiddingCount());
-        final AtomicReference<List<ListenableFuture<AdBiddingOutcome>>> bidWinningAds =
-                new AtomicReference<>();
+        Map<AdTechIdentifier, List<DBCustomAudience>> buyerToCustomAudienceMap =
+                mapBuyerToCustomAudience(customAudiences);
+        PerBuyerBiddingRunner buyerBidRunner =
+                new PerBuyerBiddingRunner(
+                        mAdBidGenerator, mScheduledExecutor, mBackgroundExecutorService);
 
-        try {
-            LogUtil.d("Triggering bidding for all %d custom audiences", customAudiences.size());
-            customThreadPool
-                    .submit(
-                            () -> {
-                                LogUtil.v("Invoking bidding for #%d CAs", customAudiences.size());
-                                bidWinningAds.set(
-                                        customAudiences.parallelStream()
-                                                .map(
-                                                        customAudience -> {
-                                                            return runAdBiddingPerCA(
-                                                                    customAudience,
-                                                                    adSelectionConfig);
-                                                        })
-                                                .collect(Collectors.toList()));
-                            })
-                    .get();
-        } catch (InterruptedException e) {
-            final String exceptionReason = "Bidding Interrupted Exception";
-            LogUtil.e(e, exceptionReason);
-            throw new InterruptedException(exceptionReason);
-        } catch (ExecutionException e) {
-            final String exceptionReason = "Bidding Execution Exception";
-            LogUtil.e(e, exceptionReason);
-            throw new ExecutionException(e.getCause());
-        } finally {
-            customThreadPool.shutdownNow();
-        }
-        return Futures.successfulAsList(bidWinningAds.get());
-    }
-
-    private ListenableFuture<AdBiddingOutcome> runAdBiddingPerCA(
-            @NonNull final DBCustomAudience customAudience,
-            @NonNull final AdSelectionConfig adSelectionConfig) {
-        LogUtil.v(String.format("Invoking bidding for CA: %s", customAudience.getName()));
-
-        // TODO(b/233239475) : Validate Buyer signals in Ad Selection Config
-        AdSelectionSignals buyerSignal =
-                Optional.ofNullable(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(customAudience.getBuyer()))
-                        .orElse(AdSelectionSignals.EMPTY);
-        return mAdBidGenerator.runAdBiddingPerCA(
-                customAudience,
-                adSelectionConfig.getAdSelectionSignals(),
-                buyerSignal,
-                AdSelectionSignals.EMPTY,
-                adSelectionConfig);
-        // TODO(b/230569187): get the contextualSignal securely = "invoking app name"
+        LogUtil.v("Invoking bidding for #%d buyers", buyerToCustomAudienceMap.size());
+        return Futures.successfulAsList(
+                buyerToCustomAudienceMap.entrySet().parallelStream()
+                        .map(
+                                entry -> {
+                                    return buyerBidRunner.runBidding(
+                                            entry.getKey(),
+                                            entry.getValue(),
+                                            mFlags.getAdSelectionBiddingTimeoutPerBuyerMs(),
+                                            adSelectionConfig);
+                                })
+                        .flatMap(List::stream)
+                        .collect(Collectors.toList()));
     }
 
     @SuppressLint("DefaultLocale")
@@ -294,12 +256,13 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final List<AdBiddingOutcome> adBiddingOutcomes,
             @NonNull final AdSelectionConfig adSelectionConfig)
             throws AdServicesException {
-        LogUtil.v("Got %d bidding outcomes", adBiddingOutcomes.size());
+        LogUtil.v("Got %d total bidding outcomes", adBiddingOutcomes.size());
         List<AdBiddingOutcome> validBiddingOutcomes =
                 adBiddingOutcomes.stream().filter(Objects::nonNull).collect(Collectors.toList());
+        LogUtil.v("Got %d valid bidding outcomes", validBiddingOutcomes.size());
 
         if (validBiddingOutcomes.isEmpty()) {
-            LogUtil.w("Received empty list of Bidding outcomes");
+            LogUtil.w("Received empty list of successful Bidding outcomes");
             throw new IllegalStateException(ERROR_NO_VALID_BIDS_FOR_SCORING);
         }
         return mAdsScoreGenerator.runAdScoring(validBiddingOutcomes, adSelectionConfig);
@@ -345,6 +308,19 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
         return new AdSelectionOrchestrationResult(
                 dbAdSelectionBuilder,
                 scoringWinner.getCustomAudienceBiddingInfo().getBuyerDecisionLogicJs());
+    }
+
+    private Map<AdTechIdentifier, List<DBCustomAudience>> mapBuyerToCustomAudience(
+            final List<DBCustomAudience> customAudienceList) {
+        Map<AdTechIdentifier, List<DBCustomAudience>> buyerToCustomAudienceMap = new HashMap<>();
+
+        for (DBCustomAudience customAudience : customAudienceList) {
+            buyerToCustomAudienceMap
+                    .computeIfAbsent(customAudience.getBuyer(), k -> new ArrayList<>())
+                    .add(customAudience);
+        }
+        LogUtil.v("Created mapping for #%d buyers", buyerToCustomAudienceMap.size());
+        return buyerToCustomAudienceMap;
     }
 
     private int getParallelBiddingCount() {
