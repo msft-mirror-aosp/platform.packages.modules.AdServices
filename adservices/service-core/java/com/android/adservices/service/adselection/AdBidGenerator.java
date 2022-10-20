@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.adselection;
 
-import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.common.AdSelectionSignals;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -37,7 +36,6 @@ interface AdBidGenerator {
      * @param contextualSignals Contextual information about the App where the Ad is being shown, Ad
      *     slot and size, geographic location information, the seller invoking the ad selection and
      *     so on.
-     * @param adSelectionConfig used as the primary key in remote overrides
      * @return a future contains either a {@link AdBiddingOutcome} containing the candidate ad with
      *     the best bid for this custom audience or null if no valid ads are available for scoring.
      */
@@ -46,6 +44,5 @@ interface AdBidGenerator {
             @NonNull DBCustomAudience customAudience,
             @NonNull AdSelectionSignals adSelectionSignals,
             @NonNull AdSelectionSignals buyerSignals,
-            @NonNull AdSelectionSignals contextualSignals,
-            @NonNull AdSelectionConfig adSelectionConfig);
+            @NonNull AdSelectionSignals contextualSignals);
 }
