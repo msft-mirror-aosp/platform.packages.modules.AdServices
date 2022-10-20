@@ -1153,16 +1153,15 @@ public final class PhFlags implements Flags {
     // ADID Killswitches
     @Override
     public boolean getAdIdKillSwitch() {
-        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        // Ignore Global Killswitch for adid.
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
-        return getGlobalKillSwitch()
-                || SystemProperties.getBoolean(
-                        getSystemPropertyName(KEY_ADID_KILL_SWITCH),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                DeviceConfig.NAMESPACE_ADSERVICES,
-                                /* flagName */ KEY_ADID_KILL_SWITCH,
-                                /* defaultValue */ ADID_KILL_SWITCH));
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(KEY_ADID_KILL_SWITCH),
+                /* defaultValue */ DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_ADID_KILL_SWITCH,
+                        /* defaultValue */ ADID_KILL_SWITCH));
     }
 
     // APPSETID Killswitch.
