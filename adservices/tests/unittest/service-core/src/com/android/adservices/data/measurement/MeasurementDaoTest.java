@@ -58,6 +58,8 @@ import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
+import com.google.common.collect.ImmutableList;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -2914,6 +2916,87 @@ public class MeasurementDaoTest {
             Assert.assertNotNull(updateAsyncRegistration);
             Assert.assertTrue(updateAsyncRegistration.getRetryCount() == originalRetryCount + 1);
         }
+    }
+
+    @Test
+    public void getSource_fetchesMatchingSourceFromDb() {
+        // Setup - insert 2 sources with different IDs
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        String sourceId1 = "source1";
+        Source source1 = SourceFixture.getValidSourceBuilder().setId(sourceId1).build();
+        insertInDb(db, source1);
+        String sourceId2 = "source2";
+        Source source2 = SourceFixture.getValidSourceBuilder().setId(sourceId2).build();
+        insertInDb(db, source2);
+
+        // Execution
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        (dao) -> {
+                            assertEquals(source1, dao.getSource(sourceId1));
+                            assertEquals(source2, dao.getSource(sourceId2));
+                        });
+    }
+
+    @Test
+    public void fetchMatchingAggregateReports_returnsMatchingReports() {
+        // setup - create reports for 3*3 combinations of source and trigger
+        Source source1 = SourceFixture.getValidSourceBuilder().setId("source1").build();
+        Source source2 = SourceFixture.getValidSourceBuilder().setId("source2").build();
+        Source source3 = SourceFixture.getValidSourceBuilder().setId("source3").build();
+        Trigger trigger1 = TriggerFixture.getValidTriggerBuilder().setId("trigger1").build();
+        Trigger trigger2 = TriggerFixture.getValidTriggerBuilder().setId("trigger2").build();
+        Trigger trigger3 = TriggerFixture.getValidTriggerBuilder().setId("trigger3").build();
+        List<AggregateReport> reports =
+                ImmutableList.of(
+                        createAggregateReportForSourceAndTrigger(source1, trigger1),
+                        createAggregateReportForSourceAndTrigger(source1, trigger2),
+                        createAggregateReportForSourceAndTrigger(source1, trigger3),
+                        createAggregateReportForSourceAndTrigger(source2, trigger1),
+                        createAggregateReportForSourceAndTrigger(source2, trigger2),
+                        createAggregateReportForSourceAndTrigger(source2, trigger3),
+                        createAggregateReportForSourceAndTrigger(source3, trigger1),
+                        createAggregateReportForSourceAndTrigger(source3, trigger2),
+                        createAggregateReportForSourceAndTrigger(source3, trigger3));
+
+        reports.forEach(
+                report ->
+                        DatastoreManagerFactory.getDatastoreManager(sContext)
+                                .runInTransaction((dao) -> dao.insertAggregateReport(report)));
+
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        (dao) -> {
+                            // Execution
+                            // one matching trigger, 1 non-matching trigger
+                            List<AggregateReport> aggregateReports =
+                                    dao.fetchMatchingAggregateReports(
+                                            Arrays.asList(trigger3.getId(), "nonMatchingTrigger"));
+                            assertEquals(3, aggregateReports.size());
+
+                            // 2 matching triggers
+                            aggregateReports =
+                                    dao.fetchMatchingAggregateReports(
+                                            Arrays.asList(trigger1.getId(), trigger3.getId()));
+                            assertEquals(6, aggregateReports.size());
+
+                            // 2 matching triggers
+                            aggregateReports =
+                                    dao.fetchMatchingAggregateReports(
+                                            Arrays.asList(
+                                                    trigger1.getId(),
+                                                    trigger2.getId(),
+                                                    trigger3.getId()));
+                            assertEquals(9, aggregateReports.size());
+                        });
+    }
+
+    private AggregateReport createAggregateReportForSourceAndTrigger(
+            Source source1, Trigger trigger1) {
+        return AggregateReportFixture.getValidAggregateReportBuilder()
+                .setSourceId(source1.getId())
+                .setTriggerId(trigger1.getId())
+                .build();
     }
 
     private void setupSourceAndTriggerData() {
