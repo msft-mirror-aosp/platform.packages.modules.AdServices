@@ -505,6 +505,8 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.EventReportContract.TRIGGER_DEBUG_KEY,
                 getNullableUnsignedLong(eventReport.getTriggerDebugKey()));
+        values.put(MeasurementTables.EventReportContract.SOURCE_ID, eventReport.getSourceId());
+        values.put(MeasurementTables.EventReportContract.TRIGGER_ID, eventReport.getTriggerId());
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.EventReportContract.TABLE,
                         /*nullColumnHack=*/null, values);
@@ -550,6 +552,8 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.AttributionContract.TRIGGER_TIME, attribution.getTriggerTime());
         values.put(MeasurementTables.AttributionContract.REGISTRANT, attribution.getRegistrant());
+        values.put(MeasurementTables.AttributionContract.SOURCE_ID, attribution.getSourceId());
+        values.put(MeasurementTables.AttributionContract.TRIGGER_ID, attribution.getTriggerId());
         long rowId =
                 mSQLTransaction
                         .getDatabase()
@@ -1344,6 +1348,8 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.AggregateReport.TRIGGER_DEBUG_KEY,
                 getNullableUnsignedLong(aggregateReport.getTriggerDebugKey()));
+        values.put(MeasurementTables.AggregateReport.SOURCE_ID, aggregateReport.getSourceId());
+        values.put(MeasurementTables.AggregateReport.TRIGGER_ID, aggregateReport.getTriggerId());
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.AggregateReport.TABLE,
                         /*nullColumnHack=*/null, values);

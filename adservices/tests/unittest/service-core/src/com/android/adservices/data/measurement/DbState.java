@@ -265,7 +265,7 @@ public class DbState {
     private EventReport getEventReportFrom(JSONObject rJSON) throws JSONException {
         return new EventReport.Builder()
                 .setId(rJSON.getString("id"))
-                .setSourceEventId(new UnsignedLong(rJSON.getString("sourceId")))
+                .setSourceEventId(new UnsignedLong(rJSON.getString("sourceEventId")))
                 .setAttributionDestination(Uri.parse(rJSON.getString("attributionDestination")))
                 .setEnrollmentId(rJSON.getString("enrollmentId"))
                 .setTriggerData(new UnsignedLong(rJSON.getString("triggerData")))
@@ -277,6 +277,8 @@ public class DbState {
                 .setSourceType(
                         Source.SourceType.valueOf(
                                 rJSON.getString("sourceType").toUpperCase(Locale.ENGLISH)))
+                .setSourceId(rJSON.optString("sourceId", null))
+                .setTriggerId(rJSON.optString("triggerId", null))
                 .build();
     }
 
@@ -291,6 +293,8 @@ public class DbState {
                 .setEnrollmentId(attrJSON.getString("enrollmentId"))
                 .setTriggerTime(attrJSON.getLong("triggerTime"))
                 .setRegistrant(attrJSON.getString("registrant"))
+                .setSourceId(attrJSON.optString("sourceId", null))
+                .setTriggerId(attrJSON.optString("triggerId", null))
                 .build();
     }
 
@@ -337,6 +341,14 @@ public class DbState {
                         cursor.getString(
                                 cursor.getColumnIndex(
                                         MeasurementTables.AttributionContract.REGISTRANT)))
+                .setSourceId(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AttributionContract.SOURCE_ID)))
+                .setTriggerId(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AttributionContract.TRIGGER_ID)))
                 .build();
     }
 
@@ -352,6 +364,8 @@ public class DbState {
                 .setDebugCleartextPayload(rJSON.getString("debugCleartextPayload"))
                 .setStatus(rJSON.getInt("status"))
                 .setApiVersion(rJSON.optString("apiVersion", null))
+                .setSourceId(rJSON.optString("sourceId", null))
+                .setTriggerId(rJSON.optString("triggerId", null))
                 .build();
     }
 
