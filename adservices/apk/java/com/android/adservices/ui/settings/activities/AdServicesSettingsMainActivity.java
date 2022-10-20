@@ -28,11 +28,22 @@ import com.android.adservices.ui.settings.viewmodels.MainViewModel;
  * Android application activity for controlling settings related to PP (Privacy Preserving) APIs.
  */
 public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
+    public static final String FROM_NOTIFICATION_KEY = "FROM_NOTIFICATION";
     private MainActionDelegate mActionDelegate;
 
     /** @return the action delegate for the activity. */
     public MainActionDelegate getActionDelegate() {
         return mActionDelegate;
+    }
+
+    @Override
+    public void onBackPressed() {
+        // if navigated here from notification, then back button should not go back to notification.
+        if (getIntent().getBooleanExtra(FROM_NOTIFICATION_KEY, false)) {
+            moveTaskToBack(true);
+        } else {
+            super.onBackPressed();
+        }
     }
 
     @Override
