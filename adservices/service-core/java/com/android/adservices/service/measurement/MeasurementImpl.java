@@ -716,6 +716,9 @@ public final class MeasurementImpl {
                 .setEnrollmentId(source.getEnrollmentId())
                 .setTriggerTime(source.getEventTime())
                 .setRegistrant(source.getRegistrant().toString())
+                .setSourceId(source.getId())
+                // Intentionally kept it as null because it's a fake attribution
+                .setTriggerId(null)
                 .build();
     }
 

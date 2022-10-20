@@ -106,6 +106,7 @@ public class MeasurementDaoTest {
     private static final Uri WEB_PUBLISHER_ONE = Uri.parse("https://not.example.com");
     private static final Uri WEB_PUBLISHER_TWO = Uri.parse("https://notexample.com");
     private static final Uri WEB_PUBLISHER_THREE = Uri.parse("http://not.example.com");
+    private static final Uri APP_DESTINATION = Uri.parse("android-app://com.destination.example");
 
     @After
     public void cleanup() {
@@ -1269,12 +1270,21 @@ public class MeasurementDaoTest {
                         .setId("1")
                         .setSourceEventId(new UnsignedLong(3L))
                         .setEnrollmentId("1")
+                        .setAttributionDestination(sourceList.get(0).getAppDestination())
+                        .setSourceType(sourceList.get(0).getSourceType())
+                        .setSourceId("1")
+                        .setTriggerId("101")
                         .build());
         reportList1.add(
                 new EventReport.Builder()
                         .setId("7")
                         .setSourceEventId(new UnsignedLong(3L))
                         .setEnrollmentId("1")
+                        .setAttributionDestination(sourceList.get(0).getAppDestination())
+                        .setAttributionDestination(APP_DESTINATION)
+                        .setSourceType(sourceList.get(0).getSourceType())
+                        .setSourceId("1")
+                        .setTriggerId("102")
                         .build());
 
         // Should match with source 2
@@ -1284,12 +1294,20 @@ public class MeasurementDaoTest {
                         .setId("3")
                         .setSourceEventId(new UnsignedLong(4L))
                         .setEnrollmentId("1")
+                        .setAttributionDestination(sourceList.get(1).getAppDestination())
+                        .setSourceType(sourceList.get(1).getSourceType())
+                        .setSourceId("2")
+                        .setTriggerId("201")
                         .build());
         reportList2.add(
                 new EventReport.Builder()
                         .setId("8")
                         .setSourceEventId(new UnsignedLong(4L))
                         .setEnrollmentId("1")
+                        .setAttributionDestination(sourceList.get(1).getAppDestination())
+                        .setSourceType(sourceList.get(1).getSourceType())
+                        .setSourceId("2")
+                        .setTriggerId("202")
                         .build());
 
         List<EventReport> reportList3 = new ArrayList<>();
@@ -1299,24 +1317,40 @@ public class MeasurementDaoTest {
                         .setId("2")
                         .setSourceEventId(new UnsignedLong(5L))
                         .setEnrollmentId("1")
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setAttributionDestination(APP_DESTINATION)
+                        .setSourceId("15")
+                        .setTriggerId("1001")
                         .build());
         reportList3.add(
                 new EventReport.Builder()
                         .setId("4")
                         .setSourceEventId(new UnsignedLong(6L))
                         .setEnrollmentId("1")
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setAttributionDestination(APP_DESTINATION)
+                        .setSourceId("16")
+                        .setTriggerId("1001")
                         .build());
         reportList3.add(
                 new EventReport.Builder()
                         .setId("5")
                         .setSourceEventId(new UnsignedLong(1L))
                         .setEnrollmentId("1")
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setAttributionDestination(APP_DESTINATION)
+                        .setSourceId("15")
+                        .setTriggerId("1001")
                         .build());
         reportList3.add(
                 new EventReport.Builder()
                         .setId("6")
                         .setSourceEventId(new UnsignedLong(2L))
                         .setEnrollmentId("1")
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setAttributionDestination(APP_DESTINATION)
+                        .setSourceId("20")
+                        .setTriggerId("1001")
                         .build());
 
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
@@ -1329,20 +1363,14 @@ public class MeasurementDaoTest {
                     values.put(SourceContract.ENROLLMENT_ID, source.getEnrollmentId());
                     db.insert(SourceContract.TABLE, null, values);
                 });
+
         Stream.of(reportList1, reportList2, reportList3)
                 .flatMap(Collection::stream)
                 .forEach(
-                        eventReport -> {
-                            ContentValues values = new ContentValues();
-                            values.put(EventReportContract.ID, eventReport.getId());
-                            values.put(
-                                    EventReportContract.SOURCE_EVENT_ID,
-                                    eventReport.getSourceEventId().getValue());
-                            values.put(
-                                    EventReportContract.ENROLLMENT_ID,
-                                    eventReport.getEnrollmentId());
-                            db.insert(EventReportContract.TABLE, null, values);
-                        });
+                        (eventReport -> {
+                            DatastoreManagerFactory.getDatastoreManager(sContext)
+                                    .runInTransaction((dao) -> dao.insertEventReport(eventReport));
+                        }));
 
         Assert.assertEquals(
                 reportList1,
