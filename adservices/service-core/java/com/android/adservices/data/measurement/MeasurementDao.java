@@ -415,6 +415,45 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
+    public void markEventDebugReportDelivered(String eventReportId) throws DatastoreException {
+        ContentValues values = new ContentValues();
+        values.put(
+                MeasurementTables.EventReportContract.DEBUG_REPORT_STATUS,
+                EventReport.DebugReportStatus.DELIVERED);
+        long rows =
+                mSQLTransaction
+                        .getDatabase()
+                        .update(
+                                MeasurementTables.EventReportContract.TABLE,
+                                values,
+                                MeasurementTables.EventReportContract.ID + " = ?",
+                                new String[] {eventReportId});
+        if (rows != 1) {
+            throw new DatastoreException("EventReport update failed.");
+        }
+    }
+
+    @Override
+    public void markAggregateDebugReportDelivered(String aggregateReportId)
+            throws DatastoreException {
+        ContentValues values = new ContentValues();
+        values.put(
+                MeasurementTables.AggregateReport.DEBUG_REPORT_STATUS,
+                AggregateReport.DebugReportStatus.DELIVERED);
+        long rows =
+                mSQLTransaction
+                        .getDatabase()
+                        .update(
+                                MeasurementTables.AggregateReport.TABLE,
+                                values,
+                                MeasurementTables.AggregateReport.ID + " = ? ",
+                                new String[] {aggregateReportId});
+        if (rows != 1) {
+            throw new DatastoreException("AggregateReport update failed");
+        }
+    }
+
+    @Override
     @Nullable
     public List<EventReport> getSourceEventReports(Source source) throws DatastoreException {
         List<EventReport> eventReports = new ArrayList<>();
@@ -464,6 +503,32 @@ class MeasurementDao implements IMeasurementDao {
             while (cursor.moveToNext()) {
                 eventReports.add(cursor.getString(cursor.getColumnIndex(
                         MeasurementTables.EventReportContract.ID)));
+            }
+            return eventReports;
+        }
+    }
+
+    @Override
+    public List<String> getPendingDebugEventReportIds() throws DatastoreException {
+        List<String> eventReports = new ArrayList<>();
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                MeasurementTables.EventReportContract.TABLE,
+                                /*columns=*/ null,
+                                MeasurementTables.EventReportContract.DEBUG_REPORT_STATUS + " = ? ",
+                                new String[] {
+                                    String.valueOf(EventReport.DebugReportStatus.PENDING)
+                                },
+                                /*groupBy=*/ null,
+                                /*having=*/ null,
+                                /*orderBy=*/ "RANDOM()",
+                                /*limit=*/ null)) {
+            while (cursor.moveToNext()) {
+                eventReports.add(
+                        cursor.getString(
+                                cursor.getColumnIndex(MeasurementTables.EventReportContract.ID)));
             }
             return eventReports;
         }
@@ -521,6 +586,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.EventReportContract.ENROLLMENT_ID,
                 eventReport.getEnrollmentId());
         values.put(MeasurementTables.EventReportContract.STATUS, eventReport.getStatus());
+        values.put(
+                MeasurementTables.EventReportContract.DEBUG_REPORT_STATUS,
+                eventReport.getDebugReportStatus());
         values.put(MeasurementTables.EventReportContract.REPORT_TIME, eventReport.getReportTime());
         values.put(MeasurementTables.EventReportContract.TRIGGER_PRIORITY,
                 eventReport.getTriggerPriority());
@@ -1375,6 +1443,9 @@ class MeasurementDao implements IMeasurementDao {
                 aggregateReport.getDebugCleartextPayload());
         values.put(MeasurementTables.AggregateReport.STATUS,
                 aggregateReport.getStatus());
+        values.put(
+                MeasurementTables.AggregateReport.DEBUG_REPORT_STATUS,
+                aggregateReport.getDebugReportStatus());
         values.put(MeasurementTables.AggregateReport.API_VERSION,
                 aggregateReport.getApiVersion());
         values.put(
@@ -1407,8 +1478,35 @@ class MeasurementDao implements IMeasurementDao {
                         String.valueOf(AggregateReport.Status.PENDING)},
                 /*groupBy=*/null, /*having=*/null, /*orderBy=*/"RANDOM()", /*limit=*/null)) {
             while (cursor.moveToNext()) {
-                aggregateReports.add(cursor.getString(cursor.getColumnIndex(
-                        MeasurementTables.EventReportContract.ID)));
+                aggregateReports.add(
+                        cursor.getString(
+                                cursor.getColumnIndex(MeasurementTables.AggregateReport.ID)));
+            }
+            return aggregateReports;
+        }
+    }
+
+    @Override
+    public List<String> getPendingAggregateDebugReportIds() throws DatastoreException {
+        List<String> aggregateReports = new ArrayList<>();
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                MeasurementTables.AggregateReport.TABLE,
+                                /*columns=*/ null,
+                                MeasurementTables.AggregateReport.DEBUG_REPORT_STATUS + " = ? ",
+                                new String[] {
+                                    String.valueOf(AggregateReport.DebugReportStatus.PENDING)
+                                },
+                                /*groupBy=*/ null,
+                                /*having=*/ null,
+                                /*orderBy=*/ "RANDOM()",
+                                /*limit=*/ null)) {
+            while (cursor.moveToNext()) {
+                aggregateReports.add(
+                        cursor.getString(
+                                cursor.getColumnIndex(MeasurementTables.AggregateReport.ID)));
             }
             return aggregateReports;
         }

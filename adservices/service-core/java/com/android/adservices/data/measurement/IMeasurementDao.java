@@ -210,6 +210,13 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
+     * Change the status of an event debug report to DELIVERED
+     *
+     * @param eventReportId the id of the event report to be updated
+     */
+    void markEventDebugReportDelivered(String eventReportId) throws DatastoreException;
+
+    /**
      * Change the status of an aggregate report to DELIVERED
      *
      * @param aggregateReportId the id of the event report to be updated
@@ -217,6 +224,13 @@ public interface IMeasurementDao {
      */
     void markAggregateReportStatus(String aggregateReportId, @AggregateReport.Status int status)
             throws DatastoreException;
+
+    /**
+     * Change the status of an aggregate debug report to DELIVERED
+     *
+     * @param aggregateReportId the id of the event report to be updated
+     */
+    void markAggregateDebugReportDelivered(String aggregateReportId) throws DatastoreException;
 
     /**
      * Saves the {@link EventReport} to datastore.
@@ -233,6 +247,9 @@ public interface IMeasurementDao {
      */
     List<String> getPendingEventReportIdsInWindow(long windowStartTime, long windowEndTime)
             throws DatastoreException;
+
+    /** Returns list of all debug event reports. */
+    List<String> getPendingDebugEventReportIds() throws DatastoreException;
 
     /**
      * Returns list of all pending event reports for a given app right away.
@@ -305,6 +322,9 @@ public interface IMeasurementDao {
      */
     List<String> getPendingAggregateReportIdsInWindow(long windowStartTime, long windowEndTime)
             throws DatastoreException;
+
+    /** Returns list of all aggregate debug reports. */
+    List<String> getPendingAggregateDebugReportIds() throws DatastoreException;
 
     /**
      * Returns list of all pending aggregate reports for a given app right away.

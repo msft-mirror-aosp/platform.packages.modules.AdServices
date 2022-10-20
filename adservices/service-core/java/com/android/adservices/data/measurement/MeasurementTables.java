@@ -122,6 +122,7 @@ public final class MeasurementTables {
         String TRIGGER_DEDUP_KEY = "trigger_dedup_key";
         String TRIGGER_TIME = "trigger_time";
         String STATUS = "status";
+        String DEBUG_REPORT_STATUS = "debug_report_status";
         String SOURCE_TYPE = "source_type";
         String ENROLLMENT_ID = "enrollment_id";
         String RANDOMIZED_TRIGGER_RATE = "randomized_trigger_rate";
@@ -157,6 +158,7 @@ public final class MeasurementTables {
         String ENROLLMENT_ID = "enrollment_id";
         String DEBUG_CLEARTEXT_PAYLOAD = "debug_cleartext_payload";
         String STATUS = "status";
+        String DEBUG_REPORT_STATUS = "debug_report_status";
         String API_VERSION = "api_version";
         String SOURCE_DEBUG_KEY = "source_debug_key";
         String TRIGGER_DEBUG_KEY = "trigger_debug_key";
@@ -377,6 +379,8 @@ public final class MeasurementTables {
                     + " INTEGER, "
                     + EventReportContract.STATUS
                     + " INTEGER, "
+                    + EventReportContract.DEBUG_REPORT_STATUS
+                    + " INTEGER, "
                     + EventReportContract.SOURCE_TYPE
                     + " TEXT, "
                     + EventReportContract.RANDOMIZED_TRIGGER_RATE
@@ -510,6 +514,8 @@ public final class MeasurementTables {
                     + AggregateReport.DEBUG_CLEARTEXT_PAYLOAD
                     + " TEXT, "
                     + AggregateReport.STATUS
+                    + " INTEGER, "
+                    + AggregateReport.DEBUG_REPORT_STATUS
                     + " INTEGER, "
                     + AggregateReport.API_VERSION
                     + " TEXT, "
