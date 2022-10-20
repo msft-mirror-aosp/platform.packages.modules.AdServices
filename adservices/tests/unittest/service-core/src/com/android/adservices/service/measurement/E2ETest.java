@@ -522,8 +522,11 @@ public abstract class E2ETest {
     private static void sortAggregateReportObjects(OutputType outputType,
             List<JSONObject> aggregateReportObjects) {
         aggregateReportObjects.sort(
-                // We cannot use report time due to fuzzy matching between actual and expected
-                // output.
+                // Unlike event reports (sorted elsewhere in this file), aggregate reports are
+                // scheduled with randomised times, and using report time for sorting can result
+                // in unexpected variations in the sort order, depending on test timing. Without
+                // time ordering, we rely on other data across the reports to yield different
+                // hash codes.
                 Comparator.comparing(obj -> hashForAggregateReportObject(outputType, obj)));
     }
 
