@@ -133,6 +133,28 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
+    public Source getSource(@NonNull String sourceId) throws DatastoreException {
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                MeasurementTables.SourceContract.TABLE,
+                                /*columns=*/ null,
+                                MeasurementTables.SourceContract.ID + " = ? ",
+                                new String[] {sourceId},
+                                /*groupBy=*/ null,
+                                /*having=*/ null,
+                                /*orderBy=*/ null,
+                                /*limit=*/ null)) {
+            if (cursor.getCount() == 0) {
+                throw new DatastoreException("Source retrieval failed. Id: " + sourceId);
+            }
+            cursor.moveToNext();
+            return SqliteObjectMapper.constructSourceFromCursor(cursor);
+        }
+    }
+
+    @Override
     public Trigger getTrigger(@NonNull String triggerId) throws DatastoreException {
         try (Cursor cursor = mSQLTransaction.getDatabase().query(
                 MeasurementTables.TriggerContract.TABLE,
@@ -483,16 +505,15 @@ class MeasurementDao implements IMeasurementDao {
                 eventReport.getAttributionDestination().toString());
         values.put(MeasurementTables.EventReportContract.TRIGGER_TIME,
                 eventReport.getTriggerTime());
-        values.put(MeasurementTables.EventReportContract.TRIGGER_DATA,
+        values.put(
+                MeasurementTables.EventReportContract.TRIGGER_DATA,
                 getNullableUnsignedLong(eventReport.getTriggerData()));
         values.put(MeasurementTables.EventReportContract.TRIGGER_DEDUP_KEY,
                 getNullableUnsignedLong(eventReport.getTriggerDedupKey()));
         values.put(MeasurementTables.EventReportContract.ENROLLMENT_ID,
                 eventReport.getEnrollmentId());
-        values.put(MeasurementTables.EventReportContract.STATUS,
-                eventReport.getStatus());
-        values.put(MeasurementTables.EventReportContract.REPORT_TIME,
-                eventReport.getReportTime());
+        values.put(MeasurementTables.EventReportContract.STATUS, eventReport.getStatus());
+        values.put(MeasurementTables.EventReportContract.REPORT_TIME, eventReport.getReportTime());
         values.put(MeasurementTables.EventReportContract.TRIGGER_PRIORITY,
                 eventReport.getTriggerPriority());
         values.put(MeasurementTables.EventReportContract.SOURCE_TYPE,
@@ -866,6 +887,33 @@ class MeasurementDao implements IMeasurementDao {
                         + " NOT IN "
                         + inQuery.toString(),
                 /* whereArgs */ null);
+    }
+
+    @Override
+    public List<AggregateReport> fetchMatchingAggregateReports(@NonNull List<String> triggerIds)
+            throws DatastoreException {
+        List<AggregateReport> aggregateReports = new ArrayList<>();
+        String delimitedTriggerIds =
+                triggerIds.stream()
+                        .map(DatabaseUtils::sqlEscapeString)
+                        .collect(Collectors.joining(","));
+
+        String whereString =
+                MeasurementTables.AggregateReport.TRIGGER_ID + " IN (" + delimitedTriggerIds + ")";
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .rawQuery(
+                                String.format(
+                                        Locale.ENGLISH,
+                                        "SELECT * FROM %1$s" + " WHERE " + whereString,
+                                        MeasurementTables.AggregateReport.TABLE),
+                                null)) {
+            while (cursor.moveToNext()) {
+                aggregateReports.add(SqliteObjectMapper.constructAggregateReport(cursor));
+            }
+        }
+        return aggregateReports;
     }
 
     private String constructDeleteQueryAppsNotPresent(List<Uri> uriList) {
@@ -1285,11 +1333,16 @@ class MeasurementDao implements IMeasurementDao {
                 aggregateEncryptionKey.getKeyId());
         values.put(MeasurementTables.AggregateEncryptionKey.PUBLIC_KEY,
                 aggregateEncryptionKey.getPublicKey());
-        values.put(MeasurementTables.AggregateEncryptionKey.EXPIRY,
+        values.put(
+                MeasurementTables.AggregateEncryptionKey.EXPIRY,
                 aggregateEncryptionKey.getExpiry());
-        long rowId = mSQLTransaction.getDatabase()
-                .insert(MeasurementTables.AggregateEncryptionKey.TABLE,
-                        /*nullColumnHack=*/null, values);
+        long rowId =
+                mSQLTransaction
+                        .getDatabase()
+                        .insert(
+                                MeasurementTables.AggregateEncryptionKey.TABLE,
+                                /*nullColumnHack=*/ null,
+                                values);
         if (rowId == -1) {
             throw new DatastoreException("Aggregate encryption key insertion failed.");
         }
@@ -1299,12 +1352,18 @@ class MeasurementDao implements IMeasurementDao {
     public List<AggregateEncryptionKey> getNonExpiredAggregateEncryptionKeys(long expiry)
             throws DatastoreException {
         List<AggregateEncryptionKey> aggregateEncryptionKeys = new ArrayList<>();
-        try (Cursor cursor = mSQLTransaction.getDatabase().query(
-                MeasurementTables.AggregateEncryptionKey.TABLE,
-                /*columns=*/null,
-                MeasurementTables.AggregateEncryptionKey.EXPIRY + " >= ?",
-                new String[]{String.valueOf(expiry)},
-                /*groupBy=*/null, /*having=*/null, /*orderBy=*/null, /*limit=*/null)) {
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                MeasurementTables.AggregateEncryptionKey.TABLE,
+                                /*columns=*/ null,
+                                MeasurementTables.AggregateEncryptionKey.EXPIRY + " >= ?",
+                                new String[] {String.valueOf(expiry)},
+                                /*groupBy=*/ null,
+                                /*having=*/ null,
+                                /*orderBy=*/ null,
+                                /*limit=*/ null)) {
             while (cursor.moveToNext()) {
                 aggregateEncryptionKeys
                         .add(SqliteObjectMapper.constructAggregateEncryptionKeyFromCursor(cursor));

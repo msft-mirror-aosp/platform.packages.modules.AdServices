@@ -34,8 +34,8 @@ public class Attribution {
     private final String mEnrollmentId;
     private final long mTriggerTime;
     private final String mRegistrant;
-    private String mSourceId;
-    private String mTriggerId;
+    private final String mSourceId;
+    private final String mTriggerId;
 
     private Attribution(Builder builder) {
         this.mId = builder.mId;
