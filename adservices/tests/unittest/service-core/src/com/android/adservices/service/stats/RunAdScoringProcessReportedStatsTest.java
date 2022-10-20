@@ -16,13 +16,9 @@
 
 package com.android.adservices.service.stats;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SCORING_PROCESS_REPORTED__GET_AD_SCORES_RESULT_CODE__RUN_AD_SELECTION_STATUS_SUCCESS;
-import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SCORING_PROCESS_REPORTED__GET_AD_SELECTION_LOGIC_RESULT_CODE__RUN_AD_SELECTION_STATUS_SUCCESS;
-import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SCORING_PROCESS_REPORTED__GET_AD_SELECTION_LOGIC_SCRIPT_TYPE__JAVASCRIPT;
-import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SCORING_PROCESS_REPORTED__GET_TRUSTED_SCORING_SIGNALS_RESULT_CODE__RUN_AD_SELECTION_STATUS_SUCCESS;
-import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SCORING_PROCESS_REPORTED__RUN_AD_SCORING_RESULT_CODE__RUN_AD_SELECTION_STATUS_SUCCESS;
-
 import static org.junit.Assert.assertEquals;
+
+import android.adservices.common.AdServicesStatusUtils;
 
 import org.junit.Test;
 
@@ -34,20 +30,15 @@ public class RunAdScoringProcessReportedStatsTest {
     static final int FETCHED_TRUSTED_SCORING_SIGNALS_DATA_SIZE_IN_BYTES = 10;
     static final int SCORE_ADS_LATENCY_IN_MILLIS = 5;
     static final int GET_AD_SCORES_LATENCY_IN_MILLIS = 5;
-    static final int GET_AD_SELECTION_LOGIC_RESULT_CODE =
-            RUN_AD_SCORING_PROCESS_REPORTED__GET_AD_SELECTION_LOGIC_RESULT_CODE__RUN_AD_SELECTION_STATUS_SUCCESS;
-    static final int GET_AD_SCORES_RESULT_CODE =
-            RUN_AD_SCORING_PROCESS_REPORTED__GET_AD_SCORES_RESULT_CODE__RUN_AD_SELECTION_STATUS_SUCCESS;
-    static final int GET_TRUSTED_SCORING_SIGNALS_RESULT_CODE =
-            RUN_AD_SCORING_PROCESS_REPORTED__GET_TRUSTED_SCORING_SIGNALS_RESULT_CODE__RUN_AD_SELECTION_STATUS_SUCCESS;
+    static final int GET_AD_SELECTION_LOGIC_RESULT_CODE = AdServicesStatusUtils.STATUS_SUCCESS;
+    static final int GET_AD_SCORES_RESULT_CODE = AdServicesStatusUtils.STATUS_SUCCESS;
+    static final int GET_TRUSTED_SCORING_SIGNALS_RESULT_CODE = AdServicesStatusUtils.STATUS_SUCCESS;
     static final int NUM_OF_CAS_ENTERING_SCORING = 5;
     static final int NUM_OF_REMARKETING_ADS_ENTERING_SCORING = 6;
     static final int NUM_OF_CONTEXTUAL_ADS_ENTERING_SCORING = 0;
     static final int RUN_AD_SCORING_LATENCY_IN_MILLIS = 10;
-    static final int RUN_AD_SCORING_RESULT_CODE =
-            RUN_AD_SCORING_PROCESS_REPORTED__RUN_AD_SCORING_RESULT_CODE__RUN_AD_SELECTION_STATUS_SUCCESS;
-    static final int GET_AD_SELECTION_LOGIC_SCRIPT_TYPE =
-            RUN_AD_SCORING_PROCESS_REPORTED__GET_AD_SELECTION_LOGIC_SCRIPT_TYPE__JAVASCRIPT;
+    static final int RUN_AD_SCORING_RESULT_CODE = AdServicesStatusUtils.STATUS_SUCCESS;
+    static final int GET_AD_SELECTION_LOGIC_SCRIPT_TYPE = AdServicesStatusUtils.STATUS_SUCCESS;
 
     @Test
     public void testBuilderCreateSuccess() {
