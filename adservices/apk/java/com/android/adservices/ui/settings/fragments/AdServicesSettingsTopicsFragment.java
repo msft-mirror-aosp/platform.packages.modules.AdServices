@@ -19,6 +19,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -101,7 +102,7 @@ public class AdServicesSettingsTopicsFragment extends Fragment {
                         });
 
         // locked_topics_when_empty_state_button is disabled if there is no blocked topics
-        View blockedTopicsWhenEmptyStateButton =
+        Button blockedTopicsWhenEmptyStateButton =
                 rootView.findViewById(R.id.blocked_topics_when_empty_state_button);
         viewModel
                 .getBlockedTopics()
@@ -112,10 +113,14 @@ public class AdServicesSettingsTopicsFragment extends Fragment {
                                 blockedTopicsWhenEmptyStateButton.setEnabled(false);
                                 blockedTopicsWhenEmptyStateButton.setAlpha(
                                         getResources().getFloat(R.dimen.disabled_button_alpha));
+                                blockedTopicsWhenEmptyStateButton.setText(
+                                        R.string.settingsUI_topics_view_no_blocked_topics_text);
                             } else {
                                 blockedTopicsWhenEmptyStateButton.setEnabled(true);
                                 blockedTopicsWhenEmptyStateButton.setAlpha(
                                         getResources().getFloat(R.dimen.enabled_button_alpha));
+                                blockedTopicsWhenEmptyStateButton.setText(
+                                        R.string.settingsUI_blocked_topics_title);
                             }
                         });
     }

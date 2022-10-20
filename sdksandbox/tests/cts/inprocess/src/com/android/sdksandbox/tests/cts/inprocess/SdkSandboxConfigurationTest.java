@@ -63,6 +63,8 @@ import java.util.concurrent.TimeUnit;
 public class SdkSandboxConfigurationTest {
 
     private static final String TEST_PKG = "com.android.sdksandbox.tests.cts.inprocesstests";
+    private static final String CURRENT_USER_ID =
+            String.valueOf(Process.myUserHandle().getUserId(Process.myUid()));
 
     /**
      * Tests that uid belongs to the sdk sandbox processes uid range.
@@ -116,8 +118,9 @@ public class SdkSandboxConfigurationTest {
     public void testGetDataDir_CE() throws Exception {
         final Context ctx = InstrumentationRegistry.getInstrumentation().getTargetContext();
         final File dir = ctx.getDataDir();
-        assertThat(dir.getAbsolutePath()).isEqualTo(
-                "/data/misc_ce/0/sdksandbox/" + TEST_PKG + "/shared");
+        assertThat(dir.getAbsolutePath())
+                .isEqualTo(
+                        "/data/misc_ce/" + CURRENT_USER_ID + "/sdksandbox/" + TEST_PKG + "/shared");
     }
 
     /**
@@ -131,8 +134,9 @@ public class SdkSandboxConfigurationTest {
                         .getTargetContext()
                         .createDeviceProtectedStorageContext();
         final File dir = ctx.getDataDir();
-        assertThat(dir.getAbsolutePath()).isEqualTo(
-                "/data/misc_de/0/sdksandbox/" + TEST_PKG + "/shared");
+        assertThat(dir.getAbsolutePath())
+                .isEqualTo(
+                        "/data/misc_de/" + CURRENT_USER_ID + "/sdksandbox/" + TEST_PKG + "/shared");
     }
 
     /** Tests that sdk sandbox process can write to it's CE storage. */
