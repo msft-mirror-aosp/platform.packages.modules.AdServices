@@ -183,9 +183,10 @@ class AttributionJobHandler {
                             + AGGREGATE_MIN_REPORT_DELAY);
                     AggregateReport aggregateReport =
                             new AggregateReport.Builder()
-                                    // TODO: Unused field, incorrect value; cleanup
+                                    // TODO: b/254855494 unused field, incorrect value; cleanup
                                     .setPublisher(source.getRegistrant())
-                                    .setAttributionDestination(trigger.getAttributionDestination())
+                                    .setAttributionDestination(
+                                            trigger.getAttributionDestinationBaseUri())
                                     .setSourceRegistrationTime(
                                             roundDownToDay(source.getEventTime()))
                                     .setScheduledReportTime(trigger.getTriggerTime() + randomTime)

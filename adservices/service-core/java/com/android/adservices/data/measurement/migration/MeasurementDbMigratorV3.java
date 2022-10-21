@@ -16,12 +16,21 @@
 
 package com.android.adservices.data.measurement.migration;
 
+import android.content.ContentValues;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.MeasurementTables;
+import com.android.adservices.service.measurement.util.BaseUriExtractor;
+import com.android.adservices.service.measurement.util.Web;
+
+import java.util.Optional;
 
 /** Migrates Measurement DB from user version 2 to 3. */
 public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
+    private static final String ANDROID_APP_SCHEME = "android-app";
     private static final String EVENT_REPORT_CONTRACT_BACKUP =
             MeasurementTables.EventReportContract.TABLE + "_backup";
     private static final String AGGREGATE_REPORT_CONTRACT_BACKUP =
@@ -109,5 +118,61 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
         for (String sql : ALTER_STATEMENTS_VER_3) {
             db.execSQL(sql);
         }
+        migrateEventReportData(db);
+    }
+
+    private static void migrateEventReportData(SQLiteDatabase db) {
+        try (Cursor cursor = db.query(
+                    MeasurementTables.EventReportContract.TABLE,
+                    new String[] {
+                        MeasurementTables.EventReportContract.ID,
+                        MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION
+                    },
+                    null, null, null, null, null, null)) {
+            while (cursor.moveToNext()) {
+                updateEventReport(db, cursor);
+            }
+        }
+    }
+
+    private static void updateEventReport(SQLiteDatabase db, Cursor cursor) {
+        String id = cursor.getString(cursor.getColumnIndex(
+                MeasurementTables.EventReportContract.ID));
+        String destination = cursor.getString(cursor.getColumnIndex(
+                MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION));
+        Optional<String> baseUri = extractBaseUri(destination);
+        if (baseUri.isPresent()) {
+            ContentValues values = new ContentValues();
+            values.put(MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
+                    baseUri.get());
+            long rowCount = db.update(
+                    MeasurementTables.EventReportContract.TABLE,
+                    values,
+                    MeasurementTables.EventReportContract.ID + " = ?",
+                    new String[]{id});
+            if (rowCount != 1) {
+                LogUtil.d("MeasurementDbMigratorV3: failed to update event report record.");
+            }
+        } else {
+            LogUtil.d("MeasurementDbMigratorV3: baseUri not present. %s", destination);
+        }
+    }
+
+    private static Optional<String> extractBaseUri(String destination) {
+        if (destination == null) {
+            return Optional.empty();
+        }
+        Uri uri = Uri.parse(destination);
+        if (uri.getScheme() == null || !uri.isHierarchical() || !uri.isAbsolute()) {
+            return Optional.empty();
+        }
+        if (uri.getScheme().equals(ANDROID_APP_SCHEME)) {
+            return Optional.of(BaseUriExtractor.getBaseUri(uri).toString());
+        }
+        Optional<Uri> topPrivateDomainAndScheme = Web.topPrivateDomainAndScheme(uri);
+        if (topPrivateDomainAndScheme.isPresent()) {
+            return Optional.of(topPrivateDomainAndScheme.get().toString());
+        }
+        return Optional.empty();
     }
 }
