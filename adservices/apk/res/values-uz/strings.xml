@@ -99,14 +99,14 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android ushbu qiziqishni yana roʻyxatingizga kiritishi, lekin u darhol chiqmasligi mumkin"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Barcha qiziqishlar asliga tiklansinmi?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"Roʻyxatingiz tozalanadi, keyin vaqt oʻtishi bilan yangilanadi"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Roʻyxatingiz tozalanadi va kelgusida yangi qiziqishlar taxmin qilinadi. Tozalangan qiziqishlarga aloqador ayrim reklamalar hamon chiqib turishi mumkin."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Tiklash"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> bloklansinmi?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Bu ilova Privacy Sandbox uchun qiziqishlarni hisoblamaydi va uni blokdan chiqarmaguningizcha roʻyxatingizga qayta qoʻshilmaydi.\n\nUshbu ilova tomonidan oldindan taxmin qilingan qiziqishlar oʻchirib tashlanadi, lekin shunga qaramay, ayrim aloqador reklamalarni koʻrishingiz mumkin."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> blokdan chiqarildi"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Bu ilova siz uchun yana qiziqishlarni taxmin qilishi mumkin, lekin u darhol roʻyxatingizda koʻrinmasligi mumkin. Tegishli reklamalarni koʻrish uchun biroz vaqt ketishi mumkin."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Ilovalar yaratgan qiziqishlar qayta tiklansinmi?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"Roʻyxatingiz tozalanadi, keyin vaqt oʻtishi bilan yangilanadi"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Roʻyxatingizdagi ilovalar tomonidan hisoblangan qiziqishlar Privacy Sandbox tizimidan oʻchiriladi va ilovalar kelgusida yangi qiziqishlarni taxmin qiladi. Aloqador ayrim reklamalar chiqib turishi mumkin."</string>
     <string name="topic10001" msgid="1636806320891333775">"Sanʼat va hordiq"</string>
     <string name="topic10002" msgid="1226367977754287428">"Aktyorlik va teatr"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime va manga"</string>

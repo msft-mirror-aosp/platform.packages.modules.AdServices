@@ -99,14 +99,16 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android kan legge til denne interessen i listen igjen, men den vises muligens ikke umiddelbart"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Vil du tilbakestille alle interessene dine?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"Listen blir tømt og lastet inn på nytt over tid"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Tilbakestill"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Vil du blokkere <xliff:g id="APP">%1$s</xliff:g>?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Denne appen anslår ikke interesser for Privacy Sandbox og blir ikke lagt til i listen igjen, med mindre du opphever blokkeringen av den.\n\nInteresser som allerede er anslått av denne appen, blir slettet, men det kan hende du fortsatt ser noen relaterte annonser."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Blokkeringen av <xliff:g id="APP">%1$s</xliff:g> er opphevet"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Denne appen kan anslå interesser for deg igjen, men den vises muligens ikke i listen umiddelbart. Det kan ta en stund før du ser relaterte annonser."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Vil du tilbakestille interesser som er anslått av apper?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"Listen blir tømt og lastet inn på nytt over tid"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Kunst og underholdning"</string>
     <string name="topic10002" msgid="1226367977754287428">"Skuespill og teater"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime og manga"</string>

@@ -99,14 +99,16 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android бул кызыккан нерсени тизмеге кошо алат, бирок ал дароо көрүнбөйт"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"Жарайт"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Бардык кызыккан нерселериңиз баштапкы абалга келтирилсинби?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"Тизмедеги бардык кызыккан нерселериңиз тазаланып, убакыттын өтүшү менен жаңырып турат."</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Баштапкы абалга келтирүү"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> бөгөттөлсүнбү?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Бул колдонмо Privacy Sandbox технологиялары үчүн кызыккан нерселериңизди божомолдоп, тизмеңизде көрүнүшү үчүн аны бөгөттөн чыгарышыңыз керек.\n\nБуга чейин аныкталган кызыгууларыңыз өчүрүлөт, бирок алардын негизинде тандалган жарнамалар көрүнө берет."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> бөгөттөн чыгарылды"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Бул колдонмо кызыккан нерселериңизди кайра божомолдой алат, бирок алар тизмеде дароо көрүнбөйт. Ушул нерселердин негизинде тандалган жарнамалар бир аздан кийин көрүнө баштайт."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Колдонмолор чогулткан кызыккан нерселер баштапкы абалга келтирилсинби?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"Тизмедеги бардык кызыккан нерселериңиз тазаланып, убакыттын өтүшү менен жаңырып турат."</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Искусство жана көңүл ачуу"</string>
     <string name="topic10002" msgid="1226367977754287428">"Актёрдук жана театр"</string>
     <string name="topic10003" msgid="6949890838957814881">"Аниме жана Манга"</string>

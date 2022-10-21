@@ -99,14 +99,16 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"‏Android اس دلچسپی کو آپ کی فہرست میں دوبارہ شامل کر سکتی ہے لیکن ممکن ہے یہ فوری طور پر نظر نہ آئے"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"ٹھیک ہے"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"آپ کی تمام دلچسپیوں کو ری سیٹ کریں؟"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"آپ کی فہرست صاف کر دی جائے گی اور پھر وقت کے ساتھ ریفریش کر دی جائے گی"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"ری سیٹ کریں"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> کو مسدود کریں؟"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"یہ ایپ رازداری سینڈ باکس کے لئے دلچسپیوں کا اندازہ لگائے گی اور جب تک آپ اسے غیر مسدود نہیں کرتے ہیں، یہ آپ کی فہرست میں دوبارہ شامل نہیں کی جائے گی۔\n\nاس ایپ کے ذریعے پہلے سے اندازہ کردہ دلچسپیوں کو حذف کر دیا جائے گا لیکن آپ کو ابھی بھی کچھ متعلقہ اشتہارات نظر آ سکتے ہیں۔"</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> غیر مسدود ہے"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"یہ ایپ آپ کے لئے دلچسپیوں کا پھر سے اندازہ لگا سکتی ہے لیکن ممکن ہے یہ فوری طور پر آپ کی فہرست پر نظر نہ آئے۔ آپ کو متعلقہ اشتہارات نظر آنے میں وقت لگ سکتا ہے۔"</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"ایپس کے ذریعے تخلیق کی گئی دلچسپیوں کو ری سیٹ کریں؟"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"آپ کی فہرست صاف کر دی جائے گی اور پھر وقت کے ساتھ ریفریش کر دی جائے گی"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"آرٹس اور تفریح"</string>
     <string name="topic10002" msgid="1226367977754287428">"اداکاری اور تھیٹر"</string>
     <string name="topic10003" msgid="6949890838957814881">"اینیمی اور مانگا"</string>
