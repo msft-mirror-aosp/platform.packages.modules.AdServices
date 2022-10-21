@@ -178,34 +178,28 @@ public class SdkSandboxManagerTest {
     }
 
     @Test
-    public void unloadAndReloadSdk() {
+    public void unloadAndReloadSdk() throws Exception {
         final String sdkName = "com.android.loadSdkSuccessfullySdkProvider";
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
 
         mSdkSandboxManager.unloadSdk(sdkName);
+        // Wait till SDK is unloaded.
+        Thread.sleep(2000);
 
         // Calls to an unloaded SDK should fail.
-        // TODO(249482251): Only check one error case.
         final FakeRequestSurfacePackageCallback requestSurfacePackageCallback =
                 new FakeRequestSurfacePackageCallback();
-        boolean threwException = false;
-        try {
-            mSdkSandboxManager.requestSurfacePackage(
-                    sdkName,
-                    getRequestSurfacePackageParams(),
-                    Runnable::run,
-                    requestSurfacePackageCallback);
-        } catch (IllegalArgumentException e) {
-            threwException = true;
-        }
+        mSdkSandboxManager.requestSurfacePackage(
+                sdkName,
+                getRequestSurfacePackageParams(),
+                Runnable::run,
+                requestSurfacePackageCallback);
 
-        if (!threwException) {
-            assertThat(requestSurfacePackageCallback.isRequestSurfacePackageSuccessful()).isFalse();
-            assertThat(requestSurfacePackageCallback.getSurfacePackageErrorCode())
-                    .isEqualTo(SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE);
-        }
+        assertThat(requestSurfacePackageCallback.isRequestSurfacePackageSuccessful()).isFalse();
+        assertThat(requestSurfacePackageCallback.getSurfacePackageErrorCode())
+                .isEqualTo(SdkSandboxManager.REQUEST_SURFACE_PACKAGE_SDK_NOT_LOADED);
 
         // SDK can be reloaded after being unloaded.
         final FakeLoadSdkCallback callback2 = new FakeLoadSdkCallback();
@@ -214,7 +208,7 @@ public class SdkSandboxManagerTest {
     }
 
     @Test
-    public void unloadingNonexistentSdkThrowsException() {
+    public void unloadNonexistentSdk() {
         final String sdkName1 = "com.android.loadSdkSuccessfullySdkProvider";
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(sdkName1, new Bundle(), Runnable::run, callback);
@@ -222,7 +216,8 @@ public class SdkSandboxManagerTest {
         assertThat(callback.isLoadSdkSuccessful(/*ignoreSdkAlreadyLoadedError=*/ true)).isTrue();
 
         final String sdkName2 = "com.android.nonexistent";
-        assertThrows(IllegalArgumentException.class, () -> mSdkSandboxManager.unloadSdk(sdkName2));
+        // Unloading does nothing - call should go throw without error.
+        mSdkSandboxManager.unloadSdk(sdkName2);
     }
 
     @Test
@@ -408,7 +403,7 @@ public class SdkSandboxManagerTest {
                 sdkName, getRequestSurfacePackageParams(), Runnable::run, surfacePackageCallback);
         assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isFalse();
         assertThat(surfacePackageCallback.getSurfacePackageErrorCode())
-                .isEqualTo(SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE);
+                .isEqualTo(SdkSandboxManager.REQUEST_SURFACE_PACKAGE_SDK_NOT_LOADED);
     }
 
     @Test
