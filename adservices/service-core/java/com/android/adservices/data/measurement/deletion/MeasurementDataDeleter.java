@@ -22,6 +22,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
+import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
@@ -62,13 +63,36 @@ public class MeasurementDataDeleter {
                                 mDatastoreManager.runInTransaction(
                                         (dao) ->
                                                 resetAggregateContributionsOfTriggersToDelete(
-                                                        dao,
-                                                        report,
-                                                        dao.getSource(report.getSourceId()))));
+                                                        dao, report)));
+    }
+
+    @VisibleForTesting
+    void resetDedupKeys(@NonNull List<String> triggerIdsToDelete) {
+        Optional<List<EventReport>> eventReportsOpt =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) -> dao.fetchMatchingEventReports(triggerIdsToDelete));
+
+        if (!eventReportsOpt.isPresent()) {
+            LogUtil.d("No aggregate reports found for provided triggers.");
+            return;
+        }
+
+        eventReportsOpt
+                .get()
+                .forEach(
+                        report ->
+                                mDatastoreManager.runInTransaction(
+                                        (dao) -> resetDedupKeys(dao, report)));
     }
 
     private void resetAggregateContributionsOfTriggersToDelete(
-            IMeasurementDao dao, AggregateReport report, Source source) throws DatastoreException {
+            IMeasurementDao dao, AggregateReport report) throws DatastoreException {
+        if (report.getSourceId() == null) {
+            LogUtil.e("SourceId is null on event report.");
+            return;
+        }
+
+        Source source = dao.getSource(report.getSourceId());
         int aggregateHistogramContributionsSum =
                 report.getAggregateAttributionData().getContributions().stream()
                         .mapToInt(AggregateHistogramContribution::getValue)
@@ -83,5 +107,16 @@ public class MeasurementDataDeleter {
 
         // Update in the DB
         dao.updateSourceAggregateContributions(source);
+    }
+
+    private void resetDedupKeys(IMeasurementDao dao, EventReport report) throws DatastoreException {
+        if (report.getSourceId() == null) {
+            LogUtil.e("SourceId on the event report is null.");
+            return;
+        }
+
+        Source source = dao.getSource(report.getSourceId());
+        source.getDedupKeys().remove(report.getTriggerDedupKey());
+        dao.updateSourceDedupKeys(source);
     }
 }
