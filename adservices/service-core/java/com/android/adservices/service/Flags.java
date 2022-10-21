@@ -962,8 +962,7 @@ public interface Flags extends Dumpable {
 
     /** Gets the state of the global and appSetId kill switch. */
     default boolean getAppSetIdKillSwitch() {
-        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch() || APPSETID_KILL_SWITCH;
+        return APPSETID_KILL_SWITCH;
     }
 
     // TOPICS Killswitches
