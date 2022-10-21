@@ -2427,7 +2427,7 @@ public class AdSelectionE2ETest {
                                 .setUri(
                                         mMockWebServerRule.uriForPath(
                                                 BUYER_TRUSTED_SIGNAL_URI_PATH))
-                                .setKeys(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_KEYS)
+                                .setKeys(TrustedBiddingDataFixture.getValidTrustedBiddingKeys())
                                 .build())
                 .setBiddingLogicUri(biddingUri)
                 .setAds(ads)
