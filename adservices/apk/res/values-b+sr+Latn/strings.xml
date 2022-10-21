@@ -99,14 +99,16 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android može ponovo da doda ovo interesovanje na listu, ali se ono možda neće odmah pojaviti"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"Potvrdi"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Želite da resetujete sva interesovanja?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"Lista će biti obrisana, pa osvežena tokom vremena"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Resetuj"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Želite da blokirate aplikaciju <xliff:g id="APP">%1$s</xliff:g>?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Ova aplikacija neće procenjivati interesovanja za Zaštićeno okruženje privatnosti i neće biti ponovo dodata na listu.\n\nInteresovanja koja je ova aplikacija već procenila biće izbrisana, ali ćete možda i dalje videti neke srodne oglase."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Aplikacija <xliff:g id="APP">%1$s</xliff:g> je odblokirana"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Ova aplikacija može ponovo da proceni interesovanja za vas, ali se možda neće odmah pojaviti na listi. Možda će proći neko vreme dok ne budete videli srodne oglase."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Želite da resetujete interesovanja koja su generisale aplikacije?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"Lista će biti obrisana, pa osvežena tokom vremena"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Umetnost i zabava"</string>
     <string name="topic10002" msgid="1226367977754287428">"Gluma i pozorište"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime i manga"</string>

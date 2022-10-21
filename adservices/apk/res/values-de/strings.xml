@@ -99,14 +99,16 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android kann dieses Interesse wieder zu deiner Liste hinzufügen, unter Umständen erscheint es aber nicht sofort auf deiner Liste"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Alle Interessen zurücksetzen?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"Deine Liste wird gelöscht und mit der Zeit aktualisiert"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Zurücksetzen"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> blockieren?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Diese App schätzt keine Interessen für die Privacy Sandbox mehr und sie wird nicht noch einmal zu deiner Liste hinzugefügt – es sei denn, du hebst die Blockierung auf.\n\nBereits von der App geschätzte Interessen werden gelöscht. Es kann aber sein, dass du weiterhin entsprechende Werbung siehst."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> ist nicht mehr blockiert"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Diese App kann wieder deine Interessen schätzen. Unter Umständen erscheinen sie aber nicht sofort auf deiner Liste. Es kann eine Weile dauern, bis du entsprechende Werbung siehst."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Von Apps generierte Interessen zurücksetzen?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"Deine Liste wird gelöscht und mit der Zeit aktualisiert"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Kunst und Unterhaltung"</string>
     <string name="topic10002" msgid="1226367977754287428">"Schauspielkunst und Theater"</string>
     <string name="topic10003" msgid="6949890838957814881">"Manga und Anime"</string>

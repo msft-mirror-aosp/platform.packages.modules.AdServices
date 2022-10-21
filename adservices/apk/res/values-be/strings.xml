@@ -99,14 +99,16 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android можа зноў дадаць гэты інтарэс у ваш спіс, аднак ён не з\'явіцца там адразу ж"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Скінуць усе вашы інтарэсы?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"Ваш спіс будзе ачышчаны, а потым абноўлены праз некаторы час"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Скінуць"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Заблакіраваць праграму \"<xliff:g id="APP">%1$s</xliff:g>\"?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Гэта праграма не будзе ствараць інтарэсы для Privacy Sandbox і не з\'явіцца ў спісе, пакуль вы яе не разблакіруеце.\n\nІнтарэсы, ужо створаныя гэтай праграмай, будуць выдалены, аднак вам па-ранейшаму можа паказвацца адпаведная рэклама."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Праграма \"<xliff:g id="APP">%1$s</xliff:g>\" разблакіравана"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Гэта праграма зноў можа ствараць вашы інтарэсы, аднак яны не з\'явяцца ў спісе адразу ж. Адпаведная рэклама пачне вам паказвацца толькі праз некаторы час."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Скінуць інтарэсы, створаныя праграмамі?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"Ваш спіс будзе ачышчаны, а потым абноўлены праз некаторы час"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Мастацтва і забавы"</string>
     <string name="topic10002" msgid="1226367977754287428">"Акцёрскае майстэрства і тэатр"</string>
     <string name="topic10003" msgid="6949890838957814881">"Анімэ і манга"</string>

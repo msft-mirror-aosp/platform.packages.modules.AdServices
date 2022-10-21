@@ -99,14 +99,16 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Az Android újból felveheti ezt az érdeklődési kört a listára, de előfordulhat, hogy nem jelenik meg azonnal"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Alaphelyzetbe állítja az összes érdeklődési kört?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"A listán szereplő elemek törlődnek, majd idővel frissülnek"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Alaphelyzet"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Letiltja ezt: <xliff:g id="APP">%1$s</xliff:g>?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Amíg fel nem oldja, az alkalmazás nem tesz becslést az érdeklődési körökre a Privacy Sandboxnál, és az érdeklődési köröket nem veszi fel újból a rendszer a listára.\n\nAz alkalmazás által korábban becsült érdeklődési körök törlődnek, de továbbra is láthat néhány kapcsolódó hirdetést."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> letiltása feloldva"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Az alkalmazás újból megbecsülheti az érdeklődési köröket, de előfordulhat, hogy nem jelennek meg azonnal a listán. Beletelhet némi időbe, amíg az összes kapcsolódó hirdetés megjelenik."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Alaphelyzetbe állítja az alkalmazások által generált érdeklődési köröket?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"A listán szereplő elemek törlődnek, majd idővel frissülnek"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Művészetek és szórakoztatás"</string>
     <string name="topic10002" msgid="1226367977754287428">"Színészet és színház"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime és manga"</string>

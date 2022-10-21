@@ -99,14 +99,14 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android сможет снова добавить эту тему в список. Вероятно, она появится не сразу."</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"ОК"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Сбросить все интересы?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"Из списка будут удалены все интересы. С течением времени он будет обновляться."</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Из списка будут удалены все интересы, а со временем в нем появятся новые. Иногда вы всё ещё будете видеть связанную со старыми интересами рекламу."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Сбросить"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Заблокировать приложение \"<xliff:g id="APP">%1$s</xliff:g>\"?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Это приложение не будет определять ваши интересы для технологий Privacy Sandbox и появляться в вашем списке, пока вы не разблокируете его.\n\nОпределенные ранее интересы будут удалены, но вы ещё сможете видеть рекламу, подобранную на их основе."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Приложение \"<xliff:g id="APP">%1$s</xliff:g>\" разблокировано"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Это приложение снова сможет определять ваши интересы. Вероятно, вы увидите их в списке не сразу. Реклама, подобранная на их основе, начнет появляться через некоторое время."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Сбросить интересы, сгенерированные приложениями?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"Из списка будут удалены все интересы. С течением времени он будет обновляться."</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Выявленные ранее интересы будут удалены из Privacy Sandbox, а приложения начнут определять их заново. Иногда вы всё ещё будете видеть связанную со старыми интересами рекламу."</string>
     <string name="topic10001" msgid="1636806320891333775">"Искусство и развлечения"</string>
     <string name="topic10002" msgid="1226367977754287428">"Актерское искусство и театр"</string>
     <string name="topic10003" msgid="6949890838957814881">"Аниме и манга"</string>
