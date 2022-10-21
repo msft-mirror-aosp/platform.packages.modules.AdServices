@@ -23,6 +23,7 @@ import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
 import android.os.Binder;
 import android.os.Bundle;
+import android.os.Process;
 import android.util.Log;
 import android.view.View;
 
@@ -44,6 +45,9 @@ public class SdkSandboxDataIsolationTestProvider extends SandboxedSdkProvider {
 
     private static final String APP_PKG = "com.android.sdksandbox.cts.app";
     private static final String APP_2_PKG = "com.android.sdksandbox.cts.app2";
+
+    private static final String CURRENT_USER_ID =
+            String.valueOf(Process.myUserHandle().getUserId(Process.myUid()));
 
     @Override
     public SandboxedSdk onLoadSdk(Bundle params) {
@@ -83,18 +87,24 @@ public class SdkSandboxDataIsolationTestProvider extends SandboxedSdkProvider {
     private void testSdkSandboxDataIsolation_CannotVerifyAppExistence() {
         // Check if the sandbox can check existence of any app through their data directories,
         // profiles or associated sandbox data directories.
-        verifyDirectoryAccess("/data/user/0/" + APP_PKG, false);
-        verifyDirectoryAccess("/data/user/0/" + APP_2_PKG, false);
-        verifyDirectoryAccess("/data/user/0/does.not.exist", false);
+        verifyDirectoryAccess("/data/user/" + CURRENT_USER_ID + "/" + APP_PKG, false);
+        verifyDirectoryAccess("/data/user/" + CURRENT_USER_ID + "/" + APP_2_PKG, false);
+        verifyDirectoryAccess("/data/user/" + CURRENT_USER_ID + "/does.not.exist", false);
 
-        verifyDirectoryAccess("/data/misc/profiles/cur/0/" + APP_PKG, false);
-        verifyDirectoryAccess("/data/misc/profiles/cur/0/" + APP_2_PKG, false);
-        verifyDirectoryAccess("/data/misc/profiles/cur/0/does.not.exist", false);
+        verifyDirectoryAccess("/data/misc/profiles/cur/" + CURRENT_USER_ID + "/" + APP_PKG, false);
+        verifyDirectoryAccess(
+                "/data/misc/profiles/cur/" + CURRENT_USER_ID + "/" + APP_2_PKG, false);
+        verifyDirectoryAccess(
+                "/data/misc/profiles/cur/" + CURRENT_USER_ID + "/does.not.exist", false);
 
-        verifyDirectoryAccess("/data/misc_ce/0/sdksandbox/" + APP_2_PKG, false);
-        verifyDirectoryAccess("/data/misc_ce/0/sdksandbox/does.not.exist", false);
-        verifyDirectoryAccess("/data/misc_de/0/sdksandbox/" + APP_2_PKG, false);
-        verifyDirectoryAccess("/data/misc_de/0/sdksandbox/does.not.exist", false);
+        verifyDirectoryAccess(
+                "/data/misc_ce/" + CURRENT_USER_ID + "/sdksandbox/" + APP_2_PKG, false);
+        verifyDirectoryAccess(
+                "/data/misc_ce/" + CURRENT_USER_ID + "/sdksandbox/does.not.exist", false);
+        verifyDirectoryAccess(
+                "/data/misc_de/" + CURRENT_USER_ID + "/sdksandbox/" + APP_2_PKG, false);
+        verifyDirectoryAccess(
+                "/data/misc_de/" + CURRENT_USER_ID + "/sdksandbox/does.not.exist", false);
     }
 
     private void testSdkSandboxDataIsolation_CannotVerifyOtherUserAppExistence(Bundle params) {
@@ -114,12 +124,16 @@ public class SdkSandboxDataIsolationTestProvider extends SandboxedSdkProvider {
         String uuid = params.getString("sandbox_isolation_uuid");
         String volumePath = "/mnt/expand/" + uuid;
 
-        verifyDirectoryAccess(volumePath + "/user/0/" + APP_2_PKG, false);
-        verifyDirectoryAccess(volumePath + "/user/0/does.not.exist", false);
-        verifyDirectoryAccess(volumePath + "/misc_ce/0/sdksandbox/" + APP_2_PKG, false);
-        verifyDirectoryAccess(volumePath + "/misc_ce/0/sdksandbox/does.not.exist", false);
-        verifyDirectoryAccess(volumePath + "/misc_de/0/sdksandbox/" + APP_2_PKG, false);
-        verifyDirectoryAccess(volumePath + "/misc_de/0/sdksandbox/does.not.exist", false);
+        verifyDirectoryAccess(volumePath + "/user/" + CURRENT_USER_ID + "/" + APP_2_PKG, false);
+        verifyDirectoryAccess(volumePath + "/user/" + CURRENT_USER_ID + "/does.not.exist", false);
+        verifyDirectoryAccess(
+                volumePath + "/misc_ce/" + CURRENT_USER_ID + "/sdksandbox/" + APP_2_PKG, false);
+        verifyDirectoryAccess(
+                volumePath + "/misc_ce/" + CURRENT_USER_ID + "/sdksandbox/does.not.exist", false);
+        verifyDirectoryAccess(
+                volumePath + "/misc_de/" + CURRENT_USER_ID + "/sdksandbox/" + APP_2_PKG, false);
+        verifyDirectoryAccess(
+                volumePath + "/misc_de/" + CURRENT_USER_ID + "/sdksandbox/does.not.exist", false);
     }
 
     private void verifyDirectoryAccess(String path, boolean shouldBeAccessible) {
