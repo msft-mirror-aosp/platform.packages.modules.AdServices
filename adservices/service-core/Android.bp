@@ -84,6 +84,8 @@ android_library {
         "mobile_data_downloader_lib",
         "androidx.webkit_webkit",
         "androidx.javascriptengine_javascriptengine",
+        "adservices-proto-lite",
+        "adservices-grpclib-lite",
     ],
     jarjar_rules: "jarjar-rules.txt",
     apex_available: ["com.android.adservices"],

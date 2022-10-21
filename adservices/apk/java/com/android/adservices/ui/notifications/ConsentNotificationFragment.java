@@ -20,6 +20,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
 import static com.android.adservices.ui.notifications.ConsentNotificationConfirmationFragment.IS_CONSENT_GIVEN_ARGUMENT_KEY;
+import static com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity.FROM_NOTIFICATION_KEY;
 
 import android.content.Context;
 import android.content.Intent;
@@ -118,9 +119,9 @@ public class ConsentNotificationFragment extends Fragment {
                         // go to settings activity
                         Intent intent =
                                 new Intent(requireActivity(), AdServicesSettingsMainActivity.class);
-                        intent.addFlags(
-                                Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        intent.putExtra(FROM_NOTIFICATION_KEY, true);
                         startActivity(intent);
+                        requireActivity().finish();
                     }
                 });
 
