@@ -32,6 +32,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.FlagsFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -91,7 +92,8 @@ public final class EpochJobService extends JobService {
         return false;
     }
 
-    private static void schedule(
+    @VisibleForTesting
+    static void schedule(
             Context context,
             @NonNull JobScheduler jobScheduler,
             long epochJobPeriodMs,
@@ -101,6 +103,7 @@ public final class EpochJobService extends JobService {
                                 TOPICS_EPOCH_JOB_ID,
                                 new ComponentName(context, EpochJobService.class))
                         .setRequiresCharging(true)
+                        .setPersisted(true)
                         .setPeriodic(epochJobPeriodMs, epochJobFlexMs)
                         .build();
 
