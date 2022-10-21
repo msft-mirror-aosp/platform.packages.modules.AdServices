@@ -17,6 +17,9 @@
 package com.android.adservices.data.measurement.deletion;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -25,6 +28,7 @@ import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
+import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.Trigger;
@@ -35,6 +39,7 @@ import com.android.adservices.service.measurement.aggregation.AggregateAttributi
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.aggregation.AggregateReportFixture;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import com.google.common.collect.ImmutableList;
 
@@ -46,6 +51,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -104,6 +110,9 @@ public class MeasurementDataDeleterTest {
     @Mock private AggregatableAttributionSource mAggregatableAttributionSource2;
     @Mock private AggregatableAttributionTrigger mAggregatableAttributionTrigger1;
     @Mock private AggregatableAttributionTrigger mAggregatableAttributionTrigger2;
+    @Mock private EventReport mEventReport1;
+    @Mock private EventReport mEventReport2;
+    @Mock private EventReport mEventReport3;
 
     private MeasurementDataDeleter mMeasurementDataDeleter;
 
@@ -206,5 +215,74 @@ public class MeasurementDataDeleterTest {
                 .updateSourceAggregateContributions(sourceCaptor.capture());
         assertEquals(1, sourceCaptor.getAllValues().size());
         assertEquals(0, sourceCaptor.getValue().getAggregateContributions());
+    }
+
+    @Test
+    public void resetDedupKeys_hasMatchingEventReports_removesTriggerDedupKeysFromSource()
+            throws DatastoreException {
+        // Setup
+        Source source1 =
+                SourceFixture.getValidSourceBuilder()
+                        .setId("sourceId1")
+                        .setDedupKeys(
+                                new ArrayList<>(
+                                        Arrays.asList(
+                                                new UnsignedLong("1"),
+                                                new UnsignedLong("2"),
+                                                new UnsignedLong("3"))))
+                        .build();
+        Source source2 =
+                SourceFixture.getValidSourceBuilder()
+                        .setId("sourceId2")
+                        .setDedupKeys(
+                                new ArrayList<>(
+                                        Arrays.asList(
+                                                new UnsignedLong("11"),
+                                                new UnsignedLong("22"),
+                                                new UnsignedLong("33"))))
+                        .build();
+
+        List<String> triggerIds = Arrays.asList("triggerId1", "triggerId2", "triggerId3");
+        when(mEventReport1.getTriggerDedupKey()).thenReturn(new UnsignedLong("1")); // S1 - T1
+        when(mEventReport2.getTriggerDedupKey()).thenReturn(new UnsignedLong("22")); // S2 - T2
+        when(mEventReport3.getTriggerDedupKey()).thenReturn(new UnsignedLong("3")); // S1 - T3
+        when(mEventReport1.getSourceId()).thenReturn(source1.getId());
+        when(mEventReport2.getSourceId()).thenReturn(source2.getId());
+        when(mEventReport3.getSourceId()).thenReturn(source1.getId());
+
+        when(mMeasurementDao.getSource(source1.getId())).thenReturn(source1);
+        when(mMeasurementDao.getSource(source2.getId())).thenReturn(source2);
+        when(mMeasurementDao.fetchMatchingEventReports(triggerIds))
+                .thenReturn(List.of(mEventReport1, mEventReport2, mEventReport3));
+
+        // Execution
+        mMeasurementDataDeleter.resetDedupKeys(triggerIds);
+
+        // Verification
+        verify(mMeasurementDao, times(2)).updateSourceDedupKeys(source1);
+        verify(mMeasurementDao).updateSourceDedupKeys(source2);
+        assertEquals(Collections.singletonList(new UnsignedLong("2")), source1.getDedupKeys());
+        assertEquals(
+                Arrays.asList(new UnsignedLong("11"), new UnsignedLong("33")),
+                source2.getDedupKeys());
+    }
+
+    @Test
+    public void resetDedupKeys_eventReportHasNullSourceId_ignoresRemoval()
+            throws DatastoreException {
+        // Setup
+        List<String> triggerIds = Collections.singletonList("triggerId1");
+        when(mEventReport1.getSourceId()).thenReturn(null);
+        when(mEventReport1.getTriggerDedupKey()).thenReturn(new UnsignedLong("1")); // S1 - T1
+
+        when(mMeasurementDao.fetchMatchingEventReports(triggerIds))
+                .thenReturn(List.of(mEventReport1));
+
+        // Execution
+        mMeasurementDataDeleter.resetDedupKeys(triggerIds);
+
+        // Verification
+        verify(mMeasurementDao, never()).getSource(anyString());
+        verify(mMeasurementDao, never()).updateSourceDedupKeys(any());
     }
 }

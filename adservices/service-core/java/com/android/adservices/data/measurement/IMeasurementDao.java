@@ -383,4 +383,13 @@ public interface IMeasurementDao {
      */
     List<AggregateReport> fetchMatchingAggregateReports(@NonNull List<String> triggerIds)
             throws DatastoreException;
+
+    /**
+     * Fetches matching event reports with the provided parameters. It returns a union of event
+     * reports that match with any of the source IDs or the trigger IDs.
+     *
+     * @param triggerIds triggers that should match with event reports
+     */
+    List<EventReport> fetchMatchingEventReports(@NonNull List<String> triggerIds)
+            throws DatastoreException;
 }

@@ -44,7 +44,6 @@ import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Web;
 
-
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -892,28 +891,21 @@ class MeasurementDao implements IMeasurementDao {
     @Override
     public List<AggregateReport> fetchMatchingAggregateReports(@NonNull List<String> triggerIds)
             throws DatastoreException {
-        List<AggregateReport> aggregateReports = new ArrayList<>();
-        String delimitedTriggerIds =
-                triggerIds.stream()
-                        .map(DatabaseUtils::sqlEscapeString)
-                        .collect(Collectors.joining(","));
+        return fetchRecordsMatchingWithParameters(
+                triggerIds,
+                MeasurementTables.AggregateReport.TABLE,
+                MeasurementTables.AggregateReport.TRIGGER_ID,
+                SqliteObjectMapper::constructAggregateReport);
+    }
 
-        String whereString =
-                MeasurementTables.AggregateReport.TRIGGER_ID + " IN (" + delimitedTriggerIds + ")";
-        try (Cursor cursor =
-                mSQLTransaction
-                        .getDatabase()
-                        .rawQuery(
-                                String.format(
-                                        Locale.ENGLISH,
-                                        "SELECT * FROM %1$s" + " WHERE " + whereString,
-                                        MeasurementTables.AggregateReport.TABLE),
-                                null)) {
-            while (cursor.moveToNext()) {
-                aggregateReports.add(SqliteObjectMapper.constructAggregateReport(cursor));
-            }
-        }
-        return aggregateReports;
+    @Override
+    public List<EventReport> fetchMatchingEventReports(@NonNull List<String> triggerIds)
+            throws DatastoreException {
+        return fetchRecordsMatchingWithParameters(
+                triggerIds,
+                MeasurementTables.EventReportContract.TABLE,
+                MeasurementTables.EventReportContract.TRIGGER_ID,
+                SqliteObjectMapper::constructEventReportFromCursor);
     }
 
     private String constructDeleteQueryAppsNotPresent(List<Uri> uriList) {
@@ -1727,5 +1719,34 @@ class MeasurementDao implements IMeasurementDao {
                             postfixMatch);
         }
         return (int) DatabaseUtils.longForQuery(mSQLTransaction.getDatabase(), query, null);
+    }
+
+    private <T> List<T> fetchRecordsMatchingWithParameters(
+            List<String> matchingParameters,
+            String tableName,
+            String columnName,
+            Function<Cursor, T> sqlMapperFunction)
+            throws DatastoreException {
+        List<T> reports = new ArrayList<>();
+        String delimitedStringsToMatch =
+                matchingParameters.stream()
+                        .map(DatabaseUtils::sqlEscapeString)
+                        .collect(Collectors.joining(","));
+
+        String whereString = columnName + " IN (" + delimitedStringsToMatch + ")";
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .rawQuery(
+                                String.format(
+                                        Locale.ENGLISH,
+                                        "SELECT * FROM %1$s WHERE " + whereString,
+                                        tableName),
+                                null)) {
+            while (cursor.moveToNext()) {
+                reports.add(sqlMapperFunction.apply(cursor));
+            }
+        }
+        return reports;
     }
 }
