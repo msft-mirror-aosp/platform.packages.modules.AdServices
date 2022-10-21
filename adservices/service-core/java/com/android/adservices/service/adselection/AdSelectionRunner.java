@@ -45,7 +45,6 @@ import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.js.JSSandboxIsNotAvailableException;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -129,6 +128,22 @@ public abstract class AdSelectionRunner {
     @NonNull protected final ApiServiceLatencyCalculator mApiServiceLatencyCalculator;
     protected final int mCallerUid;
 
+    /**
+     * @param context service context
+     * @param customAudienceDao DAO to access custom audience storage
+     * @param adSelectionEntryDao DAO to access ad selection storage
+     * @param lightweightExecutorService executor for running short tasks
+     * @param backgroundExecutorService executor for longer running tasks (ex. network calls)
+     * @param scheduledExecutor executor for tasks to be run with a delay or timed executions
+     * @param consentManager instance of {@link ConsentManager} for verifying user consent
+     * @param adServicesLogger logger for logging calls to PPAPI
+     * @param appImportanceFilter filter to assert calling app is running in the foreground
+     * @param flags for accessing feature flags
+     * @param throttlerSupplier supplier for throttling calls to PPAPI
+     * @param callerUid calling app UID
+     * @param fledgeAuthorizationFilter filter for authorizing the caller on certain behavior
+     * @param fledgeAllowListsFilter filter for verifying the caller can call PPAPI
+     */
     public AdSelectionRunner(
             @NonNull final Context context,
             @NonNull final CustomAudienceDao customAudienceDao,
@@ -138,7 +153,6 @@ public abstract class AdSelectionRunner {
             @NonNull final ScheduledThreadPoolExecutor scheduledExecutor,
             @NonNull final ConsentManager consentManager,
             @NonNull final AdServicesLogger adServicesLogger,
-            @NonNull final DevContext devContext,
             @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull final Flags flags,
             @NonNull final Supplier<Throttler> throttlerSupplier,
@@ -153,7 +167,6 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(consentManager);
         Objects.requireNonNull(adServicesLogger);
-        Objects.requireNonNull(devContext);
         Objects.requireNonNull(appImportanceFilter);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(throttlerSupplier);
