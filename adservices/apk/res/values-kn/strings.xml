@@ -99,14 +99,16 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android ಈ ಆಸಕ್ತಿಯನ್ನು ಮತ್ತೆ ನಿಮ್ಮ ಪಟ್ಟಿಗೆ ಸೇರಿಸಬಹುದು, ಆದರೆ ಅದು ತಕ್ಷಣವೇ ಗೋಚರಿಸದೇ ಇರಬಹುದು"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"ಸರಿ"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"ನಿಮ್ಮ ಎಲ್ಲಾ ಆಸಕ್ತಿಗಳನ್ನು ಮರುಹೊಂದಿಸುವುದೇ?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"ನಿಮ್ಮ ಪಟ್ಟಿಯನ್ನು ತೆರವುಗೊಳಿಸಲಾಗುತ್ತದೆ, ನಂತರ ಕಾಲಕ್ರಮೇಣ ರಿಫ್ರೆಶ್ ಮಾಡಲಾಗುತ್ತದೆ"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"ಮರುಹೊಂದಿಸಿ"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> ಅನ್ನು ನಿರ್ಬಂಧಿಸುವುದೇ?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"ಈ ಆ್ಯಪ್ ಪ್ರೈವೆಸಿ ಸ್ಯಾಂಡ್‌ಬಾಕ್ಸ್‌ಗಾಗಿ ಆಸಕ್ತಿಗಳನ್ನು ಅಂದಾಜು ಮಾಡುವುದಿಲ್ಲ ಮತ್ತು ನೀವು ಅದಕ್ಕೆ ವಿಧಿಸಿರುವ ನಿರ್ಬಂಧವನ್ನು ತೆಗೆದುಹಾಕದ ಹೊರತು ಮತ್ತೆ ನಿಮ್ಮ ಪಟ್ಟಿಗೆ ಸೇರಿಸಲಾಗುವುದಿಲ್ಲ.\n\nಈ ಆ್ಯಪ್‌ನಿಂದ ಈಗಾಗಲೇ ಅಂದಾಜಿಸಲಾದ ಆಸಕ್ತಿಗಳನ್ನು ಅಳಿಸಲಾಗುತ್ತದೆ, ಆದರೂ ಸಹ ನಿಮಗೆ ಕೆಲವು ಸಂಬಂಧಿತ ಜಾಹೀರಾತುಗಳು ಕಾಣಬಹುದು."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> ನ ನಿರ್ಬಂಧವನ್ನು ತೆಗೆದುಹಾಕಲಾಗಿದೆ"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"ಈ ಆ್ಯಪ್ ನಿಮಗಾಗಿ ಆಸಕ್ತಿಗಳನ್ನು ಮತ್ತೊಮ್ಮೆ ಅಂದಾಜು ಮಾಡಬಹುದು, ಆದರೆ ಇದು ತಕ್ಷಣವೇ ನಿಮ್ಮ ಪಟ್ಟಿಯಲ್ಲಿ ಕಾಣಿಸದೇ ಇರಬಹುದು. ನಿಮಗೆ ಸಂಬಂಧಿತ ಜಾಹೀರಾತುಗಳು ಕಾಣಲು ಸ್ವಲ್ಪ ಸಮಯ ತೆಗೆದುಕೊಳ್ಳಬಹುದು."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"ಆ್ಯಪ್‌ಗಳಿಂದ ರಚಿಸಲಾದ ಆಸಕ್ತಿಗಳನ್ನು ಮರುಹೊಂದಿಸುವುದೇ?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"ನಿಮ್ಮ ಪಟ್ಟಿಯನ್ನು ತೆರವುಗೊಳಿಸಲಾಗುತ್ತದೆ, ನಂತರ ಕಾಲಕ್ರಮೇಣ ರಿಫ್ರೆಶ್ ಮಾಡಲಾಗುತ್ತದೆ"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"ಕಲೆ &amp; ಮನರಂಜನೆ"</string>
     <string name="topic10002" msgid="1226367977754287428">"ನಟನೆ &amp; ಥೇಟರ್"</string>
     <string name="topic10003" msgid="6949890838957814881">"ಆನಿಮೇ &amp; ಮಾಂಗ"</string>

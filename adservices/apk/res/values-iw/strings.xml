@@ -103,14 +103,14 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"‏ייתכן ש-Android יוסיף שוב את תחום העניין הזה לרשימה שלך, אך יכול להיות שהוא לא יופיע מיד"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"אישור"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"לאפס את כל תחומי העניין?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"הרשימה תימחק ותתרענן עם הזמן"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"הרשימה תימחק ותחומי עניין חדשים יוערכו בהמשך. ייתכן שעדיין יוצגו כמה מודעות שקשורות לתחומי עניין שנמחקו."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"איפוס"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"לחסום את <xliff:g id="APP">%1$s</xliff:g>?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"האפליקציה הזו לא תעריך את תחומי העניין לארגז החול לפרטיות ולא תתווסף שוב לרשימה שלך, אלא אם ביטלת את החסימה שלה.\n\nכל תחומי העניין שהאפליקציה כבר העריכה יימחקו, אך יכול להיות שעדיין יוצגו לך כמה מודעות קשורות."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"בוטלה החסימה של <xliff:g id="APP">%1$s</xliff:g>"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"האפליקציה הזו יכולה להעריך את תחומי העניין בשבילך שוב, אך יכול להיות שהם לא יופיעו ברשימה שלך מיד. הצגת כל המודעות הקשורות עשויה לקחת הרבה זמן."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"לאפס את תחומי העניין שנוצרו על ידי האפליקציות?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"הרשימה תימחק ותתרענן עם הזמן"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"תחומי עניין שהוערכו על ידי האפליקציות ברשימה שלך יימחקו מארגז החול לפרטיות, והאפליקציות יעריכו תחומי עניין חדשים בהמשך. ייתכן שעדיין יוצגו כמה מודעות קשורות."</string>
     <string name="topic10001" msgid="1636806320891333775">"אומנות ובידור"</string>
     <string name="topic10002" msgid="1226367977754287428">"משחק ותיאטרון"</string>
     <string name="topic10003" msgid="6949890838957814881">"אנימה ומנגה"</string>

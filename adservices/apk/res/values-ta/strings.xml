@@ -99,14 +99,16 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"உங்கள் பட்டியலில் இந்த ஆர்வத்தை Android மீண்டும் சேர்க்கலாம், எனினும் அது உடனே காட்டப்படாது"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"சரி"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"உங்களின் அனைத்து ஆர்வங்களையும் மீட்டமைக்கவா?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"உங்கள் பட்டியல் நீக்கப்படும், அதன் பிறகு காலப்போக்கில் புதுப்பிக்கப்படும்"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"மீட்டமை"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> ஆப்ஸைத் தடுக்கவா?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"தனியுரிமை சாண்ட்பாக்ஸுக்கான ஆர்வங்களை இந்த ஆப்ஸ் கணக்கிடாது மற்றும் நீங்கள் அதற்கான தடையை நீக்கும் வரை பட்டியலில் அது மீண்டும் சேர்க்கப்படாது.\n\nஇந்த ஆப்ஸ் மூலம் ஏற்கெனவே கணக்கிடப்பட்ட ஆர்வங்கள் நீக்கப்படும், எனினும் தொடர்புடைய சில விளம்பரங்களை நீங்கள் பார்க்கக்கூடும்."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> ஆப்ஸ் தடுப்பு நீக்கப்பட்டது"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"இந்த ஆப்ஸ் உங்களுக்காக ஆர்வங்களை மீண்டும் கணக்கிடலாம், எனினும் அவை உங்கள் பட்டியலில் உடனே காட்டப்படாது. தொடர்புடைய விளம்பரங்களைப் பார்க்க சிறிதுநேரம் ஆகக்கூடும்."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"ஆப்ஸ் மூலம் உருவாக்கப்பட்ட ஆர்வங்களை மீட்டமைக்கவா?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"உங்கள் பட்டியல் நீக்கப்படும், அதன் பிறகு காலப்போக்கில் புதுப்பிக்கப்படும்"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"கலை &amp; பொழுதுபோக்கு"</string>
     <string name="topic10002" msgid="1226367977754287428">"நடிப்பு &amp; திரையரங்கு"</string>
     <string name="topic10003" msgid="6949890838957814881">"அனிமே &amp; மங்கா"</string>

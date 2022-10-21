@@ -99,14 +99,14 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android ଆପଣଙ୍କ ତାଲିକାରେ ଏହି ଆଗ୍ରହକୁ ପୁଣି ଯୋଗ କରିପାରେ, କିନ୍ତୁ ଏହା ତୁରନ୍ତ ଦେଖାଯାଇନପାରେ"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"ଠିକ୍ ଅଛି"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"ଆପଣଙ୍କର ସମସ୍ତ ଆଗ୍ରହକୁ ରିସେଟ କରିବେ?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"ଆପଣଙ୍କ ତାଲିକା ଖାଲି ହୋଇଯିବ, ତା\'ପରେ ସମୟ ଅନୁସାରେ ରିଫ୍ରେସ ହେବ"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"ଆପଣଙ୍କ ତାଲିକା ଖାଲି ହୋଇଯିବ ଏବଂ ଭବିଷ୍ୟତରେ ନୂଆ ଆଗ୍ରହଗୁଡ଼ିକୁ ଆକଳନ କରାଯିବ। ଆପଣ ଏବେ ବି ଖାଲି କରାଯାଇଥିବା ଆଗ୍ରହ ସମ୍ବନ୍ଧିତ କିଛି ବିଜ୍ଞାପନ ଦେଖିପାରନ୍ତି।"</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"ରିସେଟ କରନ୍ତୁ"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g>କୁ ବ୍ଲକ କରିବେ?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"ଏହି ଆପ ପ୍ରାଇଭେସି ସେଣ୍ଡବକ୍ସ ପାଇଁ ଆଗ୍ରହଗୁଡ଼ିକୁ ଆକଳନ କରିବ ନାହିଁ ଏବଂ ଆପଣ ଏହାକୁ ଅନବ୍ଲକ ନକରିବା ପର୍ଯ୍ୟନ୍ତ ଆପଣଙ୍କ ତାଲିକାରେ ଏହାକୁ ପୁଣି ଯୋଗ କରିହେବ ନାହିଁ।\n\nଏହି ଆପ ଦ୍ୱାରା ପୂର୍ବରୁ ଆକଳନ କରାଯାଇଥିବା ଆଗ୍ରହଗୁଡ଼ିକ ଡିଲିଟ ହୋଇଯିବ, କିନ୍ତୁ ଆପଣ ଏବେ ବି କିଛି ସମ୍ବନ୍ଧିତ ବିଜ୍ଞାପନ ଦେଖିପାରନ୍ତି।"</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g>କୁ ଅନବ୍ଲକ କରାଯାଇଛି"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"ଏହି ଆପ ଆପଣଙ୍କ ପାଇଁ ଆଗ୍ରହଗୁଡ଼ିକୁ ପୁଣି ଆକଳନ କରିପାରିବ, କିନ୍ତୁ ସେଗୁଡ଼ିକ ତୁରନ୍ତ ଆପଣଙ୍କ ତାଲିକାରେ ଦେଖାଯାଇନପାରେ। ସମ୍ବନ୍ଧିତ ବିଜ୍ଞାପନଗୁଡ଼ିକୁ ଆପଣ ଦେଖିବା ପାଇଁ କିଛି ସମୟ ଲାଗିପାରେ।"</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"ଆପ୍ସ ଦ୍ୱାରା ସୃଷ୍ଟି ହୋଇଥିବା ଆଗ୍ରହଗୁଡ଼ିକୁ ରିସେଟ କରିବେ?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"ଆପଣଙ୍କ ତାଲିକା ଖାଲି ହୋଇଯିବ, ତା\'ପରେ ସମୟ ଅନୁସାରେ ରିଫ୍ରେସ ହେବ"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"ଆପଣଙ୍କ ତାଲିକାରେ ଥିବା ଆପ୍ସ ଦ୍ୱାରା ଅନୁମାନ କରାଯାଇଥିବା ଆଗ୍ରହଗୁଡ଼ିକୁ ପ୍ରାଇଭେସି ସେଣ୍ଡବକ୍ସରୁ ଡିଲିଟ କରାଯିବ ଏବଂ ଭବିଷ୍ୟତରେ ଆପ୍ସ ନୂଆ ଆଗ୍ରହଗୁଡ଼ିକୁ ଆକଳନ କରିବ। ଆପଣ ଏବେ ବି କିଛି ସମ୍ବନ୍ଧିତ ବିଜ୍ଞାପନ ଦେଖିପାରନ୍ତି।"</string>
     <string name="topic10001" msgid="1636806320891333775">"କଳା ଏବଂ ମନୋରଞ୍ଜନ"</string>
     <string name="topic10002" msgid="1226367977754287428">"ଅଭିନୟ ଏବଂ ଥିଏଟର"</string>
     <string name="topic10003" msgid="6949890838957814881">"ଆନିମେ ଏବଂ ମାଙ୍ଗା"</string>
