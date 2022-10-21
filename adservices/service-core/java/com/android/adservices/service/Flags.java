@@ -947,10 +947,9 @@ public interface Flags extends Dumpable {
      */
     boolean ADID_KILL_SWITCH = false; // By default, the AdId API is enabled.
 
-    /** Gets the state of the global and adId kill switch. */
+    /** Gets the state of adId kill switch. */
     default boolean getAdIdKillSwitch() {
-        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch() || ADID_KILL_SWITCH;
+        return ADID_KILL_SWITCH;
     }
 
     // APPSETID Killswitch.

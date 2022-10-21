@@ -2575,6 +2575,23 @@ public class PhFlagsTest {
     }
 
     @Test
+    public void testGetAdIdKillSwitch_globalOverride() {
+        // test that global killswitch override has no effect on
+        // AdIdKillswitch.
+        assertThat(FlagsFactory.getFlags().getAdIdKillSwitch()).isEqualTo(ADID_KILL_SWITCH);
+
+        final boolean phOverrideValue = true;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_GLOBAL_KILL_SWITCH,
+                Boolean.toString(phOverrideValue),
+                false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getAdIdKillSwitch()).isEqualTo(ADID_KILL_SWITCH);
+    }
+
+    @Test
     public void testGetAdIdKillSwitch() {
         // Without any overriding, the value is the hard coded constant.
         assertThat(FlagsFactory.getFlags().getAdIdKillSwitch()).isEqualTo(ADID_KILL_SWITCH);
@@ -2663,8 +2680,8 @@ public class PhFlagsTest {
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getGlobalKillSwitch()).isEqualTo(phOverridingValue);
 
-        // Global Killswitch is on and overrides the getAdIdKillswitch.
-        assertThat(FlagsFactory.getFlags().getAdIdKillSwitch()).isEqualTo(true);
+        // Global Killswitch is on, but is ignored by the getAdIdKillswitch.
+        assertThat(FlagsFactory.getFlags().getAdIdKillSwitch()).isEqualTo(false);
     }
 
     @Test
