@@ -48,18 +48,17 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"စမ်းသပ်အစီအစဉ် ဖွင့်ခြင်းဖြင့် ကြော်ငြာပြရန်အတွက် ကိုယ်ရေးအချက်အလက် ပိုမိုလုံခြုံသောနည်းလမ်းသစ်များအား စမ်းသပ်ရန် အက်ပ်များကို ခွင့်ပြုရာရောက်သည်။ စမ်းသပ်အစီအစဉ်ကို ကိုယ်ရေးအချက်အလက်လုံခြုံမှု ဆက်တင်များတွင် အချိန်မရွေး ပိတ်နိုင်သည်။"</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"မလိုပါ"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"ဖွင့်ရန်"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"ပိုပြပါ"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"ပါဝင်ပေး၍ ကျေးဇူးတင်ပါသည်"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Android ၏ ကြော်ငြာဆိုင်ရာ ကိုယ်ရေးအချက်လုံခြုံမှု စမ်းသပ်အစီအစဉ်တွင် သင်ပါဝင်သည်။ Privacy Sandbox ကို သင့်စက်အတွက် ဖွင့်လိုက်သည်။\n\nကိုယ်ရေးအချက်အလက်လုံခြုံမှု ဆက်တင်များတွင် စမ်းသပ်အစီအစဉ်အကြောင်း ပိုမိုလေ့လာနိုင်သည် (သို့) ၎င်းကို အချိန်မရွေး ပိတ်နိုင်သည်။"</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"မပါဝင်ရန် သင်ရွေးချယ်ထားပါသည်"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="4194388733937808440">"ဖြေကြားမှုအတွက် ကျေးဇူးတင်ပါသည်။ Privacy Sandbox ကို သင့်စက်အတွက် ပိတ်လိုက်သည်။\n\nသင်စိတ်ပြောင်းသွားပါက (သို့) ပိုမိုလေ့လာလိုပါက ကိုယ်ရေးအချက်အလက်လုံခြုံမှု ဆက်တင်များသို့ သွားပါ။"</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"ကိုယ်ရေးအချက်အလက်လုံခြုံမှု ဆက်တင်များ"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"ရပြီ"</string>
+    <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"နားလည်ပြီ"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"စမ်းသပ်အစီအစဉ်တွင် သင်ပါဝင်သည်"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Privacy Sandbox ကို သင့်စက်အတွက်ဖွင့်ထားပြီး ကြော်ငြာပြရန် ကိုယ်ရေးအချက်အလက် ပိုမိုလုံခြုံသောနည်းလမ်းသစ်များကို အက်ပ်များက စမ်းသပ်နိုင်သည်။ စမ်းသပ်အစီအစဉ်ကို ကိုယ်ရေးအချက်အလက်လုံခြုံမှု ဆက်တင်များတွင် အချိန်မရွေး ပိတ်နိုင်သည်။"</string>
     <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"ကိုယ်ရေးအချက်အလက်လုံခြုံမှု ဆက်တင်များ စီမံရန်"</string>
-    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"ရပြီ"</string>
+    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"နားလည်ပြီ"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Android ၏ Privacy Sandbox သည် သင်နှစ်သက်နိုင်မည့် ကြော်ငြာများပြရန် အက်ပ်များအသုံးပြုနိုင်သော ဝန်ဆောင်မှုသစ်များကို ပံ့ပိုးသည်။ ဤနည်းပညာများသည် စက်ပစ္စည်း သတ်မှတ်မှုစနစ်များကို အသုံးမပြုပါ။\n\nAndroid နှင့် သင့်အက်ပ်များက သင်နှစ်သက်နိုင်မည့် ကြော်ငြာအမျိုးအစားများကို ခန့်မှန်းနိုင်ပြီး သင့်စက်တွင် စိတ်ဝင်စားမှုများကို ယာယီသိမ်းနိုင်သည်။ ၎င်းက သင့်လုပ်ဆောင်ချက်များအား ဝဘ်ဆိုက်နှင့် အခြားဆော့ဖ်ဝဲရေးသူများ၏ အက်ပ်များတွင် ခြေရာခံစရာမလိုဘဲ သင်နှစ်သက်နိုင်မည့် ကြော်ငြာများအား အက်ပ်များကို ပြခွင့်ပေးသည်။"</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"Privacy Sandbox ဖြင့် ကြော်ငြာများ စိတ်ကြိုက်သတ်မှတ်ခြင်း"</string>
     <string name="notificationUI_how_it_works_expanded_text3" msgid="603165966360369018">"•  Android က ခန့်မှန်းထားသည့် စိတ်ဝင်စားမှုများ"</string>
@@ -100,14 +99,16 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android က ဤစိတ်ဝင်စားမှုကို သင်၏စာရင်းတွင် ထပ်ထည့်နိုင်သော်လည်း ၎င်းက ချက်ချင်းပေါ်မလာနိုင်ပါ"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"သင်၏ စိတ်ဝင်စားမှုအားလုံးကို ပြင်ဆင်သတ်မှတ်မလား။"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"သင်၏စာရင်းကို ရှင်းထုတ်ပြီးနောက် တဖြည်းဖြည်း အပ်ဒိတ်လုပ်သွားမည်"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"ပြင်ဆင်သတ်မှတ်ရန်"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> ကို ပိတ်ထားမလား။"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"ဤအက်ပ်သည် Privacy Sandbox အတွက် စိတ်ဝင်စားမှုများကို ခန့်မှန်းမည်မဟုတ်ဘဲ သင်ပြန်မဖွင့်ပါက သင်၏စာရင်းတွင် ၎င်းကို ထပ်ထည့်မည်မဟုတ်ပါ။\n\nဤအက်ပ်က ခန့်မှန်းထားပြီးသော စိတ်ဝင်စားမှုများကို ဖျက်လိုက်မည်ဖြစ်သော်လည်း ဆက်စပ်သော ကြော်ငြာအချို့ကို မြင်ရနိုင်သေးသည်။"</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> ကို ပြန်ဖွင့်လိုက်သည်"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"ဤအက်ပ်သည် သင့်အတွက်စိတ်ဝင်စားမှုများကို ထပ်ခန့်မှန်းနိုင်သော်လည်း ၎င်းက သင်၏စာရင်းတွင် ချက်ချင်းပေါ်မလာနိုင်ပါ။ ဆက်စပ်သော ကြော်ငြာများ မြင်ရရန် အချိန်အနည်းငယ်ကြာနိုင်သည်။"</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"အက်ပ်များကထုတ်ပေးသော စိတ်ဝင်စားမှုများကို ပြင်ဆင်သတ်မှတ်မလား။"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"သင်၏စာရင်းကို ရှင်းထုတ်ပြီးနောက် တဖြည်းဖြည်း အပ်ဒိတ်လုပ်သွားမည်"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"အနုပညာနှင့် ဖျော်ဖြေရေး"</string>
     <string name="topic10002" msgid="1226367977754287428">"သရုပ်ဆောင်ခြင်းနှင့် ကဇာတ်ရုံ"</string>
     <string name="topic10003" msgid="6949890838957814881">"အန်နီမီနှင့် မန်ဂါ"</string>

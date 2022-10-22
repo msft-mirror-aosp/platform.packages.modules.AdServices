@@ -48,8 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Włączenie wersji beta umożliwia testowanie w aplikacjach nowych sposobów wyświetlania Ci reklam – z lepszą ochroną prywatności. W każdej chwili możesz wyłączyć wersję beta w ustawieniach prywatności."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Nie, dziękuję"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Włącz"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Więcej"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Dziękujemy za udział w programie"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Bierzesz udział w testach wersji beta ustawień prywatności w reklamach na Androidzie. Masz na urządzeniu włączoną Piaskownicę prywatności.\n\nW ustawieniach prywatności możesz dowiedzieć się więcej i wyłączyć wersję beta."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Nie zamierzasz brać udziału w programie"</string>
@@ -100,14 +99,16 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android może ponownie dodać te zainteresowania do Twojej listy, ale możliwe, że nie pojawią się na niej od razu"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Zresetować wszystkie Twoje zainteresowania?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"Lista zostanie wyczyszczona, a z czasem odświeżona"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Resetuj"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Zablokować aplikację <xliff:g id="APP">%1$s</xliff:g>?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Ta aplikacja nie będzie szacować Twoich zainteresowań na potrzeby Piaskownicy prywatności i nie zostanie ponownie dodana do listy, dopóki jej nie odblokujesz.\n\nZainteresowania wcześniej oszacowane przez tę aplikację zostaną usunięte, ale wciąż możesz widzieć pewne powiązane reklamy."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Aplikacja <xliff:g id="APP">%1$s</xliff:g> jest odblokowana"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Ta aplikacja ponownie może szacować Twoje zainteresowania, ale możliwe, że nie pojawi się od razu na liście. Zanim zobaczysz powiązane reklamy, może minąć trochę czasu."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Zresetować zainteresowania wygenerowane przez aplikacje?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"Lista zostanie wyczyszczona, a z czasem odświeżona"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Sztuka i rozrywka"</string>
     <string name="topic10002" msgid="1226367977754287428">"Aktorstwo i teatr"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime i manga"</string>

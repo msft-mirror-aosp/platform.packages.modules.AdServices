@@ -48,8 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Uključivanje beta verzije omogućava aplikacijama da testiraju ove nove, privatnije načine za prikazivanje oglasa. Možete isključiti beta verziju bilo kada u postavkama privatnosti."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Ne, hvala"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Uključi"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Više"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Hvala na učešću"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Koristite Androidovu beta verziju privatnosti oglasa. Okruženje zaštićene privatnosti je uključeno za vaš uređaj.\n\nMožete saznati više ili isključiti beta verziju bilo kada u postavkama privatnosti."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Odabrali ste da ne učestvujete"</string>
@@ -100,14 +99,16 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android može ponovo dodati ovo interesovanje na listu, ali je moguće da se neće odmah prikazati"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"Uredu"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Poništiti sva interesovanja?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"Lista će se obrisati, a zatim povremeno osvježavati"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Poništi"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Blokirati aplikaciju <xliff:g id="APP">%1$s</xliff:g>?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Ova aplikacija neće procjenjivati interesovanja za Okruženje zaštićene privatnosti i neće se ponovo dodati na vašu listu, osim ako je deblokirate.\n\nInteresovanja koja je aplikacija već procijenila će se izbrisati, ali vam se i dalje mogu prikazivati srodni oglasi."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Aplikacija <xliff:g id="APP">%1$s</xliff:g> je deblokirana"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Aplikacija može ponovo procjenjivati vaša interesovanja, ali se možda neće odmah pojaviti na vašoj listi. Može proći neko vrijeme dok vam se ne prikažu srodni oglasi."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Poništiti interesovanja koja su generirale aplikacije?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"Lista će se obrisati, a zatim povremeno osvježavati"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Umjetnost i zabava"</string>
     <string name="topic10002" msgid="1226367977754287428">"Gluma i teatar"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime i manga"</string>

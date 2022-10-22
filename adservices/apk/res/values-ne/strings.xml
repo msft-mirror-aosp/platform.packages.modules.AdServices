@@ -48,8 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"तपाईंले यो बिटा सुविधा अन गर्नुभयो भने एपहरू तपाईंलाई विज्ञापन देखाउने यी नयाँ अनि अझ गोप्य तरिकाको परीक्षण गर्न सक्छन्। तपाईं जुनसुकै बेला गोपनीयतासम्बन्धी सेटिङमा गई यो बिटा सुविधा अफ गर्न सक्नुहुन्छ।"</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"पर्दैन"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"अन गर्नुहोस्"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"थप देखाइयोस्"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"सामेल हुनुभएकोमा धन्यवाद"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"तपाईं Android को विज्ञापनसम्बन्धी गोपनीयता सुविधाको बिटा संस्करणको सदस्य बन्नुभएको छ। तपाईंको डिभाइसमा प्राइभेसी स्यान्डबक्स अन गरिएको छ।\n\nतपाईं जुनसुकै बेला गोपनीयतासम्बन्धी सेटिङमा गई यसका बारेमा थप जान्न वा यसलाई अफ गर्न सक्नुहुन्छ।"</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"तपाईंले यस कार्यक्रममा सामेल नहुने विकल्प छनौट गर्नुभएको छ"</string>
@@ -100,14 +99,16 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android ले यो रुचि फेरि तपाईंको सूचीमा हाल्न सक्छ तर सो रुचि तुरुन्तै तपाईंको सूचीमा भने नदेखिन सक्छ"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"ठिक छ"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"आफ्ना सबै रुचिहरू रिसेट गर्ने हो?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"तपाईंको सूची खाली गरिने छ, त्यसपछि समयसँगै रिफ्रेस गरिने छ"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"रिसेट गर्नुहोस्"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> ब्लक गर्ने हो?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"यो एपले प्राइभेसी स्यान्डबक्सका हकमा रुचिहरूको अनुमान गर्ने छैन र तपाईंले कुनै रुचि अनब्लक नगरेसम्म त्यसलाई फेरि तपाईंको सूचीमा हालिने छैन।\n\nयो एपले अनुमान गरिसकेका रुचिहरू मेटाइने छन् तर तपाईं अझै पनि त्यससँग सम्बन्धित केही विज्ञापनहरू देख्न सक्नुहुन्छ।"</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> अनब्लक गरिएको छ"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"यो एपले फेरि तपाईंका रुचिहरूको अनुमान गर्न सक्छ तर ती रुचिहरू तुरुन्तै तपाईंको सूचीमा भने नदेखिन सक्छ। तपाईं केही बेरपछि मात्र त्यससँग सम्बन्धित विज्ञापनहरू देख्न सक्नुहुन्छ।"</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"एपहरूले अनुमान गरेका रुचिहरू रिसेट गर्ने हो?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"तपाईंको सूची खाली गरिने छ, त्यसपछि समयसँगै रिफ्रेस गरिने छ"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"कला तथा मनोरञ्जन"</string>
     <string name="topic10002" msgid="1226367977754287428">"अभिनय तथा रङ्गमञ्च"</string>
     <string name="topic10003" msgid="6949890838957814881">"एनिम तथा माङ्गा"</string>

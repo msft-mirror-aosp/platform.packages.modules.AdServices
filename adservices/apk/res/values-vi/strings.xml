@@ -48,8 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Khi bạn bật bản beta, các ứng dụng có thể thử nghiệm những cách mới, riêng tư hơn để hiển thị quảng cáo cho bạn. Bạn có thể tắt bản beta bất kỳ lúc nào trong chế độ cài đặt quyền riêng tư."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Không, cảm ơn"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Bật"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Xem thêm"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Cảm ơn bạn đã tham gia."</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Bạn là một phần của bản beta về quyền riêng tư trong quảng cáo của Android. Hộp cát về quyền riêng tư được bật cho thiết bị của bạn.\n\nBạn có thể tìm hiểu thêm hoặc tắt bản beta bất kỳ lúc nào trong mục cài đặt quyền riêng tư của mình."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Bạn đã chọn không tham gia"</string>
@@ -100,14 +99,16 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android có thể thêm lại mối quan tâm này vào danh sách của bạn, nhưng mối quan tâm có thể không xuất hiện ngay lập tức"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Đặt lại tất cả các mối quan tâm của bạn?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"Danh sách của bạn sẽ bị xoá rồi được làm mới theo thời gian"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Đặt lại"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Chặn ứng dụng <xliff:g id="APP">%1$s</xliff:g>?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Ứng dụng này sẽ không dự đoán mối quan tâm của bạn khi bạn bật Hộp cát về quyền riêng tư. Ứng dụng này cũng sẽ không được thêm lại vào danh sách của bạn, trừ phi bạn bỏ chặn ứng dụng này.\n\nCác mối quan tâm mà ứng dụng này đã dự đoán sẽ bị xoá, nhưng bạn có thể vẫn thấy một số quảng cáo liên quan."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Đã bỏ chặn ứng dụng <xliff:g id="APP">%1$s</xliff:g>"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Ứng dụng này có thể dự đoán lại mối quan tâm cho bạn, nhưng mối quan tâm có thể không xuất hiện ngay trong danh sách của bạn. Có thể mất chút thời gian thì bạn mới thấy quảng cáo liên quan."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Đặt lại mối quan tâm do các ứng dụng tạo?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"Danh sách của bạn sẽ bị xoá rồi được làm mới theo thời gian"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Nghệ thuật &amp; Giải trí"</string>
     <string name="topic10002" msgid="1226367977754287428">"Diễn xuất &amp; Kịch nghệ"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime &amp; Manga"</string>

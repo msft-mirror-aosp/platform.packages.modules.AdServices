@@ -48,8 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"የቅድመ-ይሁንታውን ማብራት መተግበሪያዎች ለእርስዎ ማስታወቂያዎችን ለማሳየት እነዚህን አዲስና ይበልጥ የግል የሆኑ መንገዶች እንዲሞክሩ ያስችላቸዋል። በማንኛውም ጊዜ በእርስዎ የግላዊነት ቅንብሮች ውስጥ ቅድመ-ይሁንታውን ማጥፋት ይችላሉ።"</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"አይ፣ አመሰግናለሁ"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"አብራ"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"ተጨማሪ"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"ስለተሳትፎዎ እናመሰግናለን"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"የAndroid የማስታወቂያዎች ግላዊነት ቅድመ-ይሁንታ አካል ነዎት። የግላዊነት Sandbox ለመሣሪያዎ በርቷል።\n\nበማንኛውም ሰዓት በእርስዎ የግላዊነት ቅንብሮች ውስጥ የበለጠ ማወቅ ወይም ቅድመ-ይሁንታውን ማጥፋት ይችላሉ።"</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"ላለመሳተፍ መርጠዋል"</string>
@@ -100,14 +99,16 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android ይህን ዝንባሌ እንደገና በእርስዎ ዝርዝር ላይ ሊያክል ይችላል ነገር ግን ወዲያውኑ ላይታይ ይችላል"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"እሺ"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"ሁሉም ዝንባሌዎችዎ ዳግም ይጀመሩ?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"ዝርዝርዎ ይጸዳል ከዚያ በጊዜ ሂደት ይታደሳል"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"ዳግም አስጀምር"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> ይታገድ?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"ይህ መተግበሪያ ዝንባሌዎችን ለግላዊነት Sandbox አይገምትም እና እርስዎ እገዳውን ካላነሱለት በስተቀር እንደገና በዝርዝርዎ ላይ አይታከልም።\n\nበዚህ መተግበሪያ አስቀድመው የተገመቱ ዝንባሌዎች ይሰረዛሉ ነገር ግን አሁንም አንዳንድ ተዛማጅ ማስታወቂያዎችን ሊያዩ ይችላሉ።"</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"የ<xliff:g id="APP">%1$s</xliff:g> እገዳ ተነስቷል"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"ይህ መተግበሪያ እንደገና ዝንባሌዎችን ለእርስዎ መገመት ይችላል ነገር ግን በዝርዝርዎ ላይ ወዲያውኑ ላይታይ ይችላል። ተዛማጅ ማስታወቂያዎችን እስከሚያዩ ድረስ ጊዜ ሊወስድ ይችላል።"</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"በመተግበሪያዎች የመነጩ ዝንባሌዎች ዳግም ይጀመሩ?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"ዝርዝርዎ ይጸዳል ከዚያ በጊዜ ሂደት ይታደሳል"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"ሥነ ጥበባት እና መዝናኛ"</string>
     <string name="topic10002" msgid="1226367977754287428">"ትወና እና ቲያትር"</string>
     <string name="topic10003" msgid="6949890838957814881">"አኒሜ እና ማንጋ"</string>
@@ -282,7 +283,7 @@
     <string name="topic10172" msgid="3626573644414074730">"የዴስክቶፕ ህትመት"</string>
     <string name="topic10173" msgid="7320053835183057144">"ቅርጸ-ቁምፊዎች"</string>
     <string name="topic10174" msgid="5770469447869586710">"የአውርድ አስተዳዳሪዎች"</string>
-    <string name="topic10175" msgid="3475235810022334041">"ነጻ ዌር እና ተከፋይ ዌር"</string>
+    <string name="topic10175" msgid="3475235810022334041">"ነፃ ዌር እና ተከፋይ ዌር"</string>
     <string name="topic10176" msgid="6881704501596479881">"የግራፊክስ እና የእነማ ሶፍትዌር"</string>
     <string name="topic10177" msgid="6740430730079682579">"ብልህ የግል ረዳቶች"</string>
     <string name="topic10178" msgid="7261811053741593091">"የሚዲያ ማጫወቻዎች"</string>
@@ -476,7 +477,7 @@
     <string name="topic10366" msgid="7460927054539097025">"ካርታዎች"</string>
     <string name="topic10367" msgid="3900361839783743700">"ሳይንስ"</string>
     <string name="topic10368" msgid="2069447039109930660">"የላቀ እውነታ እና ምናባዊ እውነታ"</string>
-    <string name="topic10369" msgid="5747888306428024793">"የስነ ህይወት ሳይንሶች"</string>
+    <string name="topic10369" msgid="5747888306428024793">"የስነ ሕይወት ሳይንሶች"</string>
     <string name="topic10370" msgid="4860829940151353583">"ስነ ዘረመል"</string>
     <string name="topic10371" msgid="8229818210867472466">"ኬሚስትሪ"</string>
     <string name="topic10372" msgid="6400467418954574231">"ሥነ ምህዳር እና አካባቢ"</string>
@@ -533,7 +534,7 @@
     <string name="topic10423" msgid="6333426807705188459">"ቴኒስ"</string>
     <string name="topic10424" msgid="5495511215629567375">"ትራክ እና ሜዳ"</string>
     <string name="topic10425" msgid="4009138228283995179">"መረብ ኳስ"</string>
-    <string name="topic10426" msgid="7998590461761852196">"ነጻ ትግል"</string>
+    <string name="topic10426" msgid="7998590461761852196">"ነፃ ትግል"</string>
     <string name="topic10427" msgid="6711468161729797769">"ጉዞ እና መጓጓዣ"</string>
     <string name="topic10428" msgid="661919563628063196">"የጀብዱ ጉዞ"</string>
     <string name="topic10429" msgid="408270392813634227">"የአየር ጉዞ"</string>

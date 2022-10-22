@@ -121,7 +121,7 @@ public class Source {
         private final String mValue;
 
         SourceType(String value) {
-            this.mValue = value;
+            mValue = value;
         }
 
         public String getValue() {
@@ -146,9 +146,9 @@ public class Source {
         private final Uri mDestination;
 
         public FakeReport(UnsignedLong triggerData, long reportingTime, Uri destination) {
-            this.mTriggerData = triggerData;
-            this.mReportingTime = reportingTime;
-            this.mDestination = destination;
+            mTriggerData = triggerData;
+            mReportingTime = reportingTime;
+            mDestination = destination;
         }
 
         @Override
@@ -242,7 +242,7 @@ public class Source {
     public int getTriggerDataCardinality() {
         return mSourceType == SourceType.EVENT
                 ? PrivacyParams.EVENT_TRIGGER_DATA_CARDINALITY
-                : PrivacyParams.NAVIGATION_TRIGGER_DATA_CARDINALITY;
+                : PrivacyParams.getNavigationTriggerDataCardinality();
     }
 
     /**
@@ -615,16 +615,34 @@ public class Source {
     }
 
     /**
+     * Generates AggregatableFilterData from aggregate filter string in Source, including an entry
+     * for source type.
+     */
+    public AggregateFilterData parseAggregateFilterData() throws JSONException {
+        AggregateFilterData aggregateFilterData;
+        if (mAggregateFilterData == null || mAggregateFilterData.isEmpty()) {
+            aggregateFilterData = new AggregateFilterData.Builder().build();
+        } else {
+            aggregateFilterData =
+                    new AggregateFilterData.Builder()
+                            .buildAggregateFilterData(new JSONObject(mAggregateFilterData))
+                            .build();
+        }
+        aggregateFilterData.getAttributionFilterMap().put("source_type",
+                Collections.singletonList(mSourceType.getValue()));
+        return aggregateFilterData;
+    }
+
+    /**
      * Generates AggregatableAttributionSource from aggregate source string and aggregate filter
      * data string in Source.
      */
     public Optional<AggregatableAttributionSource> parseAggregateSource()
             throws JSONException, NumberFormatException {
-
-        if (this.mAggregateSource == null) {
+        if (mAggregateSource == null) {
             return Optional.empty();
         }
-        JSONArray jsonArray = new JSONArray(this.mAggregateSource);
+        JSONArray jsonArray = new JSONArray(mAggregateSource);
         Map<String, BigInteger> aggregateSourceMap = new HashMap<>();
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -634,16 +652,11 @@ public class Source {
             BigInteger bigInteger = new BigInteger(hexString, 16);
             aggregateSourceMap.put(id, bigInteger);
         }
-        AggregatableAttributionSource.Builder asBuilder =
+        AggregatableAttributionSource.Builder aggregatableAttributionSourceBuilder =
                 new AggregatableAttributionSource.Builder()
                         .setAggregatableSource(aggregateSourceMap);
-        if (this.mAggregateFilterData != null) {
-            asBuilder.setAggregateFilterData(
-                    new AggregateFilterData.Builder()
-                            .buildAggregateFilterData(new JSONObject(this.mAggregateFilterData))
-                            .build());
-        }
-        return Optional.of(asBuilder.build());
+        aggregatableAttributionSourceBuilder.setAggregateFilterData(parseAggregateFilterData());
+        return Optional.of(aggregatableAttributionSourceBuilder.build());
     }
 
     private List<FakeReport> generateVtcDualDestinationPostInstallFakeReports() {

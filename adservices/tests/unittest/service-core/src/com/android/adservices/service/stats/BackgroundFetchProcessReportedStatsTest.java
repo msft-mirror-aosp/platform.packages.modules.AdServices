@@ -16,9 +16,9 @@
 
 package com.android.adservices.service.stats;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.BACKGROUND_FETCH_PROCESS_REPORTED__RESULT_CODE__BACKGROUND_FETCH_SUCCESS;
-
 import static org.junit.Assert.assertEquals;
+
+import android.adservices.common.AdServicesStatusUtils;
 
 import org.junit.Test;
 
@@ -26,8 +26,7 @@ import org.junit.Test;
 public class BackgroundFetchProcessReportedStatsTest {
     static final int LATENCY_IN_MILLIS = 10;
     static final int NUM_OF_ELIGIBLE_TO_UPDATE_CAS = 5;
-    static final int RESULT_CODE =
-            BACKGROUND_FETCH_PROCESS_REPORTED__RESULT_CODE__BACKGROUND_FETCH_SUCCESS;
+    static final int RESULT_CODE = AdServicesStatusUtils.STATUS_SUCCESS;
 
     @Test
     public void testBuilderCreateSuccess() {
