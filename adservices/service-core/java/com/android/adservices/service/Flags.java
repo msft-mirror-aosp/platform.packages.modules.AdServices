@@ -1303,4 +1303,28 @@ public interface Flags extends Dumpable {
     default boolean getUIDialogsFeatureEnabled() {
         return UI_DIALOGS_FEATURE_ENABLED;
     }
+
+    long ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS = (int) TimeUnit.HOURS.toMillis(1);
+    /** Returns the interval in which to run Registration Job Queue Service. */
+    default long getRegistrationJobQueueIntervalMs() {
+        return ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS;
+    }
+
+    /**
+     * Registration Job Queue Kill Switch. The default value is false which means Registration Job
+     * Queue is enabled. This flag is used for emergency shutdown of the Registration Job Queue.
+     */
+    boolean MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Registration Job Queue. The API will be disabled if either
+     * the Global Kill Switch, Measurement Kill Switch, or the Registration Job Queue Kill Switch
+     * value is true.
+     */
+    default boolean getRegistrationJobQueueKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
+    }
 }

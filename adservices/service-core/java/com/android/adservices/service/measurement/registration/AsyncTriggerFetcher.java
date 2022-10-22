@@ -20,19 +20,20 @@ import static com.android.adservices.service.measurement.SystemHealthParams.MAX_
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_EVENT_TRIGGER_DATA;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__TRIGGER;
 
-import android.adservices.measurement.RegistrationRequest;
-import android.adservices.measurement.WebTriggerParams;
-import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.content.Context;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.measurement.AsyncRegistration;
+import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
+import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.util.AsyncFetchStatus;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -53,9 +54,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
 
 /**
  * Download and decode Trigger registration.
@@ -63,19 +61,18 @@ import java.util.concurrent.ExecutorService;
  * @hide
  */
 public class AsyncTriggerFetcher {
-    private final ExecutorService mIoExecutor = AdServicesExecutors.getBlockingExecutor();
+
+    private static final String ANDROID_APP_SCHEME = "android-app";
     private final MeasurementHttpClient mNetworkConnection = new MeasurementHttpClient();
     private final EnrollmentDao mEnrollmentDao;
     private final Flags mFlags;
     private final AdServicesLogger mLogger;
-
     public AsyncTriggerFetcher(Context context) {
         this(
                 EnrollmentDao.getInstance(context),
                 FlagsFactory.getFlags(),
                 AdServicesLoggerImpl.getInstance());
     }
-
     @VisibleForTesting
     public AsyncTriggerFetcher(EnrollmentDao enrollmentDao, Flags flags, AdServicesLogger logger) {
         mEnrollmentDao = enrollmentDao;
@@ -84,18 +81,30 @@ public class AsyncTriggerFetcher {
     }
 
     private boolean parseTrigger(
+            @NonNull Uri topOrigin,
+            @NonNull Uri registrant,
             @NonNull String enrollmentId,
+            long triggerTime,
             @NonNull Map<String, List<String>> headers,
-            @NonNull List<TriggerRegistration> addToResults,
+            @NonNull List<Trigger> triggers,
             boolean isWebSource,
             boolean isAllowDebugKey,
-            boolean isAdIdPermissionGranted) {
-        TriggerRegistration.Builder result = new TriggerRegistration.Builder();
+            boolean isAdIdPermissionGranted,
+            AsyncRegistration.RegistrationType registrationType) {
+        Trigger.Builder result = new Trigger.Builder();
         result.setEnrollmentId(enrollmentId);
-        List<String> field;
-        field = headers.get("Attribution-Reporting-Register-Trigger");
+        result.setAttributionDestination(topOrigin);
+        result.setRegistrant(registrant);
+        result.setDestinationType(
+                registrationType == AsyncRegistration.RegistrationType.WEB_TRIGGER
+                        ? EventSurfaceType.WEB
+                        : EventSurfaceType.APP);
+        result.setTriggerTime(triggerTime);
+        List<String> field = headers.get("Attribution-Reporting-Register-Trigger");
         if (field == null || field.size() != 1) {
-            LogUtil.d("Invalid Attribution-Reporting-Register-Trigger header");
+            LogUtil.d(
+                    "AsyncSourceFetcher: "
+                            + "Invalid Attribution-Reporting-Register-Source header.");
             return false;
         }
         try {
@@ -138,10 +147,10 @@ public class AsyncTriggerFetcher {
                     LogUtil.e(e, "Parsing trigger debug key failed");
                 }
             }
-            addToResults.add(result.build());
+            triggers.add(result.build());
             return true;
         } catch (JSONException e) {
-            LogUtil.e(e, "Trigger Parsing failed");
+            LogUtil.e("Trigger Parsing failed", e);
             return false;
         }
     }
@@ -153,26 +162,34 @@ public class AsyncTriggerFetcher {
     }
 
     private void fetchTrigger(
+            @NonNull Uri topOrigin,
             @NonNull Uri registrationUri,
+            Uri registrant,
+            long triggerTime,
             boolean shouldProcessRedirects,
-            @NonNull List<TriggerRegistration> registrationsOut,
+            @NonNull List<Uri> registrationsOut,
+            @NonNull List<Trigger> triggerOut,
             boolean isWebSource,
             boolean isAllowDebugKey,
-            boolean isAdIdPermissionGranted) {
+            @Nullable AsyncFetchStatus asyncFetchStatus,
+            boolean isAdIdPermissionGranted,
+            AsyncRegistration.RegistrationType registrationType) {
         // Require https.
         if (!registrationUri.getScheme().equals("https")) {
+            asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.PARSING_ERROR);
             return;
         }
         URL url;
         try {
             url = new URL(registrationUri.toString());
         } catch (MalformedURLException e) {
-            LogUtil.d(e, "Malformed registration registrationUri URL");
+            LogUtil.d(e, "Malformed registration target URL");
             return;
         }
         Optional<String> enrollmentId =
                 Enrollment.maybeGetEnrollmentId(registrationUri, mEnrollmentDao);
         if (!enrollmentId.isPresent()) {
+            asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.INVALID_ENROLLMENT);
             LogUtil.d(
                     "fetchTrigger: unable to find enrollment ID. Registration URI: %s",
                     registrationUri);
@@ -182,52 +199,46 @@ public class AsyncTriggerFetcher {
         try {
             urlConnection = (HttpURLConnection) openUrl(url);
         } catch (IOException e) {
-            LogUtil.d(e, "Failed to open registration registrationUri URL");
+            asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.NETWORK_ERROR);
+            LogUtil.d(e, "Failed to open registration target URL");
             return;
         }
         try {
             urlConnection.setRequestMethod("POST");
             urlConnection.setInstanceFollowRedirects(false);
             Map<String, List<String>> headers = urlConnection.getHeaderFields();
-
             FetcherUtil.emitHeaderMetrics(
                     mFlags,
                     mLogger,
                     AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__TRIGGER,
                     headers,
                     registrationUri);
-
             int responseCode = urlConnection.getResponseCode();
             LogUtil.d("Response code = " + responseCode);
-
             if (!FetcherUtil.isRedirect(responseCode) && !FetcherUtil.isSuccess(responseCode)) {
+                asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.SERVER_UNAVAILABLE);
                 return;
             }
-
+            asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
             final boolean parsed =
                     parseTrigger(
+                            topOrigin,
+                            registrant,
                             enrollmentId.get(),
+                            triggerTime,
                             headers,
-                            registrationsOut,
+                            triggerOut,
                             isWebSource,
                             isAllowDebugKey,
-                            isAdIdPermissionGranted);
+                            isAdIdPermissionGranted,
+                            registrationType);
             if (!parsed) {
+                asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.PARSING_ERROR);
                 LogUtil.d("Failed to parse.");
                 return;
             }
-
             if (shouldProcessRedirects) {
-                List<Uri> redirects = FetcherUtil.parseRedirects(headers);
-                for (Uri redirect : redirects) {
-                    fetchTrigger(
-                            redirect,
-                            false,
-                            registrationsOut,
-                            isWebSource,
-                            isAllowDebugKey,
-                            isAdIdPermissionGranted);
-                }
+                registrationsOut.addAll(FetcherUtil.parseRedirects(headers));
             }
         } catch (IOException e) {
             LogUtil.d(e, "Failed to get registration response");
@@ -237,77 +248,41 @@ public class AsyncTriggerFetcher {
             }
         }
     }
-
-    /** Fetch a trigger type registration. */
-    public Optional<List<TriggerRegistration>> fetchTrigger(@NonNull RegistrationRequest request) {
-        if (request.getRegistrationType() != RegistrationRequest.REGISTER_TRIGGER) {
-            throw new IllegalArgumentException("Expected trigger registration");
-        }
-        List<TriggerRegistration> out = new ArrayList<>();
+    /**
+     * Fetch a trigger type registration.
+     *
+     * @param asyncRegistration a {@link AsyncRegistration}, a request the record.
+     * @param asyncFetchStatus a {@link AsyncFetchStatus}, stores Ad Tech server status.
+     */
+    public Optional<Trigger> fetchTrigger(
+            @NonNull AsyncRegistration asyncRegistration,
+            @NonNull AsyncFetchStatus asyncFetchStatus,
+            List<Uri> redirects) {
+        List<Trigger> out = new ArrayList<>();
         fetchTrigger(
-                request.getRegistrationUri(),
-                true,
+                asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_TRIGGER
+                        ? asyncRegistration.getTopOrigin()
+                        : getAttributionDestination(asyncRegistration),
+                asyncRegistration.getRegistrationUri(),
+                asyncRegistration.getRegistrant(),
+                asyncRegistration.getRequestTime(),
+                asyncRegistration.getRedirect(),
+                redirects,
                 out,
-                false,
-                false,
-                request.isAdIdPermissionGranted());
+                asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_TRIGGER,
+                asyncRegistration.getDebugKeyAllowed(),
+                asyncFetchStatus,
+                asyncRegistration.getDebugKeyAllowed(),
+                asyncRegistration.getType());
         if (out.isEmpty()) {
             return Optional.empty();
         } else {
-            return Optional.of(out);
+            return Optional.of(out.get(0));
         }
-    }
-
-    /** Fetch a trigger type registration without redirects. */
-    public Optional<List<TriggerRegistration>> fetchWebTriggers(
-            WebTriggerRegistrationRequest request, boolean isAdIdPermissionGranted) {
-        List<TriggerRegistration> out = new ArrayList<>();
-        processWebTriggersFetch(request.getTriggerParams(), out, isAdIdPermissionGranted);
-
-        if (out.isEmpty()) {
-            return Optional.empty();
-        } else {
-            return Optional.of(out);
-        }
-    }
-
-    private void processWebTriggersFetch(
-            List<WebTriggerParams> triggerParamsList,
-            List<TriggerRegistration> registrationsOut,
-            boolean isAdIdPermissionGranted) {
-        try {
-            CompletableFuture.allOf(
-                            triggerParamsList.stream()
-                                    .map(
-                                            triggerParams ->
-                                                    createFutureToFetchWebTrigger(
-                                                            registrationsOut,
-                                                            triggerParams,
-                                                            isAdIdPermissionGranted))
-                                    .toArray(CompletableFuture<?>[]::new))
-                    .get();
-        } catch (InterruptedException | ExecutionException e) {
-            LogUtil.e(e, "Failed to process source redirection");
-        }
-    }
-
-    private CompletableFuture<Void> createFutureToFetchWebTrigger(
-            List<TriggerRegistration> registrationsOut,
-            WebTriggerParams triggerParams,
-            boolean isAdIdPermissionGranted) {
-        return CompletableFuture.runAsync(
-                () ->
-                        fetchTrigger(
-                                triggerParams.getRegistrationUri(),
-                                /* should process redirects*/ false,
-                                registrationsOut,
-                                true,
-                                triggerParams.isDebugKeyAllowed(),
-                                isAdIdPermissionGranted),
-                mIoExecutor);
     }
 
     private Optional<String> getValidEventTriggerData(JSONArray eventTriggerDataArr) {
+
         if (eventTriggerDataArr.length() > MAX_ATTRIBUTION_EVENT_TRIGGER_DATA) {
             LogUtil.d(
                     "Event trigger data list has more entries than permitted. %s",
@@ -367,7 +342,7 @@ public class AsyncTriggerFetcher {
                 }
                 validEventTriggerData.put(validEventTriggerDatum);
             } catch (JSONException e) {
-                LogUtil.d(e, "Parsing event trigger datum JSON failed.");
+                LogUtil.d(e, "AsyncTriggerFetcher: " + "Parsing event trigger datum JSON failed.");
             }
         }
         return Optional.of(validEventTriggerData.toString());
@@ -418,7 +393,7 @@ public class AsyncTriggerFetcher {
         return true;
     }
 
-    private static boolean isValidAggregateValues(JSONObject aggregateValues) {
+    private boolean isValidAggregateValues(JSONObject aggregateValues) {
         if (aggregateValues.length() > MAX_AGGREGATE_KEYS_PER_REGISTRATION) {
             LogUtil.d(
                     "Aggregate values have more keys than permitted. %s", aggregateValues.length());
@@ -433,6 +408,11 @@ public class AsyncTriggerFetcher {
             }
         }
         return true;
+    }
+
+    @VisibleForTesting
+    static Uri getAttributionDestination(AsyncRegistration request) {
+        return Uri.parse(ANDROID_APP_SCHEME + "://" + request.getRegistrant());
     }
 
     private interface TriggerHeaderContract {
