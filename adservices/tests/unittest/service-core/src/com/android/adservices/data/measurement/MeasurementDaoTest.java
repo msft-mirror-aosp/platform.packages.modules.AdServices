@@ -1527,8 +1527,8 @@ public class MeasurementDaoTest {
         // Trigger Time = sApp3's eventTime
         // Trigger Time < sApp4's eventTime
         // sApp5 and sApp6 don't have app destination
-        // Trigger Time > sAppWeb7's eventTime and < sAppWeb7's expiryTime
-        // Expected: Match with sApp1, sApp2, sAppWeb7
+        // Trigger Time > sAppWeb7's eventTime and = sAppWeb7's expiryTime
+        // Expected: Match with sApp2, sApp3
         Trigger trigger2MatchSource127 =
                 TriggerFixture.getValidTriggerBuilder()
                         .setTriggerTime(20)
@@ -1538,10 +1538,9 @@ public class MeasurementDaoTest {
                         .build();
 
         List<Source> result2 = runFunc.apply(trigger2MatchSource127);
-        Assert.assertEquals(3, result2.size());
-        Assert.assertEquals(sApp1.getId(), result2.get(0).getId());
-        Assert.assertEquals(sApp2.getId(), result2.get(1).getId());
-        Assert.assertEquals(sAppWeb7.getId(), result2.get(2).getId());
+        Assert.assertEquals(2, result2.size());
+        Assert.assertEquals(sApp2.getId(), result2.get(0).getId());
+        Assert.assertEquals(sApp3.getId(), result2.get(1).getId());
 
         // Trigger Time > sApp1's expiryTime
         // Trigger Time > sApp2's eventTime and < sApp2's expiryTime

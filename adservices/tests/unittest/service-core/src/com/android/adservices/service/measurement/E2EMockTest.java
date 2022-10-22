@@ -307,8 +307,8 @@ public abstract class E2EMockTest extends E2ETest {
         for (int i = 0; i < destinations.size(); i++) {
             JSONObject sharedInfo = new JSONObject(payloads.get(i).getString("shared_info"));
             result.add(new JSONObject()
-                    .put(TestFormatJsonMapping.REPORT_TIME_KEY,
-                            sharedInfo.getLong("scheduled_report_time") * 1000)
+                    .put(TestFormatJsonMapping.REPORT_TIME_KEY, String.valueOf(
+                            sharedInfo.getLong("scheduled_report_time") * 1000))
                     .put(TestFormatJsonMapping.REPORT_TO_KEY, destinations.get(i).toString())
                     .put(TestFormatJsonMapping.PAYLOAD_KEY,
                             getAggregatablePayloadForTest(sharedInfo, payloads.get(i))));
