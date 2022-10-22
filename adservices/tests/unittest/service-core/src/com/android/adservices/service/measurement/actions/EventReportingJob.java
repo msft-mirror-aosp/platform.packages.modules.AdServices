@@ -25,6 +25,7 @@ public final class EventReportingJob implements Action {
         mTimestamp = timestamp;
     }
 
+    @Override
     public long getComparable() {
         return mTimestamp;
     }

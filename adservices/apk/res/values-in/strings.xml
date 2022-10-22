@@ -48,8 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Mengaktifkan program beta memungkinkan aplikasi menguji cara baru yang lebih pribadi ini untuk menampilkan iklan kepada Anda. Anda dapat menonaktifkan program beta kapan saja di setelan privasi."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Lain kali"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Aktifkan"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Lainnya"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Terima kasih sudah berpartisipasi"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Anda berpartisipasi dalam privasi iklan Android beta. Privacy Sandbox diaktifkan untuk perangkat Anda.\n\nAnda dapat mempelajari lebih lanjut atau menonaktifkan program beta kapan saja di setelan privasi."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Anda telah memilih untuk tidak berpartisipasi"</string>
@@ -100,14 +99,16 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android dapat menambahkan minat ini lagi ke daftar Anda, tetapi minat mungkin tidak langsung muncul"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"Oke"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Reset semua minat?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"Daftar Anda akan dihapus, lalu diperbarui dari waktu ke waktu"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Reset"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Blokir <xliff:g id="APP">%1$s</xliff:g>?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Aplikasi ini tidak akan memperkirakan minat untuk Privacy Sandbox dan tidak akan ditambahkan ke daftar Anda lagi, kecuali jika Anda berhenti memblokirnya.\n\nMinat yang sudah diperkirakan oleh aplikasi ini akan dihapus, tetapi Anda mungkin masih melihat beberapa iklan terkait minat tersebut."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> berhenti diblokir"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Aplikasi ini dapat memperkirakan minat lagi untuk Anda, tetapi minat mungkin tidak langsung muncul di daftar. Mungkin perlu waktu agak lama untuk melihat iklan terkait minat tersebut."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Reset minat yang dibuat oleh aplikasi?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"Daftar Anda akan dihapus, lalu diperbarui dari waktu ke waktu"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Seni &amp; Hiburan"</string>
     <string name="topic10002" msgid="1226367977754287428">"Akting &amp; Teater"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime &amp; Manga"</string>

@@ -48,8 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"ベータ版を ON にすると、アプリは広告の表示でプライバシー保護を強化したこれらの新しい方法をテストできます。ベータ版はプライバシー設定でいつでも OFF にできます。"</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"利用しない"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"ON にする"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"その他"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"ご参加ありがとうございます"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Android の広告のプライバシー（ベータ版）にご参加いただきありがとうございます。プライバシー サンドボックスはこのデバイスで ON になっています。\n\nベータ版はプライバシー設定でいつでも OFF にできます。詳しくは、プライバシー設定をご覧ください。"</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"参加を取り消しました"</string>
@@ -100,14 +99,14 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"この興味 / 関心は Android によって再びリストに追加されることがありますが、すぐには反映されない可能性があります"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"興味 / 関心をすべてリセットしますか？"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"リストは内容が削除された後、徐々に更新されます"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"現在のリストは削除され、今後は新しい興味 / 関心が推定されるようになります。なお、削除された興味 / 関心に関連する広告が引き続き表示されることもあります。"</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"リセット"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> をブロックしますか？"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"このアプリは、ブロックを解除しない限り、プライバシー サンドボックスで興味 / 関心を推定することはありません。また、リストに再び追加されることもありません。\n\nこのアプリですでに推定された興味 / 関心は削除されますが、一部の関連する広告は引き続き表示されることがあります。"</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> のブロックを解除しました"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"このアプリはあなたの興味 / 関心を再び推定できるようになりますが、すぐにはリストに反映されない可能性があります。関連する広告が表示されるまで時間がかかることがあります。"</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"アプリで生成された興味 / 関心をリセットしますか？"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"リストは内容が削除された後、徐々に更新されます"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"リスト上でアプリが推定した興味 / 関心はプライバシー サンドボックスから削除され、今後は新しい興味 / 関心をアプリが推定するようになります。なお、関連する広告が引き続き表示されることもあります。"</string>
     <string name="topic10001" msgid="1636806320891333775">"アート、エンターテインメント"</string>
     <string name="topic10002" msgid="1226367977754287428">"劇場、映画館"</string>
     <string name="topic10003" msgid="6949890838957814881">"アニメ、漫画"</string>

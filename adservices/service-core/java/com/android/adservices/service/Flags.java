@@ -475,11 +475,14 @@ public interface Flags extends Dumpable {
         return FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT;
     }
 
-    // TODO(b/240647148): Limits are increased temporarily, decrease these numbers after
-    //  implementing a solution for more accurately scoped timeout
+    // TODO(b/240647148): Limits are increased temporarily, re-evaluate these numbers after
+    //  getting real world data from telemetry & set accurately scoped timeout
     long FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS = 5000;
+    long FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS = 10000;
     long FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS = 5000;
+    // For *on device* ad selection.
     long FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS = 10000;
+    long FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS = 10_000;
 
     long FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS = 2000;
 
@@ -488,17 +491,30 @@ public interface Flags extends Dumpable {
         return FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
     }
 
+    /** Returns the timeout constant in milliseconds that limits the bidding per Buyer */
+    default long getAdSelectionBiddingTimeoutPerBuyerMs() {
+        return FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS;
+    }
+
     /** Returns the timeout constant in milliseconds that limits the scoring */
     default long getAdSelectionScoringTimeoutMs() {
         return FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
     }
 
     /**
-     * Returns the timeout constant in milliseconds that limits the overall ad selection
-     * orchestration
+     * Returns the timeout constant in milliseconds that limits the overall *on device* ad selection
+     * orchestration.
      */
     default long getAdSelectionOverallTimeoutMs() {
         return FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
+    }
+
+    /**
+     * Returns the timeout constant in milliseconds that limits the overall off device ad selection
+     * orchestration.
+     */
+    default long getAdSelectionOffDeviceOverallTimeoutMs() {
+        return FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS;
     }
 
     /**
@@ -517,6 +533,20 @@ public interface Flags extends Dumpable {
      */
     default long getAdSelectionExpirationWindowS() {
         return FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S;
+    }
+
+    boolean FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED = false;
+
+    /** @return whether to call trusted servers for off device ad selection. */
+    default boolean getAdSelectionOffDeviceEnabled() {
+        return FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED;
+    }
+
+    boolean FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED = true;
+
+    /** Returns whether to compress requests sent off device for ad selection. */
+    default boolean getAdSelectionOffDeviceRequestCompressionEnabled() {
+        return FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED;
     }
 
     boolean ADSERVICES_ENABLED = false;
@@ -931,10 +961,9 @@ public interface Flags extends Dumpable {
      */
     boolean ADID_KILL_SWITCH = false; // By default, the AdId API is enabled.
 
-    /** Gets the state of the global and adId kill switch. */
+    /** Gets the state of adId kill switch. */
     default boolean getAdIdKillSwitch() {
-        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch() || ADID_KILL_SWITCH;
+        return ADID_KILL_SWITCH;
     }
 
     // APPSETID Killswitch.
@@ -1274,18 +1303,35 @@ public interface Flags extends Dumpable {
         return MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES;
     }
 
-    boolean OFF_DEVICE_AD_SELECTION_ENABLED = false;
-
-    /** @return whether to call trusted servers for off device ad selection. */
-    default boolean getOffDeviceAdSelectionEnabled() {
-        return OFF_DEVICE_AD_SELECTION_ENABLED;
-    }
-
     /** UI Dialogs feature enabled. */
-    boolean UI_DIALOGS_FEATURE_ENABLED = true;
+    boolean UI_DIALOGS_FEATURE_ENABLED = false;
 
     /** Returns if the UI Dialogs feature is enabled. */
     default boolean getUIDialogsFeatureEnabled() {
         return UI_DIALOGS_FEATURE_ENABLED;
+    }
+
+    long ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS = (int) TimeUnit.HOURS.toMillis(1);
+    /** Returns the interval in which to run Registration Job Queue Service. */
+    default long getRegistrationJobQueueIntervalMs() {
+        return ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS;
+    }
+
+    /**
+     * Registration Job Queue Kill Switch. The default value is false which means Registration Job
+     * Queue is enabled. This flag is used for emergency shutdown of the Registration Job Queue.
+     */
+    boolean MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Registration Job Queue. The API will be disabled if either
+     * the Global Kill Switch, Measurement Kill Switch, or the Registration Job Queue Kill Switch
+     * value is true.
+     */
+    default boolean getRegistrationJobQueueKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
     }
 }

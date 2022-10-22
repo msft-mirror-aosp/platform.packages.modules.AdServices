@@ -48,6 +48,8 @@ public final class PhFlags implements Flags {
     static final String KEY_TOPICS_NUMBER_OF_TOP_TOPICS = "topics_number_of_top_topics";
     static final String KEY_TOPICS_NUMBER_OF_RANDOM_TOPICS = "topics_number_of_random_topics";
     static final String KEY_TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS = "topics_number_of_lookback_epochs";
+    static final String KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY =
+            "topics_number_of_epochs_to_keep_in_history";
 
     // Topics classifier keys
     static final String KEY_CLASSIFIER_TYPE = "classifier_type";
@@ -155,8 +157,19 @@ public final class PhFlags implements Flags {
             "fledge_ad_selection_expiration_window_s";
     static final String KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS =
             "fledge_report_impression_overall_timeout_ms";
-    static final String KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY =
-            "topics_number_of_epochs_to_keep_in_history";
+    static final String KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS =
+            "fledge_ad_selection_bidding_timeout_per_buyer_ms";
+
+    // FLEDGE Off device ad selection keys
+    static final String KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS =
+            "fledge_ad_selection_off_device_overall_timeout_ms";
+    // Whether to call trusted servers for off device ad selection.
+    static final String KEY_FLEDE_AD_SELECTION_OFF_DEVICE_ENABLED =
+            "fledge_ad_selection_off_device_enabled";
+    // Whether to compress the request object when calling trusted servers for off device ad
+    // selection.
+    static final String KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED =
+            "fledge_ad_selection_off_device_request_compression_enabled";
 
     // Fledge invoking app status keys
     static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION =
@@ -224,6 +237,8 @@ public final class PhFlags implements Flags {
             "measurement_receiver_install_attribution_kill_switch";
     static final String KEY_MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH =
             "measurement_receiver_delete_packages_kill_switch";
+    static final String KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH =
+            "measurement_job_registration_job_queue_kill_switch";
     static final String KEY_TOPICS_KILL_SWITCH = "topics_kill_switch";
     static final String KEY_MDD_BACKGROUND_TASK_KILL_SWITCH = "mdd_background_task_kill_switch";
     static final String KEY_MDD_LOGGER_KILL_SWITCH = "mdd_logger_kill_switch";
@@ -276,12 +291,25 @@ public final class PhFlags implements Flags {
     // Whether to call trusted servers for off device ad selection.
     static final String KEY_OFF_DEVICE_AD_SELECTION_ENABLED = "enable_off_device_ad_selection";
 
+    // Interval in which to run Registration Job Queue Service.
+    static final String KEY_REGISTRATION_JOB_QUEUE_INTERVAL_MS =
+            "key_registration_job_queue_interval_ms";
+
     private static final PhFlags sSingleton = new PhFlags();
 
     /** Returns the singleton instance of the PhFlags. */
     @NonNull
     public static PhFlags getInstance() {
         return sSingleton;
+    }
+
+    @Override
+    public long getRegistrationJobQueueIntervalMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_REGISTRATION_JOB_QUEUE_INTERVAL_MS,
+                /* defaultValue */ ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS);
     }
 
     @Override
@@ -807,6 +835,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public long getAdSelectionBiddingTimeoutPerBuyerMs() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS,
+                /* defaultValue */ FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS);
+    }
+
+    @Override
     public long getAdSelectionScoringTimeoutMs() {
         return DeviceConfig.getLong(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -820,6 +856,14 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS,
                 /* defaultValue */ FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS);
+    }
+
+    @Override
+    public long getAdSelectionOffDeviceOverallTimeoutMs() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS,
+                /* defaultValue */ FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS);
     }
 
     @Override
@@ -1108,6 +1152,22 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getRegistrationJobQueueKillSwitch() {
+        // We check the Global Killswitch first then Measurement Killswitch.
+        // As a result, it overrides all other killswitches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        final String flagName = KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
+        final boolean defaultValue = MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(flagName),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                DeviceConfig.NAMESPACE_ADSERVICES, flagName, defaultValue));
+    }
+
+    @Override
     public boolean getMeasurementReceiverInstallAttributionKillSwitch() {
         // We check the Global Killswitch first then Measurement Killswitch.
         // As a result, it overrides all other killswitches.
@@ -1143,16 +1203,15 @@ public final class PhFlags implements Flags {
     // ADID Killswitches
     @Override
     public boolean getAdIdKillSwitch() {
-        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        // Ignore Global Killswitch for adid.
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
-        return getGlobalKillSwitch()
-                || SystemProperties.getBoolean(
-                        getSystemPropertyName(KEY_ADID_KILL_SWITCH),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                DeviceConfig.NAMESPACE_ADSERVICES,
-                                /* flagName */ KEY_ADID_KILL_SWITCH,
-                                /* defaultValue */ ADID_KILL_SWITCH));
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(KEY_ADID_KILL_SWITCH),
+                /* defaultValue */ DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_ADID_KILL_SWITCH,
+                        /* defaultValue */ ADID_KILL_SWITCH));
     }
 
     // APPSETID Killswitch.
@@ -1317,6 +1376,22 @@ public final class PhFlags implements Flags {
         }
 
         return numberOfEpochsToKeepInHistory;
+    }
+
+    @Override
+    public boolean getAdSelectionOffDeviceEnabled() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDE_AD_SELECTION_OFF_DEVICE_ENABLED,
+                FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED);
+    }
+
+    @Override
+    public boolean getAdSelectionOffDeviceRequestCompressionEnabled() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED,
+                FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED);
     }
 
     @Override
@@ -1512,13 +1587,6 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES,
                 /* defaultValue */ MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES);
-    }
-
-    public boolean getOffDeviceAdSelectionEnabled() {
-        return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_OFF_DEVICE_AD_SELECTION_ENABLED,
-                OFF_DEVICE_AD_SELECTION_ENABLED);
     }
 
     @VisibleForTesting
@@ -1885,6 +1953,11 @@ public final class PhFlags implements Flags {
                         + getAdSelectionBiddingTimeoutPerCaMs());
         writer.println(
                 "\t"
+                        + KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS
+                        + " = "
+                        + getAdSelectionBiddingTimeoutPerBuyerMs());
+        writer.println(
+                "\t"
                         + KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS
                         + " = "
                         + getAdSelectionScoringTimeoutMs());
@@ -1893,6 +1966,11 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS
                         + " = "
                         + getAdSelectionOverallTimeoutMs());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS
+                        + " = "
+                        + getAdSelectionOffDeviceOverallTimeoutMs());
         writer.println(
                 "\t"
                         + KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS
@@ -1925,9 +2003,14 @@ public final class PhFlags implements Flags {
                         + getForegroundStatuslLevelForValidation());
         writer.println(
                 "\t"
-                        + KEY_OFF_DEVICE_AD_SELECTION_ENABLED
+                        + KEY_FLEDE_AD_SELECTION_OFF_DEVICE_ENABLED
                         + " = "
-                        + getOffDeviceAdSelectionEnabled());
+                        + getAdSelectionOffDeviceEnabled());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED
+                        + " = "
+                        + getAdSelectionOffDeviceRequestCompressionEnabled());
 
         writer.println(
                 "\t" + KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE + " = " + getEnforceIsolateMaxHeapSize());

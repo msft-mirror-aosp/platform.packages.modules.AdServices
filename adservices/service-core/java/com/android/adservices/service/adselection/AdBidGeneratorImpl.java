@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.adselection;
 
-import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdWithBid;
 import android.adservices.common.AdData;
 import android.adservices.common.AdSelectionSignals;
@@ -162,13 +161,11 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             @NonNull DBCustomAudience customAudience,
             @NonNull AdSelectionSignals adSelectionSignals,
             @NonNull AdSelectionSignals buyerSignals,
-            @NonNull AdSelectionSignals contextualSignals,
-            @NonNull AdSelectionConfig adSelectionConfig) {
+            @NonNull AdSelectionSignals contextualSignals) {
         Objects.requireNonNull(customAudience);
         Objects.requireNonNull(adSelectionSignals);
         Objects.requireNonNull(buyerSignals);
         Objects.requireNonNull(contextualSignals);
-        Objects.requireNonNull(adSelectionConfig);
 
         LogUtil.v("Running Ad Bidding for CA : %s", customAudience.getName());
         if (customAudience.getAds().isEmpty()) {

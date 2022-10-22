@@ -48,8 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Hvis du aktiverer betaversionen, giver du apps mulighed for at teste disse nye og mere private måder at vise dig annoncer på. Du kan altid deaktivere betaversionen i privatlivsindstillingerne."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Nej tak"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Slå til"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Mere"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Tak, fordi du deltager"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Du er en del af Androids betaprogram for beskyttelse af personlige oplysninger i forbindelse med annoncer. Privacy Sandbox er aktiveret på din enhed.\n\nDu kan få flere oplysninger eller deaktivere betaversionen i privatlivsindstillingerne."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Du har valgt ikke at deltage"</string>
@@ -100,14 +99,16 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android kan føje denne interesse til din liste igen, men den vises muligvis ikke med det samme"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Vil du nulstille alle dine interesser?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"Din liste ryddes og bliver derefter løbende opdateret"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Nulstil"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Vil du blokere <xliff:g id="APP">%1$s</xliff:g>?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Denne app estimerer ikke interesser for Privacy Sandbox, og den føjes ikke til din liste igen, medmindre du fjerner blokeringen af den.\n\nInteresser, som allerede er blevet estimeret af denne app, slettes, men du får muligvis stadig vist nogle relaterede annoncer."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Blokeringen af <xliff:g id="APP">%1$s</xliff:g> er fjernet"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Denne app kan estimere interesser for dig igen, men de vises muligvis ikke på din liste med det samme. Der kan gå noget tid, før du får vist relaterede annoncer."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Vil du nulstille interesser, der er genereret af apps?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"Din liste ryddes og bliver derefter løbende opdateret"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Kunst og underholdning"</string>
     <string name="topic10002" msgid="1226367977754287428">"Skuespil og teater"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime og manga"</string>

@@ -48,8 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"开启 Beta 版会允许应用测试这些更注重保护隐私的新方式以向您展示广告。您随时可在隐私设置中关闭 Beta 版。"</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"不用了"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"开启"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"更多"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"感谢您的加入"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"您已加入 Android 广告隐私权 Beta 版测试计划。我们已为您的设备开启 Privacy Sandbox。\n\n您随时可在隐私设置中了解详情或关闭 Beta 版。"</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"您已选择不加入"</string>
@@ -100,14 +99,16 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android 可能还会将此感兴趣主题再次添加到您的列表中，但该主题可能不会立即显示"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"确定"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"要重置所有感兴趣主题吗？"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"您的列表将被清空，一段时间后可能会刷新"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"重置"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"要屏蔽“<xliff:g id="APP">%1$s</xliff:g>”吗？"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"启用 Privacy Sandbox 后，此应用将不会预测您的感兴趣主题，也不会将这些主题再次添加到您的列表中，除非您取消屏蔽该应用。\n\n此应用已预测的感兴趣主题将被删除，但您仍可能会看到一些相关广告。"</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"已取消屏蔽<xliff:g id="APP">%1$s</xliff:g>"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"此应用可能会再次推测您感兴趣的主题，但这些主题可能不会立即在您的列表中显示。您可能需要过段时间才能看到相关广告。"</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"要重置应用生成的感兴趣主题吗？"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"您的列表将被清空，一段时间后可能会刷新"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"艺术与娱乐"</string>
     <string name="topic10002" msgid="1226367977754287428">"演出与剧场"</string>
     <string name="topic10003" msgid="6949890838957814881">"动漫与日本漫画"</string>

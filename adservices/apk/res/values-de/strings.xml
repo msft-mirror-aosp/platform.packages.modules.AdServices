@@ -48,8 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Wenn du die Betaversion aktivierst, können Apps diese neuen privateren Möglichkeiten zum Anzeigen von Werbung testen. Die Betaversion lässt sich jederzeit in deinen Datenschutzeinstellungen deaktivieren."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Nein danke"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Aktivieren"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Mehr"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Danke für deine Teilnahme"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Du nimmst am Betaprogramm für Android-Datenschutz bei Werbung teil. Die Privacy Sandbox ist für dein Gerät aktiviert.\n\nIn den Datenschutzeinstellungen kannst du jederzeit die Betaversion deaktivieren oder mehr erfahren."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Du möchtest nicht teilnehmen"</string>
@@ -89,43 +88,26 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Das Betaprogramm für Android-Datenschutz bei Werbung bietet neue Funktionen, mit denen Apps dir Werbung präsentieren können, die für dich möglicherweise interessant ist. Diese Technologien nutzen keine Geräte-IDs.\n\nApps können schätzen, welche Art von Werbung dich möglicherweise interessiert, und diese Interessen vorübergehend auf deinem Gerät speichern. So können Apps dir relevante Werbung präsentieren, ohne dabei deine Aktivitäten auf Websites und in Apps anderer Entwickler zu erfassen."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Du hast keine blockierten Apps"</string>
-    <!-- no translation found for settingsUI_dialog_negative_text (3014088254631375852) -->
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Abbrechen"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Privacy Sandbox deaktivieren?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Falls du es dir anders überlegst oder mehr über das Betaprogramm für Android-Datenschutz bei Werbung erfahren möchtest, rufe deine Datenschutzeinstellungen auf"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Deaktivieren"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"<xliff:g id="TOPIC">%1$s</xliff:g> blockieren?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Dieses Interesse wird blockiert und nicht noch einmal zu deiner Liste hinzugefügt – es sei denn, du hebst die Blockierung auf. Unter Umständen siehst du einige zugehörige Werbeanzeigen jedoch weiterhin."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Blockieren"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> ist nicht mehr blockiert"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android kann dieses Interesse wieder zu deiner Liste hinzufügen, unter Umständen erscheint es aber nicht sofort auf deiner Liste"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Alle Interessen zurücksetzen?"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
     <skip />
-    <!-- no translation found for settingsUI_dialog_opt_out_title (1862069591629418291) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_opt_out_message (5696012172835241848) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_opt_out_positive_text (5344259263448028614) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_block_topic_title (5744004384480280782) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_block_topic_message (2474902516721078270) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_block_topic_positive_text (2626152417590300510) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_unblock_topic_title (7361000923920947234) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_unblock_topic_message (4058967523591550460) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_unblock_topic_positive_text (2192452325573789737) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_topic_title (1949146936958849544) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (8099126076667244456) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_topic_positive_text (8345697359799280761) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_block_app_title (421160714549264414) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_block_app_message (4703493174054204149) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_unblock_app_title (4360730780049298286) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_unblock_app_message (7858109719986236041) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_title (7193520707240514769) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_message (1967554695864827385) -->
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Zurücksetzen"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> blockieren?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Diese App schätzt keine Interessen für die Privacy Sandbox mehr und sie wird nicht noch einmal zu deiner Liste hinzugefügt – es sei denn, du hebst die Blockierung auf.\n\nBereits von der App geschätzte Interessen werden gelöscht. Es kann aber sein, dass du weiterhin entsprechende Werbung siehst."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> ist nicht mehr blockiert"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Diese App kann wieder deine Interessen schätzen. Unter Umständen erscheinen sie aber nicht sofort auf deiner Liste. Es kann eine Weile dauern, bis du entsprechende Werbung siehst."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Von Apps generierte Interessen zurücksetzen?"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
     <skip />
     <string name="topic10001" msgid="1636806320891333775">"Kunst und Unterhaltung"</string>
     <string name="topic10002" msgid="1226367977754287428">"Schauspielkunst und Theater"</string>

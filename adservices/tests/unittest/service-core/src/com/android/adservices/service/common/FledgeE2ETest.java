@@ -50,6 +50,7 @@ import android.adservices.common.AdData;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.CallerMetadata;
 import android.adservices.common.CallingAppUidSupplierProcessImpl;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
@@ -148,6 +149,7 @@ public class FledgeE2ETest {
                             + "\t\"render_uri_1\": \"signals_for_1\",\n"
                             + "\t\"render_uri_2\": \"signals_for_2\"\n"
                             + "}");
+    private static final long BINDER_ELAPSED_TIMESTAMP = 100L;
     private static final List<Double> BIDS_FOR_BUYER_1 = ImmutableList.of(1.1, 2.2);
     private static final List<Double> BIDS_FOR_BUYER_2 = ImmutableList.of(4.5, 6.7, 10.0);
     private static final List<Double> INVALID_BIDS = ImmutableList.of(0.0, -1.0, -2.0);
@@ -1768,8 +1770,11 @@ public class FledgeE2ETest {
                         .setAdSelectionConfig(adSelectionConfig)
                         .setCallerPackageName(callerPackageName)
                         .build();
-
-        adSelectionService.runAdSelection(input, adSelectionTestCallback);
+        CallerMetadata callerMetadata =
+                new CallerMetadata.Builder()
+                        .setBinderElapsedTimestamp(BINDER_ELAPSED_TIMESTAMP)
+                        .build();
+        adSelectionService.runAdSelection(input, callerMetadata, adSelectionTestCallback);
         adSelectionTestCallback.mCountDownLatch.await();
         return adSelectionTestCallback;
     }
@@ -1870,7 +1875,7 @@ public class FledgeE2ETest {
                                                 buyerDomain.getAuthority(),
                                                 BUYER_TRUSTED_SIGNAL_URI_PATH))
                                 .setTrustedBiddingKeys(
-                                        TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_KEYS)
+                                        TrustedBiddingDataFixture.getValidTrustedBiddingKeys())
                                 .build())
                 .setBiddingLogicUri(
                         CommonFixture.getUri(

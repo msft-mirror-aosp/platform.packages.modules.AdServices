@@ -259,8 +259,7 @@ public class AdBidGeneratorImplTest {
                         mCustomAudienceWithAds,
                         EMPTY_AD_SELECTION_SIGNALS,
                         EMPTY_BUYER_SIGNALS,
-                        EMPTY_CONTEXTUAL_SIGNALS,
-                        AdSelectionConfigFixture.anAdSelectionConfig());
+                        EMPTY_CONTEXTUAL_SIGNALS);
         AdBiddingOutcome expectedAdBiddingOutcome =
                 AdBiddingOutcome.builder()
                         .setAdWithBid(AD_WITH_BIDS.get(2))
@@ -361,8 +360,7 @@ public class AdBidGeneratorImplTest {
                         mCustomAudienceWithAds,
                         EMPTY_AD_SELECTION_SIGNALS,
                         EMPTY_BUYER_SIGNALS,
-                        EMPTY_CONTEXTUAL_SIGNALS,
-                        adSelectionConfig);
+                        EMPTY_CONTEXTUAL_SIGNALS);
         AdBiddingOutcome expectedAdBiddingOutcome =
                 AdBiddingOutcome.builder()
                         .setAdWithBid(AD_WITH_BIDS.get(2))
@@ -429,8 +427,7 @@ public class AdBidGeneratorImplTest {
                         mCustomAudienceWithAds,
                         EMPTY_AD_SELECTION_SIGNALS,
                         EMPTY_BUYER_SIGNALS,
-                        EMPTY_CONTEXTUAL_SIGNALS,
-                        AdSelectionConfigFixture.anAdSelectionConfig());
+                        EMPTY_CONTEXTUAL_SIGNALS);
         // Then we can test the result by assertion,
         assertNull(result.get());
         Mockito.verify(mAdSelectionScriptEngine)
@@ -501,8 +498,7 @@ public class AdBidGeneratorImplTest {
                         mCustomAudienceWithAds,
                         EMPTY_AD_SELECTION_SIGNALS,
                         EMPTY_BUYER_SIGNALS,
-                        EMPTY_CONTEXTUAL_SIGNALS,
-                        AdSelectionConfigFixture.anAdSelectionConfig());
+                        EMPTY_CONTEXTUAL_SIGNALS);
         // Then we can test the result by assertion
         ExecutionException thrown = assertThrows(ExecutionException.class, result::get);
         assertTrue(thrown.getMessage().contains(BIDDING_TIMED_OUT));
@@ -659,8 +655,7 @@ public class AdBidGeneratorImplTest {
                         customAudienceWithAds,
                         EMPTY_AD_SELECTION_SIGNALS,
                         EMPTY_BUYER_SIGNALS,
-                        EMPTY_CONTEXTUAL_SIGNALS,
-                        AdSelectionConfigFixture.anAdSelectionConfig());
+                        EMPTY_CONTEXTUAL_SIGNALS);
         AdBiddingOutcome expectedAdBiddingOutcome =
                 AdBiddingOutcome.builder()
                         .setAdWithBid(AD_WITH_BIDS.get(2))
@@ -733,8 +728,7 @@ public class AdBidGeneratorImplTest {
                         mCustomAudienceWithAds,
                         EMPTY_AD_SELECTION_SIGNALS,
                         EMPTY_BUYER_SIGNALS,
-                        EMPTY_CONTEXTUAL_SIGNALS,
-                        AdSelectionConfigFixture.anAdSelectionConfig());
+                        EMPTY_CONTEXTUAL_SIGNALS);
         ExecutionException outException = assertThrows(ExecutionException.class, result::get);
         assertEquals(outException.getCause().getMessage(), missingJSLogicException.getMessage());
         mMockWebServerRule.verifyMockServerRequests(
@@ -789,8 +783,7 @@ public class AdBidGeneratorImplTest {
                         mCustomAudienceWithAds,
                         EMPTY_AD_SELECTION_SIGNALS,
                         EMPTY_BUYER_SIGNALS,
-                        EMPTY_CONTEXTUAL_SIGNALS,
-                        AdSelectionConfigFixture.anAdSelectionConfig());
+                        EMPTY_CONTEXTUAL_SIGNALS);
         ExecutionException outException = assertThrows(ExecutionException.class, result::get);
         assertEquals(outException.getCause().getMessage(), missingSignalsException.getMessage());
         mMockWebServerRule.verifyMockServerRequests(
@@ -844,8 +837,7 @@ public class AdBidGeneratorImplTest {
                         mCustomAudienceWithAds,
                         EMPTY_AD_SELECTION_SIGNALS,
                         EMPTY_BUYER_SIGNALS,
-                        EMPTY_CONTEXTUAL_SIGNALS,
-                        AdSelectionConfigFixture.anAdSelectionConfig());
+                        EMPTY_CONTEXTUAL_SIGNALS);
         assertNull(result.get());
         mMockWebServerRule.verifyMockServerRequests(
                 mServer,
@@ -884,8 +876,7 @@ public class AdBidGeneratorImplTest {
                         CUSTOM_AUDIENCE_WITH_EMPTY_ADS,
                         EMPTY_AD_SELECTION_SIGNALS,
                         EMPTY_BUYER_SIGNALS,
-                        EMPTY_CONTEXTUAL_SIGNALS,
-                        AdSelectionConfigFixture.anAdSelectionConfig());
+                        EMPTY_CONTEXTUAL_SIGNALS);
         // The result is an early return with a FluentFuture of Null, after checking the Ads list is
         // empty.
         assertNull(result.get());

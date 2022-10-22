@@ -18,5 +18,4 @@ interface IStorageTestSdk1Api {
     void verifySharedStorageIsUsable();
     void verifyPerSdkStorageIsUsable();
     void createFilesInSharedStorage(int sizeInBytes, boolean inCacheDir);
-    String getSyncedSharedPreferencesString(in String key);
 }

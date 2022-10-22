@@ -48,8 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"बीटा प्रोग्राम को चालू करने का मतलब है कि आपके डिवाइस में मौजूद ऐप्लिकेशन, विज्ञापन दिखाने के लिए ज़्यादा निजता वाले इन नए तरीकों को आज़मा सकते हैं. निजता सेटिंग में जाकर, बीटा प्रोग्राम को कभी भी बंद किया जा सकता है."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"रहने दें"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"चालू करें"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"ज़्यादा देखें"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"इसमें हिस्सा लेने के लिए धन्यवाद"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"अब आप Android प्राइवसी सैंडबॉक्स के बीटा प्रोग्राम का हिस्सा हैं. आपके डिवाइस के लिए, प्राइवसी सैंडबॉक्स का बीटा प्रोग्राम चालू है.\n\nबीटा प्रोग्राम को कभी भी बंद करने या इसके बारे में ज़्यादा जानने के लिए निजता सेटिंग में जाएं."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"आपने इस प्रोग्राम में शामिल न होने का विकल्प चुना है"</string>
@@ -100,14 +99,16 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android, आपकी दिलचस्पी से जुड़े इस विषय को सूची में फिर से जोड़ सकता है. हालांकि, ऐसा हो सकता है कि यह सूची में तुरंत न दिखे"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"ठीक है"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"क्या आपको अपनी दिलचस्पी के सभी विषय रीसेट करने हैं?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"आपकी दिलचस्पी से जुड़े विषय की सूची को मिटा दिया जाएगा. इसे कुछ देर बाद रीफ़्रेश कर दिया जाएगा"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"रीसेट करें"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"क्या आपको <xliff:g id="APP">%1$s</xliff:g> को ब्लॉक करना है?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"यह ऐप्लिकेशन प्राइवसी सैंडबॉक्स के लिए, आपकी दिलचस्पियों का अनुमान नहीं लगाएगा और जब तक इसे अनब्लॉक नहीं किया जाता, तब तक इसे आपकी सूची में वापस नहीं जोड़ा जाएगा.\n\nऐप्लिकेशन ने आपकी जिन दिलचस्पियों का अनुमान लगाया था उन्हें मिटा दिया जाएगा. हालांकि, आपको अब भी इनसे जुड़े कुछ विज्ञापन दिख सकते हैं."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> को अनब्लॉक कर दिया गया है"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"यह ऐप्लिकेशन फिर से आपकी दिलचस्पियों का अनुमान लगा सकता है. हालांकि, ऐसा हो सकता है कि ये आपकी सूची में तुरंत न दिखें. इससे जुड़े विज्ञापन दिखने में कुछ समय लग सकता है."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"क्या आपको ऐप्लिकेशन की अनुमान लगाई गई दिलचस्पियां रीसेट करनी हैं?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"आपके ऐप्लिकेशन की सूची को मिटा दिया जाएगा. इसे कुछ देर बाद रीफ़्रेश कर दिया जाएगा"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"कला और मनोरंजन"</string>
     <string name="topic10002" msgid="1226367977754287428">"अभिनय और थिएटर"</string>
     <string name="topic10003" msgid="6949890838957814881">"ऐनमे और मंगा"</string>

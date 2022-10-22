@@ -48,8 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"การใช้รุ่นเบต้าช่วยให้แอปทดสอบวิธีการแสดงโฆษณาแบบใหม่ที่มีความเป็นส่วนตัวมากขึ้นเหล่านี้ได้ คุณหยุดใช้รุ่นเบต้าได้ทุกเมื่อในการตั้งค่าความเป็นส่วนตัว"</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"ไม่เป็นไร"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"เปิด"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"เพิ่มเติม"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"ขอขอบคุณที่เข้าร่วม"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"คุณเป็นส่วนหนึ่งของโปรแกรมความเป็นส่วนตัวสำหรับโฆษณาใน Android (เบต้า) Privacy Sandbox เปิดใช้อยู่บนอุปกรณ์ของคุณ\n\nคุณดูข้อมูลเพิ่มเติมหรือหยุดใช้รุ่นเบต้าได้ทุกเมื่อในการตั้งค่าความเป็นส่วนตัว"</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"คุณเลือกที่จะไม่เข้าร่วม"</string>
@@ -100,14 +99,14 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android อาจเพิ่มความสนใจนี้ลงในรายการอีกครั้ง แต่อาจไม่ปรากฏโดยทันที"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"ตกลง"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"รีเซ็ตความสนใจทั้งหมดไหม"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"ระบบจะล้างรายการแล้วรีเฟรชเมื่อเวลาผ่านไป"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"ระบบจะล้างรายการของคุณและจะประเมินความสนใจใหม่ของคุณในอนาคต คุณอาจยังคงเห็นโฆษณาที่เกี่ยวข้องกับความสนใจที่ระบบล้างไปแล้วอยู่บ้าง"</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"รีเซ็ต"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"บล็อก \"<xliff:g id="APP">%1$s</xliff:g>\" ใช่ไหม"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"แอปนี้จะไม่คาดการณ์ความสนใจสำหรับ Privacy Sandbox และไม่เพิ่มลงในรายการอีกครั้ง เว้นแต่คุณจะเลิกบล็อก\n\nระบบจะลบความสนใจที่แอปนี้คาดการณ์แล้ว แต่คุณอาจยังเห็นโฆษณาที่เกี่ยวข้องอยู่บ้าง"</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"เลิกบล็อก \"<xliff:g id="APP">%1$s</xliff:g>\" แล้ว"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"แอปนี้คาดการณ์ความสนใจให้คุณอีกครั้งได้ แต่อาจไม่ปรากฏในรายการโดยทันที อาจใช้เวลาสักครู่จึงจะเห็นโฆษณาที่เกี่ยวข้อง"</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"รีเซ็ตความสนใจที่สร้างโดยแอปไหม"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"ระบบจะล้างรายการแล้วรีเฟรชเมื่อเวลาผ่านไป"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"ระบบจะลบความสนใจที่คาดการณ์โดยแอปในรายการของคุณออกจาก Privacy Sandbox โดยแอปจะคาดการณ์ความสนใจใหม่ในอนาคต คุณอาจยังคงเห็นโฆษณาที่เกี่ยวข้องอยู่บ้าง"</string>
     <string name="topic10001" msgid="1636806320891333775">"ศิลปะและบันเทิง"</string>
     <string name="topic10002" msgid="1226367977754287428">"การแสดงและโรงละคร"</string>
     <string name="topic10003" msgid="6949890838957814881">"อะนิเมะและการ์ตูนญี่ปุ่น"</string>

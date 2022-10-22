@@ -219,8 +219,7 @@ public class AsyncRegistration {
 
         /** See {@link AsyncRegistration#getTopOrigin()}. */
         @NonNull
-        public Builder setTopOrigin(@NonNull Uri topOrigin) {
-            Validation.validateNonNull(topOrigin);
+        public Builder setTopOrigin(@Nullable Uri topOrigin) {
             mTopOrigin = topOrigin;
             return this;
         }

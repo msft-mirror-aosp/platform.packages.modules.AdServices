@@ -27,11 +27,9 @@ import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.usage.StorageStats;
 import android.app.usage.StorageStatsManager;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Process;
 import android.os.UserHandle;
-import android.preference.PreferenceManager;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
@@ -50,7 +48,6 @@ import org.junit.runners.JUnit4;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.util.Set;
 
 @RunWith(JUnit4.class)
 public class SdkSandboxStorageTestApp {
@@ -66,10 +63,6 @@ public class SdkSandboxStorageTestApp {
             "open failed: ENOENT (No such file or directory)";
 
     @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(TestActivity.class);
-
-    private static final String KEY_TO_SYNC = "hello";
-    private static final String BULK_SYNC_VALUE = "bulksync";
-    private static final String UPDATE_VALUE = "update";
 
     private Context mContext;
     private SdkSandboxManager mSdkSandboxManager;
@@ -152,92 +145,6 @@ public class SdkSandboxStorageTestApp {
                 finalUserStats.getCacheBytes() - initialUserStats.getCacheBytes();
         assertMostlyEquals(deltaCacheSize, cacheSizeAppStats, errorMarginSize);
         assertMostlyEquals(deltaCacheSize, cacheSizeUserStats, errorMarginSize);
-    }
-
-    @Test
-    public void testSharedPreferences_IsSyncedFromAppToSandbox() throws Exception {
-        loadSdk();
-
-        // Write to default shared preference
-        final SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(mContext);
-        pref.edit().putString(KEY_TO_SYNC, BULK_SYNC_VALUE).commit();
-
-        // Start syncing keys
-        mSdkSandboxManager.addSyncedSharedPreferencesKeys(Set.of(KEY_TO_SYNC));
-        // Allow some time for data to sync
-        Thread.sleep(1000);
-
-        // Verify same key can be read from the sandbox
-        final String syncedValueInSandbox = mSdk.getSyncedSharedPreferencesString(KEY_TO_SYNC);
-        assertThat(syncedValueInSandbox).isEqualTo(BULK_SYNC_VALUE);
-    }
-
-    @Test
-    public void testSharedPreferences_SyncPropagatesUpdates() throws Exception {
-        loadSdk();
-
-        // Start syncing keys
-        mSdkSandboxManager.addSyncedSharedPreferencesKeys(Set.of(KEY_TO_SYNC));
-
-        // Update the default SharedPreferences
-        final SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(mContext);
-        pref.edit().putString(KEY_TO_SYNC, UPDATE_VALUE).commit();
-        // Allow some time for data to sync
-        Thread.sleep(1000);
-
-        // Verify update was propagated
-        final String syncedValueInSandbox = mSdk.getSyncedSharedPreferencesString(KEY_TO_SYNC);
-        assertThat(syncedValueInSandbox).isEqualTo(UPDATE_VALUE);
-    }
-
-    @Test
-    public void testSharedPreferences_SyncStartedBeforeLoadingSdk() throws Exception {
-        // Write to default shared preference
-        final SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(mContext);
-        pref.edit().putString(KEY_TO_SYNC, BULK_SYNC_VALUE).commit();
-
-        // Start syncing keys
-        mSdkSandboxManager.addSyncedSharedPreferencesKeys(Set.of(KEY_TO_SYNC));
-
-        // Load Sdk so that sandbox is started
-        loadSdk();
-        // Allow some time for data to sync
-        Thread.sleep(1000);
-
-        // Verify same key can be read from the sandbox
-        final String syncedValueInSandbox = mSdk.getSyncedSharedPreferencesString(KEY_TO_SYNC);
-        assertThat(syncedValueInSandbox).isEqualTo(BULK_SYNC_VALUE);
-    }
-
-    @Test
-    public void testSharedPreferences_SyncRemoveKeys() throws Exception {
-        loadSdk();
-
-        // Write to default shared preference
-        final SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(mContext);
-        pref.edit().putString(KEY_TO_SYNC, BULK_SYNC_VALUE).commit();
-
-        // Start syncing keys
-        mSdkSandboxManager.addSyncedSharedPreferencesKeys(Set.of(KEY_TO_SYNC));
-
-        // Remove the key
-        mSdkSandboxManager.removeSyncedSharedPreferencesKeys(Set.of(KEY_TO_SYNC));
-
-        // Allow some time for data to sync
-        Thread.sleep(1000);
-
-        // Verify key has been removed from the sandbox
-        final String syncedValueInSandbox = mSdk.getSyncedSharedPreferencesString(KEY_TO_SYNC);
-        assertThat(syncedValueInSandbox).isEmpty();
-    }
-
-    @Test
-    public void testSharedPreferences_SyncedDataClearedOnSandboxRestart() throws Exception {
-        loadSdk();
-
-        // Verify previously synced keys are not available in sandbox anymore
-        final String syncedValueInSandbox = mSdk.getSyncedSharedPreferencesString(KEY_TO_SYNC);
-        assertThat(syncedValueInSandbox).isEmpty();
     }
 
     private static void assertDirIsNotAccessible(String path) {
