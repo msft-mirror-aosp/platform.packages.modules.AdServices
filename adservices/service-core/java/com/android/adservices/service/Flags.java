@@ -475,18 +475,25 @@ public interface Flags extends Dumpable {
         return FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT;
     }
 
-    // TODO(b/240647148): Limits are increased temporarily, decrease these numbers after
-    //  implementing a solution for more accurately scoped timeout
+    // TODO(b/240647148): Limits are increased temporarily, re-evaluate these numbers after
+    //  getting real world data from telemetry & set accurately scoped timeout
     long FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS = 5000;
+    long FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS = 10000;
     long FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS = 5000;
     // For *on device* ad selection.
     long FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS = 10000;
     long FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS = 10_000;
+
     long FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS = 2000;
 
     /** Returns the timeout constant in milliseconds that limits the bidding per CA */
     default long getAdSelectionBiddingTimeoutPerCaMs() {
         return FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
+    }
+
+    /** Returns the timeout constant in milliseconds that limits the bidding per Buyer */
+    default long getAdSelectionBiddingTimeoutPerBuyerMs() {
+        return FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS;
     }
 
     /** Returns the timeout constant in milliseconds that limits the scoring */
@@ -940,10 +947,9 @@ public interface Flags extends Dumpable {
      */
     boolean ADID_KILL_SWITCH = false; // By default, the AdId API is enabled.
 
-    /** Gets the state of the global and adId kill switch. */
+    /** Gets the state of adId kill switch. */
     default boolean getAdIdKillSwitch() {
-        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        return getGlobalKillSwitch() || ADID_KILL_SWITCH;
+        return ADID_KILL_SWITCH;
     }
 
     // APPSETID Killswitch.

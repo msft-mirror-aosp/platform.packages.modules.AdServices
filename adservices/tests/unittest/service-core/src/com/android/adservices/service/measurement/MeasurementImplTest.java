@@ -1877,7 +1877,7 @@ public final class MeasurementImplTest {
         verify(mMeasurementDao, times(2)).insertEventReport(any());
         verify(mMeasurementDao).insertAttribution(attributionRateLimitArgCaptor.capture());
 
-        assertEquals(
+        assertAttributionObjectsEquals(
                 new Attribution.Builder()
                         .setDestinationOrigin(source.getAppDestination().toString())
                         .setDestinationSite(source.getAppDestination().toString())
@@ -1936,7 +1936,7 @@ public final class MeasurementImplTest {
         verify(mMeasurementDao, times(2)).insertEventReport(any());
         verify(mMeasurementDao).insertAttribution(attributionRateLimitArgCaptor.capture());
 
-        assertEquals(
+        assertAttributionObjectsEquals(
                 new Attribution.Builder()
                         .setDestinationOrigin(source.getWebDestination().toString())
                         .setDestinationSite(source.getWebDestination().toString())
@@ -1999,7 +1999,7 @@ public final class MeasurementImplTest {
         verify(mMeasurementDao, times(2))
                 .insertAttribution(attributionRateLimitArgCaptor.capture());
 
-        assertEquals(
+        assertAttributionObjectsEquals(
                 new Attribution.Builder()
                         .setDestinationOrigin(source.getAppDestination().toString())
                         .setDestinationSite(source.getAppDestination().toString())
@@ -2011,7 +2011,7 @@ public final class MeasurementImplTest {
                         .build(),
                 attributionRateLimitArgCaptor.getAllValues().get(0));
 
-        assertEquals(
+        assertAttributionObjectsEquals(
                 new Attribution.Builder()
                         .setDestinationOrigin(source.getWebDestination().toString())
                         .setDestinationSite(source.getWebDestination().toString())
@@ -2068,7 +2068,7 @@ public final class MeasurementImplTest {
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mMeasurementDao).insertAttribution(attributionRateLimitArgCaptor.capture());
 
-        assertEquals(
+        assertAttributionObjectsEquals(
                 new Attribution.Builder()
                         .setDestinationOrigin(source.getAppDestination().toString())
                         .setDestinationSite(source.getAppDestination().toString())
@@ -2079,6 +2079,18 @@ public final class MeasurementImplTest {
                         .setTriggerTime(source.getEventTime())
                         .build(),
                 attributionRateLimitArgCaptor.getValue());
+    }
+
+    private void assertAttributionObjectsEquals(Attribution expected, Attribution actual) {
+        // Skip matching triggerId because it's randomly generated for fake reports
+        assertEquals(expected.getDestinationOrigin(), actual.getDestinationOrigin());
+        assertEquals(expected.getDestinationSite(), actual.getDestinationSite());
+        assertEquals(expected.getEnrollmentId(), actual.getEnrollmentId());
+        assertEquals(expected.getSourceOrigin(), actual.getSourceOrigin());
+        assertEquals(expected.getSourceSite(), actual.getSourceSite());
+        assertEquals(expected.getRegistrant(), actual.getRegistrant());
+        assertEquals(expected.getTriggerTime(), actual.getTriggerTime());
+        assertEquals(expected.getSourceId(), actual.getSourceId());
     }
 
     private List<Source.FakeReport> createFakeReports(Source source, int count, Uri destination) {

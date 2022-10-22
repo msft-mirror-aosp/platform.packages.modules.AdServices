@@ -75,6 +75,10 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.EventReportContract.TRIGGER_DEBUG_KEY,
                 builder::setTriggerDebugKey);
+        setTextColumn(
+                cursor, MeasurementTables.EventReportContract.SOURCE_ID, builder::setSourceId);
+        setTextColumn(
+                cursor, MeasurementTables.EventReportContract.TRIGGER_ID, builder::setTriggerId);
         return builder.build();
     }
 
@@ -200,6 +204,8 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.AggregateReport.TRIGGER_DEBUG_KEY,
                 builder::setTriggerDebugKey);
+        setTextColumn(cursor, MeasurementTables.AggregateReport.SOURCE_ID, builder::setSourceId);
+        setTextColumn(cursor, MeasurementTables.AggregateReport.TRIGGER_ID, builder::setTriggerId);
         return builder.build();
     }
 

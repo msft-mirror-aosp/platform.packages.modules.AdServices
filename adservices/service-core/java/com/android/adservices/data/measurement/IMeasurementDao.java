@@ -52,6 +52,14 @@ public interface IMeasurementDao {
     List<String> getPendingTriggerIds() throws DatastoreException;
 
     /**
+     * Queries and returns the {@link Source}.
+     *
+     * @param sourceId ID of the requested Source
+     * @return the requested Source
+     */
+    Source getSource(@NonNull String sourceId) throws DatastoreException;
+
+    /**
      * Queries and returns the {@link Trigger}.
      *
      * @param triggerId Id of the request Trigger
@@ -367,4 +375,21 @@ public interface IMeasurementDao {
      * @throws DatastoreException
      */
     void deleteAppRecordsNotPresent(List<Uri> uriList) throws DatastoreException;
+
+    /**
+     * Fetches matching aggregate reports with the provided trigger IDs.
+     *
+     * @param triggerIds triggers that match with aggregate reports
+     */
+    List<AggregateReport> fetchMatchingAggregateReports(@NonNull List<String> triggerIds)
+            throws DatastoreException;
+
+    /**
+     * Fetches matching event reports with the provided parameters. It returns a union of event
+     * reports that match with any of the source IDs or the trigger IDs.
+     *
+     * @param triggerIds triggers that should match with event reports
+     */
+    List<EventReport> fetchMatchingEventReports(@NonNull List<String> triggerIds)
+            throws DatastoreException;
 }

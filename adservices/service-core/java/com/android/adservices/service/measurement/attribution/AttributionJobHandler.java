@@ -203,6 +203,8 @@ class AttributionJobHandler {
                                     .setApiVersion(API_VERSION)
                                     .setSourceDebugKey(source.getDebugKey())
                                     .setTriggerDebugKey(trigger.getDebugKey())
+                                    .setSourceId(source.getId())
+                                    .setTriggerId(trigger.getId())
                                     .build();
 
                     measurementDao.updateSourceAggregateContributions(source);
@@ -565,6 +567,8 @@ class AttributionJobHandler {
                 .setEnrollmentId(trigger.getEnrollmentId())
                 .setTriggerTime(trigger.getTriggerTime())
                 .setRegistrant(trigger.getRegistrant().toString())
+                .setSourceId(source.getId())
+                .setTriggerId(trigger.getId())
                 .build();
     }
 
