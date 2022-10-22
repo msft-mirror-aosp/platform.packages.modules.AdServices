@@ -202,7 +202,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         mLightweightExecutor.execute(
                 () -> {
                     // TODO(b/249298855): Evolve off device ad selection logic.
-                    if (mFlags.getOffDeviceAdSelectionEnabled()) {
+                    if (mFlags.getAdSelectionOffDeviceEnabled()) {
                         runOffDeviceAdSelection(
                                 devContext,
                                 callerUid,

@@ -535,6 +535,20 @@ public interface Flags extends Dumpable {
         return FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S;
     }
 
+    boolean FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED = false;
+
+    /** @return whether to call trusted servers for off device ad selection. */
+    default boolean getAdSelectionOffDeviceEnabled() {
+        return FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED;
+    }
+
+    boolean FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED = true;
+
+    /** Returns whether to compress requests sent off device for ad selection. */
+    default boolean getAdSelectionOffDeviceRequestCompressionEnabled() {
+        return FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED;
+    }
+
     boolean ADSERVICES_ENABLED = false;
 
     default boolean getAdServicesEnabled() {
@@ -1287,13 +1301,6 @@ public interface Flags extends Dumpable {
      */
     default long getMaxResponseBasedRegistrationPayloadSizeBytes() {
         return MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES;
-    }
-
-    boolean OFF_DEVICE_AD_SELECTION_ENABLED = false;
-
-    /** @return whether to call trusted servers for off device ad selection. */
-    default boolean getOffDeviceAdSelectionEnabled() {
-        return OFF_DEVICE_AD_SELECTION_ENABLED;
     }
 
     /** UI Dialogs feature enabled. */
