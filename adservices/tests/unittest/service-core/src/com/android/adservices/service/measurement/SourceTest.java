@@ -1265,6 +1265,48 @@ public class SourceTest {
     }
 
     @Test
+    public void testParseAggregateFilterData_nonEmpty() throws JSONException {
+        JSONObject filterData = new JSONObject();
+        filterData.put("conversion", new JSONArray(Collections.singletonList("electronics")));
+        filterData.put("product", new JSONArray(Arrays.asList("1234", "2345")));
+        Source source = SourceFixture.getValidSourceBuilder()
+                .setSourceType(Source.SourceType.NAVIGATION)
+                .setAggregateFilterData(filterData.toString())
+                .build();
+        AggregateFilterData aggregateFilterData = source.parseAggregateFilterData();
+        assertEquals(aggregateFilterData.getAttributionFilterMap().size(), 3);
+        assertEquals(Collections.singletonList("electronics"),
+                aggregateFilterData.getAttributionFilterMap().get("conversion"));
+        assertEquals(Arrays.asList("1234", "2345"),
+                aggregateFilterData.getAttributionFilterMap().get("product"));
+        assertEquals(Collections.singletonList("navigation"),
+                aggregateFilterData.getAttributionFilterMap().get("source_type"));
+    }
+
+    @Test
+    public void testParseAggregateFilterData_nullAggregateFilterData() throws JSONException {
+        Source source = SourceFixture.getValidSourceBuilder()
+                .setSourceType(Source.SourceType.EVENT)
+                .build();
+        AggregateFilterData aggregateFilterData = source.parseAggregateFilterData();
+        assertEquals(aggregateFilterData.getAttributionFilterMap().size(), 1);
+        assertEquals(Collections.singletonList("event"),
+                aggregateFilterData.getAttributionFilterMap().get("source_type"));
+    }
+
+    @Test
+    public void testParseAggregateFilterData_emptyAggregateFilterData() throws JSONException {
+        Source source = SourceFixture.getValidSourceBuilder()
+                .setSourceType(Source.SourceType.EVENT)
+                .setAggregateFilterData("")
+                .build();
+        AggregateFilterData aggregateFilterData = source.parseAggregateFilterData();
+        assertEquals(aggregateFilterData.getAttributionFilterMap().size(), 1);
+        assertEquals(Collections.singletonList("event"),
+                aggregateFilterData.getAttributionFilterMap().get("source_type"));
+    }
+
+    @Test
     public void testParseAggregateSource() throws JSONException {
         JSONArray aggregatableSource = new JSONArray();
         JSONObject jsonObject1 = new JSONObject();
@@ -1282,6 +1324,7 @@ public class SourceTest {
         filterData.put("product", new JSONArray(Arrays.asList("1234", "2345")));
 
         Source source = SourceFixture.getValidSourceBuilder()
+                .setSourceType(Source.SourceType.NAVIGATION)
                 .setAggregateSource(aggregatableSource.toString())
                 .setAggregateFilterData(filterData.toString()).build();
         Optional<AggregatableAttributionSource> aggregatableAttributionSource =
@@ -1292,7 +1335,7 @@ public class SourceTest {
         assertEquals(
                 aggregateSource.getAggregatableSource().get("campaignCounts").longValue(), 345L);
         assertEquals(aggregateSource.getAggregatableSource().get("geoValue").longValue(), 5L);
-        assertEquals(aggregateSource.getAggregateFilterData().getAttributionFilterMap().size(), 2);
+        assertEquals(aggregateSource.getAggregateFilterData().getAttributionFilterMap().size(), 3);
     }
 
     private void verifyAlgorithmicFakeReportGeneration(Source source, int expectedCardinality) {

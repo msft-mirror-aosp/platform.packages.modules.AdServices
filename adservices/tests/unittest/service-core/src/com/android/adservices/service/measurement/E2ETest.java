@@ -627,7 +627,7 @@ public abstract class E2ETest {
         return result.toString();
     }
 
-    private static String getDatastoreState() {
+    protected static String getDatastoreState() {
         StringBuilder result = new StringBuilder();
         SQLiteDatabase db = DbHelper.getInstance(sContext).getWritableDatabase();
         List<String> tableNames = ImmutableList.of(
