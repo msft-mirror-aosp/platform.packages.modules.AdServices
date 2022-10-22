@@ -300,15 +300,10 @@ class MeasurementDao implements IMeasurementDao {
                                         + " = ? AND "
                                         + MeasurementTables.SourceContract.ENROLLMENT_ID
                                         + " = ? AND "
-                                        // EventTime should be strictly less than TriggerTime as it
-                                        // is highly
-                                        // unlikely for matching Source and Trigger to happen at
-                                        // same instant
-                                        // in milliseconds.
                                         + MeasurementTables.SourceContract.EVENT_TIME
-                                        + " < ? AND "
+                                        + " <= ? AND "
                                         + MeasurementTables.SourceContract.EXPIRY_TIME
-                                        + " >= ? AND "
+                                        + " > ? AND "
                                         + MeasurementTables.SourceContract.STATUS
                                         + " != ?",
                                 new String[] {
@@ -1585,10 +1580,12 @@ class MeasurementDao implements IMeasurementDao {
     @Override
     public void deleteAsyncRegistration(@NonNull String id) throws DatastoreException {
         SQLiteDatabase db = mSQLTransaction.getDatabase();
-        db.delete(
-                MeasurementTables.AsyncRegistrationContract.TABLE,
-                MeasurementTables.AsyncRegistrationContract.ID + " = ?",
-                new String[] {id});
+        int rows =
+                db.delete(
+                        MeasurementTables.AsyncRegistrationContract.TABLE,
+                        MeasurementTables.AsyncRegistrationContract.ID + " = ?",
+                        new String[] {id});
+        LogUtil.d("MeasurementDao: deleteAsyncRegistration: rows affected=" + rows);
     }
 
     @Override

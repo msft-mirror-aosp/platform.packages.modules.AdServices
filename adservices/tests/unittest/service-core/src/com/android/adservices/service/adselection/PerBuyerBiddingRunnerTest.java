@@ -63,6 +63,7 @@ public class PerBuyerBiddingRunnerTest {
     List<DBCustomAudience> mDBCustomAudienceList;
 
     @Mock AdBidGenerator mAdBidGeneratorMock;
+    @Mock AdBiddingOutcome mAdBiddingOutcome;
 
     private PerBuyerBiddingRunner mPerBuyerBiddingRunner;
     private ScheduledThreadPoolExecutor mScheduledExecutor = AdServicesExecutors.getScheduler();
@@ -163,7 +164,7 @@ public class PerBuyerBiddingRunnerTest {
         return mExecutor.submit(
                 () -> {
                     Thread.sleep(delayTime);
-                    return ExtendedMockito.any(AdBiddingOutcome.class);
+                    return mAdBiddingOutcome;
                 });
     }
 
@@ -209,7 +210,7 @@ public class PerBuyerBiddingRunnerTest {
                 .setTrustedBiddingData(
                         new DBTrustedBiddingData.Builder()
                                 .setUri(Uri.parse("https://www.example.com/trusted"))
-                                .setKeys(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_KEYS)
+                                .setKeys(TrustedBiddingDataFixture.getValidTrustedBiddingKeys())
                                 .build())
                 .setBiddingLogicUri(Uri.parse("https://www.example.com/logic"))
                 .setAds(ads)

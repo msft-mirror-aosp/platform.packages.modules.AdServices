@@ -26,6 +26,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSEN
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS_PREVIEW_API;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
@@ -155,7 +156,10 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                                 new ApiCallStats.Builder()
                                         .setCode(AdServicesStatsLog.AD_SERVICES_API_CALLED)
                                         .setApiClass(AD_SERVICES_API_CALLED__API_CLASS__TARGETING)
-                                        .setApiName(AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS)
+                                        .setApiName(
+                                                topicsParam.shouldRecordObservation()
+                                                    ? AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS
+                                        : AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS_PREVIEW_API)
                                         .setAppPackageName(packageName)
                                         .setSdkPackageName(sdkName)
                                         .setLatencyMillisecond(apiLatency)
