@@ -31,6 +31,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.times;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -55,6 +56,7 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoSession;
 import org.mockito.Spy;
@@ -64,6 +66,8 @@ import org.mockito.quality.Strictness;
 @SuppressWarnings("ConstantConditions")
 public class MaintenanceJobServiceTest {
     private static final int BACKGROUND_THREAD_TIMEOUT_MS = 5_000;
+    private static final long MAINTENANCE_JOB_PERIOD_MS = 10_000L;
+    private static final long MAINTENANCE_JOB_FLEX_MS = 1_000L;
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final JobScheduler JOB_SCHEDULER = CONTEXT.getSystemService(JobScheduler.class);
     private static final Flags TEST_FLAGS = FlagsFactory.getFlagsForTest();
@@ -79,6 +83,7 @@ public class MaintenanceJobServiceTest {
     @Mock AppUpdateManager mMockAppUpdateManager;
     @Mock JobParameters mMockJobParameters;
     @Mock Flags mMockFlags;
+    @Mock JobScheduler mMockJobScheduler;
     private AdSelectionEntryDao mAdSelectionEntryDao;
     @Spy private FledgeMaintenanceTasksWorker mFledgeMaintenanceTasksWorkerSpy;
 
@@ -224,7 +229,7 @@ public class MaintenanceJobServiceTest {
     }
 
     @Test
-    public void testOnStartJob_killSwitchOn() throws InterruptedException {
+    public void testOnStartJob_killSwitchOn() {
         // Killswitch on.
         doReturn(true).when(mMockFlags).getTopicsKillSwitch();
         doReturn(true).when(mMockFlags).getFledgeSelectAdsKillSwitch();
@@ -244,8 +249,8 @@ public class MaintenanceJobServiceTest {
                                 MAINTENANCE_JOB_ID,
                                 new ComponentName(CONTEXT, EpochJobService.class))
                         .setRequiresCharging(true)
-                        .setPeriodic(
-                                /* maintenanceJobPeriodMs */ 10000, /* maintenanceJobFlexMs */ 1000)
+                        .setPeriodic(MAINTENANCE_JOB_PERIOD_MS, MAINTENANCE_JOB_FLEX_MS)
+                        .setPersisted(true)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
         assertNotNull(JOB_SCHEDULER.getPendingJob(MAINTENANCE_JOB_ID));
@@ -476,5 +481,17 @@ public class MaintenanceJobServiceTest {
         // The first invocation of scheduleIfNeeded() schedules the job.
         assertThat(EpochJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isFalse();
         assertThat(JOB_SCHEDULER.getPendingJob(MAINTENANCE_JOB_ID)).isNull();
+    }
+
+    @Test
+    public void testSchedule_jobInfoIsPersisted() {
+        final ArgumentCaptor<JobInfo> argumentCaptor = ArgumentCaptor.forClass(JobInfo.class);
+
+        MaintenanceJobService.schedule(
+                CONTEXT, mMockJobScheduler, MAINTENANCE_JOB_PERIOD_MS, MAINTENANCE_JOB_FLEX_MS);
+
+        verify(mMockJobScheduler, times(1)).schedule(argumentCaptor.capture());
+        assertThat(argumentCaptor.getValue()).isNotNull();
+        assertThat(argumentCaptor.getValue().isPersisted()).isTrue();
     }
 }
