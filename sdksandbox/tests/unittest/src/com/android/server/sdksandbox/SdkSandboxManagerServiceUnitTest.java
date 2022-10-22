@@ -450,7 +450,7 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
-    public void testRequestSurfacePackageSdkNotLoaded() throws Exception {
+    public void testRequestSurfacePackageSdkNotLoaded_SandboxExists() throws Exception {
         disableNetworkPermissionChecks();
         disableForegroundCheck();
 
@@ -463,21 +463,21 @@ public class SdkSandboxManagerServiceUnitTest {
 
         // Trying to request package with not exist SDK packageName
         String sdkName = "invalid";
-        IllegalArgumentException thrown =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () ->
-                                mService.requestSurfacePackage(
-                                        TEST_PACKAGE,
-                                        sdkName,
-                                        new Binder(),
-                                        0,
-                                        500,
-                                        500,
-                                        TIME_APP_CALLED_SYSTEM_SERVER,
-                                        new Bundle(),
-                                        new FakeRequestSurfacePackageCallbackBinder()));
-        assertThat(thrown).hasMessageThat().contains("Sdk " + sdkName + " is not loaded");
+        FakeRequestSurfacePackageCallbackBinder surfacePackageCallback =
+                new FakeRequestSurfacePackageCallbackBinder();
+        mService.requestSurfacePackage(
+                TEST_PACKAGE,
+                sdkName,
+                new Binder(),
+                0,
+                500,
+                500,
+                TIME_APP_CALLED_SYSTEM_SERVER,
+                new Bundle(),
+                surfacePackageCallback);
+        assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isFalse();
+        assertThat(surfacePackageCallback.getSurfacePackageErrorCode())
+                .isEqualTo(SdkSandboxManager.REQUEST_SURFACE_PACKAGE_SDK_NOT_LOADED);
     }
 
     @Test
@@ -500,7 +500,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 callback);
         assertThat(callback.isRequestSurfacePackageSuccessful()).isFalse();
         assertThat(callback.getSurfacePackageErrorCode())
-                .isEqualTo(SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE);
+                .isEqualTo(SdkSandboxManager.REQUEST_SURFACE_PACKAGE_SDK_NOT_LOADED);
     }
 
     @Test
@@ -563,7 +563,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 requestSurfacePackageCallback);
         assertThat(requestSurfacePackageCallback.isRequestSurfacePackageSuccessful()).isFalse();
         assertThat(requestSurfacePackageCallback.getSurfacePackageErrorCode())
-                .isEqualTo(SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE);
+                .isEqualTo(SdkSandboxManager.REQUEST_SURFACE_PACKAGE_SDK_NOT_LOADED);
     }
 
     @Test
@@ -618,7 +618,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
         assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isFalse();
         assertThat(surfacePackageCallback.getSurfacePackageErrorCode())
-                .isEqualTo(SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE);
+                .isEqualTo(SdkSandboxManager.REQUEST_SURFACE_PACKAGE_SDK_NOT_LOADED);
     }
 
     @Test
@@ -971,12 +971,8 @@ public class SdkSandboxManagerServiceUnitTest {
     public void testUnloadSdkThatIsNotLoaded() throws Exception {
         // Load SDK to bring up a sandbox
         loadSdk(SDK_NAME);
-        // Trying to unload an SDK that is not loaded should fail.
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        mService.unloadSdk(
-                                TEST_PACKAGE, SDK_PROVIDER_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER));
+        // Trying to unload an SDK that is not loaded should do nothing - it's a no-op.
+        mService.unloadSdk(TEST_PACKAGE, SDK_PROVIDER_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER);
     }
 
     @Test

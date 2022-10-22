@@ -48,6 +48,8 @@ public final class PhFlags implements Flags {
     static final String KEY_TOPICS_NUMBER_OF_TOP_TOPICS = "topics_number_of_top_topics";
     static final String KEY_TOPICS_NUMBER_OF_RANDOM_TOPICS = "topics_number_of_random_topics";
     static final String KEY_TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS = "topics_number_of_lookback_epochs";
+    static final String KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY =
+            "topics_number_of_epochs_to_keep_in_history";
 
     // Topics classifier keys
     static final String KEY_CLASSIFIER_TYPE = "classifier_type";
@@ -157,8 +159,8 @@ public final class PhFlags implements Flags {
             "fledge_ad_selection_expiration_window_s";
     static final String KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS =
             "fledge_report_impression_overall_timeout_ms";
-    static final String KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY =
-            "topics_number_of_epochs_to_keep_in_history";
+    static final String KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS =
+            "fledge_ad_selection_bidding_timeout_per_buyer_ms";
 
     // Fledge invoking app status keys
     static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION =
@@ -809,6 +811,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public long getAdSelectionBiddingTimeoutPerBuyerMs() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS,
+                /* defaultValue */ FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS);
+    }
+
+    @Override
     public long getAdSelectionScoringTimeoutMs() {
         return DeviceConfig.getLong(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -1153,16 +1163,15 @@ public final class PhFlags implements Flags {
     // ADID Killswitches
     @Override
     public boolean getAdIdKillSwitch() {
-        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        // Ignore Global Killswitch for adid.
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
-        return getGlobalKillSwitch()
-                || SystemProperties.getBoolean(
-                        getSystemPropertyName(KEY_ADID_KILL_SWITCH),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                DeviceConfig.NAMESPACE_ADSERVICES,
-                                /* flagName */ KEY_ADID_KILL_SWITCH,
-                                /* defaultValue */ ADID_KILL_SWITCH));
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(KEY_ADID_KILL_SWITCH),
+                /* defaultValue */ DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_ADID_KILL_SWITCH,
+                        /* defaultValue */ ADID_KILL_SWITCH));
     }
 
     // APPSETID Killswitch.
@@ -1893,6 +1902,11 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS
                         + " = "
                         + getAdSelectionBiddingTimeoutPerCaMs());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS
+                        + " = "
+                        + getAdSelectionBiddingTimeoutPerBuyerMs());
         writer.println(
                 "\t"
                         + KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS
