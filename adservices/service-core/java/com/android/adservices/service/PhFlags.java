@@ -228,6 +228,8 @@ public final class PhFlags implements Flags {
             "measurement_receiver_install_attribution_kill_switch";
     static final String KEY_MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH =
             "measurement_receiver_delete_packages_kill_switch";
+    static final String KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH =
+            "measurement_job_registration_job_queue_kill_switch";
     static final String KEY_TOPICS_KILL_SWITCH = "topics_kill_switch";
     static final String KEY_MDD_BACKGROUND_TASK_KILL_SWITCH = "mdd_background_task_kill_switch";
     static final String KEY_MDD_LOGGER_KILL_SWITCH = "mdd_logger_kill_switch";
@@ -280,12 +282,25 @@ public final class PhFlags implements Flags {
     // Whether to call trusted servers for off device ad selection.
     static final String KEY_OFF_DEVICE_AD_SELECTION_ENABLED = "enable_off_device_ad_selection";
 
+    // Interval in which to run Registration Job Queue Service.
+    static final String KEY_REGISTRATION_JOB_QUEUE_INTERVAL_MS =
+            "key_registration_job_queue_interval_ms";
+
     private static final PhFlags sSingleton = new PhFlags();
 
     /** Returns the singleton instance of the PhFlags. */
     @NonNull
     public static PhFlags getInstance() {
         return sSingleton;
+    }
+
+    @Override
+    public long getRegistrationJobQueueIntervalMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_REGISTRATION_JOB_QUEUE_INTERVAL_MS,
+                /* defaultValue */ ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS);
     }
 
     @Override
@@ -1125,6 +1140,22 @@ public final class PhFlags implements Flags {
                                 DeviceConfig.NAMESPACE_ADSERVICES,
                                 /* flagName */ KEY_MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH,
                                 /* defaultValue */ MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH));
+    }
+
+    @Override
+    public boolean getRegistrationJobQueueKillSwitch() {
+        // We check the Global Killswitch first then Measurement Killswitch.
+        // As a result, it overrides all other killswitches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        final String flagName = KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
+        final boolean defaultValue = MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(flagName),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                DeviceConfig.NAMESPACE_ADSERVICES, flagName, defaultValue));
     }
 
     @Override

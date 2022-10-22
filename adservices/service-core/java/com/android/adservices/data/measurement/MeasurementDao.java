@@ -1585,10 +1585,12 @@ class MeasurementDao implements IMeasurementDao {
     @Override
     public void deleteAsyncRegistration(@NonNull String id) throws DatastoreException {
         SQLiteDatabase db = mSQLTransaction.getDatabase();
-        db.delete(
-                MeasurementTables.AsyncRegistrationContract.TABLE,
-                MeasurementTables.AsyncRegistrationContract.ID + " = ?",
-                new String[] {id});
+        int rows =
+                db.delete(
+                        MeasurementTables.AsyncRegistrationContract.TABLE,
+                        MeasurementTables.AsyncRegistrationContract.ID + " = ?",
+                        new String[] {id});
+        LogUtil.d("MeasurementDao: deleteAsyncRegistration: rows affected=" + rows);
     }
 
     @Override
