@@ -1875,7 +1875,7 @@ public class FledgeE2ETest {
                                                 buyerDomain.getAuthority(),
                                                 BUYER_TRUSTED_SIGNAL_URI_PATH))
                                 .setTrustedBiddingKeys(
-                                        TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_KEYS)
+                                        TrustedBiddingDataFixture.getValidTrustedBiddingKeys())
                                 .build())
                 .setBiddingLogicUri(
                         CommonFixture.getUri(
