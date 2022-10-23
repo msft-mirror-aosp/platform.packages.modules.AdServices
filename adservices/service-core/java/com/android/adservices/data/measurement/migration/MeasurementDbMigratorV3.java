@@ -41,8 +41,17 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
         String.format(
                 "ALTER TABLE %1$s " + "RENAME COLUMN %2$s TO %3$s",
                 MeasurementTables.AsyncRegistrationContract.TABLE,
-                MeasurementTables.AsyncRegistrationContract.INPUT_EVENT,
+                MeasurementTablesDeprecated.AsyncRegistration.INPUT_EVENT,
                 MeasurementTables.AsyncRegistrationContract.SOURCE_TYPE),
+        String.format(
+                "ALTER TABLE %1$s " + "RENAME COLUMN %2$s TO %3$s",
+                MeasurementTables.AsyncRegistrationContract.TABLE,
+                MeasurementTablesDeprecated.AsyncRegistration.REDIRECT,
+                MeasurementTables.AsyncRegistrationContract.REDIRECT_TYPE),
+        String.format(
+                "ALTER TABLE %1$s ADD %2$s INTEGER",
+                MeasurementTables.AsyncRegistrationContract.TABLE,
+                MeasurementTables.AsyncRegistrationContract.REDIRECT_COUNT),
         String.format(
                 "ALTER TABLE %1$s RENAME COLUMN %2$s TO %3$s",
                 MeasurementTables.EventReportContract.TABLE,

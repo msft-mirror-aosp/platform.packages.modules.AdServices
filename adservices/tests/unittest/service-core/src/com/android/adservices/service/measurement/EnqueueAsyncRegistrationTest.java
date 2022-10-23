@@ -310,7 +310,9 @@ public class EnqueueAsyncRegistrationTest {
                                     .getRegistrationUri())) {
                 Assert.assertNotNull(asyncRegistration.getRegistrationUri());
                 Assert.assertEquals(REGISTRATION_URI_1, asyncRegistration.getRegistrationUri());
-                Assert.assertEquals(false, asyncRegistration.getRedirect());
+                Assert.assertEquals(
+                        AsyncRegistration.RedirectType.NONE,
+                        asyncRegistration.getRedirectType());
                 Assert.assertEquals(Source.SourceType.EVENT, asyncRegistration.getSourceType());
                 Assert.assertEquals(
                         Uri.parse("android-app://com.destination"),
@@ -337,7 +339,9 @@ public class EnqueueAsyncRegistrationTest {
 
                 Assert.assertNotNull(asyncRegistrationTwo.getRegistrationUri());
                 Assert.assertEquals(REGISTRATION_URI_2, asyncRegistrationTwo.getRegistrationUri());
-                Assert.assertEquals(false, asyncRegistrationTwo.getRedirect());
+                Assert.assertEquals(
+                        AsyncRegistration.RedirectType.NONE,
+                        asyncRegistrationTwo.getRedirectType());
                 Assert.assertEquals(Source.SourceType.EVENT, asyncRegistrationTwo.getSourceType());
                 Assert.assertEquals(
                         Uri.parse("android-app://com.destination"),
@@ -371,7 +375,9 @@ public class EnqueueAsyncRegistrationTest {
                                     .getRegistrationUri())) {
                 Assert.assertNotNull(asyncRegistration.getRegistrationUri());
                 Assert.assertEquals(REGISTRATION_URI_2, asyncRegistration.getRegistrationUri());
-                Assert.assertEquals(false, asyncRegistration.getRedirect());
+                Assert.assertEquals(
+                        AsyncRegistration.RedirectType.NONE,
+                        asyncRegistration.getRedirectType());
                 Assert.assertEquals(Source.SourceType.EVENT, asyncRegistration.getSourceType());
                 Assert.assertEquals(
                         Uri.parse("android-app://com.destination"),
@@ -401,7 +407,9 @@ public class EnqueueAsyncRegistrationTest {
                         SqliteObjectMapper.constructAsyncRegistration(cursor);
                 Assert.assertNotNull(asyncRegistrationTwo.getRegistrationUri());
                 Assert.assertEquals(REGISTRATION_URI_1, asyncRegistrationTwo.getRegistrationUri());
-                Assert.assertEquals(false, asyncRegistrationTwo.getRedirect());
+                Assert.assertEquals(
+                        AsyncRegistration.RedirectType.NONE,
+                        asyncRegistrationTwo.getRedirectType());
                 Assert.assertEquals(Source.SourceType.EVENT, asyncRegistrationTwo.getSourceType());
                 Assert.assertEquals(
                         Uri.parse("android-app://com.destination"),
@@ -479,7 +487,9 @@ public class EnqueueAsyncRegistrationTest {
                                     .getRegistrationUri())) {
                 Assert.assertNotNull(asyncRegistration.getRegistrationUri());
                 Assert.assertEquals(REGISTRATION_URI_1, asyncRegistration.getRegistrationUri());
-                Assert.assertEquals(false, asyncRegistration.getRedirect());
+                Assert.assertEquals(
+                        AsyncRegistration.RedirectType.NONE,
+                        asyncRegistration.getRedirectType());
                 Assert.assertEquals(
                         Source.SourceType.NAVIGATION, asyncRegistration.getSourceType());
                 Assert.assertEquals(
@@ -507,7 +517,9 @@ public class EnqueueAsyncRegistrationTest {
 
                 Assert.assertNotNull(asyncRegistrationTwo.getRegistrationUri());
                 Assert.assertEquals(REGISTRATION_URI_2, asyncRegistrationTwo.getRegistrationUri());
-                Assert.assertEquals(false, asyncRegistrationTwo.getRedirect());
+                Assert.assertEquals(
+                        AsyncRegistration.RedirectType.NONE,
+                        asyncRegistrationTwo.getRedirectType());
                 Assert.assertEquals(
                         Source.SourceType.NAVIGATION, asyncRegistrationTwo.getSourceType());
                 Assert.assertEquals(
@@ -542,7 +554,9 @@ public class EnqueueAsyncRegistrationTest {
                                     .getRegistrationUri())) {
                 Assert.assertNotNull(asyncRegistration.getRegistrationUri());
                 Assert.assertEquals(REGISTRATION_URI_2, asyncRegistration.getRegistrationUri());
-                Assert.assertEquals(false, asyncRegistration.getRedirect());
+                Assert.assertEquals(
+                        AsyncRegistration.RedirectType.NONE,
+                        asyncRegistration.getRedirectType());
                 Assert.assertEquals(
                         Source.SourceType.NAVIGATION, asyncRegistration.getSourceType());
                 Assert.assertEquals(
@@ -573,7 +587,9 @@ public class EnqueueAsyncRegistrationTest {
                         SqliteObjectMapper.constructAsyncRegistration(cursor);
                 Assert.assertNotNull(asyncRegistrationTwo.getRegistrationUri());
                 Assert.assertEquals(REGISTRATION_URI_1, asyncRegistrationTwo.getRegistrationUri());
-                Assert.assertEquals(false, asyncRegistrationTwo.getRedirect());
+                Assert.assertEquals(
+                        AsyncRegistration.RedirectType.NONE,
+                        asyncRegistrationTwo.getRedirectType());
                 Assert.assertEquals(
                         Source.SourceType.NAVIGATION, asyncRegistrationTwo.getSourceType());
                 Assert.assertEquals(
@@ -640,7 +656,9 @@ public class EnqueueAsyncRegistrationTest {
                                     .getRegistrationUri())) {
                 Assert.assertNotNull(asyncRegistration.getRegistrationUri());
                 Assert.assertEquals(REGISTRATION_URI_1, asyncRegistration.getRegistrationUri());
-                Assert.assertEquals(false, asyncRegistration.getRedirect());
+                Assert.assertEquals(
+                        AsyncRegistration.RedirectType.NONE,
+                        asyncRegistration.getRedirectType());
                 Assert.assertEquals(null, asyncRegistration.getSourceType());
                 Assert.assertNotNull(asyncRegistration.getRegistrant());
                 Assert.assertEquals(
@@ -661,7 +679,9 @@ public class EnqueueAsyncRegistrationTest {
 
                 Assert.assertNotNull(asyncRegistrationTwo.getRegistrationUri());
                 Assert.assertEquals(REGISTRATION_URI_2, asyncRegistrationTwo.getRegistrationUri());
-                Assert.assertEquals(false, asyncRegistrationTwo.getRedirect());
+                Assert.assertEquals(
+                        AsyncRegistration.RedirectType.NONE,
+                        asyncRegistrationTwo.getRedirectType());
                 Assert.assertEquals(null, asyncRegistrationTwo.getSourceType());
                 Assert.assertNotNull(asyncRegistration.getRegistrant());
                 Assert.assertEquals(
@@ -684,7 +704,9 @@ public class EnqueueAsyncRegistrationTest {
                                     .getRegistrationUri())) {
                 Assert.assertNotNull(asyncRegistration.getRegistrationUri());
                 Assert.assertEquals(REGISTRATION_URI_2, asyncRegistration.getRegistrationUri());
-                Assert.assertEquals(false, asyncRegistration.getRedirect());
+                Assert.assertEquals(
+                        AsyncRegistration.RedirectType.NONE,
+                        asyncRegistration.getRedirectType());
                 Assert.assertEquals(null, asyncRegistration.getSourceType());
                 Assert.assertNotNull(asyncRegistration.getRegistrant());
                 Assert.assertEquals(
@@ -704,7 +726,9 @@ public class EnqueueAsyncRegistrationTest {
                         SqliteObjectMapper.constructAsyncRegistration(cursor);
                 Assert.assertNotNull(asyncRegistrationTwo.getRegistrationUri());
                 Assert.assertEquals(REGISTRATION_URI_1, asyncRegistrationTwo.getRegistrationUri());
-                Assert.assertEquals(false, asyncRegistrationTwo.getRedirect());
+                Assert.assertEquals(
+                        AsyncRegistration.RedirectType.NONE,
+                        asyncRegistrationTwo.getRedirectType());
                 Assert.assertEquals(null, asyncRegistrationTwo.getSourceType());
                 Assert.assertNotNull(asyncRegistrationTwo.getRegistrant());
                 Assert.assertEquals(
@@ -799,7 +823,9 @@ public class EnqueueAsyncRegistrationTest {
             Assert.assertNotNull(asyncRegistration.getType());
             Assert.assertEquals(
                     AsyncRegistration.RegistrationType.APP_SOURCE, asyncRegistration.getType());
-            Assert.assertEquals(true, asyncRegistration.getRedirect());
+            Assert.assertEquals(
+                    AsyncRegistration.RedirectType.ANY,
+                    asyncRegistration.getRedirectType());
         }
     }
 }
