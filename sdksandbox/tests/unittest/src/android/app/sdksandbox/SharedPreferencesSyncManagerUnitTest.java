@@ -37,6 +37,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.mockito.Mockito;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -89,6 +90,23 @@ public class SharedPreferencesSyncManagerUnitTest {
         final SharedPreferencesSyncManager manager2 =
                 SharedPreferencesSyncManager.getInstance(mContext, mSdkSandboxManagerService);
         assertThat(manager1).isSameInstanceAs(manager2);
+
+        Context mockContext = Mockito.mock(Context.class);
+        Mockito.when(mockContext.getPackageName()).thenReturn(mContext.getPackageName());
+        final SharedPreferencesSyncManager manager3 =
+                SharedPreferencesSyncManager.getInstance(mockContext, mSdkSandboxManagerService);
+        assertThat(manager1).isSameInstanceAs(manager3);
+    }
+
+    @Test
+    public void test_sharedPreferencesSyncManager_isSingletonPerPackage() throws Exception {
+        final SharedPreferencesSyncManager manager1 =
+                SharedPreferencesSyncManager.getInstance(mContext, mSdkSandboxManagerService);
+
+        Context mockContext = Mockito.mock(Context.class);
+        final SharedPreferencesSyncManager manager2 =
+                SharedPreferencesSyncManager.getInstance(mockContext, mSdkSandboxManagerService);
+        assertThat(manager1).isNotSameInstanceAs(manager2);
     }
 
     @Test

@@ -35,14 +35,14 @@ import java.util.Collection;
 public class E2EDenoisedMockTest extends E2EMockTest {
     private static final String TEST_DIR_NAME = "msmt_e2e_tests";
 
-    @Parameterized.Parameters(name = "{2}")
+    @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> getData() throws IOException, JSONException {
         return data(TEST_DIR_NAME);
     }
 
     public E2EDenoisedMockTest(Collection<Action> actions, ReportObjects expectedOutput,
-            String name) throws DatastoreException {
-        super(actions, expectedOutput, name);
+            PrivacyParamsProvider privacyParamsProvider, String name) throws DatastoreException {
+        super(actions, expectedOutput, privacyParamsProvider, name);
         mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager);
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(

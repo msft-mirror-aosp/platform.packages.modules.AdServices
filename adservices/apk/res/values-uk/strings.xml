@@ -48,8 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Якщо ввімкнути бета-версію, додатки зможуть тестувати нові, більш захищені способи показу вам реклами. Ви будь-коли можете вимкнути бета-версію в налаштуваннях конфіденційності."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Ні, дякую"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Увімкнути"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Більше"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Дякуємо за участь"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Ви берете участь у програмі \"Конфіденційність у сфері реклами Android (бета-версія)\". Privacy Sandbox увімкнено для вашого пристрою.\n\nДізнатися більше або вимкнути бета-версію можна будь-коли в налаштуваннях конфіденційності."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Ви відмовилися від участі"</string>
@@ -100,14 +99,16 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android може знову додати цей інтерес до вашого списку, однак, можливо, він з’явиться в ньому не відразу."</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Скинути всі ваші інтереси?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"Ваш список буде очищено, і згодом він оновиться"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Скинути"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Заблокувати додаток <xliff:g id="APP">%1$s</xliff:g>?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Цей додаток не визначатиме інтереси для Privacy Sandbox і більше не включатиметься в список, доки ви його не розблокуєте.\n\nІнтереси, визначені додатком раніше, буде видалено, але деякі пов’язані оголошення можуть показуватися й надалі."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Додаток <xliff:g id="APP">%1$s</xliff:g> розблоковано"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Цей додаток може знову визначати ваші інтереси, однак, можливо, він не відразу з’явиться у вашому списку. Перш ніж почнуть відображатися пов’язані оголошення, може пройти певний час."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Скинути інтереси, визначені додатками?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"Ваш список буде очищено, і згодом він оновиться"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Мистецтво та розваги"</string>
     <string name="topic10002" msgid="1226367977754287428">"Акторська майстерність і театр"</string>
     <string name="topic10003" msgid="6949890838957814881">"Аніме та манга"</string>

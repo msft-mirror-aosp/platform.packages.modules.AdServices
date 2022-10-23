@@ -46,6 +46,8 @@ public class EventReport {
     private Source.SourceType mSourceType;
     @Nullable private UnsignedLong mSourceDebugKey;
     @Nullable private UnsignedLong mTriggerDebugKey;
+    private String mSourceId;
+    private String mTriggerId;
 
     @IntDef(value = {
             Status.PENDING,
@@ -79,7 +81,9 @@ public class EventReport {
                 && mSourceType == eventReport.mSourceType
                 && mRandomizedTriggerRate == eventReport.mRandomizedTriggerRate
                 && Objects.equals(mSourceDebugKey, eventReport.mSourceDebugKey)
-                && Objects.equals(mTriggerDebugKey, eventReport.mTriggerDebugKey);
+                && Objects.equals(mTriggerDebugKey, eventReport.mTriggerDebugKey)
+                && Objects.equals(mSourceId, eventReport.mSourceId)
+                && Objects.equals(mTriggerId, eventReport.mTriggerId);
     }
 
     @Override
@@ -97,12 +101,12 @@ public class EventReport {
                 mSourceType,
                 mRandomizedTriggerRate,
                 mSourceDebugKey,
-                mTriggerDebugKey);
+                mTriggerDebugKey,
+                mSourceId,
+                mTriggerId);
     }
 
-    /**
-     * Unique identifier for the report.
-     */
+    /** Unique identifier for the report. */
     public String getId() {
         return mId;
     }
@@ -192,6 +196,16 @@ public class EventReport {
     @Nullable
     public UnsignedLong getTriggerDebugKey() {
         return mTriggerDebugKey;
+    }
+
+    /** Source ID */
+    public String getSourceId() {
+        return mSourceId;
+    }
+
+    /** Trigger ID */
+    public String getTriggerId() {
+        return mTriggerId;
     }
 
     /** Builder for {@link EventReport} */
@@ -309,6 +323,18 @@ public class EventReport {
             return this;
         }
 
+        /** See {@link EventReport#getSourceId()} */
+        public Builder setSourceId(String sourceId) {
+            mBuilding.mSourceId = sourceId;
+            return this;
+        }
+
+        /** See {@link EventReport#getTriggerId()} */
+        public Builder setTriggerId(String triggerId) {
+            mBuilding.mTriggerId = triggerId;
+            return this;
+        }
+
         /** Populates fields using {@link Source}, {@link Trigger} and {@link EventTrigger}. */
         public Builder populateFromSourceAndTrigger(
                 Source source, Trigger trigger, EventTrigger eventTrigger) {
@@ -329,6 +355,8 @@ public class EventReport {
             mBuilding.mRandomizedTriggerRate = source.getRandomAttributionProbability();
             mBuilding.mSourceDebugKey = source.getDebugKey();
             mBuilding.mTriggerDebugKey = trigger.getDebugKey();
+            mBuilding.mSourceId = source.getId();
+            mBuilding.mTriggerId = trigger.getId();
             return this;
         }
 

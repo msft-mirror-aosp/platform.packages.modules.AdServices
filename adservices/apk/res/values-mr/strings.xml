@@ -48,8 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"बीटा सुरू केल्याने ॲप्सना तुम्हाला जाहिराती दाखवण्यासाठी या नवीन अधिक खाजगी मार्गांची चाचणी घेण्याची अनुमती मिळते. तुम्ही तुमच्या गोपनीयता सेटिंग्जमध्ये बीटा कधीही बंद करू शकता."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"नाही, नको"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"सुरू करा"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"आणखी"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"सहभागी झाल्याबद्दल धन्यवाद"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"तुम्ही Android च्या जाहिरातींशी संबंधित गोपनीयतेची बीटा आवृत्तीचा भाग आहात. तुमच्या डिव्हाइससाठी प्रायव्हसी सॅंडबाॅक्स सुरू केला आहे.\n\nतुम्ही अधिक जाणून घेऊ शकता किंवा तुमच्या गोपनीयता सेटिंग्जमध्ये बीटा कधीही बंद करू शकता."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"तुम्ही सहभागी न होण्याचे निवडले आहे"</string>
@@ -100,14 +99,16 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android हे स्वारस्य तुमच्या सूचीमध्ये पुन्हा जोडू शकते, पण ते कदाचित तात्काळ दिसणार नाही"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"ओके"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"तुमची सर्व स्वारस्ये रीसेट करायची आहेत का?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"तुमची सूची साफ केली जाईल, त्यानंतर कालांतराने रिफ्रेश केली जाईल"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"रीसेट करा"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> ब्लॉक करायचे आहे का?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"हे अ‍ॅप प्रायव्हसी सॅंडबाॅक्स साठी स्वारस्यांचा अंदाज लावणार नाही आणि तुम्ही ते अनब्लॉक न केल्यास, सूचीमध्ये पुन्हा जोडले जाणार नाही.\n\nया अ‍ॅपद्वारे आधीच अंदाज लावलेली स्वारस्ये हटवली जातील, पण तरीही तुम्हाला काही संबंधित जाहिराती दिसू शकतात."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> अनब्लॉक केले आहे"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"हे अ‍ॅप तुमच्यासाठी स्वारस्यांचा पुन्हा अंदाज लावू शकते, पण ती तुमच्या सूचीमध्ये कदाचित तात्काळ दिसणार नाही. तुम्हाला संबंधित जाहिराती पाहण्यासाठी कदाचित थोडा वेळ लागेल."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"अ‍ॅप्सद्वारे जनरेट केलेली स्वारस्ये रीसेट करायची आहेत का?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"तुमची सूची साफ केली जाईल, त्यानंतर कालांतराने रिफ्रेश केली जाईल"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"कला आणि मनोरंजन"</string>
     <string name="topic10002" msgid="1226367977754287428">"अभिनय आणि रंगभूमी"</string>
     <string name="topic10003" msgid="6949890838957814881">"ॲनिमे आणि मांगा"</string>

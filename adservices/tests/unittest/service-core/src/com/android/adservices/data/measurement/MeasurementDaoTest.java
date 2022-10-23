@@ -58,6 +58,9 @@ import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
+import com.google.common.collect.ImmutableList;
+
+import org.json.JSONException;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -106,6 +109,7 @@ public class MeasurementDaoTest {
     private static final Uri WEB_PUBLISHER_ONE = Uri.parse("https://not.example.com");
     private static final Uri WEB_PUBLISHER_TWO = Uri.parse("https://notexample.com");
     private static final Uri WEB_PUBLISHER_THREE = Uri.parse("http://not.example.com");
+    private static final Uri APP_DESTINATION = Uri.parse("android-app://com.destination.example");
 
     @After
     public void cleanup() {
@@ -1269,12 +1273,21 @@ public class MeasurementDaoTest {
                         .setId("1")
                         .setSourceEventId(new UnsignedLong(3L))
                         .setEnrollmentId("1")
+                        .setAttributionDestination(sourceList.get(0).getAppDestination())
+                        .setSourceType(sourceList.get(0).getSourceType())
+                        .setSourceId("1")
+                        .setTriggerId("101")
                         .build());
         reportList1.add(
                 new EventReport.Builder()
                         .setId("7")
                         .setSourceEventId(new UnsignedLong(3L))
                         .setEnrollmentId("1")
+                        .setAttributionDestination(sourceList.get(0).getAppDestination())
+                        .setAttributionDestination(APP_DESTINATION)
+                        .setSourceType(sourceList.get(0).getSourceType())
+                        .setSourceId("1")
+                        .setTriggerId("102")
                         .build());
 
         // Should match with source 2
@@ -1284,12 +1297,20 @@ public class MeasurementDaoTest {
                         .setId("3")
                         .setSourceEventId(new UnsignedLong(4L))
                         .setEnrollmentId("1")
+                        .setAttributionDestination(sourceList.get(1).getAppDestination())
+                        .setSourceType(sourceList.get(1).getSourceType())
+                        .setSourceId("2")
+                        .setTriggerId("201")
                         .build());
         reportList2.add(
                 new EventReport.Builder()
                         .setId("8")
                         .setSourceEventId(new UnsignedLong(4L))
                         .setEnrollmentId("1")
+                        .setAttributionDestination(sourceList.get(1).getAppDestination())
+                        .setSourceType(sourceList.get(1).getSourceType())
+                        .setSourceId("2")
+                        .setTriggerId("202")
                         .build());
 
         List<EventReport> reportList3 = new ArrayList<>();
@@ -1299,24 +1320,40 @@ public class MeasurementDaoTest {
                         .setId("2")
                         .setSourceEventId(new UnsignedLong(5L))
                         .setEnrollmentId("1")
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setAttributionDestination(APP_DESTINATION)
+                        .setSourceId("15")
+                        .setTriggerId("1001")
                         .build());
         reportList3.add(
                 new EventReport.Builder()
                         .setId("4")
                         .setSourceEventId(new UnsignedLong(6L))
                         .setEnrollmentId("1")
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setAttributionDestination(APP_DESTINATION)
+                        .setSourceId("16")
+                        .setTriggerId("1001")
                         .build());
         reportList3.add(
                 new EventReport.Builder()
                         .setId("5")
                         .setSourceEventId(new UnsignedLong(1L))
                         .setEnrollmentId("1")
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setAttributionDestination(APP_DESTINATION)
+                        .setSourceId("15")
+                        .setTriggerId("1001")
                         .build());
         reportList3.add(
                 new EventReport.Builder()
                         .setId("6")
                         .setSourceEventId(new UnsignedLong(2L))
                         .setEnrollmentId("1")
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setAttributionDestination(APP_DESTINATION)
+                        .setSourceId("20")
+                        .setTriggerId("1001")
                         .build());
 
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
@@ -1329,20 +1366,14 @@ public class MeasurementDaoTest {
                     values.put(SourceContract.ENROLLMENT_ID, source.getEnrollmentId());
                     db.insert(SourceContract.TABLE, null, values);
                 });
+
         Stream.of(reportList1, reportList2, reportList3)
                 .flatMap(Collection::stream)
                 .forEach(
-                        eventReport -> {
-                            ContentValues values = new ContentValues();
-                            values.put(EventReportContract.ID, eventReport.getId());
-                            values.put(
-                                    EventReportContract.SOURCE_EVENT_ID,
-                                    eventReport.getSourceEventId().getValue());
-                            values.put(
-                                    EventReportContract.ENROLLMENT_ID,
-                                    eventReport.getEnrollmentId());
-                            db.insert(EventReportContract.TABLE, null, values);
-                        });
+                        (eventReport -> {
+                            DatastoreManagerFactory.getDatastoreManager(sContext)
+                                    .runInTransaction((dao) -> dao.insertEventReport(eventReport));
+                        }));
 
         Assert.assertEquals(
                 reportList1,
@@ -1496,8 +1527,8 @@ public class MeasurementDaoTest {
         // Trigger Time = sApp3's eventTime
         // Trigger Time < sApp4's eventTime
         // sApp5 and sApp6 don't have app destination
-        // Trigger Time > sAppWeb7's eventTime and < sAppWeb7's expiryTime
-        // Expected: Match with sApp1, sApp2, sAppWeb7
+        // Trigger Time > sAppWeb7's eventTime and = sAppWeb7's expiryTime
+        // Expected: Match with sApp2, sApp3
         Trigger trigger2MatchSource127 =
                 TriggerFixture.getValidTriggerBuilder()
                         .setTriggerTime(20)
@@ -1507,10 +1538,9 @@ public class MeasurementDaoTest {
                         .build();
 
         List<Source> result2 = runFunc.apply(trigger2MatchSource127);
-        Assert.assertEquals(3, result2.size());
-        Assert.assertEquals(sApp1.getId(), result2.get(0).getId());
-        Assert.assertEquals(sApp2.getId(), result2.get(1).getId());
-        Assert.assertEquals(sAppWeb7.getId(), result2.get(2).getId());
+        Assert.assertEquals(2, result2.size());
+        Assert.assertEquals(sApp2.getId(), result2.get(0).getId());
+        Assert.assertEquals(sApp3.getId(), result2.get(1).getId());
 
         // Trigger Time > sApp1's expiryTime
         // Trigger Time > sApp2's eventTime and < sApp2's expiryTime
@@ -2886,6 +2916,173 @@ public class MeasurementDaoTest {
             Assert.assertNotNull(updateAsyncRegistration);
             Assert.assertTrue(updateAsyncRegistration.getRetryCount() == originalRetryCount + 1);
         }
+    }
+
+    @Test
+    public void getSource_fetchesMatchingSourceFromDb() {
+        // Setup - insert 2 sources with different IDs
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        String sourceId1 = "source1";
+        Source source1 = SourceFixture.getValidSourceBuilder().setId(sourceId1).build();
+        insertInDb(db, source1);
+        String sourceId2 = "source2";
+        Source source2 = SourceFixture.getValidSourceBuilder().setId(sourceId2).build();
+        insertInDb(db, source2);
+
+        // Execution
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        (dao) -> {
+                            assertEquals(source1, dao.getSource(sourceId1));
+                            assertEquals(source2, dao.getSource(sourceId2));
+                        });
+    }
+
+    @Test
+    public void fetchMatchingAggregateReports_returnsMatchingReports() {
+        // setup - create reports for 3*3 combinations of source and trigger
+        Source source1 = SourceFixture.getValidSourceBuilder().setId("source1").build();
+        Source source2 = SourceFixture.getValidSourceBuilder().setId("source2").build();
+        Source source3 = SourceFixture.getValidSourceBuilder().setId("source3").build();
+        Trigger trigger1 = TriggerFixture.getValidTriggerBuilder().setId("trigger1").build();
+        Trigger trigger2 = TriggerFixture.getValidTriggerBuilder().setId("trigger2").build();
+        Trigger trigger3 = TriggerFixture.getValidTriggerBuilder().setId("trigger3").build();
+        List<AggregateReport> reports =
+                ImmutableList.of(
+                        createAggregateReportForSourceAndTrigger(source1, trigger1),
+                        createAggregateReportForSourceAndTrigger(source1, trigger2),
+                        createAggregateReportForSourceAndTrigger(source1, trigger3),
+                        createAggregateReportForSourceAndTrigger(source2, trigger1),
+                        createAggregateReportForSourceAndTrigger(source2, trigger2),
+                        createAggregateReportForSourceAndTrigger(source2, trigger3),
+                        createAggregateReportForSourceAndTrigger(source3, trigger1),
+                        createAggregateReportForSourceAndTrigger(source3, trigger2),
+                        createAggregateReportForSourceAndTrigger(source3, trigger3));
+
+        reports.forEach(
+                report ->
+                        DatastoreManagerFactory.getDatastoreManager(sContext)
+                                .runInTransaction((dao) -> dao.insertAggregateReport(report)));
+
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        (dao) -> {
+                            // Execution
+                            // one matching trigger, 1 non-matching trigger
+                            List<AggregateReport> aggregateReports =
+                                    dao.fetchMatchingAggregateReports(
+                                            Arrays.asList(trigger3.getId(), "nonMatchingTrigger"));
+                            assertEquals(3, aggregateReports.size());
+
+                            // 2 matching triggers
+                            aggregateReports =
+                                    dao.fetchMatchingAggregateReports(
+                                            Arrays.asList(trigger1.getId(), trigger3.getId()));
+                            assertEquals(6, aggregateReports.size());
+
+                            // 2 matching triggers
+                            aggregateReports =
+                                    dao.fetchMatchingAggregateReports(
+                                            Arrays.asList(
+                                                    trigger1.getId(),
+                                                    trigger2.getId(),
+                                                    trigger3.getId()));
+                            assertEquals(9, aggregateReports.size());
+                        });
+    }
+
+    @Test
+    public void fetchMatchingEventReports_returnsMatchingReports() throws JSONException {
+        // setup - create reports for 3*3 combinations of source and trigger
+        Source source1 =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setId("source1")
+                        .build();
+        Source source2 =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventId(new UnsignedLong(2L))
+                        .setId("source2")
+                        .build();
+        Source source3 =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventId(new UnsignedLong(3L))
+                        .setId("source3")
+                        .build();
+        Trigger trigger1 =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                        .setId("trigger1")
+                        .build();
+        Trigger trigger2 =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                        .setId("trigger2")
+                        .build();
+        Trigger trigger3 =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                        .setId("trigger3")
+                        .build();
+        List<EventReport> reports =
+                ImmutableList.of(
+                        createEventReportForSourceAndTrigger(source1, trigger1),
+                        createEventReportForSourceAndTrigger(source1, trigger2),
+                        createEventReportForSourceAndTrigger(source1, trigger3),
+                        createEventReportForSourceAndTrigger(source2, trigger1),
+                        createEventReportForSourceAndTrigger(source2, trigger2),
+                        createEventReportForSourceAndTrigger(source2, trigger3),
+                        createEventReportForSourceAndTrigger(source3, trigger1),
+                        createEventReportForSourceAndTrigger(source3, trigger2),
+                        createEventReportForSourceAndTrigger(source3, trigger3));
+
+        reports.forEach(
+                report ->
+                        DatastoreManagerFactory.getDatastoreManager(sContext)
+                                .runInTransaction((dao) -> dao.insertEventReport(report)));
+
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        (dao) -> {
+                            // Execution
+                            // one matching trigger, 1 non-matching trigger
+                            List<EventReport> eventReports =
+                                    dao.fetchMatchingEventReports(
+                                            Arrays.asList(trigger3.getId(), "nonMatchingTrigger"));
+                            assertEquals(3, eventReports.size());
+
+                            // 2 matching triggers
+                            eventReports =
+                                    dao.fetchMatchingEventReports(
+                                            Arrays.asList(trigger1.getId(), trigger3.getId()));
+                            assertEquals(6, eventReports.size());
+
+                            // 2 matching triggers
+                            eventReports =
+                                    dao.fetchMatchingEventReports(
+                                            Arrays.asList(
+                                                    trigger1.getId(),
+                                                    trigger2.getId(),
+                                                    trigger3.getId()));
+                            assertEquals(9, eventReports.size());
+                        });
+    }
+
+    private AggregateReport createAggregateReportForSourceAndTrigger(
+            Source source, Trigger trigger) {
+        return AggregateReportFixture.getValidAggregateReportBuilder()
+                .setSourceId(source.getId())
+                .setTriggerId(trigger.getId())
+                .build();
+    }
+
+    private EventReport createEventReportForSourceAndTrigger(Source source, Trigger trigger)
+            throws JSONException {
+        return new EventReport.Builder()
+                .populateFromSourceAndTrigger(source, trigger, trigger.parseEventTriggers().get(0))
+                .setSourceId(source.getId())
+                .setTriggerId(trigger.getId())
+                .build();
     }
 
     private void setupSourceAndTriggerData() {

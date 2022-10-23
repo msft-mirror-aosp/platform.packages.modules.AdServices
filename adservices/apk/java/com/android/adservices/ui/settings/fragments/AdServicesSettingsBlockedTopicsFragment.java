@@ -21,15 +21,20 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.adservices.api.R;
-import com.android.adservices.ui.settings.ActionDelegate;
-import com.android.adservices.ui.settings.AdServicesSettingsActivity;
+import com.android.adservices.data.topics.Topic;
+import com.android.adservices.ui.settings.activities.BlockedTopicsActivity;
+import com.android.adservices.ui.settings.delegates.BlockedTopicsActionDelegate;
 import com.android.adservices.ui.settings.viewadatpors.TopicsListViewAdapter;
-import com.android.adservices.ui.settings.viewmodels.TopicsViewModel;
+import com.android.adservices.ui.settings.viewmodels.BlockedTopicsViewModel;
+
+import java.util.function.Function;
 
 /** Fragment for the blocked topics view of the AdServices Settings App. */
 public class AdServicesSettingsBlockedTopicsFragment extends Fragment {
@@ -37,37 +42,40 @@ public class AdServicesSettingsBlockedTopicsFragment extends Fragment {
     @Override
     public View onCreateView(
             LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.blocked_topics_fragment, container, false);
+        return inflater.inflate(R.layout.blocked_topics_fragment, container, false);
+    }
 
-        setupViewModel(rootView);
+    @Override
+    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+        setupViewModel(view);
         initActionListeners();
-
-        return rootView;
     }
 
     // initialize all action listeners except for actions in blocked topics list
     private void initActionListeners() {
-        ActionDelegate actionDelegate =
-                ((AdServicesSettingsActivity) requireActivity()).getActionDelegate();
+        BlockedTopicsActionDelegate actionDelegate =
+                ((BlockedTopicsActivity) requireActivity()).getActionDelegate();
         actionDelegate.initBlockedTopicsFragment();
     }
 
-    /**
-     * initializes view model connection with blocked topics list. (Action listeners for each item
-     * in the list will be handled by the adapter)
-     */
+    // initializes view model connection with blocked topics list.
+    // (Action listeners for each item in the list will be handled by the adapter)
     private void setupViewModel(View rootView) {
-        TopicsViewModel viewModel =
-                ((AdServicesSettingsActivity) requireActivity())
-                        .getViewModelProvider()
-                        .get(TopicsViewModel.class);
+        // create adapter
+        BlockedTopicsViewModel viewModel =
+                new ViewModelProvider(requireActivity()).get(BlockedTopicsViewModel.class);
+        Function<Topic, View.OnClickListener> getOnclickListener =
+                topic -> view -> viewModel.restoreTopicConsentButtonClickHandler(topic);
+        TopicsListViewAdapter adapter =
+                new TopicsListViewAdapter(
+                        requireContext(), viewModel.getBlockedTopics(), getOnclickListener, true);
+
+        // set adapter for recyclerView
         RecyclerView recyclerView = rootView.findViewById(R.id.blocked_topics_list);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        TopicsListViewAdapter adapter = new TopicsListViewAdapter(viewModel, true);
         recyclerView.setAdapter(adapter);
 
         View noBlockedTopicsMessage = rootView.findViewById(R.id.no_blocked_topics_message);
-
         viewModel
                 .getBlockedTopics()
                 .observe(getViewLifecycleOwner(), blockedTopicsList -> {

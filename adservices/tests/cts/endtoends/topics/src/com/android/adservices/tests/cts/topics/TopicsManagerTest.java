@@ -56,13 +56,18 @@ public class TopicsManagerTest {
     private static final long TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000; // 7 days.
 
     // Classifier test constants.
-    private static final float TEST_CLASSIFIER_THRESHOLD = 0.0f;
     private static final int TEST_CLASSIFIER_NUMBER_OF_TOP_LABELS = 5;
+    // Each app is given topics with a confidence score between 0.0 to 1.0 float value. This
+    // denotes how confident are you that a particular topic t1 is related to the app x that is
+    // classified.
+    // Threshold value for classifier confidence set to 0 to allow all topics and avoid filtering.
+    private static final float TEST_CLASSIFIER_THRESHOLD = 0.0f;
     // ON_DEVICE_CLASSIFIER
     private static final int TEST_CLASSIFIER_TYPE = 1;
 
     // Classifier default constants.
     private static final int DEFAULT_CLASSIFIER_NUMBER_OF_TOP_LABELS = 3;
+    // Threshold value for classifier confidence set back to the default.
     private static final float DEFAULT_CLASSIFIER_THRESHOLD = 0.1f;
     // PRECOMPUTED_THEN_ON_DEVICE_CLASSIFIER
     private static final int DEFAULT_CLASSIFIER_TYPE = 3;
@@ -209,7 +214,7 @@ public class TopicsManagerTest {
 
     // Override the flag to select classifier type.
     private void overrideClassifierType(int val) {
-        ShellUtils.runShellCommand("setprop debug.adservices.classifier_type " + val);
+        ShellUtils.runShellCommand("device_config put adservices classifier_type " + val);
     }
 
     // Override the flag to change the number of top labels returned by on-device classifier type.
