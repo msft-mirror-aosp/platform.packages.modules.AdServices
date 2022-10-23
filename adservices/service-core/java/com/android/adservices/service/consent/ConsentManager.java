@@ -19,12 +19,12 @@ package com.android.adservices.service.consent;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_IN_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_OUT_SELECTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
 
 import android.annotation.NonNull;
 import android.app.job.JobScheduler;
 import android.content.Context;
-import android.content.pm.PackageManager;
 
 
 
@@ -80,7 +80,7 @@ public class ConsentManager {
     private final EnrollmentDao mEnrollmentDao;
     private final MeasurementImpl mMeasurementImpl;
     private final AdServicesLoggerImpl mAdServicesLoggerImpl;
-    private int mDeviceLoggingRegion;
+    private final int mDeviceLoggingRegion;
     private final CustomAudienceDao mCustomAudienceDao;
     private final ExecutorService mExecutor;
 
@@ -109,6 +109,7 @@ public class ConsentManager {
         mCustomAudienceDao = customAudienceDao;
         mExecutor = Executors.newSingleThreadExecutor();
         mFlags = flags;
+        mDeviceLoggingRegion = initializeLoggingValues(context);
     }
 
     /**
@@ -144,15 +145,18 @@ public class ConsentManager {
      * Enables all PP API services. It gives consent to Topics, Fledge and Measurements services.
      */
     public void enable(@NonNull Context context) {
+        Objects.requireNonNull(context);
+
         mAdServicesLoggerImpl.logUIStats(
                 new UIStats.Builder()
                         .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
                         .setRegion(mDeviceLoggingRegion)
                         .setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_IN_SELECTED)
                         .build());
+
         // Enable all the APIs
         try {
-            init(context.getPackageManager());
+            init();
 
             BackgroundJobsManager.scheduleAllBackgroundJobs(context);
 
@@ -178,7 +182,7 @@ public class ConsentManager {
 
         // Disable all the APIs
         try {
-            init(context.getPackageManager());
+            init();
 
             // reset all data
             resetTopicsAndBlockedTopics();
@@ -197,12 +201,12 @@ public class ConsentManager {
     }
 
     /** Retrieves the consent for all PP API services. */
-    public AdServicesApiConsent getConsent(@NonNull PackageManager packageManager) {
+    public AdServicesApiConsent getConsent() {
         if (mFlags.getConsentManagerDebugMode()) {
             return AdServicesApiConsent.GIVEN;
         }
         try {
-            init(packageManager);
+            init();
             return AdServicesApiConsent.getConsent(mDatastore.get(CONSENT_KEY));
         } catch (NullPointerException | IllegalArgumentException | IOException e) {
             LogUtil.e(e, ERROR_MESSAGE_DATASTORE_EXCEPTION_WHILE_GET_CONTENT);
@@ -351,8 +355,6 @@ public class ConsentManager {
      * <p>This method also checks whether a user has opted out of the FLEDGE Privacy Sandbox
      * initiative.
      *
-     * @param packageManager the {@link PackageManager} used to check initial consent for the
-     *     Privacy Sandbox
      * @param packageName String package name that uniquely identifies an installed application to
      *     check
      * @return {@code true} if either the FLEDGE Privacy Sandbox initiative has been opted out or if
@@ -360,11 +362,10 @@ public class ConsentManager {
      * @throws IllegalArgumentException if the package name is invalid or not found as an installed
      *     application
      */
-    public boolean isFledgeConsentRevokedForApp(
-            @NonNull PackageManager packageManager, @NonNull String packageName)
+    public boolean isFledgeConsentRevokedForApp(@NonNull String packageName)
             throws IllegalArgumentException {
         // TODO(b/238464639): Implement API-specific consent for FLEDGE
-        if (!getConsent(packageManager).isGiven()) {
+        if (!getConsent().isGiven()) {
             return true;
         }
 
@@ -385,8 +386,6 @@ public class ConsentManager {
      *
      * <p>This is only meant to be called by the FLEDGE APIs.
      *
-     * @param packageManager the {@link PackageManager} used to check initial consent for the
-     *     Privacy Sandbox
      * @param packageName String package name that uniquely identifies an installed application that
      *     has used a FLEDGE API
      * @return {@code true} if user consent has been revoked for the application or API, {@code
@@ -394,11 +393,10 @@ public class ConsentManager {
      * @throws IllegalArgumentException if the package name is invalid or not found as an installed
      *     application
      */
-    public boolean isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-            @NonNull PackageManager packageManager, @NonNull String packageName)
+    public boolean isFledgeConsentRevokedForAppAfterSettingFledgeUse(@NonNull String packageName)
             throws IllegalArgumentException {
         // TODO(b/238464639): Implement API-specific consent for FLEDGE
-        if (!getConsent(packageManager).isGiven()) {
+        if (!getConsent().isGiven()) {
             return true;
         }
 
@@ -424,9 +422,9 @@ public class ConsentManager {
      * Saves information to the storage that notification was displayed for the first time to the
      * user.
      */
-    public void recordNotificationDisplayed(@NonNull PackageManager packageManager) {
+    public void recordNotificationDisplayed() {
         try {
-            init(packageManager);
+            init();
             // TODO(b/229725886): add metrics / logging
             mDatastore.put(NOTIFICATION_DISPLAYED_ONCE, true);
         } catch (IOException e) {
@@ -439,9 +437,9 @@ public class ConsentManager {
      *
      * @return true if Consent Notification was displayed, otherwise false.
      */
-    public Boolean wasNotificationDisplayed(@NonNull PackageManager packageManager) {
+    public Boolean wasNotificationDisplayed() {
         try {
-            init(packageManager);
+            init();
             return mDatastore.get(NOTIFICATION_DISPLAYED_ONCE);
         } catch (IOException e) {
             LogUtil.e(e, "Record notification failed due to IOException thrown by Datastore.");
@@ -454,9 +452,8 @@ public class ConsentManager {
         mDatastore.put(CONSENT_KEY, state.isGiven());
     }
 
-    void init(PackageManager packageManager) throws IOException {
+    void init() throws IOException {
         initializeStorage();
-        initializeLoggingValues(packageManager);
         if (mDatastore.get(CONSENT_ALREADY_INITIALIZED_KEY) == null
                 || mDatastore.get(CONSENT_KEY) == null) {
             mDatastore.put(NOTIFICATION_DISPLAYED_ONCE, false);
@@ -475,14 +472,12 @@ public class ConsentManager {
         }
     }
 
-    private void initializeLoggingValues(PackageManager packageManager) {
-        // TODO: fix it after background job CLs are submitted
-        //        if (DeviceRegionProvider.isEuDevice(context)) {
-        //            mDeviceLoggingRegion = AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
-        //        } else {
-        //            mDeviceLoggingRegion = AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
-        //        }
-        mDeviceLoggingRegion = AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
+    private int initializeLoggingValues(Context context) {
+        if (DeviceRegionProvider.isEuDevice(context)) {
+            return AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
+        } else {
+            return AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
+        }
     }
 
     /**
