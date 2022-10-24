@@ -51,6 +51,13 @@ public class AdServicesSettingsAppsFragment extends Fragment {
         initActionListeners();
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        AppsViewModel viewModel = new ViewModelProvider(requireActivity()).get(AppsViewModel.class);
+        viewModel.refresh();
+    }
+
     // initialize all action listeners except for actions in apps list
     private void initActionListeners() {
         AppsActionDelegate actionDelegate = ((AppsActivity) requireActivity()).getActionDelegate();
