@@ -19,6 +19,7 @@ package com.android.adservices.service.measurement.reporting;
 import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -47,6 +48,7 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
@@ -240,6 +242,26 @@ public class EventFallbackReportingJobServiceTest {
                             times(1));
                     verify(mMockJobScheduler, times(1))
                             .getPendingJob(eq(MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID));
+                });
+    }
+
+    @Test
+    public void testSchedule_jobInfoIsPersisted() throws Exception {
+        runWithMocks(
+                () -> {
+                    // Setup
+                    final JobScheduler jobScheduler = mock(JobScheduler.class);
+                    final ArgumentCaptor<JobInfo> captor = ArgumentCaptor.forClass(JobInfo.class);
+
+                    // Execute
+                    ExtendedMockito.doCallRealMethod()
+                            .when(() -> EventFallbackReportingJobService.schedule(any(), any()));
+                    EventFallbackReportingJobService.schedule(mock(Context.class), jobScheduler);
+
+                    // Validate
+                    verify(jobScheduler, times(1)).schedule(captor.capture());
+                    assertNotNull(captor.getValue());
+                    assertTrue(captor.getValue().isPersisted());
                 });
     }
 
