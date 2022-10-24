@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.adservices.data.measurement.migration;
+package com.android.adservices.data.measurement;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.enrollment.EnrollmentTables;
-import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.data.topics.TopicsTables;
 
 import java.util.Arrays;
@@ -29,14 +28,14 @@ import java.util.Collections;
 import java.util.List;
 
 /** Snapshot of DBHelper at Version 1 */
-class DbHelperV1 extends DbHelper {
+public class DbHelperV1 extends DbHelper {
 
     /**
      * @param context the context
      * @param dbName Name of database to query
      * @param dbVersion db version
      */
-    DbHelperV1(Context context, String dbName, int dbVersion) {
+    public DbHelperV1(Context context, String dbName, int dbVersion) {
         super(context, dbName, dbVersion);
     }
 
