@@ -13,12 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package android.app.sdksandbox;
+package android.app.sdksandbox.sdkprovider;
 
-import static android.app.sdksandbox.SdkSandboxController.SDK_SANDBOX_CONTROLLER_SERVICE;
+import static android.app.sdksandbox.sdkprovider.SdkSandboxController.SDK_SANDBOX_CONTROLLER_SERVICE;
 
 import android.annotation.NonNull;
 import android.annotation.SystemService;
+import android.app.sdksandbox.SandboxedSdk;
+import android.app.sdksandbox.SandboxedSdkContext;
+import android.app.sdksandbox.SandboxedSdkProvider;
+import android.app.sdksandbox.SdkSandboxLocalSingleton;
+import android.app.sdksandbox.SdkSandboxManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.RemoteException;
