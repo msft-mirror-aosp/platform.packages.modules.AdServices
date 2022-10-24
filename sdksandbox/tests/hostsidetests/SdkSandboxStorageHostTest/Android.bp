@@ -58,7 +58,6 @@ java_defaults {
     min_sdk_version: "Tiramisu",
     target_sdk_version: "Tiramisu",
     test_suites: ["general-tests"],
-    platform_apis: true,
 }
 
 android_test_helper_app {
