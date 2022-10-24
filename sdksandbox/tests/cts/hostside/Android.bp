@@ -24,6 +24,7 @@ java_test_host {
     ],
     libs: ["tradefed"],
     static_libs: [
+        "modules-utils-build-testing",
         "SdkSandboxHostTestUtils",
     ],
     test_suites: [
