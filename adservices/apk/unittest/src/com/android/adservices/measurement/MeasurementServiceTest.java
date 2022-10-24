@@ -101,7 +101,7 @@ public class MeasurementServiceTest {
 
                     // Verification
                     assertNotNull(binder);
-                    verify(mMockConsentManager, times(1)).getConsent(any());
+                    verify(mMockConsentManager, times(1)).getConsent();
                     ExtendedMockito.verify(
                             () -> PackageChangedReceiver.enableReceiver(any(Context.class)));
                     assertJobScheduled(/* timesCalled */ 1);
@@ -120,7 +120,7 @@ public class MeasurementServiceTest {
 
                     // Verification
                     assertNotNull(binder);
-                    verify(mMockConsentManager, times(1)).getConsent(any());
+                    verify(mMockConsentManager, times(1)).getConsent();
                     assertJobScheduled(/* timesCalled */ 0);
                 });
     }
@@ -137,7 +137,7 @@ public class MeasurementServiceTest {
 
                     // Verification
                     assertNull(binder);
-                    verify(mMockConsentManager, never()).getConsent(any());
+                    verify(mMockConsentManager, never()).getConsent();
                     assertJobScheduled(/* timesCalled */ 0);
                 });
     }
@@ -185,7 +185,7 @@ public class MeasurementServiceTest {
 
             final AdServicesApiConsent mockConsent = mock(AdServicesApiConsent.class);
             doReturn(consentStatus).when(mockConsent).isGiven();
-            doReturn(mockConsent).when(mMockConsentManager).getConsent(any());
+            doReturn(mockConsent).when(mMockConsentManager).getConsent();
 
             ExtendedMockito.doReturn(mMockEnrollmentDao)
                     .when(() -> EnrollmentDao.getInstance(any()));
