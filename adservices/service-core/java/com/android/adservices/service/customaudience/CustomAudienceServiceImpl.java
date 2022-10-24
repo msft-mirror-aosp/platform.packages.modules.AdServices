@@ -223,7 +223,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
                 // Fail silently for revoked user consent
                 if (!mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                        mContext.getPackageManager(), ownerPackageName)) {
+                        ownerPackageName)) {
                     LogUtil.v("Joining custom audience");
                     mCustomAudienceImpl.joinCustomAudience(customAudience, ownerPackageName);
                     BackgroundFetchJobService.scheduleIfNeeded(mContext, mFlags, false);
@@ -350,8 +350,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 shouldLog = true;
 
                 // Fail silently for revoked user consent
-                if (!mConsentManager.isFledgeConsentRevokedForApp(
-                        mContext.getPackageManager(), ownerPackageName)) {
+                if (!mConsentManager.isFledgeConsentRevokedForApp(ownerPackageName)) {
                     // TODO(b/233681870): Investigate implementation of actual failures
                     //  in logs/metrics
                     mCustomAudienceImpl.leaveCustomAudience(ownerPackageName, buyer, name);

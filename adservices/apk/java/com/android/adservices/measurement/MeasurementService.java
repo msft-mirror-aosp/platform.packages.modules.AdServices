@@ -90,7 +90,7 @@ public class MeasurementService extends Service {
     }
 
     private boolean hasUserConsent() {
-        return ConsentManager.getInstance(this).getConsent(this.getPackageManager()).isGiven();
+        return ConsentManager.getInstance(this).getConsent().isGiven();
     }
 
     private void schedulePeriodicJobsIfNeeded() {

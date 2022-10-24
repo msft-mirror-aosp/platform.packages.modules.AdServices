@@ -86,7 +86,7 @@ public class AdSelectionServiceTest {
         IBinder binder = adSelectionService.onBind(getIntentForAdSelectionService());
         assertNull(binder);
 
-        verify(mConsentManagerMock, never()).getConsent(any());
+        verify(mConsentManagerMock, never()).getConsent();
         verify(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()), never());
     }
 
@@ -95,7 +95,7 @@ public class AdSelectionServiceTest {
         doReturn(mMockAdSelectionServiceImpl)
                 .when(() -> AdSelectionServiceImpl.create(any(Context.class)));
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any(Context.class)));
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         ExtendedMockito.doReturn(true)
                 .when(() -> PackageChangedReceiver.enableReceiver(any(Context.class)));
         doReturn(true).when(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
@@ -111,7 +111,7 @@ public class AdSelectionServiceTest {
         IBinder binder = adSelectionServiceSpy.onBind(getIntentForAdSelectionService());
         assertNotNull(binder);
 
-        verify(mConsentManagerMock).getConsent(any());
+        verify(mConsentManagerMock).getConsent();
         verify(() -> PackageChangedReceiver.enableReceiver(any(Context.class)));
         verify(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
         verify(() -> MaintenanceJobService.scheduleIfNeeded(any(), anyBoolean()));

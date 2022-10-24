@@ -276,8 +276,7 @@ public final class MeasurementImpl {
      * Implement a getMeasurementApiStatus request, returning a result code.
      */
     @MeasurementManager.MeasurementApiState int getMeasurementApiStatus() {
-        AdServicesApiConsent consent =
-                ConsentManager.getInstance(mContext).getConsent(mContext.getPackageManager());
+        AdServicesApiConsent consent = ConsentManager.getInstance(mContext).getConsent();
         if (consent.isGiven()) {
             return MeasurementManager.MEASUREMENT_API_STATE_ENABLED;
         } else {
