@@ -91,7 +91,8 @@ public class BackgroundFetchWorker {
                             new BackgroundFetchWorker(
                                     customAudienceDao,
                                     flags,
-                                    new BackgroundFetchRunner(customAudienceDao, flags));
+                                    new BackgroundFetchRunner(
+                                            customAudienceDao, context.getPackageManager(), flags));
                 }
             }
         }
@@ -125,8 +126,9 @@ public class BackgroundFetchWorker {
             mWorkInProgress = true;
             mStopWorkRequested = false;
 
-            // Clean up expired custom audiences first so the actual fetch won't do unnecessary work
+            // Clean up custom audiences first so the actual fetch won't do unnecessary work
             mBackgroundFetchRunner.deleteExpiredCustomAudiences(jobStartTime);
+            mBackgroundFetchRunner.deleteDisallowedOwnerCustomAudiences();
 
             if (mStopWorkRequested) {
                 LogUtil.d("Stopping FLEDGE background fetch");
