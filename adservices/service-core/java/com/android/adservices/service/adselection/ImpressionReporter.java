@@ -511,7 +511,7 @@ public class ImpressionReporter {
      *     user consent
      */
     private Void assertCallerHasUserConsent() throws ConsentManager.RevokedConsentException {
-        if (!mConsentManager.getConsent(mContext.getPackageManager()).isGiven()) {
+        if (!mConsentManager.getConsent().isGiven()) {
             throw new ConsentManager.RevokedConsentException();
         }
         return null;

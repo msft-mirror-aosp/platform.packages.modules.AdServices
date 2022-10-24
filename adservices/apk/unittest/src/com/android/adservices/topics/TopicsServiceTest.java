@@ -26,7 +26,6 @@ import static org.mockito.Mockito.spy;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.os.IBinder;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -64,7 +63,6 @@ public class TopicsServiceTest {
     @Mock AppImportanceFilter mMockAppImportanceFilter;
     @Mock Flags mMockFlags;
     @Mock AdServicesApiConsent mMockAdServicesApiConsent;
-    @Mock PackageManager mMockPackageManager;
 
     @Before
     public void setup() {
@@ -99,13 +97,10 @@ public class TopicsServiceTest {
                     .when(() -> TopicsWorker.getInstance(any(Context.class)));
 
             TopicsService spyTopicsService = spy(new TopicsService());
-            doReturn(mMockPackageManager).when(spyTopicsService).getPackageManager();
             ExtendedMockito.doReturn(mMockConsentManager)
                     .when(() -> ConsentManager.getInstance(any(Context.class)));
             doReturn(true).when(mMockAdServicesApiConsent).isGiven();
-            doReturn(mMockAdServicesApiConsent)
-                    .when(mMockConsentManager)
-                    .getConsent(mMockPackageManager);
+            doReturn(mMockAdServicesApiConsent).when(mMockConsentManager).getConsent();
 
             ExtendedMockito.doReturn(true)
                     .when(() -> PackageChangedReceiver.enableReceiver(any(Context.class)));

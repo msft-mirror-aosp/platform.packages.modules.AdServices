@@ -265,7 +265,7 @@ public class OnDeviceAdSelectionRunnerTest {
     public void testRunAdSelectionSuccess() throws AdServicesException {
         when(mClock.instant()).thenReturn(Clock.systemUTC().instant());
         doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
         // Populating the Custom Audience DB
@@ -398,7 +398,7 @@ public class OnDeviceAdSelectionRunnerTest {
     @Test
     public void testRunAdSelectionWithRevokedUserConsentSuccess() throws AdServicesException {
         doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent();
 
         // Creating ad selection config for happy case with all the buyers in place
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -464,7 +464,7 @@ public class OnDeviceAdSelectionRunnerTest {
     public void testRunAdSelectionMissingBuyerSignals() throws AdServicesException {
         when(mClock.instant()).thenReturn(Clock.systemUTC().instant());
         doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         // Creating ad selection config with missing Buyer signals to test the fallback
         AdSelectionConfig adSelectionConfig =
@@ -586,7 +586,7 @@ public class OnDeviceAdSelectionRunnerTest {
     @Test
     public void testRunAdSelectionNoCAs() {
         when(mClock.instant()).thenReturn(Clock.systemUTC().instant());
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         // Creating ad selection config for happy case with all the buyers in place
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -637,7 +637,7 @@ public class OnDeviceAdSelectionRunnerTest {
 
     @Test
     public void testRunAdSelectionCallerNotInForeground_fails() {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         // Creating ad selection config for happy case with all the buyers in place
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -680,7 +680,7 @@ public class OnDeviceAdSelectionRunnerTest {
 
     @Test
     public void testRunAdSelectionCallerNotInForegroundFlagDisabled_doesNotFailValidation() {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         Flags flags =
                 new Flags() {
                     @Override
@@ -736,7 +736,7 @@ public class OnDeviceAdSelectionRunnerTest {
     public void testRunAdSelectionPartialBidding() throws AdServicesException {
         when(mClock.instant()).thenReturn(Clock.systemUTC().instant());
         doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         // Creating ad selection config for happy case with all the buyers in place
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -872,7 +872,7 @@ public class OnDeviceAdSelectionRunnerTest {
     public void testRunAdSelectionBiddingFailure() {
         when(mClock.instant()).thenReturn(Clock.systemUTC().instant());
         doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         // Creating ad selection config for happy case with all the buyers in place
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -969,7 +969,7 @@ public class OnDeviceAdSelectionRunnerTest {
     public void testRunAdSelectionScoringFailure() throws AdServicesException {
         when(mClock.instant()).thenReturn(Clock.systemUTC().instant());
         doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         // Creating ad selection config for happy case with all the buyers in place
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -1067,7 +1067,7 @@ public class OnDeviceAdSelectionRunnerTest {
     public void testRunAdSelectionNegativeScoring() throws AdServicesException {
         when(mClock.instant()).thenReturn(Clock.systemUTC().instant());
         doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         // Creating ad selection config for happy case with all the buyers in place
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -1172,7 +1172,7 @@ public class OnDeviceAdSelectionRunnerTest {
     public void testRunAdSelectionPartialNegativeScoring() throws AdServicesException {
         when(mClock.instant()).thenReturn(Clock.systemUTC().instant());
         doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         // Creating ad selection config for happy case with all the buyers in place
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -1310,7 +1310,7 @@ public class OnDeviceAdSelectionRunnerTest {
     public void testRunAdSelectionScoringException() throws AdServicesException {
         when(mClock.instant()).thenReturn(Clock.systemUTC().instant());
         doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         // Creating ad selection config for happy case with all the buyers in place
         AdSelectionConfig adSelectionConfig =
@@ -1410,7 +1410,7 @@ public class OnDeviceAdSelectionRunnerTest {
     public void testRunAdSelectionOrchestrationTimesOut() throws AdServicesException {
         when(mClock.instant()).thenReturn(Clock.systemUTC().instant());
         doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         Flags flagsWithSmallerLimits =
                 new Flags() {
@@ -1528,7 +1528,7 @@ public class OnDeviceAdSelectionRunnerTest {
                 };
         when(mClock.instant()).thenReturn(Clock.systemUTC().instant());
         doReturn(flagsWithSmallPerBuyerTimeout).when(FlagsFactory::getFlags);
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
         // Populating the Custom Audience DB
@@ -1675,7 +1675,7 @@ public class OnDeviceAdSelectionRunnerTest {
     public void testRunAdSelectionThrottledFailure() throws AdServicesException {
         when(mClock.instant()).thenReturn(Clock.systemUTC().instant());
         doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         // Creating ad selection config for happy case with all the buyers in place
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
