@@ -67,4 +67,10 @@ public interface AdServicesLogger {
      */
     void logUpdateCustomAudienceProcessReportedStats(
             UpdateCustomAudienceProcessReportedStats stats);
+
+    /**
+     * Logs GetTopics API call stats as an {@link
+     * com.android.adservices.service.stats.GetTopicsReportedStats} object.
+     */
+    void logGetTopicsReportedStats(GetTopicsReportedStats stats);
 }
