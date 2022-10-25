@@ -17,6 +17,7 @@
 package com.android.sdksandbox;
 
 import android.app.sdksandbox.LoadSdkException;
+import android.app.sdksandbox.LogUtil;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SandboxedSdkProvider;
@@ -213,6 +214,8 @@ class SandboxedSdkHolder {
             sandboxLatencyInfo.setTimeSandboxReceivedCallFromSystemServer(
                     mInjector.getCurrentTime());
 
+            LogUtil.d(TAG, "onSurfacePackageRequested received");
+
             try {
                 Context displayContext = mContext.createDisplayContext(
                         mDisplayManager.getDisplay(displayId));
@@ -222,6 +225,8 @@ class SandboxedSdkHolder {
                 // Creating a SurfaceControlViewHost needs to done on the handler thread.
                 mHandler.post(
                         () -> {
+                            LogUtil.d(TAG, "Creating SurfaceControlViewHost on handler thread");
+
                             final View view;
                             sandboxLatencyInfo.setTimeSandboxCalledSdk(mInjector.getCurrentTime());
                             try {
