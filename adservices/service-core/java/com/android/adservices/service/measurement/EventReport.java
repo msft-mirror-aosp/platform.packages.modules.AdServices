@@ -21,6 +21,8 @@ import android.net.Uri;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.service.measurement.util.UnsignedLong;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Objects;
@@ -31,19 +33,21 @@ import java.util.Objects;
 public class EventReport {
 
     private String mId;
-    private long mSourceId;
+    private UnsignedLong mSourceEventId;
     private long mReportTime;
     private long mTriggerTime;
     private long mTriggerPriority;
     private Uri mAttributionDestination;
     private String mEnrollmentId;
-    private long mTriggerData;
-    private Long mTriggerDedupKey;
+    private UnsignedLong mTriggerData;
+    private UnsignedLong mTriggerDedupKey;
     private double mRandomizedTriggerRate;
     private @Status int mStatus;
     private Source.SourceType mSourceType;
-    @Nullable private Long mSourceDebugKey;
-    @Nullable private Long mTriggerDebugKey;
+    @Nullable private UnsignedLong mSourceDebugKey;
+    @Nullable private UnsignedLong mTriggerDebugKey;
+    private String mSourceId;
+    private String mTriggerId;
 
     @IntDef(value = {
             Status.PENDING,
@@ -70,14 +74,16 @@ public class EventReport {
                 && Objects.equals(mAttributionDestination, eventReport.mAttributionDestination)
                 && Objects.equals(mEnrollmentId, eventReport.mEnrollmentId)
                 && mTriggerTime == eventReport.mTriggerTime
-                && mTriggerData == eventReport.mTriggerData
-                && mSourceId == eventReport.mSourceId
+                && Objects.equals(mTriggerData, eventReport.mTriggerData)
+                && Objects.equals(mSourceEventId, eventReport.mSourceEventId)
                 && mTriggerPriority == eventReport.mTriggerPriority
                 && Objects.equals(mTriggerDedupKey, eventReport.mTriggerDedupKey)
                 && mSourceType == eventReport.mSourceType
                 && mRandomizedTriggerRate == eventReport.mRandomizedTriggerRate
                 && Objects.equals(mSourceDebugKey, eventReport.mSourceDebugKey)
-                && Objects.equals(mTriggerDebugKey, eventReport.mTriggerDebugKey);
+                && Objects.equals(mTriggerDebugKey, eventReport.mTriggerDebugKey)
+                && Objects.equals(mSourceId, eventReport.mSourceId)
+                && Objects.equals(mTriggerId, eventReport.mTriggerId);
     }
 
     @Override
@@ -89,27 +95,25 @@ public class EventReport {
                 mEnrollmentId,
                 mTriggerTime,
                 mTriggerData,
-                mSourceId,
+                mSourceEventId,
                 mTriggerPriority,
                 mTriggerDedupKey,
                 mSourceType,
                 mRandomizedTriggerRate,
                 mSourceDebugKey,
-                mTriggerDebugKey);
+                mTriggerDebugKey,
+                mSourceId,
+                mTriggerId);
     }
 
-    /**
-     * Unique identifier for the report.
-     */
+    /** Unique identifier for the report. */
     public String getId() {
         return mId;
     }
 
-    /**
-     * Identifier of the associated {@link Source} event.
-     */
-    public long getSourceId() {
-        return mSourceId;
+    /** Identifier of the associated {@link Source} event. */
+    public UnsignedLong getSourceEventId() {
+        return mSourceEventId;
     }
 
     /**
@@ -150,14 +154,14 @@ public class EventReport {
     /**
      * Metadata for the report.
      */
-    public long getTriggerData() {
+    public UnsignedLong getTriggerData() {
         return mTriggerData;
     }
 
     /**
      * Deduplication key of the associated {@link Trigger}
      */
-    public Long getTriggerDedupKey() {
+    public UnsignedLong getTriggerDedupKey() {
         return mTriggerDedupKey;
     }
 
@@ -184,14 +188,24 @@ public class EventReport {
 
     /** Source Debug Key */
     @Nullable
-    public Long getSourceDebugKey() {
+    public UnsignedLong getSourceDebugKey() {
         return mSourceDebugKey;
     }
 
     /** Trigger Debug Key */
     @Nullable
-    public Long getTriggerDebugKey() {
+    public UnsignedLong getTriggerDebugKey() {
         return mTriggerDebugKey;
+    }
+
+    /** Source ID */
+    public String getSourceId() {
+        return mSourceId;
+    }
+
+    /** Trigger ID */
+    public String getTriggerId() {
+        return mTriggerId;
     }
 
     /** Builder for {@link EventReport} */
@@ -211,11 +225,9 @@ public class EventReport {
             return this;
         }
 
-        /**
-         * See {@link EventReport#getSourceId()}
-         */
-        public Builder setSourceId(long sourceId) {
-            mBuilding.mSourceId = sourceId;
+        /** See {@link EventReport#getSourceEventId()} */
+        public Builder setSourceEventId(UnsignedLong sourceEventId) {
+            mBuilding.mSourceEventId = sourceEventId;
             return this;
         }
 
@@ -246,7 +258,7 @@ public class EventReport {
         /**
          * See {@link EventReport#getTriggerData()}
          */
-        public Builder setTriggerData(long triggerData) {
+        public Builder setTriggerData(UnsignedLong triggerData) {
             mBuilding.mTriggerData = triggerData;
             return this;
         }
@@ -262,7 +274,7 @@ public class EventReport {
         /**
          * See {@link EventReport#getTriggerDedupKey()}
          */
-        public Builder setTriggerDedupKey(Long triggerDedupKey) {
+        public Builder setTriggerDedupKey(UnsignedLong triggerDedupKey) {
             mBuilding.mTriggerDedupKey = triggerDedupKey;
             return this;
         }
@@ -300,14 +312,26 @@ public class EventReport {
         }
 
         /** See {@link EventReport#getSourceDebugKey()} ()} */
-        public Builder setSourceDebugKey(Long sourceDebugKey) {
+        public Builder setSourceDebugKey(UnsignedLong sourceDebugKey) {
             mBuilding.mSourceDebugKey = sourceDebugKey;
             return this;
         }
 
         /** See {@link EventReport#getTriggerDebugKey()} ()} */
-        public Builder setTriggerDebugKey(Long triggerDebugKey) {
+        public Builder setTriggerDebugKey(UnsignedLong triggerDebugKey) {
             mBuilding.mTriggerDebugKey = triggerDebugKey;
+            return this;
+        }
+
+        /** See {@link EventReport#getSourceId()} */
+        public Builder setSourceId(String sourceId) {
+            mBuilding.mSourceId = sourceId;
+            return this;
+        }
+
+        /** See {@link EventReport#getTriggerId()} */
+        public Builder setTriggerId(String triggerId) {
+            mBuilding.mTriggerId = triggerId;
             return this;
         }
 
@@ -319,7 +343,7 @@ public class EventReport {
             // truncate trigger data to 3-bit or 1-bit based on {@link Source.SourceType}
             mBuilding.mTriggerData = getTruncatedTriggerData(source, eventTrigger);
             mBuilding.mTriggerTime = trigger.getTriggerTime();
-            mBuilding.mSourceId = source.getEventId();
+            mBuilding.mSourceEventId = source.getEventId();
             mBuilding.mEnrollmentId = source.getEnrollmentId();
             mBuilding.mStatus = Status.PENDING;
             mBuilding.mAttributionDestination = trigger.getAttributionDestination();
@@ -331,11 +355,17 @@ public class EventReport {
             mBuilding.mRandomizedTriggerRate = source.getRandomAttributionProbability();
             mBuilding.mSourceDebugKey = source.getDebugKey();
             mBuilding.mTriggerDebugKey = trigger.getDebugKey();
+            mBuilding.mSourceId = source.getId();
+            mBuilding.mTriggerId = trigger.getId();
             return this;
         }
 
-        private long getTruncatedTriggerData(Source source, EventTrigger eventTrigger) {
-            return eventTrigger.getTriggerData() % source.getTriggerDataCardinality();
+        private UnsignedLong getTruncatedTriggerData(Source source, EventTrigger eventTrigger) {
+            UnsignedLong triggerData = eventTrigger.getTriggerData();
+            if (triggerData == null) {
+                return new UnsignedLong(0L);
+            }
+            return triggerData.mod(source.getTriggerDataCardinality());
         }
 
         /**

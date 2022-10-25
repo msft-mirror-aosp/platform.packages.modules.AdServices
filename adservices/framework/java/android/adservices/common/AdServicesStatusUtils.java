@@ -115,6 +115,13 @@ public class AdServicesStatusUtils {
      * <p>This error may be considered similar to {@link java.util.concurrent.TimeoutException}
      */
     public static final int STATUS_TIMEOUT = 13;
+    /**
+     * The device is not running a version of WebView that supports JSSandbox, required for FLEDGE
+     * Ad Selection.
+     *
+     * <p>This error may be considered similar to {@link IllegalStateException}.
+     */
+    public static final int STATUS_JS_SANDBOX_UNAVAILABLE = 14;
 
     /** The error message to be returned along with {@link IllegalStateException}. */
     public static final String ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE = "Service is not available.";
@@ -164,6 +171,7 @@ public class AdServicesStatusUtils {
                 return new IOException();
             case STATUS_KILLSWITCH_ENABLED: // Intentional fallthrough
             case STATUS_USER_CONSENT_REVOKED: // Intentional fallthrough
+            case STATUS_JS_SANDBOX_UNAVAILABLE:
                 return new IllegalStateException(ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE);
             case STATUS_PERMISSION_NOT_REQUESTED:
                 return new SecurityException(
@@ -212,7 +220,8 @@ public class AdServicesStatusUtils {
                 STATUS_CALLER_NOT_ALLOWED,
                 STATUS_BACKGROUND_CALLER,
                 STATUS_UNAUTHORIZED,
-                STATUS_TIMEOUT
+                STATUS_TIMEOUT,
+                STATUS_JS_SANDBOX_UNAVAILABLE
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface StatusCode {}

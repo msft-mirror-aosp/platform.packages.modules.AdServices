@@ -24,6 +24,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.customaudience.CustomAudienceServiceImpl;
 
@@ -61,6 +62,7 @@ public class CustomAudienceService extends Service {
         }
 
         if (hasUserConsent()) {
+            PackageChangedReceiver.enableReceiver(this);
             MddJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
         }
     }
@@ -77,6 +79,6 @@ public class CustomAudienceService extends Service {
 
     /** @return {@code true} if the Privacy Sandbox has user consent */
     private boolean hasUserConsent() {
-        return ConsentManager.getInstance(this).getConsent(getPackageManager()).isGiven();
+        return ConsentManager.getInstance(this).getConsent().isGiven();
     }
 }

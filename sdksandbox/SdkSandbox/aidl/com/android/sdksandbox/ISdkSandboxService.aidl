@@ -29,14 +29,14 @@ import com.android.sdksandbox.SandboxLatencyInfo;
 
 /** @hide */
 oneway interface ISdkSandboxService {
+    void initialize(in ISdkToServiceCallback sdkToService);
     void isDisabled(in ISdkSandboxDisabledCallback callback);
     // TODO(b/228045863): Wrap parameters in a parcelable
-    void loadSdk(in String callingPackageName, IBinder sdkToken, in ApplicationInfo info,
+    void loadSdk(in String callingPackageName, in ApplicationInfo info,
                   in String sdkName, in String sdkProviderClassName,
                   in String sdkCeDataDir, in String sdkDeDataDir,
                   in Bundle params, in ILoadSdkInSandboxCallback callback,
-                  in SandboxLatencyInfo sandboxLatencyInfo,
-                  in ISdkToServiceCallback sdkToService);
-    void unloadSdk(IBinder sdkToken, in IUnloadSdkCallback callback, in SandboxLatencyInfo sandboxLatencyInfo);
+                  in SandboxLatencyInfo sandboxLatencyInfo);
+    void unloadSdk(in String sdkName, in IUnloadSdkCallback callback, in SandboxLatencyInfo sandboxLatencyInfo);
     void syncDataFromClient(in SharedPreferencesUpdate update);
 }

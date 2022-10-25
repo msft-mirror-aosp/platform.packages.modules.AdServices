@@ -47,7 +47,8 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Kaip dalyvauti"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Įjungus beta versiją, programos gali išbandyti šiuos naujus privatesnius būdus skelbimams rodyti. Galite bet kuriuo metu išjungti beta versiją privatumo nustatymuose."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Ne, ačiū"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"Taip, prisijungsiu"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Įjungti"</string>
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Daugiau"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Dėkojame, kad dalyvaujate"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Dalyvaujate „Android“ su skelbimais susijusio privatumo beta versijos programoje. Privatumo „sandbox“ (smėlio dėžė) jūsų įrenginyje įjungta.\n\nGalite sužinoti daugiau arba bet kuriuo metu išjungti beta versiją privatumo nustatymuose."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Pasirinkote nedalyvauti"</string>
@@ -79,8 +80,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Šiuo metu nėra rodytinų pomėgių"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privatumo „sandbox“ (smėlio dėžė)"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"„Android“ su skelbimais susijusio privatumo beta versijos programa teikia naujų funkcijų, kurias programos gali naudoti, kad rodytų skelbimus, kurie jums gali patikti. Šios technologijos nenaudoja įrenginio identifikatorių.\n\n„Android“ gali nustatyti, kokio tipo skelbimai jus gali dominti, ir laikinai išsaugoti šiuos pomėgius įrenginyje. Tai leidžia programoms rodyti aktualius skelbimus, nestebint jūsų veiklos svetainėse ir kitų kūrėjų programose."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Nėra užblokuotų pomėgių"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Programos gali nustatyti jūsų pomėgius ir laikinai juos išsaugoti sistemoje „Android“. Vėliau kita programa gali parodyti su šiais pomėgiais susijusį skelbimą.\n\nJei užblokuosite programą, ji nebenustatys pomėgių. Ji nebebus pridėta į šį programų sąrašą, nebent ją atblokuosite. Pomėgiai, kuriuos programa jau nustatė, bus ištrinti, bet vis tiek gali būti rodomi kai kurie susiję skelbimai."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Jūsų užblokuotos programos"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Iš naujo nustatyti programų nustatytus pomėgius"</string>
@@ -88,7 +88,27 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privatumo „sandbox“ (smėlio dėžė)"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"„Android“ su skelbimais susijusio privatumo beta versijos programa teikia naujų funkcijų, kurias programos gali naudoti, kad rodytų skelbimus, kurie jums gali patikti. Šios technologijos nenaudoja įrenginio identifikatorių.\n\nProgramos gali nustatyti, kokio tipo skelbimai jus gali dominti, ir laikinai išsaugoti šiuos pomėgius įrenginyje. Tai leidžia programoms rodyti aktualius skelbimus, nestebint jūsų veiklos svetainėse ir kitų kūrėjų programose."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Nėra užblokuotų programų"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Nėra užblokuotų pomėgių"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Atšaukti"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Išjungti privatumo „sandbox“ (smėlio dėžę)?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Jei apsigalvotumėte ar norėtumėte sužinoti daugiau apie „Android“ skelbimų privatumo beta versiją, eikite į privatumo nustatymus"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Išjungti"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Blokuoti „<xliff:g id="TOPIC">%1$s</xliff:g>“?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Šis pomėgis bus užblokuotas ir nebus vėl pridėtas prie jūsų sąrašo, nebent patys vėl pridėsite. Vis tiek gali būti rodomi kai kurie susiję skelbimai."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Blokuoti"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"„<xliff:g id="TOPIC">%1$s</xliff:g>“ blokavimas panaikintas"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"„Android“ gali vėl pridėti šį pomėgį prie jūsų sąrašo, bet jis gali būti pateiktas ne iš karto."</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"Gerai"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Iš naujo nustatyti visus pomėgius?"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Nustatyti iš naujo"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Blokuoti „<xliff:g id="APP">%1$s</xliff:g>“?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Ši programa nevertins jūsų privatumo „sandbox“ (smėlio dėžės) pomėgių ir nebus vėl pridėta prie jūsų sąrašo, nebent panaikinsite jos blokavimą.\n\nŠios programos jau įvertinti pomėgiai bus ištrinti, bet vis tiek gali būti rodoma susijusių skelbimų."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"„<xliff:g id="APP">%1$s</xliff:g>“ blokavimas panaikintas"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Ši programa gali vėl įvertinti jūsų pomėgius, bet jūsų sąraše gali būti pateikta ne iš karto. Gali šiek tiek užtrukti, kol bus rodomi susiję skelbimai."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Iš naujo nustatyti programų sugeneruotus pomėgius?"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Menas ir pramogos"</string>
     <string name="topic10002" msgid="1226367977754287428">"Vaidyba ir teatras"</string>
     <string name="topic10003" msgid="6949890838957814881">"Animė ir manga"</string>

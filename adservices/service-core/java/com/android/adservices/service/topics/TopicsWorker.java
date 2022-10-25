@@ -307,6 +307,7 @@ public class TopicsWorker {
             loadCache();
         } finally {
             mReadWriteLock.writeLock().unlock();
+            LogUtil.d("App Update Reconciliation is done!");
         }
     }
 
@@ -349,7 +350,13 @@ public class TopicsWorker {
 
     // Handle topic assignment to SDK for newly installed applications. Cached topics need to be
     // reloaded if any topic assignment happens.
-    private void handleSdkTopicsAssignment(String app, String sdk) {
+    private void handleSdkTopicsAssignment(@NonNull String app, @NonNull String sdk) {
+        // Return if any topic has been assigned to this app-sdk.
+        List<Topic> existingTopics = getExistingTopicsForAppSdk(app, sdk);
+        if (!existingTopics.isEmpty()) {
+            return;
+        }
+
         mReadWriteLock.writeLock().lock();
         try {
             if (mAppUpdateManager.assignTopicsToSdkForAppInstallation(
@@ -363,5 +370,28 @@ public class TopicsWorker {
         } finally {
             mReadWriteLock.writeLock().unlock();
         }
+    }
+
+    // Get all existing topics from cache for a pair of app and sdk.
+    // The epoch range is [currentEpochId - numberOfLookBackEpochs, currentEpochId].
+    @NonNull
+    private List<Topic> getExistingTopicsForAppSdk(@NonNull String app, @NonNull String sdk) {
+        List<Topic> existingTopics;
+
+        mReadWriteLock.readLock().lock();
+        // Get existing returned topics map for last 3 epochs and current epoch.
+        try {
+            long currentEpochId = mEpochManager.getCurrentEpochId();
+            existingTopics =
+                    mCacheManager.getTopicsInEpochRange(
+                            currentEpochId - mFlags.getTopicsNumberOfLookBackEpochs(),
+                            currentEpochId,
+                            app,
+                            sdk);
+        } finally {
+            mReadWriteLock.readLock().unlock();
+        }
+
+        return existingTopics == null ? new ArrayList<>() : existingTopics;
     }
 }

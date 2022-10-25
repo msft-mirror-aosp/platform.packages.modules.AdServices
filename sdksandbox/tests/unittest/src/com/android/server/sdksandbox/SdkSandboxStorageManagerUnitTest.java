@@ -29,7 +29,7 @@ import androidx.annotation.NonNull;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.server.pm.PackageManagerLocal;
-import com.android.server.sdksandbox.SdkSandboxStorageManager.SdkDataDirInfo;
+import com.android.server.sdksandbox.SdkSandboxStorageManager.StorageDirInfo;
 import com.android.server.sdksandbox.SdkSandboxStorageManager.SubDirectories;
 
 import org.junit.After;
@@ -122,31 +122,26 @@ public class SdkSandboxStorageManagerUnitTest {
     }
 
     @Test
-    public void test_SdkDataDirInfo_GetterApis() throws Exception {
-        final SdkDataDirInfo sdkInfo = new SdkDataDirInfo("foo", "bar");
+    public void test_StorageDirInfo_GetterApis() throws Exception {
+        final StorageDirInfo sdkInfo = new StorageDirInfo("foo", "bar");
         assertThat(sdkInfo.getCeDataDir()).isEqualTo("foo");
         assertThat(sdkInfo.getDeDataDir()).isEqualTo("bar");
     }
 
     @Test
-    public void test_GetSdkDataDirInfo_NonExistingStorage() throws Exception {
-        // Call getSdkDataDirInfo on SdkStorageManager
+    public void test_getSdkStorageDirInfo_nonExistingStorage() throws Exception {
+        // Call getSdkStorageDirInfo on SdkStorageManager
         final CallingInfo callingInfo = new CallingInfo(CLIENT_UID, CLIENT_PKG_NAME);
-        final SdkDataDirInfo sdkInfo =
-                mSdkSandboxStorageManager.getSdkDataDirInfo(callingInfo, SDK_NAME);
+        final StorageDirInfo sdkInfo =
+                mSdkSandboxStorageManager.getSdkStorageDirInfo(callingInfo, SDK_NAME);
 
         assertThat(sdkInfo.getCeDataDir()).isNull();
         assertThat(sdkInfo.getDeDataDir()).isNull();
     }
 
     @Test
-    public void test_GetSdkDataDirInfo_StorageExists() throws Exception {
-        createSdkStorageForTest(
-                /*volumeUuid=*/ null,
-                /*userId=*/ 0,
-                CLIENT_PKG_NAME,
-                Arrays.asList(SDK_NAME),
-                Collections.emptyList());
+    public void test_getSdkStorageDirInfo_storageExists() throws Exception {
+        createSdkStorageForTest(Arrays.asList(SDK_NAME), Collections.emptyList());
 
         final ApplicationInfo info = new ApplicationInfo();
         info.storageUuid = UUID.fromString("41217664-9172-527a-b3d5-edabb50a7d69");
@@ -154,10 +149,10 @@ public class SdkSandboxStorageManagerUnitTest {
                 .when(mPmMock)
                 .getApplicationInfo(Mockito.any(String.class), Mockito.anyInt());
 
-        // Call getSdkDataDirInfo on SdkStorageManager
+        // Call getSdkStorageDirInfo on SdkStorageManager
         final CallingInfo callingInfo = new CallingInfo(CLIENT_UID, CLIENT_PKG_NAME);
-        final SdkDataDirInfo sdkInfo =
-                mSdkSandboxStorageManager.getSdkDataDirInfo(callingInfo, SDK_NAME);
+        final StorageDirInfo sdkInfo =
+                mSdkSandboxStorageManager.getSdkStorageDirInfo(callingInfo, SDK_NAME);
 
         assertThat(sdkInfo.getCeDataDir())
                 .isEqualTo(mTestDir + "/data/misc_ce/0/sdksandbox/client/sdk@sdk");
@@ -166,7 +161,38 @@ public class SdkSandboxStorageManagerUnitTest {
     }
 
     @Test
-    public void test_GetMountedVolumes_NewVolumeExists() throws Exception {
+    public void test_getInernalStorageDirInfo_nonExistingStorage() throws Exception {
+        final CallingInfo callingInfo = new CallingInfo(CLIENT_UID, CLIENT_PKG_NAME);
+        final StorageDirInfo dirInfo =
+                mSdkSandboxStorageManager.getInternalStorageDirInfo(callingInfo, SDK_NAME);
+
+        assertThat(dirInfo.getCeDataDir()).isNull();
+        assertThat(dirInfo.getDeDataDir()).isNull();
+    }
+
+    @Test
+    public void test_getInternalStorageDirInfo_storageExists() throws Exception {
+        createSdkStorageForTest(Collections.emptyList(), Arrays.asList(SubDirectories.SANDBOX_DIR));
+
+        final ApplicationInfo info = new ApplicationInfo();
+        info.storageUuid = UUID.fromString("41217664-9172-527a-b3d5-edabb50a7d69");
+        Mockito.doReturn(info)
+                .when(mPmMock)
+                .getApplicationInfo(Mockito.any(String.class), Mockito.anyInt());
+
+        final CallingInfo callingInfo = new CallingInfo(CLIENT_UID, CLIENT_PKG_NAME);
+        final StorageDirInfo internalSubDirInfo =
+                mSdkSandboxStorageManager.getInternalStorageDirInfo(
+                        callingInfo, SubDirectories.SANDBOX_DIR);
+
+        assertThat(internalSubDirInfo.getCeDataDir())
+                .isEqualTo(mTestDir + "/data/misc_ce/0/sdksandbox/client/sandbox#sandbox");
+        assertThat(internalSubDirInfo.getDeDataDir())
+                .isEqualTo(mTestDir + "/data/misc_de/0/sdksandbox/client/sandbox#sandbox");
+    }
+
+    @Test
+    public void test_getMountedVolumes_newVolumeExists() throws Exception {
         createSdkStorageForTest(
                 /*volumeUuid=*/ null,
                 /*userId=*/ 0,
@@ -254,12 +280,7 @@ public class SdkSandboxStorageManagerUnitTest {
 
     @Test
     public void test_SdkSubDirectories_NonExistingParentPath() throws Exception {
-        createSdkStorageForTest(
-                /*volumeUuid=*/ null,
-                /*userId=*/ 0,
-                CLIENT_PKG_NAME,
-                Arrays.asList(SDK_NAME),
-                Collections.emptyList());
+        createSdkStorageForTest(Arrays.asList(SDK_NAME), Collections.emptyList());
 
         final SubDirectories subDirs = new SubDirectories("/does/not/exist");
 
@@ -269,12 +290,7 @@ public class SdkSandboxStorageManagerUnitTest {
 
     @Test
     public void test_SdkSubDirectories_GetSdkSubDir() throws Exception {
-        createSdkStorageForTest(
-                /*volumeUuid=*/ null,
-                /*userId=*/ 0,
-                CLIENT_PKG_NAME,
-                Arrays.asList(SDK_NAME),
-                Collections.emptyList());
+        createSdkStorageForTest(Arrays.asList(SDK_NAME), Collections.emptyList());
 
         final String packageDir =
                 mSdkSandboxStorageManager.getSdkDataPackageDirectory(
@@ -294,11 +310,8 @@ public class SdkSandboxStorageManagerUnitTest {
     @Test
     public void test_SdkSubDirectories_IsValid() throws Exception {
         createSdkStorageForTest(
-                /*volumeUuid=*/ null,
-                /*userId=*/ 0,
-                CLIENT_PKG_NAME,
                 Arrays.asList(SDK_NAME, SDK2_NAME),
-                Arrays.asList("shared"));
+                Arrays.asList(SubDirectories.SHARED_DIR, SubDirectories.SANDBOX_DIR));
 
         final String packageDir =
                 mSdkSandboxStorageManager.getSdkDataPackageDirectory(
@@ -314,12 +327,7 @@ public class SdkSandboxStorageManagerUnitTest {
     @Test
     public void test_SdkSubDirectories_IsValid_MissingNonSdkStorage() throws Exception {
         // Avoid creating "shared" storage
-        createSdkStorageForTest(
-                /*volumeUuid=*/ null,
-                /*userId=*/ 0,
-                CLIENT_PKG_NAME,
-                Arrays.asList(SDK_NAME),
-                Collections.emptyList());
+        createSdkStorageForTest(Arrays.asList(SDK_NAME), Collections.emptyList());
 
         final String packageDir =
                 mSdkSandboxStorageManager.getSdkDataPackageDirectory(
@@ -332,12 +340,7 @@ public class SdkSandboxStorageManagerUnitTest {
 
     @Test
     public void test_SdkSubDirectories_IsValid_HasUnknownSubDir() throws Exception {
-        createSdkStorageForTest(
-                /*volumeUuid=*/ null,
-                /*userId=*/ 0,
-                CLIENT_PKG_NAME,
-                Arrays.asList(SDK_NAME),
-                Arrays.asList("shared"));
+        createSdkStorageForTest(Arrays.asList(SDK_NAME), Arrays.asList(SubDirectories.SHARED_DIR));
 
         // Create a random subdir not following our format
         final String packageDir =
@@ -349,6 +352,68 @@ public class SdkSandboxStorageManagerUnitTest {
         final SubDirectories subDirs = new SubDirectories(packageDir);
 
         assertThat(subDirs.isValid(Set.of(SDK_NAME))).isFalse();
+    }
+
+    @Test
+    public void test_SdkSubDirectories_GenerateSubDirNames_InternalOnly_NonExisting()
+            throws Exception {
+        final SubDirectories subDirs = new SubDirectories("does.not.exist");
+
+        final List<String> internalSubDirs = subDirs.generateSubDirNames(Collections.emptyList());
+        assertThat(internalSubDirs).hasSize(SubDirectories.INTERNAL_SUBDIRS.size());
+        assertThat(internalSubDirs).contains(SubDirectories.SHARED_DIR);
+        for (String subDir : internalSubDirs) {
+            if (subDir.equals(SubDirectories.SHARED_DIR)) continue;
+            final String[] tokens = subDir.split("#");
+            assertThat(tokens).asList().hasSize(2);
+            assertThat(SubDirectories.INTERNAL_SUBDIRS).contains(tokens[0]);
+        }
+    }
+
+    @Test
+    public void test_SdkSubDirectories_GenerateSubDirNames_InternalOnly_Existing()
+            throws Exception {
+        createSdkStorageForTest(
+                Collections.emptyList(),
+                Arrays.asList(SubDirectories.SHARED_DIR, SubDirectories.SANDBOX_DIR));
+
+        final String packageDir =
+                mSdkSandboxStorageManager.getSdkDataPackageDirectory(
+                        /*volumeUuid=*/ null, /*userId=*/ 0, CLIENT_PKG_NAME, /*isCeData=*/ true);
+        final SubDirectories subDirs = new SubDirectories(packageDir);
+
+        final List<String> internalSubDirs = subDirs.generateSubDirNames(Collections.emptyList());
+        final String expectedSandboxDirName =
+                SubDirectories.SANDBOX_DIR + "#" + SubDirectories.SANDBOX_DIR;
+        assertThat(internalSubDirs).containsExactly("shared", expectedSandboxDirName);
+    }
+
+    @Test
+    public void test_SdkSubDirectories_GenerateSubDirNames_WithSdkNames() throws Exception {
+        createSdkStorageForTest(
+                Arrays.asList(SDK_NAME),
+                Arrays.asList(SubDirectories.SHARED_DIR, SubDirectories.SANDBOX_DIR));
+
+        final String packageDir =
+                mSdkSandboxStorageManager.getSdkDataPackageDirectory(
+                        /*volumeUuid=*/ null, /*userId=*/ 0, CLIENT_PKG_NAME, /*isCeData=*/ true);
+        final SubDirectories subDirs = new SubDirectories(packageDir);
+
+        final List<String> allSubDirNames =
+                subDirs.generateSubDirNames(Arrays.asList(SDK_NAME, "foo"));
+        assertThat(allSubDirNames).hasSize(2 + SubDirectories.INTERNAL_SUBDIRS.size());
+
+        // Assert internal directories
+        final String expectedSandboxDirName =
+                SubDirectories.SANDBOX_DIR + "#" + SubDirectories.SANDBOX_DIR;
+        assertThat(allSubDirNames).containsAtLeast("shared", expectedSandboxDirName);
+
+        // Assert per-sdk directories
+        assertThat(allSubDirNames).contains(SDK_NAME + "@" + SDK_NAME);
+        boolean foundFoo =
+                allSubDirNames.stream()
+                        .anyMatch(s -> s.contains("@") && s.split("@")[0].equals("foo"));
+        assertThat(foundFoo).isTrue();
     }
 
     /**
@@ -379,10 +444,18 @@ public class SdkSandboxStorageManagerUnitTest {
 
             for (String dir : nonSdkDirectories) {
                 final Path subDir =
-                        Paths.get(packageDir, dir.equals("shared") ? dir : dir + "#" + dir);
+                        Paths.get(
+                                packageDir,
+                                dir.equals(SubDirectories.SHARED_DIR) ? dir : dir + "#" + dir);
                 Files.createDirectories(subDir);
             }
         }
+    }
+
+    private void createSdkStorageForTest(List<String> sdkNames, List<String> nonSdkDirectories)
+            throws Exception {
+        createSdkStorageForTest(
+                /*volumeUuid=*/ null, /*userId=*/ 0, CLIENT_PKG_NAME, sdkNames, nonSdkDirectories);
     }
 
     private static class FakeSdkSandboxManagerLocal implements SdkSandboxManagerLocal {

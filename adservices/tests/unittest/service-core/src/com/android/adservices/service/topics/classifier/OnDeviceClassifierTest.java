@@ -55,6 +55,13 @@ import java.util.stream.Collectors;
 
 /** Topic Classifier Test {@link OnDeviceClassifier}. */
 public class OnDeviceClassifierTest {
+    private static final String TEST_LABELS_FILE_PATH = "classifier/labels_test_topics.txt";
+    private static final String TEST_PRECOMPUTED_FILE_PATH =
+            "classifier/precomputed_test_app_list.csv";
+    private static final String TEST_CLASSIFIER_ASSETS_METADATA_PATH =
+            "classifier/classifier_test_assets_metadata.json";
+    private static final String TEST_CLASSIFIER_MODEL_PATH = "classifier/test_model.tflite";
+
     // (b/244313803): Refactor tests to remove DeviceConfig and use Flags.
     @Rule
     public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
@@ -75,10 +82,10 @@ public class OnDeviceClassifierTest {
         mModelManager =
                 new ModelManager(
                         sContext,
-                        ModelManager.BUNDLED_LABELS_FILE_PATH,
-                        ModelManager.BUNDLED_TOP_APP_FILE_PATH,
-                        ModelManager.BUNDLED_CLASSIFIER_ASSETS_METADATA_PATH,
-                        ModelManager.BUNDLED_MODEL_FILE_PATH,
+                        TEST_LABELS_FILE_PATH,
+                        TEST_PRECOMPUTED_FILE_PATH,
+                        TEST_CLASSIFIER_ASSETS_METADATA_PATH,
+                        TEST_CLASSIFIER_MODEL_PATH,
                         mMockFileStorage,
                         mMockDownloadedFiles);
 
@@ -89,8 +96,33 @@ public class OnDeviceClassifierTest {
     }
 
     @Test
-    public void testClassify_packageManagerError_returnsDefaultClassifications()
-            throws IOException {
+    public void testClassify_earlyReturnIfNoModelAvailable() {
+        mModelManager =
+                new ModelManager(
+                        sContext,
+                        TEST_LABELS_FILE_PATH,
+                        TEST_PRECOMPUTED_FILE_PATH,
+                        TEST_CLASSIFIER_ASSETS_METADATA_PATH,
+                        "ModelWrongPath",
+                        mMockFileStorage,
+                        null /*No downloaded files.*/);
+        sPreprocessor = new Preprocessor(sContext);
+        mOnDeviceClassifier =
+                new OnDeviceClassifier(
+                        sPreprocessor, mPackageManagerUtil, new Random(), mModelManager);
+
+        String appPackage1 = "com.example.adservices.samples.topics.sampleapp1";
+        ImmutableSet<String> appPackages = ImmutableSet.of(appPackage1);
+
+        ImmutableMap<String, List<Topic>> classifications =
+                mOnDeviceClassifier.classify(appPackages);
+
+        // Result is empty due to no bundled model available.
+        assertThat(classifications).isEmpty();
+    }
+
+    @Test
+    public void testClassify_packageManagerError_returnsDefaultClassifications() {
         String appPackage1 = "com.example.adservices.samples.topics.sampleapp1";
         ImmutableSet<String> appPackages = ImmutableSet.of(appPackage1);
         // If fetch from PackageManagerUtil fails, we will use empty strings as descriptions.
@@ -126,7 +158,7 @@ public class OnDeviceClassifierTest {
         // One value for input package name.
         assertThat(classifications).hasSize(1);
         // Verify size of the labels returned.
-        assertThat(classifications.get(appPackage1)).hasSize(2);
+        assertThat(classifications.get(appPackage1)).hasSize(3);
 
         // Check if the first category matches in the top CLASSIFIER_NUMBER_OF_TOP_LABELS.
         // Scores can differ a little on devices. Using this technique to reduce flakiness.
@@ -172,7 +204,7 @@ public class OnDeviceClassifierTest {
         // Two values for two input package names.
         assertThat(classifications).hasSize(2);
         // Verify size of the labels returned.
-        assertThat(classifications.get(appPackage1)).hasSize(2);
+        assertThat(classifications.get(appPackage1)).hasSize(3);
         assertThat(classifications.get(appPackage2)).hasSize(CLASSIFIER_NUMBER_OF_TOP_LABELS);
 
         // Check if the first category matches in the top CLASSIFIER_NUMBER_OF_TOP_LABELS.
@@ -228,7 +260,7 @@ public class OnDeviceClassifierTest {
         verify(mPackageManagerUtil).getAppInformation(eq(appPackages));
         assertThat(classifications).hasSize(1);
         // Expecting 2 values greater than 0.1 threshold.
-        assertThat(classifications.get(appPackage1)).hasSize(2);
+        assertThat(classifications.get(appPackage1)).hasSize(3);
     }
 
     @Test
@@ -317,7 +349,7 @@ public class OnDeviceClassifierTest {
         assertThat(topTopics).hasSize(numberOfTopTopics + numberOfRandomTopics);
         // Verify the top topics are from the description that was repeated.
         List<Topic> expectedLabelsForCommonDescription =
-                createTopics(Arrays.asList(10220, 10235, 10247, 10225));
+                createTopics(Arrays.asList(10230, 10227, 10238, 10253));
         assertThat(topTopics.subList(0, numberOfTopTopics))
                 .containsAnyIn(expectedLabelsForCommonDescription);
     }

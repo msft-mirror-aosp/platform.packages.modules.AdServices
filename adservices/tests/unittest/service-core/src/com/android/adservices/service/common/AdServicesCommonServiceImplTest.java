@@ -163,7 +163,7 @@ public class AdServicesCommonServiceImplTest {
                                 ConsentNotificationJobService.schedule(
                                         any(Context.class), any(Boolean.class)));
         when(mFlags.getAdServicesEnabled()).thenReturn(true);
-        ExtendedMockito.when(mConsentManager.getConsent(any(PackageManager.class)))
+        ExtendedMockito.when(mConsentManager.getConsent())
                 .thenReturn(AdServicesApiConsent.getConsent(true));
         ExtendedMockito.doReturn(mConsentManager)
                 .when(() -> ConsentManager.getInstance(any(Context.class)));

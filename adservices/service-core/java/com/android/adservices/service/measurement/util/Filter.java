@@ -45,17 +45,20 @@ public final class Filter {
             // Finds the intersection of two value lists.
             List<String> sourceValues = sourceFilter.getAttributionFilterMap().get(key);
             List<String> triggerValues = triggerFilter.getAttributionFilterMap().get(key);
-            Set<String> common = new HashSet<>(sourceValues);
-            common.retainAll(triggerValues);
-            // For filters, return false when one key doesn't have intersection.
-            if (isFilter && common.size() == 0) {
-                return false;
-            }
-            // For not_filters, return false when one key has intersection.
-            if (!isFilter && common.size() != 0) {
+            if (!matchFilterValues(sourceValues, triggerValues, isFilter)) {
                 return false;
             }
         }
         return true;
+    }
+
+    private static boolean matchFilterValues(List<String> sourceValues, List<String> triggerValues,
+            boolean isFilter) {
+        if (triggerValues.isEmpty()) {
+            return isFilter ? sourceValues.isEmpty() : !sourceValues.isEmpty();
+        }
+        Set<String> intersection = new HashSet<>(sourceValues);
+        intersection.retainAll(triggerValues);
+        return isFilter ? !intersection.isEmpty() : intersection.isEmpty();
     }
 }

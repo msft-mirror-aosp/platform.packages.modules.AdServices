@@ -47,7 +47,8 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Slik deltar du"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Hvis du slår på betaversjonen, kan apper teste disse nye, mer private måtene å vise deg annonser på. Du kan når som helst slå av betaversjonen i personverninnstillingene."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Nei takk"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"Ja, jeg vil bli med"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Slå på"</string>
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Mer"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Takk for deltakelsen"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Du er en del av Android-betaversjonen for annonsepersonvern. Privacy Sandbox er slått på for enheten din.\n\nDu kan finne ut mer eller slå av betaversjonen når som helst i personverninnstillingene."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Du har valgt å ikke delta"</string>
@@ -79,8 +80,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Ingen interesser å vise akkurat nå"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android-betaversjonen for annonsepersonvern har nye funksjoner som apper kan bruke for å vise deg annonser du kan være interessert i. Disse teknologiene bruker ikke enhetsidentifikatorer.\n\nAndroid kan anslå hvilke typer annonser du kan være interessert i, og lagre disse interessene midlertidig på enheten din. Dette gjør at apper kan vise deg relevante annonser uten å spore aktiviteten din på nettsteder og i apper fra andre utviklere."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Du har ingen blokkerte interesser"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Apper kan anslå interessene dine og midlertidig lagre disse med Android. Senere kan andre apper viser deg annonser basert på disse interessene.\n\nHvis du blokkerer en app, anslår den ikke flere interesser. Den legges ikke til i denne applisten igjen, med mindre du opphever blokkeringen av den. Interesser som allerede er anslått av appen, blir slettet, men du kan fremdeles se noen relaterte annonser."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Apper du har blokkert"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Tilbakestill interesser anslått av apper"</string>
@@ -88,7 +88,27 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android-betaversjonen for annonsepersonvern har nye funksjoner som apper kan bruke for å vise deg annonser du kan være interessert i. Disse teknologiene bruker ikke enhetsidentifikatorer.\n\nApper kan anslå hvilke typer annonser du kan være interessert i, og lagre disse interessene midlertidig på enheten din. Dette gjør at apper kan vise deg relevante annonser uten å spore aktiviteten din på nettsteder og i apper fra andre utviklere."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Du har ingen blokkerte apper"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Du har ingen blokkerte interesser"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Avbryt"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Vil du slå av Privacy Sandbox?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Hvis du ombestemmer deg eller vil finne ut mer om betaversjonen av annonsepersonvern for Android, kan du gå til personverninnstillingene."</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Slå av"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Vil du blokkere <xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Denne interessen blir blokkert og blir ikke lagt til i listen igjen, med mindre du legger den til igjen. Du kan fortsatt se noen relaterte annonser."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Blokkér"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"Blokkeringen av <xliff:g id="TOPIC">%1$s</xliff:g> er opphevet"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android kan legge til denne interessen i listen igjen, men den vises muligens ikke umiddelbart"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Vil du tilbakestille alle interessene dine?"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Tilbakestill"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Vil du blokkere <xliff:g id="APP">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Denne appen anslår ikke interesser for Privacy Sandbox og blir ikke lagt til i listen igjen, med mindre du opphever blokkeringen av den.\n\nInteresser som allerede er anslått av denne appen, blir slettet, men det kan hende du fortsatt ser noen relaterte annonser."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Blokkeringen av <xliff:g id="APP">%1$s</xliff:g> er opphevet"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Denne appen kan anslå interesser for deg igjen, men den vises muligens ikke i listen umiddelbart. Det kan ta en stund før du ser relaterte annonser."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Vil du tilbakestille interesser som er anslått av apper?"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Kunst og underholdning"</string>
     <string name="topic10002" msgid="1226367977754287428">"Skuespill og teater"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime og manga"</string>

@@ -21,6 +21,8 @@ import android.net.Uri;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.service.measurement.util.UnsignedLong;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -44,8 +46,10 @@ public class AggregateReport {
     private AggregateAttributionData mAggregateAttributionData;
     private @Status int mStatus;
     private String mApiVersion;
-    @Nullable private Long mSourceDebugKey;
-    @Nullable private Long mTriggerDebugKey;
+    @Nullable private UnsignedLong mSourceDebugKey;
+    @Nullable private UnsignedLong mTriggerDebugKey;
+    private String mSourceId;
+    private String mTriggerId;
 
     @IntDef(value = {
             Status.PENDING,
@@ -88,7 +92,9 @@ public class AggregateReport {
                 && mStatus == aggregateReport.mStatus
                 && Objects.equals(mApiVersion, aggregateReport.mApiVersion)
                 && Objects.equals(mSourceDebugKey, aggregateReport.mSourceDebugKey)
-                && Objects.equals(mTriggerDebugKey, aggregateReport.mTriggerDebugKey);
+                && Objects.equals(mTriggerDebugKey, aggregateReport.mTriggerDebugKey)
+                && Objects.equals(mSourceId, aggregateReport.mSourceId)
+                && Objects.equals(mTriggerId, aggregateReport.mTriggerId);
     }
 
     @Override
@@ -104,7 +110,9 @@ public class AggregateReport {
                 mAggregateAttributionData,
                 mStatus,
                 mSourceDebugKey,
-                mTriggerDebugKey);
+                mTriggerDebugKey,
+                mSourceId,
+                mTriggerId);
     }
 
     /**
@@ -158,13 +166,13 @@ public class AggregateReport {
 
     /** Source Debug Key */
     @Nullable
-    public Long getSourceDebugKey() {
+    public UnsignedLong getSourceDebugKey() {
         return mSourceDebugKey;
     }
 
     /** Trigger Debug Key */
     @Nullable
-    public Long getTriggerDebugKey() {
+    public UnsignedLong getTriggerDebugKey() {
         return mTriggerDebugKey;
     }
 
@@ -214,6 +222,16 @@ public class AggregateReport {
         debugPayload.put("operation", "histogram");
         debugPayload.put("data", jsonArray);
         return debugPayload.toString();
+    }
+
+    /** Source ID */
+    public String getSourceId() {
+        return mSourceId;
+    }
+
+    /** Trigger ID */
+    public String getTriggerId() {
+        return mTriggerId;
     }
 
     /**
@@ -308,14 +326,26 @@ public class AggregateReport {
         }
 
         /** See {@link AggregateReport#getSourceDebugKey()} ()} */
-        public Builder setSourceDebugKey(Long sourceDebugKey) {
+        public Builder setSourceDebugKey(UnsignedLong sourceDebugKey) {
             mAttributionReport.mSourceDebugKey = sourceDebugKey;
             return this;
         }
 
         /** See {@link AggregateReport#getTriggerDebugKey()} ()} */
-        public Builder setTriggerDebugKey(Long triggerDebugKey) {
+        public Builder setTriggerDebugKey(UnsignedLong triggerDebugKey) {
             mAttributionReport.mTriggerDebugKey = triggerDebugKey;
+            return this;
+        }
+
+        /** See {@link AggregateReport#getSourceId()} */
+        public AggregateReport.Builder setSourceId(String sourceId) {
+            mAttributionReport.mSourceId = sourceId;
+            return this;
+        }
+
+        /** See {@link AggregateReport#getTriggerId()} */
+        public AggregateReport.Builder setTriggerId(String triggerId) {
+            mAttributionReport.mTriggerId = triggerId;
             return this;
         }
 

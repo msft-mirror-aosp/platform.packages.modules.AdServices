@@ -15,6 +15,8 @@
  */
 package com.android.adservices.ui.notifications;
 
+import static com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity.FROM_NOTIFICATION_KEY;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -26,7 +28,7 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
 import com.android.adservices.api.R;
-import com.android.adservices.ui.settings.AdServicesSettingsActivity;
+import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 
 /**
  * Fragment for the confirmation view after accepting or rejecting to be part of Privacy Sandbox
@@ -58,10 +60,11 @@ public class ConsentNotificationConfirmationFragment extends Fragment {
         leftControlButton.setOnClickListener(
                 view -> {
                     // go to settings activity
-                    Intent intent = new Intent(requireActivity(), AdServicesSettingsActivity.class);
-                    intent.addFlags(
-                            Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    Intent intent =
+                            new Intent(requireActivity(), AdServicesSettingsMainActivity.class);
+                    intent.putExtra(FROM_NOTIFICATION_KEY, true);
                     startActivity(intent);
+                    requireActivity().finish();
                 });
 
         Button rightControlButton =

@@ -68,8 +68,8 @@
     "event_reports": [
       {
         "id": "E1",
-        "sourceId": 1,
-        "attributionDestination": "android-app://com.site.toBeDeletedDueToSourceId1",
+        "sourceEventId": 1,
+        "attributionDestination": "android-app://com.site.toBeDeletedDueTosourceEventId1",
         "enrollmentId": "enrollment-id",
         "triggerData": 2,
         "triggerTime": 8640000002,
@@ -80,7 +80,7 @@
       },
       {
         "id": "E2",
-        "sourceId": 2,
+        "sourceEventId": 2,
         "attributionDestination": "android-app://com.site.toBeDeleted",
         "enrollmentId": "enrollment-id",
         "triggerData": 2,
@@ -92,7 +92,7 @@
       },
       {
         "id": "E3",
-        "sourceId": 3,
+        "sourceEventId": 3,
         "attributionDestination": "android-app://com.site.doNotDelete",
         "enrollmentId": "enrollment-id",
         "triggerData": 2,
@@ -174,7 +174,7 @@
     "event_reports": [
       {
         "id": "E3",
-        "sourceId": 3,
+        "sourceEventId": 3,
         "attributionDestination": "android-app://com.site.doNotDelete",
         "enrollmentId": "enrollment-id",
         "triggerData": 2,
