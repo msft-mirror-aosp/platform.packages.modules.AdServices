@@ -16,6 +16,7 @@
 
 package com.android.adservices.data.customaudience;
 
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -29,6 +30,8 @@ import static org.junit.Assert.assertTrue;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 
 import androidx.room.Room;
@@ -38,6 +41,7 @@ import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableData;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -45,6 +49,7 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 import org.mockito.MockitoSession;
 
 import java.time.Clock;
@@ -58,6 +63,8 @@ import java.util.List;
 
 public class CustomAudienceDaoTest {
     private static final Flags TEST_FLAGS = FlagsFactory.getFlagsForTest();
+
+    @Mock PackageManager mPackageManagerMock;
 
     private static final Uri DAILY_UPDATE_URI_1 = Uri.parse("https://www.example.com/d1");
     private static final AdSelectionSignals USER_BIDDING_SIGNALS_1 =
@@ -491,7 +498,10 @@ public class CustomAudienceDaoTest {
         // Test applications don't have the required permissions to read config P/H flags, and
         // injecting mocked flags everywhere is annoying and non-trivial for static methods
         mStaticMockSession =
-                ExtendedMockito.mockitoSession().spyStatic(FlagsFactory.class).startMocking();
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
+                        .initMocks(this)
+                        .startMocking();
 
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
@@ -1068,6 +1078,58 @@ public class CustomAudienceDaoTest {
     }
 
     @Test
+    public void testGetAllCustomAudienceOwners() {
+        doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+
+        // Prepopulate with three CAs belonging to two owners
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(CUSTOM_AUDIENCE_2, DAILY_UPDATE_URI_2);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_EXPIRED, DAILY_UPDATE_URI_2);
+        assertEquals(
+                CUSTOM_AUDIENCE_1,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_1,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_2,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_2.getOwner(),
+                        CUSTOM_AUDIENCE_2.getBuyer(),
+                        CUSTOM_AUDIENCE_2.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_2,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_2.getOwner(),
+                        CUSTOM_AUDIENCE_2.getBuyer(),
+                        CUSTOM_AUDIENCE_2.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_EXPIRED,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_EXPIRED.getOwner(),
+                        CUSTOM_AUDIENCE_EXPIRED.getBuyer(),
+                        CUSTOM_AUDIENCE_EXPIRED.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_EXPIRED,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_EXPIRED.getOwner(),
+                        CUSTOM_AUDIENCE_EXPIRED.getBuyer(),
+                        CUSTOM_AUDIENCE_EXPIRED.getName()));
+
+        List<String> owners = mCustomAudienceDao.getAllCustomAudienceOwners();
+        assertThat(owners).hasSize(2);
+        assertThat(owners)
+                .containsExactly(CUSTOM_AUDIENCE_1.getOwner(), CUSTOM_AUDIENCE_2.getOwner());
+    }
+
+    @Test
     public void testDeleteAllExpiredCustomAudienceData() {
         doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
 
@@ -1149,6 +1211,249 @@ public class CustomAudienceDaoTest {
                         CUSTOM_AUDIENCE_EXPIRED.getOwner(),
                         CUSTOM_AUDIENCE_EXPIRED.getBuyer(),
                         CUSTOM_AUDIENCE_EXPIRED.getName()));
+    }
+
+    @Test
+    public void testDeleteUninstalledOwnerCustomAudienceData() {
+        // All owners are allowed
+        class FlagsThatAllowAllApps implements Flags {
+            @Override
+            public String getPpapiAppAllowList() {
+                return AllowLists.ALLOW_ALL;
+            }
+        }
+        Flags flagsThatAllowAllApps = new FlagsThatAllowAllApps();
+
+        doReturn(flagsThatAllowAllApps).when(FlagsFactory::getFlags);
+
+        // Only CA1's owner is installed
+        ApplicationInfo installed_owner_1 = new ApplicationInfo();
+        installed_owner_1.packageName = CUSTOM_AUDIENCE_1.getOwner();
+        doReturn(Arrays.asList(installed_owner_1))
+                .when(mPackageManagerMock)
+                .getInstalledApplications(any());
+
+        // Prepopulate with data
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(CUSTOM_AUDIENCE_2, DAILY_UPDATE_URI_2);
+        assertEquals(
+                CUSTOM_AUDIENCE_1,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_1,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_2,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_2.getOwner(),
+                        CUSTOM_AUDIENCE_2.getBuyer(),
+                        CUSTOM_AUDIENCE_2.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_2,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_2.getOwner(),
+                        CUSTOM_AUDIENCE_2.getBuyer(),
+                        CUSTOM_AUDIENCE_2.getName()));
+
+        // Clear the uninstalled app data
+        CustomAudienceDao.CustomAudienceStats expectedDisallowedOwnerStats =
+                new CustomAudienceDao.CustomAudienceStats(null, 1, -1, 1);
+        assertEquals(
+                expectedDisallowedOwnerStats,
+                mCustomAudienceDao.deleteAllDisallowedOwnerCustomAudienceData(
+                        mPackageManagerMock, flagsThatAllowAllApps));
+
+        // Verify only the uninstalled app data is deleted
+        assertEquals(
+                CUSTOM_AUDIENCE_1,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_1,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertNull(
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_2.getOwner(),
+                        CUSTOM_AUDIENCE_2.getBuyer(),
+                        CUSTOM_AUDIENCE_2.getName()));
+        assertNull(
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_2.getOwner(),
+                        CUSTOM_AUDIENCE_2.getBuyer(),
+                        CUSTOM_AUDIENCE_2.getName()));
+    }
+
+    @Test
+    public void testDeleteNotAllowedOwnerCustomAudienceData() {
+        // Only CA1's owner is allowed
+        class FlagsThatAllowOneApp implements Flags {
+            @Override
+            public String getPpapiAppAllowList() {
+                return CUSTOM_AUDIENCE_1.getOwner();
+            }
+        }
+        Flags flagsThatAllowOneApp = new FlagsThatAllowOneApp();
+
+        doReturn(flagsThatAllowOneApp).when(FlagsFactory::getFlags);
+
+        // Both owners are installed
+        ApplicationInfo installed_owner_1 = new ApplicationInfo();
+        installed_owner_1.packageName = CUSTOM_AUDIENCE_1.getOwner();
+        ApplicationInfo installed_owner_2 = new ApplicationInfo();
+        installed_owner_2.packageName = CUSTOM_AUDIENCE_2.getOwner();
+        doReturn(Arrays.asList(installed_owner_1, installed_owner_2))
+                .when(mPackageManagerMock)
+                .getInstalledApplications(any());
+
+        // Prepopulate with data
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(CUSTOM_AUDIENCE_2, DAILY_UPDATE_URI_2);
+        assertEquals(
+                CUSTOM_AUDIENCE_1,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_1,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_2,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_2.getOwner(),
+                        CUSTOM_AUDIENCE_2.getBuyer(),
+                        CUSTOM_AUDIENCE_2.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_2,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_2.getOwner(),
+                        CUSTOM_AUDIENCE_2.getBuyer(),
+                        CUSTOM_AUDIENCE_2.getName()));
+
+        // Clear the data for the app not in the allowlist
+        CustomAudienceDao.CustomAudienceStats expectedDisallowedOwnerStats =
+                new CustomAudienceDao.CustomAudienceStats(null, 1, -1, 1);
+        assertEquals(
+                expectedDisallowedOwnerStats,
+                mCustomAudienceDao.deleteAllDisallowedOwnerCustomAudienceData(
+                        mPackageManagerMock, flagsThatAllowOneApp));
+
+        // Verify only the uninstalled app data is deleted
+        assertEquals(
+                CUSTOM_AUDIENCE_1,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_1,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertNull(
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_2.getOwner(),
+                        CUSTOM_AUDIENCE_2.getBuyer(),
+                        CUSTOM_AUDIENCE_2.getName()));
+        assertNull(
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_2.getOwner(),
+                        CUSTOM_AUDIENCE_2.getBuyer(),
+                        CUSTOM_AUDIENCE_2.getName()));
+    }
+
+    @Test
+    public void testDeleteUninstalledAndNotAllowedOwnerCustomAudienceData() {
+        // Only CA1's owner is allowed
+        class FlagsThatAllowOneApp implements Flags {
+            @Override
+            public String getPpapiAppAllowList() {
+                return CUSTOM_AUDIENCE_1.getOwner();
+            }
+        }
+        Flags flagsThatAllowOneApp = new FlagsThatAllowOneApp();
+
+        doReturn(flagsThatAllowOneApp).when(FlagsFactory::getFlags);
+
+        // Only CA2's owner is installed
+        ApplicationInfo installed_owner_2 = new ApplicationInfo();
+        installed_owner_2.packageName = CUSTOM_AUDIENCE_2.getOwner();
+        doReturn(Arrays.asList(installed_owner_2))
+                .when(mPackageManagerMock)
+                .getInstalledApplications(any());
+
+        // Prepopulate with data
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(CUSTOM_AUDIENCE_2, DAILY_UPDATE_URI_2);
+        assertEquals(
+                CUSTOM_AUDIENCE_1,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_1,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_2,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_2.getOwner(),
+                        CUSTOM_AUDIENCE_2.getBuyer(),
+                        CUSTOM_AUDIENCE_2.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_2,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_2.getOwner(),
+                        CUSTOM_AUDIENCE_2.getBuyer(),
+                        CUSTOM_AUDIENCE_2.getName()));
+
+        // All data should be cleared because neither owner is both allowlisted and installed
+        CustomAudienceDao.CustomAudienceStats expectedDisallowedOwnerStats =
+                new CustomAudienceDao.CustomAudienceStats(null, 2, -1, 2);
+        assertEquals(
+                expectedDisallowedOwnerStats,
+                mCustomAudienceDao.deleteAllDisallowedOwnerCustomAudienceData(
+                        mPackageManagerMock, flagsThatAllowOneApp));
+
+        // Verify both owners' app data are deleted
+        assertNull(
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertNull(
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertNull(
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_2.getOwner(),
+                        CUSTOM_AUDIENCE_2.getBuyer(),
+                        CUSTOM_AUDIENCE_2.getName()));
+        assertNull(
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_2.getOwner(),
+                        CUSTOM_AUDIENCE_2.getBuyer(),
+                        CUSTOM_AUDIENCE_2.getName()));
     }
 
     @Test

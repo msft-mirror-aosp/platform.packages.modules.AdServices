@@ -44,6 +44,7 @@ import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.SharedPreferencesUpdate;
+import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -1521,8 +1522,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
      * service.
      *
      * <p>When a sandbox is initialized, a callback object of {@link SdkToServiceLink} is passed to
-     * be used as a part of {@link android.app.sdksandbox.SdkSandboxController}. The Controller can
-     * then can call APIs on the link object to get data from the manager service.
+     * be used as a part of {@link SdkSandboxController}. The Controller can then can call APIs on
+     * the link object to get data from the manager service.
      */
     private class SdkToServiceLink extends ISdkToServiceCallback.Stub {
 

@@ -16,8 +16,8 @@
 
 package com.android.apiimplementation;
 
-import android.app.sdksandbox.SdkSandboxController;
 import android.app.sdksandbox.interfaces.ISdkApi;
+import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.RemoteException;

@@ -1045,9 +1045,7 @@ public final class MeasurementImplTest {
                         .initMocks(this)
                         .startMocking();
         try {
-            ExtendedMockito.doReturn(AdServicesApiConsent.GIVEN)
-                    .when(mConsentManager)
-                    .getConsent(any());
+            ExtendedMockito.doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
             ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any()));
             final int result = mMeasurementImpl.getMeasurementApiStatus();
             assertEquals(MeasurementManager.MEASUREMENT_API_STATE_ENABLED, result);
@@ -1066,7 +1064,7 @@ public final class MeasurementImplTest {
         try {
             ExtendedMockito.doReturn(AdServicesApiConsent.REVOKED)
                     .when(mConsentManager)
-                    .getConsent(any());
+                    .getConsent();
             ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any()));
             final int result = mMeasurementImpl.getMeasurementApiStatus();
             assertEquals(MeasurementManager.MEASUREMENT_API_STATE_DISABLED, result);

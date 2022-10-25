@@ -27,7 +27,6 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
-import android.content.pm.PackageManager;
 
 import androidx.core.app.NotificationManagerCompat;
 import androidx.test.core.app.ApplicationProvider;
@@ -143,7 +142,7 @@ public class ConsentNotificationTriggerTest {
             Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
 
             verify(mConsentManager).enable(any(Context.class));
-            verify(mConsentManager).recordNotificationDisplayed(any(PackageManager.class));
+            verify(mConsentManager).recordNotificationDisplayed();
             verifyNoMoreInteractions(mConsentManager);
             assertThat(mNotificationManager.getActiveNotifications()).hasLength(1);
             final Notification notification =
@@ -197,7 +196,7 @@ public class ConsentNotificationTriggerTest {
 
             ConsentNotificationTrigger.showConsentNotification(mContext, true);
 
-            verify(mConsentManager).recordNotificationDisplayed(any(PackageManager.class));
+            verify(mConsentManager).recordNotificationDisplayed();
             verifyNoMoreInteractions(mConsentManager);
         } finally {
             mStaticMockSession.finishMocking();

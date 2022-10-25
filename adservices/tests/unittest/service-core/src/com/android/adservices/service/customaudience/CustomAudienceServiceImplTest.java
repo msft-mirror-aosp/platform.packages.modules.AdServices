@@ -206,7 +206,7 @@ public class CustomAudienceServiceImplTest {
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
                         AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
-        verify(mConsentManagerMock).isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
+        verify(mConsentManagerMock).isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
         verify(mFledgeAllowListsFilter)
                 .assertAppCanUsePpapi(
                         CustomAudienceFixture.VALID_OWNER,
@@ -219,7 +219,7 @@ public class CustomAudienceServiceImplTest {
     public void testJoinCustomAudienceWithRevokedUserConsentSuccess() throws RemoteException {
         doReturn(true)
                 .when(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
 
         mService.joinCustomAudience(
                 VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER, mICustomAudienceCallback);
@@ -238,7 +238,7 @@ public class CustomAudienceServiceImplTest {
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
                         AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
-        verify(mConsentManagerMock).isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
+        verify(mConsentManagerMock).isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
         verify(mFledgeAllowListsFilter)
                 .assertAppCanUsePpapi(
                         CustomAudienceFixture.VALID_OWNER,
@@ -391,7 +391,7 @@ public class CustomAudienceServiceImplTest {
                         null);
         verify(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                        CONTEXT.getPackageManager(), CustomAudienceFixture.VALID_OWNER);
+                        CustomAudienceFixture.VALID_OWNER);
         verify(mFledgeAllowListsFilter)
                 .assertAppCanUsePpapi(
                         CustomAudienceFixture.VALID_OWNER,
@@ -437,7 +437,7 @@ public class CustomAudienceServiceImplTest {
                         AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
         verify(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                        CONTEXT.getPackageManager(), CustomAudienceFixture.VALID_OWNER);
+                        CustomAudienceFixture.VALID_OWNER);
         verifyLoggerMock(
                 AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE, STATUS_INTERNAL_ERROR);
     }
@@ -479,16 +479,14 @@ public class CustomAudienceServiceImplTest {
                 .assertAppCanUsePpapi(
                         CustomAudienceFixture.VALID_OWNER,
                         AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
-        verify(mConsentManagerMock)
-                .isFledgeConsentRevokedForApp(
-                        CONTEXT.getPackageManager(), CustomAudienceFixture.VALID_OWNER);
+        verify(mConsentManagerMock).isFledgeConsentRevokedForApp(CustomAudienceFixture.VALID_OWNER);
 
         verifyLoggerMock(AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE, STATUS_SUCCESS);
     }
 
     @Test
     public void testLeaveCustomAudienceWithRevokedUserConsent() throws RemoteException {
-        doReturn(true).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any(), any());
+        doReturn(true).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
 
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
@@ -515,9 +513,7 @@ public class CustomAudienceServiceImplTest {
                 .assertAppCanUsePpapi(
                         CustomAudienceFixture.VALID_OWNER,
                         AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
-        verify(mConsentManagerMock)
-                .isFledgeConsentRevokedForApp(
-                        CONTEXT.getPackageManager(), CustomAudienceFixture.VALID_OWNER);
+        verify(mConsentManagerMock).isFledgeConsentRevokedForApp(CustomAudienceFixture.VALID_OWNER);
         verify(mAppImportanceFilter)
                 .assertCallerIsInForeground(
                         CustomAudienceFixture.VALID_OWNER,
@@ -709,9 +705,7 @@ public class CustomAudienceServiceImplTest {
                 .assertAppCanUsePpapi(
                         CustomAudienceFixture.VALID_OWNER,
                         AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
-        verify(mConsentManagerMock)
-                .isFledgeConsentRevokedForApp(
-                        CONTEXT.getPackageManager(), CustomAudienceFixture.VALID_OWNER);
+        verify(mConsentManagerMock).isFledgeConsentRevokedForApp(CustomAudienceFixture.VALID_OWNER);
 
         verifyLoggerMock(
                 AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE, STATUS_INTERNAL_ERROR);
@@ -756,9 +750,7 @@ public class CustomAudienceServiceImplTest {
                 .assertAppCanUsePpapi(
                         CustomAudienceFixture.VALID_OWNER,
                         AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
-        verify(mConsentManagerMock)
-                .isFledgeConsentRevokedForApp(
-                        CONTEXT.getPackageManager(), CustomAudienceFixture.VALID_OWNER);
+        verify(mConsentManagerMock).isFledgeConsentRevokedForApp(CustomAudienceFixture.VALID_OWNER);
         verifyLoggerMock(
                 AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE, STATUS_INTERNAL_ERROR);
     }
@@ -833,7 +825,7 @@ public class CustomAudienceServiceImplTest {
                         AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
         verify(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                        CONTEXT.getPackageManager(), CustomAudienceFixture.VALID_OWNER);
+                        CustomAudienceFixture.VALID_OWNER);
         verify(mCustomAudienceImpl)
                 .joinCustomAudience(VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER);
         verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)));
@@ -917,9 +909,7 @@ public class CustomAudienceServiceImplTest {
                 .assertAppCanUsePpapi(
                         CustomAudienceFixture.VALID_OWNER,
                         AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
-        verify(mConsentManagerMock)
-                .isFledgeConsentRevokedForApp(
-                        CONTEXT.getPackageManager(), CustomAudienceFixture.VALID_OWNER);
+        verify(mConsentManagerMock).isFledgeConsentRevokedForApp(CustomAudienceFixture.VALID_OWNER);
         verify(mCustomAudienceImpl)
                 .leaveCustomAudience(
                         CustomAudienceFixture.VALID_OWNER,
@@ -1012,9 +1002,7 @@ public class CustomAudienceServiceImplTest {
                         AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO);
         verify(mDevContextFilter).createDevContext();
         verify(mCustomAudienceImpl).getCustomAudienceDao();
-        verify(mConsentManagerMock)
-                .isFledgeConsentRevokedForApp(
-                        CONTEXT.getPackageManager(), CustomAudienceFixture.VALID_OWNER);
+        verify(mConsentManagerMock).isFledgeConsentRevokedForApp(CustomAudienceFixture.VALID_OWNER);
         verify(mCustomAudienceDao)
                 .persistCustomAudienceOverride(
                         DBCustomAudienceOverride.builder()
@@ -1097,9 +1085,7 @@ public class CustomAudienceServiceImplTest {
         verify(mFledgeAuthorizationFilter).assertAppDeclaredPermission(CONTEXT, apiName);
         verify(mDevContextFilter).createDevContext();
         verify(mCustomAudienceImpl).getCustomAudienceDao();
-        verify(mConsentManagerMock)
-                .isFledgeConsentRevokedForApp(
-                        CONTEXT.getPackageManager(), CustomAudienceFixture.VALID_OWNER);
+        verify(mConsentManagerMock).isFledgeConsentRevokedForApp(CustomAudienceFixture.VALID_OWNER);
         verify(mCustomAudienceDao)
                 .removeCustomAudienceOverrideByPrimaryKeyAndPackageName(
                         CustomAudienceFixture.VALID_OWNER, CommonFixture.VALID_BUYER_1,
@@ -1166,9 +1152,7 @@ public class CustomAudienceServiceImplTest {
                         AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES);
         verify(mDevContextFilter).createDevContext();
         verify(mCustomAudienceImpl).getCustomAudienceDao();
-        verify(mConsentManagerMock)
-                .isFledgeConsentRevokedForApp(
-                        CONTEXT.getPackageManager(), CustomAudienceFixture.VALID_OWNER);
+        verify(mConsentManagerMock).isFledgeConsentRevokedForApp(CustomAudienceFixture.VALID_OWNER);
         verify(mCustomAudienceDao)
                 .removeCustomAudienceOverridesByPackageName(CustomAudienceFixture.VALID_OWNER);
         verify(mCustomAudienceOverrideCallback).onSuccess();
@@ -1340,7 +1324,7 @@ public class CustomAudienceServiceImplTest {
                 .assertAppCanUsePpapi(
                         CustomAudienceFixture.VALID_OWNER,
                         AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
-        verify(mConsentManagerMock).isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
+        verify(mConsentManagerMock).isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
 
         verifyLoggerMock(AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE, STATUS_SUCCESS);
     }
@@ -1433,9 +1417,7 @@ public class CustomAudienceServiceImplTest {
                 .assertAppCanUsePpapi(
                         CustomAudienceFixture.VALID_OWNER,
                         AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
-        verify(mConsentManagerMock)
-                .isFledgeConsentRevokedForApp(
-                        CONTEXT.getPackageManager(), CustomAudienceFixture.VALID_OWNER);
+        verify(mConsentManagerMock).isFledgeConsentRevokedForApp(CustomAudienceFixture.VALID_OWNER);
 
         verifyLoggerMock(AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE, STATUS_SUCCESS);
     }
