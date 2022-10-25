@@ -22,6 +22,7 @@ import android.net.Uri;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.android.adservices.service.measurement.AsyncRegistration;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
@@ -51,6 +52,14 @@ public interface IMeasurementDao {
     List<String> getPendingTriggerIds() throws DatastoreException;
 
     /**
+     * Queries and returns the {@link Source}.
+     *
+     * @param sourceId ID of the requested Source
+     * @return the requested Source
+     */
+    Source getSource(@NonNull String sourceId) throws DatastoreException;
+
+    /**
      * Queries and returns the {@link Trigger}.
      *
      * @param triggerId Id of the request Trigger
@@ -59,9 +68,36 @@ public interface IMeasurementDao {
     Trigger getTrigger(String triggerId) throws DatastoreException;
 
     /**
-     * Gets the number of sources a registrant has registered.
+     * Fetches the count of aggregate reports for the provided destination.
+     *
+     * @param attributionDestination Uri for the destination
+     * @param destinationType DestinationType App/Web
+     * @return number of aggregate reports in the database attributed to the provided destination
      */
-    long getNumSourcesPerRegistrant(Uri registrant) throws DatastoreException;
+    int getNumAggregateReportsPerDestination(
+            @NonNull Uri attributionDestination, @EventSurfaceType int destinationType)
+            throws DatastoreException;
+
+    /**
+     * Fetches the count of event reports for the provided destination.
+     *
+     * @param attributionDestination Uri for the destination
+     * @param destinationType DestinationType App/Web
+     * @return number of event reports in the database attributed to the provided destination
+     */
+    int getNumEventReportsPerDestination(
+            @NonNull Uri attributionDestination, @EventSurfaceType int destinationType)
+            throws DatastoreException;
+
+    /**
+     * Gets the number of sources associated to a publisher.
+     *
+     * @param publisherUri Uri for the publisher
+     * @param publisherType PublisherType App/Web
+     * @return Number of sources registered for the given publisher
+     */
+    long getNumSourcesPerPublisher(Uri publisherUri, @EventSurfaceType int publisherType)
+            throws DatastoreException;
 
     /**
      * Gets the number of triggers a registrant has registered.
@@ -297,4 +333,63 @@ public interface IMeasurementDao {
      *     delete every table.
      */
     void deleteAllMeasurementData(List<String> tablesToExclude) throws DatastoreException;
+
+    /**
+     * Insert a record into the Async Registration Table.
+     *
+     * @param asyncRegistration a {@link AsyncRegistration} to insert into the Async Registration
+     *     table
+     */
+    void insertAsyncRegistration(@NonNull AsyncRegistration asyncRegistration)
+            throws DatastoreException;
+
+    /**
+     * Delete a record from the AsyncRegistration table.
+     *
+     * @param id a {@link String} id of the record to delete from the AsyncRegistration table.
+     */
+    void deleteAsyncRegistration(@NonNull String id) throws DatastoreException;
+
+    /**
+     * Get the record with the earliest request time and a valid retry count.
+     *
+     * @param retryLimit a long that is used for determining the next valid record to be serviced
+     * @param failedAdTechEnrollmentIds a String that contains the Ids of records that have been
+     *     serviced during the current run
+     */
+    AsyncRegistration fetchNextQueuedAsyncRegistration(
+            short retryLimit, List<String> failedAdTechEnrollmentIds) throws DatastoreException;
+
+    /**
+     * Update the retry count for a record in the Async Registration table.
+     *
+     * @param asyncRegistration a {@link AsyncRegistration} for which the retryCount will be updated
+     */
+    void updateRetryCount(@NonNull AsyncRegistration asyncRegistration) throws DatastoreException;
+
+    /**
+     * Deletes all records in measurement tables that correspond with a Uri not in the provided
+     * list.
+     *
+     * @param uriList a {@link List} of Uris whos related records won't be deleted.
+     * @throws DatastoreException
+     */
+    void deleteAppRecordsNotPresent(List<Uri> uriList) throws DatastoreException;
+
+    /**
+     * Fetches matching aggregate reports with the provided trigger IDs.
+     *
+     * @param triggerIds triggers that match with aggregate reports
+     */
+    List<AggregateReport> fetchMatchingAggregateReports(@NonNull List<String> triggerIds)
+            throws DatastoreException;
+
+    /**
+     * Fetches matching event reports with the provided parameters. It returns a union of event
+     * reports that match with any of the source IDs or the trigger IDs.
+     *
+     * @param triggerIds triggers that should match with event reports
+     */
+    List<EventReport> fetchMatchingEventReports(@NonNull List<String> triggerIds)
+            throws DatastoreException;
 }

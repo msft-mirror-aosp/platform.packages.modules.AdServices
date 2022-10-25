@@ -131,13 +131,8 @@ public class AppImportanceFilter {
             @NonNull String appPackageName, int apiNameIdForLogging, @Nullable String sdkName)
             throws WrongCallingApplicationStateException {
         int importance = mActivityManager.getPackageImportance(appPackageName);
-        LogUtil.v(
-                "Package "
-                        + appPackageName
-                        + " has importance "
-                        + importance
-                        + " comparing with threshold of "
-                        + mImportanceThresholdSupplier.get());
+        LogUtil.v("Package %s has importance %d comparing with threshold of %d.",
+                  appPackageName, importance, mImportanceThresholdSupplier.get());
         if (importance > mImportanceThresholdSupplier.get()) {
             LogUtil.v(
                     "Application importance failed for app %s with importance %d greater"
@@ -168,13 +163,8 @@ public class AppImportanceFilter {
             int appUid, int apiNameLoggingId, @Nullable String sdkName)
             throws WrongCallingApplicationStateException {
         int importance = mActivityManager.getUidImportance(appUid);
-        LogUtil.v(
-                "Process "
-                        + appUid
-                        + "has importance "
-                        + importance
-                        + " comparing with threshold of "
-                        + mImportanceThresholdSupplier.get());
+        LogUtil.v("Process %d has importance %d comparing with threshold of %d.",
+                  appUid, importance, mImportanceThresholdSupplier.get());
         if (importance > mImportanceThresholdSupplier.get()) {
             LogUtil.v(
                     "Application importance failed for app with UID %d "

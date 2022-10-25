@@ -160,8 +160,7 @@ public class ConsentNotificationJobService extends JobService {
                         () -> {
                             try {
                                 if (!FlagsFactory.getFlags().getConsentNotificationDebugMode()
-                                        && mConsentManager.wasNotificationDisplayed(
-                                                getPackageManager())) {
+                                        && mConsentManager.wasNotificationDisplayed()) {
                                     LogUtil.i("already notified, return back");
                                     return;
                                 }

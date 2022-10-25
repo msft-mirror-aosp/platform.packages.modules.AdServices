@@ -33,6 +33,7 @@ public final class UninstallApp implements Action {
         mTimestamp = obj.getLong(TestFormatJsonMapping.INSTALLS_TIMESTAMP_KEY);
     }
 
+    @Override
     public long getComparable() {
         return mTimestamp;
     }

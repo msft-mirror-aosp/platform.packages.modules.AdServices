@@ -53,9 +53,10 @@ java_defaults {
         "androidx.test.ext.junit",
         "compatibility-device-util-axt",
         "SdkSandboxTestUtils",
+        "StorageTestSdk1Api",
     ],
     min_sdk_version: "Tiramisu",
-    target_sdk_version: "current",
+    target_sdk_version: "Tiramisu",
     test_suites: ["general-tests"],
     platform_apis: true,
 }
@@ -78,11 +79,19 @@ android_test_helper_app {
     defaults: ["platform_app_defaults"],
     srcs: [
        "codeprovider/src/**/*.java",
-       ":framework-sdksandbox-sources",
     ],
     static_libs: [
         "compatibility-device-util-axt",
+        "StorageTestSdk1Api",
     ],
-    platform_apis: true,
     certificate: ":sdksandbox-test",
+    min_sdk_version: "33",
+    target_sdk_version: "33",
+}
+
+java_library {
+    name: "StorageTestSdk1Api",
+    srcs: [
+        "codeprovider/src/**/*.aidl",
+    ],
 }

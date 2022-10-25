@@ -16,11 +16,12 @@
 
 package android.app.sdksandbox;
 
-import static android.app.sdksandbox.SdkSandboxController.SDK_SANDBOX_CONTROLLER_SERVICE;
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_SERVICE;
+import static android.app.sdksandbox.sdkprovider.SdkSandboxController.SDK_SANDBOX_CONTROLLER_SERVICE;
 
 import android.annotation.SystemApi;
 import android.app.SystemServiceRegistry;
+import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.Context;
 
 /**

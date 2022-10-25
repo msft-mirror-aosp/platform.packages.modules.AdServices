@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Data access object for the App Consent datastore serving the Privacy Sandbox Consent Manager and
@@ -110,8 +111,17 @@ public class AppConsentDao {
         initializeDatastoreIfNeeded();
         Set<String> apps = new HashSet<>();
         Set<String> datastoreKeys = mDatastore.keySetFalse();
+        Set<String> installedPackages =
+                mPackageManager
+                        .getInstalledApplications(PackageManager.ApplicationInfoFlags.of(0))
+                        .stream()
+                        .map(applicationInfo -> applicationInfo.packageName)
+                        .collect(Collectors.toSet());
         for (String key : datastoreKeys) {
-            apps.add(datastoreKeyToPackageName(key));
+            String packageName = datastoreKeyToPackageName(key);
+            if (installedPackages.contains(packageName)) {
+                apps.add(packageName);
+            }
         }
 
         return apps;
@@ -125,8 +135,17 @@ public class AppConsentDao {
         initializeDatastoreIfNeeded();
         Set<String> apps = new HashSet<>();
         Set<String> datastoreKeys = mDatastore.keySetTrue();
+        Set<String> installedPackages =
+                mPackageManager
+                        .getInstalledApplications(PackageManager.ApplicationInfoFlags.of(0))
+                        .stream()
+                        .map(applicationInfo -> applicationInfo.packageName)
+                        .collect(Collectors.toSet());
         for (String key : datastoreKeys) {
-            apps.add(datastoreKeyToPackageName(key));
+            String packageName = datastoreKeyToPackageName(key);
+            if (installedPackages.contains(packageName)) {
+                apps.add(packageName);
+            }
         }
 
         return apps;

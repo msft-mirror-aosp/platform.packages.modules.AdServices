@@ -17,11 +17,13 @@
 package com.android.apiimplementation;
 
 import android.app.sdksandbox.interfaces.ISdkApi;
+import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.RemoteException;
 
+import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -39,12 +41,28 @@ public class SdkApi extends ISdkApi.Stub {
             final Path path = Paths.get(mContext.getDataDir().getPath(), "file.txt");
             Files.deleteIfExists(path);
             Files.createFile(path);
-            try (RandomAccessFile file = new RandomAccessFile(path.toString(), "rw")) {
-                file.setLength((long) sizeInMb * 1024 * 1024);
-            }
-            return "Created " + sizeInMb + " MB file successfully";
+            final byte[] buffer = new byte[sizeInMb * 1024 * 1024];
+            Files.write(path, buffer);
+
+            final File file = new File(path.toString());
+            final long actualFilzeSize = file.length() / (1024 * 1024);
+            return "Created " + actualFilzeSize + " MB file successfully";
         } catch (IOException e) {
             throw new RemoteException(e);
         }
+    }
+
+    @Override
+    public String getMessage() {
+        return "Message Received from a sandboxedSDK";
+    }
+
+    @Override
+    public String getSyncedSharedPreferencesString(String key) {
+        return getClientSharedPreferences().getString(key, "");
+    }
+
+    private SharedPreferences getClientSharedPreferences() {
+        return mContext.getSystemService(SdkSandboxController.class).getClientSharedPreferences();
     }
 }

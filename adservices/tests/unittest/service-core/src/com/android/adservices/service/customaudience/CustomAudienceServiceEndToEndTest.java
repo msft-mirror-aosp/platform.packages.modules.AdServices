@@ -266,7 +266,7 @@ public class CustomAudienceServiceEndToEndTest {
                 .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
         doReturn(false)
                 .when(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
 
         ResultCapturingCallback callback = new ResultCapturingCallback();
         mService.joinCustomAudience(
@@ -297,7 +297,7 @@ public class CustomAudienceServiceEndToEndTest {
     public void testJoinCustomAudienceWithRevokedUserConsentForAppSuccess() {
         doReturn(true)
                 .when(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
 
         ResultCapturingCallback callback = new ResultCapturingCallback();
         mService.joinCustomAudience(
@@ -314,7 +314,7 @@ public class CustomAudienceServiceEndToEndTest {
     public void testJoinCustomAudience_beyondMaxExpirationTime_fail() {
         doReturn(false)
                 .when(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
 
         ResultCapturingCallback callback = new ResultCapturingCallback();
         mService.joinCustomAudience(
@@ -394,10 +394,10 @@ public class CustomAudienceServiceEndToEndTest {
         doReturn(CommonFixture.FLAGS_FOR_TEST).when(FlagsFactory::getFlags);
         doNothing()
                 .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
-        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any(), any());
+        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
         doReturn(false)
                 .when(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
 
         ResultCapturingCallback callback = new ResultCapturingCallback();
         mService.joinCustomAudience(
@@ -429,10 +429,10 @@ public class CustomAudienceServiceEndToEndTest {
     @Test
     public void testLeaveCustomAudienceWithRevokedUserConsentForAppSuccess() {
         doReturn(CommonFixture.FLAGS_FOR_TEST).when(FlagsFactory::getFlags);
-        doReturn(true).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any(), any());
+        doReturn(true).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
         doReturn(false)
                 .when(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
 
         ResultCapturingCallback callback = new ResultCapturingCallback();
         mService.joinCustomAudience(
@@ -462,7 +462,7 @@ public class CustomAudienceServiceEndToEndTest {
 
     @Test
     public void testLeaveCustomAudience_leaveNotJoinedCustomAudience_doesNotFail() {
-        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any(), any());
+        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
 
         ResultCapturingCallback callback = new ResultCapturingCallback();
         mService.leaveCustomAudience(
@@ -486,7 +486,7 @@ public class CustomAudienceServiceEndToEndTest {
                                 .setDevOptionsEnabled(true)
                                 .setCallingAppPackageName(MY_APP_PACKAGE_NAME)
                                 .build());
-        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any(), any());
+        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
 
         CustomAudienceOverrideTestCallback callback =
                 callAddOverride(
@@ -512,7 +512,7 @@ public class CustomAudienceServiceEndToEndTest {
                                 .setDevOptionsEnabled(true)
                                 .setCallingAppPackageName(MY_APP_PACKAGE_NAME)
                                 .build());
-        doReturn(true).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any(), any());
+        doReturn(true).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
 
         CustomAudienceOverrideTestCallback callback =
                 callAddOverride(
@@ -538,7 +538,7 @@ public class CustomAudienceServiceEndToEndTest {
                                 .setDevOptionsEnabled(true)
                                 .setCallingAppPackageName(MY_APP_PACKAGE_NAME)
                                 .build());
-        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any(), any());
+        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
 
         String otherOwner = "otherOwner";
 
@@ -585,7 +585,7 @@ public class CustomAudienceServiceEndToEndTest {
                                 .setDevOptionsEnabled(true)
                                 .setCallingAppPackageName(MY_APP_PACKAGE_NAME)
                                 .build());
-        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any(), any());
+        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
 
         DBCustomAudienceOverride dbCustomAudienceOverride =
                 DBCustomAudienceOverride.builder()
@@ -620,7 +620,7 @@ public class CustomAudienceServiceEndToEndTest {
                                 .setDevOptionsEnabled(true)
                                 .setCallingAppPackageName(MY_APP_PACKAGE_NAME)
                                 .build());
-        doReturn(true).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any(), any());
+        doReturn(true).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
 
         DBCustomAudienceOverride dbCustomAudienceOverride =
                 DBCustomAudienceOverride.builder()
@@ -657,7 +657,7 @@ public class CustomAudienceServiceEndToEndTest {
                                 .setDevOptionsEnabled(true)
                                 .setCallingAppPackageName(incorrectPackageName)
                                 .build());
-        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any(), any());
+        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
 
         DBCustomAudienceOverride dbCustomAudienceOverride =
                 DBCustomAudienceOverride.builder()
@@ -721,7 +721,7 @@ public class CustomAudienceServiceEndToEndTest {
                                 .setDevOptionsEnabled(true)
                                 .setCallingAppPackageName(MY_APP_PACKAGE_NAME)
                                 .build());
-        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any(), any());
+        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
 
         DBCustomAudienceOverride dbCustomAudienceOverride1 =
                 DBCustomAudienceOverride.builder()
@@ -773,7 +773,7 @@ public class CustomAudienceServiceEndToEndTest {
                                 .setDevOptionsEnabled(true)
                                 .setCallingAppPackageName(MY_APP_PACKAGE_NAME)
                                 .build());
-        doReturn(true).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any(), any());
+        doReturn(true).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
 
         DBCustomAudienceOverride dbCustomAudienceOverride1 =
                 DBCustomAudienceOverride.builder()
@@ -827,7 +827,7 @@ public class CustomAudienceServiceEndToEndTest {
                                 .setDevOptionsEnabled(true)
                                 .setCallingAppPackageName(incorrectPackageName)
                                 .build());
-        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any(), any());
+        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
 
         DBCustomAudienceOverride dbCustomAudienceOverride1 =
                 DBCustomAudienceOverride.builder()
@@ -922,7 +922,7 @@ public class CustomAudienceServiceEndToEndTest {
                 .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
         doReturn(false)
                 .when(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any(), any());
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
 
         CustomAudienceQuantityChecker customAudienceQuantityChecker =
                 new CustomAudienceQuantityChecker(mCustomAudienceDao, CommonFixture.FLAGS_FOR_TEST);
