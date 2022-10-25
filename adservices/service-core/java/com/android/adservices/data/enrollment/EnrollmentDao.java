@@ -17,7 +17,6 @@
 package com.android.adservices.data.enrollment;
 
 import android.adservices.common.AdTechIdentifier;
-import android.annotation.NonNull;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -26,6 +25,7 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
@@ -33,7 +33,9 @@ import com.android.adservices.data.DbHelper;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.internal.annotations.VisibleForTesting;
 
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 /** Data Access Object for the EnrollmentData. */
 public class EnrollmentDao implements IEnrollmentDao {
@@ -216,6 +218,52 @@ public class EnrollmentDao implements IEnrollmentDao {
             }
 
             return null;
+        }
+    }
+
+    @Override
+    @NonNull
+    public Set<AdTechIdentifier> getAllFledgeEnrolledAdTechs() {
+        Set<AdTechIdentifier> enrolledAdTechIdentifiers = new HashSet<>();
+
+        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
+        if (db == null) {
+            return enrolledAdTechIdentifiers;
+        }
+
+        try (Cursor cursor =
+                db.query(
+                        /*distinct=*/ true,
+                        /*table=*/ EnrollmentTables.EnrollmentDataContract.TABLE,
+                        /*columns=*/ new String[] {
+                            EnrollmentTables.EnrollmentDataContract
+                                    .REMARKETING_RESPONSE_BASED_REGISTRATION_URL
+                        },
+                        /*selection=*/ EnrollmentTables.EnrollmentDataContract
+                                        .REMARKETING_RESPONSE_BASED_REGISTRATION_URL
+                                + " IS NOT NULL",
+                        /*selectionArgs=*/ null,
+                        /*groupBy=*/ null,
+                        /*having=*/ null,
+                        /*orderBy=*/ null,
+                        /*limit=*/ null)) {
+            if (cursor == null || cursor.getCount() <= 0) {
+                LogUtil.d("Failed to find any FLEDGE-enrolled ad techs");
+                return enrolledAdTechIdentifiers;
+            }
+
+            LogUtil.v("Found %d FLEDGE enrollment entries", cursor.getCount());
+
+            while (cursor.moveToNext()) {
+                enrolledAdTechIdentifiers.addAll(
+                        SqliteObjectMapper.getAdTechIdentifiersFromFledgeCursor(cursor));
+            }
+
+            LogUtil.v(
+                    "Found %d FLEDGE enrolled ad tech identifiers",
+                    enrolledAdTechIdentifiers.size());
+
+            return enrolledAdTechIdentifiers;
         }
     }
 
