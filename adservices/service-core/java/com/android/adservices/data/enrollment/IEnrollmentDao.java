@@ -20,6 +20,8 @@ import android.adservices.common.AdTechIdentifier;
 
 import com.android.adservices.service.enrollment.EnrollmentData;
 
+import java.util.Set;
+
 /** Interface for enrollment related data access operations. */
 public interface IEnrollmentDao {
 
@@ -50,6 +52,14 @@ public interface IEnrollmentDao {
      * @return a matching {@link EnrollmentData} or {@code null} if no matches were found
      */
     EnrollmentData getEnrollmentDataForFledgeByAdTechIdentifier(AdTechIdentifier adTechIdentifier);
+
+    /**
+     * Returns a set of {@link AdTechIdentifier} objects for all ad techs enrolled with FLEDGE.
+     *
+     * @return a set of all enrolled ad techs' {@link AdTechIdentifier} if they enrolled in FLEDGE;
+     *     empty if none found
+     */
+    Set<AdTechIdentifier> getAllFledgeEnrolledAdTechs();
 
     /**
      * Returns the {@link EnrollmentData} given AdTech SDK Name.
