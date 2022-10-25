@@ -16,7 +16,7 @@
 
 package com.android.sdksandbox.cts.provider.storagetest;
 
-import android.app.sdksandbox.SdkSandboxController;
+import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.Context;
 import android.content.SharedPreferences;
 

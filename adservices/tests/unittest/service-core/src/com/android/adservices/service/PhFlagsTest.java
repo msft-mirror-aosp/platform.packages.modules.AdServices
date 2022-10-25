@@ -2745,6 +2745,23 @@ public class PhFlagsTest {
     }
 
     @Test
+    public void testGetAppSetIdKillSwitch_globalOverride() {
+        // test that global killswitch override has no effect on
+        // AppSetIdKillswitch.
+        assertThat(FlagsFactory.getFlags().getAppSetIdKillSwitch()).isEqualTo(APPSETID_KILL_SWITCH);
+
+        final boolean phOverrideValue = true;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_GLOBAL_KILL_SWITCH,
+                Boolean.toString(phOverrideValue),
+                false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getAppSetIdKillSwitch()).isEqualTo(APPSETID_KILL_SWITCH);
+    }
+
+    @Test
     public void test_globalKillswitchOverrides_getAppSetIdKillSwitch() {
         // Without any overriding, AppSetId Killswitch is off.
         assertThat(FlagsFactory.getFlags().getAppSetIdKillSwitch()).isEqualTo(APPSETID_KILL_SWITCH);
@@ -2764,8 +2781,8 @@ public class PhFlagsTest {
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getGlobalKillSwitch()).isEqualTo(phOverridingValue);
 
-        // Global Killswitch is on and overrides the getAppSetIdKillswitch.
-        assertThat(FlagsFactory.getFlags().getAppSetIdKillSwitch()).isEqualTo(true);
+        // Global Killswitch is on, but is ignored by getAppSetIdKillswitch.
+        assertThat(FlagsFactory.getFlags().getAppSetIdKillSwitch()).isEqualTo(false);
     }
 
     @Test

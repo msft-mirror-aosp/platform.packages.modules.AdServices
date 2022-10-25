@@ -104,26 +104,28 @@ public class SandboxedAppSetIdManagerTest {
         // In this test, we use the loadSdk's callback as a 2-way communications between the Test
         // app (this class) and the Sdk running within the Sandbox process.
 
-        overrideAdservicesGlobalKillSwitch(true);
+        overrideAdservicesAppSetIdKillSwitch(true);
     }
 
     // Reset back the original values.
     private void overridingAfterTest() {
         overridingAdservicesLoggingLevel("INFO");
-        overrideAdservicesGlobalKillSwitch(false);
+        overrideAdservicesAppSetIdKillSwitch(false);
     }
 
     private void overridingAdservicesLoggingLevel(String loggingLevel) {
         ShellUtils.runShellCommand("setprop log.tag.adservices %s", loggingLevel);
     }
 
-    // Override global_kill_switch to ignore the effect of actual PH values.
-    // If isOverride = true, override global_kill_switch to OFF to allow adservices
-    // If isOverride = false, override global_kill_switch to meaningless value so that PhFlags will
+    // Override appsetid_kill_switch to ignore the effect of actual PH values.
+    // If shouldOverride = true, override appsetid_kill_switch to OFF to allow adservices
+    // If shouldOverride = false, override appsetid_kill_switch to meaningless value so that PhFlags
+    // will
     // use the default value.
-    private void overrideAdservicesGlobalKillSwitch(boolean isOverride) {
-        String overrideString = isOverride ? "false" : "null";
-        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
+    private void overrideAdservicesAppSetIdKillSwitch(boolean shouldOverride) {
+        String overrideString = shouldOverride ? "false" : "null";
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.appsetid_kill_switch " + overrideString);
     }
 
     // Used to get the package name. Copied over from com.android.adservices.AndroidServiceBinder

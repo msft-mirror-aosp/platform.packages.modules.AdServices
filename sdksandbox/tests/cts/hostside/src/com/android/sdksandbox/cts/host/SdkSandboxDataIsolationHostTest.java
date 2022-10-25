@@ -23,6 +23,7 @@ import static org.junit.Assume.assumeTrue;
 import android.app.sdksandbox.hosttestutils.AdoptableStorageUtils;
 import android.app.sdksandbox.hosttestutils.SecondaryUserUtils;
 
+import com.android.modules.utils.build.testing.DeviceSdkLevel;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 import com.android.tradefed.testtype.junit4.DeviceTestRunOptions;
@@ -44,6 +45,8 @@ public class SdkSandboxDataIsolationHostTest extends BaseHostJUnit4Test {
 
     private final SecondaryUserUtils mUserUtils = new SecondaryUserUtils(this);
     private final AdoptableStorageUtils mAdoptableUtils = new AdoptableStorageUtils(this);
+
+    private DeviceSdkLevel mDeviceSdkLevel;
 
     /**
      * Runs the given phase of a test by calling into the device. Throws an exception if the test
@@ -68,6 +71,7 @@ public class SdkSandboxDataIsolationHostTest extends BaseHostJUnit4Test {
 
     @Before
     public void setUp() throws Exception {
+        mDeviceSdkLevel = new DeviceSdkLevel(getDevice());
         // These tests run on system user
         uninstallPackage(APP_PACKAGE);
         uninstallPackage(APP_2_PACKAGE);
@@ -102,6 +106,9 @@ public class SdkSandboxDataIsolationHostTest extends BaseHostJUnit4Test {
      */
     @Test
     public void testSdkSandboxDataIsolation_CannotVerifyAppExistence() throws Exception {
+        // TODO(b/254608808,b/214241165): Remove once merged into QPR.
+        assumeTrue(mDeviceSdkLevel.isDeviceAtLeastU());
+
         installPackage(APP_APK);
         installPackage(APP_2_APK);
 
@@ -115,6 +122,9 @@ public class SdkSandboxDataIsolationHostTest extends BaseHostJUnit4Test {
      */
     @Test
     public void testSdkSandboxDataIsolation_CannotVerifyOtherUserAppExistence() throws Exception {
+        // TODO(b/254608808,b/214241165): Remove once merged into QPR.
+        assumeTrue(mDeviceSdkLevel.isDeviceAtLeastU());
+
         assumeTrue(getDevice().isMultiUserSupported());
 
         installPackage(APP_APK);
@@ -135,6 +145,9 @@ public class SdkSandboxDataIsolationHostTest extends BaseHostJUnit4Test {
      */
     @Test
     public void testSdkSandboxDataIsolation_CannotVerifyAcrossVolumes() throws Exception {
+        // TODO(b/254608808,b/214241165): Remove once merged into QPR.
+        assumeTrue(mDeviceSdkLevel.isDeviceAtLeastU());
+
         assumeTrue(mAdoptableUtils.isAdoptableStorageSupported());
         installPackage(APP_APK);
         installPackage(APP_2_APK);
