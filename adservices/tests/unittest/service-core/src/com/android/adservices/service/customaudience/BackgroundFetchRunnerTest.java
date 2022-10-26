@@ -35,6 +35,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.customaudience.DBCustomAudienceBackgroundFetchDataFixture;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.data.customaudience.CustomAudienceStats;
 import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetchData;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -106,7 +107,11 @@ public class BackgroundFetchRunnerTest {
 
     @Test
     public void testDeleteDisallowedOwnerCustomAudiences() {
-        doReturn(new CustomAudienceDao.CustomAudienceStats(null, 10, -1, 2))
+        doReturn(
+                        CustomAudienceStats.builder()
+                                .setTotalCustomAudienceCount(10)
+                                .setTotalOwnerCount(2)
+                                .build())
                 .when(mCustomAudienceDaoMock)
                 .deleteAllDisallowedOwnerCustomAudienceData(any(), any());
 
