@@ -226,7 +226,6 @@ class SandboxedSdkHolder {
                 mHandler.post(
                         () -> {
                             LogUtil.d(TAG, "Creating SurfaceControlViewHost on handler thread");
-
                             final View view;
                             sandboxLatencyInfo.setTimeSandboxCalledSdk(mInjector.getCurrentTime());
                             try {
@@ -249,7 +248,9 @@ class SandboxedSdkHolder {
                                                 windowContext,
                                                 mDisplayManager.getDisplay(displayId),
                                                 token);
+                                LogUtil.d(TAG, "SurfaceControlViewHost created");
                                 host.setView(view, width, height);
+                                LogUtil.d(TAG, "View from SDK set to SurfaceControlViewHost");
                                 SurfaceControlViewHost.SurfacePackage surfacePackage =
                                         host.getSurfacePackage();
                                 int surfacePackageId = allocateSurfacePackageId(surfacePackage);
