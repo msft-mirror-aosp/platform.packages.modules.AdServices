@@ -49,6 +49,7 @@ import com.android.adservices.service.measurement.util.Web;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -242,7 +243,9 @@ class AttributionJobHandler {
         matchingSources.remove(0);
         if (!matchingSources.isEmpty()) {
             matchingSources.forEach((s) -> s.setStatus(Source.Status.IGNORED));
-            measurementDao.updateSourceStatus(matchingSources, Source.Status.IGNORED);
+            List<String> sourceIds =
+                    matchingSources.stream().map(Source::getId).collect(Collectors.toList());
+            measurementDao.updateSourceStatus(sourceIds, Source.Status.IGNORED);
         }
         return Optional.of(selectedSource);
     }
@@ -354,14 +357,16 @@ class AttributionJobHandler {
             IMeasurementDao measurementDao)
             throws DatastoreException {
         trigger.setStatus(Trigger.Status.ATTRIBUTED);
-        measurementDao.updateTriggerStatus(trigger);
+        measurementDao.updateTriggerStatus(
+                Collections.singletonList(trigger.getId()), Trigger.Status.ATTRIBUTED);
         measurementDao.insertAttribution(createAttribution(source, trigger));
     }
 
     private void ignoreTrigger(Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
         trigger.setStatus(Trigger.Status.IGNORED);
-        measurementDao.updateTriggerStatus(trigger);
+        measurementDao.updateTriggerStatus(
+                Collections.singletonList(trigger.getId()), Trigger.Status.IGNORED);
     }
 
     private boolean hasAttributionQuota(Source source, Trigger trigger,

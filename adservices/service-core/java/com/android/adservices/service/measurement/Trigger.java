@@ -63,16 +63,13 @@ public class Trigger {
     private String mFilters;
     private @Nullable UnsignedLong mDebugKey;
 
-    @IntDef(value = {
-            Status.PENDING,
-            Status.IGNORED,
-            Status.ATTRIBUTED,
-    })
+    @IntDef(value = {Status.PENDING, Status.IGNORED, Status.ATTRIBUTED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
     public @interface Status {
         int PENDING = 0;
         int IGNORED = 1;
         int ATTRIBUTED = 2;
+        int MARKED_TO_DELETE = 3;
     }
 
     private Trigger() {

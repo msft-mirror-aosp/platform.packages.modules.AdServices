@@ -328,11 +328,8 @@ public abstract class AbstractDbIntegrationTest {
         }
     }
 
-    /**
-     * Inserts a Trigger record into the given database.
-     */
-    private static void insertToDb(Trigger trigger, SQLiteDatabase db)
-            throws SQLiteException {
+    /** Inserts a Trigger record into the given database. */
+    public static void insertToDb(Trigger trigger, SQLiteDatabase db) throws SQLiteException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.TriggerContract.ID, trigger.getId());
         values.put(MeasurementTables.TriggerContract.ATTRIBUTION_DESTINATION,
@@ -357,11 +354,8 @@ public abstract class AbstractDbIntegrationTest {
         }
     }
 
-    /**
-     * Inserts an EventReport record into the given database.
-     */
-    private static void insertToDb(EventReport report, SQLiteDatabase db)
-            throws SQLiteException {
+    /** Inserts an EventReport record into the given database. */
+    public static void insertToDb(EventReport report, SQLiteDatabase db) throws SQLiteException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.EventReportContract.ID, report.getId());
         values.put(
@@ -383,16 +377,16 @@ public abstract class AbstractDbIntegrationTest {
                 report.getSourceType().toString());
         values.put(MeasurementTables.EventReportContract.RANDOMIZED_TRIGGER_RATE,
                 report.getRandomizedTriggerRate());
+        values.put(MeasurementTables.EventReportContract.SOURCE_ID, report.getSourceId());
+        values.put(MeasurementTables.EventReportContract.TRIGGER_ID, report.getTriggerId());
         long row = db.insert(MeasurementTables.EventReportContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("EventReport insertion failed");
         }
     }
 
-    /**
-     * Inserts an Attribution record into the given database.
-     */
-    private static void insertToDb(Attribution attribution, SQLiteDatabase db)
+    /** Inserts an Attribution record into the given database. */
+    public static void insertToDb(Attribution attribution, SQLiteDatabase db)
             throws SQLiteException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.AttributionContract.ID, attribution.getId());
@@ -409,6 +403,8 @@ public abstract class AbstractDbIntegrationTest {
                 attribution.getTriggerTime());
         values.put(MeasurementTables.AttributionContract.REGISTRANT,
                 attribution.getRegistrant());
+        values.put(MeasurementTables.AttributionContract.SOURCE_ID, attribution.getSourceId());
+        values.put(MeasurementTables.AttributionContract.TRIGGER_ID, attribution.getTriggerId());
         long row = db.insert(MeasurementTables.AttributionContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("Attribution insertion failed");
@@ -416,7 +412,7 @@ public abstract class AbstractDbIntegrationTest {
     }
 
     /** Inserts an AggregateReport record into the given database. */
-    private static void insertToDb(AggregateReport aggregateReport, SQLiteDatabase db)
+    public static void insertToDb(AggregateReport aggregateReport, SQLiteDatabase db)
             throws SQLiteException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.AggregateReport.ID, aggregateReport.getId());
@@ -440,6 +436,8 @@ public abstract class AbstractDbIntegrationTest {
                 aggregateReport.getDebugCleartextPayload());
         values.put(MeasurementTables.AggregateReport.STATUS, aggregateReport.getStatus());
         values.put(MeasurementTables.AggregateReport.API_VERSION, aggregateReport.getApiVersion());
+        values.put(MeasurementTables.AggregateReport.SOURCE_ID, aggregateReport.getSourceId());
+        values.put(MeasurementTables.AggregateReport.TRIGGER_ID, aggregateReport.getTriggerId());
         long row = db.insert(MeasurementTables.AggregateReport.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("AggregateReport insertion failed");

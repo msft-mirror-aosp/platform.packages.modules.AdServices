@@ -77,6 +77,7 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
+import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
@@ -252,6 +253,7 @@ public final class MeasurementImplTest {
     ITransaction mTransaction;
     @Mock
     EnrollmentDao mEnrollmentDao;
+    @Mock MeasurementDataDeleter mMeasurementDataDeleter;
 
     private static EnrollmentData getEnrollment(String enrollmentId) {
         return new EnrollmentData.Builder().setEnrollmentId(enrollmentId).build();
@@ -389,7 +391,8 @@ public final class MeasurementImplTest {
                                 mDatastoreManager,
                                 mSourceFetcher,
                                 mTriggerFetcher,
-                                mClickVerifier));
+                                mClickVerifier,
+                                mMeasurementDataDeleter));
         doReturn(true).when(mClickVerifier).isInputEventVerifiable(any(), anyLong());
         when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(any()))
                 .thenReturn(getEnrollment(DEFAULT_ENROLLMENT));
@@ -423,7 +426,8 @@ public final class MeasurementImplTest {
                                 datastoreManager,
                                 mSourceFetcher,
                                 mTriggerFetcher,
-                                mClickVerifier));
+                                mClickVerifier,
+                                mMeasurementDataDeleter));
 
         long eventTime = System.currentTimeMillis();
         // Disable Impression Noise
@@ -490,7 +494,8 @@ public final class MeasurementImplTest {
                                 datastoreManager,
                                 mSourceFetcher,
                                 mTriggerFetcher,
-                                mClickVerifier));
+                                mClickVerifier,
+                                mMeasurementDataDeleter));
 
         long eventTime = System.currentTimeMillis();
         // Disable Impression Noise
@@ -570,7 +575,8 @@ public final class MeasurementImplTest {
                                 datastoreManager,
                                 mSourceFetcher,
                                 mTriggerFetcher,
-                                mClickVerifier));
+                                mClickVerifier,
+                                mMeasurementDataDeleter));
 
         long eventTime = System.currentTimeMillis();
         // Disable Impression Noise
@@ -615,7 +621,8 @@ public final class MeasurementImplTest {
                                 datastoreManager,
                                 mSourceFetcher,
                                 mTriggerFetcher,
-                                mClickVerifier));
+                                mClickVerifier,
+                                mMeasurementDataDeleter));
 
         long eventTime = System.currentTimeMillis();
         // Disable Impression Noise
@@ -661,7 +668,8 @@ public final class MeasurementImplTest {
                                 datastoreManager,
                                 mSourceFetcher,
                                 mTriggerFetcher,
-                                mClickVerifier));
+                                mClickVerifier,
+                                mMeasurementDataDeleter));
 
         long eventTime = System.currentTimeMillis();
         // Disable Impression Noise
@@ -707,7 +715,8 @@ public final class MeasurementImplTest {
                                 datastoreManager,
                                 mSourceFetcher,
                                 mTriggerFetcher,
-                                mClickVerifier));
+                                mClickVerifier,
+                                mMeasurementDataDeleter));
 
         long eventTime = System.currentTimeMillis();
         // Disable Impression Noise
@@ -835,7 +844,9 @@ public final class MeasurementImplTest {
                         DatastoreManagerFactory.getDatastoreManager(DEFAULT_CONTEXT),
                         mSourceFetcher,
                         mTriggerFetcher,
-                        mClickVerifier);
+                        mClickVerifier,
+                        mMeasurementDataDeleter);
+        doReturn(true).when(mMeasurementDataDeleter).delete(any());
         final int result =
                 measurement.deleteRegistrations(
                         new DeletionParam.Builder()
@@ -851,6 +862,7 @@ public final class MeasurementImplTest {
 
     @Test
     public void testDeleteRegistrations_successfulWithRange() {
+        doReturn(true).when(mMeasurementDataDeleter).delete(any());
         final int result =
                 mMeasurementImpl.deleteRegistrations(
                         new DeletionParam.Builder()
@@ -868,24 +880,25 @@ public final class MeasurementImplTest {
 
     @Test
     public void testDeleteRegistrations_successfulWithOrigin() {
-        final int result =
-                mMeasurementImpl.deleteRegistrations(
-                        new DeletionParam.Builder()
-                                .setPackageName(
-                                        DEFAULT_CONTEXT.getAttributionSource().getPackageName())
-                                .setDomainUris(Collections.emptyList())
-                                .setOriginUris(Collections.singletonList(DEFAULT_URI))
-                                .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
-                                .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
-                                .setStart(Instant.ofEpochMilli(Long.MIN_VALUE))
-                                .setEnd(Instant.ofEpochMilli(Long.MAX_VALUE))
-                                .build());
+        DeletionParam deletionParam =
+                new DeletionParam.Builder()
+                        .setPackageName(DEFAULT_CONTEXT.getAttributionSource().getPackageName())
+                        .setDomainUris(Collections.emptyList())
+                        .setOriginUris(Collections.singletonList(DEFAULT_URI))
+                        .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
+                        .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
+                        .setStart(Instant.ofEpochMilli(Long.MIN_VALUE))
+                        .setEnd(Instant.ofEpochMilli(Long.MAX_VALUE))
+                        .build();
+        when(mMeasurementDataDeleter.delete(deletionParam)).thenReturn(true);
+        final int result = mMeasurementImpl.deleteRegistrations(deletionParam);
         assertEquals(STATUS_SUCCESS, result);
     }
 
     @Test
     public void testDeleteRegistrations_internalError() {
         doReturn(false).when(mDatastoreManager).runInTransaction(any());
+        doReturn(false).when(mMeasurementDataDeleter).delete(any());
         final int result =
                 mMeasurementImpl.deleteRegistrations(
                         new DeletionParam.Builder()
@@ -941,7 +954,8 @@ public final class MeasurementImplTest {
                                 new FakeDatastoreManager(),
                                 mSourceFetcher,
                                 mTriggerFetcher,
-                                mClickVerifier));
+                                mClickVerifier,
+                                mMeasurementDataDeleter));
 
         InputEvent inputEvent = getInputEvent();
         final int result =
@@ -1125,7 +1139,8 @@ public final class MeasurementImplTest {
                                 mDatastoreManager,
                                 mSourceFetcher,
                                 mTriggerFetcher,
-                                mClickVerifier));
+                                mClickVerifier,
+                                mMeasurementDataDeleter));
 
         // Execution
         measurement.deleteAllUninstalledMeasurementData();
@@ -1170,7 +1185,8 @@ public final class MeasurementImplTest {
                                 datastoreManager,
                                 mSourceFetcher,
                                 mTriggerFetcher,
-                                mClickVerifier));
+                                mClickVerifier,
+                                mMeasurementDataDeleter));
 
         long eventTime = System.currentTimeMillis();
         // Disable Impression Noise
@@ -1240,7 +1256,8 @@ public final class MeasurementImplTest {
                                 datastoreManager,
                                 mSourceFetcher,
                                 mTriggerFetcher,
-                                mClickVerifier));
+                                mClickVerifier,
+                                mMeasurementDataDeleter));
 
         long eventTime = System.currentTimeMillis();
         // Disable Impression Noise
@@ -1334,7 +1351,8 @@ public final class MeasurementImplTest {
                                 datastoreManager,
                                 mSourceFetcher,
                                 mTriggerFetcher,
-                                mClickVerifier));
+                                mClickVerifier,
+                                mMeasurementDataDeleter));
 
         long eventTime = System.currentTimeMillis();
         // Disable Impression Noise
@@ -1387,7 +1405,8 @@ public final class MeasurementImplTest {
                                 datastoreManager,
                                 mSourceFetcher,
                                 mTriggerFetcher,
-                                mClickVerifier));
+                                mClickVerifier,
+                                mMeasurementDataDeleter));
 
         long eventTime = System.currentTimeMillis();
         // Disable Impression Noise
@@ -1558,7 +1577,8 @@ public final class MeasurementImplTest {
                                 datastoreManager,
                                 mSourceFetcher,
                                 mTriggerFetcher,
-                                mClickVerifier));
+                                mClickVerifier,
+                                mMeasurementDataDeleter));
         long eventTime = System.currentTimeMillis();
 
         final int result = measurementImpl.registerWebSource(registrationRequest, eventTime);
@@ -1595,7 +1615,8 @@ public final class MeasurementImplTest {
                                 datastoreManager,
                                 mSourceFetcher,
                                 mTriggerFetcher,
-                                mClickVerifier));
+                                mClickVerifier,
+                                mMeasurementDataDeleter));
         // Disable Impression Noise
         doReturn(Collections.emptyList()).when(measurementImpl).generateFakeEventReports(any());
         long eventTime = System.currentTimeMillis();
@@ -1640,7 +1661,8 @@ public final class MeasurementImplTest {
                                 datastoreManager,
                                 mSourceFetcher,
                                 mTriggerFetcher,
-                                mClickVerifier));
+                                mClickVerifier,
+                                mMeasurementDataDeleter));
         long eventTime = System.currentTimeMillis();
         // Test
         final int result = measurementImpl.registerWebSource(registrationRequest, eventTime);
@@ -1812,7 +1834,8 @@ public final class MeasurementImplTest {
                             mDatastoreManager,
                             mSourceFetcher,
                             mTriggerFetcher,
-                            mockClickVerifier);
+                            mockClickVerifier,
+                            mMeasurementDataDeleter);
 
             // Because click verification is disabled, the SourceType is NAVIGATION even if the
             // input event is not verifiable.
@@ -1851,7 +1874,8 @@ public final class MeasurementImplTest {
                         mDatastoreManager,
                         mSourceFetcher,
                         mTriggerFetcher,
-                        mClickVerifier);
+                        mClickVerifier,
+                        mMeasurementDataDeleter);
         Answer<?> falseAttributionAnswer =
                 (arg) -> {
                     source.setAttributionMode(Source.AttributionMode.FALSELY);
@@ -1910,7 +1934,8 @@ public final class MeasurementImplTest {
                         mDatastoreManager,
                         mSourceFetcher,
                         mTriggerFetcher,
-                        mClickVerifier);
+                        mClickVerifier,
+                        mMeasurementDataDeleter);
         Answer<?> falseAttributionAnswer =
                 (arg) -> {
                     source.setAttributionMode(Source.AttributionMode.FALSELY);
@@ -1972,7 +1997,8 @@ public final class MeasurementImplTest {
                         mDatastoreManager,
                         mSourceFetcher,
                         mTriggerFetcher,
-                        mClickVerifier);
+                        mClickVerifier,
+                        mMeasurementDataDeleter);
         Answer<?> falseAttributionAnswer =
                 (arg) -> {
                     source.setAttributionMode(Source.AttributionMode.FALSELY);
@@ -2042,7 +2068,8 @@ public final class MeasurementImplTest {
                         mDatastoreManager,
                         mSourceFetcher,
                         mTriggerFetcher,
-                        mClickVerifier);
+                        mClickVerifier,
+                        mMeasurementDataDeleter);
         Answer<?> neverAttributionAnswer =
                 (arg) -> {
                     source.setAttributionMode(Source.AttributionMode.NEVER);
@@ -2218,6 +2245,7 @@ public final class MeasurementImplTest {
                 mDatastoreManager,
                 mSourceFetcher,
                 mTriggerFetcher,
-                mClickVerifier);
+                mClickVerifier,
+                mMeasurementDataDeleter);
     }
 }

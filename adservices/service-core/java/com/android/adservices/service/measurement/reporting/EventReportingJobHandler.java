@@ -110,8 +110,11 @@ public class EventReportingJobHandler {
 
             if (returnCode >= HttpURLConnection.HTTP_OK
                     && returnCode <= 299) {
-                boolean success = mDatastoreManager.runInTransaction((dao) ->
-                        dao.markEventReportDelivered(eventReportId));
+                boolean success =
+                        mDatastoreManager.runInTransaction(
+                                (dao) ->
+                                        dao.markEventReportStatus(
+                                                eventReportId, EventReport.Status.DELIVERED));
 
                 return success
                         ? AdServicesStatusUtils.STATUS_SUCCESS

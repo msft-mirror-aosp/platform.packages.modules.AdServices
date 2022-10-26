@@ -32,6 +32,7 @@ import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
+import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
@@ -105,6 +106,7 @@ public abstract class E2EMockTest extends E2ETest {
     SourceFetcher mSourceFetcher;
     TriggerFetcher mTriggerFetcher;
     ClickVerifier mClickVerifier;
+    MeasurementDataDeleter mMeasurementDataDeleter;
     Flags mFlags;
 
     private final AtomicInteger mEnrollmentCount = new AtomicInteger();
@@ -133,6 +135,7 @@ public abstract class E2EMockTest extends E2ETest {
         mFlags = FlagsFactory.getFlagsForTest();
         when(mClickVerifier.isInputEventVerifiable(any(), anyLong())).thenReturn(true);
         mE2EMockStaticRule = new E2EMockStatic.E2EMockStaticRule(privacyParamsProvider);
+        mMeasurementDataDeleter = Mockito.spy(new MeasurementDataDeleter(sDatastoreManager));
     }
 
     @Override

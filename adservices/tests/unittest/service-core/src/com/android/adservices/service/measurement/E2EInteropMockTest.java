@@ -76,7 +76,7 @@ public class E2EInteropMockTest extends E2EMockTest {
                         mSourceFetcher,
                         mTriggerFetcher,
                         mClickVerifier,
-                        mFlags);
+                        mMeasurementDataDeleter);
     }
 
     @Override
