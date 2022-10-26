@@ -278,10 +278,6 @@ public class SdkSandboxTest {
 
     @Test
     public void testDump_NoSdk() {
-        Mockito.doNothing()
-                .when(mContext)
-                .enforceCallingPermission(
-                        Mockito.eq("android.permission.DUMP"), Mockito.anyString());
         final StringWriter stringWriter = new StringWriter();
         mService.dump(new FileDescriptor(), new PrintWriter(stringWriter), new String[0]);
         assertThat(stringWriter.toString()).contains("mHeldSdk is empty");
@@ -289,11 +285,6 @@ public class SdkSandboxTest {
 
     @Test
     public void testDump_WithSdk() {
-        Mockito.doNothing()
-                .when(mContext)
-                .enforceCallingPermission(
-                        Mockito.eq("android.permission.DUMP"), Mockito.anyString());
-
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
                 mApplicationInfo,
@@ -332,11 +323,6 @@ public class SdkSandboxTest {
         SdkSandboxDisabledCallback callback = new SdkSandboxDisabledCallback();
         mService.isDisabled(callback);
         assertThat(callback.isDisabled()).isFalse();
-    }
-
-    @Test(expected = SecurityException.class)
-    public void testDump_WithoutPermission() {
-        mService.dump(new FileDescriptor(), new PrintWriter(new StringWriter()), new String[0]);
     }
 
     @Test

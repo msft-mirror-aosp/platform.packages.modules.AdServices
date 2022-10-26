@@ -99,14 +99,16 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android에서 이 관심분야를 목록에 다시 추가할 수 있지만 바로 표시되지는 않을 수도 있습니다."</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"확인"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"모든 관심분야를 재설정하시겠습니까?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"목록이 삭제되며 시간이 지나면 새로고침됩니다."</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"재설정"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> 앱을 차단하시겠습니까?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"이 앱은 개인 정보 보호 샌드박스의 관심분야를 추정하지 않으며 사용자가 앱 차단을 해제하지 않는 한 목록에 다시 추가되지 않습니다.\n\n앱에서 이미 추정한 관심분야는 삭제되지만 관련된 일부 광고는 계속 표시될 수 있습니다."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> 앱이 차단 해제됨"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"앱에서 사용자의 관심분야를 다시 추정할 수 있지만 관심분야가 목록에 바로 표시되지는 않을 수도 있습니다. 관련된 광고가 표시되기까지 시간이 걸릴 수 있습니다."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"앱에서 생성한 관심분야를 재설정하시겠습니까?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"목록이 삭제되며 시간이 지나면 새로고침됩니다."</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"예술 및 엔터테인먼트"</string>
     <string name="topic10002" msgid="1226367977754287428">"연기 및 연극"</string>
     <string name="topic10003" msgid="6949890838957814881">"일본 애니메이션 및 망가"</string>

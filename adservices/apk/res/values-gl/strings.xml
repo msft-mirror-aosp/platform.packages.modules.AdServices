@@ -99,14 +99,16 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"É posible que Android engada este interese á túa lista outra vez, pero podería non aparecer de inmediato"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"Aceptar"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Queres restablecer todos os teus intereses?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"A lista borrarase e irá actualizándose co tempo"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Restablecer"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Queres bloquear <xliff:g id="APP">%1$s</xliff:g>?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Esta aplicación non determinará intereses para Privacy Sandbox nin se volverá engadir á túa lista, a non ser que a desbloquees.\n\nOs intereses que xa determinase esta aplicación eliminaranse, pero poderías seguir vendo anuncios relacionados."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Desbloqueouse <xliff:g id="APP">%1$s</xliff:g>"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Esta aplicación pode volver determinar intereses por ti, pero poderían non aparecer na túa lista de inmediato. Poderías tardar algo en ver anuncios relacionados."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Queres restablecer os intereses xerados polas aplicacións?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"A lista borrarase e irá actualizándose co tempo"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Arte e entretemento"</string>
     <string name="topic10002" msgid="1226367977754287428">"Representacións e teatro"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime e manga"</string>
