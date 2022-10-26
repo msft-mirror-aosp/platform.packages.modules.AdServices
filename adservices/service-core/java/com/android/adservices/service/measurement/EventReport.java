@@ -346,7 +346,7 @@ public class EventReport {
             mBuilding.mSourceEventId = source.getEventId();
             mBuilding.mEnrollmentId = source.getEnrollmentId();
             mBuilding.mStatus = Status.PENDING;
-            mBuilding.mAttributionDestination = trigger.getAttributionDestination();
+            mBuilding.mAttributionDestination = trigger.getAttributionDestinationBaseUri();
             mBuilding.mReportTime =
                     source.getReportingTime(
                             trigger.getTriggerTime(),
