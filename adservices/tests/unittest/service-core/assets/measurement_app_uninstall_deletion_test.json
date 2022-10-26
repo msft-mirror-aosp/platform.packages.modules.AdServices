@@ -22,7 +22,7 @@
         "event_reports": [
           {
             "id": "id",
-            "sourceId": 1,
+            "sourceEventId": 1,
             "attributionDestination": "android-app://example2.com",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
@@ -78,7 +78,7 @@
         "event_reports": [
           {
             "id": "id",
-            "sourceId": 1,
+            "sourceEventId": 1,
             "attributionDestination": "android-app://no-match.com",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
@@ -111,7 +111,7 @@
         "event_reports": [
           {
             "id": "id",
-            "sourceId": 1,
+            "sourceEventId": 1,
             "attributionDestination": "android-app://no-match.com",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
@@ -183,7 +183,7 @@
         "event_reports": [
           {
             "id": "id",
-            "sourceId": 1,
+            "sourceEventId": 1,
             "attributionDestination": "android-app://no-match.com",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
@@ -234,7 +234,7 @@
         "event_reports": [
           {
             "id": "id",
-            "sourceId": 1,
+            "sourceEventId": 1,
             "attributionDestination": "android-app://no-match.com",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
@@ -289,7 +289,7 @@
         "event_reports": [
           {
             "id": "R1",
-            "sourceId": 1,
+            "sourceEventId": 1,
             "attributionDestination": "android-app://remove.me",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
@@ -301,7 +301,7 @@
           },
           {
             "id": "R2",
-            "sourceId": 1,
+            "sourceEventId": 1,
             "attributionDestination": "android-app://remove.me",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
@@ -313,7 +313,7 @@
           },
           {
             "id": "R3",
-            "sourceId": 1,
+            "sourceEventId": 1,
             "attributionDestination": "android-app://dont.remove.me",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
@@ -364,7 +364,7 @@
         "event_reports": [
           {
             "id": "R3",
-            "sourceId": 1,
+            "sourceEventId": 1,
             "attributionDestination": "android-app://dont.remove.me",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
@@ -453,7 +453,7 @@
         "event_reports": [
           {
             "id": "id",
-            "sourceId": 1,
+            "sourceEventId": 1,
             "attributionDestination": "android-app://example2.com",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
@@ -517,7 +517,7 @@
         "event_reports": [
           {
             "id": "id",
-            "sourceId": 1,
+            "sourceEventId": 1,
             "attributionDestination": "android-app://example2.com",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,

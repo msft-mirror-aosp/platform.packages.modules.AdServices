@@ -19,6 +19,7 @@ package com.android.server.sdksandbox;
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND;
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE;
 import static android.app.sdksandbox.SdkSandboxManager.LOAD_SDK_SDK_SANDBOX_DISABLED;
+import static android.app.sdksandbox.SdkSandboxManager.REQUEST_SURFACE_PACKAGE_SDK_NOT_LOADED;
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE;
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_SERVICE;
 
@@ -40,9 +41,11 @@ import android.app.sdksandbox.ISdkSandboxProcessDeathCallback;
 import android.app.sdksandbox.ISdkToServiceCallback;
 import android.app.sdksandbox.ISharedPreferencesSyncCallback;
 import android.app.sdksandbox.LoadSdkException;
+import android.app.sdksandbox.LogUtil;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.SharedPreferencesUpdate;
+import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -486,17 +489,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         try {
             final Pair<CallingInfo, String> appAndSdkInfo = Pair.create(callingInfo, sdkName);
             synchronized (mLock) {
-                if (mAppAndRemoteSdkLinks.get(appAndSdkInfo) == null) {
-                    if (!isSdkSandboxServiceRunning(callingInfo)) {
-                        // If the sandbox has died and unloadSdk is called after,
-                        // the app should not crash from an uncaught exception.
-                        Log.i(TAG, "Sdk sandbox for " + callingInfo
-                                + " is not available, cannot unload SDK " + sdkName);
-                        return;
-                    }
-                    throw new IllegalArgumentException(
-                            "SDK " + sdkName + " is not loaded for " + callingInfo);
-                }
+                // TODO(b/254657226): Add a callback or return value for unloadSdk() to indicate
+                // success of unload.
                 if (mSdksBeingLoaded.contains(appAndSdkInfo)) {
                     throw new IllegalArgumentException(
                             "SDK "
@@ -504,6 +498,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                     + " is currently being loaded for "
                                     + callingInfo
                                     + " - wait till onLoadSdkSuccess() to unload");
+                }
+                if (mAppAndRemoteSdkLinks.get(appAndSdkInfo) == null) {
+                    // Unloading SDK that is not loaded is a no-op, return.
+                    Log.i(TAG, "SDK " + sdkName + " is not loaded for " + callingInfo);
+                    return;
                 }
             }
             unloadSdkWithClearIdentity(callingInfo, sdkName, timeSystemServerReceivedCallFromApp);
@@ -594,6 +593,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             IRequestSurfacePackageCallback callback) {
         final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
 
+        LogUtil.d(
+                TAG,
+                "requestSurfacePackage call received. callingPackageName: " + callingPackageName);
+
         SdkSandboxStatsLog.write(
                 SdkSandboxStatsLog.SANDBOX_API_CALLED,
                 SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE,
@@ -640,18 +643,15 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             link = mAppAndRemoteSdkLinks.get(appAndSdkInfo);
         }
         if (link == null) {
-            if (!isSdkSandboxServiceRunning(callingInfo)) {
-                handleSurfacePackageError(
-                        callingInfo,
-                        SDK_SANDBOX_PROCESS_NOT_AVAILABLE,
-                        SANDBOX_NOT_AVAILABLE_MSG,
-                        timeSystemServerReceivedCallFromApp,
-                        SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
-                        /*successAtStage*/ false,
-                        callback);
-                return;
-            }
-            throw new IllegalArgumentException("Sdk " + sdkName + " is not loaded");
+            handleSurfacePackageError(
+                    callingInfo,
+                    REQUEST_SURFACE_PACKAGE_SDK_NOT_LOADED,
+                    "SDK is not loaded",
+                    timeSystemServerReceivedCallFromApp,
+                    SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
+                    /*successAtStage*/ false,
+                    callback);
+            return;
         }
 
         link.requestSurfacePackageFromSdk(
@@ -1527,8 +1527,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
      * service.
      *
      * <p>When a sandbox is initialized, a callback object of {@link SdkToServiceLink} is passed to
-     * be used as a part of {@link android.app.sdksandbox.SdkSandboxController}. The Controller can
-     * then can call APIs on the link object to get data from the manager service.
+     * be used as a part of {@link SdkSandboxController}. The Controller can then can call APIs on
+     * the link object to get data from the manager service.
      */
     private class SdkToServiceLink extends ISdkToServiceCallback.Stub {
 
@@ -1744,8 +1744,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                 () ->
                                         handleSurfacePackageError(
                                                 mCallingInfo,
-                                                SDK_SANDBOX_PROCESS_NOT_AVAILABLE,
-                                                SANDBOX_NOT_AVAILABLE_MSG,
+                                                REQUEST_SURFACE_PACKAGE_SDK_NOT_LOADED,
+                                                "SDK is not loaded",
                                                 /*timeSystemServerReceivedCallFromSandbox=*/ -1,
                                                 SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED,
                                                 /*successAtStage=*/ false,
@@ -1778,6 +1778,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                         SandboxLatencyInfo sandboxLatencyInfo) {
                                     final long timeSystemServerReceivedCallFromSandbox =
                                             mInjector.getCurrentTime();
+
+                                    LogUtil.d(TAG, "onSurfacePackageReady received");
 
                                     logLatencyMetricsForCallback(
                                             timeSystemServerReceivedCallFromSandbox,
@@ -1823,8 +1825,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             } catch (DeadObjectException e) {
                 handleSurfacePackageError(
                         mCallingInfo,
-                        SDK_SANDBOX_PROCESS_NOT_AVAILABLE,
-                        SANDBOX_NOT_AVAILABLE_MSG,
+                        REQUEST_SURFACE_PACKAGE_SDK_NOT_LOADED,
+                        "SDK is not loaded",
                         /*timeSystemServerReceivedCallFromSandbox=*/ -1,
                         SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED,
                         /*successAtStage=*/ false,

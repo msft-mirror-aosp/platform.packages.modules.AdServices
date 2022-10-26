@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement.attribution;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -43,12 +45,14 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.TriggerFixture;
+import com.android.adservices.service.measurement.aggregation.AggregateAttributionData;
+import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
+import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -56,6 +60,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -148,7 +153,7 @@ public class AttributionJobHandlerTest {
         attributionService.performPendingAttributions();
         ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
         verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        Assert.assertEquals(Trigger.Status.IGNORED, triggerArg.getValue().getStatus());
+        assertEquals(Trigger.Status.IGNORED, triggerArg.getValue().getStatus());
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
@@ -188,7 +193,7 @@ public class AttributionJobHandlerTest {
         attributionService.performPendingAttributions();
         ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
         verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        Assert.assertEquals(Trigger.Status.IGNORED, triggerArg.getValue().getStatus());
+        assertEquals(Trigger.Status.IGNORED, triggerArg.getValue().getStatus());
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
@@ -212,7 +217,7 @@ public class AttributionJobHandlerTest {
         verify(mMeasurementDao).getAttributionsPerRateLimitWindow(source, trigger);
         ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
         verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        Assert.assertEquals(Trigger.Status.IGNORED, triggerArg.getValue().getStatus());
+        assertEquals(Trigger.Status.IGNORED, triggerArg.getValue().getStatus());
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
@@ -238,7 +243,7 @@ public class AttributionJobHandlerTest {
                 any(), any(), any(), anyLong(), anyLong());
         ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
         verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        Assert.assertEquals(Trigger.Status.IGNORED, triggerArg.getValue().getStatus());
+        assertEquals(Trigger.Status.IGNORED, triggerArg.getValue().getStatus());
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
@@ -274,7 +279,7 @@ public class AttributionJobHandlerTest {
         attributionService.performPendingAttributions();
         ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
         verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        Assert.assertEquals(Trigger.Status.IGNORED, triggerArg.getValue().getStatus());
+        assertEquals(Trigger.Status.IGNORED, triggerArg.getValue().getStatus());
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
@@ -326,7 +331,7 @@ public class AttributionJobHandlerTest {
         attributionService.performPendingAttributions();
         ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
         verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        Assert.assertEquals(Trigger.Status.IGNORED, triggerArg.getValue().getStatus());
+        assertEquals(Trigger.Status.IGNORED, triggerArg.getValue().getStatus());
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
@@ -350,10 +355,11 @@ public class AttributionJobHandlerTest {
         attributionService.performPendingAttributions();
         ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
         verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        Assert.assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
         ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
         verify(mMeasurementDao).updateSourceDedupKeys(sourceArg.capture());
-        Assert.assertEquals(sourceArg.getValue().getDedupKeys(),
+        assertEquals(
+                sourceArg.getValue().getDedupKeys(),
                 Collections.singletonList(new UnsignedLong(2L)));
         verify(mMeasurementDao).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
@@ -401,13 +407,14 @@ public class AttributionJobHandlerTest {
         attributionService.performPendingAttributions();
         trigger.setStatus(Trigger.Status.ATTRIBUTED);
         verify(mMeasurementDao).updateSourceStatus(matchingSourceList, Source.Status.IGNORED);
-        Assert.assertEquals(1, matchingSourceList.size());
+        assertEquals(1, matchingSourceList.size());
         ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
         verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        Assert.assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
         ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
         verify(mMeasurementDao).updateSourceDedupKeys(sourceArg.capture());
-        Assert.assertEquals(sourceArg.getValue().getDedupKeys(),
+        assertEquals(
+                sourceArg.getValue().getDedupKeys(),
                 Collections.singletonList(new UnsignedLong(2L)));
         verify(mMeasurementDao).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
@@ -473,7 +480,7 @@ public class AttributionJobHandlerTest {
         verify(mMeasurementDao).deleteEventReport(eventReport1);
         ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
         verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        Assert.assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
         verify(mMeasurementDao).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
@@ -559,14 +566,14 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getMatchingActiveSources(trigger2)).thenReturn(matchingSourceList2);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
         AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
-        Assert.assertTrue(attributionService.performPendingAttributions());
+        assertTrue(attributionService.performPendingAttributions());
         // Verify trigger status updates.
         ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
         verify(mMeasurementDao, times(2)).updateTriggerStatus(triggerArg.capture());
         List<Trigger> statusArgs = triggerArg.getAllValues();
         for (int i = 0; i < statusArgs.size(); i++) {
-            Assert.assertEquals(Trigger.Status.ATTRIBUTED, statusArgs.get(i).getStatus());
-            Assert.assertEquals(triggers.get(i).getId(), statusArgs.get(i).getId());
+            assertEquals(Trigger.Status.ATTRIBUTED, statusArgs.get(i).getStatus());
+            assertEquals(triggers.get(i).getId(), statusArgs.get(i).getId());
         }
         // Verify source dedup key updates.
         ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
@@ -574,7 +581,7 @@ public class AttributionJobHandlerTest {
                 .updateSourceDedupKeys(sourceArg.capture());
         List<Source> dedupArgs = sourceArg.getAllValues();
         for (int i = 0; i < dedupArgs.size(); i++) {
-            Assert.assertEquals(
+            assertEquals(
                     dedupArgs.get(i).getDedupKeys(),
                     Collections.singletonList(
                             triggers.get(i).parseEventTriggers().get(0).getDedupKey()));
@@ -585,7 +592,7 @@ public class AttributionJobHandlerTest {
                 .insertEventReport(reportArg.capture());
         List<EventReport> newReportArgs = reportArg.getAllValues();
         for (int i = 0; i < newReportArgs.size(); i++) {
-            Assert.assertEquals(
+            assertEquals(
                     newReportArgs.get(i).getTriggerDedupKey(),
                     triggers.get(i).parseEventTriggers().get(0).getDedupKey());
         }
@@ -634,15 +641,16 @@ public class AttributionJobHandlerTest {
         attributionService.performPendingAttributions();
         trigger.setStatus(Trigger.Status.ATTRIBUTED);
         verify(mMeasurementDao).updateSourceStatus(matchingSourceList, Source.Status.IGNORED);
-        Assert.assertEquals(1, matchingSourceList.size());
-        Assert.assertEquals(source2.getEventId(), matchingSourceList.get(0).getEventId());
+        assertEquals(1, matchingSourceList.size());
+        assertEquals(source2.getEventId(), matchingSourceList.get(0).getEventId());
         ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
         verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        Assert.assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
         ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
         verify(mMeasurementDao).updateSourceDedupKeys(sourceArg.capture());
-        Assert.assertEquals(source1.getEventId(), sourceArg.getValue().getEventId());
-        Assert.assertEquals(sourceArg.getValue().getDedupKeys(),
+        assertEquals(source1.getEventId(), sourceArg.getValue().getEventId());
+        assertEquals(
+                sourceArg.getValue().getDedupKeys(),
                 Collections.singletonList(new UnsignedLong(2L)));
         verify(mMeasurementDao).insertEventReport(any());
     }
@@ -690,15 +698,16 @@ public class AttributionJobHandlerTest {
         attributionService.performPendingAttributions();
         trigger.setStatus(Trigger.Status.ATTRIBUTED);
         verify(mMeasurementDao).updateSourceStatus(matchingSourceList, Source.Status.IGNORED);
-        Assert.assertEquals(1, matchingSourceList.size());
-        Assert.assertEquals(source1.getEventId(), matchingSourceList.get(0).getEventId());
+        assertEquals(1, matchingSourceList.size());
+        assertEquals(source1.getEventId(), matchingSourceList.get(0).getEventId());
         ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
         verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        Assert.assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
         ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
         verify(mMeasurementDao).updateSourceDedupKeys(sourceArg.capture());
-        Assert.assertEquals(source2.getEventId(), sourceArg.getValue().getEventId());
-        Assert.assertEquals(sourceArg.getValue().getDedupKeys(),
+        assertEquals(source2.getEventId(), sourceArg.getValue().getEventId());
+        assertEquals(
+                sourceArg.getValue().getDedupKeys(),
                 Collections.singletonList(new UnsignedLong(2L)));
         verify(mMeasurementDao).insertEventReport(any());
     }
@@ -733,7 +742,7 @@ public class AttributionJobHandlerTest {
         attributionService.performPendingAttributions();
         ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
         verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        Assert.assertEquals(Trigger.Status.IGNORED, triggerArg.getValue().getStatus());
+        assertEquals(Trigger.Status.IGNORED, triggerArg.getValue().getStatus());
         verify(mMeasurementDao, never()).updateSourceDedupKeys(any());
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
@@ -770,7 +779,7 @@ public class AttributionJobHandlerTest {
         attributionService.performPendingAttributions();
         ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
         verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        Assert.assertEquals(Trigger.Status.IGNORED, triggerArg.getValue().getStatus());
+        assertEquals(Trigger.Status.IGNORED, triggerArg.getValue().getStatus());
         verify(mMeasurementDao, never()).updateSourceDedupKeys(any());
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
@@ -806,12 +815,42 @@ public class AttributionJobHandlerTest {
                         .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                         .build();
 
-        Source source = SourceFixture.getValidSourceBuilder()
-                .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
-                .setAggregateSource("[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},"
-                        + "{\"id\" : \"geoValue\", \"key_piece\" : \"0x5\"}]")
-                .setAggregateFilterData("{\"product\":[\"1234\",\"2345\"]}")
-                .build();
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setId("sourceId1")
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setAggregateSource(
+                                "[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},"
+                                        + "{\"id\" : \"geoValue\", \"key_piece\" : \"0x5\"}]")
+                        .setAggregateFilterData("{\"product\":[\"1234\",\"2345\"]}")
+                        .build();
+        AggregateReport expectedAggregateReport =
+                new AggregateReport.Builder()
+                        .setApiVersion("0.1")
+                        .setAttributionDestination(trigger.getAttributionDestination())
+                        .setDebugCleartextPayload(
+                                "{\"operation\":\"histogram\","
+                                    + "\"data\":[{\"bucket\":2693,\"value\":1644},{\"bucket\":1369,"
+                                    + "\"value\":32768}]}")
+                        .setEnrollmentId(source.getEnrollmentId())
+                        .setPublisher(source.getRegistrant())
+                        .setSourceId(source.getId())
+                        .setTriggerId(trigger.getId())
+                        .setAggregateAttributionData(
+                                new AggregateAttributionData.Builder()
+                                        .setContributions(
+                                                Arrays.asList(
+                                                        new AggregateHistogramContribution.Builder()
+                                                                .setKey(new BigInteger("2693"))
+                                                                .setValue(1644)
+                                                                .build(),
+                                                        new AggregateHistogramContribution.Builder()
+                                                                .setKey(new BigInteger("1369"))
+                                                                .setValue(32768)
+                                                                .build()))
+                                        .build())
+                        .build();
+
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
         when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
@@ -823,8 +862,12 @@ public class AttributionJobHandlerTest {
         attributionService.performPendingAttributions();
         ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
         verify(mMeasurementDao).updateSourceAggregateContributions(sourceArg.capture());
-        verify(mMeasurementDao).insertAggregateReport(any());
-        Assert.assertEquals(sourceArg.getValue().getAggregateContributions(), 32768 + 1644);
+        ArgumentCaptor<AggregateReport> aggregateReportCaptor =
+                ArgumentCaptor.forClass(AggregateReport.class);
+        verify(mMeasurementDao).insertAggregateReport(aggregateReportCaptor.capture());
+
+        assertAggregateReportsEqual(expectedAggregateReport, aggregateReportCaptor.getValue());
+        assertEquals(sourceArg.getValue().getAggregateContributions(), 32768 + 1644);
     }
 
     @Test
@@ -916,7 +959,7 @@ public class AttributionJobHandlerTest {
         // Assertions
         ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
         verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        Assert.assertEquals(Trigger.Status.IGNORED, triggerArg.getValue().getStatus());
+        assertEquals(Trigger.Status.IGNORED, triggerArg.getValue().getStatus());
         verify(mMeasurementDao, never()).updateSourceDedupKeys(any());
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
@@ -970,10 +1013,11 @@ public class AttributionJobHandlerTest {
         // Assertions
         ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
         verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        Assert.assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
         ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
         verify(mMeasurementDao).updateSourceDedupKeys(sourceArg.capture());
-        Assert.assertEquals(sourceArg.getValue().getDedupKeys(),
+        assertEquals(
+                sourceArg.getValue().getDedupKeys(),
                 Collections.singletonList(new UnsignedLong(1L)));
         verify(mMeasurementDao).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
@@ -1029,13 +1073,14 @@ public class AttributionJobHandlerTest {
         // Assertions
         ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
         verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        Assert.assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
         ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
         verify(mMeasurementDao).updateSourceDedupKeys(sourceArg.capture());
-        Assert.assertEquals(sourceArg.getValue().getDedupKeys(),
+        assertEquals(
+                sourceArg.getValue().getDedupKeys(),
                 Collections.singletonList(new UnsignedLong(1L)));
-        Assert.assertEquals(sourceArg.getValue().getDebugKey(), SOURCE_DEBUG_KEY);
-        Assert.assertEquals(triggerArg.getValue().getDebugKey(), TRIGGER_DEBUG_KEY);
+        assertEquals(sourceArg.getValue().getDebugKey(), SOURCE_DEBUG_KEY);
+        assertEquals(triggerArg.getValue().getDebugKey(), TRIGGER_DEBUG_KEY);
         verify(mMeasurementDao).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
@@ -1089,12 +1134,13 @@ public class AttributionJobHandlerTest {
         // Assertions
         ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
         verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        Assert.assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
         ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
         verify(mMeasurementDao).updateSourceDedupKeys(sourceArg.capture());
-        Assert.assertEquals(sourceArg.getValue().getDedupKeys(),
+        assertEquals(
+                sourceArg.getValue().getDedupKeys(),
                 Collections.singletonList(new UnsignedLong(1L)));
-        Assert.assertEquals(sourceArg.getValue().getDebugKey(), SOURCE_DEBUG_KEY);
+        assertEquals(sourceArg.getValue().getDebugKey(), SOURCE_DEBUG_KEY);
         verify(mMeasurementDao).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
@@ -1148,11 +1194,12 @@ public class AttributionJobHandlerTest {
         // Assertions
         ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
         verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        Assert.assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
         ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
-        Assert.assertEquals(triggerArg.getValue().getDebugKey(), TRIGGER_DEBUG_KEY);
+        assertEquals(triggerArg.getValue().getDebugKey(), TRIGGER_DEBUG_KEY);
         verify(mMeasurementDao).updateSourceDedupKeys(sourceArg.capture());
-        Assert.assertEquals(sourceArg.getValue().getDedupKeys(),
+        assertEquals(
+                sourceArg.getValue().getDedupKeys(),
                 Collections.singletonList(new UnsignedLong(1L)));
         verify(mMeasurementDao).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
@@ -1206,10 +1253,11 @@ public class AttributionJobHandlerTest {
         // Assertions
         ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
         verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        Assert.assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
         ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
         verify(mMeasurementDao).updateSourceDedupKeys(sourceArg.capture());
-        Assert.assertEquals(sourceArg.getValue().getDedupKeys(),
+        assertEquals(
+                sourceArg.getValue().getDedupKeys(),
                 Collections.singletonList(new UnsignedLong(1L)));
         verify(mMeasurementDao).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
@@ -1270,6 +1318,8 @@ public class AttributionJobHandlerTest {
                                         trigger.getTriggerTime(), trigger.getDestinationType()))
                         .setSourceType(source.getSourceType())
                         .setRandomizedTriggerRate(source.getRandomAttributionProbability())
+                        .setSourceId(source.getId())
+                        .setTriggerId(trigger.getId())
                         .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
@@ -1287,7 +1337,7 @@ public class AttributionJobHandlerTest {
         // Assertions
         ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
         verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        Assert.assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
         verify(mMeasurementDao).updateSourceDedupKeys(source);
         verify(mMeasurementDao).insertEventReport(eq(expectedEventReport));
         verify(mTransaction, times(2)).begin();
@@ -1348,6 +1398,8 @@ public class AttributionJobHandlerTest {
                                         trigger.getTriggerTime(), trigger.getDestinationType()))
                         .setSourceType(source.getSourceType())
                         .setRandomizedTriggerRate(source.getRandomAttributionProbability())
+                        .setSourceId(source.getId())
+                        .setTriggerId(trigger.getId())
                         .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
@@ -1365,7 +1417,7 @@ public class AttributionJobHandlerTest {
         // Assertions
         ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
         verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        Assert.assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
         verify(mMeasurementDao).updateSourceDedupKeys(source);
         verify(mMeasurementDao).insertEventReport(eq(expectedEventReport));
         verify(mTransaction, times(2)).begin();
@@ -1429,6 +1481,8 @@ public class AttributionJobHandlerTest {
                                         trigger.getTriggerTime(), trigger.getDestinationType()))
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setRandomizedTriggerRate(source.getRandomAttributionProbability())
+                        .setSourceId(source.getId())
+                        .setTriggerId(trigger.getId())
                         .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
@@ -1446,7 +1500,7 @@ public class AttributionJobHandlerTest {
         // Assertions
         ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
         verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        Assert.assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
         verify(mMeasurementDao).updateSourceDedupKeys(source);
         verify(mMeasurementDao).insertEventReport(eq(expectedEventReport));
         verify(mTransaction, times(2)).begin();
@@ -1516,7 +1570,7 @@ public class AttributionJobHandlerTest {
         // Assertions
         ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
         verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        Assert.assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mMeasurementDao).insertAggregateReport(any());
         verify(mTransaction, times(2)).begin();
@@ -1584,7 +1638,7 @@ public class AttributionJobHandlerTest {
         // Assertions
         ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
         verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        Assert.assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
         verify(mMeasurementDao, never()).insertAggregateReport(any());
         verify(mMeasurementDao).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
@@ -1652,7 +1706,7 @@ public class AttributionJobHandlerTest {
         // Assertion
         ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
         verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        Assert.assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
         verify(mMeasurementDao).insertAggregateReport(any());
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
@@ -1720,7 +1774,7 @@ public class AttributionJobHandlerTest {
         // Assertion
         ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
         verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        Assert.assertEquals(Trigger.Status.IGNORED, triggerArg.getValue().getStatus());
+        assertEquals(Trigger.Status.IGNORED, triggerArg.getValue().getStatus());
         verify(mMeasurementDao, never()).insertAggregateReport(any());
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
@@ -1788,7 +1842,7 @@ public class AttributionJobHandlerTest {
         // Assertion
         ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
         verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
-        Assert.assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
         verify(mMeasurementDao).insertAggregateReport(any());
         verify(mMeasurementDao).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
@@ -1816,5 +1870,25 @@ public class AttributionJobHandlerTest {
                 new JSONArray(Arrays.asList("electronics.megastore")));
         filterData.put("product", new JSONArray(Arrays.asList("1234", "2345")));
         return filterData;
+    }
+
+    private void assertAggregateReportsEqual(
+            AggregateReport expectedReport, AggregateReport actualReport) {
+        // Avoids checking report time because there is randomization
+        assertEquals(expectedReport.getApiVersion(), actualReport.getApiVersion());
+        assertEquals(
+                expectedReport.getAttributionDestination(),
+                actualReport.getAttributionDestination());
+        assertEquals(
+                expectedReport.getDebugCleartextPayload(), actualReport.getDebugCleartextPayload());
+        assertEquals(expectedReport.getEnrollmentId(), actualReport.getEnrollmentId());
+        assertEquals(expectedReport.getPublisher(), actualReport.getPublisher());
+        assertEquals(expectedReport.getSourceId(), actualReport.getSourceId());
+        assertEquals(expectedReport.getTriggerId(), actualReport.getTriggerId());
+        assertEquals(
+                expectedReport.getAggregateAttributionData(),
+                actualReport.getAggregateAttributionData());
+        assertEquals(expectedReport.getSourceDebugKey(), actualReport.getSourceDebugKey());
+        assertEquals(expectedReport.getTriggerDebugKey(), actualReport.getTriggerDebugKey());
     }
 }

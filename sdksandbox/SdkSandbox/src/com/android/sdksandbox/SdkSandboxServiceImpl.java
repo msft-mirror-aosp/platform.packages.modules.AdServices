@@ -18,15 +18,15 @@ package com.android.sdksandbox;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
-import android.annotation.RequiresPermission;
 import android.app.Service;
 import android.app.sdksandbox.ISdkToServiceCallback;
 import android.app.sdksandbox.LoadSdkException;
+import android.app.sdksandbox.LogUtil;
 import android.app.sdksandbox.SandboxedSdkContext;
-import android.app.sdksandbox.SdkSandboxController;
 import android.app.sdksandbox.SdkSandboxLocalSingleton;
 import android.app.sdksandbox.SharedPreferencesKey;
 import android.app.sdksandbox.SharedPreferencesUpdate;
+import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -115,18 +115,19 @@ public class SdkSandboxServiceImpl extends Service {
      * @param sdkToServiceCallback for initialization of {@link SdkSandboxLocalSingleton}
      */
     public void initialize(ISdkToServiceCallback sdkToServiceCallback) {
+        enforceCallerIsSystemServer();
+
         if (mInitialized) {
             Log.e(TAG, "Sandbox is already initialized");
             return;
         }
-
-        enforceCallerIsSystemServer();
 
         SdkSandboxLocalSingleton.initInstance(sdkToServiceCallback.asBinder());
 
         cleanUpSyncedSharedPreferencesData();
 
         mInitialized = true;
+        LogUtil.d(TAG, "Sandbox initialized");
     }
 
     /** Loads SDK. */
@@ -178,9 +179,11 @@ public class SdkSandboxServiceImpl extends Service {
         }
     }
 
-    /** Sync data from client. */
+    /** Syncs data from client. */
     public void syncDataFromClient(SharedPreferencesUpdate update) {
         enforceCallerIsSystemServer();
+
+        LogUtil.d(TAG, "Syncing data from client");
 
         SharedPreferences pref = getClientSharedPreferences();
         SharedPreferences.Editor editor = pref.edit();
@@ -290,10 +293,7 @@ public class SdkSandboxServiceImpl extends Service {
     }
 
     @Override
-    @RequiresPermission(android.Manifest.permission.DUMP)
     protected void dump(FileDescriptor fd, PrintWriter writer, String[] args) {
-        mInjector.getContext().enforceCallingPermission(android.Manifest.permission.DUMP,
-                "Can't dump " + TAG);
         synchronized (mHeldSdk) {
             // TODO(b/211575098): Use IndentingPrintWriter for better formatting
             if (mHeldSdk.isEmpty()) {

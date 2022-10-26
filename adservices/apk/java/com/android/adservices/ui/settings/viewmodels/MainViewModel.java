@@ -120,6 +120,6 @@ public class MainViewModel extends AndroidViewModel {
     }
 
     private boolean getConsentFromConsentManager() {
-        return mConsentManager.getConsent(getApplication().getPackageManager()).isGiven();
+        return mConsentManager.getConsent().isGiven();
     }
 }

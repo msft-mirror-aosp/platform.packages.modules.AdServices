@@ -35,9 +35,9 @@ public final class AggregateReportFixture {
     private static final long MIN_TIME_MS = TimeUnit.MINUTES.toMillis(10L);
     private static final long MAX_TIME_MS = TimeUnit.MINUTES.toMillis(60L);
 
-    // Assume the field values in this AggregateReport have no relation to the field
+    // Assume the field values in this AggregateReport.Builder have no relation to the field
     // values in {@link ValidAggregateReportParams}
-    public static AggregateReport getValidAggregateReport() {
+    public static AggregateReport.Builder getValidAggregateReportBuilder() {
         return new AggregateReport.Builder()
                 .setPublisher(ValidAggregateReportParams.PUBLISHER)
                 .setAttributionDestination(ValidAggregateReportParams.ATTRIBUTION_DESTINATION)
@@ -47,8 +47,11 @@ public final class AggregateReportFixture {
                 .setSourceDebugKey(ValidAggregateReportParams.SOURCE_DEBUG_KEY)
                 .setTriggerDebugKey(ValidAggregateReportParams.TRIGGER_DEBUG_KEY)
                 .setDebugCleartextPayload(ValidAggregateReportParams.getDebugPayload())
-                .setStatus(EventReport.Status.PENDING)
-                .build();
+                .setStatus(EventReport.Status.PENDING);
+    }
+
+    public static AggregateReport getValidAggregateReport() {
+        return getValidAggregateReportBuilder().build();
     }
 
     public static class ValidAggregateReportParams {

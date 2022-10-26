@@ -276,8 +276,7 @@ public final class MeasurementImpl {
      * Implement a getMeasurementApiStatus request, returning a result code.
      */
     @MeasurementManager.MeasurementApiState int getMeasurementApiStatus() {
-        AdServicesApiConsent consent =
-                ConsentManager.getInstance(mContext).getConsent(mContext.getPackageManager());
+        AdServicesApiConsent consent = ConsentManager.getInstance(mContext).getConsent();
         if (consent.isGiven()) {
             return MeasurementManager.MEASUREMENT_API_STATE_ENABLED;
         } else {
@@ -716,6 +715,9 @@ public final class MeasurementImpl {
                 .setEnrollmentId(source.getEnrollmentId())
                 .setTriggerTime(source.getEventTime())
                 .setRegistrant(source.getRegistrant().toString())
+                .setSourceId(source.getId())
+                // Intentionally kept it as null because it's a fake attribution
+                .setTriggerId(null)
                 .build();
     }
 
@@ -784,7 +786,7 @@ public final class MeasurementImpl {
 
         if (destinationCount.isPresent()) {
             return destinationCount.get() < PrivacyParams
-                    .MAX_DISTINCT_DESTINATIONS_PER_PUBLISHER_X_ENROLLMENT_IN_ACTIVE_SOURCE;
+                    .getMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource();
         } else {
             LogUtil.e("isDestinationWithinPrivacyBounds: "
                     + "dao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource not "
@@ -842,7 +844,7 @@ public final class MeasurementImpl {
 
         if (adTechCount.isPresent()) {
             return adTechCount.get() < PrivacyParams
-                    .MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_SOURCE;
+                    .getMaxDistinctEnrollmentsPerPublisherXDestinationInSource();
         } else {
             LogUtil.e("isAdTechWithinPrivacyBounds: "
                     + "dao.countDistinctEnrollmentsPerPublisherXDestinationInSource not present"

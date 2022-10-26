@@ -24,6 +24,7 @@ import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.annotation.SystemService;
 import android.annotation.TestApi;
+import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -140,11 +141,23 @@ public final class SdkSandboxManager {
      */
     public static final int REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR = 700;
 
+    /**
+     * SDK is not loaded while requesting a {@link SurfacePackage}.
+     *
+     * <p>This indicates that the SDK for which the {@link SurfacePackage} is being requested is not
+     * loaded, either because the sandbox died or because it was not loaded in the first place.
+     */
+    public static final int REQUEST_SURFACE_PACKAGE_SDK_NOT_LOADED = 701;
+
     /** @hide */
-    @IntDef(value = {REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR, SDK_SANDBOX_PROCESS_NOT_AVAILABLE})
+    @IntDef(
+            prefix = "REQUEST_SURFACE_PACKAGE_",
+            value = {
+                REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR,
+                REQUEST_SURFACE_PACKAGE_SDK_NOT_LOADED
+            })
     @Retention(RetentionPolicy.SOURCE)
     public @interface RequestSurfacePackageErrorCode {}
-
 
     /**
      * SDK Sandbox is disabled.

@@ -22,7 +22,7 @@ java_defaults {
     static_libs: [
         "mockwebserver",
         "modules-utils-testable-device-config",
-        "androidx.test.uiautomator",
+        "androidx.test.uiautomator_uiautomator",
         "app-helpers-handheld-interfaces",
         "common-platform-scenarios",
         "launcher-aosp-tapl",

@@ -156,4 +156,10 @@ public class AdServicesConfig {
      * com.android.adservices.service.measurement.DeleteUninstalledJobService})
      */
     public static final int MEASUREMENT_DELETE_UNINSTALLED_JOB_ID = 16;
+
+    /**
+     * Job ID for the Async Registration Queue JobService ({@link
+     * com.android.adservices.service.measurement.AsyncRegistrationQueueJobService})
+     */
+    public static final int ASYNC_REGISTRATION_QUEUE_JOB_ID = 15;
 }

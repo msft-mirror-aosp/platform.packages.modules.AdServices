@@ -88,6 +88,6 @@ public class AdSelectionService extends Service {
 
     /** @return {@code true} if the Privacy Sandbox has user consent */
     private boolean hasUserConsent() {
-        return ConsentManager.getInstance(this).getConsent(getPackageManager()).isGiven();
+        return ConsentManager.getInstance(this).getConsent().isGiven();
     }
 }

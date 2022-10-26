@@ -48,8 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Se attivi il programma beta consenti alle app di testare queste nuove modalità più private di mostrarti gli annunci. Puoi disattivare il programma beta in qualsiasi momento dalle impostazioni di privacy."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"No, grazie"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Attiva"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Altro"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Grazie per aver scelto di partecipare"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Fai parte del programma beta di Android sulla privacy per gli annunci. Privacy Sandbox è attivato per il tuo dispositivo.\n\nSe vuoi saperne di più o vuoi disattivare il programma beta, vai alle impostazioni della privacy in qualsiasi momento."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Hai deciso di non partecipare"</string>
@@ -100,14 +99,16 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android potrebbe aggiungere di nuovo al tuo elenco questo interesse, che potrebbe non essere visualizzato subito"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Vuoi reimpostare tutti i tuoi interessi?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"L\'elenco verrà cancellato e poi verrà aggiornato nel tempo"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Reimposta"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Vuoi bloccare <xliff:g id="APP">%1$s</xliff:g>?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Questa app non stimerà gli interessi per Privacy Sandbox e non verrà aggiunta nuovamente all\'elenco finché non la sblocchi.\n\nGli interessi già stimati dall\'app verranno eliminati, ma potresti comunque vedere alcuni annunci correlati."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"L\'app <xliff:g id="APP">%1$s</xliff:g> è sbloccata"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Questa app può stimare di nuovo gli interessi per te, ma gli interessi potrebbero non essere visualizzati subito nell\'elenco. Potrebbe occorrere un po\' di tempo affinché tu possa vedere gli annunci correlati."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Vuoi reimpostare gli interessi generati dalle app?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"L\'elenco verrà cancellato e poi verrà aggiornato nel tempo"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Arte e spettacoli"</string>
     <string name="topic10002" msgid="1226367977754287428">"Recitazione e teatro"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime e manga"</string>

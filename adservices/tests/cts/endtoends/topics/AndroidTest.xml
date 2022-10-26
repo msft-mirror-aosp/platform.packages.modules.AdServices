@@ -48,11 +48,11 @@
         <!-- Override the flag to disable Topics enrollment check. -->
         <option name="run-command" value="setprop debug.adservices.disable_topics_enrollment_check true" />
         <!-- Forces using bundled model files. -->
-        <option name="run-command" value="device_config put adservices classifier_use_downloaded_files false" />
+        <option name="run-command" value="device_config put adservices classifier_force_use_bundled_files true" />
 
         <option name="teardown-command" value="setprop debug.adservices.consent_manager_debug_mode false"/>
         <option name="teardown-command" value="setprop debug.adservices.disable_topics_enrollment_check false" />
-        <option name="teardown-command" value="device_config put adservices classifier_use_downloaded_files true" />
+        <option name="teardown-command" value="device_config put adservices classifier_force_use_bundled_files false" />
     </target_preparer>
 
     <object type="module_controller"

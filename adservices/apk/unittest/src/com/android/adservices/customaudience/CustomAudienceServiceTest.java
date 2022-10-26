@@ -83,7 +83,7 @@ public class CustomAudienceServiceTest {
         IBinder binder = customAudienceService.onBind(getIntentForCustomAudienceService());
         assertNull(binder);
 
-        verify(mConsentManagerMock, never()).getConsent(any());
+        verify(mConsentManagerMock, never()).getConsent();
         verify(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()), never());
     }
 
@@ -92,7 +92,7 @@ public class CustomAudienceServiceTest {
         doReturn(mMockCustomAudienceServiceImpl)
                 .when(() -> CustomAudienceServiceImpl.create(any(Context.class)));
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any(Context.class)));
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         ExtendedMockito.doReturn(true)
                 .when(() -> PackageChangedReceiver.enableReceiver(any(Context.class)));
         doReturn(true).when(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
@@ -107,7 +107,7 @@ public class CustomAudienceServiceTest {
         IBinder binder = customAudienceServiceSpy.onBind(getIntentForCustomAudienceService());
         assertNotNull(binder);
 
-        verify(mConsentManagerMock).getConsent(any());
+        verify(mConsentManagerMock).getConsent();
         verify(() -> PackageChangedReceiver.enableReceiver(any(Context.class)));
         verify(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
     }

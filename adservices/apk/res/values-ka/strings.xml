@@ -48,8 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"ბეტას ჩართვით აპებს შეუძლია თქვენთვის რეკლამების ჩვენების უფრო მეტი გზების გამოცდა. ბეტას გამორთვა ნებისმიერ დროს შეგიძლიათ კონფიდენციალურობის პარამეტრებში."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"არა, გმადლობთ"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"ჩართვა"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"მეტი"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"გმადლობთ მონაწილეობისათვის"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"თქვენ Android რეკლამების კონფიდენციალურობის (ბეტა) წევრი ხართ. Privacy Sandbox ჩართულია თქვენს მოწყობილობაზე.\n\nშეიტყვეთ მეტი ან გამორთეთ ბეტა ნებისმიერ დროს კონფიდენციალურობის პარამეტრებიდან."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"თქვენ გადაწყვიტეთ, რომ არ მიიღოთ მონაწილეობა"</string>
@@ -100,14 +99,16 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android-მა შეიძლება კვლავ დაამატოს ეს ინტერესი თქვენს სიაში, მაგრამ ის შეიძლება მაშინვე არ გამოჩნდეს"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"კარგი"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"გსურთ, რომ გადააყენოთ ყველა თქვენი ინტერესი?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"თქვენი სია გასუფთავდება და განახლდება დროთა განმავლობაში"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"გადაყენება"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"გსურთ, დაბლოკოთ <xliff:g id="APP">%1$s</xliff:g>?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"ეს აპი არ შეაფასებს ინტერესებს Privacy Sandbox-ისთვის და აღარ დაემატება თქვენს სიას, თუ არ განბლოკავთ მას.\n\nამ აპის მიერ უკვე შეფასებული ინტერესები წაიშლება, მაგრამ თქვენ შესაძლოა კვლავ ნახოთ დაკავშირებული რეკლამები."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> განბლოკილია"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"ამ აპს შეუძლია კვლავ შეაფასოს თქვენთვის ინტერესები, მაგრამ ის შესაძლოა დაუყოვნებლივ არ გამოჩნდეს თქვენს სიაში. დაკავშირებული რეკლამის ნახვას შესაძლოა გარკვეული დრო დასჭირდეს."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"გსურთ აპების მიერ გენერირებული ინტერესების გადაყენება?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"თქვენი სია გასუფთავდება და განახლდება დროთა განმავლობაში"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"ხელოვნება და გართობა"</string>
     <string name="topic10002" msgid="1226367977754287428">"სამსახიობო ოსტატობა და თეატრი"</string>
     <string name="topic10003" msgid="6949890838957814881">"ანიმე და მანგა"</string>

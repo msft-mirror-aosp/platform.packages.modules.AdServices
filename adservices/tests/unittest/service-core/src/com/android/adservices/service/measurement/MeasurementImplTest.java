@@ -1045,9 +1045,7 @@ public final class MeasurementImplTest {
                         .initMocks(this)
                         .startMocking();
         try {
-            ExtendedMockito.doReturn(AdServicesApiConsent.GIVEN)
-                    .when(mConsentManager)
-                    .getConsent(any());
+            ExtendedMockito.doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
             ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any()));
             final int result = mMeasurementImpl.getMeasurementApiStatus();
             assertEquals(MeasurementManager.MEASUREMENT_API_STATE_ENABLED, result);
@@ -1066,7 +1064,7 @@ public final class MeasurementImplTest {
         try {
             ExtendedMockito.doReturn(AdServicesApiConsent.REVOKED)
                     .when(mConsentManager)
-                    .getConsent(any());
+                    .getConsent();
             ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any()));
             final int result = mMeasurementImpl.getMeasurementApiStatus();
             assertEquals(MeasurementManager.MEASUREMENT_API_STATE_DISABLED, result);
@@ -1877,7 +1875,7 @@ public final class MeasurementImplTest {
         verify(mMeasurementDao, times(2)).insertEventReport(any());
         verify(mMeasurementDao).insertAttribution(attributionRateLimitArgCaptor.capture());
 
-        assertEquals(
+        assertAttributionObjectsEquals(
                 new Attribution.Builder()
                         .setDestinationOrigin(source.getAppDestination().toString())
                         .setDestinationSite(source.getAppDestination().toString())
@@ -1936,7 +1934,7 @@ public final class MeasurementImplTest {
         verify(mMeasurementDao, times(2)).insertEventReport(any());
         verify(mMeasurementDao).insertAttribution(attributionRateLimitArgCaptor.capture());
 
-        assertEquals(
+        assertAttributionObjectsEquals(
                 new Attribution.Builder()
                         .setDestinationOrigin(source.getWebDestination().toString())
                         .setDestinationSite(source.getWebDestination().toString())
@@ -1999,7 +1997,7 @@ public final class MeasurementImplTest {
         verify(mMeasurementDao, times(2))
                 .insertAttribution(attributionRateLimitArgCaptor.capture());
 
-        assertEquals(
+        assertAttributionObjectsEquals(
                 new Attribution.Builder()
                         .setDestinationOrigin(source.getAppDestination().toString())
                         .setDestinationSite(source.getAppDestination().toString())
@@ -2011,7 +2009,7 @@ public final class MeasurementImplTest {
                         .build(),
                 attributionRateLimitArgCaptor.getAllValues().get(0));
 
-        assertEquals(
+        assertAttributionObjectsEquals(
                 new Attribution.Builder()
                         .setDestinationOrigin(source.getWebDestination().toString())
                         .setDestinationSite(source.getWebDestination().toString())
@@ -2068,7 +2066,7 @@ public final class MeasurementImplTest {
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mMeasurementDao).insertAttribution(attributionRateLimitArgCaptor.capture());
 
-        assertEquals(
+        assertAttributionObjectsEquals(
                 new Attribution.Builder()
                         .setDestinationOrigin(source.getAppDestination().toString())
                         .setDestinationSite(source.getAppDestination().toString())
@@ -2079,6 +2077,18 @@ public final class MeasurementImplTest {
                         .setTriggerTime(source.getEventTime())
                         .build(),
                 attributionRateLimitArgCaptor.getValue());
+    }
+
+    private void assertAttributionObjectsEquals(Attribution expected, Attribution actual) {
+        // Skip matching triggerId because it's randomly generated for fake reports
+        assertEquals(expected.getDestinationOrigin(), actual.getDestinationOrigin());
+        assertEquals(expected.getDestinationSite(), actual.getDestinationSite());
+        assertEquals(expected.getEnrollmentId(), actual.getEnrollmentId());
+        assertEquals(expected.getSourceOrigin(), actual.getSourceOrigin());
+        assertEquals(expected.getSourceSite(), actual.getSourceSite());
+        assertEquals(expected.getRegistrant(), actual.getRegistrant());
+        assertEquals(expected.getTriggerTime(), actual.getTriggerTime());
+        assertEquals(expected.getSourceId(), actual.getSourceId());
     }
 
     private List<Source.FakeReport> createFakeReports(Source source, int count, Uri destination) {

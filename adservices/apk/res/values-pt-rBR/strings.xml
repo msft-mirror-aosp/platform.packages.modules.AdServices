@@ -48,8 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Ativar a versão Beta permite que os apps testem essas formas novas e mais particulares de mostrar anúncios. Você pode desativar a versão Beta a qualquer momento nas configurações de privacidade."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Agora não"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Ativar"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Mais"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Agradecemos a participação"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Você está participando do programa Beta da privacidade de anúncios do Android. O Sandbox de privacidade está ativado para seu dispositivo.\n\nSaiba mais ou desative a versão Beta a qualquer momento nas configurações de privacidade."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Você preferiu não participar"</string>
@@ -100,14 +99,14 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"O Android pode adicionar novamente esse interesse à sua lista, mas ele pode não aparecer de forma imediata."</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Quer mesmo redefinir todos os seus interesses?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"Sua lista vai ser limpa e atualizada ao longo do tempo."</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Sua lista vai ser limpa, e novos interesses serão estimados daqui em diante. Talvez você ainda veja alguns anúncios relacionados a interesses excluídos."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Redefinir"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Bloquear <xliff:g id="APP">%1$s</xliff:g>?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Este app não vai estimar os interesses do Sandbox de privacidade e só poderá ser adicionado à sua lista novamente se for desbloqueado.\n\nOs interesses já estimados por este app vão ser excluídos, mas você ainda poderá ver alguns anúncios relacionados."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"O app <xliff:g id="APP">%1$s</xliff:g> foi desbloqueado"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Este app pode voltar a estimar interesses para você, mas eles podem não aparecer na sua lista de forma imediata. Pode demorar um pouco para você ver anúncios relacionados."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Quer mesmo redefinir os interesses gerados por apps?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"Sua lista vai ser limpa e atualizada ao longo do tempo."</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Os interesses estimados pelos apps em sua lista vão ser excluídos do Sandbox de privacidade, e novos interesses serão estimados daqui em diante. Talvez você ainda encontre alguns anúncios relacionados ao interesse bloqueado."</string>
     <string name="topic10001" msgid="1636806320891333775">"Artes e entretenimento"</string>
     <string name="topic10002" msgid="1226367977754287428">"Atuação e cinema"</string>
     <string name="topic10003" msgid="6949890838957814881">"Animê e Mangá"</string>

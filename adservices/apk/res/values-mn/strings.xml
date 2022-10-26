@@ -48,8 +48,7 @@
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Бета хувилбарыг асааснаар аппуудад танд зар харуулах эдгээр шинэ бөгөөд илүү хувийн аргыг турших боломж олгоно. Та нууцлалын тохиргоо хэсэгт бета хувилбарыг хүссэн үедээ унтраах болно."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Үгүй, баярлалаа"</string>
     <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Асаах"</string>
-    <!-- no translation found for notificationUI_more_button_text (8861584693765844519) -->
-    <skip />
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Бусад"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Оролцсонд баярлалаа"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Та Android-н зарын нууцлалын бетагийн нэг хэсэг юм. Таны төхөөрөмжид Privacy Sandbox-г асаасан.\n\nТа нэмэлт мэдээлэл авах эсвэл нууцлалын тохиргоондоо бетаг хүссэн үедээ унтраах боломжтой."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Та оролцохгүй байхаар сонгосон"</string>
@@ -100,14 +99,14 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android энэ сонирхлыг таны жагсаалтад дахин нэмж магадгүй хэдий ч энэ нь тэр даруй харагдахгүй"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"ОК"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Бүх сонирхлоо шинэчлэх үү?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"Таны жагсаалтыг арилгах ба дараа нь аажмаар сэргээнэ"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Таны жагсаалтыг арилгах бөгөөд цаашид шинэ сонирхол тооцоолно. Та арилгасан сонирхолтой холбоотой зарим зарыг харсан хэвээр байж магадгүй."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Шинэчлэх"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g>-г блоклох уу?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Энэ апп Privacy Sandbox-д сонирхол тооцоолохгүй бөгөөд та үүнийг блокоос гаргаагүйгээс бусад тохиолдолд жагсаалтад тань дахин нэмэхгүй.\n\nЭнэ аппын аль хэдийн тооцоолсон сонирхлыг устгах хэдий ч та зарим холбоотой зарыг харсан хэвээр байж магадгүй."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g>-г блокоос гаргасан"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Энэ апп танд зориулж сонирхлыг дахин тооцоолох боломжтой хэдий ч энэ нь таны жагсаалтад тэр даруй харагдахгүй байж магадгүй. Та холбоотой зар харах хүртэл хэсэг хугацаа зарцуулж магадгүй."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Аппуудын үүсгэсэн сонирхлыг шинэчлэх үү?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"Таны жагсаалтыг арилгах ба дараа нь аажмаар сэргээнэ"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Таны жагсаалт дээрх аппуудын тооцоолсон сонирхлыг Privacy Sandbox-с устгах бөгөөд аппууд цаашид шинэ сонирхол тооцоолно. Та зарим холбоотой зарыг харсан хэвээр байж магадгүй."</string>
     <string name="topic10001" msgid="1636806320891333775">"Урлаг &amp; энтертэйнмент"</string>
     <string name="topic10002" msgid="1226367977754287428">"Жүжиглэх &amp; театр"</string>
     <string name="topic10003" msgid="6949890838957814881">"Анимэ &amp; манга"</string>
