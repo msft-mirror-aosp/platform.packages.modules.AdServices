@@ -2166,7 +2166,7 @@ public final class AsyncTriggerFetcherTest {
                                         .getRegistrationUri()
                                         .buildUpon()
                                         .clearQuery()
-                                        .toString())
+                                        .build())
                 != null) {
             enrollmentId =
                     EnrollmentDao.getInstance(CONTEXT)
@@ -2175,7 +2175,7 @@ public final class AsyncTriggerFetcherTest {
                                             .getRegistrationUri()
                                             .buildUpon()
                                             .clearQuery()
-                                            .toString())
+                                            .build())
                             .getEnrollmentId();
         }
         return createAsyncRegistration(
@@ -2214,7 +2214,7 @@ public final class AsyncTriggerFetcherTest {
                                             .getRegistrationUri()
                                             .buildUpon()
                                             .clearQuery()
-                                            .toString())
+                                            .build())
                     != null) {
                 enrollmentId =
                         EnrollmentDao.getInstance(CONTEXT)
@@ -2223,7 +2223,7 @@ public final class AsyncTriggerFetcherTest {
                                                 .getRegistrationUri()
                                                 .buildUpon()
                                                 .clearQuery()
-                                                .toString())
+                                                .build())
                                 .getEnrollmentId();
             }
             return createAsyncRegistration(
