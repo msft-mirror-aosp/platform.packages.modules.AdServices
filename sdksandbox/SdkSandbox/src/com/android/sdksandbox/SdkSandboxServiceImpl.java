@@ -18,7 +18,6 @@ package com.android.sdksandbox;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
-import android.annotation.RequiresPermission;
 import android.app.Service;
 import android.app.sdksandbox.ISdkToServiceCallback;
 import android.app.sdksandbox.LoadSdkException;
@@ -180,7 +179,7 @@ public class SdkSandboxServiceImpl extends Service {
         }
     }
 
-    /** Sync data from client. */
+    /** Syncs data from client. */
     public void syncDataFromClient(SharedPreferencesUpdate update) {
         enforceCallerIsSystemServer();
 
@@ -294,10 +293,7 @@ public class SdkSandboxServiceImpl extends Service {
     }
 
     @Override
-    @RequiresPermission(android.Manifest.permission.DUMP)
     protected void dump(FileDescriptor fd, PrintWriter writer, String[] args) {
-        mInjector.getContext().enforceCallingPermission(android.Manifest.permission.DUMP,
-                "Can't dump " + TAG);
         synchronized (mHeldSdk) {
             // TODO(b/211575098): Use IndentingPrintWriter for better formatting
             if (mHeldSdk.isEmpty()) {

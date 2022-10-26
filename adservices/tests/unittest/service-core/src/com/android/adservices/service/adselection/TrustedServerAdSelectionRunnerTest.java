@@ -16,11 +16,13 @@
 
 package com.android.adservices.service.adselection;
 
+import static com.android.adservices.service.adselection.TrustedServerAdSelectionRunner.GZIP;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyString;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
@@ -54,6 +56,7 @@ import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.proto.SellerFrontEndGrpc;
+import com.android.adservices.service.proto.SellerFrontEndGrpc.SellerFrontEndFutureStub;
 import com.android.adservices.service.proto.SellerFrontendService.SelectWinningAdRequest;
 import com.android.adservices.service.proto.SellerFrontendService.SelectWinningAdRequest.SelectWinningAdRawRequest;
 import com.android.adservices.service.proto.SellerFrontendService.SelectWinningAdResponse;
@@ -72,6 +75,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 
 import java.time.Clock;
@@ -148,7 +152,9 @@ public class TrustedServerAdSelectionRunnerTest {
     @Mock private AdSelectionIdGenerator mMockAdSelectionIdGenerator;
     @Mock private OkHttpChannelBuilder mChannelBuilder;
     @Mock private ManagedChannel mManagedChannel;
-    @Mock private SellerFrontEndGrpc.SellerFrontEndFutureStub mStub;
+    @Mock private SellerFrontEndFutureStub mStub;
+    private SellerFrontEndFutureStub mStubWithCompression =
+            Mockito.mock(SellerFrontEndFutureStub.class, "mStubWithCompression");
     @Mock private ApiServiceLatencyCalculator mApiServiceLatencyCalculator;
 
     @Before
@@ -177,8 +183,9 @@ public class TrustedServerAdSelectionRunnerTest {
                 .when(() -> OkHttpChannelBuilder.forAddress(anyString(), anyInt()));
         doReturn(mManagedChannel).when(mChannelBuilder).build();
         doReturn(mStub).when(() -> SellerFrontEndGrpc.newFutureStub(mManagedChannel));
+        doReturn(mStubWithCompression).when(mStub).withCompression(GZIP);
         doReturn(Futures.immediateFuture(sSelectWinningAdResponse))
-                .when(mStub)
+                .when(mStubWithCompression)
                 .selectWinningAd(any(SelectWinningAdRequest.class));
 
         AdSelectionConfig adSelectionConfig = sAdSelectionConfigBuilder.build();
@@ -226,16 +233,20 @@ public class TrustedServerAdSelectionRunnerTest {
 
         assertEquals(expectedWinningAdRenderUri, dbAdSelection.getWinningAdRenderUri());
         assertEquals(expectedWinningAdBid, dbAdSelection.getWinningAdBid(), 0);
+
+        SellerFrontEndFutureStub unused = verify(mStub).withCompression(GZIP);
     }
 
+    @SuppressWarnings("FutureReturnValueIgnored")
     @Test
     public void verifyNoCANameInBiddingSignalKeys() {
         doReturn(mChannelBuilder)
                 .when(() -> OkHttpChannelBuilder.forAddress(anyString(), anyInt()));
         doReturn(mManagedChannel).when(mChannelBuilder).build();
         doReturn(mStub).when(() -> SellerFrontEndGrpc.newFutureStub(mManagedChannel));
+        doReturn(mStubWithCompression).when(mStub).withCompression(GZIP);
         doReturn(Futures.immediateFuture(sSelectWinningAdResponse))
-                .when(mStub)
+                .when(mStubWithCompression)
                 .selectWinningAd(any(SelectWinningAdRequest.class));
 
         AdSelectionConfig adSelectionConfig = sAdSelectionConfigBuilder.build();
@@ -279,7 +290,7 @@ public class TrustedServerAdSelectionRunnerTest {
                 ImmutableList.of(customAudience));
 
         // Verify the bidding signal keys list does *not* contain the CA name.
-        verify(mStub).selectWinningAd(captor.capture());
+        verify(mStubWithCompression).selectWinningAd(captor.capture());
         SelectWinningAdRawRequest req = captor.getValue().getRawRequest();
         List<String> biddingSignalKeys =
                 req.getRawBuyerInputMap()
@@ -289,14 +300,16 @@ public class TrustedServerAdSelectionRunnerTest {
         assertThat(biddingSignalKeys).doesNotContain(customAudience.getName());
     }
 
+    @SuppressWarnings("FutureReturnValueIgnored")
     @Test
     public void verifyEmptyBiddingSignalKeys() {
         doReturn(mChannelBuilder)
                 .when(() -> OkHttpChannelBuilder.forAddress(anyString(), anyInt()));
         doReturn(mManagedChannel).when(mChannelBuilder).build();
         doReturn(mStub).when(() -> SellerFrontEndGrpc.newFutureStub(mManagedChannel));
+        doReturn(mStubWithCompression).when(mStub).withCompression(GZIP);
         doReturn(Futures.immediateFuture(sSelectWinningAdResponse))
-                .when(mStub)
+                .when(mStubWithCompression)
                 .selectWinningAd(any(SelectWinningAdRequest.class));
 
         AdSelectionConfig adSelectionConfig = sAdSelectionConfigBuilder.build();
@@ -341,7 +354,7 @@ public class TrustedServerAdSelectionRunnerTest {
                 ImmutableList.of(customAudience));
 
         // Verify the bidding signal keys list does *not* contain the CA name.
-        verify(mStub).selectWinningAd(captor.capture());
+        verify(mStubWithCompression).selectWinningAd(captor.capture());
         SelectWinningAdRawRequest req = captor.getValue().getRawRequest();
         List<String> biddingSignalKeys =
                 req.getRawBuyerInputMap()
@@ -357,8 +370,9 @@ public class TrustedServerAdSelectionRunnerTest {
                 .when(() -> OkHttpChannelBuilder.forAddress(anyString(), anyInt()));
         doReturn(mManagedChannel).when(mChannelBuilder).build();
         doReturn(mStub).when(() -> SellerFrontEndGrpc.newFutureStub(mManagedChannel));
+        doReturn(mStubWithCompression).when(mStub).withCompression(GZIP);
         doReturn(Futures.immediateFuture(sSelectWinningAdResponse))
-                .when(mStub)
+                .when(mStubWithCompression)
                 .selectWinningAd(any(SelectWinningAdRequest.class));
 
         AdSelectionConfig adSelectionConfig = sAdSelectionConfigBuilder.build();
@@ -398,6 +412,59 @@ public class TrustedServerAdSelectionRunnerTest {
                 adSelectionConfig,
                 MY_APP_PACKAGE_NAME,
                 ImmutableList.of(sDBCustomAudience));
+    }
+
+    @Test
+    public void verifyNoRequestCompressionWhenFlagDisabled() {
+        Flags flags =
+                new Flags() {
+                    @Override
+                    public boolean getAdSelectionOffDeviceRequestCompressionEnabled() {
+                        return false;
+                    }
+                };
+
+        doReturn(mChannelBuilder)
+                .when(() -> OkHttpChannelBuilder.forAddress(anyString(), anyInt()));
+        doReturn(mManagedChannel).when(mChannelBuilder).build();
+        doReturn(mStub).when(() -> SellerFrontEndGrpc.newFutureStub(mManagedChannel));
+        doReturn(Futures.immediateFuture(sSelectWinningAdResponse))
+                .when(mStub)
+                .selectWinningAd(any(SelectWinningAdRequest.class));
+
+        AdSelectionConfig adSelectionConfig = sAdSelectionConfigBuilder.build();
+        when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
+
+        FluentFuture js = FluentFuture.from(Futures.immediateFuture("js"));
+        when(mJsFetcher.getBuyerDecisionLogic(any(), any(), any(), any())).thenReturn(js);
+
+        mAdSelectionRunner =
+                new TrustedServerAdSelectionRunner(
+                        mContext,
+                        mCustomAudienceDao,
+                        mAdSelectionEntryDao,
+                        sLightweightExecutorService,
+                        sBackgroundExecutorService,
+                        sScheduledExecutor,
+                        mConsentManagerMock,
+                        mMockAdSelectionIdGenerator,
+                        mClock,
+                        mAdServicesLoggerSpy,
+                        mAppImportanceFilter,
+                        flags,
+                        mThrottlerSupplier,
+                        CALLER_UID,
+                        mFledgeAuthorizationFilter,
+                        mFledgeAllowListsFilter,
+                        mJsFetcher,
+                        mApiServiceLatencyCalculator);
+        invokeRunAdSelection(
+                mAdSelectionRunner,
+                adSelectionConfig,
+                MY_APP_PACKAGE_NAME,
+                ImmutableList.of(sDBCustomAudience));
+
+        SellerFrontEndFutureStub unused = verify(mStub, times(0)).withCompression(GZIP);
     }
 
     private AdSelectionOrchestrationResult invokeRunAdSelection(

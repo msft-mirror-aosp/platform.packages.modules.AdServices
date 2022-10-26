@@ -16,6 +16,8 @@
 
 package com.android.adservices.data.enrollment;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -38,6 +40,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import java.util.Arrays;
+import java.util.Set;
 
 public class EnrollmentDaoTest {
 
@@ -107,6 +110,10 @@ public class EnrollmentDaoTest {
 
     @After
     public void cleanup() {
+        clearAllTables();
+    }
+
+    private void clearAllTables() {
         for (String table : EnrollmentTables.ENROLLMENT_TABLES) {
             mDbHelper.safeGetWritableDatabase().delete(table, null, null);
         }
@@ -203,6 +210,30 @@ public class EnrollmentDaoTest {
                 mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(adtechIdentifier);
         assertNotNull(e);
         assertEquals(e, ENROLLMENT_DATA2);
+    }
+
+    @Test
+    public void testGetAllFledgeEnrolledAdTechs_noEntries() {
+        // Delete any entries in the database
+        clearAllTables();
+
+        assertThat(mEnrollmentDao.getAllFledgeEnrolledAdTechs()).isEmpty();
+    }
+
+    @Test
+    public void testGetAllFledgeEnrolledAdTechs_multipleEntries() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA1);
+        mEnrollmentDao.insert(ENROLLMENT_DATA2);
+        mEnrollmentDao.insert(ENROLLMENT_DATA3);
+
+        Set<AdTechIdentifier> enrolledFledgeAdTechIdentifiers =
+                mEnrollmentDao.getAllFledgeEnrolledAdTechs();
+
+        assertThat(enrolledFledgeAdTechIdentifiers).hasSize(2);
+        assertThat(enrolledFledgeAdTechIdentifiers)
+                .containsExactly(
+                        AdTechIdentifier.fromString("1test.com"),
+                        AdTechIdentifier.fromString("2test.com"));
     }
 
     @Test
