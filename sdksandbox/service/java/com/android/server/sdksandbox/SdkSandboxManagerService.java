@@ -41,6 +41,7 @@ import android.app.sdksandbox.ISdkSandboxProcessDeathCallback;
 import android.app.sdksandbox.ISdkToServiceCallback;
 import android.app.sdksandbox.ISharedPreferencesSyncCallback;
 import android.app.sdksandbox.LoadSdkException;
+import android.app.sdksandbox.LogUtil;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.SharedPreferencesUpdate;
@@ -591,6 +592,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             Bundle params,
             IRequestSurfacePackageCallback callback) {
         final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
+
+        LogUtil.d(
+                TAG,
+                "requestSurfacePackage call received. callingPackageName: " + callingPackageName);
 
         SdkSandboxStatsLog.write(
                 SdkSandboxStatsLog.SANDBOX_API_CALLED,
@@ -1773,6 +1778,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                         SandboxLatencyInfo sandboxLatencyInfo) {
                                     final long timeSystemServerReceivedCallFromSandbox =
                                             mInjector.getCurrentTime();
+
+                                    LogUtil.d(TAG, "onSurfacePackageReady received");
 
                                     logLatencyMetricsForCallback(
                                             timeSystemServerReceivedCallFromSandbox,
