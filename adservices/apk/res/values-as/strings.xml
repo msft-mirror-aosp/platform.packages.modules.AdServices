@@ -99,14 +99,16 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Androidএ আপোনাৰ সূচীখনত এই আগ্ৰহটো পুনৰ যোগ দিব পাৰে, কিন্তু আপোনাৰ তৎক্ষণাৎ প্ৰদৰ্শিত নহ’ব পাৰে"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"ঠিক আছে"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"আপোনাৰ আটাইবোৰ আগ্ৰহ ৰিছেট কৰিবনে?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"আপোনাৰ সূচীখন মচা হ’ব, তাৰ পাছত সময়ৰ লগে লগে ৰিফ্ৰেশ্ব কৰা হ’ব"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"ৰিছেট কৰক"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> অৱৰোধ কৰিবনে?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"এই এপ্‌টোৱে প্ৰাইভেচি ছেণ্ডবক্সৰ বাবে আগ্ৰহসমূহ অনুমান নকৰে আৰু আপুনি ইয়াক অৱৰোধৰ পৰা আঁতৰাই নিদিয়ালৈকে ইয়াক আপোনাৰ সূচীখনত পুনৰ যোগ দিয়া নহ’ব।\n\nএই এপ্‌টোৱে ইতিমধ্যে অনুমান কৰা আগ্ৰহসমূহ মচা হ’ব কিন্তু আপুনি তথাপিও কিছুমান প্ৰাসংগিক বিজ্ঞাপন দেখা পাব পাৰে।"</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g>ক অৱৰোধৰ পৰা আঁতৰোৱা হ’ল"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"এপ্‌টোৱে পুনৰ আপোনাৰ বাবে আগ্ৰহসমূহ অনুমান কৰিব পাৰে, কিন্তু সেয়া আপোনাৰ সূচীখনত তৎক্ষণাৎ প্ৰদৰ্শিত নহ’ব পাৰে। আপুনি প্ৰাসংগিক বিজ্ঞাপনসমূহ দেখা পাবলৈ কিছু সময় লাগিব পাৰে।"</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"এপে সৃষ্টি কৰা আগ্ৰহসমূহ ৰিছেট কৰিবনে?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"আপোনাৰ সূচীখন মচা হ’ব, তাৰ পাছত সময়ৰ লগে লগে ৰিফ্ৰেশ্ব কৰা হ’ব"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"কলা আৰু বিনোদন"</string>
     <string name="topic10002" msgid="1226367977754287428">"অভিনয় আৰু থিয়েটাৰ"</string>
     <string name="topic10003" msgid="6949890838957814881">"এনিমে’ আৰু মাংগা"</string>

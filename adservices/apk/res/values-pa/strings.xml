@@ -99,14 +99,16 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android ਤੁਹਾਡੀ ਸੂਚੀ ਵਿੱਚ ਇਸ ਦਿਲਚਸਪੀ ਨੂੰ ਦੁਬਾਰਾ ਸ਼ਾਮਲ ਕਰ ਸਕਦਾ ਹੈ, ਪਰ ਹੋ ਸਕਦਾ ਹੈ ਕਿ ਇਹ ਤੁਰੰਤ ਨਾ ਦਿਸੇ"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"ਠੀਕ ਹੈ"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"ਕੀ ਤੁਹਾਡੀਆਂ ਸਾਰੀਆਂ ਦਿਲਚਸਪੀਆਂ ਨੂੰ ਰੀਸੈੱਟ ਕਰਨਾ ਹੈ?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"ਤੁਹਾਡੀ ਸੂਚੀ ਨੂੰ ਕਲੀਅਰ ਕੀਤਾ ਜਾਵੇਗਾ, ਫਿਰ ਸਮੇਂ ਦੇ ਨਾਲ ਇਹ ਰਿਫ੍ਰੈਸ਼ ਕੀਤੀ ਜਾਵੇਗੀ"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"ਰੀਸੈੱਟ ਕਰੋ"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"ਕੀ <xliff:g id="APP">%1$s</xliff:g> ਨੂੰ ਬਲਾਕ ਕਰਨਾ ਹੈ?"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"ਇਹ ਐਪ ਪ੍ਰਾਈਵੇਸੀ ਸੈਂਡਬਾਕਸ ਲਈ ਦਿਲਚਸਪੀਆਂ ਦਾ ਅੰਦਾਜ਼ਾ ਨਹੀਂ ਲਗਾਏਗੀ ਅਤੇ ਇਸਨੂੰ ਤੁਹਾਡੀ ਸੂਚੀ ਵਿੱਚ ਉਦੋਂ ਤੱਕ ਦੁਬਾਰਾ ਸ਼ਾਮਲ ਨਹੀਂ ਕੀਤਾ ਜਾਵੇਗਾ, ਜਦੋਂ ਤੱਕ ਤੁਸੀਂ ਇਸਨੂੰ ਅਣਬਲਾਕ ਨਹੀਂ ਕਰਦੇ।\n\nਇਸ ਐਪ ਵੱਲੋਂ ਪਹਿਲਾਂ ਤੋਂ ਅੰਦਾਜ਼ਨ ਦਿਲਚਸਪੀਆਂ ਨੂੰ ਮਿਟਾ ਦਿੱਤਾ ਜਾਵੇਗਾ, ਪਰ ਤੁਹਾਨੂੰ ਹਾਲੇ ਵੀ ਕੁਝ ਸੰਬੰਧਿਤ ਵਿਗਿਆਪਨ ਦਿਸ ਸਕਦੇ ਹਨ।"</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> ਨੂੰ ਅਣਬਲਾਕ ਕੀਤਾ ਗਿਆ"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"ਇਹ ਐਪ ਤੁਹਾਡੇ ਲਈ ਦੁਬਾਰਾ ਦਿਲਚਸਪੀਆਂ ਦਾ ਅੰਦਾਜ਼ਾ ਲਗਾ ਸਕਦੀ ਹੈ, ਪਰ ਹੋ ਸਕਦਾ ਹੈ ਕਿ ਇਹ ਤੁਰੰਤ ਤੁਹਾਡੀ ਸੂਚੀ ਵਿੱਚ ਨਾ ਦਿਸਣ। ਤੁਹਾਨੂੰ ਸੰਬੰਧਿਤ ਵਿਗਿਆਪਨ ਦਿਸਣ ਵਿੱਚ ਕੁਝ ਸਮਾਂ ਲੱਗ ਸਕਦਾ ਹੈ।"</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"ਕੀ ਐਪਾਂ ਵੱਲੋਂ ਸਿਰਜੀਆਂ ਗਈਆਂ ਦਿਲਚਸਪੀਆਂ ਨੂੰ ਰੀਸੈੱਟ ਕਰਨਾ ਹੈ?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"ਤੁਹਾਡੀ ਸੂਚੀ ਨੂੰ ਕਲੀਅਰ ਕੀਤਾ ਜਾਵੇਗਾ, ਫਿਰ ਸਮੇਂ ਦੇ ਨਾਲ ਇਹ ਰਿਫ੍ਰੈਸ਼ ਕੀਤੀ ਜਾਵੇਗੀ"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"ਕਲਾ ਅਤੇ ਮਨੋਰੰਜਨ"</string>
     <string name="topic10002" msgid="1226367977754287428">"ਅਦਾਕਾਰੀ ਅਤੇ ਥੀਏਟਰ"</string>
     <string name="topic10003" msgid="6949890838957814881">"ਐਨੀਮੇ ਅਤੇ ਮਾਂਗਾ"</string>

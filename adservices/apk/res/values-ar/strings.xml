@@ -99,14 +99,16 @@
     <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"‏قد يضيف نظام Android هذا الاهتمام إلى قائمتك مرة أخرى، ولكنه قد لا يظهر على الفور."</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"حسنًا"</string>
     <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"هل تريد إعادة ضبط كل الاهتمامات؟"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="8099126076667244456">"سيتم إنشاء قائمتك ثم إعادة تحميلها بمرور الوقت."</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"إعادة الضبط"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"هل تريد حظر <xliff:g id="APP">%1$s</xliff:g>؟"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"لن يقدِّر هذا التطبيق اهتماماتك من أجل \"مبادرة حماية الخصوصية\" ولن تتم إضافته إلى قائمتك مرة أخرى ما لم تتم إزالة حظره.\n\nسيتم حذف الاهتمامات التي سبق أن قدّرها هذا التطبيق، ولكن قد تظلّ تظهر لك بعض الإعلانات ذات الصلة."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"تمت إزالة حظر <xliff:g id="APP">%1$s</xliff:g>"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"يمكن أن يقدِّر هذا التطبيق اهتماماتك نيابةً عنك مرة أخرى، ولكنها قد لا تظهر في قائمتك على الفور. وقد يستغرق ظهور الإعلانات ذات الصلة لك بعض الوقت."</string>
     <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"هل تريد إعادة ضبط الاهتمامات التي تُنشئها التطبيقات؟"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1967554695864827385">"سيتم إنشاء قائمتك ثم إعادة تحميلها بمرور الوقت."</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"فنون وترفيه"</string>
     <string name="topic10002" msgid="1226367977754287428">"تمثيل ومسرح"</string>
     <string name="topic10003" msgid="6949890838957814881">"أنمي وقصص مصورة"</string>
