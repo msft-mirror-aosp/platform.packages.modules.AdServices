@@ -177,8 +177,14 @@ public abstract class CustomAudienceDao {
         long customAudienceCount = getCustomAudienceCount();
         long customAudienceCountPerOwner = getCustomAudienceCountForOwner(owner);
         long ownerCount = getCustomAudienceOwnerCount();
-        return new CustomAudienceStats(
-                owner, customAudienceCount, customAudienceCountPerOwner, ownerCount);
+
+        // TODO(b/255780705): Add buyer and per-buyer stats
+        return CustomAudienceStats.builder()
+                .setOwner(owner)
+                .setTotalCustomAudienceCount(customAudienceCount)
+                .setPerOwnerCustomAudienceCount(customAudienceCountPerOwner)
+                .setTotalOwnerCount(ownerCount)
+                .build();
     }
 
     /**
@@ -386,8 +392,10 @@ public abstract class CustomAudienceDao {
             numRemovedCustomAudiences = deleteCustomAudiencesByOwner(ownersToRemove);
         }
 
-        return new CustomAudienceStats(
-                null, numRemovedCustomAudiences, -1, numDisallowedOwnersFound);
+        return CustomAudienceStats.builder()
+                .setTotalCustomAudienceCount(numRemovedCustomAudiences)
+                .setTotalOwnerCount(numDisallowedOwnersFound)
+                .build();
     }
 
     /**
@@ -527,67 +535,4 @@ public abstract class CustomAudienceDao {
                     + "AND :currentTime < ca.expiration_time")
     public abstract int getNumActiveEligibleCustomAudienceBackgroundFetchData(
             @NonNull Instant currentTime);
-
-    /** Class represents custom audience stats query result. */
-    public static class CustomAudienceStats {
-        private final String mOwner;
-        private final long mTotalCount;
-        private final long mPerOwnerCount;
-        private final long mOwnerCount;
-
-        public CustomAudienceStats(
-                String owner, long totalCount, long perOwnerCount, long ownerCount) {
-            mOwner = owner;
-            mTotalCount = totalCount;
-            mPerOwnerCount = perOwnerCount;
-            mOwnerCount = ownerCount;
-        }
-
-        public String getOwner() {
-            return mOwner;
-        }
-
-        public long getTotalCount() {
-            return mTotalCount;
-        }
-
-        public long getPerOwnerCount() {
-            return mPerOwnerCount;
-        }
-
-        public long getOwnerCount() {
-            return mOwnerCount;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof CustomAudienceStats)) return false;
-            CustomAudienceStats that = (CustomAudienceStats) o;
-            return mTotalCount == that.mTotalCount
-                    && mPerOwnerCount == that.mPerOwnerCount
-                    && mOwnerCount == that.mOwnerCount
-                    && Objects.equals(mOwner, that.mOwner);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(mOwner, mTotalCount, mPerOwnerCount, mOwnerCount);
-        }
-
-        @Override
-        public String toString() {
-            return "CustomAudienceStats{"
-                    + "mOwner='"
-                    + mOwner
-                    + '\''
-                    + ", mTotalCount="
-                    + mTotalCount
-                    + ", mPerOwnerCount="
-                    + mPerOwnerCount
-                    + ", mOwnerCount="
-                    + mOwnerCount
-                    + '}';
-        }
-    }
 }

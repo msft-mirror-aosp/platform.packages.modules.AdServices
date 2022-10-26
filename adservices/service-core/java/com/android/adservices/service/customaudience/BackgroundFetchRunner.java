@@ -24,6 +24,7 @@ import android.net.Uri;
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.data.customaudience.CustomAudienceStats;
 import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetchData;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdServicesHttpsClient;
@@ -94,12 +95,12 @@ public class BackgroundFetchRunner {
      */
     public void deleteDisallowedOwnerCustomAudiences() {
         LogUtil.d("Starting custom audience disallowed owner garbage collection");
-        CustomAudienceDao.CustomAudienceStats deletedCAStats =
+        CustomAudienceStats deletedCAStats =
                 mCustomAudienceDao.deleteAllDisallowedOwnerCustomAudienceData(
                         mPackageManager, mFlags);
         LogUtil.d(
                 "Deleted %d custom audiences belonging to %d disallowed owner apps",
-                deletedCAStats.getTotalCount(), deletedCAStats.getOwnerCount());
+                deletedCAStats.getTotalCustomAudienceCount(), deletedCAStats.getTotalOwnerCount());
     }
 
     /** Updates a single given custom audience and persists the results. */

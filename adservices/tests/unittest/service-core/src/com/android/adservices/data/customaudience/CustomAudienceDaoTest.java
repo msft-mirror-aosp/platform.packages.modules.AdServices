@@ -1262,8 +1262,11 @@ public class CustomAudienceDaoTest {
                         CUSTOM_AUDIENCE_2.getName()));
 
         // Clear the uninstalled app data
-        CustomAudienceDao.CustomAudienceStats expectedDisallowedOwnerStats =
-                new CustomAudienceDao.CustomAudienceStats(null, 1, -1, 1);
+        CustomAudienceStats expectedDisallowedOwnerStats =
+                CustomAudienceStats.builder()
+                        .setTotalCustomAudienceCount(1)
+                        .setTotalOwnerCount(1)
+                        .build();
         assertEquals(
                 expectedDisallowedOwnerStats,
                 mCustomAudienceDao.deleteAllDisallowedOwnerCustomAudienceData(
@@ -1345,8 +1348,11 @@ public class CustomAudienceDaoTest {
                         CUSTOM_AUDIENCE_2.getName()));
 
         // Clear the data for the app not in the allowlist
-        CustomAudienceDao.CustomAudienceStats expectedDisallowedOwnerStats =
-                new CustomAudienceDao.CustomAudienceStats(null, 1, -1, 1);
+        CustomAudienceStats expectedDisallowedOwnerStats =
+                CustomAudienceStats.builder()
+                        .setTotalCustomAudienceCount(1)
+                        .setTotalOwnerCount(1)
+                        .build();
         assertEquals(
                 expectedDisallowedOwnerStats,
                 mCustomAudienceDao.deleteAllDisallowedOwnerCustomAudienceData(
@@ -1426,8 +1432,11 @@ public class CustomAudienceDaoTest {
                         CUSTOM_AUDIENCE_2.getName()));
 
         // All data should be cleared because neither owner is both allowlisted and installed
-        CustomAudienceDao.CustomAudienceStats expectedDisallowedOwnerStats =
-                new CustomAudienceDao.CustomAudienceStats(null, 2, -1, 2);
+        CustomAudienceStats expectedDisallowedOwnerStats =
+                CustomAudienceStats.builder()
+                        .setTotalCustomAudienceCount(2)
+                        .setTotalOwnerCount(2)
+                        .build();
         assertEquals(
                 expectedDisallowedOwnerStats,
                 mCustomAudienceDao.deleteAllDisallowedOwnerCustomAudienceData(
@@ -1646,14 +1655,14 @@ public class CustomAudienceDaoTest {
     }
 
     private void verifyCustomAudienceStats(
-            CustomAudienceDao.CustomAudienceStats customAudienceStats,
+            CustomAudienceStats customAudienceStats,
             String owner,
             int totalCount,
             int perOwnerCount,
             int ownerCount) {
         assertEquals(owner, customAudienceStats.getOwner());
-        assertEquals(totalCount, customAudienceStats.getTotalCount());
-        assertEquals(perOwnerCount, customAudienceStats.getPerOwnerCount());
-        assertEquals(ownerCount, customAudienceStats.getOwnerCount());
+        assertEquals(totalCount, customAudienceStats.getTotalCustomAudienceCount());
+        assertEquals(perOwnerCount, customAudienceStats.getPerOwnerCustomAudienceCount());
+        assertEquals(ownerCount, customAudienceStats.getTotalOwnerCount());
     }
 }
