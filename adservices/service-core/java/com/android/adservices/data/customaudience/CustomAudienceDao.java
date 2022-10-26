@@ -28,6 +28,8 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Transaction;
 
+import com.android.adservices.LogUtil;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableData;
@@ -366,6 +368,8 @@ public abstract class CustomAudienceDao {
     @NonNull
     public CustomAudienceStats deleteAllDisallowedOwnerCustomAudienceData(
             @NonNull PackageManager packageManager, @NonNull Flags flags) {
+        Objects.requireNonNull(packageManager);
+        Objects.requireNonNull(flags);
         List<String> ownersToRemove = getAllCustomAudienceOwners();
 
         if (!ownersToRemove.isEmpty()) {
@@ -395,6 +399,77 @@ public abstract class CustomAudienceDao {
         return CustomAudienceStats.builder()
                 .setTotalCustomAudienceCount(numRemovedCustomAudiences)
                 .setTotalOwnerCount(numDisallowedOwnersFound)
+                .build();
+    }
+
+    /** Returns the set of all unique buyer ad techs in the custom audience table. */
+    @Query("SELECT DISTINCT buyer FROM custom_audience")
+    public abstract List<AdTechIdentifier> getAllCustomAudienceBuyers();
+
+    /**
+     * Deletes all custom audiences belonging to any ad tech in the given set of {@code
+     * buyersToRemove}.
+     *
+     * <p>This method is not intended to be called on its own. Please use {@link
+     * #deleteAllDisallowedBuyerCustomAudienceData(EnrollmentDao, Flags)} instead.
+     *
+     * @return the number of deleted custom audiences
+     */
+    @Query("DELETE FROM custom_audience WHERE buyer IN (:buyersToRemove)")
+    protected abstract int deleteCustomAudiencesByBuyer(
+            @NonNull List<AdTechIdentifier> buyersToRemove);
+
+    /**
+     * Deletes all custom audience background fetch data belonging to any ad tech in the given set
+     * of {@code buyersToRemove}.
+     *
+     * <p>This method is not intended to be called on its own. Please use {@link
+     * #deleteAllDisallowedBuyerCustomAudienceData(EnrollmentDao, Flags)} instead.
+     */
+    @Query("DELETE FROM custom_audience_background_fetch_data WHERE buyer IN (:buyersToRemove)")
+    protected abstract void deleteCustomAudienceBackgroundFetchDataByBuyer(
+            @NonNull List<AdTechIdentifier> buyersToRemove);
+
+    /**
+     * Deletes all custom audience data belonging to disallowed buyer ad techs in a single
+     * transaction, where the custom audiences' buyer ad techs cannot be found in the enrollment
+     * database.
+     *
+     * @return a {@link CustomAudienceStats} object containing only the number of deleted custom
+     *     audiences and the number of disallowed owner apps found
+     */
+    @Transaction
+    @NonNull
+    public CustomAudienceStats deleteAllDisallowedBuyerCustomAudienceData(
+            @NonNull EnrollmentDao enrollmentDao, @NonNull Flags flags) {
+        Objects.requireNonNull(enrollmentDao);
+        Objects.requireNonNull(flags);
+
+        if (flags.getDisableFledgeEnrollmentCheck()) {
+            LogUtil.d("FLEDGE enrollment check disabled; skipping enrolled buyer cleanup");
+            return CustomAudienceStats.builder()
+                    .setTotalCustomAudienceCount(0)
+                    .setTotalBuyerCount(0)
+                    .build();
+        }
+
+        List<AdTechIdentifier> buyersToRemove = getAllCustomAudienceBuyers();
+
+        if (!buyersToRemove.isEmpty()) {
+            Set<AdTechIdentifier> allowedAdTechs = enrollmentDao.getAllFledgeEnrolledAdTechs();
+            buyersToRemove.removeAll(allowedAdTechs);
+        }
+
+        long numDisallowedBuyersFound = buyersToRemove.size();
+        long numRemovedCustomAudiences = 0;
+        if (!buyersToRemove.isEmpty()) {
+            deleteCustomAudienceBackgroundFetchDataByBuyer(buyersToRemove);
+            numRemovedCustomAudiences = deleteCustomAudiencesByBuyer(buyersToRemove);
+        }
+
+        return CustomAudienceStats.builder()
+                .setTotalCustomAudienceCount(numRemovedCustomAudiences)
+                .setTotalBuyerCount(numDisallowedBuyersFound)
                 .build();
     }
 

@@ -24,6 +24,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetchData;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.internal.annotations.VisibleForTesting;
@@ -92,7 +93,10 @@ public class BackgroundFetchWorker {
                                     customAudienceDao,
                                     flags,
                                     new BackgroundFetchRunner(
-                                            customAudienceDao, context.getPackageManager(), flags));
+                                            customAudienceDao,
+                                            context.getPackageManager(),
+                                            EnrollmentDao.getInstance(context),
+                                            flags));
                 }
             }
         }
@@ -129,6 +133,7 @@ public class BackgroundFetchWorker {
             // Clean up custom audiences first so the actual fetch won't do unnecessary work
             mBackgroundFetchRunner.deleteExpiredCustomAudiences(jobStartTime);
             mBackgroundFetchRunner.deleteDisallowedOwnerCustomAudiences();
+            mBackgroundFetchRunner.deleteDisallowedBuyerCustomAudiences();
 
             if (mStopWorkRequested) {
                 LogUtil.d("Stopping FLEDGE background fetch");

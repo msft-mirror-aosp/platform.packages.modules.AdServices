@@ -37,6 +37,7 @@ import com.android.adservices.customaudience.DBCustomAudienceBackgroundFetchData
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceStats;
 import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetchData;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -67,6 +68,7 @@ public class BackgroundFetchRunnerTest {
 
     @Mock private CustomAudienceDao mCustomAudienceDaoMock;
     @Mock private PackageManager mPackageManagerMock;
+    @Mock private EnrollmentDao mEnrollmentDaoMock;
 
     private BackgroundFetchRunner mBackgroundFetchRunnerSpy;
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
@@ -86,7 +88,10 @@ public class BackgroundFetchRunnerTest {
         mBackgroundFetchRunnerSpy =
                 ExtendedMockito.spy(
                         new BackgroundFetchRunner(
-                                mCustomAudienceDaoMock, mPackageManagerMock, mFlags));
+                                mCustomAudienceDaoMock,
+                                mPackageManagerMock,
+                                mEnrollmentDaoMock,
+                                mFlags));
 
         mFetchUri = mMockWebServerRule.uriForPath(mFetchPath);
     }
@@ -122,16 +127,46 @@ public class BackgroundFetchRunnerTest {
     }
 
     @Test
+    public void testDeleteDisallowedBuyerCustomAudiences() {
+        doReturn(
+                        CustomAudienceStats.builder()
+                                .setTotalCustomAudienceCount(12)
+                                .setTotalBuyerCount(3)
+                                .build())
+                .when(mCustomAudienceDaoMock)
+                .deleteAllDisallowedBuyerCustomAudienceData(any(), any());
+
+        mBackgroundFetchRunnerSpy.deleteDisallowedBuyerCustomAudiences();
+
+        verify(mCustomAudienceDaoMock)
+                .deleteAllDisallowedBuyerCustomAudienceData(mEnrollmentDaoMock, mFlags);
+    }
+
+    @Test
     public void testBackgroundFetchRunnerNullInputsCauseFailure() {
         assertThrows(
                 NullPointerException.class,
-                () -> new BackgroundFetchRunner(null, mPackageManagerMock, mFlags));
+                () ->
+                        new BackgroundFetchRunner(
+                                null, mPackageManagerMock, mEnrollmentDaoMock, mFlags));
         assertThrows(
                 NullPointerException.class,
-                () -> new BackgroundFetchRunner(mCustomAudienceDaoMock, null, mFlags));
+                () ->
+                        new BackgroundFetchRunner(
+                                mCustomAudienceDaoMock, null, mEnrollmentDaoMock, mFlags));
         assertThrows(
                 NullPointerException.class,
-                () -> new BackgroundFetchRunner(mCustomAudienceDaoMock, mPackageManagerMock, null));
+                () ->
+                        new BackgroundFetchRunner(
+                                mCustomAudienceDaoMock, mPackageManagerMock, null, mFlags));
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new BackgroundFetchRunner(
+                                mCustomAudienceDaoMock,
+                                mPackageManagerMock,
+                                mEnrollmentDaoMock,
+                                null));
     }
 
     @Test
@@ -259,7 +294,10 @@ public class BackgroundFetchRunnerTest {
 
         BackgroundFetchRunner runnerWithSmallLimits =
                 new BackgroundFetchRunner(
-                        mCustomAudienceDaoMock, mPackageManagerMock, new FlagsWithSmallLimits());
+                        mCustomAudienceDaoMock,
+                        mPackageManagerMock,
+                        mEnrollmentDaoMock,
+                        new FlagsWithSmallLimits());
 
         CountDownLatch responseLatch = new CountDownLatch(1);
         MockWebServer mockWebServer =
@@ -335,7 +373,10 @@ public class BackgroundFetchRunnerTest {
 
         BackgroundFetchRunner runnerWithSmallLimits =
                 new BackgroundFetchRunner(
-                        mCustomAudienceDaoMock, mPackageManagerMock, new FlagsWithSmallLimits());
+                        mCustomAudienceDaoMock,
+                        mPackageManagerMock,
+                        mEnrollmentDaoMock,
+                        new FlagsWithSmallLimits());
 
         MockWebServer mockWebServer =
                 mMockWebServerRule.startMockWebServer(
