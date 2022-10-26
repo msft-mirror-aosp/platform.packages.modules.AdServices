@@ -40,6 +40,7 @@ import com.android.adservices.customaudience.DBCustomAudienceBackgroundFetchData
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetchData;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 
@@ -77,6 +78,7 @@ public class BackgroundFetchWorkerTest {
     @Rule public MockitoRule mMockitoRule = MockitoJUnit.rule();
 
     @Mock private PackageManager mPackageManagerMock;
+    @Mock private EnrollmentDao mEnrollmentDaoMock;
 
     private CustomAudienceDao mCustomAudienceDaoSpy;
     private BackgroundFetchRunner mBackgroundFetchRunnerSpy;
@@ -93,7 +95,10 @@ public class BackgroundFetchWorkerTest {
         mBackgroundFetchRunnerSpy =
                 Mockito.spy(
                         new BackgroundFetchRunner(
-                                mCustomAudienceDaoSpy, mPackageManagerMock, mFlags));
+                                mCustomAudienceDaoSpy,
+                                mPackageManagerMock,
+                                mEnrollmentDaoMock,
+                                mFlags));
 
         mBackgroundFetchWorker =
                 new BackgroundFetchWorker(mCustomAudienceDaoSpy, mFlags, mBackgroundFetchRunnerSpy);
@@ -149,7 +154,7 @@ public class BackgroundFetchWorkerTest {
         class BackgroundFetchRunnerWithSleep extends BackgroundFetchRunner {
             BackgroundFetchRunnerWithSleep(
                     @NonNull CustomAudienceDao customAudienceDao, @NonNull Flags flags) {
-                super(customAudienceDao, mPackageManagerMock, flags);
+                super(customAudienceDao, mPackageManagerMock, mEnrollmentDaoMock, flags);
             }
 
             @Override
@@ -209,6 +214,8 @@ public class BackgroundFetchWorkerTest {
         verify(mCustomAudienceDaoSpy).deleteAllExpiredCustomAudienceData(any());
         verify(mBackgroundFetchRunnerSpy).deleteDisallowedOwnerCustomAudiences();
         verify(mCustomAudienceDaoSpy).deleteAllDisallowedOwnerCustomAudienceData(any(), any());
+        verify(mBackgroundFetchRunnerSpy).deleteDisallowedBuyerCustomAudiences();
+        verify(mCustomAudienceDaoSpy).deleteAllDisallowedBuyerCustomAudienceData(any(), any());
         verify(mBackgroundFetchRunnerSpy, never()).updateCustomAudience(any(), any());
     }
 
@@ -232,6 +239,8 @@ public class BackgroundFetchWorkerTest {
         verify(mCustomAudienceDaoSpy).deleteAllExpiredCustomAudienceData(any());
         verify(mBackgroundFetchRunnerSpy).deleteDisallowedOwnerCustomAudiences();
         verify(mCustomAudienceDaoSpy).deleteAllDisallowedOwnerCustomAudienceData(any(), any());
+        verify(mBackgroundFetchRunnerSpy).deleteDisallowedBuyerCustomAudiences();
+        verify(mCustomAudienceDaoSpy).deleteAllDisallowedBuyerCustomAudienceData(any(), any());
         verify(mBackgroundFetchRunnerSpy).updateCustomAudience(any(), any());
     }
 
@@ -261,6 +270,8 @@ public class BackgroundFetchWorkerTest {
         verify(mCustomAudienceDaoSpy).deleteAllExpiredCustomAudienceData(any());
         verify(mBackgroundFetchRunnerSpy).deleteDisallowedOwnerCustomAudiences();
         verify(mCustomAudienceDaoSpy).deleteAllDisallowedOwnerCustomAudienceData(any(), any());
+        verify(mBackgroundFetchRunnerSpy).deleteDisallowedBuyerCustomAudiences();
+        verify(mCustomAudienceDaoSpy).deleteAllDisallowedBuyerCustomAudienceData(any(), any());
         verify(mBackgroundFetchRunnerSpy, times(numEligibleCustomAudiences))
                 .updateCustomAudience(any(), any());
     }
@@ -316,6 +327,8 @@ public class BackgroundFetchWorkerTest {
         verify(mCustomAudienceDaoSpy).deleteAllExpiredCustomAudienceData(any());
         verify(mBackgroundFetchRunnerSpy).deleteDisallowedOwnerCustomAudiences();
         verify(mCustomAudienceDaoSpy).deleteAllDisallowedOwnerCustomAudienceData(any(), any());
+        verify(mBackgroundFetchRunnerSpy).deleteDisallowedBuyerCustomAudiences();
+        verify(mCustomAudienceDaoSpy).deleteAllDisallowedBuyerCustomAudienceData(any(), any());
         verify(mBackgroundFetchRunnerSpy, times(numEligibleCustomAudiences))
                 .updateCustomAudience(any(), any());
     }

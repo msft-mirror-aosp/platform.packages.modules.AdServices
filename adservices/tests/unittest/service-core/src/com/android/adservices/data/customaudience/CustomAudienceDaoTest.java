@@ -18,6 +18,8 @@ package com.android.adservices.data.customaudience;
 
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -39,6 +41,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 import com.android.adservices.data.common.DBAdData;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AllowLists;
@@ -60,11 +63,14 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class CustomAudienceDaoTest {
     private static final Flags TEST_FLAGS = FlagsFactory.getFlagsForTest();
 
-    @Mock PackageManager mPackageManagerMock;
+    @Mock private PackageManager mPackageManagerMock;
+    @Mock private EnrollmentDao mEnrollmentDaoMock;
 
     private static final Uri DAILY_UPDATE_URI_1 = Uri.parse("https://www.example.com/d1");
     private static final AdSelectionSignals USER_BIDDING_SIGNALS_1 =
@@ -1463,6 +1469,168 @@ public class CustomAudienceDaoTest {
                         CUSTOM_AUDIENCE_2.getOwner(),
                         CUSTOM_AUDIENCE_2.getBuyer(),
                         CUSTOM_AUDIENCE_2.getName()));
+    }
+
+    @Test
+    public void testDeleteAllDisallowedBuyerCustomAudienceData_enrollmentEnabled() {
+        class FlagsThatEnforceEnrollment implements Flags {
+            @Override
+            public boolean getDisableFledgeEnrollmentCheck() {
+                return false;
+            }
+        }
+        Flags flagsThatEnforceEnrollment = new FlagsThatEnforceEnrollment();
+
+        doReturn(flagsThatEnforceEnrollment).when(FlagsFactory::getFlags);
+
+        // Only CA2's buyer is enrolled
+        doReturn(Stream.of(CUSTOM_AUDIENCE_2.getBuyer()).collect(Collectors.toSet()))
+                .when(mEnrollmentDaoMock)
+                .getAllFledgeEnrolledAdTechs();
+
+        // Prepopulate with data
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(CUSTOM_AUDIENCE_2, DAILY_UPDATE_URI_2);
+        assertEquals(
+                CUSTOM_AUDIENCE_1,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_1,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_2,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_2.getOwner(),
+                        CUSTOM_AUDIENCE_2.getBuyer(),
+                        CUSTOM_AUDIENCE_2.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_2,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_2.getOwner(),
+                        CUSTOM_AUDIENCE_2.getBuyer(),
+                        CUSTOM_AUDIENCE_2.getName()));
+
+        // CA1's data should be deleted because it is not enrolled
+        CustomAudienceStats expectedDisallowedBuyerStats =
+                CustomAudienceStats.builder()
+                        .setTotalCustomAudienceCount(1)
+                        .setTotalBuyerCount(1)
+                        .build();
+        assertEquals(
+                expectedDisallowedBuyerStats,
+                mCustomAudienceDao.deleteAllDisallowedBuyerCustomAudienceData(
+                        mEnrollmentDaoMock, flagsThatEnforceEnrollment));
+
+        // Verify only CA1's app data is deleted
+        assertNull(
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertNull(
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_2,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_2.getOwner(),
+                        CUSTOM_AUDIENCE_2.getBuyer(),
+                        CUSTOM_AUDIENCE_2.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_2,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_2.getOwner(),
+                        CUSTOM_AUDIENCE_2.getBuyer(),
+                        CUSTOM_AUDIENCE_2.getName()));
+    }
+
+    @Test
+    public void testDeleteAllDisallowedBuyerCustomAudienceData_enrollmentDisabledNoDeletion() {
+        class FlagsThatDisableEnrollment implements Flags {
+            @Override
+            public boolean getDisableFledgeEnrollmentCheck() {
+                return true;
+            }
+        }
+        Flags flagsThatDisableEnrollment = new FlagsThatDisableEnrollment();
+
+        doReturn(flagsThatDisableEnrollment).when(FlagsFactory::getFlags);
+
+        // Prepopulate with data
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(CUSTOM_AUDIENCE_2, DAILY_UPDATE_URI_2);
+        assertEquals(
+                CUSTOM_AUDIENCE_1,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_1,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_2,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_2.getOwner(),
+                        CUSTOM_AUDIENCE_2.getBuyer(),
+                        CUSTOM_AUDIENCE_2.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_2,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_2.getOwner(),
+                        CUSTOM_AUDIENCE_2.getBuyer(),
+                        CUSTOM_AUDIENCE_2.getName()));
+
+        // CA1's data should be deleted because it is not enrolled, but enrollment is disabled, so
+        // nothing is cleared
+        CustomAudienceStats expectedDisallowedBuyerStats =
+                CustomAudienceStats.builder()
+                        .setTotalCustomAudienceCount(0)
+                        .setTotalBuyerCount(0)
+                        .build();
+        assertEquals(
+                expectedDisallowedBuyerStats,
+                mCustomAudienceDao.deleteAllDisallowedBuyerCustomAudienceData(
+                        mEnrollmentDaoMock, flagsThatDisableEnrollment));
+
+        // Verify no data is deleted
+        assertEquals(
+                CUSTOM_AUDIENCE_1,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_1,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_2,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_2.getOwner(),
+                        CUSTOM_AUDIENCE_2.getBuyer(),
+                        CUSTOM_AUDIENCE_2.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_2,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_2.getOwner(),
+                        CUSTOM_AUDIENCE_2.getBuyer(),
+                        CUSTOM_AUDIENCE_2.getName()));
+
+        verify(mEnrollmentDaoMock, never()).getAllFledgeEnrolledAdTechs();
     }
 
     @Test
