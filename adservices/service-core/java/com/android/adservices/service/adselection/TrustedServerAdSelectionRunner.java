@@ -74,6 +74,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import io.grpc.Codec;
 import io.grpc.ManagedChannel;
 import io.grpc.okhttp.OkHttpChannelBuilder;
 
@@ -82,6 +83,8 @@ import io.grpc.okhttp.OkHttpChannelBuilder;
  * Service.
  */
 public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
+    public static final String GZIP = new Codec.Gzip().getMessageEncoding(); // "gzip"
+
     @NonNull private final JsFetcher mJsFetcher;
 
     public TrustedServerAdSelectionRunner(
@@ -297,6 +300,11 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
         ManagedChannel channel = OkHttpChannelBuilder.forAddress("localhost", 8080).build();
         SellerFrontEndGrpc.SellerFrontEndFutureStub stub =
                 SellerFrontEndGrpc.newFutureStub(channel);
+
+        if (mFlags.getAdSelectionOffDeviceRequestCompressionEnabled()) {
+            stub = stub.withCompression(GZIP);
+        }
+
         return stub.selectWinningAd(req);
     }
 
