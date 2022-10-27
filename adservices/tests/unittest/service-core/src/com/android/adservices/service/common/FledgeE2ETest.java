@@ -321,7 +321,7 @@ public class FledgeE2ETest {
                         + "}";
         String biddingLogicJs =
                 "function generateBid(ad, auction_signals, per_buyer_signals,"
-                        + " trusted_bidding_signals, contextual_signals, user_signals,"
+                        + " trusted_bidding_signals, contextual_signals,"
                         + " custom_audience_signals) { \n"
                         + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
                         + "}\n"
@@ -483,7 +483,7 @@ public class FledgeE2ETest {
                         + "}";
         String biddingLogicJs =
                 "function generateBid(ad, auction_signals, per_buyer_signals,"
-                        + " trusted_bidding_signals, contextual_signals, user_signals,"
+                        + " trusted_bidding_signals, contextual_signals,"
                         + " custom_audience_signals) { \n"
                         + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
                         + "}\n"
@@ -681,7 +681,7 @@ public class FledgeE2ETest {
                         + "}";
         String biddingLogicJs =
                 "function generateBid(ad, auction_signals, per_buyer_signals,"
-                        + " trusted_bidding_signals, contextual_signals, user_signals,"
+                        + " trusted_bidding_signals, contextual_signals,"
                         + " custom_audience_signals) { \n"
                         + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
                         + "}\n"
@@ -835,7 +835,7 @@ public class FledgeE2ETest {
                         + "}";
         String biddingLogicJs =
                 "function generateBid(ad, auction_signals, per_buyer_signals,"
-                        + " trusted_bidding_signals, contextual_signals, user_signals,"
+                        + " trusted_bidding_signals, contextual_signals,"
                         + " custom_audience_signals) { \n"
                         + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
                         + "}\n"
@@ -991,7 +991,7 @@ public class FledgeE2ETest {
                         + "}";
         String biddingLogicJs =
                 "function generateBid(ad, auction_signals, per_buyer_signals,"
-                        + " trusted_bidding_signals, contextual_signals, user_signals,"
+                        + " trusted_bidding_signals, contextual_signals,"
                         + " custom_audience_signals) { \n"
                         + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
                         + "}\n"
@@ -1137,7 +1137,7 @@ public class FledgeE2ETest {
                         + "}";
         String biddingLogicJs =
                 "function generateBid(ad, auction_signals, per_buyer_signals,"
-                        + " trusted_bidding_signals, contextual_signals, user_signals,"
+                        + " trusted_bidding_signals, contextual_signals,"
                         + " custom_audience_signals) { \n"
                         + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
                         + "}\n"
@@ -1293,7 +1293,7 @@ public class FledgeE2ETest {
                         + "}";
         String biddingLogicJs =
                 "function generateBid(ad, auction_signals, per_buyer_signals,"
-                        + " trusted_bidding_signals, contextual_signals, user_signals,"
+                        + " trusted_bidding_signals, contextual_signals,"
                         + " custom_audience_signals) { \n"
                         + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
                         + "}\n"
@@ -1527,7 +1527,7 @@ public class FledgeE2ETest {
                         + "}";
         String biddingLogicJs =
                 "function generateBid(ad, auction_signals, per_buyer_signals,"
-                        + " trusted_bidding_signals, contextual_signals, user_signals,"
+                        + " trusted_bidding_signals, contextual_signals,"
                         + " custom_audience_signals) { \n"
                         + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
                         + "}\n"
@@ -1682,7 +1682,7 @@ public class FledgeE2ETest {
                         + "}";
         String biddingLogicJs =
                 "function generateBid(ad, auction_signals, per_buyer_signals,"
-                        + " trusted_bidding_signals, contextual_signals, user_signals,"
+                        + " trusted_bidding_signals, contextual_signals,"
                         + " custom_audience_signals) { \n"
                         + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
                         + "}\n"
