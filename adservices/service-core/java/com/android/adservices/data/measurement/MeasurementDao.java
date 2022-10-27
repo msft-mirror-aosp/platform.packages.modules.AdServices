@@ -425,14 +425,8 @@ class MeasurementDao implements IMeasurementDao {
                         .query(
                                 MeasurementTables.EventReportContract.TABLE,
                                 /*columns=*/ null,
-                                MeasurementTables.EventReportContract.SOURCE_EVENT_ID
-                                        + " = ? "
-                                        + " AND "
-                                        + MeasurementTables.EventReportContract.ENROLLMENT_ID
-                                        + " = ?",
-                                new String[] {
-                                    String.valueOf(source.getEventId()), source.getEnrollmentId()
-                                },
+                                MeasurementTables.EventReportContract.SOURCE_ID + " = ? ",
+                                new String[] {source.getId()},
                                 /*groupBy=*/ null,
                                 /*having=*/ null,
                                 /*orderBy=*/ null,
@@ -554,9 +548,9 @@ class MeasurementDao implements IMeasurementDao {
     @Override
     public void updateSourceDedupKeys(@NonNull Source source) throws DatastoreException {
         ContentValues values = new ContentValues();
-        values.put(MeasurementTables.SourceContract.DEDUP_KEYS,
-                source.getDedupKeys()
-                        .stream()
+        values.put(
+                MeasurementTables.SourceContract.DEDUP_KEYS,
+                source.getDedupKeys().stream()
                         .map(UnsignedLong::getValue)
                         .map(String::valueOf)
                         .collect(Collectors.joining(",")));
@@ -958,16 +952,20 @@ class MeasurementDao implements IMeasurementDao {
                 MeasurementTables.SourceContract.EVENT_TIME + " < ?",
                 new String[] {earliestValidInsertionStr});
         // Trigger table
-        db.delete(MeasurementTables.TriggerContract.TABLE,
+        db.delete(
+                MeasurementTables.TriggerContract.TABLE,
                 MeasurementTables.TriggerContract.TRIGGER_TIME + " < ?",
-                new String[]{earliestValidInsertionStr});
+                new String[] {earliestValidInsertionStr});
         // EventReport table
-        db.delete(MeasurementTables.EventReportContract.TABLE,
-                MeasurementTables.EventReportContract.STATUS + " = ? OR "
-                        + MeasurementTables.EventReportContract.REPORT_TIME + " < ?",
-                new String[]{
-                        String.valueOf(EventReport.Status.DELIVERED),
-                        earliestValidInsertionStr});
+        db.delete(
+                MeasurementTables.EventReportContract.TABLE,
+                MeasurementTables.EventReportContract.STATUS
+                        + " = ? OR "
+                        + MeasurementTables.EventReportContract.REPORT_TIME
+                        + " < ?",
+                new String[] {
+                    String.valueOf(EventReport.Status.DELIVERED), earliestValidInsertionStr
+                });
         // AggregateReport table
         db.delete(
                 MeasurementTables.AggregateReport.TABLE,
@@ -1477,9 +1475,10 @@ class MeasurementDao implements IMeasurementDao {
 
     private static Optional<Pair<String, String>> getDestinationColumnAndValue(Trigger trigger) {
         if (trigger.getDestinationType() == EventSurfaceType.APP) {
-            return Optional.of(Pair.create(
-                    MeasurementTables.SourceContract.APP_DESTINATION,
-                    trigger.getAttributionDestination().toString()));
+            return Optional.of(
+                    Pair.create(
+                            MeasurementTables.SourceContract.APP_DESTINATION,
+                            trigger.getAttributionDestination().toString()));
         } else {
             Optional<Uri> topPrivateDomainAndScheme =
                     Web.topPrivateDomainAndScheme(trigger.getAttributionDestination());

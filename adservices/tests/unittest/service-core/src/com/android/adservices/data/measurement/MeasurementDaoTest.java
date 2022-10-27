@@ -1665,6 +1665,150 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void getSourceEventReports_sourcesWithSameEventId_haveSeparateEventReportsMatch() {
+        List<Source> sourceList =
+                Arrays.asList(
+                        SourceFixture.getValidSourceBuilder()
+                                .setId("1")
+                                .setEventId(new UnsignedLong(1L))
+                                .setEnrollmentId("1")
+                                .build(),
+                        SourceFixture.getValidSourceBuilder()
+                                .setId("2")
+                                .setEventId(new UnsignedLong(1L))
+                                .setEnrollmentId("1")
+                                .build(),
+                        SourceFixture.getValidSourceBuilder()
+                                .setId("3")
+                                .setEventId(new UnsignedLong(2L))
+                                .setEnrollmentId("2")
+                                .build(),
+                        SourceFixture.getValidSourceBuilder()
+                                .setId("4")
+                                .setEventId(new UnsignedLong(2L))
+                                .setEnrollmentId("2")
+                                .build());
+
+        List<Trigger> triggers =
+                Arrays.asList(
+                        TriggerFixture.getValidTriggerBuilder()
+                                .setId("101")
+                                .setEnrollmentId("2")
+                                .build(),
+                        TriggerFixture.getValidTriggerBuilder()
+                                .setId("102")
+                                .setEnrollmentId("2")
+                                .build());
+
+        // Should match with source 1
+        List<EventReport> reportList1 = new ArrayList<>();
+        reportList1.add(
+                new EventReport.Builder()
+                        .setId("1")
+                        .setSourceEventId(new UnsignedLong(1L))
+                        .setEnrollmentId("1")
+                        .setAttributionDestination(sourceList.get(0).getAppDestination())
+                        .setSourceType(sourceList.get(0).getSourceType())
+                        .setSourceId("1")
+                        .setTriggerId("101")
+                        .build());
+        reportList1.add(
+                new EventReport.Builder()
+                        .setId("2")
+                        .setSourceEventId(new UnsignedLong(1L))
+                        .setEnrollmentId("1")
+                        .setAttributionDestination(sourceList.get(0).getAppDestination())
+                        .setAttributionDestination(APP_DESTINATION)
+                        .setSourceType(sourceList.get(0).getSourceType())
+                        .setSourceId("1")
+                        .setTriggerId("102")
+                        .build());
+
+        // Should match with source 2
+        List<EventReport> reportList2 = new ArrayList<>();
+        reportList2.add(
+                new EventReport.Builder()
+                        .setId("3")
+                        .setSourceEventId(new UnsignedLong(2L))
+                        .setEnrollmentId("1")
+                        .setAttributionDestination(sourceList.get(1).getAppDestination())
+                        .setSourceType(sourceList.get(1).getSourceType())
+                        .setSourceId("2")
+                        .setTriggerId("101")
+                        .build());
+        reportList2.add(
+                new EventReport.Builder()
+                        .setId("4")
+                        .setSourceEventId(new UnsignedLong(2L))
+                        .setEnrollmentId("1")
+                        .setAttributionDestination(sourceList.get(1).getAppDestination())
+                        .setSourceType(sourceList.get(1).getSourceType())
+                        .setSourceId("2")
+                        .setTriggerId("102")
+                        .build());
+
+        // Match with source3
+        List<EventReport> reportList3 = new ArrayList<>();
+        reportList3.add(
+                new EventReport.Builder()
+                        .setId("5")
+                        .setSourceEventId(new UnsignedLong(2L))
+                        .setEnrollmentId("2")
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setAttributionDestination(APP_DESTINATION)
+                        .setSourceId("3")
+                        .setTriggerId("101")
+                        .build());
+        reportList3.add(
+                new EventReport.Builder()
+                        .setId("6")
+                        .setSourceEventId(new UnsignedLong(2L))
+                        .setEnrollmentId("2")
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setAttributionDestination(APP_DESTINATION)
+                        .setSourceId("3")
+                        .setTriggerId("102")
+                        .build());
+
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+        sourceList.forEach(source -> AbstractDbIntegrationTest.insertToDb(source, db));
+        triggers.forEach(trigger -> AbstractDbIntegrationTest.insertToDb(trigger, db));
+
+        Stream.of(reportList1, reportList2, reportList3)
+                .flatMap(Collection::stream)
+                .forEach(
+                        (eventReport -> {
+                            DatastoreManagerFactory.getDatastoreManager(sContext)
+                                    .runInTransaction((dao) -> dao.insertEventReport(eventReport));
+                        }));
+
+        assertEquals(
+                reportList1,
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransactionWithResult(
+                                measurementDao ->
+                                        measurementDao.getSourceEventReports(sourceList.get(0)))
+                        .orElseThrow());
+
+        assertEquals(
+                reportList2,
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransactionWithResult(
+                                measurementDao ->
+                                        measurementDao.getSourceEventReports(sourceList.get(1)))
+                        .orElseThrow());
+
+        assertEquals(
+                reportList3,
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransactionWithResult(
+                                measurementDao ->
+                                        measurementDao.getSourceEventReports(sourceList.get(2)))
+                        .orElseThrow());
+    }
+
+    @Test
     public void testUpdateSourceStatus() {
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         Objects.requireNonNull(db);
@@ -2848,20 +2992,21 @@ public class MeasurementDaoTest {
             @Source.Status int sourceStatus) {
         List<Source> sources = new ArrayList<>();
         for (int i = 0; i < numSources; i++) {
-            Source.Builder sourceBuilder = new Source.Builder()
-                    .setEventId(new UnsignedLong(0L))
-                    .setEventTime(eventTime)
-                    .setPublisher(publisher)
-                    .setEnrollmentId(enrollmentId)
-                    .setRegistrant(SourceFixture.ValidSourceParams.REGISTRANT)
-                    .setStatus(sourceStatus);
+            Source.Builder sourceBuilder =
+                    new Source.Builder()
+                            .setEventId(new UnsignedLong(0L))
+                            .setEventTime(eventTime)
+                            .setPublisher(publisher)
+                            .setEnrollmentId(enrollmentId)
+                            .setRegistrant(SourceFixture.ValidSourceParams.REGISTRANT)
+                            .setStatus(sourceStatus);
             if (hasAppDestination) {
-                sourceBuilder.setAppDestination(Uri.parse(
-                        "android-app://app-destination-" + String.valueOf(i)));
+                sourceBuilder.setAppDestination(
+                        Uri.parse("android-app://app-destination-" + String.valueOf(i)));
             }
             if (hasWebDestination) {
-                sourceBuilder.setWebDestination(Uri.parse(
-                        "https://web-destination-" + String.valueOf(i) + ".com"));
+                sourceBuilder.setWebDestination(
+                        Uri.parse("https://web-destination-" + String.valueOf(i) + ".com"));
             }
             sources.add(sourceBuilder.build());
         }
@@ -2877,15 +3022,16 @@ public class MeasurementDaoTest {
             @Source.Status int sourceStatus) {
         List<Source> sources = new ArrayList<>();
         for (int i = 0; i < numSources; i++) {
-            Source.Builder sourceBuilder = new Source.Builder()
-                    .setEventId(new UnsignedLong(0L))
-                    .setEventTime(eventTime)
-                    .setPublisher(publisher)
-                    .setRegistrant(SourceFixture.ValidSourceParams.REGISTRANT)
-                    .setStatus(sourceStatus)
-                    .setAppDestination(appDestination)
-                    .setWebDestination(webDestination)
-                    .setEnrollmentId("enrollment-id-" + i);
+            Source.Builder sourceBuilder =
+                    new Source.Builder()
+                            .setEventId(new UnsignedLong(0L))
+                            .setEventTime(eventTime)
+                            .setPublisher(publisher)
+                            .setRegistrant(SourceFixture.ValidSourceParams.REGISTRANT)
+                            .setStatus(sourceStatus)
+                            .setAppDestination(appDestination)
+                            .setWebDestination(webDestination)
+                            .setEnrollmentId("enrollment-id-" + i);
             sources.add(sourceBuilder.build());
         }
         return sources;
@@ -3810,8 +3956,6 @@ public class MeasurementDaoTest {
                 .setTriggerId(trigger.getId())
                 .build();
     }
-
-
 
     private void setupSourceAndTriggerData() {
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
