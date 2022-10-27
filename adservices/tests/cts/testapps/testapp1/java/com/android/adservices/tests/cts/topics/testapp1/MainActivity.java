@@ -75,6 +75,7 @@ public class MainActivity extends Activity {
     }
 
     // Send Broadcast to main test suite to pass the GetTopicsResponse
+    @SuppressWarnings("NewApi")
     private void sendGetTopicsResponseBroadcast(@NonNull GetTopicsResponse getTopicsResponse) {
         List<Topic> topics = getTopicsResponse.getTopics();
         Log.v(LOG_TAG, "Test app gets topics: " + topics);

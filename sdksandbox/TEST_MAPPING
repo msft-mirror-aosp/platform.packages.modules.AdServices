@@ -2,6 +2,9 @@
    "mainline-presubmit": [
     // Install com.google.android.adservices.apex and run the corresponding test.
     {
+      "name": "CtsSdkSandboxHostSideTests[com.google.android.adservices.apex]"
+    },
+    {
       "name": "CtsSdkSandboxInprocessTests[com.google.android.adservices.apex]"
     },
     {
@@ -32,6 +35,9 @@
           "exclude-annotation": "android.platform.test.annotations.LargeTest"
         }
       ]
+    },
+    {
+      "name": "SdkSandboxManagerDisabledTests[com.google.android.adservices.apex]"
     }
   ],
   "mainline-postsubmit": [
@@ -41,6 +47,9 @@
     }
   ],
   "presubmit": [
+    {
+      "name": "CtsSdkSandboxHostSideTests"
+    },
     {
       "name": "CtsSdkSandboxInprocessTests"
     },
@@ -72,6 +81,9 @@
           "exclude-annotation": "android.platform.test.annotations.LargeTest"
         }
       ]
+    },
+    {
+      "name": "SdkSandboxManagerDisabledTests"
     }
   ],
   "postsubmit": [

@@ -102,10 +102,8 @@ public class ConsentNotificationJobServiceTest {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
         doReturn(mPackageManager).when(mConsentNotificationJobService).getPackageManager();
-        doReturn(Boolean.FALSE)
-                .when(consentManager)
-                .wasNotificationDisplayed(any(PackageManager.class));
-        doNothing().when(consentManager).recordNotificationDisplayed(any());
+        doReturn(Boolean.FALSE).when(consentManager).wasNotificationDisplayed();
+        doNothing().when(consentManager).recordNotificationDisplayed();
         mConsentNotificationJobService.setConsentManager(consentManager);
         doReturn(consentManager).when(() -> ConsentManager.getInstance(any(Context.class)));
         doReturn(true).when(() -> ConsentNotificationJobService.isEuDevice(any(Context.class)));
@@ -127,7 +125,7 @@ public class ConsentNotificationJobServiceTest {
         mConsentNotificationJobService.onStartJob(mMockJobParameters);
         jobFinishedCountDown.await();
 
-        verify(consentManager).wasNotificationDisplayed(any());
+        verify(consentManager).wasNotificationDisplayed();
         verify(mAdservicesSyncUtil).execute(any(Context.class), any(Boolean.class));
         verify(mConsentNotificationJobService).jobFinished(mMockJobParameters, false);
     }

@@ -52,6 +52,10 @@ public class ManifestBasedAdtechAccessResolverTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final String PACKAGE = "package";
     private static final Uri ENROLLED_AD_TECH_URL = Uri.parse("https://test.com/source");
+    private static final Uri ENROLLED_AD_TECH_URL_WITH_QUERY =
+            Uri.parse("https://test.com/source?hello");
+    private static final Uri ENROLLED_AD_TECH_URL_WITH_QUERY_FRAGMENT =
+            Uri.parse("https://test.com/source?hello#now");
     private static final Uri UNENROLLED_AD_TECH_URL = Uri.parse("https://notatest.com/source");
     private static final Uri EMPTY_URL = Uri.parse("");
     private ManifestBasedAdtechAccessResolver mClassUnderTest;
@@ -64,7 +68,7 @@ public class ManifestBasedAdtechAccessResolverTest {
         mMockEnrollmentDao = mock(EnrollmentDao.class);
         doReturn(EnrollmentFixture.getValidEnrollment())
                 .when(mMockEnrollmentDao)
-                .getEnrollmentDataFromMeasurementUrl(eq(ENROLLED_AD_TECH_URL.toString()));
+                .getEnrollmentDataFromMeasurementUrl(eq(ENROLLED_AD_TECH_URL));
         mMockitoSession =
                 ExtendedMockito.mockitoSession()
                         .mockStatic(AppManifestConfigHelper.class)
@@ -120,6 +124,31 @@ public class ManifestBasedAdtechAccessResolverTest {
         mClassUnderTest =
                 new ManifestBasedAdtechAccessResolver(
                         mMockEnrollmentDao, mFlags, PACKAGE, ENROLLED_AD_TECH_URL);
+        doReturn(false).when(mFlags).isDisableMeasurementEnrollmentCheck();
+        when(AppManifestConfigHelper.isAllowedAttributionAccess(any(), any(), any()))
+                .thenReturn(true);
+        assertTrue(mClassUnderTest.isAllowed(CONTEXT));
+    }
+
+    @Test
+    public void isAllowedSuccessClearsQuery() {
+        mClassUnderTest =
+                new ManifestBasedAdtechAccessResolver(
+                        mMockEnrollmentDao, mFlags, PACKAGE, ENROLLED_AD_TECH_URL_WITH_QUERY);
+        doReturn(false).when(mFlags).isDisableMeasurementEnrollmentCheck();
+        when(AppManifestConfigHelper.isAllowedAttributionAccess(any(), any(), any()))
+                .thenReturn(true);
+        assertTrue(mClassUnderTest.isAllowed(CONTEXT));
+    }
+
+    @Test
+    public void isAllowedSuccessClearsFragment() {
+        mClassUnderTest =
+                new ManifestBasedAdtechAccessResolver(
+                        mMockEnrollmentDao,
+                        mFlags,
+                        PACKAGE,
+                        ENROLLED_AD_TECH_URL_WITH_QUERY_FRAGMENT);
         doReturn(false).when(mFlags).isDisableMeasurementEnrollmentCheck();
         when(AppManifestConfigHelper.isAllowedAttributionAccess(any(), any(), any()))
                 .thenReturn(true);

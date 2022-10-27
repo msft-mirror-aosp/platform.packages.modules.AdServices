@@ -20,6 +20,7 @@ import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.measurement.EventReport;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONException;
 
@@ -34,18 +35,23 @@ public final class AggregateReportFixture {
     private static final long MIN_TIME_MS = TimeUnit.MINUTES.toMillis(10L);
     private static final long MAX_TIME_MS = TimeUnit.MINUTES.toMillis(60L);
 
-    // Assume the field values in this AggregateReport have no relation to the field
+    // Assume the field values in this AggregateReport.Builder have no relation to the field
     // values in {@link ValidAggregateReportParams}
-    public static AggregateReport getValidAggregateReport() {
+    public static AggregateReport.Builder getValidAggregateReportBuilder() {
         return new AggregateReport.Builder()
                 .setPublisher(ValidAggregateReportParams.PUBLISHER)
                 .setAttributionDestination(ValidAggregateReportParams.ATTRIBUTION_DESTINATION)
                 .setSourceRegistrationTime(ValidAggregateReportParams.SOURCE_REGISTRATION_TIME)
                 .setScheduledReportTime(ValidAggregateReportParams.TRIGGER_TIME + getRandomTime())
                 .setEnrollmentId(ValidAggregateReportParams.ENROLLMENT_ID)
+                .setSourceDebugKey(ValidAggregateReportParams.SOURCE_DEBUG_KEY)
+                .setTriggerDebugKey(ValidAggregateReportParams.TRIGGER_DEBUG_KEY)
                 .setDebugCleartextPayload(ValidAggregateReportParams.getDebugPayload())
-                .setStatus(EventReport.Status.PENDING)
-                .build();
+                .setStatus(EventReport.Status.PENDING);
+    }
+
+    public static AggregateReport getValidAggregateReport() {
+        return getValidAggregateReportBuilder().build();
     }
 
     public static class ValidAggregateReportParams {
@@ -54,6 +60,8 @@ public final class AggregateReportFixture {
                 Uri.parse("android-app://com.destination");
         public static final long SOURCE_REGISTRATION_TIME = 8640000000L;
         public static final long TRIGGER_TIME = 8640000000L;
+        public static final UnsignedLong SOURCE_DEBUG_KEY = new UnsignedLong(43254545L);
+        public static final UnsignedLong TRIGGER_DEBUG_KEY = new UnsignedLong(67878545L);
         public static final String ENROLLMENT_ID = "enrollment-id";
 
         public static final String getDebugPayload() {

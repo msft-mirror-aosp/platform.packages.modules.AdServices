@@ -26,6 +26,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 
+import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
@@ -37,6 +38,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.PermissionInfo;
 import android.os.Binder;
 import android.os.Bundle;
+import android.os.Parcel;
 
 import androidx.lifecycle.Lifecycle;
 import androidx.test.core.app.ActivityScenario;
@@ -51,6 +53,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.util.List;
+
 /*
  * TODO(b/215372846): These providers
  * (RequestSurfacePackageSuccessfullySdkProvider, RetryLoadSameSdkShouldFailSdkProvider) could be
@@ -58,6 +62,8 @@ import org.junit.runners.JUnit4;
  */
 @RunWith(JUnit4.class)
 public class SdkSandboxManagerTest {
+
+    private static final String NON_EXISTENT_SDK = "com.android.not_exist";
 
     @Rule
     public final ActivityScenarioRule<TestActivity> mRule =
@@ -77,8 +83,47 @@ public class SdkSandboxManagerTest {
     }
 
     @Test
+    public void testGetSdkSandboxState() throws Exception {
+        int state = mSdkSandboxManager.getSdkSandboxState();
+        assertThat(state).isEqualTo(SdkSandboxManager.SDK_SANDBOX_STATE_ENABLED_PROCESS_ISOLATION);
+    }
+
+    @Test
     public void loadSdkSuccessfully() {
         final String sdkName = "com.android.loadSdkSuccessfullySdkProvider";
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        assertNotNull(callback.getSandboxedSdk());
+        assertNotNull(callback.getSandboxedSdk().getInterface());
+        mSdkSandboxManager.unloadSdk(sdkName);
+    }
+
+    @Test
+    public void getSandboxedSdkSuccessfully() {
+        final String sdkName = "com.android.loadSdkSuccessfullySdkProvider";
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
+        assertThat(callback.isLoadSdkSuccessful(/*ignoreSdkAlreadyLoadedError=*/ true)).isTrue();
+
+        List<SandboxedSdk> sandboxedSdks = mSdkSandboxManager.getSandboxedSdks();
+
+        int nLoadedSdks = sandboxedSdks.size();
+        assertThat(nLoadedSdks).isGreaterThan(0);
+        assertThat(
+                        sandboxedSdks.stream()
+                                .filter(s -> s.getSharedLibraryInfo().getName().equals(sdkName))
+                                .count())
+                .isEqualTo(1);
+
+        mSdkSandboxManager.unloadSdk(sdkName);
+        List<SandboxedSdk> sandboxedSdksAfterUnload = mSdkSandboxManager.getSandboxedSdks();
+        assertThat(sandboxedSdksAfterUnload.size()).isEqualTo(nLoadedSdks - 1);
+    }
+
+    @Test
+    public void loadSdkAndCheckClassloader() {
+        final String sdkName = "com.android.loadSdkAndCheckClassloader";
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
@@ -104,13 +149,22 @@ public class SdkSandboxManagerTest {
 
     @Test
     public void loadNotExistSdkShouldFail() {
-        final String sdkName = "com.android.not_exist";
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
 
-        mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
+        mSdkSandboxManager.loadSdk(NON_EXISTENT_SDK, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isFalse();
         assertThat(callback.getLoadSdkErrorCode())
                 .isEqualTo(SdkSandboxManager.LOAD_SDK_NOT_FOUND);
+    }
+
+    @Test
+    public void loadNotExistSdkShouldFail_checkLoadSdkException() {
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+
+        mSdkSandboxManager.loadSdk(NON_EXISTENT_SDK, new Bundle(), Runnable::run, callback);
+        LoadSdkException loadSdkException = callback.getLoadSdkException();
+        assertThat(loadSdkException.getExtraInformation()).isNotNull();
+        assertThat(loadSdkException.getExtraInformation().isEmpty()).isTrue();
     }
 
     @Test
@@ -124,27 +178,28 @@ public class SdkSandboxManagerTest {
     }
 
     @Test
-    public void unloadAndReloadSdk() {
+    public void unloadAndReloadSdk() throws Exception {
         final String sdkName = "com.android.loadSdkSuccessfullySdkProvider";
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
 
         mSdkSandboxManager.unloadSdk(sdkName);
+        // Wait till SDK is unloaded.
+        Thread.sleep(2000);
 
-        // Calls to an unloaded SDK should throw an exception.
+        // Calls to an unloaded SDK should fail.
         final FakeRequestSurfacePackageCallback requestSurfacePackageCallback =
                 new FakeRequestSurfacePackageCallback();
-        Bundle params = new Bundle();
-        params.putInt(EXTRA_WIDTH_IN_PIXELS, 500);
-        params.putInt(EXTRA_HEIGHT_IN_PIXELS, 500);
-        params.putInt(EXTRA_DISPLAY_ID, 0);
-        params.putBinder(EXTRA_HOST_TOKEN, new Binder());
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        mSdkSandboxManager.requestSurfacePackage(
-                                sdkName, params, Runnable::run, requestSurfacePackageCallback));
+        mSdkSandboxManager.requestSurfacePackage(
+                sdkName,
+                getRequestSurfacePackageParams(),
+                Runnable::run,
+                requestSurfacePackageCallback);
+
+        assertThat(requestSurfacePackageCallback.isRequestSurfacePackageSuccessful()).isFalse();
+        assertThat(requestSurfacePackageCallback.getSurfacePackageErrorCode())
+                .isEqualTo(SdkSandboxManager.REQUEST_SURFACE_PACKAGE_SDK_NOT_LOADED);
 
         // SDK can be reloaded after being unloaded.
         final FakeLoadSdkCallback callback2 = new FakeLoadSdkCallback();
@@ -153,7 +208,7 @@ public class SdkSandboxManagerTest {
     }
 
     @Test
-    public void unloadingNonexistentSdkThrowsException() {
+    public void unloadNonexistentSdk() {
         final String sdkName1 = "com.android.loadSdkSuccessfullySdkProvider";
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(sdkName1, new Bundle(), Runnable::run, callback);
@@ -161,7 +216,8 @@ public class SdkSandboxManagerTest {
         assertThat(callback.isLoadSdkSuccessful(/*ignoreSdkAlreadyLoadedError=*/ true)).isTrue();
 
         final String sdkName2 = "com.android.nonexistent";
-        assertThrows(IllegalArgumentException.class, () -> mSdkSandboxManager.unloadSdk(sdkName2));
+        // Unloading does nothing - call should go throw without error.
+        mSdkSandboxManager.unloadSdk(sdkName2);
     }
 
     @Test
@@ -186,13 +242,8 @@ public class SdkSandboxManagerTest {
         // Further calls to the SDK should still be valid.
         final FakeRequestSurfacePackageCallback surfacePackageCallback =
                 new FakeRequestSurfacePackageCallback();
-        Bundle params = new Bundle();
-        params.putInt(EXTRA_WIDTH_IN_PIXELS, 500);
-        params.putInt(EXTRA_HEIGHT_IN_PIXELS, 500);
-        params.putInt(EXTRA_DISPLAY_ID, 0);
-        params.putBinder(EXTRA_HOST_TOKEN, new Binder());
         mSdkSandboxManager.requestSurfacePackage(
-                sdkName, params, Runnable::run, surfacePackageCallback);
+                sdkName, getRequestSurfacePackageParams(), Runnable::run, surfacePackageCallback);
         assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isTrue();
     }
 
@@ -313,13 +364,8 @@ public class SdkSandboxManagerTest {
 
         final FakeRequestSurfacePackageCallback surfacePackageCallback =
                 new FakeRequestSurfacePackageCallback();
-        Bundle params = new Bundle();
-        params.putInt(EXTRA_WIDTH_IN_PIXELS, 500);
-        params.putInt(EXTRA_HEIGHT_IN_PIXELS, 500);
-        params.putInt(EXTRA_DISPLAY_ID, 0);
-        params.putBinder(EXTRA_HOST_TOKEN, new Binder());
         mSdkSandboxManager.requestSurfacePackage(
-                sdkName, params, Runnable::run, surfacePackageCallback);
+                sdkName, getRequestSurfacePackageParams(), Runnable::run, surfacePackageCallback);
         assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isTrue();
     }
 
@@ -333,16 +379,13 @@ public class SdkSandboxManagerTest {
 
         final FakeRequestSurfacePackageCallback surfacePackageCallback =
                 new FakeRequestSurfacePackageCallback();
-        Bundle params = new Bundle();
-        params.putInt(EXTRA_WIDTH_IN_PIXELS, 500);
-        params.putInt(EXTRA_HEIGHT_IN_PIXELS, 500);
-        params.putInt(EXTRA_DISPLAY_ID, 0);
-        params.putBinder(EXTRA_HOST_TOKEN, new Binder());
         mSdkSandboxManager.requestSurfacePackage(
-                sdkName, params, Runnable::run, surfacePackageCallback);
+                sdkName, getRequestSurfacePackageParams(), Runnable::run, surfacePackageCallback);
         assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isFalse();
         assertThat(surfacePackageCallback.getSurfacePackageErrorCode())
                 .isEqualTo(SdkSandboxManager.REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR);
+        assertThat(surfacePackageCallback.getExtraErrorInformation()).isNotNull();
+        assertThat(surfacePackageCallback.getExtraErrorInformation().isEmpty()).isTrue();
     }
 
     @Test
@@ -356,16 +399,11 @@ public class SdkSandboxManagerTest {
 
         final FakeRequestSurfacePackageCallback surfacePackageCallback =
                 new FakeRequestSurfacePackageCallback();
-        Bundle params = new Bundle();
-        params.putInt(EXTRA_WIDTH_IN_PIXELS, 500);
-        params.putInt(EXTRA_HEIGHT_IN_PIXELS, 500);
-        params.putInt(EXTRA_DISPLAY_ID, 0);
-        params.putBinder(EXTRA_HOST_TOKEN, new Binder());
         mSdkSandboxManager.requestSurfacePackage(
-                sdkName, params, Runnable::run, surfacePackageCallback);
+                sdkName, getRequestSurfacePackageParams(), Runnable::run, surfacePackageCallback);
         assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isFalse();
         assertThat(surfacePackageCallback.getSurfacePackageErrorCode())
-                .isEqualTo(SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE);
+                .isEqualTo(SdkSandboxManager.REQUEST_SURFACE_PACKAGE_SDK_NOT_LOADED);
     }
 
     @Test
@@ -374,6 +412,118 @@ public class SdkSandboxManagerTest {
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
+    }
+
+    @Test
+    public void testLoadSdkInBackgroundFails() throws Exception {
+        mScenario.moveToState(Lifecycle.State.DESTROYED);
+
+        // Wait for the activity to be destroyed
+        Thread.sleep(1000);
+
+        final String sdkName = "com.android.loadSdkSuccessfullySdkProvider";
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        SecurityException thrown =
+                assertThrows(
+                        SecurityException.class,
+                        () ->
+                                mSdkSandboxManager.loadSdk(
+                                        sdkName, new Bundle(), Runnable::run, callback));
+        assertThat(thrown).hasMessageThat().contains("does not run in the foreground");
+    }
+
+    @Test
+    public void testSandboxApisAreUsableAfterUnbindingSandbox() throws Exception {
+        final String sdkName1 = "com.android.requestSurfacePackageSuccessfullySdkProvider";
+        FakeLoadSdkCallback callback1 = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(sdkName1, new Bundle(), Runnable::run, callback1);
+        assertThat(callback1.isLoadSdkSuccessful(/*ignoreSdkAlreadyLoadedError=*/ true)).isTrue();
+
+        // Move the app to the background and bring it back to the foreground again.
+        mScenario.recreate();
+
+        // Loading another sdk should work without issue
+        final String sdkName2 = "com.android.loadSdkSuccessfullySdkProvider";
+        FakeLoadSdkCallback callback2 = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(sdkName2, new Bundle(), Runnable::run, callback2);
+        assertThat(callback2.isLoadSdkSuccessful()).isTrue();
+
+        // Requesting surface package from the first loaded sdk should work.
+        final FakeRequestSurfacePackageCallback surfacePackageCallback =
+                new FakeRequestSurfacePackageCallback();
+        mSdkSandboxManager.requestSurfacePackage(
+                sdkName1, getRequestSurfacePackageParams(), Runnable::run, surfacePackageCallback);
+        assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isTrue();
+
+        mSdkSandboxManager.unloadSdk(sdkName1);
+        mSdkSandboxManager.unloadSdk(sdkName2);
+    }
+
+    /** Checks that {@code SdkSandbox.apk} only requests normal permissions in its manifest. */
+    // TODO: This should probably be a separate test module
+    @Test
+    public void testSdkSandboxPermissions() throws Exception {
+        final PackageManager pm =
+                InstrumentationRegistry.getInstrumentation().getContext().getPackageManager();
+        final PackageInfo sdkSandboxPackage =
+                pm.getPackageInfo(
+                        pm.getSdkSandboxPackageName(),
+                        PackageManager.PackageInfoFlags.of(PackageManager.GET_PERMISSIONS));
+        for (int i = 0; i < sdkSandboxPackage.requestedPermissions.length; i++) {
+            final String permissionName = sdkSandboxPackage.requestedPermissions[i];
+            final PermissionInfo permissionInfo = pm.getPermissionInfo(permissionName, 0);
+            mExpect.withMessage("SdkSandbox.apk requests non-normal permission " + permissionName)
+                    .that(permissionInfo.getProtection())
+                    .isEqualTo(PermissionInfo.PROTECTION_NORMAL);
+        }
+    }
+
+    // TODO(b/244730098): The test below needs to be moved from e2e.
+    // It is not and e2e test.
+    @Test
+    public void testLoadSdkExceptionWriteToParcel() throws Exception {
+        final Bundle bundle = new Bundle();
+        bundle.putChar("testKey", /*testValue=*/ 'C');
+
+        final LoadSdkException exception = new LoadSdkException(/*Throwable=*/ null, bundle);
+
+        final Parcel parcel = Parcel.obtain();
+        exception.writeToParcel(parcel, /*flags=*/ 0);
+
+        // Create LoadSdkException with the same parcel
+        parcel.setDataPosition(0); // rewind
+        final LoadSdkException exceptionCheck = LoadSdkException.CREATOR.createFromParcel(parcel);
+
+        assertThat(exceptionCheck.getLoadSdkErrorCode()).isEqualTo(exception.getLoadSdkErrorCode());
+        assertThat(exceptionCheck.getExtraInformation().getChar("testKey"))
+                .isEqualTo(exception.getExtraInformation().getChar("testKey"));
+        assertThat(exceptionCheck.getExtraInformation().keySet()).containsExactly("testKey");
+    }
+
+    // TODO(b/244730098): The test below needs to be moved from e2e.
+    // It is not and e2e test.
+    @Test
+    public void testLoadSdkExceptionDescribeContents() throws Exception {
+        final LoadSdkException exception = new LoadSdkException(/*Throwable=*/ null, new Bundle());
+        assertThat(exception.describeContents()).isEqualTo(0);
+    }
+
+    // TODO(b/244730098): The test below needs to be moved from e2e.
+    // It is not and e2e test.
+    @Test
+    public void testSandboxedSdkDescribeContents() throws Exception {
+        final SandboxedSdk sandboxedSdk = new SandboxedSdk(new Binder());
+        assertThat(sandboxedSdk.describeContents()).isEqualTo(0);
+    }
+
+    private Bundle getRequestSurfacePackageParams() {
+        Bundle params = new Bundle();
+        params.putInt(EXTRA_WIDTH_IN_PIXELS, 500);
+        params.putInt(EXTRA_HEIGHT_IN_PIXELS, 500);
+        params.putInt(EXTRA_DISPLAY_ID, 0);
+        params.putBinder(EXTRA_HOST_TOKEN, new Binder());
+
+        return params;
     }
 
     private void loadMultipleSdks() {
@@ -401,42 +551,5 @@ public class SdkSandboxManagerTest {
         // TODO(b/241542162): Avoid using reflection as a workaround once test apis can be run
         //  without issue.
         mSdkSandboxManager.getClass().getMethod("stopSdkSandbox").invoke(mSdkSandboxManager);
-    }
-
-    @Test
-    public void testLoadSdkInBackgroundFails() throws Exception {
-        mScenario.moveToState(Lifecycle.State.DESTROYED);
-
-        // Wait for the activity to be destroyed
-        Thread.sleep(1000);
-
-        final String sdkName = "com.android.loadSdkSuccessfullySdkProvider";
-        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
-        SecurityException thrown =
-                assertThrows(
-                        SecurityException.class,
-                        () ->
-                                mSdkSandboxManager.loadSdk(
-                                        sdkName, new Bundle(), Runnable::run, callback));
-        assertThat(thrown).hasMessageThat().contains("does not run in the foreground");
-    }
-
-    /** Checks that {@code SdkSandbox.apk} only requests normal permissions in its manifest. */
-    // TODO: This should probably be a separate test module
-    @Test
-    public void testSdkSandboxPermissions() throws Exception {
-        final PackageManager pm =
-                InstrumentationRegistry.getInstrumentation().getContext().getPackageManager();
-        final PackageInfo sdkSandboxPackage =
-                pm.getPackageInfo(
-                        pm.getSdkSandboxPackageName(),
-                        PackageManager.PackageInfoFlags.of(PackageManager.GET_PERMISSIONS));
-        for (int i = 0; i < sdkSandboxPackage.requestedPermissions.length; i++) {
-            final String permissionName = sdkSandboxPackage.requestedPermissions[i];
-            final PermissionInfo permissionInfo = pm.getPermissionInfo(permissionName, 0);
-            mExpect.withMessage("SdkSandbox.apk requests non-normal permission " + permissionName)
-                    .that(permissionInfo.getProtection())
-                    .isEqualTo(PermissionInfo.PROTECTION_NORMAL);
-        }
     }
 }

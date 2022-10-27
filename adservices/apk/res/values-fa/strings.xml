@@ -47,7 +47,8 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"نحوه مشارکت"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"روشن کردن نسخه بتا به برنامه‌ها اجازه می‌دهد این روش‌های خصوصی‌تر جدید را برای نمایش آگهی به شما آزمایش کنند. هرزمان خواستید می‌توانید نسخه بتا را در تنظیمات حریم خصوصی خاموش کنید."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"نه متشکرم"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"بله، می‌پیوندم"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"روشن کردن"</string>
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"بیشتر"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"از مشارکت شما سپاس‌گزاریم"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"‏شما عضوی از نسخه بتای حریم خصوصی آگهی‌های Android هستید. «جعبه ایمنی حریم خصوصی» برای دستگاه شما روشن شده است.\n\nهرزمان بخواهید می‌توانید در تنظیمات حریم خصوصی اطلاعات بیشتری کسب کنید یا نسخه بتا را خاموش کنید."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"انتخاب کرده‌اید که شرکت نکنید"</string>
@@ -79,8 +80,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"در‌حال‌حاضر هیچ علاقه‌ای برای نمایش وجود ندارد"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"جعبه ایمنی حریم خصوصی"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"‏نسخه بتای حریم خصوصی آگهی‌های Android ویژگی‌های جدیدی را ارائه می‌کند که برنامه‌ها بااستفاده از آن‌ها می‌توانند آگهی‌هایی به شما نشان دهند که شاید بپسندید. این فناوری‌ها از شناسه‌های دستگاه استفاده نمی‌کنند.\n\nAndroid می‌تواند انواع آگهی‌هایی را که ممکن است به آن‌ها علاقه داشته باشید ارزیابی کند و این علایق را به‌طور موقت در دستگاهتان ذخیره کند. این ویژگی به برنامه‌ها امکان می‌دهد بدون ردیابی فعالیت شما در وب‌سایت‌ها و برنامه‌های توسعه‌دهندگان دیگر، آگهی‌های مرتبط به شما نشان دهند."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"علاقه مسدودشده‌ای ندارید"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"‏برنامه‌ها می‌توانند علایق شما را ارزیابی کنند و آن‌ها را به‌طور موقت در Android ذخیره کنند. بعداً، برنامه دیگری می‌تواند براساس این علایق به شما آگهی نشان دهد.\n\nاگر برنامه‌ای را مسدود کنید، این برنامه دیگر علایق را ارزیابی نخواهد کرد. تا زمانی‌که آن را لغو انسداد نکنید دیگر به این فهرست برنامه اضافه نخواهد شد. علایقی که برنامه قبلاً ارزیابی کرده است حذف خواهد شد، اما ممکن است همچنان آگهی‌هایی مرتبط با آن‌ها ببینید."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"برنامه‌هایی که مسدود کرده‌اید"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"بازنشانی علایق ارزیابی‌شده توسط برنامه‌ها"</string>
@@ -88,7 +88,27 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"جعبه ایمنی حریم خصوصی"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"‏نسخه بتای حریم خصوصی آگهی‌های Android ویژگی‌های جدیدی را ارائه می‌کند که برنامه‌ها بااستفاده از آن‌ها می‌توانند آگهی‌هایی به شما نشان دهند که شاید بپسندید. این فناوری‌ها از شناسه‌های دستگاه استفاده نمی‌کنند.\n\nبرنامه‌ها می‌توانند انواع آگهی‌هایی را که ممکن است به آن‌ها علاقه داشته باشید ارزیابی کنند و این علایق را به‌طور موقت در دستگاهتان ذخیره کنند. این ویژگی به برنامه‌ها امکان می‌دهد بدون ردیابی فعالیت شما در وب‌سایت‌ها و برنامه‌های توسعه‌دهندگان دیگر، آگهی‌های مرتبط به شما نشان دهند."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"هیچ برنامه مسدودشده‌ای ندارید"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"علاقه مسدودشده‌ای ندارید"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"لغو"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"«جعبه ایمنی حریم خصوصی» خاموش شود؟"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"‏اگر نظرتان عوض شد یا خواستید درباره نسخه بتای حریم خصوصی آگهی‌های Android اطلاعات بیشتری کسب کنید، به تنظیمات حریم خصوصی‌تان بروید"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"خاموش کردن"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"<xliff:g id="TOPIC">%1$s</xliff:g> مسدود شود؟"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"این علاقه مسدود خواهد شد و دیگر به فهرستتان اضافه نخواهد شد، مگراینکه آن را دوباره اضافه کنید. ممکن است همچنان تعدادی آگهی مرتبط ببینید."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"مسدود کردن"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> لغو انسداد شد"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"‏Android ممکن است این علاقه را دوباره به فهرستتان اضافه کند، اما ممکن است فوراً نمایش داده نشود"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"تأیید"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"همه علایقتان بازنشانی شود؟"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"بازنشانی"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g> مسدود شود؟"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"این برنامه علایق را برای «جعبه ایمنی حریم خصوصی» تخمین نمی‌زند و دیگر به فهرستتان اضافه نخواهد شد، مگراینکه آن را لغو انسداد کنید.\n\nعلایقی که قبلاً توسط این برنامه تخمین زده شده است حذف خواهد شد، اما ممکن است همچنان تعدادی آگهی مرتبط ببینید."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> لغو انسداد شد"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"این برنامه می‌تواند دوباره علایقتان را تخمین بزند، اما ممکن است فوراً در فهرستتان نمایش داده نشود. ممکن است مدتی طول بکشد تا آگهی‌های مرتبط را ببینید."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"علایق ایجادشده توسط برنامه‌ها بازنشانی شود؟"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"هنر و سرگرمی"</string>
     <string name="topic10002" msgid="1226367977754287428">"بازیگری و تئاتر"</string>
     <string name="topic10003" msgid="6949890838957814881">"انیمه و مانگا"</string>
@@ -246,7 +266,7 @@
     <string name="topic10155" msgid="5243817792730496258">"سیستم سینمای خانگی"</string>
     <string name="topic10156" msgid="2497791567138856030">"‏MP3 و پخش‌کننده رسانه قابل‌حمل"</string>
     <string name="topic10157" msgid="4723439422860510190">"فناوری پوشیدنی"</string>
-    <string name="topic10158" msgid="5345830001295028513">"پشتیبان‌گیری و بازیابی داده"</string>
+    <string name="topic10158" msgid="5345830001295028513">"پشتیبان‌گیری و بازیابی داده‌ها"</string>
     <string name="topic10159" msgid="6146958285117174314">"رایانه رومیزی"</string>
     <string name="topic10160" msgid="6624820395549466426">"رایانه کیفی و نوت‌بوک"</string>
     <string name="topic10161" msgid="912458758908978530">"ایجاد شبکه"</string>

@@ -28,6 +28,7 @@ import com.android.adservices.MockWebServerRuleFactory;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import com.google.mockwebserver.MockResponse;
+import com.google.mockwebserver.MockWebServer;
 
 import org.json.JSONObject;
 import org.junit.Assert;
@@ -67,6 +68,33 @@ public final class MeasurementHttpClientTest {
         Assert.assertEquals(
                 MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS, urlConnection.getConnectTimeout());
         Assert.assertEquals(MEASUREMENT_NETWORK_READ_TIMEOUT_MS, urlConnection.getReadTimeout());
+    }
+
+    @Test
+    public void testSetup_headersLeakingInfoAreOverridden() throws Exception {
+        final MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
+        MockWebServer server = null;
+        try {
+            server =
+                    mMockWebServerRule.startMockWebServer(
+                            request -> {
+                                Assert.assertNotNull(request);
+                                final String userAgentHeader = request.getHeader("user-agent");
+                                Assert.assertNotNull(userAgentHeader);
+                                Assert.assertEquals("", userAgentHeader);
+                                return new MockResponse().setResponseCode(200);
+                            });
+
+            final URL url = server.getUrl("/test");
+            final HttpURLConnection urlConnection =
+                    (HttpURLConnection) mNetworkConnection.setup(url);
+
+            Assert.assertEquals(200, urlConnection.getResponseCode());
+        } finally {
+            if (server != null) {
+                server.shutdown();
+            }
+        }
     }
 
     @Test

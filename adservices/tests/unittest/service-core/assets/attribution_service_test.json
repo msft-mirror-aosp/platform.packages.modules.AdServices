@@ -77,7 +77,7 @@
         ],
         "event_reports": [{
           "id": "unused",
-          "sourceId": 1,
+          "sourceEventId": 1,
           "attributionDestination": "android-app://com.example2.app/d1",
           "enrollmentId": "enrollment-id-3",
           "triggerData": 2,
@@ -86,7 +86,9 @@
           "reportTime": 8643600030,
           "triggerPriority": 101,
           "sourceType": "navigation",
-          "randomizedTriggerRate":  0.0024263
+          "randomizedTriggerRate":  0.0024263,
+          "sourceId": "S1",
+          "triggerId": "T1"
         }],
         "attributions": [
           {
@@ -97,9 +99,90 @@
             "destinationOrigin": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "sourceId": "S1",
+            "triggerId": "T1"
           }
         ]
+      }
+    },
+    {
+      "name": "Expired source",
+      "input": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "publisher": "android-app://com.example.abc",
+            "appDestination": "android-app://com.example2.app",
+            "enrollmentId": "enrollment-id-3",
+            "eventTime": 1643235573000,
+            "expiryTime": 1643408373000,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "android-app://com.example2.app",
+            "enrollmentId": "enrollment-id-3",
+            "status": 0,
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
+            "triggerTime": 1643408373000,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [],
+        "attributions": []
+      },
+      "output": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "publisher": "android-app://com.example.abc",
+            "appDestination": "android-app://com.example2.app",
+            "enrollmentId": "enrollment-id-3",
+            "eventTime": 1643235573000,
+            "expiryTime": 1643408373000,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "android-app://com.example2.app",
+            "enrollmentId": "enrollment-id-3",
+            "status": 1,
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
+            "triggerTime": 1643408373000,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [],
+        "attributions": []
       }
     },
     {
@@ -288,7 +371,7 @@
         ],
         "event_reports": [{
           "id": "unused",
-          "sourceId": 2,
+          "sourceEventId": 2,
           "attributionDestination": "android-app://com.example2.app/d1",
           "reportTime": 8643600030,
           "enrollmentId": "enrollment-id-3",
@@ -297,7 +380,9 @@
           "triggerPriority": 101,
           "status": 0,
           "sourceType": "navigation",
-          "randomizedTriggerRate":  0.0024263
+          "randomizedTriggerRate":  0.0024263,
+          "sourceId": "S2",
+          "triggerId": "T1"
         }],
         "attributions": [
           {
@@ -308,7 +393,9 @@
             "destinationOrigin": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "sourceId": "S2",
+            "triggerId": "T1"
           }
         ]
       }
@@ -416,7 +503,7 @@
         ],
         "event_reports": [{
           "id": "unused",
-          "sourceId": 2,
+          "sourceEventId": 2,
           "attributionDestination": "android-app://com.example.xyz",
           "reportTime": 8643600030,
           "enrollmentId": "enrollment-id-3",
@@ -425,7 +512,9 @@
           "triggerPriority": 101,
           "status": 0,
           "sourceType": "navigation",
-          "randomizedTriggerRate":  0.0024263
+          "randomizedTriggerRate":  0.0024263,
+          "sourceId": "S2",
+          "triggerId": "T1"
         }],
         "attributions": [
           {
@@ -436,7 +525,9 @@
             "destinationOrigin": "android-app://com.example.xyz",
             "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000003,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "sourceId": "S2",
+            "triggerId": "T1"
           }
         ]
       }
@@ -550,7 +641,7 @@
         "event_reports": [
           {
             "id": "unused",
-            "sourceId": 2,
+            "sourceEventId": 2,
             "attributionDestination": "android-app://com.example.xyz",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
@@ -559,7 +650,9 @@
             "status": 0,
             "reportTime": 8816400000,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263
+            "randomizedTriggerRate":  0.0024263,
+            "sourceId": "S2",
+            "triggerId": "T1"
           }
         ],
         "attributions": [
@@ -571,7 +664,9 @@
             "destinationOrigin": "android-app://com.example.xyz",
             "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "sourceId": "S2",
+            "triggerId": "T1"
           }
         ]
       }
@@ -686,7 +781,7 @@
         "event_reports": [
           {
             "id": "unused",
-            "sourceId": 1,
+            "sourceEventId": 1,
             "attributionDestination": "android-app://com.example.xyz",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
@@ -695,7 +790,9 @@
             "status": 0,
             "reportTime": 9248400001,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263
+            "randomizedTriggerRate":  0.0024263,
+            "sourceId": "S1",
+            "triggerId": "T1"
           }
         ],
         "attributions": [
@@ -707,7 +804,9 @@
             "destinationOrigin": "android-app://com.example.xyz",
             "enrollmentId": "enrollment-id-3",
             "triggerTime": 9072000001,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "sourceId": "S1",
+            "triggerId": "T1"
           }
         ]
       }
@@ -822,7 +921,7 @@
         "event_reports": [
           {
             "id": "unused",
-            "sourceId": 2,
+            "sourceEventId": 2,
             "attributionDestination": "android-app://com.example.xyz",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 1,
@@ -831,7 +930,9 @@
             "status": 0,
             "reportTime": 8816400000,
             "sourceType": "event",
-            "randomizedTriggerRate":  0.0000125
+            "randomizedTriggerRate":  0.0000125,
+            "sourceId": "S2",
+            "triggerId": "T1"
           }
         ],
         "attributions": [
@@ -843,7 +944,9 @@
             "destinationOrigin": "android-app://com.example.xyz",
             "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "sourceId": "S2",
+            "triggerId": "T1"
           }
         ]
       }
@@ -957,7 +1060,7 @@
         "event_reports": [
           {
             "id": "unused",
-            "sourceId": 1,
+            "sourceEventId": 1,
             "attributionDestination": "android-app://com.example.xyz",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 0,
@@ -966,7 +1069,9 @@
             "status": 0,
             "reportTime": 10371600000,
             "sourceType": "event",
-            "randomizedTriggerRate":  0.0000025
+            "randomizedTriggerRate":  0.0000025,
+            "sourceId": "S1",
+            "triggerId": "T1"
           }
         ],
         "attributions": [
@@ -978,7 +1083,9 @@
             "destinationOrigin": "android-app://com.example.xyz",
             "enrollmentId": "enrollment-id-3",
             "triggerTime": 9072000001,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "sourceId": "S1",
+            "triggerId": "T1"
           }
         ]
       }
@@ -1063,7 +1170,7 @@
         ],
         "event_reports": [{
           "id": "unused",
-          "sourceId": 1,
+          "sourceEventId": 1,
           "attributionDestination": "android-app://com.example2.app/d1",
           "enrollmentId": "enrollment-id-3",
           "triggerData": 1,
@@ -1072,7 +1179,9 @@
           "reportTime": 8643600030,
           "triggerPriority": 101,
           "sourceType": "event",
-          "randomizedTriggerRate":  0.0000025
+          "randomizedTriggerRate":  0.0000025,
+          "sourceId": "S1",
+          "triggerId": "T1"
         }],
         "attributions": [
           {
@@ -1083,7 +1192,9 @@
             "destinationOrigin": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "sourceId": "S1",
+            "triggerId": "T1"
           }
         ]
       }
@@ -1166,7 +1277,7 @@
         ],
         "event_reports": [{
           "id": "unused",
-          "sourceId": 1,
+          "sourceEventId": 1,
           "attributionDestination": "android-app://com.example2.app/d1",
           "enrollmentId": "enrollment-id-3",
           "triggerData": 7,
@@ -1175,7 +1286,9 @@
           "reportTime": 8643600030,
           "triggerPriority": 101,
           "sourceType": "navigation",
-          "randomizedTriggerRate":  0.0024263
+          "randomizedTriggerRate":  0.0024263,
+          "sourceId": "S1",
+          "triggerId": "T1"
         }],
         "attributions": [
           {
@@ -1186,7 +1299,9 @@
             "destinationOrigin": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "sourceId": "S1",
+            "triggerId": "T1"
           }
         ]
       }
@@ -1295,7 +1410,7 @@
         }],
         "event_reports": [{
           "id": "unused",
-          "sourceId": 1,
+          "sourceEventId": 1,
           "attributionDestination": "android-app://com.example2.app/d1",
           "enrollmentId": "enrollment-id-3",
           "triggerData": 0,
@@ -1304,7 +1419,9 @@
           "reportTime": 8643600030,
           "triggerPriority": 101,
           "sourceType": "event",
-          "randomizedTriggerRate":  0.0000025
+          "randomizedTriggerRate":  0.0000025,
+          "sourceId": "S1",
+          "triggerId": "T1"
         }],
         "attributions": [{
           "id": "unused",
@@ -1314,7 +1431,9 @@
           "destinationOrigin": "android-app://com.example2.app",
           "enrollmentId": "enrollment-id-3",
           "triggerTime": 8640000002,
-          "registrant": "android-app://com.example.xyz"
+          "registrant": "android-app://com.example.xyz",
+          "sourceId": "S1",
+          "triggerId": "T1"
         }]
       }
     },
@@ -1422,7 +1541,7 @@
         }],
         "event_reports": [{
           "id": "unused",
-          "sourceId": 1,
+          "sourceEventId": 1,
           "attributionDestination": "android-app://com.example2.app/d1",
           "enrollmentId": "enrollment-id-3",
           "triggerData": 1,
@@ -1431,7 +1550,9 @@
           "reportTime": 8643600030,
           "triggerPriority": 102,
           "sourceType": "event",
-          "randomizedTriggerRate":  0.0000025
+          "randomizedTriggerRate":  0.0000025,
+          "sourceId": "S1",
+          "triggerId": "T2"
         }],
         "attributions": [
           {
@@ -1442,7 +1563,9 @@
             "destinationOrigin": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "sourceId": "S1",
+            "triggerId": "T1"
           },
           {
             "id": "unused2",
@@ -1452,7 +1575,9 @@
             "destinationOrigin": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000003,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "sourceId": "S1",
+            "triggerId": "T2"
           }]
       }
     },
@@ -1637,7 +1762,7 @@
         "event_reports": [
           {
             "id": "unused",
-            "sourceId": 1,
+            "sourceEventId": 1,
             "attributionDestination": "android-app://com.example2.app/d1",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
@@ -1646,11 +1771,13 @@
             "reportTime": 8643600030,
             "triggerPriority": 102,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263
+            "randomizedTriggerRate":  0.0024263,
+            "sourceId": "S1",
+            "triggerId": "T2"
           },
           {
             "id": "unused",
-            "sourceId": 1,
+            "sourceEventId": 1,
             "attributionDestination": "android-app://com.example2.app/d1",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 3,
@@ -1659,11 +1786,13 @@
             "reportTime": 8643600030,
             "triggerPriority": 103,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263
+            "randomizedTriggerRate":  0.0024263,
+            "sourceId": "S1",
+            "triggerId": "T3"
           },
           {
             "id": "unused",
-            "sourceId": 1,
+            "sourceEventId": 1,
             "attributionDestination": "android-app://com.example2.app/d1",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 4,
@@ -1672,7 +1801,9 @@
             "reportTime": 8643600030,
             "triggerPriority": 104,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263
+            "randomizedTriggerRate":  0.0024263,
+            "sourceId": "S1",
+            "triggerId": "T4"
           }
         ],
         "attributions": [
@@ -1684,7 +1815,9 @@
             "destinationOrigin": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "sourceId": "S1",
+            "triggerId": "T1"
           },
           {
             "id": "unused2",
@@ -1694,7 +1827,9 @@
             "destinationOrigin": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000003,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "sourceId": "S1",
+            "triggerId": "T2"
           },
           {
             "id": "unused3",
@@ -1704,7 +1839,9 @@
             "destinationOrigin": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000004,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "sourceId": "S1",
+            "triggerId": "T3"
           },
           {
             "id": "unused4",
@@ -1714,7 +1851,9 @@
             "destinationOrigin": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000005,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "sourceId": "S1",
+            "triggerId": "T4"
           }
         ]
       }
@@ -1902,7 +2041,7 @@
         "event_reports": [
           {
             "id": "unused",
-            "sourceId": 1,
+            "sourceEventId": 1,
             "attributionDestination": "android-app://com.example2.app/d1",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 1,
@@ -1911,11 +2050,13 @@
             "reportTime": 8643600030,
             "triggerPriority": 101,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263
+            "randomizedTriggerRate":  0.0024263,
+            "sourceId": "S1",
+            "triggerId": "T1"
           },
           {
             "id": "unused",
-            "sourceId": 1,
+            "sourceEventId": 1,
             "attributionDestination": "android-app://com.example2.app/d1",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
@@ -1924,11 +2065,13 @@
             "reportTime": 8643600030,
             "triggerPriority": 101,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263
+            "randomizedTriggerRate":  0.0024263,
+            "sourceId": "S1",
+            "triggerId": "T2"
           },
           {
             "id": "unused",
-            "sourceId": 1,
+            "sourceEventId": 1,
             "attributionDestination": "android-app://com.example2.app/d1",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 4,
@@ -1937,7 +2080,9 @@
             "reportTime": 8643600030,
             "triggerPriority": 102,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263
+            "randomizedTriggerRate":  0.0024263,
+            "sourceId": "S1",
+            "triggerId": "T4"
           }
         ],
         "attributions": [
@@ -1949,7 +2094,9 @@
             "destinationOrigin": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "sourceId": "S1",
+            "triggerId": "T1"
           },
           {
             "id": "unused2",
@@ -1959,7 +2106,9 @@
             "destinationOrigin": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000003,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "sourceId": "S1",
+            "triggerId": "T2"
           },
           {
             "id": "unused3",
@@ -1969,7 +2118,9 @@
             "destinationOrigin": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000004,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "sourceId": "S1",
+            "triggerId": "T3"
           },
           {
             "id": "unused4",
@@ -1979,7 +2130,9 @@
             "destinationOrigin": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000005,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "sourceId": "S1",
+            "triggerId": "T4"
           }
         ]
       }
@@ -2048,7 +2201,6 @@
             "sourceType": "navigation",
             "publisher": "https://www.example1.com",
             "appDestination": "android-app://com.example2.app/d1",
-            "enrollmentId": "enrollment-id-3",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -2296,7 +2448,7 @@
         "event_reports": [
           {
             "id": "unused",
-            "sourceId": 2,
+            "sourceEventId": 2,
             "attributionDestination": "android-app://com.example2.app/d1",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 1,
@@ -2305,7 +2457,9 @@
             "reportTime": 8643600030,
             "triggerPriority": 101,
             "sourceType": "event",
-            "randomizedTriggerRate": 0.0000025
+            "randomizedTriggerRate": 0.0000025,
+            "sourceId": "S1",
+            "triggerId": "T1"
           }
         ],
         "attributions": [
@@ -2317,7 +2471,9 @@
             "destinationOrigin": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "sourceId": "S1",
+            "triggerId": "T1"
           }
         ]
       }
@@ -2525,7 +2681,7 @@
         "event_reports": [
           {
             "id": "unused",
-            "sourceId": 2,
+            "sourceEventId": 2,
             "attributionDestination": "android-app://com.example2.app/d1",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 0,
@@ -2534,7 +2690,9 @@
             "reportTime": 8643600030,
             "triggerPriority": 102,
             "sourceType": "event",
-            "randomizedTriggerRate": 0.0000025
+            "randomizedTriggerRate": 0.0000025,
+            "sourceId": "S1",
+            "triggerId": "T1"
           }
         ],
         "attributions": [
@@ -2546,7 +2704,9 @@
             "destinationOrigin": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "sourceId": "S1",
+            "triggerId": "T1"
           }
         ]
       }
@@ -2652,7 +2812,7 @@
         "event_reports": [
           {
             "id": "unused",
-            "sourceId": 2,
+            "sourceEventId": 2,
             "attributionDestination": "android-app://com.example2.app/d1",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 1,
@@ -2661,7 +2821,9 @@
             "reportTime": 8643600030,
             "triggerPriority": 101,
             "sourceType": "event",
-            "randomizedTriggerRate": 0.0000025
+            "randomizedTriggerRate": 0.0000025,
+            "sourceId": "S1",
+            "triggerId": "T1"
           }
         ],
         "attributions": [
@@ -2673,7 +2835,9 @@
             "destinationOrigin": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "sourceId": "S1",
+            "triggerId": "T1"
           }
         ]
       }
@@ -2797,7 +2961,7 @@
         "event_reports": [
           {
             "id": "unused",
-            "sourceId": 2,
+            "sourceEventId": 2,
             "attributionDestination": "android-app://com.example2.app/d1",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 0,
@@ -2806,7 +2970,9 @@
             "reportTime": 8643600030,
             "triggerPriority": 102,
             "sourceType": "event",
-            "randomizedTriggerRate": 0.0000025
+            "randomizedTriggerRate": 0.0000025,
+            "sourceId": "S1",
+            "triggerId": "T1"
           }
         ],
         "attributions": [
@@ -2818,7 +2984,9 @@
             "destinationOrigin": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "sourceId": "S1",
+            "triggerId": "T1"
           }
         ]
       }
@@ -2946,7 +3114,7 @@
         "event_reports": [
           {
             "id": "unused",
-            "sourceId": 2,
+            "sourceEventId": 2,
             "attributionDestination": "android-app://com.example2.app/d1",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 1,
@@ -2955,7 +3123,9 @@
             "reportTime": 8643600030,
             "triggerPriority": 103,
             "sourceType": "event",
-            "randomizedTriggerRate": 0.0000025
+            "randomizedTriggerRate": 0.0000025,
+            "sourceId": "S1",
+            "triggerId": "T1"
           }
         ],
         "attributions": [
@@ -2967,7 +3137,165 @@
             "destinationOrigin": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "triggerTime": 8640000002,
+            "registrant": "android-app://com.example.xyz",
+            "sourceId": "S1",
+            "triggerId": "T1"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Simple 1-1 matching Web Destination Aggregate Report",
+      "input": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "publisher": "android-app://com.example.abc",
+            "appDestination": "android-app://com.example2.app/d1",
+            "webDestination": "https://example2.com",
+            "enrollmentId": "enrollment-id-3",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "aggregationKeys": [
+              {
+                "id": "campaignCounts",
+                "key_piece": "0x159"
+              }
+            ],
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "https://example2.com",
+            "destinationType": 1,
+            "enrollmentId": "enrollment-id-3",
+            "status": 0,
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
+            "aggregatableTriggerData": [
+              {
+                "key_piece": "0x400",
+                "source_keys": ["campaignCounts"]
+              }
+            ],
+            "aggregatableValues": {
+              "campaignCounts": 32678
+            },
+            "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [],
+        "attributions": []
+      },
+      "output": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "publisher": "android-app://com.example.abc",
+            "appDestination": "android-app://com.example2.app/d1",
+            "webDestination": "https://example2.com",
+            "enrollmentId": "enrollment-id-3",
+            "aggregationKeys": [
+              {
+                "id": "campaignCounts",
+                "key_piece": "0x159"
+              }
+            ],
+            "aggregateContributions": 32678,
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "https://example2.com",
+            "destinationType": 1,
+            "enrollmentId": "enrollment-id-3",
+            "status": 2,
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
+            "aggregatableTriggerData": [
+              {
+                "key_piece": "0x400",
+                "source_keys": ["campaignCounts"]
+              }
+            ],
+            "aggregatableValues": {
+              "campaignCounts": 32678
+            },
+            "triggerTime": 8640000002,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [{
+          "id": "unused",
+          "sourceEventId": 1,
+          "attributionDestination": "https://example2.com",
+          "enrollmentId": "enrollment-id-3",
+          "triggerData": 2,
+          "triggerTime": 8640000002,
+          "status": 0,
+          "reportTime": 8643600030,
+          "triggerPriority": 101,
+          "sourceType": "navigation",
+          "randomizedTriggerRate":  0.017022,
+          "sourceId": "S1",
+          "triggerId": "T1"
+        }],
+        "aggregate_reports": [
+          {
+            "id": "unused",
+            "publisher": "android-app://com.example.abc",
+            "attributionDestination": "https://example2.com",
+            "sourceRegistrationTime": 8640000000,
+            "scheduledReportTime": 8640000002,
+            "enrollmentId": "enrollment-id-3",
+            "status": 0,
+            "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32678}]}",
+            "apiVersion": "0.1",
+            "sourceId": "S1",
+            "triggerId": "T1"
+          }
+        ],
+        "attributions": [
+          {
+            "id": "unused",
+            "sourceSite": "android-app://com.example.abc",
+            "sourceOrigin": "android-app://com.example.abc",
+            "destinationSite": "https://example2.com",
+            "destinationOrigin": "https://example2.com",
+            "enrollmentId": "enrollment-id-3",
+            "triggerTime": 8640000002,
+            "registrant": "android-app://com.example.xyz",
+            "sourceId": "S1",
+            "triggerId": "T1"
           }
         ]
       }

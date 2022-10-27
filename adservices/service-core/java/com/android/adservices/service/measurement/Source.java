@@ -25,6 +25,7 @@ import com.android.adservices.service.measurement.aggregation.AggregatableAttrib
 import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.noising.ImpressionNoiseParams;
 import com.android.adservices.service.measurement.noising.ImpressionNoiseUtil;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Validation;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -66,7 +67,7 @@ public class Source {
     public static final int DUAL_DESTINATION_IMPRESSION_NOISE_MULTIPLIER = 2;
 
     private String mId;
-    private long mEventId;
+    private UnsignedLong mEventId;
     private Uri mPublisher;
     @EventSurfaceType private int mPublisherType;
     private Uri mAppDestination;
@@ -78,11 +79,11 @@ public class Source {
     @Status private int mStatus;
     private long mEventTime;
     private long mExpiryTime;
-    private List<Long> mDedupKeys;
+    private List<UnsignedLong> mDedupKeys;
     @AttributionMode private int mAttributionMode;
     private long mInstallAttributionWindow;
     private long mInstallCooldownWindow;
-    private @Nullable Long mDebugKey;
+    private @Nullable UnsignedLong mDebugKey;
     private boolean mIsInstallAttributed;
     private String mAggregateFilterData;
     private String mAggregateSource;
@@ -120,7 +121,7 @@ public class Source {
         private final String mValue;
 
         SourceType(String value) {
-            this.mValue = value;
+            mValue = value;
         }
 
         public String getValue() {
@@ -140,14 +141,14 @@ public class Source {
 
     /** Class for storing fake report data. */
     public static class FakeReport {
-        private final long mTriggerData;
+        private final UnsignedLong mTriggerData;
         private final long mReportingTime;
         private final Uri mDestination;
 
-        public FakeReport(long triggerData, long reportingTime, Uri destination) {
-            this.mTriggerData = triggerData;
-            this.mReportingTime = reportingTime;
-            this.mDestination = destination;
+        public FakeReport(UnsignedLong triggerData, long reportingTime, Uri destination) {
+            mTriggerData = triggerData;
+            mReportingTime = reportingTime;
+            mDestination = destination;
         }
 
         @Override
@@ -155,7 +156,7 @@ public class Source {
             if (this == o) return true;
             if (!(o instanceof FakeReport)) return false;
             FakeReport that = (FakeReport) o;
-            return mTriggerData == that.mTriggerData
+            return Objects.equals(mTriggerData, that.mTriggerData)
                     && mReportingTime == that.mReportingTime
                     && Objects.equals(mDestination, that.mDestination);
         }
@@ -169,7 +170,7 @@ public class Source {
             return mReportingTime;
         }
 
-        public long getTriggerData() {
+        public UnsignedLong getTriggerData() {
             return mTriggerData;
         }
 
@@ -241,7 +242,7 @@ public class Source {
     public int getTriggerDataCardinality() {
         return mSourceType == SourceType.EVENT
                 ? PrivacyParams.EVENT_TRIGGER_DATA_CARDINALITY
-                : PrivacyParams.NAVIGATION_TRIGGER_DATA_CARDINALITY;
+                : PrivacyParams.getNavigationTriggerDataCardinality();
     }
 
     /**
@@ -316,7 +317,7 @@ public class Source {
                 && mStatus == source.mStatus
                 && mExpiryTime == source.mExpiryTime
                 && mEventTime == source.mEventTime
-                && mEventId == source.mEventId
+                && Objects.equals(mEventId, source.mEventId)
                 && Objects.equals(mDebugKey, source.mDebugKey)
                 && mSourceType == source.mSourceType
                 && Objects.equals(mDedupKeys, source.mDedupKeys)
@@ -409,7 +410,7 @@ public class Source {
                             .map(
                                     reportConfig ->
                                             new FakeReport(
-                                                    reportConfig[0],
+                                                    new UnsignedLong(Long.valueOf(reportConfig[0])),
                                                     getReportingTimeForNoising(reportConfig[1]),
                                                     resolveFakeReportDestination(reportConfig[2])))
                             .collect(Collectors.toList());
@@ -429,7 +430,7 @@ public class Source {
     /**
      * Identifier provided by the registrant.
      */
-    public long getEventId() {
+    public UnsignedLong getEventId() {
         return mEventId;
     }
 
@@ -483,7 +484,7 @@ public class Source {
     }
 
     /** Debug key of {@link Source}. */
-    public @Nullable Long getDebugKey() {
+    public @Nullable UnsignedLong getDebugKey() {
         return mDebugKey;
     }
 
@@ -497,7 +498,7 @@ public class Source {
     /**
      * List of dedup keys for the attributed {@link Trigger}.
      */
-    public List<Long> getDedupKeys() {
+    public List<UnsignedLong> getDedupKeys() {
         return mDedupKeys;
     }
 
@@ -614,15 +615,34 @@ public class Source {
     }
 
     /**
+     * Generates AggregatableFilterData from aggregate filter string in Source, including an entry
+     * for source type.
+     */
+    public AggregateFilterData parseAggregateFilterData() throws JSONException {
+        AggregateFilterData aggregateFilterData;
+        if (mAggregateFilterData == null || mAggregateFilterData.isEmpty()) {
+            aggregateFilterData = new AggregateFilterData.Builder().build();
+        } else {
+            aggregateFilterData =
+                    new AggregateFilterData.Builder()
+                            .buildAggregateFilterData(new JSONObject(mAggregateFilterData))
+                            .build();
+        }
+        aggregateFilterData.getAttributionFilterMap().put("source_type",
+                Collections.singletonList(mSourceType.getValue()));
+        return aggregateFilterData;
+    }
+
+    /**
      * Generates AggregatableAttributionSource from aggregate source string and aggregate filter
      * data string in Source.
      */
     public Optional<AggregatableAttributionSource> parseAggregateSource()
             throws JSONException, NumberFormatException {
-        if (this.mAggregateSource == null) {
+        if (mAggregateSource == null) {
             return Optional.empty();
         }
-        JSONArray jsonArray = new JSONArray(this.mAggregateSource);
+        JSONArray jsonArray = new JSONArray(mAggregateSource);
         Map<String, BigInteger> aggregateSourceMap = new HashMap<>();
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -632,15 +652,11 @@ public class Source {
             BigInteger bigInteger = new BigInteger(hexString, 16);
             aggregateSourceMap.put(id, bigInteger);
         }
-        return Optional.of(
+        AggregatableAttributionSource.Builder aggregatableAttributionSourceBuilder =
                 new AggregatableAttributionSource.Builder()
-                        .setAggregatableSource(aggregateSourceMap)
-                        .setAggregateFilterData(
-                                new AggregateFilterData.Builder()
-                                        .buildAggregateFilterData(
-                                                new JSONObject(this.mAggregateFilterData))
-                                        .build())
-                        .build());
+                        .setAggregatableSource(aggregateSourceMap);
+        aggregatableAttributionSourceBuilder.setAggregateFilterData(parseAggregateFilterData());
+        return Optional.of(aggregatableAttributionSourceBuilder.build());
     }
 
     private List<FakeReport> generateVtcDualDestinationPostInstallFakeReports() {
@@ -652,7 +668,7 @@ public class Source {
                 .map(
                         reportConfig ->
                                 new FakeReport(
-                                        reportConfig[0],
+                                        new UnsignedLong(Long.valueOf(reportConfig[0])),
                                         getReportingTimeForNoising(reportConfig[1]),
                                         resolveFakeReportDestination(reportConfig[2])))
                 .collect(Collectors.toList());
@@ -703,7 +719,7 @@ public class Source {
 
         /** See {@link Source#getEventId()}. */
         @NonNull
-        public Builder setEventId(long eventId) {
+        public Builder setEventId(UnsignedLong eventId) {
             mBuilding.mEventId = eventId;
             return this;
         }
@@ -768,7 +784,7 @@ public class Source {
         }
 
         /** See {@link Source#getDebugKey()} ()}. */
-        public Builder setDebugKey(@Nullable Long debugKey) {
+        public Builder setDebugKey(@Nullable UnsignedLong debugKey) {
             mBuilding.mDebugKey = debugKey;
             return this;
         }
@@ -783,7 +799,7 @@ public class Source {
 
         /** See {@link Source#getDedupKeys()}. */
         @NonNull
-        public Builder setDedupKeys(@Nullable List<Long> dedupKeys) {
+        public Builder setDedupKeys(@Nullable List<UnsignedLong> dedupKeys) {
             mBuilding.mDedupKeys = dedupKeys;
             return this;
         }

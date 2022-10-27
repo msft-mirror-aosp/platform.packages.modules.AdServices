@@ -88,6 +88,8 @@ public class MeasurementManagerCtsTest {
         // We need to turn the Consent Manager into debug mode
         overrideConsentManagerDebugMode();
 
+        overrideMeasurementKillSwitches(true);
+
         mMeasurementClient =
                 new MeasurementClient.Builder()
                         .setContext(sContext)
@@ -100,6 +102,7 @@ public class MeasurementManagerCtsTest {
         resetAllowSandboxPackageNameAccessMeasurementApis();
         resetOverrideConsentManagerDebugMode();
         resetOverrideDisableMeasurementEnrollmentCheck();
+        overrideMeasurementKillSwitches(false);
         TimeUnit.SECONDS.sleep(1);
     }
 
@@ -303,5 +306,33 @@ public class MeasurementManagerCtsTest {
     private void resetOverrideDisableMeasurementEnrollmentCheck() {
         ShellUtils.runShellCommand(
                 "setprop debug.adservices.disable_measurement_enrollment_check null");
+    }
+
+    // Override measurement related kill switch to ignore the effect of actual PH values.
+    // If isOverride = true, override measurement related kill switch to OFF to allow adservices
+    // If isOverride = false, override measurement related kill switch to meaningless value so that
+    // PhFlags will use the default value.
+    private void overrideMeasurementKillSwitches(boolean isOverride) {
+        String overrideString = isOverride ? "false" : "null";
+        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_kill_switch " + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_register_source_kill_switch "
+                        + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_register_trigger_kill_switch "
+                        + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_register_web_source_kill_switch "
+                        + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_register_web_trigger_kill_switch "
+                        + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_delete_registrations_kill_switch "
+                        + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_status_kill_switch " + overrideString);
     }
 }

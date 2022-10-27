@@ -137,7 +137,7 @@
     "event_reports": [
       {
         "id": "E1",
-        "sourceId": 1,
+        "sourceEventId": 1,
         "attributionDestination": "https://deleteCandidate1.site.com",
         "enrollmentId": "enrollment-id",
         "triggerData": 2,
@@ -149,7 +149,7 @@
       },
       {
         "id": "E2",
-        "sourceId": 1,
+        "sourceEventId": 1,
         "attributionDestination": "android-app://com.site.notInRangeButDeleteDueToSourceId1",
         "enrollmentId": "enrollment-id",
         "triggerData": 2,
@@ -161,7 +161,7 @@
       },
       {
         "id": "E3",
-        "sourceId": 2,
+        "sourceEventId": 2,
         "attributionDestination": "https://doNotDelete.site.com",
         "enrollmentId": "enrollment-id",
         "triggerData": 2,
@@ -173,7 +173,7 @@
       },
       {
         "id": "E4",
-        "sourceId": 2,
+        "sourceEventId": 2,
         "attributionDestination": "https://deleteCandidate1.site.com",
         "enrollmentId": "enrollment-id",
         "triggerData": 2,
@@ -185,7 +185,7 @@
       },
       {
         "id": "E5",
-        "sourceId": 2,
+        "sourceEventId": 2,
         "attributionDestination": "https://deleteCandidate1.site.com",
         "enrollmentId": "enrollment-id",
         "triggerData": 2,
@@ -197,7 +197,7 @@
       },
       {
         "id": "E6",
-        "sourceId": 2,
+        "sourceEventId": 2,
         "attributionDestination": "https://deleteCandidate2.site.com",
         "enrollmentId": "enrollment-id",
         "triggerData": 2,
@@ -323,7 +323,7 @@
     "event_reports": [
       {
         "id": "E3",
-        "sourceId": 2,
+        "sourceEventId": 2,
         "attributionDestination": "https://doNotDelete.site.com",
         "enrollmentId": "enrollment-id",
         "triggerData": 2,
@@ -335,7 +335,7 @@
       },
       {
         "id": "E5",
-        "sourceId": 2,
+        "sourceEventId": 2,
         "attributionDestination": "https://deleteCandidate1.site.com",
         "enrollmentId": "enrollment-id",
         "triggerData": 2,

@@ -173,6 +173,42 @@ public class CacheManager implements Dumpable {
     }
 
     /**
+     * Get cached topics within certain epoch range. This is a helper method to get cached topics
+     * for an app-sdk caller, without considering other constraints, like UI blocking logic.
+     *
+     * @param epochLowerBound the earliest epoch to include cached topics from
+     * @param epochUpperBound the latest epoch to included cached topics to
+     * @param app the app
+     * @param sdk the sdk. In case the app calls the Topics API directly, the sdk == empty string.
+     * @return {@link List<Topic>} a list of Topics between {@code epochLowerBound} and {@code
+     *     epochUpperBound}.
+     */
+    @NonNull
+    public List<Topic> getTopicsInEpochRange(
+            long epochLowerBound, long epochUpperBound, @NonNull String app, @NonNull String sdk) {
+        List<Topic> topics = new ArrayList<>();
+        // To deduplicate returned topics
+        Set<Integer> topicsSet = new HashSet<>();
+
+        mReadWriteLock.readLock().lock();
+        try {
+            for (long epochId = epochLowerBound; epochId <= epochUpperBound; epochId++) {
+                if (mCachedTopics.containsKey(epochId)) {
+                    Topic topic = mCachedTopics.get(epochId).get(Pair.create(app, sdk));
+                    if (topic != null && !topicsSet.contains(topic.getTopic())) {
+                        topics.add(topic);
+                        topicsSet.add(topic.getTopic());
+                    }
+                }
+            }
+        } finally {
+            mReadWriteLock.readLock().unlock();
+        }
+
+        return topics;
+    }
+
+    /**
      * Gets a list of all topics that could be returned to the user in the last
      * numberOfLookBackEpochs epochs. Does not include the current epoch, so range is
      * [currentEpochId - numberOfLookBackEpochs, currentEpochId - 1].

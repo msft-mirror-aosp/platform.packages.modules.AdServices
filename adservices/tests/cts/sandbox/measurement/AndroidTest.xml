@@ -31,6 +31,20 @@
         <option name="package" value="com.android.tests.sandbox.measurement"/>
     </test>
 
+    <target_preparer class="com.android.tradefed.targetprep.DeviceSetup" >
+        <option name="force-skip-system-props" value="true" />
+        <option name="disable-device-config-sync" value="true" />
+    </target_preparer>
+
+    <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
+        <!-- Disable global_kill_switch to ignore the effect of actual PH values. -->
+        <option name="run-command" value="device_config put adservices global_kill_switch false" />
+        <!-- Override Consent Manager to debug mode to grant user consent -->
+        <option name="run-command" value="setprop debug.adservices.consent_manager_debug_mode true" />
+
+        <option name="teardown-command" value="setprop debug.adservices.consent_manager_debug_mode false"/>
+    </target_preparer>
+
     <object type="module_controller"
             class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController" >
         <option name="mainline-module-package-name" value="com.google.android.adservices" />

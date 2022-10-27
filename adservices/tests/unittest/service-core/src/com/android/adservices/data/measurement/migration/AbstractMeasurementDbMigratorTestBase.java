@@ -26,6 +26,7 @@ import android.database.sqlite.SQLiteDatabase;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.DbHelper;
+import com.android.adservices.data.measurement.DbHelperV1;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -73,7 +74,9 @@ public abstract class AbstractMeasurementDbMigratorTestBase {
     protected DbHelper getDbHelper(int version) {
         synchronized (DbHelper.class) {
             if (sDbHelper == null) {
-                sDbHelper = new DbHelper(sContext, DATABASE_NAME_FOR_MIGRATION, version);
+                if (version == 1) {
+                    sDbHelper = new DbHelperV1(sContext, DATABASE_NAME_FOR_MIGRATION, version);
+                }
             }
             return sDbHelper;
         }
@@ -82,4 +85,7 @@ public abstract class AbstractMeasurementDbMigratorTestBase {
     abstract int getTargetVersion();
 
     abstract AbstractMeasurementDbMigrator getTestSubject();
+
 }
+
+

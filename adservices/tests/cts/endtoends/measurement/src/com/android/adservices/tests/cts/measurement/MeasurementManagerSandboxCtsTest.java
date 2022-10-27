@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
+
 package com.android.adservices.tests.cts.measurement;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
 import android.adservices.measurement.DeletionParam;
@@ -44,6 +45,9 @@ import android.test.suitebuilder.annotation.SmallTest;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
+import com.android.compatibility.common.util.ShellUtils;
+
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -61,6 +65,7 @@ public class MeasurementManagerSandboxCtsTest {
     protected static final Context sSandboxedSdkContext =
             new SandboxedSdkContext(
                     /* baseContext = */ sContext,
+                    /* classLoader = */ sContext.getClassLoader(),
                     /* clientPackageName = */ sContext.getPackageName(),
                     /* info = */ new ApplicationInfo(),
                     /* sdkName = */ "sdkName",
@@ -87,6 +92,13 @@ public class MeasurementManagerSandboxCtsTest {
         mMeasurementManager =
                 Mockito.spy(sSandboxedSdkContext.getSystemService(MeasurementManager.class));
         doReturn(mMockMeasurementService).when(mMeasurementManager).getService();
+
+        overrideMeasurementKillSwitches(true);
+    }
+
+    @After
+    public void teardown() {
+        overrideMeasurementKillSwitches(false);
     }
 
     @Test
@@ -97,12 +109,11 @@ public class MeasurementManagerSandboxCtsTest {
                 /* inputEvent = */ null,
                 mMockCallbackExecutor,
                 mMockOutcomeReceiver);
-
         // Verification
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
 
-        verify(mMockMeasurementService, times(1)).register(captor.capture(), any(), any());
+        verify(mMockMeasurementService, timeout(2000)).register(captor.capture(), any(), any());
         Assert.assertNotNull(captor.getValue());
         Assert.assertEquals(sContext.getPackageName(), captor.getValue().getPackageName());
     }
@@ -119,7 +130,7 @@ public class MeasurementManagerSandboxCtsTest {
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
 
-        verify(mMockMeasurementService, times(1)).register(captor.capture(), any(), any());
+        verify(mMockMeasurementService, timeout(2000)).register(captor.capture(), any(), any());
         Assert.assertNotNull(captor.getValue());
         Assert.assertEquals(sContext.getPackageName(), captor.getValue().getPackageName());
     }
@@ -151,7 +162,8 @@ public class MeasurementManagerSandboxCtsTest {
         ArgumentCaptor<WebSourceRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebSourceRegistrationRequestInternal.class);
 
-        verify(mMockMeasurementService, times(1)).registerWebSource(captor.capture(), any(), any());
+        verify(mMockMeasurementService, timeout(2000))
+                .registerWebSource(captor.capture(), any(), any());
         Assert.assertNotNull(captor.getValue());
         Assert.assertEquals(sContext.getPackageName(), captor.getValue().getPackageName());
     }
@@ -176,7 +188,7 @@ public class MeasurementManagerSandboxCtsTest {
         ArgumentCaptor<WebTriggerRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebTriggerRegistrationRequestInternal.class);
 
-        verify(mMockMeasurementService, times(1))
+        verify(mMockMeasurementService, timeout(2000))
                 .registerWebTrigger(captor.capture(), any(), any());
         Assert.assertNotNull(captor.getValue());
         Assert.assertEquals(sContext.getPackageName(), captor.getValue().getPackageName());
@@ -198,7 +210,7 @@ public class MeasurementManagerSandboxCtsTest {
         // Verification
         ArgumentCaptor<DeletionParam> captor = ArgumentCaptor.forClass(DeletionParam.class);
 
-        verify(mMockMeasurementService, times(1))
+        verify(mMockMeasurementService, timeout(2000))
                 .deleteRegistrations(captor.capture(), any(), any());
         Assert.assertNotNull(captor.getValue());
         Assert.assertEquals(sContext.getPackageName(), captor.getValue().getPackageName());
@@ -212,9 +224,37 @@ public class MeasurementManagerSandboxCtsTest {
         // Verification
         ArgumentCaptor<StatusParam> captor = ArgumentCaptor.forClass(StatusParam.class);
 
-        verify(mMockMeasurementService, times(1))
+        verify(mMockMeasurementService, timeout(2000))
                 .getMeasurementApiStatus(captor.capture(), any(), any());
         Assert.assertNotNull(captor.getValue());
         Assert.assertEquals(sContext.getPackageName(), captor.getValue().getAppPackageName());
+    }
+
+    // Override measurement related kill switch to ignore the effect of actual PH values.
+    // If isOverride = true, override measurement related kill switch to OFF to allow adservices
+    // If isOverride = false, override measurement related kill switch to meaningless value so that
+    // PhFlags will use the default value.
+    private void overrideMeasurementKillSwitches(boolean isOverride) {
+        String overrideString = isOverride ? "false" : "null";
+        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_kill_switch " + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_register_source_kill_switch "
+                        + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_register_trigger_kill_switch "
+                        + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_register_web_source_kill_switch "
+                        + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_register_web_trigger_kill_switch "
+                        + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_delete_registrations_kill_switch "
+                        + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_status_kill_switch " + overrideString);
     }
 }

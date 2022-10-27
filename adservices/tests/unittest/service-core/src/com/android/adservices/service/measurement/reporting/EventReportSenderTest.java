@@ -20,6 +20,8 @@ import static org.junit.Assert.assertEquals;
 
 import android.net.Uri;
 
+import com.android.adservices.service.measurement.util.UnsignedLong;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
@@ -33,8 +35,8 @@ import java.net.HttpURLConnection;
 public class EventReportSenderTest {
 
     private static final String ATTRIBUTION_DESTINATION = "https://toasters.example";
-    private static final String SOURCE_EVENT_ID = "12345";
-    private static final String TRIGGER_DATA = "2";
+    private static final UnsignedLong SOURCE_EVENT_ID = new UnsignedLong(12345L);
+    private static final UnsignedLong TRIGGER_DATA = new UnsignedLong(2L);
     private static final String REPORT_ID = "678";
     private static final String SOURCE_TYPE = "event";
     private static final double RANDOMIZED_TRIGGER_RATE = 0.0024;

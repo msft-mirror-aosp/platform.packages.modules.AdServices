@@ -89,6 +89,12 @@ public class OnDeviceClassifier implements Classifier {
             return ImmutableMap.of();
         }
 
+        if (!mModelManager.isModelAvailable()) {
+            // Return empty map since no model is available.
+            LogUtil.d("[ML] No ML model available for classification. Return empty Map.");
+            return ImmutableMap.of();
+        }
+
         // Load the assets if not loaded already.
         if (!isLoaded()) {
             mLoaded = load();
@@ -133,7 +139,15 @@ public class OnDeviceClassifier implements Classifier {
     private List<Topic> getAppClassificationTopics(@NonNull String appDescription) {
         // Returns list of labelIds with their corresponding score in Category for the app
         // description.
-        List<Category> classifications = mBertNLClassifier.classify(appDescription);
+        List<Category> classifications = ImmutableList.of();
+        try {
+            classifications = mBertNLClassifier.classify(appDescription);
+        } catch (Exception e) {
+            // (TODO:b/242926783): Update to more granular Exception after resolving JNI error
+            // propagation.
+            LogUtil.e("[ML] classify call failed for mBertNLClassifier.");
+            return ImmutableList.of();
+        }
         // Get the highest score first. Sort in decreasing order.
         classifications.sort(Comparator.comparing(Category::getScore).reversed());
 
@@ -253,7 +267,7 @@ public class OnDeviceClassifier implements Classifier {
         // Load Bert model.
         try {
             mBertNLClassifier = loadModel();
-        } catch (IOException e) {
+        } catch (Exception e) {
             LogUtil.e(e, "Loading ML model failed.");
             return false;
         }

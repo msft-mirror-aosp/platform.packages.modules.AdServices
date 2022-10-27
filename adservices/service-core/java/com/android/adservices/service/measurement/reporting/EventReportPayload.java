@@ -18,6 +18,10 @@ package com.android.adservices.service.measurement.reporting;
 
 import android.annotation.NonNull;
 
+import androidx.annotation.Nullable;
+
+import com.android.adservices.service.measurement.util.UnsignedLong;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -27,21 +31,25 @@ import org.json.JSONObject;
 public final class EventReportPayload {
 
     private String mAttributionDestination;
-    private String mSourceEventId;
-    private String mTriggerData;
+    private UnsignedLong mSourceEventId;
+    @NonNull private UnsignedLong mTriggerData;
     private String mReportId;
     private String mSourceType;
     private double mRandomizedTriggerRate;
+    @Nullable private UnsignedLong mSourceDebugKey;
+    @Nullable private UnsignedLong mTriggerDebugKey;
 
     private EventReportPayload() {};
 
     private EventReportPayload(EventReportPayload other) {
-        this.mAttributionDestination = other.mAttributionDestination;
-        this.mSourceEventId = other.mSourceEventId;
-        this.mTriggerData = other.mTriggerData;
-        this.mReportId = other.mReportId;
-        this.mSourceType = other.mSourceType;
-        this.mRandomizedTriggerRate = other.mRandomizedTriggerRate;
+        mAttributionDestination = other.mAttributionDestination;
+        mSourceEventId = other.mSourceEventId;
+        mTriggerData = other.mTriggerData;
+        mReportId = other.mReportId;
+        mSourceType = other.mSourceType;
+        mRandomizedTriggerRate = other.mRandomizedTriggerRate;
+        mSourceDebugKey = other.mSourceDebugKey;
+        mTriggerDebugKey = other.mTriggerDebugKey;
     }
 
     /**
@@ -50,12 +58,18 @@ public final class EventReportPayload {
     public JSONObject toJson() throws JSONException {
         JSONObject eventPayloadJson = new JSONObject();
 
-        eventPayloadJson.put("attribution_destination", this.mAttributionDestination);
-        eventPayloadJson.put("source_event_id", this.mSourceEventId);
-        eventPayloadJson.put("trigger_data", this.mTriggerData);
-        eventPayloadJson.put("report_id", this.mReportId);
-        eventPayloadJson.put("source_type", this.mSourceType);
-        eventPayloadJson.put("randomized_trigger_rate", this.mRandomizedTriggerRate);
+        eventPayloadJson.put("attribution_destination", mAttributionDestination);
+        eventPayloadJson.put("source_event_id", mSourceEventId.toString());
+        eventPayloadJson.put("trigger_data", mTriggerData.toString());
+        eventPayloadJson.put("report_id", mReportId);
+        eventPayloadJson.put("source_type", mSourceType);
+        eventPayloadJson.put("randomized_trigger_rate", mRandomizedTriggerRate);
+        if (mSourceDebugKey != null) {
+            eventPayloadJson.put("source_debug_key", mSourceDebugKey.toString());
+        }
+        if (mTriggerDebugKey != null) {
+            eventPayloadJson.put("trigger_debug_key", mTriggerDebugKey.toString());
+        }
 
         return eventPayloadJson;
     }
@@ -81,7 +95,7 @@ public final class EventReportPayload {
         /**
          * 64-bit event id set on the attribution source.
          */
-        public @NonNull Builder setSourceEventId(@NonNull String sourceEventId) {
+        public @NonNull Builder setSourceEventId(@NonNull UnsignedLong sourceEventId) {
             mBuilding.mSourceEventId = sourceEventId;
             return this;
         }
@@ -89,7 +103,7 @@ public final class EventReportPayload {
         /**
          * Course data set in the attribution trigger registration.
          */
-        public @NonNull Builder setTriggerData(@NonNull String triggerData) {
+        public @NonNull Builder setTriggerData(@NonNull UnsignedLong triggerData) {
             mBuilding.mTriggerData = triggerData;
             return this;
         }
@@ -119,10 +133,25 @@ public final class EventReportPayload {
             return this;
         }
 
+        /** Source debug key */
+        public @NonNull Builder setSourceDebugKey(@Nullable UnsignedLong sourceDebugKey) {
+            mBuilding.mSourceDebugKey = sourceDebugKey;
+            return this;
+        }
+
+        /** Trigger debug key */
+        public @NonNull Builder setTriggerDebugKey(@Nullable UnsignedLong triggerDebugKey) {
+            mBuilding.mTriggerDebugKey = triggerDebugKey;
+            return this;
+        }
+
         /**
          * Build the EventReportPayload.
          */
         public @NonNull EventReportPayload build() {
+            if (mBuilding.mTriggerData == null) {
+                mBuilding.mTriggerData = new UnsignedLong(0L);
+            }
             return new EventReportPayload(mBuilding);
         }
     }

@@ -33,7 +33,7 @@ public class DBCustomAudienceBackgroundFetchDataFixture {
                 .setOwner(CustomAudienceFixture.VALID_OWNER)
                 .setBuyer(buyer)
                 .setName(CustomAudienceFixture.VALID_NAME)
-                .setDailyUpdateUrl(CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyer))
+                .setDailyUpdateUri(CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyer))
                 .setEligibleUpdateTime(
                         DBCustomAudienceBackgroundFetchData
                                 .computeNextEligibleUpdateTimeAfterSuccessfulUpdate(

@@ -26,8 +26,11 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -52,6 +55,7 @@ import android.adservices.measurement.WebTriggerRegistrationRequestInternal;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Binder;
 import android.os.SystemClock;
 import android.provider.DeviceConfig;
 import android.test.mock.MockContext;
@@ -61,6 +65,7 @@ import androidx.test.filters.SmallTest;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.common.PermissionHelper;
 import com.android.adservices.service.common.Throttler;
@@ -111,6 +116,7 @@ public final class MeasurementServiceImplTest {
             new WebTriggerParams.Builder(REGISTRATION_URI).setDebugKeyAllowed(true).build();
     private static final StatusParam STATUS_PARAM = new StatusParam.Builder(PACKAGE_NAME).build();
 
+    @Mock private AppImportanceFilter mMockAppImportanceFilter;
     @Mock private PackageManager mPackageManager;
     @Mock private ConsentManager mConsentManager;
     @Mock private MeasurementImpl mMockMeasurementImpl;
@@ -141,6 +147,7 @@ public final class MeasurementServiceImplTest {
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         toggleAllowAllPpApi(true);
+        toggleEnforceForegroundAll(true);
         when(mMockMeasurementImpl.register(any(RegistrationRequest.class), anyLong()))
                 .thenReturn(STATUS_SUCCESS);
         when(mMockMeasurementImpl.registerWebSource(
@@ -149,8 +156,7 @@ public final class MeasurementServiceImplTest {
         when(mMockMeasurementImpl.registerWebSource(
                         any(WebSourceRegistrationRequestInternal.class), anyLong()))
                 .thenReturn(STATUS_SUCCESS);
-        when(mConsentManager.getConsent(any(PackageManager.class)))
-                .thenReturn(AdServicesApiConsent.GIVEN);
+        when(mConsentManager.getConsent()).thenReturn(AdServicesApiConsent.GIVEN);
         when(mMockFlags.getWebContextClientAppAllowList()).thenReturn("*");
         when(mMockThrottler.tryAcquire(any(), any())).thenReturn(true).thenReturn(false);
         when(mMockFlags.getWebContextClientAppAllowList()).thenReturn(ALLOW_ALL_PACKAGES);
@@ -161,6 +167,16 @@ public final class MeasurementServiceImplTest {
         when(mMockFlags.getMeasurementApiDeleteRegistrationsKillSwitch()).thenReturn(false);
         when(mMockFlags.getMeasurementApiStatusKillSwitch()).thenReturn(false);
         when(mMockFlags.getPpapiAppAllowList()).thenReturn("*");
+        when(mMockFlags.getEnforceForegroundStatusForMeasurementStatus()).thenReturn(false);
+        when(mMockFlags.getEnforceForegroundStatusForMeasurementDeleteRegistrations())
+                .thenReturn(false);
+        when(mMockFlags.getEnforceForegroundStatusForMeasurementRegisterSource()).thenReturn(false);
+        when(mMockFlags.getEnforceForegroundStatusForMeasurementRegisterTrigger())
+                .thenReturn(false);
+        when(mMockFlags.getEnforceForegroundStatusForMeasurementRegisterWebSource())
+                .thenReturn(false);
+        when(mMockFlags.getEnforceForegroundStatusForMeasurementRegisterWebTrigger())
+                .thenReturn(false);
         mCallerMetadata =
                 new CallerMetadata.Builder()
                         .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
@@ -175,7 +191,8 @@ public final class MeasurementServiceImplTest {
                         mEnrollmentDao,
                         mMockThrottler,
                         mMockFlags,
-                        mMockAdServicesLogger);
+                        mMockAdServicesLogger,
+                        mMockAppImportanceFilter);
     }
 
     @Test
@@ -210,6 +227,87 @@ public final class MeasurementServiceImplTest {
     }
 
     @Test
+    public void testRegisterSource_enforceForeground_runInForegroundAllowed() throws Exception {
+        try {
+            mockAccessControl(true, true, true);
+
+            doNothing()
+                    .when(mMockAppImportanceFilter)
+                    .assertCallerIsInForeground(anyInt(), anyInt(), any());
+
+            final CountDownLatch countDownLatch = new CountDownLatch(1);
+            final List<Integer> list = new ArrayList<>();
+
+            mMeasurementServiceImpl.register(
+                    getDefaultRegistrationSourceRequest(),
+                    mCallerMetadata,
+                    new IMeasurementCallback.Stub() {
+                        @Override
+                        public void onResult() {
+                            list.add(STATUS_SUCCESS);
+                            countDownLatch.countDown();
+                        }
+
+                        @Override
+                        public void onFailure(MeasurementErrorResponse responseParcel) {}
+                    });
+
+            assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+            assertThat(list.size()).isEqualTo(1);
+            assertThat(list.get(0)).isEqualTo(STATUS_SUCCESS);
+        } finally {
+            mMockitoSession.finishMocking();
+        }
+    }
+
+    @Test
+    public void testRegisterSource_enforceForeground_runInBackgroundNotAllowed() throws Exception {
+        try {
+            mockAccessControl(true, true, true);
+
+            doThrow(new AppImportanceFilter.WrongCallingApplicationStateException())
+                    .when(mMockAppImportanceFilter)
+                    .assertCallerIsInForeground(anyInt(), anyInt(), any());
+
+            final CountDownLatch countDownLatch = new CountDownLatch(1);
+            final List<MeasurementErrorResponse> errors = new ArrayList<>();
+            new MeasurementServiceImpl(
+                            mMockMeasurementImpl,
+                            mMockContext,
+                            mClock,
+                            mConsentManager,
+                            mEnrollmentDao,
+                            mMockThrottler,
+                            FlagsFactory.getFlags(),
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
+                    .register(
+                            getDefaultRegistrationSourceRequest(),
+                            mCallerMetadata,
+                            new IMeasurementCallback.Stub() {
+                                @Override
+                                public void onResult() {
+                                    fail();
+                                }
+
+                                @Override
+                                public void onFailure(MeasurementErrorResponse responseParcel) {
+                                    errors.add(responseParcel);
+                                    countDownLatch.countDown();
+                                }
+                            });
+
+            assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+            verify(mMockMeasurementImpl, never()).register(any(), anyLong());
+            Assert.assertEquals(1, errors.size());
+            Assert.assertEquals(
+                    AdServicesStatusUtils.STATUS_BACKGROUND_CALLER, errors.get(0).getStatusCode());
+        } finally {
+            mMockitoSession.finishMocking();
+        }
+    }
+
+    @Test
     public void testRegisterSource_killSwitchOff() throws Exception {
         try {
             mockAccessControl(true, true, true);
@@ -225,7 +323,8 @@ public final class MeasurementServiceImplTest {
                             mEnrollmentDao,
                             mMockThrottler,
                             FlagsFactory.getFlags(),
-                            mMockAdServicesLogger)
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
                     .register(
                             getDefaultRegistrationSourceRequest(),
                             mCallerMetadata,
@@ -265,7 +364,8 @@ public final class MeasurementServiceImplTest {
                             mEnrollmentDao,
                             mMockThrottler,
                             FlagsFactory.getFlags(),
-                            mMockAdServicesLogger)
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
                     .register(
                             getDefaultRegistrationSourceRequest(),
                             mCallerMetadata,
@@ -311,7 +411,8 @@ public final class MeasurementServiceImplTest {
                             mEnrollmentDao,
                             mMockThrottler,
                             FlagsFactory.getFlags(),
-                            mMockAdServicesLogger)
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
                     .register(
                             getDefaultRegistrationSourceRequest(),
                             mCallerMetadata,
@@ -369,7 +470,8 @@ public final class MeasurementServiceImplTest {
                             mEnrollmentDao,
                             mMockThrottler,
                             mMockFlags,
-                            mMockAdServicesLogger)
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
                     .register(getDefaultRegistrationSourceRequest(), mCallerMetadata, callback);
             new MeasurementServiceImpl(
                             mMockMeasurementImpl,
@@ -379,7 +481,8 @@ public final class MeasurementServiceImplTest {
                             mEnrollmentDao,
                             mMockThrottler,
                             mMockFlags,
-                            mMockAdServicesLogger)
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
                     .register(getDefaultRegistrationSourceRequest(), mCallerMetadata, callback);
 
             assertThat(countDownLatchSuccess.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
@@ -424,7 +527,8 @@ public final class MeasurementServiceImplTest {
                             mEnrollmentDao,
                             mMockThrottler,
                             mMockFlags,
-                            mMockAdServicesLogger)
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
                     .register(getDefaultRegistrationTriggerRequest(), mCallerMetadata, callback);
             new MeasurementServiceImpl(
                             mMockMeasurementImpl,
@@ -434,7 +538,8 @@ public final class MeasurementServiceImplTest {
                             mEnrollmentDao,
                             mMockThrottler,
                             mMockFlags,
-                            mMockAdServicesLogger)
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
                     .register(getDefaultRegistrationTriggerRequest(), mCallerMetadata, callback);
 
             assertThat(countDownLatchSuccess.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
@@ -443,6 +548,96 @@ public final class MeasurementServiceImplTest {
             assertThat(statusCodes.size()).isEqualTo(1);
             assertThat(errors.get(0).getStatusCode()).isEqualTo(STATUS_RATE_LIMIT_REACHED);
             assertThat(errors.size()).isEqualTo(1);
+        } finally {
+            mMockitoSession.finishMocking();
+        }
+    }
+
+    @Test
+    public void testRegisterTrigger_enforceForeground_runInForegroundAllowed() throws Exception {
+        try {
+            mockAccessControl(true, true, true);
+
+            doNothing()
+                    .when(mMockAppImportanceFilter)
+                    .assertCallerIsInForeground(anyInt(), anyInt(), any());
+
+            final CountDownLatch countDownLatchAny = new CountDownLatch(1);
+            new MeasurementServiceImpl(
+                            mMockMeasurementImpl,
+                            mMockContext,
+                            mClock,
+                            mConsentManager,
+                            mEnrollmentDao,
+                            mMockThrottler,
+                            FlagsFactory.getFlags(),
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
+                    .register(
+                            getDefaultRegistrationTriggerRequest(),
+                            mCallerMetadata,
+                            new IMeasurementCallback.Stub() {
+                                @Override
+                                public void onResult() {
+                                    countDownLatchAny.countDown();
+                                }
+
+                                @Override
+                                public void onFailure(MeasurementErrorResponse errorResponse) {
+                                    countDownLatchAny.countDown();
+                                }
+                            });
+
+            assertThat(countDownLatchAny.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+
+            verify(mMockMeasurementImpl, times(1)).register(any(), anyLong());
+        } finally {
+            mMockitoSession.finishMocking();
+        }
+    }
+
+    @Test
+    public void testRegisterTrigger_enforceForeground_runInBackgroundNotAllowed() throws Exception {
+        try {
+            mockAccessControl(true, true, true);
+
+            doThrow(new AppImportanceFilter.WrongCallingApplicationStateException())
+                    .when(mMockAppImportanceFilter)
+                    .assertCallerIsInForeground(anyInt(), anyInt(), any());
+
+            final CountDownLatch countDownLatch = new CountDownLatch(1);
+            final List<MeasurementErrorResponse> errors = new ArrayList<>();
+            new MeasurementServiceImpl(
+                            mMockMeasurementImpl,
+                            mMockContext,
+                            mClock,
+                            mConsentManager,
+                            mEnrollmentDao,
+                            mMockThrottler,
+                            FlagsFactory.getFlags(),
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
+                    .register(
+                            getDefaultRegistrationTriggerRequest(),
+                            mCallerMetadata,
+                            new IMeasurementCallback.Stub() {
+                                @Override
+                                public void onResult() {
+                                    Assert.fail();
+                                }
+
+                                @Override
+                                public void onFailure(MeasurementErrorResponse responseParcel) {
+                                    errors.add(responseParcel);
+                                    countDownLatch.countDown();
+                                }
+                            });
+
+            assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+            verify(mMockMeasurementImpl, never()).register(any(), anyLong());
+            Assert.assertEquals(1, errors.size());
+            Assert.assertEquals(
+                    AdServicesStatusUtils.STATUS_BACKGROUND_CALLER, errors.get(0).getStatusCode());
         } finally {
             mMockitoSession.finishMocking();
         }
@@ -464,7 +659,8 @@ public final class MeasurementServiceImplTest {
                             mEnrollmentDao,
                             mMockThrottler,
                             FlagsFactory.getFlags(),
-                            mMockAdServicesLogger)
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
                     .register(
                             getDefaultRegistrationTriggerRequest(),
                             mCallerMetadata,
@@ -505,7 +701,8 @@ public final class MeasurementServiceImplTest {
                             mEnrollmentDao,
                             mMockThrottler,
                             FlagsFactory.getFlags(),
-                            mMockAdServicesLogger)
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
                     .register(
                             getDefaultRegistrationTriggerRequest(),
                             mCallerMetadata,
@@ -551,7 +748,8 @@ public final class MeasurementServiceImplTest {
                             mEnrollmentDao,
                             mMockThrottler,
                             FlagsFactory.getFlags(),
-                            mMockAdServicesLogger)
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
                     .register(
                             getDefaultRegistrationTriggerRequest(),
                             mCallerMetadata,
@@ -641,6 +839,95 @@ public final class MeasurementServiceImplTest {
     }
 
     @Test
+    public void testDeleteRegistrations_enforceForeground_runInForegroundAllowed()
+            throws Exception {
+        try {
+            mockAccessControl(true, true, true);
+
+            // Allow client to call API
+            toggleAllowAllWebContext(true);
+
+            doNothing()
+                    .when(mMockAppImportanceFilter)
+                    .assertCallerIsInForeground(anyInt(), anyInt(), any());
+
+            CountDownLatch countDownLatch = new CountDownLatch(1);
+            final List<Integer> list = new ArrayList<>();
+
+            mMeasurementServiceImpl.deleteRegistrations(
+                    getDefaultDeletionRequest(),
+                    mCallerMetadata,
+                    new IMeasurementCallback.Stub() {
+                        @Override
+                        public void onResult() {
+                            list.add(STATUS_SUCCESS);
+                            countDownLatch.countDown();
+                        }
+
+                        @Override
+                        public void onFailure(MeasurementErrorResponse responseParcel) {}
+                    });
+
+            assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+            assertThat(list.get(0)).isEqualTo(STATUS_SUCCESS);
+            assertThat(list.size()).isEqualTo(1);
+        } finally {
+            mMockitoSession.finishMocking();
+        }
+    }
+
+    @Test
+    public void testDeleteRegistrations_enforceForeground_runInBackgroundNotAllowed()
+            throws Exception {
+        try {
+            mockAccessControl(true, true, true);
+
+            // Allow client to call API
+            toggleAllowAllWebContext(true);
+
+            doThrow(new AppImportanceFilter.WrongCallingApplicationStateException())
+                    .when(mMockAppImportanceFilter)
+                    .assertCallerIsInForeground(anyInt(), anyInt(), any());
+
+            final List<MeasurementErrorResponse> errors = new ArrayList<>();
+            final CountDownLatch countDownLatch = new CountDownLatch(1);
+            new MeasurementServiceImpl(
+                            mMockMeasurementImpl,
+                            mMockContext,
+                            mClock,
+                            mConsentManager,
+                            mEnrollmentDao,
+                            mMockThrottler,
+                            FlagsFactory.getFlags(),
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
+                    .deleteRegistrations(
+                            getDefaultDeletionRequest(),
+                            mCallerMetadata,
+                            new IMeasurementCallback.Stub() {
+                                @Override
+                                public void onResult() {
+                                    fail("Failure callback expected.");
+                                }
+
+                                @Override
+                                public void onFailure(MeasurementErrorResponse errorResponse) {
+                                    errors.add(errorResponse);
+                                    countDownLatch.countDown();
+                                }
+                            });
+
+            assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+            verify(mMockMeasurementImpl, never()).deleteRegistrations(any());
+            Assert.assertEquals(1, errors.size());
+            Assert.assertEquals(
+                    AdServicesStatusUtils.STATUS_BACKGROUND_CALLER, errors.get(0).getStatusCode());
+        } finally {
+            mMockitoSession.finishMocking();
+        }
+    }
+
+    @Test
     public void testDeleteRegistrations_killSwitchOffAndPackageAllowListed() throws Exception {
         try {
             mockAccessControl(true, true, true);
@@ -659,7 +946,8 @@ public final class MeasurementServiceImplTest {
                             mEnrollmentDao,
                             mMockThrottler,
                             FlagsFactory.getFlags(),
-                            mMockAdServicesLogger)
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
                     .deleteRegistrations(
                             getDefaultDeletionRequest(),
                             mCallerMetadata,
@@ -699,7 +987,8 @@ public final class MeasurementServiceImplTest {
                             mEnrollmentDao,
                             mMockThrottler,
                             FlagsFactory.getFlags(),
-                            mMockAdServicesLogger)
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
                     .deleteRegistrations(
                             getDefaultDeletionRequest(),
                             mCallerMetadata,
@@ -746,7 +1035,8 @@ public final class MeasurementServiceImplTest {
                             mEnrollmentDao,
                             mMockThrottler,
                             FlagsFactory.getFlags(),
-                            mMockAdServicesLogger)
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
                     .deleteRegistrations(
                             getDefaultDeletionRequest(),
                             mCallerMetadata,
@@ -795,7 +1085,8 @@ public final class MeasurementServiceImplTest {
                             mEnrollmentDao,
                             mMockThrottler,
                             FlagsFactory.getFlags(),
-                            mMockAdServicesLogger)
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
                     .deleteRegistrations(
                             getDefaultDeletionRequest(),
                             mCallerMetadata,
@@ -852,7 +1143,8 @@ public final class MeasurementServiceImplTest {
                             mEnrollmentDao,
                             mMockThrottler,
                             mMockFlags,
-                            mMockAdServicesLogger)
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
                     .deleteRegistrations(getDefaultDeletionRequest(), mCallerMetadata, callback);
             new MeasurementServiceImpl(
                             mMockMeasurementImpl,
@@ -862,7 +1154,8 @@ public final class MeasurementServiceImplTest {
                             mEnrollmentDao,
                             mMockThrottler,
                             mMockFlags,
-                            mMockAdServicesLogger)
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
                     .deleteRegistrations(getDefaultDeletionRequest(), mCallerMetadata, callback);
 
             assertThat(countDownLatchSuccess.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
@@ -905,13 +1198,14 @@ public final class MeasurementServiceImplTest {
     public void testGetMeasurementApiStatus_success() throws Exception {
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
+                        .spyStatic(Binder.class)
                         .spyStatic(ConsentManager.class)
                         .initMocks(this)
                         .startMocking();
         try {
-            ExtendedMockito.doReturn(AdServicesApiConsent.GIVEN)
-                    .when(mConsentManager)
-                    .getConsent(any());
+            ExtendedMockito.doReturn(1).when(Binder::getCallingUidOrThrow);
+
+            ExtendedMockito.doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
             ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any()));
             MeasurementImpl measurementImpl =
                     new MeasurementImpl(mMockContext, null, null, null, null, null);
@@ -928,7 +1222,8 @@ public final class MeasurementServiceImplTest {
                             mEnrollmentDao,
                             mMockThrottler,
                             mMockFlags,
-                            mMockAdServicesLogger);
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter);
             mMeasurementServiceImpl.getMeasurementApiStatus(
                     STATUS_PARAM,
                     mCallerMetadata,
@@ -943,6 +1238,109 @@ public final class MeasurementServiceImplTest {
             assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
             assertThat(resultWrapper.get())
                     .isEqualTo(MeasurementManager.MEASUREMENT_API_STATE_ENABLED);
+        } finally {
+            session.finishMocking();
+        }
+    }
+
+    @Test
+    public void testGetMeasurementApiStatus_enforceForeground_runInForegroundAllowed()
+            throws Exception {
+        MockitoSession session =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(Binder.class)
+                        .spyStatic(ConsentManager.class)
+                        .strictness(Strictness.LENIENT)
+                        .initMocks(this)
+                        .startMocking();
+        try {
+            ExtendedMockito.doReturn(1).when(Binder::getCallingUidOrThrow);
+
+            ExtendedMockito.doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
+
+            doNothing()
+                    .when(mMockAppImportanceFilter)
+                    .assertCallerIsInForeground(anyInt(), anyInt(), any());
+
+            ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any()));
+            MeasurementImpl measurementImpl =
+                    new MeasurementImpl(mMockContext, null, null, null, null, null);
+            when(mMockFlags.getPpapiAppAllowList()).thenReturn("*");
+            CountDownLatch countDownLatch = new CountDownLatch(1);
+            final AtomicInteger resultWrapper = new AtomicInteger();
+
+            mMeasurementServiceImpl =
+                    new MeasurementServiceImpl(
+                            measurementImpl,
+                            mMockContext,
+                            mClock,
+                            mConsentManager,
+                            mEnrollmentDao,
+                            mMockThrottler,
+                            mMockFlags,
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter);
+            mMeasurementServiceImpl.getMeasurementApiStatus(
+                    STATUS_PARAM,
+                    mCallerMetadata,
+                    new IMeasurementApiStatusCallback.Stub() {
+                        @Override
+                        public void onResult(int result) {
+                            resultWrapper.set(result);
+                            countDownLatch.countDown();
+                        }
+                    });
+
+            assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+            assertThat(resultWrapper.get())
+                    .isEqualTo(MeasurementManager.MEASUREMENT_API_STATE_ENABLED);
+        } finally {
+            session.finishMocking();
+        }
+    }
+
+    @Test
+    public void testGetMeasurementApiStatus_enforceForeground_runInBackgroundNotAllowed()
+            throws Exception {
+        MockitoSession session =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(Binder.class)
+                        .spyStatic(ConsentManager.class)
+                        .strictness(Strictness.LENIENT)
+                        .initMocks(this)
+                        .startMocking();
+        try {
+            ExtendedMockito.doReturn(1).when(Binder::getCallingUidOrThrow);
+
+            ExtendedMockito.doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
+
+            doThrow(new AppImportanceFilter.WrongCallingApplicationStateException())
+                    .when(mMockAppImportanceFilter)
+                    .assertCallerIsInForeground(anyInt(), anyInt(), any());
+
+            final CountDownLatch countDownLatchAny = new CountDownLatch(1);
+            new MeasurementServiceImpl(
+                            mMockMeasurementImpl,
+                            mMockContext,
+                            mClock,
+                            mConsentManager,
+                            mEnrollmentDao,
+                            mMockThrottler,
+                            FlagsFactory.getFlags(),
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
+                    .getMeasurementApiStatus(
+                            STATUS_PARAM,
+                            mCallerMetadata,
+                            new IMeasurementApiStatusCallback.Stub() {
+                                @Override
+                                public void onResult(int result) {
+                                    countDownLatchAny.countDown();
+                                }
+                            });
+
+            assertThat(countDownLatchAny.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+            verify(mMockMeasurementImpl, never()).getMeasurementApiStatus();
         } finally {
             session.finishMocking();
         }
@@ -964,7 +1362,8 @@ public final class MeasurementServiceImplTest {
                             mEnrollmentDao,
                             mMockThrottler,
                             FlagsFactory.getFlags(),
-                            mMockAdServicesLogger)
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
                     .getMeasurementApiStatus(
                             STATUS_PARAM,
                             mCallerMetadata,
@@ -998,7 +1397,8 @@ public final class MeasurementServiceImplTest {
                             mEnrollmentDao,
                             mMockThrottler,
                             FlagsFactory.getFlags(),
-                            mMockAdServicesLogger)
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
                     .getMeasurementApiStatus(
                             STATUS_PARAM,
                             mCallerMetadata,
@@ -1034,7 +1434,8 @@ public final class MeasurementServiceImplTest {
                             mEnrollmentDao,
                             mMockThrottler,
                             FlagsFactory.getFlags(),
-                            mMockAdServicesLogger)
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
                     .getMeasurementApiStatus(
                             STATUS_PARAM,
                             mCallerMetadata,
@@ -1087,6 +1488,87 @@ public final class MeasurementServiceImplTest {
     }
 
     @Test
+    public void registerWebSource_enforceForeground_runInForegroundAllowed() throws Exception {
+        try {
+            mockAccessControl(true, true, true);
+
+            doNothing()
+                    .when(mMockAppImportanceFilter)
+                    .assertCallerIsInForeground(anyInt(), anyInt(), any());
+
+            CountDownLatch countDownLatch = new CountDownLatch(1);
+            final List<Integer> list = new ArrayList<>();
+
+            mMeasurementServiceImpl.registerWebSource(
+                    createWebSourceRegistrationRequest(),
+                    mCallerMetadata,
+                    new IMeasurementCallback.Stub() {
+                        @Override
+                        public void onResult() {
+                            list.add(STATUS_SUCCESS);
+                            countDownLatch.countDown();
+                        }
+
+                        @Override
+                        public void onFailure(MeasurementErrorResponse measurementErrorResponse) {}
+                    });
+
+            assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+            assertThat(list.get(0)).isEqualTo(STATUS_SUCCESS);
+            assertThat(list.size()).isEqualTo(1);
+        } finally {
+            mMockitoSession.finishMocking();
+        }
+    }
+
+    @Test
+    public void registerWebSource_enforceForeground_runInBackgroundNotAllowed() throws Exception {
+        try {
+            mockAccessControl(true, true, true);
+
+            doThrow(new AppImportanceFilter.WrongCallingApplicationStateException())
+                    .when(mMockAppImportanceFilter)
+                    .assertCallerIsInForeground(anyInt(), anyInt(), any());
+
+            final CountDownLatch countDownLatch = new CountDownLatch(1);
+            final List<MeasurementErrorResponse> errors = new ArrayList<>();
+            new MeasurementServiceImpl(
+                            mMockMeasurementImpl,
+                            mMockContext,
+                            mClock,
+                            mConsentManager,
+                            mEnrollmentDao,
+                            mMockThrottler,
+                            FlagsFactory.getFlags(),
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
+                    .registerWebSource(
+                            createWebSourceRegistrationRequest(),
+                            mCallerMetadata,
+                            new IMeasurementCallback.Stub() {
+                                @Override
+                                public void onResult() {
+                                    Assert.fail();
+                                }
+
+                                @Override
+                                public void onFailure(MeasurementErrorResponse responseParcel) {
+                                    errors.add(responseParcel);
+                                    countDownLatch.countDown();
+                                }
+                            });
+
+            assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+            verify(mMockMeasurementImpl, never()).registerWebSource(any(), anyLong());
+            Assert.assertEquals(1, errors.size());
+            Assert.assertEquals(
+                    AdServicesStatusUtils.STATUS_BACKGROUND_CALLER, errors.get(0).getStatusCode());
+        } finally {
+            mMockitoSession.finishMocking();
+        }
+    }
+
+    @Test
     public void testRegisterWebSource_killSwitchOff() throws Exception {
         try {
             mockAccessControl(true, true, true);
@@ -1105,7 +1587,8 @@ public final class MeasurementServiceImplTest {
                             mEnrollmentDao,
                             mMockThrottler,
                             FlagsFactory.getFlags(),
-                            mMockAdServicesLogger)
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
                     .registerWebSource(
                             createWebSourceRegistrationRequest(),
                             mCallerMetadata,
@@ -1148,7 +1631,8 @@ public final class MeasurementServiceImplTest {
                             mEnrollmentDao,
                             mMockThrottler,
                             FlagsFactory.getFlags(),
-                            mMockAdServicesLogger)
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
                     .registerWebSource(
                             createWebSourceRegistrationRequest(),
                             mCallerMetadata,
@@ -1197,7 +1681,8 @@ public final class MeasurementServiceImplTest {
                             mEnrollmentDao,
                             mMockThrottler,
                             FlagsFactory.getFlags(),
-                            mMockAdServicesLogger)
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
                     .registerWebSource(
                             createWebSourceRegistrationRequest(),
                             mCallerMetadata,
@@ -1254,7 +1739,8 @@ public final class MeasurementServiceImplTest {
                             mEnrollmentDao,
                             mMockThrottler,
                             mMockFlags,
-                            mMockAdServicesLogger)
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
                     .registerWebSource(
                             createWebSourceRegistrationRequest(), mCallerMetadata, callback);
             new MeasurementServiceImpl(
@@ -1265,7 +1751,8 @@ public final class MeasurementServiceImplTest {
                             mEnrollmentDao,
                             mMockThrottler,
                             mMockFlags,
-                            mMockAdServicesLogger)
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
                     .registerWebSource(
                             createWebSourceRegistrationRequest(), mCallerMetadata, callback);
 
@@ -1340,6 +1827,87 @@ public final class MeasurementServiceImplTest {
     }
 
     @Test
+    public void registerWebTrigger_enforceForeground_runInForegroundAllowed() throws Exception {
+        try {
+            mockAccessControl(true, true, true);
+
+            doNothing()
+                    .when(mMockAppImportanceFilter)
+                    .assertCallerIsInForeground(anyInt(), anyInt(), any());
+
+            CountDownLatch countDownLatch = new CountDownLatch(1);
+            final List<Integer> list = new ArrayList<>();
+
+            mMeasurementServiceImpl.registerWebTrigger(
+                    createWebTriggerRegistrationRequest(),
+                    mCallerMetadata,
+                    new IMeasurementCallback.Stub() {
+                        @Override
+                        public void onResult() {
+                            list.add(STATUS_SUCCESS);
+                            countDownLatch.countDown();
+                        }
+
+                        @Override
+                        public void onFailure(MeasurementErrorResponse measurementErrorResponse) {}
+                    });
+
+            assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+            assertThat(list.get(0)).isEqualTo(STATUS_SUCCESS);
+            assertThat(list.size()).isEqualTo(1);
+        } finally {
+            mMockitoSession.finishMocking();
+        }
+    }
+
+    @Test
+    public void registerWebTrigger_enforceForeground_runInBackgroundNotAllowed() throws Exception {
+        try {
+            mockAccessControl(true, true, true);
+
+            doThrow(new AppImportanceFilter.WrongCallingApplicationStateException())
+                    .when(mMockAppImportanceFilter)
+                    .assertCallerIsInForeground(anyInt(), anyInt(), any());
+
+            final CountDownLatch countDownLatch = new CountDownLatch(1);
+            final List<MeasurementErrorResponse> errors = new ArrayList<>();
+            new MeasurementServiceImpl(
+                            mMockMeasurementImpl,
+                            mMockContext,
+                            mClock,
+                            mConsentManager,
+                            mEnrollmentDao,
+                            mMockThrottler,
+                            FlagsFactory.getFlags(),
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
+                    .registerWebTrigger(
+                            createWebTriggerRegistrationRequest(),
+                            mCallerMetadata,
+                            new IMeasurementCallback.Stub() {
+                                @Override
+                                public void onResult() {
+                                    Assert.fail();
+                                }
+
+                                @Override
+                                public void onFailure(MeasurementErrorResponse responseParcel) {
+                                    errors.add(responseParcel);
+                                    countDownLatch.countDown();
+                                }
+                            });
+
+            assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+            verify(mMockMeasurementImpl, never()).registerWebTrigger(any(), anyLong());
+            Assert.assertEquals(1, errors.size());
+            Assert.assertEquals(
+                    AdServicesStatusUtils.STATUS_BACKGROUND_CALLER, errors.get(0).getStatusCode());
+        } finally {
+            mMockitoSession.finishMocking();
+        }
+    }
+
+    @Test
     public void testRegisterWebTrigger_killSwitchOff() throws Exception {
         try {
             mockAccessControl(true, true, true);
@@ -1358,7 +1926,8 @@ public final class MeasurementServiceImplTest {
                             mEnrollmentDao,
                             mMockThrottler,
                             FlagsFactory.getFlags(),
-                            mMockAdServicesLogger)
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
                     .registerWebTrigger(
                             createWebTriggerRegistrationRequest(),
                             mCallerMetadata,
@@ -1401,7 +1970,8 @@ public final class MeasurementServiceImplTest {
                             mEnrollmentDao,
                             mMockThrottler,
                             FlagsFactory.getFlags(),
-                            mMockAdServicesLogger)
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
                     .registerWebTrigger(
                             createWebTriggerRegistrationRequest(),
                             mCallerMetadata,
@@ -1450,7 +2020,8 @@ public final class MeasurementServiceImplTest {
                             mEnrollmentDao,
                             mMockThrottler,
                             FlagsFactory.getFlags(),
-                            mMockAdServicesLogger)
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
                     .registerWebTrigger(
                             createWebTriggerRegistrationRequest(),
                             mCallerMetadata,
@@ -1507,7 +2078,8 @@ public final class MeasurementServiceImplTest {
                             mEnrollmentDao,
                             mMockThrottler,
                             mMockFlags,
-                            mMockAdServicesLogger)
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
                     .registerWebTrigger(
                             createWebTriggerRegistrationRequest(), mCallerMetadata, callback);
             new MeasurementServiceImpl(
@@ -1518,7 +2090,8 @@ public final class MeasurementServiceImplTest {
                             mEnrollmentDao,
                             mMockThrottler,
                             mMockFlags,
-                            mMockAdServicesLogger)
+                            mMockAdServicesLogger,
+                            mMockAppImportanceFilter)
                     .registerWebTrigger(
                             createWebTriggerRegistrationRequest(), mCallerMetadata, callback);
 
@@ -1557,8 +2130,7 @@ public final class MeasurementServiceImplTest {
     public void testRegister_userRevokedConsent() {
         try {
             mockAccessControl(true, true, true);
-            when(mConsentManager.getConsent(any(PackageManager.class)))
-                    .thenReturn(AdServicesApiConsent.REVOKED);
+            when(mConsentManager.getConsent()).thenReturn(AdServicesApiConsent.REVOKED);
             mMeasurementServiceImpl.register(
                     getDefaultRegistrationSourceRequest(),
                     mCallerMetadata,
@@ -1583,9 +2155,7 @@ public final class MeasurementServiceImplTest {
     public void testRegisterWebSource_userRevokedConsent() {
         try {
             mockAccessControl(true, true, true);
-            doReturn(AdServicesApiConsent.REVOKED)
-                    .when(mConsentManager)
-                    .getConsent(mPackageManager);
+            doReturn(AdServicesApiConsent.REVOKED).when(mConsentManager).getConsent();
 
             mMeasurementServiceImpl.registerWebSource(
                     createWebSourceRegistrationRequest(),
@@ -1611,7 +2181,7 @@ public final class MeasurementServiceImplTest {
     public void testRegisterWebSource_packageNotAllowListed() throws InterruptedException {
         try {
             mockAccessControl(true, true, true);
-            doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent(mPackageManager);
+            doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
             doReturn(ALLOW_LIST_WITHOUT_TEST_PACKAGE)
                     .when(mMockFlags)
                     .getWebContextClientAppAllowList();
@@ -1646,9 +2216,7 @@ public final class MeasurementServiceImplTest {
     public void testRegisterWebTrigger_userRevokedConsent() {
         try {
             mockAccessControl(true, true, true);
-            doReturn(AdServicesApiConsent.REVOKED)
-                    .when(mConsentManager)
-                    .getConsent(mPackageManager);
+            doReturn(AdServicesApiConsent.REVOKED).when(mConsentManager).getConsent();
 
             mMeasurementServiceImpl.registerWebTrigger(
                     createWebTriggerRegistrationRequest(),
@@ -1676,7 +2244,7 @@ public final class MeasurementServiceImplTest {
         try {
             // Setup
             mockAccessControl(true, true, true);
-            doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent(mPackageManager);
+            doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
             doReturn(ALLOW_LIST_WITHOUT_TEST_PACKAGE)
                     .when(mMockFlags)
                     .getWebContextClientAppAllowList();
@@ -1963,7 +2531,6 @@ public final class MeasurementServiceImplTest {
         return new RegistrationRequest.Builder()
                 .setPackageName(PACKAGE_NAME)
                 .setRegistrationUri(Uri.parse("https://registration-uri.com"))
-                .setTopOriginUri(Uri.parse("android-app://com.example"))
                 .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
                 .build();
     }
@@ -1972,7 +2539,6 @@ public final class MeasurementServiceImplTest {
         return new RegistrationRequest.Builder()
                 .setPackageName(PACKAGE_NAME)
                 .setRegistrationUri(Uri.parse("https://registration-uri.com"))
-                .setTopOriginUri(Uri.parse("android-app://com.example"))
                 .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
                 .build();
     }
@@ -2079,14 +2645,73 @@ public final class MeasurementServiceImplTest {
                 /* makeDefault */ false);
     }
 
+    private void toggleEnforceForegroundAll(boolean enforce) {
+        toggleEnforceForegroundRegisterSource(enforce);
+        toggleEnforceForegroundRegisterTrigger(enforce);
+        toggleEnforceForegroundRegisterWebSource(enforce);
+        toggleEnforceForegroundRegisterWebTrigger(enforce);
+        toggleEnforceForegroundDeleteRegistrations(enforce);
+        toggleEnforceForegroundApiStatus(enforce);
+    }
+
+    private void toggleEnforceForegroundRegisterSource(boolean enforce) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_enforce_foreground_status_register_source",
+                Boolean.toString(enforce),
+                /* makeDefault */ false);
+    }
+
+    private void toggleEnforceForegroundRegisterTrigger(boolean enforce) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_enforce_foreground_status_register_trigger",
+                Boolean.toString(enforce),
+                /* makeDefault */ false);
+    }
+
+    private void toggleEnforceForegroundRegisterWebSource(boolean enforce) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_enforce_foreground_status_register_web_source",
+                Boolean.toString(enforce),
+                /* makeDefault */ false);
+    }
+
+    private void toggleEnforceForegroundRegisterWebTrigger(boolean enforce) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_enforce_foreground_status_register_web_trigger",
+                Boolean.toString(enforce),
+                /* makeDefault */ false);
+    }
+
+    private void toggleEnforceForegroundDeleteRegistrations(boolean enforce) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_enforce_foreground_status_delete_registrations",
+                Boolean.toString(enforce),
+                /* makeDefault */ false);
+    }
+
+    private void toggleEnforceForegroundApiStatus(boolean enforce) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_enforce_foreground_status_get_status",
+                Boolean.toString(enforce),
+                /* makeDefault */ false);
+    }
+
     private void mockAccessControl(
             boolean isEnrolled, boolean isAllowedByAppManifest, boolean isPermissionGranted) {
         mMockitoSession =
                 ExtendedMockito.mockitoSession()
+                        .mockStatic(Binder.class)
                         .mockStatic(PermissionHelper.class)
                         .mockStatic(AppManifestConfigHelper.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
+        ExtendedMockito.doReturn(1).when(Binder::getCallingUidOrThrow);
         ExtendedMockito.doReturn(isPermissionGranted)
                 .when(() -> PermissionHelper.hasAttributionPermission(any(Context.class)));
         ExtendedMockito.doReturn(isAllowedByAppManifest)

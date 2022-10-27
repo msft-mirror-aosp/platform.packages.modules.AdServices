@@ -41,7 +41,6 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
-import com.android.compatibility.common.util.ShellUtils;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -83,20 +82,10 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
         DevContext devContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
         mIsDebugMode = devContext.getDevOptionsEnabled();
 
+        // Needed to test different custom audience limits
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
-        // Override rate limiting throttle on API calls
-        PhFlagsFixture.overrideSdkRequestPermitsPerSecond(Integer.MAX_VALUE);
-        // Disable the enrollment check, by default
-        PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
-        // We need to turn the Consent Manager into debug mode
-        overrideConsentManagerDebugMode();
-    }
-
-    // Override the Consent Manager behaviour - Consent Given
-    private void overrideConsentManagerDebugMode() {
-        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
     }
 
     @Test
@@ -110,15 +99,13 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
 
     @Test
     public void testJoinCustomAudience_withMissingEnrollment_fail() {
-        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
-
         Exception exception =
                 assertThrows(
                         ExecutionException.class,
                         () ->
                                 mClient.joinCustomAudience(
                                                 CustomAudienceFixture.getValidBuilderForBuyer(
-                                                                CommonFixture.VALID_BUYER_1)
+                                                                CommonFixture.NOT_ENROLLED_BUYER)
                                                         .build())
                                         .get());
         assertThat(exception).hasCauseThat().isInstanceOf(SecurityException.class);
@@ -146,13 +133,13 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
     }
 
     @Test
-    public void testJoinCustomAudience_invalidAdsRenderUrls_fail() {
-        CustomAudience customAudienceWithInvalidAdDataRenderUrls =
+    public void testJoinCustomAudience_invalidAdsRenderUris_fail() {
+        CustomAudience customAudienceWithInvalidAdDataRenderUris =
                 CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                         .setAds(
                                 AdDataFixture.getInvalidAdsByBuyer(
                                         AdTechIdentifier.fromString(
-                                                "!\\@#\"$#@NOTAREALURL$%487\\")))
+                                                "!\\@#\"$#@NOTAREALURI$%487\\")))
                         .build();
 
         Exception exception =
@@ -160,7 +147,7 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
                         ExecutionException.class,
                         () ->
                                 mClient.joinCustomAudience(
-                                                customAudienceWithInvalidAdDataRenderUrls)
+                                                customAudienceWithInvalidAdDataRenderUris)
                                         .get());
         assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
         assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
@@ -197,7 +184,7 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
 
     @Test
     public void testJoinCustomAudience_mismatchDailyFetchUriDomain_fail() {
-        CustomAudience customAudienceWithMismatchedDailyFetchUrlDomain =
+        CustomAudience customAudienceWithMismatchedDailyFetchUriDomain =
                 CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                         .setDailyUpdateUri(
                                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
@@ -209,7 +196,7 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
                         ExecutionException.class,
                         () ->
                                 mClient.joinCustomAudience(
-                                                customAudienceWithMismatchedDailyFetchUrlDomain)
+                                                customAudienceWithMismatchedDailyFetchUriDomain)
                                         .get());
         assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
         assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
@@ -321,14 +308,12 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
 
     @Test
     public void testLeaveCustomAudience_withMissingEnrollment_fail() {
-        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
-
         Exception exception =
                 assertThrows(
                         ExecutionException.class,
                         () ->
                                 mClient.leaveCustomAudience(
-                                                CommonFixture.VALID_BUYER_1,
+                                                CommonFixture.NOT_ENROLLED_BUYER,
                                                 CustomAudienceFixture.VALID_NAME)
                                         .get());
         assertThat(exception).hasCauseThat().isInstanceOf(SecurityException.class);

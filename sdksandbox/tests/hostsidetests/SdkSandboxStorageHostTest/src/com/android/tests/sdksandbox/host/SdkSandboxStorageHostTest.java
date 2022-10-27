@@ -26,9 +26,10 @@ import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
+import android.app.sdksandbox.hosttestutils.AdoptableStorageUtils;
+import android.app.sdksandbox.hosttestutils.SecondaryUserUtils;
 import android.platform.test.annotations.LargeTest;
 
-import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
@@ -38,6 +39,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -48,8 +50,6 @@ import javax.annotation.Nullable;
 @RunWith(DeviceJUnit4ClassRunner.class)
 public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
-    private int mOriginalUserId;
-    private int mSecondaryUserId = -1;
     private boolean mWasRoot;
 
     private static final String CODE_PROVIDER_APK = "StorageTestCodeProvider.apk";
@@ -59,10 +59,13 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
             "SdkSandboxStorageTestAppV2_DoesNotConsumeSdk.apk";
     private static final String SDK_NAME = "com.android.tests.codeprovider.storagetest";
 
-    private static final long SWITCH_USER_COMPLETED_NUMBER_OF_POLLS = 60;
-    private static final long SWITCH_USER_COMPLETED_POLL_INTERVAL_IN_MILLIS = 1000;
-    private static final long WAIT_FOR_RECONCILE_MS = 20000;
+    private static final String SHARED_DIR = "shared";
+    private static final String SANDBOX_DIR = "sandbox";
 
+    // Needs to be at least 20s since that's how long we delay reconcile on SdkSandboxManagerService
+    private static final long WAIT_FOR_RECONCILE_MS = 30000;
+
+    private final SecondaryUserUtils mUserUtils = new SecondaryUserUtils(this);
     private final AdoptableStorageUtils mAdoptableUtils = new AdoptableStorageUtils(this);
     private final DeviceLockUtils mDeviceLockUtils = new DeviceLockUtils(this);
 
@@ -85,12 +88,11 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         mWasRoot = getDevice().isAdbRoot();
         getDevice().enableAdbRoot();
         uninstallPackage(TEST_APP_STORAGE_PACKAGE);
-        mOriginalUserId = getDevice().getCurrentUser();
     }
 
     @After
     public void tearDown() throws Exception {
-        removeSecondaryUserIfNecessary();
+        mUserUtils.removeSecondaryUserIfNecessary();
         uninstallPackage(TEST_APP_STORAGE_PACKAGE);
         if (!mWasRoot) {
             getDevice().disableAdbRoot();
@@ -111,9 +113,11 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
                 "sdk_sandbox_system_data_file");
         // Check label of /data/misc_{ce,de}/0/sdksandbox/<app-name>/shared
         assertSelinuxLabel(
-                getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, true), "sdk_sandbox_data_file");
+                getSdkDataInternalPath(0, TEST_APP_STORAGE_PACKAGE, SHARED_DIR, true),
+                "sdk_sandbox_data_file");
         assertSelinuxLabel(
-                getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, false), "sdk_sandbox_data_file");
+                getSdkDataInternalPath(0, TEST_APP_STORAGE_PACKAGE, SHARED_DIR, false),
+                "sdk_sandbox_data_file");
         // Check label of /data/misc_{ce,de}/0/sdksandbox/<app-name>/<sdk-package>
         assertSelinuxLabel(getSdkDataPerSdkPath(0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, true),
                 "sdk_sandbox_data_file");
@@ -137,12 +141,25 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
         {
             // Verify root directory is created for new user
-            mSecondaryUserId = createAndStartSecondaryUser();
-            final String cePath = getSdkDataRootPath(mSecondaryUserId, true);
-            final String dePath = getSdkDataRootPath(mSecondaryUserId, false);
+            int secondaryUserId = mUserUtils.createAndStartSecondaryUser();
+            final String cePath = getSdkDataRootPath(secondaryUserId, true);
+            final String dePath = getSdkDataRootPath(secondaryUserId, false);
             assertThat(getDevice().isDirectory(dePath)).isTrue();
             assertThat(getDevice().isDirectory(cePath)).isTrue();
         }
+    }
+
+    @Test
+    public void testSdkDataRootDirectory_IsDestroyedOnUserDeletion() throws Exception {
+        // delete the new user
+        final int newUser = mUserUtils.createAndStartSecondaryUser();
+        mUserUtils.removeSecondaryUserIfNecessary(/*waitForUserDataDeletion=*/ true);
+
+        // Sdk Sandbox root directories should not exist as the user was removed
+        final String ceSdkSandboxDataRootPath = getSdkDataRootPath(newUser, true);
+        final String deSdkSandboxDataRootPath = getSdkDataRootPath(newUser, false);
+        assertThat(getDevice().isDirectory(ceSdkSandboxDataRootPath)).isFalse();
+        assertThat(getDevice().isDirectory(deSdkSandboxDataRootPath)).isFalse();
     }
 
     /**
@@ -248,9 +265,8 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         }
 
         // Once device is unlocked, the uninstallation during locked state should take effect.
-        // Allow some time for background task to run. Needs to be at least 20s since that's how
-        // long we delay before starting our background task.
-        Thread.sleep(20000 + 10000);
+        // Allow some time for background task to run.
+        Thread.sleep(WAIT_FOR_RECONCILE_MS);
 
         final String cePath = getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, true);
         assertDirectoryDoesNotExist(cePath);
@@ -390,7 +406,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
         final String cePackageDir = getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, true);
         // Delete the shared directory
-        final String sharedDir = cePackageDir + "/shared";
+        final String sharedDir = cePackageDir + "/" + SHARED_DIR;
         getDevice().deleteFile(sharedDir);
         assertDirectoryDoesNotExist(sharedDir);
 
@@ -480,8 +496,10 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
                 Arrays.asList(
                         getAppDataPath(0, TEST_APP_STORAGE_PACKAGE, true), // CE app data
                         getAppDataPath(0, TEST_APP_STORAGE_PACKAGE, false), // DE app data
-                        getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, true), // CE sdk data
-                        getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, false), // DE sdk data
+                        getSdkDataInternalPath(
+                                0, TEST_APP_STORAGE_PACKAGE, SHARED_DIR, true), // CE sdk data
+                        getSdkDataInternalPath(
+                                0, TEST_APP_STORAGE_PACKAGE, SHARED_DIR, false), // DE sdk data
                         getSdkDataPerSdkPath(
                                 0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, true), // CE per-sdk
                         getSdkDataPerSdkPath(
@@ -516,8 +534,10 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
                 Arrays.asList(
                         getAppDataPath(0, TEST_APP_STORAGE_PACKAGE, true), // CE app data
                         getAppDataPath(0, TEST_APP_STORAGE_PACKAGE, false), // DE app data
-                        getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, true), // CE sdk data
-                        getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, false), // DE sdk data
+                        getSdkDataInternalPath(
+                                0, TEST_APP_STORAGE_PACKAGE, SHARED_DIR, true), // CE sdk data
+                        getSdkDataInternalPath(
+                                0, TEST_APP_STORAGE_PACKAGE, SHARED_DIR, false), // DE sdk data
                         getSdkDataPerSdkPath(
                                 0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, true), // CE per-sdk
                         getSdkDataPerSdkPath(
@@ -552,8 +572,10 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
                 Arrays.asList(
                         getAppDataPath(0, TEST_APP_STORAGE_PACKAGE, true), // CE app data
                         getAppDataPath(0, TEST_APP_STORAGE_PACKAGE, false), // DE app data
-                        getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, true), // CE sdk data
-                        getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, false), // DE sdk data
+                        getSdkDataInternalPath(
+                                0, TEST_APP_STORAGE_PACKAGE, SHARED_DIR, true), // CE sdk data
+                        getSdkDataInternalPath(
+                                0, TEST_APP_STORAGE_PACKAGE, SHARED_DIR, false), // DE sdk data
                         getSdkDataPerSdkPath(
                                 0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, true), // CE per-sdk
                         getSdkDataPerSdkPath(
@@ -577,37 +599,19 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
-    public void testSdkDataPackageDirectory_IsDestroyedOnUserDeletion() throws Exception {
-        // Create new user
-        mSecondaryUserId = createAndStartSecondaryUser();
-
-        // Install the app
-        installPackage(TEST_APP_STORAGE_APK);
-
-        // delete the new user
-        removeSecondaryUserIfNecessary();
-
-        // Sdk Sandbox root directories should not exist as the user was removed
-        final String ceSdkSandboxDataRootPath = getSdkDataRootPath(mSecondaryUserId, true);
-        final String deSdkSandboxDataRootPath = getSdkDataRootPath(mSecondaryUserId, false);
-        assertThat(getDevice().isDirectory(ceSdkSandboxDataRootPath)).isFalse();
-        assertThat(getDevice().isDirectory(deSdkSandboxDataRootPath)).isFalse();
-    }
-
-    @Test
     public void testSdkDataPackageDirectory_IsUserSpecific() throws Exception {
         // Install first before creating the user
         installPackage(TEST_APP_STORAGE_APK, "--user all");
 
-        mSecondaryUserId = createAndStartSecondaryUser();
+        int secondaryUserId = mUserUtils.createAndStartSecondaryUser();
 
         // Data directories should not exist as the package is not installed on new user
-        final String ceAppPath = getAppDataPath(mSecondaryUserId, TEST_APP_STORAGE_PACKAGE, true);
-        final String deAppPath = getAppDataPath(mSecondaryUserId, TEST_APP_STORAGE_PACKAGE, false);
-        final String cePath = getSdkDataPackagePath(mSecondaryUserId,
-                TEST_APP_STORAGE_PACKAGE, true);
-        final String dePath = getSdkDataPackagePath(mSecondaryUserId,
-                TEST_APP_STORAGE_PACKAGE, false);
+        final String ceAppPath = getAppDataPath(secondaryUserId, TEST_APP_STORAGE_PACKAGE, true);
+        final String deAppPath = getAppDataPath(secondaryUserId, TEST_APP_STORAGE_PACKAGE, false);
+        final String cePath =
+                getSdkDataPackagePath(secondaryUserId, TEST_APP_STORAGE_PACKAGE, true);
+        final String dePath =
+                getSdkDataPackagePath(secondaryUserId, TEST_APP_STORAGE_PACKAGE, false);
 
         assertThat(getDevice().isDirectory(ceAppPath)).isFalse();
         assertThat(getDevice().isDirectory(deAppPath)).isFalse();
@@ -628,7 +632,8 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         installPackage(TEST_APP_STORAGE_APK);
 
         // Verify that shared storage exist
-        final String sharedCePath = getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, true);
+        final String sharedCePath =
+                getSdkDataInternalPath(0, TEST_APP_STORAGE_PACKAGE, SHARED_DIR, true);
         assertThat(getDevice().isDirectory(sharedCePath)).isTrue();
 
         // Write a file in the shared storage that code needs to read and write it back
@@ -672,8 +677,10 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
                 /*includeRandomSuffix=*/false);
         final List<String> deSdkDirsAfterLoadingSdksList = getSubDirs(dePackagePath,
                 /*includeRandomSuffix=*/false);
-        assertThat(ceSdkDirsAfterLoadingSdksList).containsExactly("shared", SDK_NAME);
-        assertThat(deSdkDirsAfterLoadingSdksList).containsExactly("shared", SDK_NAME);
+        assertThat(ceSdkDirsAfterLoadingSdksList)
+                .containsExactly(SHARED_DIR, SDK_NAME, SANDBOX_DIR);
+        assertThat(deSdkDirsAfterLoadingSdksList)
+                .containsExactly(SHARED_DIR, SDK_NAME, SANDBOX_DIR);
     }
 
     @Test
@@ -693,8 +700,10 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
                 /*includeRandomSuffix=*/false);
         final List<String> deSdkDirsAfterLoadingSdksList = getSubDirs(dePackagePath,
                 /*includeRandomSuffix=*/false);
-        assertThat(ceSdkDirsAfterLoadingSdksList).containsExactly("shared", SDK_NAME);
-        assertThat(deSdkDirsAfterLoadingSdksList).containsExactly("shared", SDK_NAME);
+        assertThat(ceSdkDirsAfterLoadingSdksList)
+                .containsExactly(SHARED_DIR, SDK_NAME, SANDBOX_DIR);
+        assertThat(deSdkDirsAfterLoadingSdksList)
+                .containsExactly(SHARED_DIR, SDK_NAME, SANDBOX_DIR);
     }
 
     @Test
@@ -718,8 +727,10 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
                 /*includeRandomSuffix=*/false);
         final List<String> deSdkDirsAfterLoadingSdksList =
                 getSubDirs(dePackagePath, /*includeRandomSuffix=*/ false);
-        assertThat(ceSdkDirsAfterLoadingSdksList).containsExactly("shared", SDK_NAME);
-        assertThat(deSdkDirsAfterLoadingSdksList).containsExactly("shared", SDK_NAME);
+        assertThat(ceSdkDirsAfterLoadingSdksList)
+                .containsExactly(SHARED_DIR, SDK_NAME, SANDBOX_DIR);
+        assertThat(deSdkDirsAfterLoadingSdksList)
+                .containsExactly(SHARED_DIR, SDK_NAME, SANDBOX_DIR);
     }
 
     @Test
@@ -732,9 +743,11 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
                 getSubDirs(cePackagePath, /*includeRandomSuffix=*/ true);
         final List<String> deSdkDirsBeforeLoadingSdksList =
                 getSubDirs(dePackagePath, /*includeRandomSuffix=*/ true);
+
         // Delete the sdk sub directories
-        getDevice().deleteFile(cePackagePath + "/" + ceSdkDirsBeforeLoadingSdksList.get(1));
-        getDevice().deleteFile(dePackagePath + "/" + deSdkDirsBeforeLoadingSdksList.get(1));
+        getDevice().deleteFile(cePackagePath + "/" + SHARED_DIR);
+        getDevice().deleteFile(dePackagePath + "/" + SHARED_DIR);
+
         runPhase("loadSdk");
 
         final List<String> ceSdkDirsAfterLoadingSdksList =
@@ -765,6 +778,9 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     @Test
     public void testSdkDataSubDirectory_IsCreatedOnInstall() throws Exception {
         // Directory should not exist before install
+        assertThat(getSdkDataInternalPath(0, TEST_APP_STORAGE_PACKAGE, SANDBOX_DIR, true)).isNull();
+        assertThat(getSdkDataInternalPath(0, TEST_APP_STORAGE_PACKAGE, SANDBOX_DIR, false))
+                .isNull();
         assertThat(getSdkDataPerSdkPath(0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, true)).isNull();
         assertThat(getSdkDataPerSdkPath(0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, false)).isNull();
 
@@ -772,6 +788,10 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         installPackage(TEST_APP_STORAGE_APK);
 
         // Verify directory is created
+        assertThat(getSdkDataInternalPath(0, TEST_APP_STORAGE_PACKAGE, SANDBOX_DIR, true))
+                .isNotNull();
+        assertThat(getSdkDataInternalPath(0, TEST_APP_STORAGE_PACKAGE, SANDBOX_DIR, false))
+                .isNotNull();
         assertThat(getSdkDataPerSdkPath(0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, true)).isNotNull();
         assertThat(getSdkDataPerSdkPath(0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, false)).isNotNull();
     }
@@ -906,7 +926,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
                 boolean isCeData = (i == 0) ? true : false;
                 final String sdkDataRootPath = getSdkDataRootPath(newVolumeUuid, 0, isCeData);
                 final String sdkDataPackagePath = sdkDataRootPath + "/" + TEST_APP_STORAGE_PACKAGE;
-                final String sdkDataSharedPath = sdkDataPackagePath + "/" + "shared";
+                final String sdkDataSharedPath = sdkDataPackagePath + "/" + SHARED_DIR;
 
                 assertThat(getDevice().isDirectory(sdkDataRootPath)).isTrue();
                 assertThat(getDevice().isDirectory(sdkDataPackagePath)).isTrue();
@@ -934,7 +954,8 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
                     "pm move-package " + TEST_APP_STORAGE_PACKAGE + " " + newVolumeUuid));
 
             final String sharedCePath =
-                    getSdkDataSharedPath(newVolumeUuid, 0, TEST_APP_STORAGE_PACKAGE, true);
+                    getSdkDataInternalPath(
+                            newVolumeUuid, 0, TEST_APP_STORAGE_PACKAGE, SHARED_DIR, true);
             assertThat(getDevice().isDirectory(sharedCePath)).isTrue();
 
             String fileToRead = sharedCePath + "/readme.txt";
@@ -991,7 +1012,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
                 assertDirectoryDoesNotExist(OldPackagePath);
                 final List<String> SdkDirsInNewVolume =
                         getSubDirs(sdkDataPackagePath, /*includeRandomSuffix=*/ false);
-                assertThat(SdkDirsInNewVolume).containsExactly("shared", SDK_NAME);
+                assertThat(SdkDirsInNewVolume).containsExactly(SHARED_DIR, SDK_NAME, SANDBOX_DIR);
             }
         } finally {
             mAdoptableUtils.cleanUpVolume();
@@ -1002,6 +1023,19 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     public void testSdkData_IsAttributedToApp() throws Exception {
         installPackage(TEST_APP_STORAGE_APK);
         runPhase("testSdkDataIsAttributedToApp");
+    }
+
+    @Test
+    public void testSdkData_IsAttributedToApp_DisableQuota() throws Exception {
+        installPackage(TEST_APP_STORAGE_APK);
+        String initialValue = getDevice().getProperty("fw.disable_quota");
+        try {
+            assertThat(getDevice().setProperty("fw.disable_quota", "true")).isTrue();
+            runPhase("testSdkDataIsAttributedToApp");
+        } finally {
+            if (initialValue == null) initialValue = "false";
+            assertThat(getDevice().setProperty("fw.disable_quota", initialValue)).isTrue();
+        }
     }
 
     private String getAppDataPath(int userId, String packageName, boolean isCeData) {
@@ -1050,19 +1084,54 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
                 "%s/%s", getSdkDataRootPath(volumeUuid, userId, isCeData), packageName);
     }
 
-    private String getSdkDataSharedPath(int userId, String packageName, boolean isCeData) {
-        return getSdkDataSharedPath(/*volumeUuid=*/ null, userId, packageName, isCeData);
-    }
-
-    private String getSdkDataSharedPath(
-            @Nullable String volumeUuid, int userId, String packageName, boolean isCeData) {
-        return String.format(
-                "%s/shared", getSdkDataPackagePath(volumeUuid, userId, packageName, isCeData));
-    }
-
     private String getSdkDataPerSdkPath(
             int userId, String packageName, String sdkName, boolean isCeData) throws Exception {
         return getSdkDataPerSdkPath(/*volumeUuid=*/ null, userId, packageName, sdkName, isCeData);
+    }
+
+    @Nullable
+    private String getSdkDataInternalPath(
+            int userId, String packageName, String internalDirName, boolean isCeData)
+            throws Exception {
+        return getSdkDataInternalPath(
+                /*volumeUuid=*/ null, userId, packageName, internalDirName, isCeData);
+    }
+
+    // Internal sub-directory can have random suffix. So we need to iterate over the app-level
+    // directory to find it.
+    @Nullable
+    private String getSdkDataInternalPath(
+            @Nullable String volumeUuid,
+            int userId,
+            String packageName,
+            String internalDirName,
+            boolean isCeData)
+            throws Exception {
+        final String appLevelPath =
+                getSdkDataPackagePath(volumeUuid, userId, packageName, isCeData);
+        if (internalDirName.equals(SHARED_DIR)) {
+            return Paths.get(appLevelPath, SHARED_DIR).toString();
+        }
+
+        final String[] children = getDevice().getChildren(appLevelPath);
+        String result = null;
+        for (String child : children) {
+            if (!child.contains("#")) continue;
+            String[] tokens = child.split("#");
+            if (tokens.length != 2) {
+                continue;
+            }
+            String dirNameFound = tokens[0];
+            if (internalDirName.equals(dirNameFound)) {
+                if (result == null) {
+                    result = Paths.get(appLevelPath, child).toString();
+                } else {
+                    throw new IllegalStateException(
+                            "Found two internal directory with same name: " + internalDirName);
+                }
+            }
+        }
+        return result;
     }
 
     // Per-Sdk directory has random suffix. So we need to iterate over the app-level directory
@@ -1080,6 +1149,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         final String[] children = getDevice().getChildren(appLevelPath);
         String result = null;
         for (String child : children) {
+            if (!child.contains("@")) continue;
             String[] tokens = child.split("@");
             if (tokens.length != 2) {
                 continue;
@@ -1107,7 +1177,12 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         }
         final List<String> result = new ArrayList();
         for (int i = 0; i < children.length; i++) {
-            final String[] tokens = children[i].split("@");
+            String[] tokens;
+            if (children[i].contains("@")) {
+                tokens = children[i].split("@");
+            } else {
+                tokens = children[i].split("#");
+            }
             result.add(tokens[0]);
         }
         return result;
@@ -1117,38 +1192,6 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         assertThat(path).isNotNull();
         final String output = getDevice().executeShellCommand("ls -ldZ " + path);
         assertThat(output).contains("u:object_r:" + label);
-    }
-
-    private int createAndStartSecondaryUser() throws Exception {
-        assertWithMessage("Secondary user already created: " + mSecondaryUserId)
-                .that(mSecondaryUserId).isEqualTo(-1);
-        String name = "SdkSandboxStorageHostTest_User" + System.currentTimeMillis();
-        int newId = getDevice().createUser(name);
-        getDevice().startUser(newId);
-        // Note we can't install apps on a locked user
-        awaitUserUnlocked(newId);
-        return newId;
-    }
-
-    private void awaitUserUnlocked(int userId) throws Exception {
-        for (int i = 0; i < SWITCH_USER_COMPLETED_NUMBER_OF_POLLS; ++i) {
-            String userState = getDevice().executeShellCommand("am get-started-user-state "
-                    + userId);
-            if (userState.contains("RUNNING_UNLOCKED")) {
-                return;
-            }
-            Thread.sleep(SWITCH_USER_COMPLETED_POLL_INTERVAL_IN_MILLIS);
-        }
-        fail("Timed out in unlocking user: " + userId);
-    }
-
-    private void removeSecondaryUserIfNecessary() throws Exception {
-        if (mSecondaryUserId != -1) {
-            // Can't remove the 2nd user without switching out of it
-            assertThat(getDevice().switchUser(mOriginalUserId)).isTrue();
-            getDevice().removeUser(mSecondaryUserId);
-            mSecondaryUserId = -1;
-        }
     }
 
     private static void assertSuccess(String str) {
@@ -1169,130 +1212,12 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
                 .isFalse();
     }
 
-    private static class AdoptableStorageUtils {
-
-        private final BaseHostJUnit4Test mTest;
-
-        private String mDiskId;
-
-        AdoptableStorageUtils(BaseHostJUnit4Test test) {
-            mTest = test;
-        }
-
-        public boolean isAdoptableStorageSupported() throws Exception {
-            boolean hasFeature = mTest.getDevice().hasFeature(
-                    "feature:android.software.adoptable_storage");
-            boolean hasFstab =
-                    Boolean.parseBoolean(
-                            mTest.getDevice().executeShellCommand("sm has-adoptable").trim());
-            return hasFeature && hasFstab;
-        }
-
-        // Creates a new volume in adoptable storage and returns its uuid
-        public String createNewVolume() throws Exception {
-            mDiskId = getAdoptionDisk();
-            assertEmpty(
-                    mTest.getDevice().executeShellCommand("sm partition " + mDiskId + " private"));
-            final LocalVolumeInfo vol = getAdoptionVolume();
-            return vol.uuid;
-        }
-
-        // Destroy the volume created before
-        public void cleanUpVolume() throws Exception {
-            mTest.getDevice().executeShellCommand("sm partition " + mDiskId + " public");
-            mTest.getDevice().executeShellCommand("sm forget all");
-        }
-
-        private String getAdoptionDisk() throws Exception {
-            // In the case where we run multiple test we cleanup the state of the device. This
-            // results in the execution of sm forget all which causes the MountService to "reset"
-            // all its knowledge about available drives. This can cause the adoptable drive to
-            // become temporarily unavailable.
-            int attempt = 0;
-            String disks = mTest.getDevice().executeShellCommand("sm list-disks adoptable");
-            while ((disks == null || disks.isEmpty()) && attempt++ < 15) {
-                Thread.sleep(1000);
-                disks = mTest.getDevice().executeShellCommand("sm list-disks adoptable");
-            }
-
-            if (disks == null || disks.isEmpty()) {
-                throw new AssertionError(
-                        "Devices that claim to support adoptable storage must have "
-                                + "adoptable media inserted during CTS to verify correct behavior");
-            }
-            return disks.split("\n")[0].trim();
-        }
-
-        private static void assertEmpty(String str) {
-            if (str != null && str.trim().length() > 0) {
-                throw new AssertionError("Expected empty string but found " + str);
-            }
-        }
-
-        private static class LocalVolumeInfo {
-            public String volId;
-            public String state;
-            public String uuid;
-
-            LocalVolumeInfo(String line) {
-                final String[] split = line.split(" ");
-                volId = split[0];
-                state = split[1];
-                uuid = split[2];
-            }
-        }
-
-        private LocalVolumeInfo getAdoptionVolume() throws Exception {
-            String[] lines = null;
-            int attempt = 0;
-            int mounted_count = 0;
-            while (attempt++ < 15) {
-                lines = mTest.getDevice().executeShellCommand(
-                        "sm list-volumes private").split("\n");
-                CLog.w("getAdoptionVolume(): " + Arrays.toString(lines));
-                for (String line : lines) {
-                    final LocalVolumeInfo info = new LocalVolumeInfo(line.trim());
-                    if (!"private".equals(info.volId)) {
-                        if ("mounted".equals(info.state)) {
-                            // make sure the storage is mounted and stable for a while
-                            mounted_count++;
-                            attempt--;
-                            if (mounted_count >= 3) {
-                                return waitForVolumeReady(info);
-                            }
-                        } else {
-                            mounted_count = 0;
-                        }
-                    }
-                }
-                Thread.sleep(1000);
-            }
-            throw new AssertionError("Expected private volume; found " + Arrays.toString(lines));
-        }
-
-        private LocalVolumeInfo waitForVolumeReady(LocalVolumeInfo vol)
-                throws Exception {
-            int attempt = 0;
-            while (attempt++ < 15) {
-                if (mTest.getDevice()
-                        .executeShellCommand("dumpsys package volumes")
-                        .contains(vol.volId)) {
-                    return vol;
-                }
-                Thread.sleep(1000);
-            }
-            throw new AssertionError("Volume not ready " + vol.volId);
-        }
-    }
-
     private static class DeviceLockUtils {
 
         private static final String FBE_MODE_EMULATED = "emulated";
         private static final String FBE_MODE_NATIVE = "native";
 
         private final BaseHostJUnit4Test mTest;
-
-        private boolean mIsDeviceLocked = false;
 
         DeviceLockUtils(BaseHostJUnit4Test test) {
             mTest = test;
@@ -1328,8 +1253,6 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
                 mTest.getDevice().rebootUntilOnline();
             }
             waitForBootCompleted(mTest.getDevice());
-
-            mIsDeviceLocked = true;
         }
 
         public void clearScreenLock() throws Exception {
@@ -1354,14 +1277,13 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         }
 
         public void unlockDevice() throws Exception {
-            if (!mIsDeviceLocked) return;
-            assertThat(
-                            mTest.runDeviceTests(
-                                    "com.android.cts.appdataisolation.appa",
-                                    "com.android.cts.appdataisolation.appa.AppATests",
-                                    "testUnlockDevice"))
-                    .isTrue();
-            mIsDeviceLocked = false;
+            try {
+                mTest.runDeviceTests(
+                        "com.android.cts.appdataisolation.appa",
+                        "com.android.cts.appdataisolation.appa.AppATests",
+                        "testUnlockDevice");
+            } catch (Exception ignore) {
+            }
         }
 
         private boolean isFbeModeEmulated() throws Exception {

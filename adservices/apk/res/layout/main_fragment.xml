@@ -36,6 +36,7 @@
                 android:orientation="vertical"
                 android:focusableInTouchMode="true" >
                 <TextView
+                    android:layout_marginTop="8dp"
                     android:text="@string/settingsUI_main_view_subtitle"
                     style="@style/MainStyle.Body2" />
 
