@@ -49,11 +49,13 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
 import com.android.adservices.data.measurement.MeasurementTables;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.registration.AsyncSourceFetcher;
 import com.android.adservices.service.measurement.registration.AsyncTriggerFetcher;
 import com.android.adservices.service.measurement.util.AsyncFetchStatus;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -62,6 +64,8 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
 
 import java.util.Collections;
@@ -81,10 +85,8 @@ public class AsyncRegistrationQueueRunnerTest {
     private static final Uri WEB_DESTINATION = Uri.parse("https://web-destination.com");
     private static final Uri APP_DESTINATION = Uri.parse("android-app://com.app_destination");
 
-    private AsyncSourceFetcher mAsyncSourceFetcher = spy(new AsyncSourceFetcher(sDefaultContext));
-
-    private AsyncTriggerFetcher mAsyncTriggerFetcher =
-            spy(new AsyncTriggerFetcher(sDefaultContext));
+    private AsyncSourceFetcher mAsyncSourceFetcher;
+    private AsyncTriggerFetcher mAsyncTriggerFetcher;
 
     @Mock private IMeasurementDao mMeasurementDao;
     @Mock private Source mMockedSource;
@@ -93,6 +95,8 @@ public class AsyncRegistrationQueueRunnerTest {
     @Mock private EnrollmentDao mEnrollmentDao;
     @Mock private ContentResolver mContentResolver;
     @Mock private ContentProviderClient mMockContentProviderClient;
+
+    private MockitoSession mStaticMockSession;
 
     private static EnrollmentData getEnrollment(String enrollmentId) {
         return new EnrollmentData.Builder().setEnrollmentId(enrollmentId).build();
@@ -117,10 +121,20 @@ public class AsyncRegistrationQueueRunnerTest {
         for (String table : MeasurementTables.ALL_MSMT_TABLES) {
             db.delete(table, null, null);
         }
+        mStaticMockSession.finishMocking();
     }
 
     @Before
     public void before() throws RemoteException {
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
+                        .strictness(Strictness.WARN)
+                        .startMocking();
+        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+
+        mAsyncSourceFetcher = spy(new AsyncSourceFetcher(sDefaultContext));
+        mAsyncTriggerFetcher = spy(new AsyncTriggerFetcher(sDefaultContext));
         MockitoAnnotations.initMocks(this);
         when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(any()))
                 .thenReturn(getEnrollment(DEFAULT_ENROLLMENT));

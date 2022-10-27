@@ -24,6 +24,7 @@ import android.database.sqlite.SQLiteException;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.DbHelper;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
@@ -31,6 +32,7 @@ import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -39,6 +41,8 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -64,8 +68,17 @@ public abstract class AbstractDbIntegrationTest {
     public final DbState mInput;
     public final DbState mOutput;
 
+    private MockitoSession mStaticMockSession;
+
     @Before
     public void before() {
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
+                        .strictness(Strictness.WARN)
+                        .startMocking();
+        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+
         SQLiteDatabase db = DbHelper.getInstance(sContext).getWritableDatabase();
         emptyTables(db);
         seedTables(db, mInput);
@@ -75,6 +88,8 @@ public abstract class AbstractDbIntegrationTest {
     public void after() {
         SQLiteDatabase db = DbHelper.getInstance(sContext).getWritableDatabase();
         emptyTables(db);
+
+        mStaticMockSession.finishMocking();
     }
 
     public AbstractDbIntegrationTest(DbState input, DbState output) {
