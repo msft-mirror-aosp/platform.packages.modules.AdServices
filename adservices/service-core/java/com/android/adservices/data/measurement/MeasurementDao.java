@@ -1542,8 +1542,11 @@ class MeasurementDao implements IMeasurementDao {
                 MeasurementTables.AsyncRegistrationContract.TOP_ORIGIN,
                 asyncRegistration.getTopOrigin().toString());
         values.put(
-                MeasurementTables.AsyncRegistrationContract.REDIRECT,
-                asyncRegistration.getRedirect());
+                MeasurementTables.AsyncRegistrationContract.REDIRECT_TYPE,
+                asyncRegistration.getRedirectType());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.REDIRECT_COUNT,
+                asyncRegistration.getRedirectCount());
         values.put(
                 MeasurementTables.AsyncRegistrationContract.SOURCE_TYPE,
                 asyncRegistration.getSourceType() == null
