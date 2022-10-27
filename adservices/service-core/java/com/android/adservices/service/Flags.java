@@ -1334,4 +1334,27 @@ public interface Flags extends Dumpable {
                 || getMeasurementKillSwitch()
                 || MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
     }
+
+    /**
+     * A feature flag to enable the feature of handling topics without any contributors. Note that
+     * in an epoch, an app is a contributor to a topic if the app has called Topics API in this
+     * epoch and is classified to the topic.
+     *
+     * <p>Default value is false, which means the feature is disabled by default and needs to be
+     * ramped up.
+     */
+    boolean ENABLE_TOPIC_CONTRIBUTORS_CHECK = false;
+
+    /** @return if to enable topic contributors check. */
+    default boolean getEnableTopicContributorsCheck() {
+        return ENABLE_TOPIC_CONTRIBUTORS_CHECK;
+    }
+
+    /** Whether to enable database schema version 3 */
+    boolean ENABLE_DATABASE_SCHEMA_VERSION_3 = false;
+
+    /** @return if to enable database schema version 3. */
+    default boolean getEnableDatabaseSchemaVersion3() {
+        return ENABLE_DATABASE_SCHEMA_VERSION_3;
+    }
 }

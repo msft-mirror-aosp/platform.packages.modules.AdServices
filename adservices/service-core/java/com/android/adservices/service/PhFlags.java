@@ -295,6 +295,12 @@ public final class PhFlags implements Flags {
     static final String KEY_REGISTRATION_JOB_QUEUE_INTERVAL_MS =
             "key_registration_job_queue_interval_ms";
 
+    // Feature Flags
+    static final String KEY_ENABLE_TOPIC_CONTRIBUTORS_CHECK = "enable_topic_contributors_check";
+
+    // Database Schema Version Flags
+    static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_3 = "enable_database_schema_version_3";
+
     private static final PhFlags sSingleton = new PhFlags();
 
     /** Returns the singleton instance of the PhFlags. */
@@ -1611,6 +1617,22 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S,
                 /* defaultValue */ FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S);
+    }
+
+    @Override
+    public boolean getEnableTopicContributorsCheck() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENABLE_TOPIC_CONTRIBUTORS_CHECK,
+                /* defaultValue */ ENABLE_TOPIC_CONTRIBUTORS_CHECK);
+    }
+
+    @Override
+    public boolean getEnableDatabaseSchemaVersion3() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENABLE_DATABASE_SCHEMA_VERSION_3,
+                /* defaultValue */ ENABLE_DATABASE_SCHEMA_VERSION_3);
     }
 
     @Override
