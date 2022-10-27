@@ -486,8 +486,8 @@ class MeasurementDao implements IMeasurementDao {
                                         MeasurementTables.EventReportContract.ID,
                                         MeasurementTables.EventReportContract.TABLE,
                                         MeasurementTables.SourceContract.TABLE,
-                                        MeasurementTables.EventReportContract.SOURCE_EVENT_ID,
-                                        MeasurementTables.SourceContract.EVENT_ID,
+                                        MeasurementTables.EventReportContract.SOURCE_ID,
+                                        MeasurementTables.SourceContract.ID,
                                         MeasurementTables.EventReportContract.STATUS,
                                         MeasurementTables.SourceContract.REGISTRANT),
                                 new String[] {
@@ -766,8 +766,8 @@ class MeasurementDao implements IMeasurementDao {
                         MeasurementTables.EventReportContract.ID,
                         MeasurementTables.EventReportContract.TABLE,
                         MeasurementTables.SourceContract.TABLE,
-                        MeasurementTables.EventReportContract.SOURCE_EVENT_ID,
-                        MeasurementTables.SourceContract.EVENT_ID,
+                        MeasurementTables.EventReportContract.SOURCE_ID,
+                        MeasurementTables.SourceContract.ID,
                         MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
                         MeasurementTables.SourceContract.APP_DESTINATION,
                         MeasurementTables.EventReportContract.ENROLLMENT_ID,
@@ -818,8 +818,8 @@ class MeasurementDao implements IMeasurementDao {
         String inQuery = constructDeleteQueryAppsNotPresent(uriList);
 
         // For all Source records not in the given list
-        // as REGISTRANT, obtains EventReport records who's SOURCE_ID
-        // matches a Source records' EVENT_ID.
+        // as REGISTRANT, obtains EventReport records whose SOURCE_ID
+        // matches Source records' SOURCE_ID.
         db.delete(
                 MeasurementTables.EventReportContract.TABLE,
                 String.format(
@@ -829,13 +829,13 @@ class MeasurementDao implements IMeasurementDao {
                                 + " INNER JOIN %3$s s"
                                 + " ON (e.%4$s = s.%5$s AND e.%6$s = s.%7$s AND e.%8$s = s.%9$s)"
                                 + " WHERE s.%10$s NOT IN "
-                                + inQuery.toString()
+                                + inQuery
                                 + ")",
                         MeasurementTables.EventReportContract.ID,
                         MeasurementTables.EventReportContract.TABLE,
                         MeasurementTables.SourceContract.TABLE,
-                        MeasurementTables.EventReportContract.SOURCE_EVENT_ID,
-                        MeasurementTables.SourceContract.EVENT_ID,
+                        MeasurementTables.EventReportContract.SOURCE_ID,
+                        MeasurementTables.SourceContract.ID,
                         MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
                         MeasurementTables.SourceContract.APP_DESTINATION,
                         MeasurementTables.EventReportContract.ENROLLMENT_ID,
@@ -848,7 +848,7 @@ class MeasurementDao implements IMeasurementDao {
                 MeasurementTables.EventReportContract.TABLE,
                 MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION
                         + " NOT IN "
-                        + inQuery.toString(),
+                        + inQuery,
                 /* whereArgs */ null);
 
         // AggregateReport table
@@ -869,20 +869,20 @@ class MeasurementDao implements IMeasurementDao {
                 "(("
                         + MeasurementTables.SourceContract.REGISTRANT
                         + " NOT IN "
-                        + inQuery.toString()
+                        + inQuery
                         + ") OR ("
                         + MeasurementTables.SourceContract.STATUS
                         + " = ? AND "
                         + MeasurementTables.SourceContract.APP_DESTINATION
                         + " NOT IN "
-                        + inQuery.toString()
+                        + inQuery
                         + "))",
                 new String[] {String.valueOf(Source.Status.IGNORED)});
 
         // Trigger table
         db.delete(
                 MeasurementTables.TriggerContract.TABLE,
-                MeasurementTables.TriggerContract.REGISTRANT + " NOT IN " + inQuery.toString(),
+                MeasurementTables.TriggerContract.REGISTRANT + " NOT IN " + inQuery,
                 /* whereArgs */ null);
 
         // Attribution table

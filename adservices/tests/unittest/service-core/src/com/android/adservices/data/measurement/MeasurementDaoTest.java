@@ -2833,7 +2833,7 @@ public class MeasurementDaoTest {
 
         List<Source> sourceList = new ArrayList<>();
         sourceList.add(
-                new Source.Builder()
+                new Source.Builder() // deleted
                         .setId("1")
                         .setEventId(new UnsignedLong(1L))
                         .setAppDestination(Uri.parse("android-app://app-destination-1"))
@@ -2850,26 +2850,27 @@ public class MeasurementDaoTest {
                         .setRegistrant(Uri.parse("android-app://installed-app"))
                         .setPublisher(Uri.parse("android-app://installed-app"))
                         .build());
-        sourceList.forEach(
-                source -> {
-                    ContentValues values = new ContentValues();
-                    values.put(SourceContract.ID, source.getId());
-                    values.put(SourceContract.EVENT_ID, source.getEventId().toString());
-                    values.put(
-                            SourceContract.APP_DESTINATION, source.getAppDestination().toString());
-                    values.put(SourceContract.ENROLLMENT_ID, source.getEnrollmentId());
-                    values.put(SourceContract.REGISTRANT, source.getRegistrant().toString());
-                    values.put(SourceContract.PUBLISHER, source.getPublisher().toString());
-                    db.insert(SourceContract.TABLE, /* nullColumnHack */ null, values);
-                });
+        sourceList.forEach(source -> AbstractDbIntegrationTest.insertToDb(source, db));
+
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("1")
+                        .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                        .setRegistrant(Uri.parse("android-app://installed-app"))
+                        .build();
+        AbstractDbIntegrationTest.insertToDb(trigger, db);
 
         List<EventReport> reportList = new ArrayList<>();
         reportList.add(
                 new EventReport.Builder()
-                        .setId("1")
+                        .setId("1") // deleted
                         .setSourceEventId(new UnsignedLong(1L))
                         .setAttributionDestination(Uri.parse("android-app://app-destination-1"))
                         .setEnrollmentId("enrollment-id")
+                        .setTriggerData(new UnsignedLong(5L))
+                        .setSourceId(sourceList.get(0).getId())
+                        .setTriggerId(trigger.getId())
+                        .setSourceType(sourceList.get(0).getSourceType())
                         .build());
         reportList.add(
                 new EventReport.Builder()
@@ -2877,20 +2878,12 @@ public class MeasurementDaoTest {
                         .setSourceEventId(new UnsignedLong(2L))
                         .setAttributionDestination(Uri.parse("android-app://app-destination-2"))
                         .setEnrollmentId("enrollment-id")
+                        .setTriggerData(new UnsignedLong(5L))
+                        .setSourceId(sourceList.get(1).getId())
+                        .setTriggerId(trigger.getId())
+                        .setSourceType(sourceList.get(1).getSourceType())
                         .build());
-        reportList.forEach(
-                report -> {
-                    ContentValues values = new ContentValues();
-                    values.put(EventReportContract.ID, report.getId());
-                    values.put(
-                            EventReportContract.SOURCE_EVENT_ID,
-                            report.getSourceEventId().toString());
-                    values.put(
-                            EventReportContract.ATTRIBUTION_DESTINATION,
-                            report.getAttributionDestination().toString());
-                    values.put(EventReportContract.ENROLLMENT_ID, report.getEnrollmentId());
-                    db.insert(EventReportContract.TABLE, /* nullColumnHack */ null, values);
-                });
+        reportList.forEach(report -> AbstractDbIntegrationTest.insertToDb(report, db));
 
         long count =
                 DatabaseUtils.queryNumEntries(db, EventReportContract.TABLE, /* selection */ null);
