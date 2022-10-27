@@ -16,9 +16,11 @@
 
 package com.android.adservices.service.adselection;
 
+import android.adservices.adselection.Tracing;
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.net.Uri;
+import android.os.Trace;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.common.AdServicesHttpsClient;
@@ -61,6 +63,8 @@ public class JsFetcher {
             @NonNull String owner,
             @NonNull AdTechIdentifier buyer,
             @NonNull String name) {
+        int traceCookie = Tracing.beginAsyncSection(Tracing.GET_BUYER_DECISION_LOGIC);
+
         FluentFuture<String> jsOverrideFuture =
                 FluentFuture.from(
                         mBackgroundExecutorService.submit(
@@ -70,6 +74,7 @@ public class JsFetcher {
         return jsOverrideFuture
                 .transformAsync(
                         jsOverride -> {
+                            Trace.endAsyncSection(Tracing.GET_BUYER_DECISION_LOGIC, traceCookie);
                             if (jsOverride == null) {
                                 LogUtil.v(
                                         "Fetching buyer decision logic from server: %s",
@@ -87,6 +92,7 @@ public class JsFetcher {
                 .catching(
                         Exception.class,
                         e -> {
+                            Trace.endAsyncSection(Tracing.GET_BUYER_DECISION_LOGIC, traceCookie);
                             LogUtil.w(
                                     e, "Exception encountered when fetching buyer decision logic");
                             throw new IllegalStateException(MISSING_BIDDING_LOGIC);

@@ -23,6 +23,7 @@ import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.AdSelectionResponse;
+import android.adservices.adselection.Tracing;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.exceptions.AdServicesException;
@@ -32,6 +33,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.LimitExceededException;
 import android.os.RemoteException;
+import android.os.Trace;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -257,6 +259,7 @@ public abstract class AdSelectionRunner {
      */
     public void runAdSelection(
             @NonNull AdSelectionInput inputParams, @NonNull AdSelectionCallback callback) {
+        final int traceCookie = Tracing.beginAsyncSection(Tracing.RUN_AD_SELECTION);
         Objects.requireNonNull(inputParams);
         Objects.requireNonNull(callback);
 
@@ -293,11 +296,13 @@ public abstract class AdSelectionRunner {
                     new FutureCallback<DBAdSelection>() {
                         @Override
                         public void onSuccess(DBAdSelection result) {
+                            Tracing.endAsyncSection(Tracing.RUN_AD_SELECTION, traceCookie);
                             notifySuccessToCaller(result, callback);
                         }
 
                         @Override
                         public void onFailure(Throwable t) {
+                            Tracing.endAsyncSection(Tracing.RUN_AD_SELECTION, traceCookie);
                             if (t instanceof ConsentManager.RevokedConsentException) {
                                 notifyEmptySuccessToCaller(
                                         callback,
@@ -313,6 +318,7 @@ public abstract class AdSelectionRunner {
                     },
                     mLightweightExecutorService);
         } catch (Throwable t) {
+            Tracing.endAsyncSection(Tracing.RUN_AD_SELECTION, traceCookie);
             LogUtil.v("run ad selection fails fast with exception %s.", t.toString());
             notifyFailureToCaller(callback, t);
         }
@@ -473,6 +479,7 @@ public abstract class AdSelectionRunner {
 
     private ListenableFuture<List<DBCustomAudience>> getBuyersCustomAudience(
             final AdSelectionConfig adSelectionConfig) {
+        final int traceCookie = Tracing.beginAsyncSection(Tracing.GET_BUYERS_CUSTOM_AUDIENCE);
         try {
             return mBackgroundExecutorService.submit(
                     () -> {
@@ -500,12 +507,14 @@ public abstract class AdSelectionRunner {
                         // end successful get-buyers-custom-audience process.
                         mAdSelectionExecutionLogger.endGetBuyersCustomAudience(
                                 countBuyersFromCustomAudiences(buyerCustomAudience));
+                        Tracing.endAsyncSection(Tracing.GET_BUYERS_CUSTOM_AUDIENCE, traceCookie);
                         return buyerCustomAudience;
                     });
         } catch (Exception e) {
             // Bidding stage fails early during fetching buyers custom audience.
             mAdSelectionExecutionLogger.endBiddingProcess(
                     null, AdServicesLoggerUtil.getResultCodeFromException(e));
+            Tracing.endAsyncSection(Tracing.GET_BUYERS_CUSTOM_AUDIENCE, traceCookie);
             throw e;
         }
     }
@@ -530,6 +539,7 @@ public abstract class AdSelectionRunner {
             @NonNull DBAdSelection.Builder dbAdSelectionBuilder,
             @NonNull String buyerDecisionLogicJS,
             @NonNull String callerPackageName) {
+        final int traceCookie = Tracing.beginAsyncSection(Tracing.PERSIST_AD_SELECTION);
         final long adSelectionId = mAdSelectionIdGenerator.generateId();
         LogUtil.v("Persisting Ad Selection Result for Id:%d", adSelectionId);
         return mBackgroundExecutorService.submit(
@@ -548,6 +558,7 @@ public abstract class AdSelectionRunner {
                                     .setBuyerDecisionLogicJs(buyerDecisionLogicJS)
                                     .setBiddingLogicUri(dbAdSelection.getBiddingLogicUri())
                                     .build());
+                    Tracing.endAsyncSection(Tracing.PERSIST_AD_SELECTION, traceCookie);
                     mAdSelectionExecutionLogger.endPersistAdSelection();
                     return dbAdSelection;
                 });
@@ -689,6 +700,7 @@ public abstract class AdSelectionRunner {
      * @return an ignorable {@code null}
      */
     private Void validateRequest(AdSelectionConfig adSelectionConfig, String callerPackageName) {
+        Trace.beginSection(Tracing.VALIDATE_REQUEST);
         assertCallerPackageName(callerPackageName);
         assertCallerNotThrottled(callerPackageName);
         maybeAssertForegroundCaller();
@@ -696,6 +708,7 @@ public abstract class AdSelectionRunner {
         assertAppInAllowList(callerPackageName);
         assertCallerHasUserConsent();
         validateAdSelectionConfig(adSelectionConfig);
+        Trace.endSection();
 
         return null;
     }
