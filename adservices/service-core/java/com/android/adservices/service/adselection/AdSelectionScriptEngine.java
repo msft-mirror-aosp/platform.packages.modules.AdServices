@@ -74,7 +74,10 @@ public class AdSelectionScriptEngine {
     public static final String TRUSTED_BIDDING_SIGNALS_ARG_NAME = "__rb_trusted_bidding_signals";
     public static final String CONTEXTUAL_SIGNALS_ARG_NAME = "__rb_contextual_signals";
     public static final String USER_SIGNALS_ARG_NAME = "__rb_user_signals";
-    public static final String CUSTOM_AUDIENCE_SIGNALS_ARG_NAME = "__rb_custom_audience_signals";
+    public static final String CUSTOM_AUDIENCE_BIDDING_SIGNALS_ARG_NAME =
+            "__rb_custom_audience_bidding_signals";
+    public static final String CUSTOM_AUDIENCE_SCORING_SIGNALS_ARG_NAME =
+            "__rb_custom_audience_scoring_signals";
     public static final String AUCTION_CONFIG_ARG_NAME = "__rb_auction_config";
     public static final String SELLER_SIGNALS_ARG_NAME = "__rb_seller_signals";
     public static final String TRUSTED_SCORING_SIGNALS_ARG_NAME = "__rb_trusted_scoring_signals";
@@ -171,7 +174,8 @@ public class AdSelectionScriptEngine {
                         .add(jsonArg(USER_SIGNALS_ARG_NAME, userSignals.toString()))
                         .add(
                                 CustomAudienceBiddingSignalsArgument.asScriptArgument(
-                                        CUSTOM_AUDIENCE_SIGNALS_ARG_NAME, customAudienceSignals))
+                                        CUSTOM_AUDIENCE_BIDDING_SIGNALS_ARG_NAME,
+                                        customAudienceSignals))
                         .build();
 
         ImmutableList.Builder<JSScriptArgument> adDataArguments = new ImmutableList.Builder<>();
@@ -221,7 +225,7 @@ public class AdSelectionScriptEngine {
                         .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals.toString()))
                         .add(
                                 CustomAudienceScoringSignalsArgument.asScriptArgument(
-                                        CUSTOM_AUDIENCE_SIGNALS_ARG_NAME,
+                                        CUSTOM_AUDIENCE_SCORING_SIGNALS_ARG_NAME,
                                         customAudienceSignalsList))
                         .build();
 

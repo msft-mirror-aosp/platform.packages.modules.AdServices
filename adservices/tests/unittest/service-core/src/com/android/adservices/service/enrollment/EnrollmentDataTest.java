@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.enrollment;
 
+import static com.android.adservices.service.enrollment.EnrollmentData.SEPARATOR;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
@@ -24,48 +26,114 @@ import static org.junit.Assert.assertNull;
 
 import androidx.test.filters.SmallTest;
 
+import com.google.common.collect.ImmutableList;
+
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.List;
 
 /** Unit tests for {@link EnrollmentData} */
 @SmallTest
 public final class EnrollmentDataTest {
+    private static final String ENROLLMENT_ID = "1";
+    private static final String COMPANY_ID = "100";
+    private static final ImmutableList<String> SDK_NAMES = ImmutableList.of("Admob");
+    private static final ImmutableList<String> ATTRIBUTION_SOURCE_REGISTRATION_URLS =
+            ImmutableList.of("source1.example.com", "source2.example.com");
+    private static final ImmutableList<String> ATTRIBUTION_TRIGGER_REGISTRATION_URLS =
+            ImmutableList.of("trigger1.example.com", "trigger2.example.com");
+    private static final ImmutableList<String> ATTRIBUTION_REPORTING_REGISTRATION_URLS =
+            ImmutableList.of("reporting1.example.com", "reporting2.example.com");
+    private static final ImmutableList<String> REMARKETING_RESPONSE_BASED_REGISTRATION_URLS =
+            ImmutableList.of("remarketing1.example.com", "remarketing2.example.com");
+    private static final ImmutableList<String> ENCRYPTION_KEY_URLS =
+            ImmutableList.of("encryption1.example.com", "encryption2.example.com");
 
     private EnrollmentData createEnrollmentData() {
         return new EnrollmentData.Builder()
-                .setEnrollmentId("1")
-                .setCompanyId("100")
-                .setSdkNames(Arrays.asList("Admob"))
-                .setAttributionSourceRegistrationUrl(
-                        Arrays.asList("source1.example.com", "source2.example.com"))
-                .setAttributionTriggerRegistrationUrl(
-                        Arrays.asList("trigger1.example.com", "trigger2.example.com"))
-                .setAttributionReportingUrl(
-                        Arrays.asList("reporting1.example.com", "reporting2.example.com"))
+                .setEnrollmentId(ENROLLMENT_ID)
+                .setCompanyId(COMPANY_ID)
+                .setSdkNames(SDK_NAMES)
+                .setAttributionSourceRegistrationUrl(ATTRIBUTION_SOURCE_REGISTRATION_URLS)
+                .setAttributionTriggerRegistrationUrl(ATTRIBUTION_TRIGGER_REGISTRATION_URLS)
+                .setAttributionReportingUrl(ATTRIBUTION_REPORTING_REGISTRATION_URLS)
                 .setRemarketingResponseBasedRegistrationUrl(
-                        Arrays.asList("remarketing1.example.com", "remarketing2.example.com"))
-                .setEncryptionKeyUrl(
-                        Arrays.asList("encryption1.example.com", "encryption2.example.com"))
+                        REMARKETING_RESPONSE_BASED_REGISTRATION_URLS)
+                .setEncryptionKeyUrl(ENCRYPTION_KEY_URLS)
                 .build();
     }
 
     @Test
     public void testCreation() throws Exception {
         EnrollmentData enrollmentData = createEnrollmentData();
-        assertEquals("1", enrollmentData.getEnrollmentId());
-        assertEquals("100", enrollmentData.getCompanyId());
-        assertThat(enrollmentData.getSdkNames()).containsExactly("Admob");
+
+        assertEquals(ENROLLMENT_ID, enrollmentData.getEnrollmentId());
+        assertEquals(COMPANY_ID, enrollmentData.getCompanyId());
+        assertThat(enrollmentData.getSdkNames()).containsExactlyElementsIn(SDK_NAMES);
         assertThat(enrollmentData.getAttributionSourceRegistrationUrl())
-                .containsExactly("source1.example.com", "source2.example.com");
+                .containsExactlyElementsIn(ATTRIBUTION_SOURCE_REGISTRATION_URLS);
         assertThat(enrollmentData.getAttributionTriggerRegistrationUrl())
-                .containsExactly("trigger1.example.com", "trigger2.example.com");
+                .containsExactlyElementsIn(ATTRIBUTION_TRIGGER_REGISTRATION_URLS);
         assertThat(enrollmentData.getAttributionReportingUrl())
-                .containsExactly("reporting1.example.com", "reporting2.example.com");
+                .containsExactlyElementsIn(ATTRIBUTION_REPORTING_REGISTRATION_URLS);
         assertThat(enrollmentData.getRemarketingResponseBasedRegistrationUrl())
-                .containsExactly("remarketing1.example.com", "remarketing2.example.com");
+                .containsExactlyElementsIn(REMARKETING_RESPONSE_BASED_REGISTRATION_URLS);
         assertThat(enrollmentData.getEncryptionKeyUrl())
-                .containsExactly("encryption1.example.com", "encryption2.example.com");
+                .containsExactlyElementsIn(ENCRYPTION_KEY_URLS);
+    }
+
+    @Test
+    public void testCreationFromStrings() {
+        EnrollmentData enrollmentData =
+                new EnrollmentData.Builder()
+                        .setEnrollmentId(ENROLLMENT_ID)
+                        .setCompanyId(COMPANY_ID)
+                        .setSdkNames(String.join(SEPARATOR, SDK_NAMES))
+                        .setAttributionSourceRegistrationUrl(
+                                String.join(SEPARATOR, ATTRIBUTION_SOURCE_REGISTRATION_URLS))
+                        .setAttributionTriggerRegistrationUrl(
+                                String.join(SEPARATOR, ATTRIBUTION_TRIGGER_REGISTRATION_URLS))
+                        .setAttributionReportingUrl(
+                                String.join(SEPARATOR, ATTRIBUTION_REPORTING_REGISTRATION_URLS))
+                        .setRemarketingResponseBasedRegistrationUrl(
+                                String.join(
+                                        SEPARATOR, REMARKETING_RESPONSE_BASED_REGISTRATION_URLS))
+                        .setEncryptionKeyUrl(String.join(SEPARATOR, ENCRYPTION_KEY_URLS))
+                        .build();
+
+        assertEquals(ENROLLMENT_ID, enrollmentData.getEnrollmentId());
+        assertEquals(COMPANY_ID, enrollmentData.getCompanyId());
+        assertThat(enrollmentData.getSdkNames()).containsExactlyElementsIn(SDK_NAMES);
+        assertThat(enrollmentData.getAttributionSourceRegistrationUrl())
+                .containsExactlyElementsIn(ATTRIBUTION_SOURCE_REGISTRATION_URLS);
+        assertThat(enrollmentData.getAttributionTriggerRegistrationUrl())
+                .containsExactlyElementsIn(ATTRIBUTION_TRIGGER_REGISTRATION_URLS);
+        assertThat(enrollmentData.getAttributionReportingUrl())
+                .containsExactlyElementsIn(ATTRIBUTION_REPORTING_REGISTRATION_URLS);
+        assertThat(enrollmentData.getRemarketingResponseBasedRegistrationUrl())
+                .containsExactlyElementsIn(REMARKETING_RESPONSE_BASED_REGISTRATION_URLS);
+        assertThat(enrollmentData.getEncryptionKeyUrl())
+                .containsExactlyElementsIn(ENCRYPTION_KEY_URLS);
+    }
+
+    @Test
+    public void testSplitEnrollmentInputToList_emptyString() {
+        assertThat(EnrollmentData.splitEnrollmentInputToList("")).isEmpty();
+    }
+
+    @Test
+    public void testSplitEnrollmentInputToList_singleItem() {
+        String item = "one.item";
+        assertThat(EnrollmentData.splitEnrollmentInputToList(item)).containsExactly(item);
+    }
+
+    @Test
+    public void testSplitEnrollmentInputToList_multipleItems() {
+        List<String> items = Arrays.asList("first.item", "second.item");
+        String itemListString = String.join(SEPARATOR, items);
+        assertThat(EnrollmentData.splitEnrollmentInputToList(itemListString))
+                .containsExactlyElementsIn(items);
     }
 
     @Test
