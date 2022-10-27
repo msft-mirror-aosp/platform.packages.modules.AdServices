@@ -36,7 +36,10 @@ java_sdk_library {
     libs: [
         "framework-adservices.impl",
     ],
-    defaults: ["framework-system-server-module-defaults"],
+    defaults: [
+        "framework-system-server-module-defaults",
+        "framework-system-server-module-optimize-defaults",
+    ],
     visibility: [
         "//packages/modules/AdServices/tests:__subpackages__",
     ],

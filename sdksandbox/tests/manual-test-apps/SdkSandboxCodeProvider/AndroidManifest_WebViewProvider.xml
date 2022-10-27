@@ -18,7 +18,7 @@
           package="com.android.sdksandboxcode_webview">
 
     <application>
-        <sdk-library android:name="com.android.sdksandboxcode"
+        <sdk-library android:name="com.android.sdksandboxcode_webview"
                      android:versionMajor="1" />
         <property android:name="android.sdksandbox.PROPERTY_SDK_PROVIDER_CLASS_NAME"
                   android:value="com.android.sdksandboxcode_webview.SandboxedSdkWebViewProvider" />

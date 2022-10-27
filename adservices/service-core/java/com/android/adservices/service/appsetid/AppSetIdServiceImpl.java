@@ -18,6 +18,7 @@ package com.android.adservices.service.appsetid;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 
@@ -43,6 +44,7 @@ import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.common.SdkRuntimeUtil;
+import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.ApiCallStats;
@@ -62,6 +64,7 @@ public class AppSetIdServiceImpl extends IAppSetIdService.Stub {
     private final AdServicesLogger mAdServicesLogger;
     private final Clock mClock;
     private final Flags mFlags;
+    private final Throttler mThrottler;
     private final AppImportanceFilter mAppImportanceFilter;
 
     public AppSetIdServiceImpl(
@@ -70,12 +73,14 @@ public class AppSetIdServiceImpl extends IAppSetIdService.Stub {
             AdServicesLogger adServicesLogger,
             Clock clock,
             Flags flags,
+            Throttler throttler,
             AppImportanceFilter appImportanceFilter) {
         mContext = context;
         mAppSetIdWorker = appsetidWorker;
         mAdServicesLogger = adServicesLogger;
         mClock = clock;
         mFlags = flags;
+        mThrottler = throttler;
         mAppImportanceFilter = appImportanceFilter;
     }
 
@@ -84,6 +89,8 @@ public class AppSetIdServiceImpl extends IAppSetIdService.Stub {
             @NonNull GetAppSetIdParam appSetIdParam,
             @NonNull CallerMetadata callerMetadata,
             @NonNull IGetAppSetIdCallback callback) {
+
+        if (isThrottled(appSetIdParam, callback)) return;
 
         final long startServiceTime = mClock.elapsedRealtime();
         final String packageName = appSetIdParam.getAppPackageName();
@@ -125,6 +132,26 @@ public class AppSetIdServiceImpl extends IAppSetIdService.Stub {
                                         .build());
                     }
                 });
+    }
+
+    // Throttle the AppSetId API.
+    // Return true if we should throttle (don't allow the API call).
+    private boolean isThrottled(GetAppSetIdParam appSetIdParam, IGetAppSetIdCallback callback) {
+        boolean throttled =
+                !mThrottler.tryAcquire(
+                        Throttler.ApiKey.APPSETID_API_APP_PACKAGE_NAME,
+                        appSetIdParam.getAppPackageName());
+
+        if (throttled) {
+            LogUtil.e("Rate Limit Reached for APPSETID_API");
+            try {
+                callback.onError(STATUS_RATE_LIMIT_REACHED);
+            } catch (RemoteException e) {
+                LogUtil.e(e, "Fail to call the callback on Rate Limit Reached.");
+            }
+            return true;
+        }
+        return false;
     }
 
     // Enforce whether caller is from foreground.

@@ -140,4 +140,26 @@ public class AdServicesConfig {
 
     /** Job ID for Mdd Wifi Charging Task ({@link com.android.adservices.download.MddJobService}) */
     public static final int MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID = 14;
+
+    /**
+     * Returns the min time period (in millis) between each uninstalled-record deletion maintenance
+     * job run.
+     */
+    public static long getMeasurementDeleteUninstalledJobPeriodMs() {
+        return MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS;
+    }
+
+    public static long MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(24);
+
+    /**
+     * Job ID for Measurement Delete Records From UninstalledApps Job ({@link
+     * com.android.adservices.service.measurement.DeleteUninstalledJobService})
+     */
+    public static final int MEASUREMENT_DELETE_UNINSTALLED_JOB_ID = 16;
+
+    /**
+     * Job ID for the Async Registration Queue JobService ({@link
+     * com.android.adservices.service.measurement.AsyncRegistrationQueueJobService})
+     */
+    public static final int ASYNC_REGISTRATION_QUEUE_JOB_ID = 15;
 }

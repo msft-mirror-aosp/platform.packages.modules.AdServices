@@ -170,7 +170,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
+                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -223,7 +223,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
                 // Fail silently for revoked user consent
                 if (!mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                        mContext.getPackageManager(), ownerPackageName)) {
+                        ownerPackageName)) {
                     LogUtil.v("Joining custom audience");
                     mCustomAudienceImpl.joinCustomAudience(customAudience, ownerPackageName);
                     BackgroundFetchJobService.scheduleIfNeeded(mContext, mFlags, false);
@@ -245,7 +245,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
         } finally {
             if (shouldLog) {
-                mAdServicesLogger.logFledgeApiCallStats(apiName, resultCode);
+                mAdServicesLogger.logFledgeApiCallStats(apiName, resultCode, 0);
             }
         }
     }
@@ -302,7 +302,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
+                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -350,8 +350,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 shouldLog = true;
 
                 // Fail silently for revoked user consent
-                if (!mConsentManager.isFledgeConsentRevokedForApp(
-                        mContext.getPackageManager(), ownerPackageName)) {
+                if (!mConsentManager.isFledgeConsentRevokedForApp(ownerPackageName)) {
                     // TODO(b/233681870): Investigate implementation of actual failures
                     //  in logs/metrics
                     mCustomAudienceImpl.leaveCustomAudience(ownerPackageName, buyer, name);
@@ -381,7 +380,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
         } finally {
             if (shouldLog) {
-                mAdServicesLogger.logFledgeApiCallStats(apiName, resultCode);
+                mAdServicesLogger.logFledgeApiCallStats(apiName, resultCode, 0);
             }
         }
     }
@@ -415,7 +414,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
+                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
             // Rethrow to fail fast
             throw exception;
         }
@@ -424,7 +423,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
         if (!devContext.getDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
+                    apiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -468,7 +467,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
+                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
             // Rethrow to fail fast
             throw exception;
         }
@@ -477,7 +476,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
         if (!devContext.getDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
+                    apiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -534,7 +533,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
+                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
             // Rethrow to fail fast
             throw exception;
         }
@@ -545,7 +544,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
         if (!devContext.getDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
+                    apiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -570,7 +569,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             return mCallingAppUidSupplier.getCallingAppUid();
         } catch (IllegalStateException illegalStateException) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiNameLoggingId, AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
+                    apiNameLoggingId, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, 0);
             throw illegalStateException;
         }
     }

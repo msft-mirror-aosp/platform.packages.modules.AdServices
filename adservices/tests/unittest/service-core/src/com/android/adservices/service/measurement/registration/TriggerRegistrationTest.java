@@ -18,9 +18,9 @@ package com.android.adservices.service.measurement.registration;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-import android.net.Uri;
-
 import androidx.test.filters.SmallTest;
+
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.junit.Test;
 
@@ -30,7 +30,6 @@ import org.junit.Test;
  */
 @SmallTest
 public final class TriggerRegistrationTest {
-    private static final Uri TOP_ORIGIN = Uri.parse("https://foo.com");
     private static final String ENROLLMENT_ID = "enrollment-id";
     private static final String TOP_LEVEL_FILTERS_JSON_STRING =
             "{\n"
@@ -50,7 +49,7 @@ public final class TriggerRegistrationTest {
                     + "}"
                     + "]\n";
 
-    private static final Long DEBUG_KEY = 23478951L;
+    private static final UnsignedLong DEBUG_KEY = new UnsignedLong(23478951L);
 
     private static final String AGGREGATE_TRIGGER_DATA =
             "[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\"],"
@@ -59,7 +58,6 @@ public final class TriggerRegistrationTest {
 
     private TriggerRegistration createExampleResponse() {
         return new TriggerRegistration.Builder()
-                .setTopOrigin(TOP_ORIGIN)
                 .setEnrollmentId(ENROLLMENT_ID)
                 .setEventTriggers(EVENT_TRIGGERS)
                 .setAggregateTriggerData(AGGREGATE_TRIGGER_DATA)
@@ -70,7 +68,6 @@ public final class TriggerRegistrationTest {
     }
 
     void verifyExampleResponse(TriggerRegistration triggerRegistration) {
-        assertEquals("https://foo.com", triggerRegistration.getTopOrigin().toString());
         assertEquals(ENROLLMENT_ID, triggerRegistration.getEnrollmentId());
         assertEquals(EVENT_TRIGGERS, triggerRegistration.getEventTriggers());
         assertEquals(AGGREGATE_TRIGGER_DATA, triggerRegistration.getAggregateTriggerData());
@@ -90,10 +87,8 @@ public final class TriggerRegistrationTest {
     public void testDefaults() throws Exception {
         TriggerRegistration response =
                 new TriggerRegistration.Builder()
-                        .setTopOrigin(TOP_ORIGIN)
                         .setEnrollmentId(ENROLLMENT_ID)
                         .build();
-        assertEquals(TOP_ORIGIN, response.getTopOrigin());
         assertEquals(ENROLLMENT_ID, response.getEnrollmentId());
         assertNull(response.getEventTriggers());
         assertNull(response.getAggregateTriggerData());

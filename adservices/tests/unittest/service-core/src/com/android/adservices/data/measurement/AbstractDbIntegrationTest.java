@@ -30,6 +30,7 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -47,6 +48,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -274,7 +276,8 @@ public abstract class AbstractDbIntegrationTest {
     public static void insertToDb(Source source, SQLiteDatabase db) throws SQLiteException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.SourceContract.ID, source.getId());
-        values.put(MeasurementTables.SourceContract.EVENT_ID, source.getEventId());
+        values.put(MeasurementTables.SourceContract.EVENT_ID,
+                getNullableUnsignedLong(source.getEventId()));
         values.put(MeasurementTables.SourceContract.SOURCE_TYPE, source.getSourceType().toString());
         values.put(MeasurementTables.SourceContract.PUBLISHER,
                 source.getPublisher().toString());
@@ -346,16 +349,19 @@ public abstract class AbstractDbIntegrationTest {
             throws SQLiteException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.EventReportContract.ID, report.getId());
-        values.put(MeasurementTables.EventReportContract.SOURCE_ID, report.getSourceId());
+        values.put(
+                MeasurementTables.EventReportContract.SOURCE_EVENT_ID,
+                report.getSourceEventId().getValue());
         values.put(MeasurementTables.EventReportContract.ENROLLMENT_ID, report.getEnrollmentId());
         values.put(MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
                 report.getAttributionDestination().toString());
         values.put(MeasurementTables.EventReportContract.REPORT_TIME, report.getReportTime());
-        values.put(MeasurementTables.EventReportContract.TRIGGER_DATA, report.getTriggerData());
+        values.put(MeasurementTables.EventReportContract.TRIGGER_DATA,
+                report.getTriggerData().getValue());
         values.put(MeasurementTables.EventReportContract.TRIGGER_PRIORITY,
                 report.getTriggerPriority());
         values.put(MeasurementTables.EventReportContract.TRIGGER_DEDUP_KEY,
-                report.getTriggerDedupKey());
+                getNullableUnsignedLong(report.getTriggerDedupKey()));
         values.put(MeasurementTables.EventReportContract.TRIGGER_TIME, report.getTriggerTime());
         values.put(MeasurementTables.EventReportContract.STATUS, report.getStatus());
         values.put(MeasurementTables.EventReportContract.SOURCE_TYPE,
@@ -442,5 +448,9 @@ public abstract class AbstractDbIntegrationTest {
         if (row == -1) {
             throw new SQLiteException("AggregateEncryptionKey insertion failed.");
         }
+    }
+
+    private static Long getNullableUnsignedLong(UnsignedLong ulong) {
+        return Optional.ofNullable(ulong).map(UnsignedLong::getValue).orElse(null);
     }
 }

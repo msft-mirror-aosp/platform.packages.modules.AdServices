@@ -25,7 +25,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import android.content.Context;
-import android.content.pm.PackageManager;
 
 import androidx.test.core.app.ApplicationProvider;
 
@@ -48,9 +47,7 @@ public class MainViewModelTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        doReturn(AdServicesApiConsent.GIVEN)
-                .when(mConsentManager)
-                .getConsent(any(PackageManager.class));
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
         mMainViewModel =
                 new MainViewModel(ApplicationProvider.getApplicationContext(), mConsentManager);
     }
@@ -64,9 +61,7 @@ public class MainViewModelTest {
     /** Test if getConsent returns false if the {@link ConsentManager} always returns false. */
     @Test
     public void testGetConsentReturnsFalse() {
-        doReturn(AdServicesApiConsent.REVOKED)
-                .when(mConsentManager)
-                .getConsent(any(PackageManager.class));
+        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManager).getConsent();
         mMainViewModel =
                 new MainViewModel(ApplicationProvider.getApplicationContext(), mConsentManager);
 
