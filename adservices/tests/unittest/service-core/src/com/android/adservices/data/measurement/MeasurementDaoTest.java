@@ -56,14 +56,13 @@ import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.aggregation.AggregateReportFixture;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
-import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import com.google.common.collect.ImmutableList;
 
 import org.json.JSONException;
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Rule;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
@@ -87,10 +86,6 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class MeasurementDaoTest {
-    @Rule
-    public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
-            new TestableDeviceConfig.TestableDeviceConfigRule();
-
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Uri APP_TWO_SOURCES = Uri.parse("android-app://com.example1.two-sources");
     private static final Uri APP_ONE_SOURCE = Uri.parse("android-app://com.example2.one-source");
@@ -111,12 +106,26 @@ public class MeasurementDaoTest {
     private static final Uri WEB_PUBLISHER_THREE = Uri.parse("http://not.example.com");
     private static final Uri APP_DESTINATION = Uri.parse("android-app://com.destination.example");
 
+    private MockitoSession mStaticMockSession;
+
+    @Before
+    public void before() {
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
+                        .strictness(Strictness.WARN)
+                        .startMocking();
+        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+    }
+
     @After
     public void cleanup() {
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         for (String table : ALL_MSMT_TABLES) {
             db.delete(table, null, null);
         }
+
+        mStaticMockSession.finishMocking();
     }
 
     @Test
@@ -169,7 +178,6 @@ public class MeasurementDaoTest {
         final MockitoSession session =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(DbHelper.class)
-                        .spyStatic(FlagsFactory.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
 
@@ -239,7 +247,6 @@ public class MeasurementDaoTest {
         final MockitoSession session =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(DbHelper.class)
-                        .spyStatic(FlagsFactory.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
 

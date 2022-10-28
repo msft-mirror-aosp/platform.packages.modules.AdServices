@@ -48,6 +48,7 @@ import androidx.test.core.content.pm.ApplicationInfoBuilder;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.data.DbHelper;
+import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.common.BooleanFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.consent.AppConsentDaoFixture;
@@ -145,7 +146,7 @@ public class ConsentManagerTest {
         mDatastore =
                 new BooleanFileDatastore(mContextSpy, AppConsentDaoFixture.TEST_DATASTORE_NAME, 1);
         mAppConsentDao = spy(new AppConsentDao(mDatastore, mPackageManagerMock));
-        mDbHelper = DbHelper.getInstance(mContextSpy);
+        mDbHelper = DbTestUtil.getDbHelperForTest();
         mEnrollmentDao = spy(new EnrollmentDao(mContextSpy, mDbHelper));
 
         mConsentManager =

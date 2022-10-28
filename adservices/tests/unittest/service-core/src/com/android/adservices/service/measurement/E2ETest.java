@@ -36,7 +36,7 @@ import android.view.MotionEvent.PointerProperties;
 import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.data.DbHelper;
+import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.AggregateReportingJob;
 import com.android.adservices.service.measurement.actions.EventReportingJob;
@@ -325,7 +325,7 @@ public abstract class E2ETest {
     }
 
     static void clearDatabase() {
-        SQLiteDatabase db = DbHelper.getInstance(sContext).getWritableDatabase();
+        SQLiteDatabase db = DbTestUtil.getDbHelperForTest().getWritableDatabase();
         emptyTables(db);
     }
 
@@ -629,7 +629,7 @@ public abstract class E2ETest {
 
     protected static String getDatastoreState() {
         StringBuilder result = new StringBuilder();
-        SQLiteDatabase db = DbHelper.getInstance(sContext).getWritableDatabase();
+        SQLiteDatabase db = DbTestUtil.getDbHelperForTest().getWritableDatabase();
         List<String> tableNames = ImmutableList.of(
                 "msmt_source",
                 "msmt_trigger",

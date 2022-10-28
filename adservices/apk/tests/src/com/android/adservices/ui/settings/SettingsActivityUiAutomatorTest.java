@@ -41,6 +41,7 @@ import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.common.BackgroundJobsManager;
 import com.android.adservices.service.consent.App;
@@ -74,6 +75,18 @@ public class SettingsActivityUiAutomatorTest {
 
     @Before
     public void setup() throws UiObjectNotFoundException, IOException {
+        // Static mocking
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(PhFlags.class)
+                        .spyStatic(FlagsFactory.class)
+                        .spyStatic(BackgroundJobsManager.class)
+                        .spyStatic(ConsentManager.class)
+                        .strictness(Strictness.WARN)
+                        .initMocks(this)
+                        .startMocking();
+        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+
         // prepare objects used by static mocking
         mConsentManager =
                 spy(ConsentManager.getInstance(ApplicationProvider.getApplicationContext()));
@@ -115,15 +128,6 @@ public class SettingsActivityUiAutomatorTest {
         }
         doNothing().when(mConsentManager).resetMeasurement();
 
-        // Static mocking
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(PhFlags.class)
-                        .spyStatic(BackgroundJobsManager.class)
-                        .spyStatic(ConsentManager.class)
-                        .strictness(Strictness.WARN)
-                        .initMocks(this)
-                        .startMocking();
         ExtendedMockito.doNothing()
                 .when(() -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
         mPhFlags = spy(PhFlags.getInstance());
