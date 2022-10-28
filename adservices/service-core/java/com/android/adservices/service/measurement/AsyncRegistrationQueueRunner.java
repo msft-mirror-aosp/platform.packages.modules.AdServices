@@ -33,6 +33,7 @@ import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.service.measurement.registration.AsyncSourceFetcher;
 import com.android.adservices.service.measurement.registration.AsyncTriggerFetcher;
 import com.android.adservices.service.measurement.util.AsyncFetchStatus;
+import com.android.adservices.service.measurement.util.AsyncRedirect;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.Web;
 import com.android.internal.annotations.VisibleForTesting;
@@ -150,9 +151,9 @@ public class AsyncRegistrationQueueRunner {
     private void processSourceRegistration(
             AsyncRegistration asyncRegistration, Set<String> failedAdTechEnrollmentIds) {
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         Optional<Source> resultSource =
-                mAsyncSourceFetcher.fetchSource(asyncRegistration, asyncFetchStatus, redirects);
+                mAsyncSourceFetcher.fetchSource(asyncRegistration, asyncFetchStatus, asyncRedirect);
 
         mDatastoreManager.runInTransaction(
                 (dao) -> {
@@ -214,7 +215,7 @@ public class AsyncRegistrationQueueRunner {
                                                     == AsyncRegistration.RegistrationType.WEB_SOURCE
                                             ? asyncRegistration.getWebDestination()
                                             : source.getWebDestination();
-                            if (asyncRegistration.getRedirect()) {
+                            if (asyncRegistration.shouldProcessRedirects()) {
                                 LogUtil.d(
                                         "AsyncRegistrationQueueRunner: "
                                                 + "async "
@@ -223,7 +224,7 @@ public class AsyncRegistrationQueueRunner {
                                                 + asyncFetchStatus.getStatus());
                                 processRedirects(
                                         asyncRegistration,
-                                        redirects,
+                                        asyncRedirect,
                                         webDestination,
                                         osDestination,
                                         dao);
@@ -237,9 +238,9 @@ public class AsyncRegistrationQueueRunner {
     private void processTriggerRegistration(
             AsyncRegistration asyncRegistration, Set<String> failedAdTechEnrollmentIds) {
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
-        List<Uri> redirects = new ArrayList<>();
-        Optional<Trigger> resultTrigger =
-                mAsyncTriggerFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, redirects);
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        Optional<Trigger> resultTrigger = mAsyncTriggerFetcher.fetchTrigger(
+                asyncRegistration, asyncFetchStatus, asyncRedirect);
         boolean status =
                 mDatastoreManager.runInTransaction(
                         (dao) -> {
@@ -276,7 +277,7 @@ public class AsyncRegistrationQueueRunner {
                                                 + asyncFetchStatus.getStatus());
                                 if (resultTrigger.isPresent()) {
                                     Trigger trigger = resultTrigger.get();
-                                    if (asyncRegistration.getRedirect()) {
+                                    if (asyncRegistration.shouldProcessRedirects()) {
                                         LogUtil.d(
                                                 "AsyncRegistrationQueueRunner: async trigger"
                                                     + " registration; processing redirects. Fetch"
@@ -284,7 +285,7 @@ public class AsyncRegistrationQueueRunner {
                                                         + asyncFetchStatus.getStatus());
                                         processRedirects(
                                                 asyncRegistration,
-                                                redirects,
+                                                asyncRedirect,
                                                 asyncRegistration.getWebDestination(),
                                                 asyncRegistration.getOsDestination(),
                                                 dao);
@@ -509,7 +510,8 @@ public class AsyncRegistrationQueueRunner {
             long requestTime,
             long retryCount,
             long lastProcessingTime,
-            boolean redirect,
+            @AsyncRegistration.RedirectType int redirectType,
+            int redirectCount,
             boolean debugKeyAllowed,
             IMeasurementDao dao)
             throws DatastoreException {
@@ -534,7 +536,8 @@ public class AsyncRegistrationQueueRunner {
                         .setRequestTime(requestTime)
                         .setRetryCount(retryCount)
                         .setLastProcessingTime(lastProcessingTime)
-                        .setRedirect(redirect)
+                        .setRedirectType(redirectType)
+                        .setRedirectCount(redirectCount)
                         .setDebugKeyAllowed(debugKeyAllowed)
                         .build();
 
@@ -598,14 +601,14 @@ public class AsyncRegistrationQueueRunner {
 
     private void processRedirects(
             AsyncRegistration asyncRegistration,
-            List<Uri> redirects,
+            AsyncRedirect redirectsAndType,
             Uri webDestination,
             Uri osDestination,
             IMeasurementDao dao)
             throws DatastoreException {
-        for (Uri redirect : redirects) {
+        for (Uri redirectUri : redirectsAndType.getRedirects()) {
             Optional<String> enrollmentData =
-                    Enrollment.maybeGetEnrollmentId(redirect, mEnrollmentDao);
+                    Enrollment.maybeGetEnrollmentId(redirectUri, mEnrollmentDao);
             if (enrollmentData == null || enrollmentData.isEmpty()) {
                 LogUtil.d(
                         "AsyncRegistrationQueueRunner: Invalid enrollment data while "
@@ -616,7 +619,7 @@ public class AsyncRegistrationQueueRunner {
             insertAsyncRegistrationFromTransaction(
                     UUID.randomUUID().toString(),
                     enrollmentId,
-                    redirect,
+                    redirectUri,
                     webDestination,
                     osDestination,
                     asyncRegistration.getRegistrant(),
@@ -627,7 +630,8 @@ public class AsyncRegistrationQueueRunner {
                     asyncRegistration.getRequestTime(),
                     /* mRetryCount */ 0,
                     System.currentTimeMillis(),
-                    /* mRedirect */ false,
+                    redirectsAndType.getRedirectType(),
+                    asyncRegistration.getNextRedirectCount(),
                     asyncRegistration.getDebugKeyAllowed(),
                     dao);
         }

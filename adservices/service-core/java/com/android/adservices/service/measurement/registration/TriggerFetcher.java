@@ -32,7 +32,9 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.measurement.AsyncRegistration;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
+import com.android.adservices.service.measurement.util.AsyncRedirect;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -220,7 +222,9 @@ public class TriggerFetcher {
             }
 
             if (shouldProcessRedirects) {
-                List<Uri> redirects = FetcherUtil.parseRedirects(headers);
+                AsyncRedirect asyncRedirect = FetcherUtil.parseRedirects(headers,
+                        AsyncRegistration.RedirectType.ANY); // Support daisy-chain pending
+                List<Uri> redirects = asyncRedirect.getRedirects();
                 for (Uri redirect : redirects) {
                     fetchTrigger(
                             redirect,

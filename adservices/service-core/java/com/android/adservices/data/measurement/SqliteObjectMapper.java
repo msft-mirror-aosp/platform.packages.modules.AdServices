@@ -253,8 +253,14 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.AsyncRegistrationContract.TOP_ORIGIN,
                 builder::setTopOrigin);
-        setBooleanColumn(
-                cursor, MeasurementTables.AsyncRegistrationContract.REDIRECT, builder::setRedirect);
+        setIntColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.REDIRECT_TYPE,
+                builder::setRedirectType);
+        setIntColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.REDIRECT_COUNT,
+                builder::setRedirectCount);
         setIntColumn(
                 cursor,
                 MeasurementTables.AsyncRegistrationContract.SOURCE_TYPE,
