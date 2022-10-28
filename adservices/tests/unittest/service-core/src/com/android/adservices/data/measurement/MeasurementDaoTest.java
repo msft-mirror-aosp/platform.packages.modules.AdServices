@@ -94,7 +94,7 @@ public class MeasurementDaoTest {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Uri APP_TWO_SOURCES = Uri.parse("android-app://com.example1.two-sources");
     private static final Uri APP_ONE_SOURCE = Uri.parse("android-app://com.example2.one-source");
-    private static final Uri APP_NO_SOURCE = Uri.parse("android-app://com.example3.no-sources");
+    private static final String DEFAULT_ENROLLMENT_ID = "enrollment-id";
     private static final Uri APP_TWO_PUBLISHER =
             Uri.parse("android-app://com.publisher2.two-sources");
     private static final Uri APP_ONE_PUBLISHER =
@@ -953,10 +953,12 @@ public class MeasurementDaoTest {
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         Objects.requireNonNull(db);
         AbstractDbIntegrationTest.insertToDb(
-                createSourceForIATest("IA1", currentTimestamp, 100, -1, false),
+                createSourceForIATest(
+                        "IA1", currentTimestamp, 100, -1, false, DEFAULT_ENROLLMENT_ID),
                 db);
         AbstractDbIntegrationTest.insertToDb(
-                createSourceForIATest("IA2", currentTimestamp, 50, -1, false),
+                createSourceForIATest(
+                        "IA2", currentTimestamp, 50, -1, false, DEFAULT_ENROLLMENT_ID),
                 db);
         // Should select id IA1 because it has higher priority
         assertTrue(
@@ -977,10 +979,11 @@ public class MeasurementDaoTest {
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         Objects.requireNonNull(db);
         AbstractDbIntegrationTest.insertToDb(
-                createSourceForIATest("IA1", currentTimestamp, -1, 10, false),
+                createSourceForIATest(
+                        "IA1", currentTimestamp, -1, 10, false, DEFAULT_ENROLLMENT_ID),
                 db);
         AbstractDbIntegrationTest.insertToDb(
-                createSourceForIATest("IA2", currentTimestamp, -1, 5, false),
+                createSourceForIATest("IA2", currentTimestamp, -1, 5, false, DEFAULT_ENROLLMENT_ID),
                 db);
         // Should select id=IA2 as it is latest
         assertTrue(
@@ -1002,10 +1005,11 @@ public class MeasurementDaoTest {
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         Objects.requireNonNull(db);
         AbstractDbIntegrationTest.insertToDb(
-                createSourceForIATest("IA1", currentTimestamp, -1, 10, false),
+                createSourceForIATest(
+                        "IA1", currentTimestamp, -1, 10, false, DEFAULT_ENROLLMENT_ID),
                 db);
         AbstractDbIntegrationTest.insertToDb(
-                createSourceForIATest("IA2", currentTimestamp, -1, 5, false),
+                createSourceForIATest("IA2", currentTimestamp, -1, 5, false, DEFAULT_ENROLLMENT_ID),
                 db);
         // Should select id=IA1 as it is the only valid choice.
         // id=IA2 is newer than the evenTimestamp of install event.
@@ -1029,10 +1033,10 @@ public class MeasurementDaoTest {
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         Objects.requireNonNull(db);
         AbstractDbIntegrationTest.insertToDb(
-                createSourceForIATest("IA1", currentTimestamp, 10, 10, true),
+                createSourceForIATest("IA1", currentTimestamp, 10, 10, true, DEFAULT_ENROLLMENT_ID),
                 db);
         AbstractDbIntegrationTest.insertToDb(
-                createSourceForIATest("IA2", currentTimestamp, 10, 11, true),
+                createSourceForIATest("IA2", currentTimestamp, 10, 11, true, DEFAULT_ENROLLMENT_ID),
                 db);
         // Should not update any sources.
         assertTrue(
@@ -1051,7 +1055,9 @@ public class MeasurementDaoTest {
         long currentTimestamp = System.currentTimeMillis();
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         Objects.requireNonNull(db);
-        Source source = createSourceForIATest("IA1", currentTimestamp, 100, -1, false);
+        Source source =
+                createSourceForIATest(
+                        "IA1", currentTimestamp, 100, -1, false, DEFAULT_ENROLLMENT_ID);
 
         // Execution
         // Active source should get install attributed
@@ -1089,6 +1095,90 @@ public class MeasurementDaoTest {
                                                 INSTALLED_PACKAGE, currentTimestamp)));
         assertFalse(getInstallAttributionStatus("IA1", db));
         removeSources(Collections.singletonList("IA1"), db);
+    }
+
+    @Test
+    public void doInstallAttribution_withSourcesAcrossEnrollments_marksOneInstallFromEachAdTech() {
+        long currentTimestamp = System.currentTimeMillis();
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+
+        // Enrollment1: Choose IA2 because that's newer and still occurred before install
+        AbstractDbIntegrationTest.insertToDb(
+                createSourceForIATest(
+                        "IA1", currentTimestamp, -1, 10, false, DEFAULT_ENROLLMENT_ID + "_1"),
+                db);
+        AbstractDbIntegrationTest.insertToDb(
+                createSourceForIATest(
+                        "IA2", currentTimestamp, -1, 9, false, DEFAULT_ENROLLMENT_ID + "_1"),
+                db);
+
+        // Enrollment2: Choose IA4 because IA3's install attribution window has expired
+        AbstractDbIntegrationTest.insertToDb(
+                createSourceForIATest(
+                        "IA3", currentTimestamp, -1, 10, true, DEFAULT_ENROLLMENT_ID + "_2"),
+                db);
+        AbstractDbIntegrationTest.insertToDb(
+                createSourceForIATest(
+                        "IA4", currentTimestamp, -1, 9, false, DEFAULT_ENROLLMENT_ID + "_2"),
+                db);
+
+        // Enrollment3: Choose IA5 because IA6 was registered after install event
+        AbstractDbIntegrationTest.insertToDb(
+                createSourceForIATest(
+                        "IA5", currentTimestamp, -1, 10, false, DEFAULT_ENROLLMENT_ID + "_3"),
+                db);
+        AbstractDbIntegrationTest.insertToDb(
+                createSourceForIATest(
+                        "IA6", currentTimestamp, -1, 5, false, DEFAULT_ENROLLMENT_ID + "_3"),
+                db);
+
+        // Enrollment4: Choose IA8 due to higher priority
+        AbstractDbIntegrationTest.insertToDb(
+                createSourceForIATest(
+                        "IA7", currentTimestamp, 5, 10, false, DEFAULT_ENROLLMENT_ID + "_4"),
+                db);
+        AbstractDbIntegrationTest.insertToDb(
+                createSourceForIATest(
+                        "IA8", currentTimestamp, 10, 10, false, DEFAULT_ENROLLMENT_ID + "_4"),
+                db);
+
+        // Enrollment5: Choose none because both sources are ineligible
+        // Expired install attribution window
+        AbstractDbIntegrationTest.insertToDb(
+                createSourceForIATest(
+                        "IA9", currentTimestamp, 5, 31, true, DEFAULT_ENROLLMENT_ID + "_5"),
+                db);
+        // Registered after install attribution
+        AbstractDbIntegrationTest.insertToDb(
+                createSourceForIATest(
+                        "IA10", currentTimestamp, 10, 3, false, DEFAULT_ENROLLMENT_ID + "_5"),
+                db);
+
+        assertTrue(
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransaction(
+                                measurementDao -> {
+                                    measurementDao.doInstallAttribution(
+                                            INSTALLED_PACKAGE,
+                                            currentTimestamp - TimeUnit.DAYS.toMillis(7));
+                                }));
+        assertTrue(getInstallAttributionStatus("IA2", db));
+        assertTrue(getInstallAttributionStatus("IA4", db));
+        assertTrue(getInstallAttributionStatus("IA5", db));
+        assertTrue(getInstallAttributionStatus("IA8", db));
+
+        assertFalse(getInstallAttributionStatus("IA1", db));
+        assertFalse(getInstallAttributionStatus("IA3", db));
+        assertFalse(getInstallAttributionStatus("IA6", db));
+        assertFalse(getInstallAttributionStatus("IA7", db));
+        assertFalse(getInstallAttributionStatus("IA9", db));
+        assertFalse(getInstallAttributionStatus("IA10", db));
+
+        removeSources(
+                Arrays.asList(
+                        "IA1", "IA2", "IA3", "IA4", "IA5", "IA6", "IA7", "IA8", "IA8", "IA10"),
+                db);
     }
 
     @Test
@@ -1345,7 +1435,9 @@ public class MeasurementDaoTest {
         long currentTimestamp = System.currentTimeMillis();
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         Objects.requireNonNull(db);
-        Source source = createSourceForIATest("IA1", currentTimestamp, 10, 10, false);
+        Source source =
+                createSourceForIATest(
+                        "IA1", currentTimestamp, 10, 10, false, DEFAULT_ENROLLMENT_ID);
         source.setInstallAttributed(true);
         AbstractDbIntegrationTest.insertToDb(source, db);
         assertTrue(
@@ -4032,13 +4124,18 @@ public class MeasurementDaoTest {
         }
     }
 
-    private Source createSourceForIATest(String id, long currentTime, long priority,
-            int eventTimePastDays, boolean expiredIAWindow) {
+    private Source createSourceForIATest(
+            String id,
+            long currentTime,
+            long priority,
+            int eventTimePastDays,
+            boolean expiredIAWindow,
+            String enrollmentId) {
         return new Source.Builder()
                 .setId(id)
                 .setPublisher(Uri.parse("android-app://com.example.sample"))
                 .setRegistrant(Uri.parse("android-app://com.example.sample"))
-                .setEnrollmentId("enrollment-id")
+                .setEnrollmentId(enrollmentId)
                 .setExpiryTime(currentTime + TimeUnit.DAYS.toMillis(30))
                 .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(expiredIAWindow ? 0 : 30))
                 .setAppDestination(INSTALLED_PACKAGE)
