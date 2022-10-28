@@ -132,7 +132,6 @@ public class SdkSandboxDataIsolationHostTest extends BaseHostJUnit4Test {
         int userId = mUserUtils.createAndStartSecondaryUser();
         installPackageAsUser(APP_2_APK, true, userId);
 
-        assertThat(getDevice().getCurrentUser()).isEqualTo(0);
         runPhase(
                 "testSdkSandboxDataIsolation_CannotVerifyOtherUserAppExistence",
                 "sandbox_isolation_user_id",

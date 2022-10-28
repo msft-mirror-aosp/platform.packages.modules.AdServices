@@ -2743,9 +2743,11 @@ public class MeasurementDaoTest {
             Assert.assertEquals(
                     asyncRegistration.getLastProcessingTime(),
                     validAsyncRegistration.getLastProcessingTime());
-            Assert.assertNotNull(asyncRegistration.getRedirect());
             Assert.assertEquals(
-                    asyncRegistration.getRedirect(), validAsyncRegistration.getRedirect());
+                    asyncRegistration.getRedirectType(), validAsyncRegistration.getRedirectType());
+            Assert.assertEquals(
+                    asyncRegistration.getRedirectCount(),
+                    validAsyncRegistration.getRedirectCount());
             Assert.assertNotNull(asyncRegistration.getRegistrationUri());
             Assert.assertEquals(
                     asyncRegistration.getRegistrationUri(),

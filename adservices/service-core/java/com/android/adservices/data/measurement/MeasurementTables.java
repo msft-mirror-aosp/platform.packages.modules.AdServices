@@ -16,6 +16,8 @@
 
 package com.android.adservices.data.measurement;
 
+import com.android.adservices.data.measurement.migration.MeasurementTablesDeprecated;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -50,9 +52,9 @@ public final class MeasurementTables {
         String ENROLLMENT_ID = "enrollment_id";
         String REGISTRATION_URI = "registration_uri";
         String TOP_ORIGIN = "top_origin";
-        String INPUT_EVENT = "input_event";
         String SOURCE_TYPE = "source_type";
-        String REDIRECT = "redirect";
+        String REDIRECT_TYPE = "redirect_type";
+        String REDIRECT_COUNT = "redirect_count";
         String REGISTRANT = "registrant";
         String REQUEST_TIME = "request_time";
         String RETRY_COUNT = "retry_count";
@@ -187,9 +189,9 @@ public final class MeasurementTables {
                     + " TEXT, "
                     + AsyncRegistrationContract.TOP_ORIGIN
                     + " TEXT, "
-                    + AsyncRegistrationContract.REDIRECT
+                    + MeasurementTablesDeprecated.AsyncRegistration.REDIRECT
                     + " INTEGER, "
-                    + AsyncRegistrationContract.INPUT_EVENT
+                    + MeasurementTablesDeprecated.AsyncRegistration.INPUT_EVENT
                     + " INTEGER, "
                     + AsyncRegistrationContract.REGISTRANT
                     + " TEXT, "
@@ -221,7 +223,9 @@ public final class MeasurementTables {
                     + " TEXT, "
                     + AsyncRegistrationContract.TOP_ORIGIN
                     + " TEXT, "
-                    + AsyncRegistrationContract.REDIRECT
+                    + AsyncRegistrationContract.REDIRECT_TYPE
+                    + " INTEGER, "
+                    + AsyncRegistrationContract.REDIRECT_COUNT
                     + " INTEGER, "
                     + AsyncRegistrationContract.SOURCE_TYPE
                     + " INTEGER, "

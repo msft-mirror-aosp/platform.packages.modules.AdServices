@@ -24,7 +24,9 @@ import android.net.Uri;
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.data.customaudience.CustomAudienceStats;
 import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetchData;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdServicesHttpsClient;
 
@@ -40,6 +42,7 @@ import java.util.concurrent.ExecutionException;
 public class BackgroundFetchRunner {
     private final CustomAudienceDao mCustomAudienceDao;
     private final PackageManager mPackageManager;
+    private final EnrollmentDao mEnrollmentDao;
     private final Flags mFlags;
     private final AdServicesHttpsClient mHttpsClient;
 
@@ -57,12 +60,15 @@ public class BackgroundFetchRunner {
     public BackgroundFetchRunner(
             @NonNull CustomAudienceDao customAudienceDao,
             @NonNull PackageManager packageManager,
+            @NonNull EnrollmentDao enrollmentDao,
             @NonNull Flags flags) {
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(packageManager);
+        Objects.requireNonNull(enrollmentDao);
         Objects.requireNonNull(flags);
         mCustomAudienceDao = customAudienceDao;
         mPackageManager = packageManager;
+        mEnrollmentDao = enrollmentDao;
         mFlags = flags;
         mHttpsClient =
                 new AdServicesHttpsClient(
@@ -94,12 +100,27 @@ public class BackgroundFetchRunner {
      */
     public void deleteDisallowedOwnerCustomAudiences() {
         LogUtil.d("Starting custom audience disallowed owner garbage collection");
-        CustomAudienceDao.CustomAudienceStats deletedCAStats =
+        CustomAudienceStats deletedCAStats =
                 mCustomAudienceDao.deleteAllDisallowedOwnerCustomAudienceData(
                         mPackageManager, mFlags);
         LogUtil.d(
                 "Deleted %d custom audiences belonging to %d disallowed owner apps",
-                deletedCAStats.getTotalCount(), deletedCAStats.getOwnerCount());
+                deletedCAStats.getTotalCustomAudienceCount(), deletedCAStats.getTotalOwnerCount());
+    }
+
+    /**
+     * Deletes custom audiences whose buyer ad techs which are not enrolled to use FLEDGE.
+     *
+     * <p>Also clears corresponding update information from the background fetch table.
+     */
+    public void deleteDisallowedBuyerCustomAudiences() {
+        LogUtil.d("Starting custom audience disallowed buyer garbage collection");
+        CustomAudienceStats deletedCAStats =
+                mCustomAudienceDao.deleteAllDisallowedBuyerCustomAudienceData(
+                        mEnrollmentDao, mFlags);
+        LogUtil.d(
+                "Deleted %d custom audiences belonging to %d disallowed buyer ad techs",
+                deletedCAStats.getTotalCustomAudienceCount(), deletedCAStats.getTotalBuyerCount());
     }
 
     /** Updates a single given custom audience and persists the results. */

@@ -14,27 +14,20 @@
  * limitations under the License.
  */
 
-package com.android.sdksandbox.cts.provider;
+package com.android.sdksandbox.cts.provider.dataisolationtest;
 
-import static com.google.common.truth.Truth.assertThat;
-
-import android.app.sdksandbox.SandboxedSdk;
-import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
-import android.os.Binder;
 import android.os.Bundle;
 import android.os.Process;
-import android.util.Log;
-import android.view.View;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
-public class SdkSandboxDataIsolationTestProvider extends SandboxedSdkProvider {
+public class DataIsolationTestSdkApiImpl extends IDataIsolationTestSdkApi.Stub {
+    private final Context mContext;
 
     private static final String TAG = "SdkSandboxDataIsolationTestProvider";
-    private static final String BUNDLE_KEY_PHASE_NAME = "phase-name";
 
     private static final String JAVA_FILE_PERMISSION_DENIED_MSG =
             "open failed: EACCES (Permission denied)";
@@ -49,42 +42,17 @@ public class SdkSandboxDataIsolationTestProvider extends SandboxedSdkProvider {
     private static final String CURRENT_USER_ID =
             String.valueOf(Process.myUserHandle().getUserId(Process.myUid()));
 
-    @Override
-    public SandboxedSdk onLoadSdk(Bundle params) {
-        return new SandboxedSdk(new Binder());
+    public DataIsolationTestSdkApiImpl(Context sdkContext) {
+        mContext = sdkContext;
     }
 
     @Override
-    public View getView(Context windowContext, Bundle params, int width, int height) {
-        handlePhase(params);
-        return new View(windowContext);
+    public void testSdkSandboxDataIsolation_SandboxCanAccessItsDirectory() {
+        verifyDirectoryAccess(mContext.getDataDir().toString(), true);
     }
 
-    private void handlePhase(Bundle params) {
-        String phaseName = params.getString(BUNDLE_KEY_PHASE_NAME, "");
-        Log.i(TAG, "Handling phase: " + phaseName);
-        switch (phaseName) {
-            case "testSdkSandboxDataIsolation_SandboxCanAccessItsDirectory":
-                testSdkSandboxDataIsolation_SandboxCanAccessItsDirectory();
-                break;
-            case "testSdkSandboxDataIsolation_CannotVerifyAppExistence":
-                testSdkSandboxDataIsolation_CannotVerifyAppExistence();
-                break;
-            case "testSdkSandboxDataIsolation_CannotVerifyOtherUserAppExistence":
-                testSdkSandboxDataIsolation_CannotVerifyOtherUserAppExistence(params);
-                break;
-            case "testSdkSandboxDataIsolation_CannotVerifyAcrossVolumes":
-                testSdkSandboxDataIsolation_CannotVerifyAcrossVolumes(params);
-                break;
-            default:
-        }
-    }
-
-    private void testSdkSandboxDataIsolation_SandboxCanAccessItsDirectory() {
-        verifyDirectoryAccess(getContext().getDataDir().toString(), true);
-    }
-
-    private void testSdkSandboxDataIsolation_CannotVerifyAppExistence() {
+    @Override
+    public void testSdkSandboxDataIsolation_CannotVerifyAppExistence() {
         // Check if the sandbox can check existence of any app through their data directories,
         // profiles or associated sandbox data directories.
         verifyDirectoryAccess("/data/user/" + CURRENT_USER_ID + "/" + APP_PKG, false);
@@ -107,7 +75,8 @@ public class SdkSandboxDataIsolationTestProvider extends SandboxedSdkProvider {
                 "/data/misc_de/" + CURRENT_USER_ID + "/sdksandbox/does.not.exist", false);
     }
 
-    private void testSdkSandboxDataIsolation_CannotVerifyOtherUserAppExistence(Bundle params) {
+    @Override
+    public void testSdkSandboxDataIsolation_CannotVerifyOtherUserAppExistence(Bundle params) {
         final String otherUserId = params.getString("sandbox_isolation_user_id");
 
         String sandboxPackageDir1 = "/data/misc_ce/" + otherUserId + "/sdksandbox/" + APP_PKG;
@@ -118,8 +87,9 @@ public class SdkSandboxDataIsolationTestProvider extends SandboxedSdkProvider {
         verifyDirectoryAccess(sandboxPackageDir2, false);
     }
 
-    private void testSdkSandboxDataIsolation_CannotVerifyAcrossVolumes(Bundle params) {
-        verifyDirectoryAccess(getContext().getApplicationContext().getDataDir().toString(), true);
+    @Override
+    public void testSdkSandboxDataIsolation_CannotVerifyAcrossVolumes(Bundle params) {
+        verifyDirectoryAccess(mContext.getApplicationContext().getDataDir().toString(), true);
 
         String uuid = params.getString("sandbox_isolation_uuid");
         String volumePath = "/mnt/expand/" + uuid;
@@ -141,12 +111,20 @@ public class SdkSandboxDataIsolationTestProvider extends SandboxedSdkProvider {
         try {
             new FileInputStream(file);
         } catch (FileNotFoundException exception) {
+            String exceptionMsg = exception.getMessage();
             if (shouldBeAccessible) {
-                assertThat(exception.getMessage()).contains(JAVA_IS_A_DIRECTORY_ERROR_MSG);
-            } else {
-                assertThat(exception.getMessage()).contains(JAVA_FILE_NOT_FOUND_MSG);
-                assertThat(exception.getMessage()).doesNotContain(JAVA_FILE_PERMISSION_DENIED_MSG);
-                assertThat(exception.getMessage()).doesNotContain(JAVA_IS_A_DIRECTORY_ERROR_MSG);
+                if (!exceptionMsg.contains(JAVA_IS_A_DIRECTORY_ERROR_MSG)) {
+                    throw new IllegalStateException(
+                            path + " should be accessible, but received error: " + exceptionMsg);
+                }
+            } else if (!exceptionMsg.contains(JAVA_FILE_NOT_FOUND_MSG)
+                    || exceptionMsg.contains(JAVA_FILE_PERMISSION_DENIED_MSG)
+                    || exceptionMsg.contains(JAVA_IS_A_DIRECTORY_ERROR_MSG)) {
+                throw new IllegalStateException(
+                        "Accessing "
+                                + path
+                                + " should have shown ENOENT error, but received error: "
+                                + exceptionMsg);
             }
         }
     }
