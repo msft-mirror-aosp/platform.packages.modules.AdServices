@@ -54,6 +54,16 @@ public class FlagsFactory {
             public boolean getDisableFledgeEnrollmentCheck() {
                 return true;
             }
+
+            @Override
+            public boolean getEnableDatabaseSchemaVersion3() {
+                return true;
+            }
+
+            @Override
+            public boolean getEnableTopicContributorsCheck() {
+                return true;
+            }
         };
     }
 }

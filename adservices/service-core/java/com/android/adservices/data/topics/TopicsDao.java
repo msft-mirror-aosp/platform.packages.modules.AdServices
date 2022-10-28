@@ -53,6 +53,7 @@ public class TopicsDao {
         TopicsTables.TopTopicsContract.TABLE,
         TopicsTables.BlockedTopicsContract.TABLE,
         TopicsTables.EpochOriginContract.TABLE,
+        TopicsTables.TopicContributorsContract.TABLE
     };
 
     private final DbHelper mDbHelper; // Used in tests.
@@ -931,19 +932,18 @@ public class TopicsDao {
     }
 
     /**
-     * Delete by column for the given values.
+     * Delete by column for the given values. Allow passing in multiple tables with their
+     * corresponding column names to delete by.
      *
-     * @param tableName the table to remove entries from
-     * @param columnNameToDeleteFrom the column name in the table to delete from
+     * @param tableNamesAndColumnNamePairs the tables and corresponding column names to remove
+     *     entries from
      * @param valuesToDelete a {@link List} of values to delete if the entry has such value in
      *     {@code columnNameToDeleteFrom}
      */
     public void deleteFromTableByColumn(
-            @NonNull String tableName,
-            @NonNull String columnNameToDeleteFrom,
+            @NonNull List<Pair<String, String>> tableNamesAndColumnNamePairs,
             @NonNull List<String> valuesToDelete) {
-        Objects.requireNonNull(tableName);
-        Objects.requireNonNull(columnNameToDeleteFrom);
+        Objects.requireNonNull(tableNamesAndColumnNamePairs);
         Objects.requireNonNull(valuesToDelete);
 
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
@@ -952,23 +952,38 @@ public class TopicsDao {
             return;
         }
 
-        // Construct the "IN" part of SQL Query
-        StringBuilder whereClauseBuilder = new StringBuilder();
-        whereClauseBuilder.append("(?");
-        for (int i = 0; i < valuesToDelete.size() - 1; i++) {
-            whereClauseBuilder.append(",?");
-        }
-        whereClauseBuilder.append(')');
-
-        String whereClause = columnNameToDeleteFrom + " IN " + whereClauseBuilder;
-        String[] whereArgs = valuesToDelete.toArray(new String[0]);
+        db.beginTransaction();
 
         try {
-            db.delete(tableName, whereClause, whereArgs);
-        } catch (SQLException e) {
-            LogUtil.e(
-                    e,
-                    String.format("Failed to delete %s in table %s.", valuesToDelete, tableName));
+            for (Pair<String, String> tableAndColumnNamePair : tableNamesAndColumnNamePairs) {
+                String tableName = tableAndColumnNamePair.first;
+                String columnNameToDeleteFrom = tableAndColumnNamePair.second;
+
+                // Construct the "IN" part of SQL Query
+                StringBuilder whereClauseBuilder = new StringBuilder();
+                whereClauseBuilder.append("(?");
+                for (int i = 0; i < valuesToDelete.size() - 1; i++) {
+                    whereClauseBuilder.append(",?");
+                }
+                whereClauseBuilder.append(')');
+
+                String whereClause = columnNameToDeleteFrom + " IN " + whereClauseBuilder;
+                String[] whereArgs = valuesToDelete.toArray(new String[0]);
+
+                try {
+                    db.delete(tableName, whereClause, whereArgs);
+                } catch (SQLException e) {
+                    LogUtil.e(
+                            e,
+                            String.format(
+                                    "Failed to delete %s in table %s.", valuesToDelete, tableName));
+                }
+            }
+
+            // Mark the transaction successful.
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
         }
     }
 
@@ -1127,5 +1142,10 @@ public class TopicsDao {
         }
 
         return topicToContributorsMap;
+    }
+
+    /** Check whether TopContributors Table is supported in current database. */
+    public boolean supportsTopContributorsTable() {
+        return mDbHelper.supportsTopContributorsTable();
     }
 }
