@@ -49,8 +49,8 @@ import com.android.adservices.service.measurement.actions.UninstallApp;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
 import com.android.adservices.service.measurement.attribution.AttributionJobHandlerWrapper;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
-import com.android.adservices.service.measurement.registration.SourceFetcher;
-import com.android.adservices.service.measurement.registration.TriggerFetcher;
+import com.android.adservices.service.measurement.registration.AsyncSourceFetcher;
+import com.android.adservices.service.measurement.registration.AsyncTriggerFetcher;
 import com.android.adservices.service.measurement.reporting.AggregateReportingJobHandlerWrapper;
 import com.android.adservices.service.measurement.reporting.EventReportingJobHandlerWrapper;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -103,12 +103,15 @@ public abstract class E2EMockTest extends E2ETest {
     // Class extensions may choose to disable or enable added noise.
     AttributionJobHandlerWrapper mAttributionHelper;
     MeasurementImpl mMeasurementImpl;
-    SourceFetcher mSourceFetcher;
-    TriggerFetcher mTriggerFetcher;
     ClickVerifier mClickVerifier;
     MeasurementDataDeleter mMeasurementDataDeleter;
     Flags mFlags;
+    AsyncRegistrationQueueRunner mAsyncRegistrationQueueRunner;
+    AsyncSourceFetcher mAsyncSourceFetcher;
+    AsyncTriggerFetcher mAsyncTriggerFetcher;
 
+    private static final long MAX_RECORDS_PROCESSED = 20L;
+    private static final short ASYNC_REG_RETRY_LIMIT = 1;
     private final AtomicInteger mEnrollmentCount = new AtomicInteger();
     private final Set<String> mSeenUris = new HashSet<>();
     private final Map<String, String> mUriToEnrollmentId = new HashMap<>();
@@ -119,23 +122,23 @@ public abstract class E2EMockTest extends E2ETest {
     E2EMockTest(Collection<Action> actions, ReportObjects expectedOutput,
             PrivacyParamsProvider privacyParamsProvider, String name) {
         super(actions, expectedOutput, name);
-        mSourceFetcher =
-                Mockito.spy(
-                        new SourceFetcher(
-                                sEnrollmentDao,
-                                FlagsFactory.getFlagsForTest(),
-                                AdServicesLoggerImpl.getInstance()));
-        mTriggerFetcher =
-                Mockito.spy(
-                        new TriggerFetcher(
-                                sEnrollmentDao,
-                                FlagsFactory.getFlagsForTest(),
-                                AdServicesLoggerImpl.getInstance()));
         mClickVerifier = Mockito.mock(ClickVerifier.class);
         mFlags = FlagsFactory.getFlagsForTest();
-        when(mClickVerifier.isInputEventVerifiable(any(), anyLong())).thenReturn(true);
         mE2EMockStaticRule = new E2EMockStatic.E2EMockStaticRule(privacyParamsProvider);
         mMeasurementDataDeleter = Mockito.spy(new MeasurementDataDeleter(sDatastoreManager));
+        mAsyncSourceFetcher =
+                Mockito.spy(
+                        new AsyncSourceFetcher(
+                                sEnrollmentDao,
+                                FlagsFactory.getFlagsForTest(),
+                                AdServicesLoggerImpl.getInstance()));
+        mAsyncTriggerFetcher =
+                Mockito.spy(
+                        new AsyncTriggerFetcher(
+                                sEnrollmentDao,
+                                FlagsFactory.getFlagsForTest(),
+                                AdServicesLoggerImpl.getInstance()));
+        when(mClickVerifier.isInputEventVerifiable(any(), anyLong())).thenReturn(true);
     }
 
     @Override
@@ -147,13 +150,12 @@ public abstract class E2EMockTest extends E2ETest {
             Answer<Map<String, List<String>>> headerFieldsMockAnswer =
                     invocation -> getNextResponse(sourceRegistration.mUriToResponseHeadersMap, uri);
             Mockito.doAnswer(headerFieldsMockAnswer).when(urlConnection).getHeaderFields();
-            Mockito.doReturn(urlConnection).when(mSourceFetcher).openUrl(new URL(uri));
+            Mockito.doReturn(urlConnection).when(mAsyncSourceFetcher).openUrl(new URL(uri));
         }
     }
 
     @Override
-    void prepareRegistrationServer(RegisterTrigger triggerRegistration)
-            throws IOException {
+    void prepareRegistrationServer(RegisterTrigger triggerRegistration) throws IOException {
         for (String uri : triggerRegistration.mUriToResponseHeadersMap.keySet()) {
             updateEnrollment(uri);
             HttpsURLConnection urlConnection = mock(HttpsURLConnection.class);
@@ -162,7 +164,7 @@ public abstract class E2EMockTest extends E2ETest {
                     invocation ->
                             getNextResponse(triggerRegistration.mUriToResponseHeadersMap, uri);
             Mockito.doAnswer(headerFieldsMockAnswer).when(urlConnection).getHeaderFields();
-            Mockito.doReturn(urlConnection).when(mTriggerFetcher).openUrl(new URL(uri));
+            Mockito.doReturn(urlConnection).when(mAsyncTriggerFetcher).openUrl(new URL(uri));
         }
     }
 
@@ -175,7 +177,7 @@ public abstract class E2EMockTest extends E2ETest {
             Answer<Map<String, List<String>>> headerFieldsMockAnswer =
                     invocation -> getNextResponse(sourceRegistration.mUriToResponseHeadersMap, uri);
             Mockito.doAnswer(headerFieldsMockAnswer).when(urlConnection).getHeaderFields();
-            Mockito.doReturn(urlConnection).when(mSourceFetcher).openUrl(new URL(uri));
+            Mockito.doReturn(urlConnection).when(mAsyncSourceFetcher).openUrl(new URL(uri));
         }
     }
 
@@ -189,7 +191,7 @@ public abstract class E2EMockTest extends E2ETest {
                     invocation ->
                             getNextResponse(triggerRegistration.mUriToResponseHeadersMap, uri);
             Mockito.doAnswer(headerFieldsMockAnswer).when(urlConnection).getHeaderFields();
-            Mockito.doReturn(urlConnection).when(mTriggerFetcher).openUrl(new URL(uri));
+            Mockito.doReturn(urlConnection).when(mAsyncTriggerFetcher).openUrl(new URL(uri));
         }
     }
 
@@ -201,6 +203,8 @@ public abstract class E2EMockTest extends E2ETest {
                 RESULT_OK,
                 mMeasurementImpl.register(
                         sourceRegistration.mRegistrationRequest, sourceRegistration.mTimestamp));
+        mAsyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker(
+                MAX_RECORDS_PROCESSED, ASYNC_REG_RETRY_LIMIT);
     }
 
     @Override
@@ -211,6 +215,8 @@ public abstract class E2EMockTest extends E2ETest {
                 RESULT_OK,
                 mMeasurementImpl.registerWebSource(
                         sourceRegistration.mRegistrationRequest, sourceRegistration.mTimestamp));
+        mAsyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker(
+                MAX_RECORDS_PROCESSED, ASYNC_REG_RETRY_LIMIT);
     }
 
     @Override
@@ -221,6 +227,8 @@ public abstract class E2EMockTest extends E2ETest {
                 RESULT_OK,
                 mMeasurementImpl.register(
                         triggerRegistration.mRegistrationRequest, triggerRegistration.mTimestamp));
+        mAsyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker(
+                MAX_RECORDS_PROCESSED, ASYNC_REG_RETRY_LIMIT);
         Assert.assertTrue("AttributionJobHandler.performPendingAttributions returned false",
                 mAttributionHelper.performPendingAttributions());
     }
@@ -233,6 +241,8 @@ public abstract class E2EMockTest extends E2ETest {
                 RESULT_OK,
                 mMeasurementImpl.registerWebTrigger(
                         triggerRegistration.mRegistrationRequest, triggerRegistration.mTimestamp));
+        mAsyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker(
+                MAX_RECORDS_PROCESSED, ASYNC_REG_RETRY_LIMIT);
         Assert.assertTrue(
                 "AttributionJobHandler.performPendingAttributions returned false",
                 mAttributionHelper.performPendingAttributions());
@@ -250,12 +260,13 @@ public abstract class E2EMockTest extends E2ETest {
 
     @Override
     void processAction(UninstallApp uninstallApp) {
-        Assert.assertTrue("measurementDao.undoInstallAttribution failed",
+        Assert.assertTrue(
+                "measurementDao.undoInstallAttribution failed",
                 sDatastoreManager.runInTransaction(
-                    measurementDao -> {
-                        measurementDao.deleteAppRecords(uninstallApp.mUri);
-                        measurementDao.undoInstallAttribution(uninstallApp.mUri);
-                    }));
+                        measurementDao -> {
+                            measurementDao.deleteAppRecords(uninstallApp.mUri);
+                            measurementDao.undoInstallAttribution(uninstallApp.mUri);
+                        }));
     }
 
     @Override
@@ -377,17 +388,15 @@ public abstract class E2EMockTest extends E2ETest {
             final Array payloadArray = (Array) payload.get(new UnicodeString("data"));
             for (DataItem i : payloadArray.getDataItems()) {
                 co.nstant.in.cbor.model.Map m = (co.nstant.in.cbor.model.Map) i;
+                Object value =
+                        "0x"
+                                + new BigInteger(
+                                                ((ByteString) m.get(new UnicodeString("bucket")))
+                                                        .getBytes())
+                                        .toString(16);
                 result.add(
                         new JSONObject()
-                                .put(
-                                        AggregateHistogramKeys.BUCKET,
-                                        "0x" + new BigInteger(
-                                                        ((ByteString)
-                                                                        m.get(
-                                                                                new UnicodeString(
-                                                                                        "bucket")))
-                                                                .getBytes())
-                                                .toString(16))
+                                .put(AggregateHistogramKeys.BUCKET, value)
                                 .put(
                                         AggregateHistogramKeys.VALUE,
                                         new BigInteger(
