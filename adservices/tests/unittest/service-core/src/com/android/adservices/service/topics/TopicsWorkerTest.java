@@ -42,6 +42,7 @@ import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.stats.AdServicesLogger;
 
 import com.google.common.collect.ImmutableList;
 
@@ -72,6 +73,7 @@ public class TopicsWorkerTest {
 
     @Mock private EpochManager mMockEpochManager;
     @Mock private Flags mMockFlags;
+    @Mock AdServicesLogger mLogger;
 
     @Before
     public void setup() {
@@ -84,7 +86,7 @@ public class TopicsWorkerTest {
         DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
         mTopicsDao = new TopicsDao(dbHelper);
         mAppUpdateManager = new AppUpdateManager(mTopicsDao, new Random(), mMockFlags);
-        mCacheManager = new CacheManager(mMockEpochManager, mTopicsDao, mMockFlags);
+        mCacheManager = new CacheManager(mMockEpochManager, mTopicsDao, mMockFlags, mLogger);
         mBlockedTopicsManager = new BlockedTopicsManager(mTopicsDao);
         mTopicsWorker =
                 new TopicsWorker(
