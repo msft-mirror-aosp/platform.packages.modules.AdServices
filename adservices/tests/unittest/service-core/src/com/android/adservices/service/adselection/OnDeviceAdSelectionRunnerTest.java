@@ -68,6 +68,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
+import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.DBAdSelection;
@@ -75,6 +76,7 @@ import com.android.adservices.data.adselection.DBAdSelectionEntry;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdServicesHttpsClient;
@@ -176,7 +178,10 @@ public class OnDeviceAdSelectionRunnerTest {
     private AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
     private final FledgeAuthorizationFilter mFledgeAuthorizationFilter =
-            FledgeAuthorizationFilter.create(mContext, mAdServicesLoggerMock);
+            new FledgeAuthorizationFilter(
+                    mContext.getPackageManager(),
+                    new EnrollmentDao(mContext, DbTestUtil.getDbHelperForTest()),
+                    mAdServicesLoggerMock);
     private final FledgeAllowListsFilter mFledgeAllowListsFilter =
             new FledgeAllowListsFilter(mFlags, mAdServicesLoggerMock);
 
