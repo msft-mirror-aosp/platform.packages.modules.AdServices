@@ -19,6 +19,7 @@ package com.android.adservices.service.measurement;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
@@ -67,6 +68,16 @@ public class TriggerTest {
                     + "]\n";
 
     private static final UnsignedLong DEBUG_KEY = new UnsignedLong(2367372L);
+    private static final Uri APP_DESTINATION = Uri.parse("android-app://com.android.app");
+    private static final Uri APP_DESTINATION_WITH_PATH =
+            Uri.parse("android-app://com.android.app/with/path");
+    private static final Uri WEB_DESTINATION = Uri.parse("https://example.com");
+    private static final Uri WEB_DESTINATION_WITH_PATH = Uri.parse("https://example.com/with/path");
+    private static final Uri WEB_DESTINATION_WITH_SUBDOMAIN =
+            Uri.parse("https://subdomain.example.com");
+    private static final Uri WEB_DESTINATION_WITH_SUBDOMAIN_PATH_QUERY_FRAGMENT =
+            Uri.parse("https://subdomain.example.com/with/path?query=0#fragment");
+    private static final Uri WEB_DESTINATION_INVALID = Uri.parse("https://example.notatld");
 
     @Test
     public void testEqualsPass() throws JSONException {
@@ -341,6 +352,73 @@ public class TriggerTest {
         assertEquals(aggregateTrigger.getValues().size(), 2);
         assertEquals(aggregateTrigger.getValues().get("campaignCounts").intValue(), 32768);
         assertEquals(aggregateTrigger.getValues().get("geoValue").intValue(), 1664);
+    }
+
+    @Test
+    public void testGetAttributionDestinationBaseUri_appDestination() throws JSONException {
+        Trigger trigger = TriggerFixture.getValidTriggerBuilder()
+                .setAttributionDestination(APP_DESTINATION)
+                .setDestinationType(EventSurfaceType.APP)
+                .build();
+        assertEquals(APP_DESTINATION, trigger.getAttributionDestinationBaseUri());
+    }
+
+    @Test
+    public void testGetAttributionDestinationBaseUri_trimsAppDestination() throws JSONException {
+        Trigger trigger = TriggerFixture.getValidTriggerBuilder()
+                .setAttributionDestination(APP_DESTINATION_WITH_PATH)
+                .setDestinationType(EventSurfaceType.APP)
+                .build();
+        assertEquals(APP_DESTINATION, trigger.getAttributionDestinationBaseUri());
+    }
+
+    @Test
+    public void testGetAttributionDestinationBaseUri_webDestination() throws JSONException {
+        Trigger trigger = TriggerFixture.getValidTriggerBuilder()
+                .setAttributionDestination(WEB_DESTINATION)
+                .setDestinationType(EventSurfaceType.WEB)
+                .build();
+        assertEquals(WEB_DESTINATION, trigger.getAttributionDestinationBaseUri());
+    }
+
+    @Test
+    public void testGetAttributionDestinationBaseUri_trimsWebDestinationWithSubdomain()
+            throws JSONException {
+        Trigger trigger = TriggerFixture.getValidTriggerBuilder()
+                .setAttributionDestination(WEB_DESTINATION_WITH_SUBDOMAIN)
+                .setDestinationType(EventSurfaceType.WEB)
+                .build();
+        assertEquals(WEB_DESTINATION, trigger.getAttributionDestinationBaseUri());
+    }
+
+    @Test
+    public void testGetAttributionDestinationBaseUri_trimsWebDestinationWithPath()
+            throws JSONException {
+        Trigger trigger = TriggerFixture.getValidTriggerBuilder()
+                .setAttributionDestination(WEB_DESTINATION_WITH_PATH)
+                .setDestinationType(EventSurfaceType.WEB)
+                .build();
+        assertEquals(WEB_DESTINATION, trigger.getAttributionDestinationBaseUri());
+    }
+
+    @Test
+    public void testGetAttributionDestinationBaseUri_trimsWebDestinationWithSubdomainPathQueryFrag()
+            throws JSONException {
+        Trigger trigger = TriggerFixture.getValidTriggerBuilder()
+                .setAttributionDestination(WEB_DESTINATION_WITH_SUBDOMAIN_PATH_QUERY_FRAGMENT)
+                .setDestinationType(EventSurfaceType.WEB)
+                .build();
+        assertEquals(WEB_DESTINATION, trigger.getAttributionDestinationBaseUri());
+    }
+
+    @Test
+    public void testGetAttributionDestinationBaseUri_invalidWebDestination()
+            throws JSONException {
+        Trigger trigger = TriggerFixture.getValidTriggerBuilder()
+                .setAttributionDestination(WEB_DESTINATION_INVALID)
+                .setDestinationType(EventSurfaceType.WEB)
+                .build();
+        assertNull(trigger.getAttributionDestinationBaseUri());
     }
 
     @Test

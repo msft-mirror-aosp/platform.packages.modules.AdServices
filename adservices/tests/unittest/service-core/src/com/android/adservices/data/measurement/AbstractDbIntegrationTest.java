@@ -300,7 +300,7 @@ public abstract class AbstractDbIntegrationTest {
                 source.getPublisherType());
         values.put(
                 MeasurementTables.SourceContract.APP_DESTINATION,
-                source.getAppDestination().toString());
+                source.getAppDestination() == null ? null : source.getAppDestination().toString());
         values.put(
                 MeasurementTables.SourceContract.WEB_DESTINATION,
                 source.getWebDestination() == null ? null : source.getWebDestination().toString());
