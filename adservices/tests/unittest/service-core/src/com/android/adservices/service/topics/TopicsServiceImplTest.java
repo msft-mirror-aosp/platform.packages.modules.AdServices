@@ -137,6 +137,7 @@ public class TopicsServiceImplTest {
     @Mock private Throttler mMockThrottler;
     @Mock private EnrollmentDao mEnrollmentDao;
     @Mock private AppImportanceFilter mMockAppImportanceFilter;
+    @Mock AdServicesLogger mLogger;
 
     @Before
     public void setup() throws Exception {
@@ -147,7 +148,8 @@ public class TopicsServiceImplTest {
 
         DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
         mTopicsDao = new TopicsDao(dbHelper);
-        CacheManager cacheManager = new CacheManager(mMockEpochManager, mTopicsDao, mMockFlags);
+        CacheManager cacheManager =
+                new CacheManager(mMockEpochManager, mTopicsDao, mMockFlags, mLogger);
 
         mBlockedTopicsManager = new BlockedTopicsManager(mTopicsDao);
         AppUpdateManager appUpdateManager =
