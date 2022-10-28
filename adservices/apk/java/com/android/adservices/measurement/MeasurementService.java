@@ -29,6 +29,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.measurement.AsyncRegistrationQueueJobService;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.DeleteUninstalledJobService;
 import com.android.adservices.service.measurement.MeasurementServiceImpl;
@@ -102,5 +103,6 @@ public class MeasurementService extends Service {
         DeleteExpiredJobService.scheduleIfNeeded(this, false);
         DeleteUninstalledJobService.scheduleIfNeeded(this, false);
         MddJobService.scheduleIfNeeded(this, false);
+        AsyncRegistrationQueueJobService.scheduleIfNeeded(this, false);
     }
 }

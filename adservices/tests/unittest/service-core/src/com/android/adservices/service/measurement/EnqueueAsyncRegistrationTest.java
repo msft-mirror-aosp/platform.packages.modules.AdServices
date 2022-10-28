@@ -170,8 +170,7 @@ public class EnqueueAsyncRegistrationTest {
                     registrationRequest.getRegistrationUri(),
                     asyncRegistration.getRegistrationUri());
             Assert.assertEquals(
-                    "android-app://" + registrationRequest.getPackageName(),
-                    asyncRegistration.getTopOrigin().toString());
+                    Uri.parse("android-app://com.destination"), asyncRegistration.getTopOrigin());
             Assert.assertNotNull(asyncRegistration.getRegistrationUri());
             Assert.assertNotNull(asyncRegistration.getRegistrant());
             Assert.assertEquals(
@@ -224,8 +223,7 @@ public class EnqueueAsyncRegistrationTest {
                     registrationRequest.getRegistrationUri(),
                     asyncRegistration.getRegistrationUri());
             Assert.assertEquals(
-                    "android-app://" + registrationRequest.getPackageName(),
-                    asyncRegistration.getTopOrigin().toString());
+                    Uri.parse("android-app://com.destination"), asyncRegistration.getTopOrigin());
             Assert.assertNotNull(asyncRegistration.getRegistrationUri());
             Assert.assertNotNull(asyncRegistration.getRegistrant());
             Assert.assertEquals(
@@ -277,8 +275,7 @@ public class EnqueueAsyncRegistrationTest {
                     registrationRequest.getRegistrationUri(),
                     asyncRegistration.getRegistrationUri());
             Assert.assertEquals(
-                    "android-app://" + registrationRequest.getPackageName(),
-                    asyncRegistration.getTopOrigin().toString());
+                    Uri.parse("android-app://com.destination"), asyncRegistration.getTopOrigin());
             Assert.assertNotNull(asyncRegistration.getRegistrationUri());
             Assert.assertNotNull(asyncRegistration.getRegistrant());
             Assert.assertEquals(
@@ -825,8 +822,7 @@ public class EnqueueAsyncRegistrationTest {
                     registrationRequest.getRegistrationUri(),
                     asyncRegistration.getRegistrationUri());
             Assert.assertEquals(
-                    "android-app://" + registrationRequest.getPackageName(),
-                    asyncRegistration.getTopOrigin().toString());
+                    Uri.parse("android-app://com.destination"), asyncRegistration.getTopOrigin());
             Assert.assertNotNull(asyncRegistration.getRegistrationUri());
             Assert.assertNotNull(asyncRegistration.getRegistrant());
             Assert.assertEquals(

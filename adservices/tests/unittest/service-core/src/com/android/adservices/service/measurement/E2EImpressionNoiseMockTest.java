@@ -62,12 +62,18 @@ public class E2EImpressionNoiseMockTest extends E2EMockTest {
         mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager);
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(
+                        sDatastoreManager,
+                        mClickVerifier,
+                        mFlags,
+                        mMeasurementDataDeleter,
+                        sEnrollmentDao);
+        mAsyncRegistrationQueueRunner =
+                TestObjectProvider.getAsyncRegistrationQueueRunner(
                         TestObjectProvider.Type.NOISY,
                         sDatastoreManager,
-                        mSourceFetcher,
-                        mTriggerFetcher,
-                        mClickVerifier,
-                        mMeasurementDataDeleter);
+                        mAsyncSourceFetcher,
+                        mAsyncTriggerFetcher,
+                        sEnrollmentDao);
         getExpectedTriggerDataDistributions();
     }
 
@@ -114,8 +120,10 @@ public class E2EImpressionNoiseMockTest extends E2EMockTest {
                 }
             }
         }
-        Assert.assertTrue(getTestFailureMessage(
-                "Trigger data distributions were the same"), testPassed);
+        Assert.assertTrue(
+                getTestFailureMessage(
+                        "Trigger data distributions were the same " + getDatastoreState()),
+                testPassed);
     }
 
     private void getExpectedTriggerDataDistributions() {
