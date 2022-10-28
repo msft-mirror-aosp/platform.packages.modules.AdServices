@@ -74,7 +74,7 @@ public class EnqueueAsyncRegistration {
                             /* mOsDestination */ null,
                             registrant,
                             /* verifiedDestination */ null,
-                            getPublisher(registrationRequest),
+                            registrant,
                             registrationRequest.getRegistrationType()
                                             == RegistrationRequest.REGISTER_SOURCE
                                     ? AsyncRegistration.RegistrationType.APP_SOURCE
@@ -227,9 +227,5 @@ public class EnqueueAsyncRegistration {
     @VisibleForTesting
     static Source.SourceType getSourceType(InputEvent inputEvent) {
         return inputEvent == null ? Source.SourceType.EVENT : Source.SourceType.NAVIGATION;
-    }
-
-    private static Uri getPublisher(RegistrationRequest request) {
-        return Uri.parse(ANDROID_APP_SCHEME + "://" + request.getPackageName());
     }
 }

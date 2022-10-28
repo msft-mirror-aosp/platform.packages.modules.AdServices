@@ -71,12 +71,18 @@ public class E2EInteropMockTest extends E2EMockTest {
         mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager);
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(
+                        sDatastoreManager,
+                        mClickVerifier,
+                        mFlags,
+                        mMeasurementDataDeleter,
+                        sEnrollmentDao);
+        mAsyncRegistrationQueueRunner =
+                TestObjectProvider.getAsyncRegistrationQueueRunner(
                         TestObjectProvider.Type.DENOISED,
                         sDatastoreManager,
-                        mSourceFetcher,
-                        mTriggerFetcher,
-                        mClickVerifier,
-                        mMeasurementDataDeleter);
+                        mAsyncSourceFetcher,
+                        mAsyncTriggerFetcher,
+                        sEnrollmentDao);
     }
 
     @Override
@@ -140,15 +146,18 @@ public class E2EInteropMockTest extends E2EMockTest {
             JSONObject json = new JSONObject(field.get(0));
             sourceBuilder.setEventId(new UnsignedLong(json.getString("source_event_id")));
             if (!json.isNull("expiry")) {
-                sourceBuilder.setExpiryTime(timestamp + TimeUnit.SECONDS.toMillis(
-                        extractValidNumberInRange(
-                                json.getLong("expiry"),
-                                MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS)));
+                long offset =
+                        TimeUnit.SECONDS.toMillis(
+                                extractValidNumberInRange(
+                                        json.getLong("expiry"),
+                                        MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
+                                        MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS));
+                sourceBuilder.setExpiryTime(timestamp + offset);
             } else {
-                sourceBuilder.setExpiryTime(timestamp
-                        + TimeUnit.SECONDS.toMillis(
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS));
+                sourceBuilder.setExpiryTime(
+                        timestamp
+                                + TimeUnit.SECONDS.toMillis(
+                                        MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS));
             }
             if (!json.isNull("priority")) {
                 sourceBuilder.setPriority(json.getLong("priority"));

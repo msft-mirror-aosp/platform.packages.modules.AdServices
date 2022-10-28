@@ -63,7 +63,6 @@ import java.util.Optional;
  */
 public class AsyncTriggerFetcher {
 
-    private static final String ANDROID_APP_SCHEME = "android-app";
     private final MeasurementHttpClient mNetworkConnection = new MeasurementHttpClient();
     private final EnrollmentDao mEnrollmentDao;
     private final Flags mFlags;
@@ -266,9 +265,7 @@ public class AsyncTriggerFetcher {
             AsyncRedirect asyncRedirect) {
         List<Trigger> out = new ArrayList<>();
         fetchTrigger(
-                asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_TRIGGER
-                        ? asyncRegistration.getTopOrigin()
-                        : getAttributionDestination(asyncRegistration),
+                asyncRegistration.getTopOrigin(),
                 asyncRegistration.getRegistrationUri(),
                 asyncRegistration.getRegistrant(),
                 asyncRegistration.getRequestTime(),
@@ -415,11 +412,6 @@ public class AsyncTriggerFetcher {
             }
         }
         return true;
-    }
-
-    @VisibleForTesting
-    static Uri getAttributionDestination(AsyncRegistration request) {
-        return Uri.parse(ANDROID_APP_SCHEME + "://" + request.getRegistrant());
     }
 
     private interface TriggerHeaderContract {

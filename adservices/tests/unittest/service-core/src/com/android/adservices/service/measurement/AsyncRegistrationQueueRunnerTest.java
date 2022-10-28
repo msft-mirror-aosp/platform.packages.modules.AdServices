@@ -18,9 +18,13 @@ package com.android.adservices.service.measurement;
 import static com.android.adservices.service.measurement.attribution.TriggerContentProvider.TRIGGER_URI;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyShort;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -66,6 +70,7 @@ import org.mockito.stubbing.Answer;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -85,6 +90,21 @@ public class AsyncRegistrationQueueRunnerTest {
     private static final String LOCATION_TYPE_REDIRECT_URI = "https://baz.com";
     private static final Uri WEB_DESTINATION = Uri.parse("https://web-destination.com");
     private static final Uri APP_DESTINATION = Uri.parse("android-app://com.app_destination");
+    private static final Source SOURCE_1 =
+            SourceFixture.getValidSourceBuilder()
+                    .setEventId(new UnsignedLong(1L))
+                    .setPublisher(APP_TOP_ORIGIN)
+                    .setAppDestination(Uri.parse("android-app://com.destination1"))
+                    .setWebDestination(Uri.parse("https://web-destination1.com"))
+                    .setEnrollmentId(DEFAULT_ENROLLMENT_ID)
+                    .setRegistrant(Uri.parse("android-app://com.example"))
+                    .setEventTime(new Random().nextLong())
+                    .setExpiryTime(8640000010L)
+                    .setPriority(100L)
+                    .setSourceType(Source.SourceType.EVENT)
+                    .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                    .setDebugKey(new UnsignedLong(47823478789L))
+                    .build();
 
     private AsyncSourceFetcher mAsyncSourceFetcher;
     private AsyncTriggerFetcher mAsyncTriggerFetcher;
@@ -1303,7 +1323,7 @@ public class AsyncRegistrationQueueRunnerTest {
                         .build(),
                 attributionRateLimitArgCaptor.getValue());
     }
-    //// HERE
+
     @Test
     public void insertSource_withFalseAppAndWebAttribution_accountsForFakeReportAttribution()
             throws DatastoreException {
@@ -1409,6 +1429,248 @@ public class AsyncRegistrationQueueRunnerTest {
                         .setTriggerTime(source.getEventTime())
                         .build(),
                 attributionRateLimitArgCaptor.getValue());
+    }
+
+    @Test
+    public void testRegister_registrationTypeSource_sourceFetchSuccess() throws DatastoreException {
+        // setup
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                spy(
+                        new AsyncRegistrationQueueRunner(
+                                mContentResolver,
+                                mAsyncSourceFetcher,
+                                mAsyncTriggerFetcher,
+                                mEnrollmentDao,
+                                new FakeDatastoreManager()));
+
+        // Execution
+        when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        when(mMeasurementDao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        asyncRegistrationQueueRunner.isSourceAllowedToInsert(
+                SOURCE_1, SOURCE_1.getPublisher(), EventSurfaceType.APP, mMeasurementDao);
+
+        // Assertions
+        verify(mMeasurementDao, times(2))
+                .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
+        verify(mMeasurementDao, times(2))
+                .countDistinctEnrollmentsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong());
+    }
+
+    @Test
+    public void testRegister_registrationTypeSource_exceedsPrivacyParam_destination()
+            throws DatastoreException {
+        // setup
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                spy(
+                        new AsyncRegistrationQueueRunner(
+                                mContentResolver,
+                                mAsyncSourceFetcher,
+                                mAsyncTriggerFetcher,
+                                mEnrollmentDao,
+                                new FakeDatastoreManager()));
+
+        // Execution
+        when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(100));
+        when(mMeasurementDao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        boolean status =
+                asyncRegistrationQueueRunner.isSourceAllowedToInsert(
+                        SOURCE_1, SOURCE_1.getPublisher(), EventSurfaceType.APP, mMeasurementDao);
+
+        // Assert
+        assertFalse(status);
+        verify(mMeasurementDao, times(1))
+                .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
+        verify(mMeasurementDao, never())
+                .countDistinctEnrollmentsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong());
+    }
+
+    @Test
+    public void testRegister_registrationTypeSource_exceedsMaxSourcesLimit()
+            throws DatastoreException {
+        // setup
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                spy(
+                        new AsyncRegistrationQueueRunner(
+                                mContentResolver,
+                                mAsyncSourceFetcher,
+                                mAsyncTriggerFetcher,
+                                mEnrollmentDao,
+                                new FakeDatastoreManager()));
+
+        // Execution
+        doReturn(SystemHealthParams.MAX_SOURCES_PER_PUBLISHER)
+                .when(mMeasurementDao)
+                .getNumSourcesPerPublisher(any(), anyInt());
+        boolean status =
+                asyncRegistrationQueueRunner.isSourceAllowedToInsert(
+                        SOURCE_1, SOURCE_1.getPublisher(), EventSurfaceType.APP, mMeasurementDao);
+
+        // Assert
+        assertFalse(status);
+        verify(mMeasurementDao, times(1)).getNumSourcesPerPublisher(any(), anyInt());
+    }
+
+    @Test
+    public void testRegister_registrationTypeSource_exceedsPrivacyParam_adTech()
+            throws DatastoreException {
+        // Setup
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                spy(
+                        new AsyncRegistrationQueueRunner(
+                                mContentResolver,
+                                mAsyncSourceFetcher,
+                                mAsyncTriggerFetcher,
+                                mEnrollmentDao,
+                                new FakeDatastoreManager()));
+        // Execution
+        when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        when(mMeasurementDao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(100));
+        boolean status =
+                asyncRegistrationQueueRunner.isSourceAllowedToInsert(
+                        SOURCE_1, SOURCE_1.getPublisher(), EventSurfaceType.APP, mMeasurementDao);
+
+        // Assert
+        assertFalse(status);
+        verify(mMeasurementDao, times(1))
+                .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
+        verify(mMeasurementDao, times(1))
+                .countDistinctEnrollmentsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong());
+    }
+
+    @Test
+    public void testRegisterWebSource_exceedsPrivacyParam_destination()
+            throws RemoteException, DatastoreException {
+        // setup
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                spy(
+                        new AsyncRegistrationQueueRunner(
+                                mContentResolver,
+                                mAsyncSourceFetcher,
+                                mAsyncTriggerFetcher,
+                                mEnrollmentDao,
+                                new FakeDatastoreManager()));
+
+        // Execution
+        when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(100));
+        when(mMeasurementDao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        boolean status =
+                asyncRegistrationQueueRunner.isSourceAllowedToInsert(
+                        SOURCE_1, SOURCE_1.getPublisher(), EventSurfaceType.APP, mMeasurementDao);
+
+        // Assert
+        assertFalse(status);
+        verify(mMockContentProviderClient, never()).insert(any(), any());
+        verify(mMeasurementDao, times(1))
+                .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
+        verify(mMeasurementDao, never())
+                .countDistinctEnrollmentsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong());
+    }
+
+    @Test
+    public void testRegisterWebSource_exceedsPrivacyParam_adTech() throws DatastoreException {
+        // setup
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                spy(
+                        new AsyncRegistrationQueueRunner(
+                                mContentResolver,
+                                mAsyncSourceFetcher,
+                                mAsyncTriggerFetcher,
+                                mEnrollmentDao,
+                                new FakeDatastoreManager()));
+
+        // Execution
+        when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        when(mMeasurementDao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(100));
+
+        boolean status =
+                asyncRegistrationQueueRunner.isSourceAllowedToInsert(
+                        SOURCE_1, SOURCE_1.getPublisher(), EventSurfaceType.APP, mMeasurementDao);
+
+        // Assert
+        assertFalse(status);
+        verify(mMeasurementDao, times(1))
+                .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
+        verify(mMeasurementDao, times(1))
+                .countDistinctEnrollmentsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong());
+    }
+
+    @Test
+    public void testRegisterWebSource_exceedsMaxSourcesLimit() throws DatastoreException {
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                spy(
+                        new AsyncRegistrationQueueRunner(
+                                mContentResolver,
+                                mAsyncSourceFetcher,
+                                mAsyncTriggerFetcher,
+                                mEnrollmentDao,
+                                new FakeDatastoreManager()));
+        doReturn(SystemHealthParams.MAX_SOURCES_PER_PUBLISHER)
+                .when(mMeasurementDao)
+                .getNumSourcesPerPublisher(any(), anyInt());
+
+        // Execution
+        boolean status =
+                asyncRegistrationQueueRunner.isSourceAllowedToInsert(
+                        SOURCE_1, SOURCE_1.getPublisher(), EventSurfaceType.APP, mMeasurementDao);
+
+        // Assertions
+        assertFalse(status);
+    }
+
+    @Test
+    public void testRegisterWebSource_LimitsMaxSources_ForWebPublisher_WitheTLDMatch()
+            throws DatastoreException {
+        // Setup
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                spy(
+                        new AsyncRegistrationQueueRunner(
+                                mContentResolver,
+                                mAsyncSourceFetcher,
+                                mAsyncTriggerFetcher,
+                                mEnrollmentDao,
+                                new FakeDatastoreManager()));
+
+        doReturn(SystemHealthParams.MAX_SOURCES_PER_PUBLISHER)
+                .when(mMeasurementDao)
+                .getNumSourcesPerPublisher(any(), anyInt());
+
+        // Execution
+        boolean status =
+                asyncRegistrationQueueRunner.isSourceAllowedToInsert(
+                        SOURCE_1, SOURCE_1.getPublisher(), EventSurfaceType.APP, mMeasurementDao);
+
+        // Assertions
+        assertFalse(status);
     }
 
     private List<Source.FakeReport> createFakeReports(Source source, int count, Uri destination) {
