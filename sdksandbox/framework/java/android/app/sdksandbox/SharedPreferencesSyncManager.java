@@ -31,8 +31,8 @@ import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -45,10 +45,8 @@ import java.util.Set;
  */
 public class SharedPreferencesSyncManager {
 
-    private static final String TAG = "SdkSandboxManager";
-
-    private static SharedPreferencesSyncManager sInstance = null;
-
+    private static final String TAG = "SdkSandboxSyncManager";
+    private static ArrayMap<String, SharedPreferencesSyncManager> sInstanceMap = new ArrayMap<>();
     private final ISdkSandboxManager mService;
     private final Context mContext;
     private final Object mLock = new Object();
@@ -61,9 +59,9 @@ public class SharedPreferencesSyncManager {
     @GuardedBy("mLock")
     private ChangeListener mListener = null;
 
-    // Map of keyName->SharedPreferenceKey that this manager needs to keep in sync.
+    // Set of keys that this manager needs to keep in sync.
     @GuardedBy("mLock")
-    private ArrayMap<String, SharedPreferencesKey> mKeysToSync = new ArrayMap<>();
+    private ArraySet<String> mKeysToSync = new ArraySet<>();
 
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
     public SharedPreferencesSyncManager(
@@ -72,76 +70,74 @@ public class SharedPreferencesSyncManager {
         mService = service;
     }
 
-    /** Returns a singleton instance of this class. */
+    /**
+     * Returns a new instance of this class if there is a new package, otherewise returns a
+     * singleton instance.
+     */
     public static synchronized SharedPreferencesSyncManager getInstance(
             @NonNull Context context, @NonNull ISdkSandboxManager service) {
-        if (sInstance == null) {
-            sInstance = new SharedPreferencesSyncManager(context, service);
+        final String packageName = context.getPackageName();
+        if (!sInstanceMap.containsKey(packageName)) {
+            sInstanceMap.put(packageName, new SharedPreferencesSyncManager(context, service));
         }
-        return sInstance;
+        return sInstanceMap.get(packageName);
     }
 
-    // TODO(b/237410689): Update links to getClientSharedPreferences when cl is merged.
     /**
-     * Adds {@link SharedPreferencesKey}s to set of keys being synced from app's default {@link
-     * SharedPreferences} to SdkSandbox.
+     * Adds keys for syncing from app's default {@link SharedPreferences} to SdkSandbox.
      *
-     * <p>Synced data will be available for sdks to read using the {@code
-     * getClientSharedPreferences} api.
-     *
-     * <p>To stop syncing any key that has been added using this API, use {@link
-     * #removeSharedPreferencesSyncKeys(Set)}.
-     *
-     * <p>If a provided {@link SharedPreferencesKey} conflicts with an existing key in the pool,
-     * i.e., they have the same name but different type, then the old key is replaced with the new
-     * one.
-     *
-     * <p>The sync breaks if the app restarts and user must call this API to rebuild the pool of
-     * keys for syncing.
-     *
-     * @param keysWithTypeToSync set of keys and their type that will be synced to Sandbox.
+     * @see SdkSandboxManager#addSyncedSharedPreferencesKeys(Set)
      */
-    public void addSharedPreferencesSyncKeys(
-            @NonNull Set<SharedPreferencesKey> keysWithTypeToSync) {
+    public void addSharedPreferencesSyncKeys(@NonNull Set<String> keyNames) {
         // TODO(b/239403323): Validate the parameters in SdkSandboxManager
         synchronized (mLock) {
-            for (SharedPreferencesKey keyWithType : keysWithTypeToSync) {
-                mKeysToSync.put(keyWithType.getName(), keyWithType);
-            }
+            mKeysToSync.addAll(keyNames);
 
             if (mListener == null) {
                 mListener = new ChangeListener();
                 getDefaultSharedPreferences().registerOnSharedPreferenceChangeListener(mListener);
             }
-
             syncData();
         }
     }
 
     /**
-     * Removes keys from set of {@link SharedPreferencesKey}s that have been added using {@link
+     * Removes keys from set of keys that have been added using {@link
      * #addSharedPreferencesSyncKeys(Set)}
      *
-     * <p>Removed keys will be erased from SdkSandbox if they have been synced already.
-     *
-     * @param keys set of key names that should no longer be synced to Sandbox.
+     * @see SdkSandboxManager#removeSyncedSharedPreferencesKeys(Set)
      */
     public void removeSharedPreferencesSyncKeys(@NonNull Set<String> keys) {
         synchronized (mLock) {
-            for (String key : keys) {
-                mKeysToSync.remove(key);
+            mKeysToSync.removeAll(keys);
+
+            final ArrayList<SharedPreferencesKey> keysWithTypeBeingRemoved = new ArrayList<>();
+
+            for (final String key : keys) {
+                keysWithTypeBeingRemoved.add(
+                        new SharedPreferencesKey(key, SharedPreferencesKey.KEY_TYPE_STRING));
             }
-            // TODO(b/19742283): removed keys need to be erased from sandbox.
+            final SharedPreferencesUpdate update =
+                    new SharedPreferencesUpdate(keysWithTypeBeingRemoved, new Bundle());
+            try {
+                mService.syncDataFromClient(
+                        mContext.getPackageName(),
+                        /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                        update,
+                        mCallback);
+            } catch (RemoteException e) {
+                Log.e(TAG, "Couldn't connect to SdkSandboxManagerService: " + e.getMessage());
+            }
         }
     }
 
     /**
-     * Returns the set of all {@link SharedPreferencesKey} that are being synced from app's default
-     * {@link SharedPreferences} to sandbox.
+     * Returns the set of all keys that are being synced from app's default {@link
+     * SharedPreferences} to sandbox.
      */
-    public Set<SharedPreferencesKey> getSharedPreferencesSyncKeys() {
+    public Set<String> getSharedPreferencesSyncKeys() {
         synchronized (mLock) {
-            return new ArraySet(mKeysToSync.values());
+            return new ArraySet(mKeysToSync);
         }
     }
 
@@ -183,12 +179,25 @@ public class SharedPreferencesSyncManager {
         // Collect data in a bundle
         final Bundle data = new Bundle();
         final SharedPreferences pref = getDefaultSharedPreferences();
+        final Map<String, ?> allData = pref.getAll();
+        final ArrayList<SharedPreferencesKey> keysWithTypeBeingSynced = new ArrayList<>();
+
         for (int i = 0; i < mKeysToSync.size(); i++) {
-            final String key = mKeysToSync.keyAt(i);
-            updateBundle(data, pref, key);
+            final String key = mKeysToSync.valueAt(i);
+            final Object value = allData.get(key);
+            if (value == null) {
+                // Keep the key missing from the bundle; that means key has been removed.
+                // Type of missing key doesn't matter, so we use a random type.
+                keysWithTypeBeingSynced.add(
+                        new SharedPreferencesKey(key, SharedPreferencesKey.KEY_TYPE_STRING));
+                continue;
+            }
+            final SharedPreferencesKey keyWithTypeAdded = updateBundle(data, key, value);
+            keysWithTypeBeingSynced.add(keyWithTypeAdded);
         }
+
         final SharedPreferencesUpdate update =
-                new SharedPreferencesUpdate(mKeysToSync.values(), data);
+                new SharedPreferencesUpdate(keysWithTypeBeingSynced, data);
         try {
             mService.syncDataFromClient(
                     mContext.getPackageName(),
@@ -221,15 +230,20 @@ public class SharedPreferencesSyncManager {
                     return;
                 }
 
-                if (!mKeysToSync.containsKey(key)) {
+                if (!mKeysToSync.contains(key)) {
                     return;
                 }
 
                 final Bundle data = new Bundle();
-                updateBundle(data, pref, key);
+                SharedPreferencesKey keyWithType;
+                final Object value = pref.getAll().get(key);
+                if (value != null) {
+                    keyWithType = updateBundle(data, key, value);
+                } else {
+                    keyWithType =
+                            new SharedPreferencesKey(key, SharedPreferencesKey.KEY_TYPE_STRING);
+                }
 
-                final SharedPreferencesKey keyWithType =
-                        new SharedPreferencesKey(key, mKeysToSync.get(key).getType());
                 final SharedPreferencesUpdate update =
                         new SharedPreferencesUpdate(List.of(keyWithType), data);
                 try {
@@ -245,48 +259,45 @@ public class SharedPreferencesSyncManager {
         }
     }
 
-    // Add key to bundle based on type of value
+    /**
+     * Adds key to bundle based on type of value
+     *
+     * @return SharedPreferenceKey of the key that has been added
+     */
     @GuardedBy("mLock")
-    private void updateBundle(Bundle data, SharedPreferences pref, String key) {
-        if (!pref.contains(key)) {
-            // Keep the key missing from the bundle; that means key has been removed.
-            return;
-        }
-
-        final int type = mKeysToSync.get(key).getType();
+    private SharedPreferencesKey updateBundle(Bundle data, String key, Object value) {
+        final String type = value.getClass().getSimpleName();
         try {
             switch (type) {
-                case SharedPreferencesKey.KEY_TYPE_STRING:
-                    data.putString(key, pref.getString(key, ""));
-                    break;
-                case SharedPreferencesKey.KEY_TYPE_BOOLEAN:
-                    data.putBoolean(key, pref.getBoolean(key, false));
-                    break;
-                case SharedPreferencesKey.KEY_TYPE_INTEGER:
-                    data.putInt(key, pref.getInt(key, 0));
-                    break;
-                case SharedPreferencesKey.KEY_TYPE_FLOAT:
-                    data.putFloat(key, pref.getFloat(key, 0.0f));
-                    break;
-                case SharedPreferencesKey.KEY_TYPE_LONG:
-                    data.putLong(key, pref.getLong(key, 0L));
-                    break;
-                case SharedPreferencesKey.KEY_TYPE_STRING_SET:
-                    data.putStringArrayList(
-                            key, new ArrayList<>(pref.getStringSet(key, Collections.emptySet())));
-                    break;
+                case "String":
+                    data.putString(key, value.toString());
+                    return new SharedPreferencesKey(key, SharedPreferencesKey.KEY_TYPE_STRING);
+                case "Boolean":
+                    data.putBoolean(key, (Boolean) value);
+                    return new SharedPreferencesKey(key, SharedPreferencesKey.KEY_TYPE_BOOLEAN);
+                case "Integer":
+                    data.putInt(key, (Integer) value);
+                    return new SharedPreferencesKey(key, SharedPreferencesKey.KEY_TYPE_INTEGER);
+                case "Float":
+                    data.putFloat(key, (Float) value);
+                    return new SharedPreferencesKey(key, SharedPreferencesKey.KEY_TYPE_FLOAT);
+                case "Long":
+                    data.putLong(key, (Long) value);
+                    return new SharedPreferencesKey(key, SharedPreferencesKey.KEY_TYPE_LONG);
+                case "HashSet":
+                    // TODO(b/239403323): Verify the set contains string
+                    data.putStringArrayList(key, new ArrayList<>((Set<String>) value));
+                    return new SharedPreferencesKey(key, SharedPreferencesKey.KEY_TYPE_STRING_SET);
                 default:
                     Log.e(
                             TAG,
                             "Unknown type found in default SharedPreferences for Key: "
                                     + key
-                                    + " Type: "
+                                    + " type: "
                                     + type);
             }
         } catch (ClassCastException ignore) {
             data.remove(key);
-            // TODO(b/239403323): Once error reporting is supported, we should return error to the
-            // user instead.
             Log.e(
                     TAG,
                     "Wrong type found in default SharedPreferences for Key: "
@@ -294,6 +305,8 @@ public class SharedPreferencesSyncManager {
                             + " Type: "
                             + type);
         }
+        // By default, assume it's string
+        return new SharedPreferencesKey(key, SharedPreferencesKey.KEY_TYPE_STRING);
     }
 
     private class SharedPreferencesSyncCallback extends ISharedPreferencesSyncCallback.Stub {

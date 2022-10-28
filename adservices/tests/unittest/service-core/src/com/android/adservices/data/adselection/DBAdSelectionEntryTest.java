@@ -35,7 +35,7 @@ public class DBAdSelectionEntryTest {
     private static final Clock CLOCK = Clock.fixed(Instant.now(), ZoneOffset.UTC);
     private static final String BUYER_DECISION_LOGIC_JS =
             "function test() { return \"hello world\"; }";
-    private static final Uri RENDER_URL = Uri.parse("http://www.domain.com/advert");
+    private static final Uri RENDER_URI = Uri.parse("http://www.domain.com/advert");
     private static final Instant ACTIVATION_TIME = CLOCK.instant().truncatedTo(ChronoUnit.MILLIS);
     private static final long AD_SELECTION_ID = 1;
     private static final String CONTEXTUAL_SIGNALS = "contextual_signals";
@@ -51,7 +51,7 @@ public class DBAdSelectionEntryTest {
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
                         .setContextualSignals(CONTEXTUAL_SIGNALS)
-                        .setWinningAdRenderUri(RENDER_URL)
+                        .setWinningAdRenderUri(RENDER_URI)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS)
@@ -60,7 +60,7 @@ public class DBAdSelectionEntryTest {
         assertEquals(dbAdSelectionEntry.getAdSelectionId(), AD_SELECTION_ID);
         assertEquals(dbAdSelectionEntry.getCustomAudienceSignals(), CUSTOM_AUDIENCE_SIGNALS);
         assertEquals(dbAdSelectionEntry.getContextualSignals(), CONTEXTUAL_SIGNALS);
-        assertEquals(dbAdSelectionEntry.getWinningAdRenderUri(), RENDER_URL);
+        assertEquals(dbAdSelectionEntry.getWinningAdRenderUri(), RENDER_URI);
         assertEquals(dbAdSelectionEntry.getWinningAdBid(), BID, 0);
         assertEquals(dbAdSelectionEntry.getCreationTimestamp(), ACTIVATION_TIME);
         assertEquals(dbAdSelectionEntry.getBuyerDecisionLogicJs(), BUYER_DECISION_LOGIC_JS);
@@ -75,7 +75,7 @@ public class DBAdSelectionEntryTest {
                     new DBAdSelectionEntry.Builder()
                             .setAdSelectionId(AD_SELECTION_ID)
                             .setContextualSignals(CONTEXTUAL_SIGNALS)
-                            .setWinningAdRenderUri(RENDER_URL)
+                            .setWinningAdRenderUri(RENDER_URI)
                             .setWinningAdBid(BID)
                             .setCreationTimestamp(ACTIVATION_TIME)
                             .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS)
@@ -93,7 +93,7 @@ public class DBAdSelectionEntryTest {
                             .setAdSelectionId(AD_SELECTION_ID)
                             .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
                             .setContextualSignals(CONTEXTUAL_SIGNALS)
-                            .setWinningAdRenderUri(RENDER_URL)
+                            .setWinningAdRenderUri(RENDER_URI)
                             .setWinningAdBid(BID)
                             .setCreationTimestamp(ACTIVATION_TIME)
                             .build();
@@ -110,7 +110,7 @@ public class DBAdSelectionEntryTest {
                             .setAdSelectionId(0)
                             .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
                             .setContextualSignals(CONTEXTUAL_SIGNALS)
-                            .setWinningAdRenderUri(RENDER_URL)
+                            .setWinningAdRenderUri(RENDER_URI)
                             .setWinningAdBid(BID)
                             .setCreationTimestamp(ACTIVATION_TIME)
                             .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS)
@@ -125,7 +125,7 @@ public class DBAdSelectionEntryTest {
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
                         .setContextualSignals(CONTEXTUAL_SIGNALS)
-                        .setWinningAdRenderUri(RENDER_URL)
+                        .setWinningAdRenderUri(RENDER_URI)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS)
@@ -136,7 +136,7 @@ public class DBAdSelectionEntryTest {
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
                         .setContextualSignals(CONTEXTUAL_SIGNALS)
-                        .setWinningAdRenderUri(RENDER_URL)
+                        .setWinningAdRenderUri(RENDER_URI)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS)
@@ -152,7 +152,7 @@ public class DBAdSelectionEntryTest {
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
                         .setContextualSignals(CONTEXTUAL_SIGNALS)
-                        .setWinningAdRenderUri(RENDER_URL)
+                        .setWinningAdRenderUri(RENDER_URI)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS)
@@ -162,7 +162,7 @@ public class DBAdSelectionEntryTest {
                         .setAdSelectionId(2)
                         .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
                         .setContextualSignals(CONTEXTUAL_SIGNALS)
-                        .setWinningAdRenderUri(RENDER_URL)
+                        .setWinningAdRenderUri(RENDER_URI)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS)
@@ -172,7 +172,7 @@ public class DBAdSelectionEntryTest {
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
                         .setContextualSignals("different-signals")
-                        .setWinningAdRenderUri(RENDER_URL)
+                        .setWinningAdRenderUri(RENDER_URI)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS)

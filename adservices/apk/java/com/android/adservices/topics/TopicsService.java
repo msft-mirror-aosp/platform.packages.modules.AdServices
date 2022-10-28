@@ -29,6 +29,7 @@ import com.android.adservices.download.MobileDataDownloadFactory;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
 import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -54,7 +55,7 @@ public class TopicsService extends Service {
         super.onCreate();
 
         if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
-            LogUtil.e("Topics API is disabled");
+            LogUtil.e("onCreate(): Topics API is disabled");
             return;
         }
 
@@ -79,28 +80,33 @@ public class TopicsService extends Service {
                             appImportanceFilter);
             mTopicsService.init();
         }
-
-        schedulePeriodicJobs();
+        if (hasUserConsent()) {
+            PackageChangedReceiver.enableReceiver(this);
+            schedulePeriodicJobs();
+        }
     }
 
     private void schedulePeriodicJobs() {
         MaintenanceJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
         EpochJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
+        MddJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
+    }
 
-        // TODO(b/238674236): Schedule this after the boot complete.
-        MddJobService.schedule(this);
+    private boolean hasUserConsent() {
+        return ConsentManager.getInstance(this).getConsent().isGiven();
     }
 
     @Override
     public IBinder onBind(Intent intent) {
         if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
-            LogUtil.e("Topics API is disabled");
+            LogUtil.e("onBind(): Topics API is disabled, return nullBinding.");
             // Return null so that clients can not bind to the service.
             return null;
         }
         return Objects.requireNonNull(mTopicsService);
     }
 
+    // TODO(b/246316128): Add dump() in Consent Manager.
     @Override
     public void dump(FileDescriptor fd, PrintWriter writer, String[] args) {
         super.dump(fd, writer, args);
@@ -110,6 +116,8 @@ public class TopicsService extends Service {
             EpochManager.getInstance(this).dump(writer, args);
             CacheManager.getInstance(this).dump(writer, args);
             MobileDataDownloadFactory.dump(this, writer);
+            writer.println("=== User Consent State For Topics Service ===");
+            writer.println("User Consent is given: " + hasUserConsent());
         } else {
             writer.println("Build is not Debuggable");
         }

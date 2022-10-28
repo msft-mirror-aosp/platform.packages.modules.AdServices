@@ -18,8 +18,11 @@ package com.android.adservices.service.measurement.reporting;
 
 import android.annotation.NonNull;
 
+import androidx.annotation.Nullable;
+
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoConverter;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -38,12 +41,16 @@ public class AggregateReportBody {
     private String mReportId;
     private String mReportingOrigin;
     private String mDebugCleartextPayload;
+    @Nullable private UnsignedLong mSourceDebugKey;
+    @Nullable private UnsignedLong mTriggerDebugKey;
 
     private static final String API_NAME = "attribution-reporting";
 
     private interface PayloadBodyKeys {
         String SHARED_INFO = "shared_info";
         String AGGREGATION_SERVICE_PAYLOADS = "aggregation_service_payloads";
+        String SOURCE_DEBUG_KEY = "source_debug_key";
+        String TRIGGER_DEBUG_KEY = "trigger_debug_key";
     }
 
     private interface AggregationServicePayloadKeys {
@@ -72,6 +79,8 @@ public class AggregateReportBody {
         mReportId = other.mReportId;
         mReportingOrigin = other.mReportingOrigin;
         mDebugCleartextPayload = other.mDebugCleartextPayload;
+        mSourceDebugKey = other.mSourceDebugKey;
+        mTriggerDebugKey = other.mTriggerDebugKey;
     }
 
     /** Generate the JSON serialization of the aggregate report. */
@@ -83,6 +92,13 @@ public class AggregateReportBody {
         aggregateBodyJson.put(
                 PayloadBodyKeys.AGGREGATION_SERVICE_PAYLOADS,
                 aggregationServicePayloadsToJson(sharedInfo, key));
+
+        if (mSourceDebugKey != null) {
+            aggregateBodyJson.put(PayloadBodyKeys.SOURCE_DEBUG_KEY, mSourceDebugKey.toString());
+        }
+        if (mTriggerDebugKey != null) {
+            aggregateBodyJson.put(PayloadBodyKeys.TRIGGER_DEBUG_KEY, mTriggerDebugKey.toString());
+        }
 
         return aggregateBodyJson;
     }
@@ -119,10 +135,11 @@ public class AggregateReportBody {
         aggregationServicePayload.put(AggregationServicePayloadKeys.PAYLOAD, encryptedPayload);
         aggregationServicePayload.put(AggregationServicePayloadKeys.KEY_ID, key.getKeyId());
 
-        aggregationServicePayload.put(
-                AggregationServicePayloadKeys.DEBUG_CLEARTEXT_PAYLOAD,
-                AggregateCryptoConverter.encode(mDebugCleartextPayload));
-
+        if (mSourceDebugKey != null || mTriggerDebugKey != null) {
+            aggregationServicePayload.put(
+                    AggregationServicePayloadKeys.DEBUG_CLEARTEXT_PAYLOAD,
+                    AggregateCryptoConverter.encode(mDebugCleartextPayload));
+        }
         aggregationServicePayloadsJson.put(aggregationServicePayload);
 
         return aggregationServicePayloadsJson;
@@ -191,6 +208,18 @@ public class AggregateReportBody {
          */
         public @NonNull Builder setDebugCleartextPayload(@NonNull String debugCleartextPayload) {
             mBuilding.mDebugCleartextPayload = debugCleartextPayload;
+            return this;
+        }
+
+        /** Source debug key */
+        public @NonNull Builder setSourceDebugKey(@Nullable UnsignedLong sourceDebugKey) {
+            mBuilding.mSourceDebugKey = sourceDebugKey;
+            return this;
+        }
+
+        /** Trigger debug key */
+        public @NonNull Builder setTriggerDebugKey(@Nullable UnsignedLong triggerDebugKey) {
+            mBuilding.mTriggerDebugKey = triggerDebugKey;
             return this;
         }
 

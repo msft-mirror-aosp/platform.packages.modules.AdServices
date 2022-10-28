@@ -19,17 +19,22 @@ package com.android.adservices.data;
 import static com.android.adservices.data.DbTestUtil.doesIndexExist;
 import static com.android.adservices.data.DbTestUtil.doesTableExistAndColumnCountMatch;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 import androidx.test.core.app.ApplicationProvider;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.junit.MockitoJUnitRunner;
 
+@RunWith(MockitoJUnitRunner.class)
 public class DbHelperTest {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
 
@@ -46,10 +51,10 @@ public class DbHelperTest {
         assertTrue(doesTableExistAndColumnCountMatch(db, "topics_app_usage_history", 3));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_source", 22));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_trigger", 12));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_async_registration_contract", 13));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_event_report", 12));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_attribution", 8));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_aggregate_report", 9));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_async_registration_contract", 16));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_event_report", 16));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_attribution", 10));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_aggregate_report", 13));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_aggregate_encryption_key", 4));
         assertTrue(doesTableExistAndColumnCountMatch(db, "enrollment_data", 8));
         assertTrue(doesIndexExist(db, "idx_msmt_source_ad_ei_et"));
@@ -76,5 +81,15 @@ public class DbHelperTest {
 
         // Verify database does not exist anymore
         Assert.assertEquals(-1, dbHelper.getDbFileSize());
+    }
+
+    @Test
+    public void onOpen_appliesForeignKeyConstraint() {
+        // dbHelper.onOpen gets called implicitly
+        SQLiteDatabase db = DbTestUtil.getDbHelperForTest().safeGetReadableDatabase();
+        try (Cursor cursor = db.rawQuery("PRAGMA foreign_keys", null)) {
+            cursor.moveToNext();
+            assertEquals(1, cursor.getLong(0));
+        }
     }
 }

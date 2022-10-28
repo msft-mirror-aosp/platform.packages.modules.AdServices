@@ -68,11 +68,14 @@ public final class DeleteExpiredJobService extends JobService {
     /** Schedule the job. */
     @VisibleForTesting
     static void schedule(Context context, JobScheduler jobScheduler) {
-        final JobInfo job = new JobInfo.Builder(MEASUREMENT_DELETE_EXPIRED_JOB_ID,
-                new ComponentName(context, DeleteExpiredJobService.class))
-                .setRequiresDeviceIdle(true)
-                .setPeriodic(AdServicesConfig.getMeasurementDeleteExpiredJobPeriodMs())
-                .build();
+        final JobInfo job =
+                new JobInfo.Builder(
+                                MEASUREMENT_DELETE_EXPIRED_JOB_ID,
+                                new ComponentName(context, DeleteExpiredJobService.class))
+                        .setRequiresDeviceIdle(true)
+                        .setPeriodic(AdServicesConfig.getMeasurementDeleteExpiredJobPeriodMs())
+                        .setPersisted(true)
+                        .build();
         jobScheduler.schedule(job);
     }
 

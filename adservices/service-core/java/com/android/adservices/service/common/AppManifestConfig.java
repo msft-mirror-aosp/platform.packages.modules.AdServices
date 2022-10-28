@@ -82,8 +82,8 @@ public class AppManifestConfig {
     }
 
     /**
-     * Returns if ad tech has corresponding enrollment which is permitted to access Custom Audiences
-     * API for config represented by this object.
+     * Returns {@code true} if an ad tech with the given enrollment ID is permitted to access Custom
+     * Audience API for config represented by this object.
      */
     @NonNull
     public boolean isAllowedCustomAudiencesAccess(@NonNull String enrollmentId) {

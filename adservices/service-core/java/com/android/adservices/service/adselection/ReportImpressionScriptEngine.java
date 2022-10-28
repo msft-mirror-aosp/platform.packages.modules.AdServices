@@ -67,12 +67,13 @@ public class ReportImpressionScriptEngine {
     public static final String PER_BUYER_SIGNALS_ARG_NAME = "per_buyer_signals";
     public static final String SIGNALS_FOR_BUYER_ARG_NAME = "signals_for_buyer";
     public static final String CONTEXTUAL_SIGNALS_ARG_NAME = "contextual_signals";
-    public static final String CUSTOM_AUDIENCE_SIGNALS_ARG_NAME = "custom_audience_signals";
+    public static final String CUSTOM_AUDIENCE_REPORTING_SIGNALS_ARG_NAME =
+            "custom_audience_reporting_signals";
     public static final String AD_SELECTION_CONFIG_ARG_NAME = "ad_selection_config";
     public static final String BID_ARG_NAME = "bid";
-    public static final String RENDER_URL_ARG_NAME = "render_url";
+    public static final String RENDER_URI_ARG_NAME = "render_uri";
     public static final String SIGNALS_FOR_BUYER_RESPONSE_NAME = "signals_for_buyer";
-    public static final String REPORTING_URL_RESPONSE_NAME = "reporting_url";
+    public static final String REPORTING_URI_RESPONSE_NAME = "reporting_uri";
     public static final String REPORT_RESULT_FUNC_NAME = "reportResult";
     public static final String REPORT_WIN_FUNC_NAME = "reportWin";
 
@@ -98,7 +99,7 @@ public class ReportImpressionScriptEngine {
      * @param decisionLogicJS Javascript containing the reportResult() function
      * @param adSelectionConfig Configuration object passed by the SDK containing various signals to
      *     be used in ad selection and reporting. See {@link AdSelectionConfig} for more details
-     * @param renderUrl Url to render the advert, is an input to the reportResult() function
+     * @param renderUri URI to render the advert, is an input to the reportResult() function
      * @param bid Bid for the winning ad, is an input to the reportResult() function
      * @param contextualSignals another input to reportResult(), contains fields such as appName
      * @throws JSONException If any of the signals are not a valid JSON object.
@@ -106,13 +107,13 @@ public class ReportImpressionScriptEngine {
     public ListenableFuture<SellerReportingResult> reportResult(
             @NonNull String decisionLogicJS,
             @NonNull AdSelectionConfig adSelectionConfig,
-            @NonNull Uri renderUrl,
+            @NonNull Uri renderUri,
             @NonNull double bid,
             @NonNull AdSelectionSignals contextualSignals)
             throws JSONException, IllegalStateException {
         Objects.requireNonNull(decisionLogicJS);
         Objects.requireNonNull(adSelectionConfig);
-        Objects.requireNonNull(renderUrl);
+        Objects.requireNonNull(renderUri);
         Objects.requireNonNull(contextualSignals);
 
         LogUtil.v("Reporting result");
@@ -121,7 +122,7 @@ public class ReportImpressionScriptEngine {
                         .add(
                                 AdSelectionConfigArgument.asScriptArgument(
                                         adSelectionConfig, AD_SELECTION_CONFIG_ARG_NAME))
-                        .add(stringArg(RENDER_URL_ARG_NAME, renderUrl.toString()))
+                        .add(stringArg(RENDER_URI_ARG_NAME, renderUri.toString()))
                         .add(numericArg(BID_ARG_NAME, bid))
                         .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals.toString()))
                         .build();
@@ -171,8 +172,9 @@ public class ReportImpressionScriptEngine {
                         .add(jsonArg(SIGNALS_FOR_BUYER_ARG_NAME, signalsForBuyer.toString()))
                         .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals.toString()))
                         .add(
-                                CustomAudienceBiddingSignalsArgument.asScriptArgument(
-                                        CUSTOM_AUDIENCE_SIGNALS_ARG_NAME, customAudienceSignals))
+                                CustomAudienceReportingSignalsArgument.asScriptArgument(
+                                        CUSTOM_AUDIENCE_REPORTING_SIGNALS_ARG_NAME,
+                                        customAudienceSignals))
                         .build();
 
         return transform(
@@ -219,10 +221,10 @@ public class ReportImpressionScriptEngine {
 
     /**
      * Parses the output from the invocation of the {@code reportResult} JS function and convert it
-     * to a {@code reportingUrl}. The script output has been pre-parsed into an {@link
+     * to a {@code reportingUri}. The script output has been pre-parsed into an {@link
      * ReportingScriptResult} object that will contain the script status code and JSONObject that
-     * holds the reportingUrl. The method will throw an exception if the status code is not {@link
-     * #JS_SCRIPT_STATUS_SUCCESS} or if there has been any problem parsing the JS response.
+     * holds the {@code reportingUri}. The method will throw an exception if the status code is not
+     * {@link #JS_SCRIPT_STATUS_SUCCESS} or if there has been any problem parsing the JS response.
      *
      * @throws IllegalStateException If the result is unsuccessful or doesn't match the expected
      *     structure.
@@ -240,7 +242,7 @@ public class ReportImpressionScriptEngine {
             return new SellerReportingResult(
                     AdSelectionSignals.fromString(
                             reportResult.results.getString(SIGNALS_FOR_BUYER_RESPONSE_NAME)),
-                    Uri.parse(reportResult.results.getString(REPORTING_URL_RESPONSE_NAME)));
+                    Uri.parse(reportResult.results.getString(REPORTING_URI_RESPONSE_NAME)));
         } catch (Exception e) {
             throw new IllegalStateException("Result does not match expected structure!");
         }
@@ -250,9 +252,9 @@ public class ReportImpressionScriptEngine {
      * Parses the output from the invocation of the {@code reportWin} JS function and convert it to
      * a {@link SellerReportingResult}. The script output has been pre-parsed into an {@link
      * ReportingScriptResult} object that will contain the script status code and JSONObject that
-     * holds both signalsForBuyer and reportingUrl. The method will throw an exception if the status
-     * code is not {@link #JS_SCRIPT_STATUS_SUCCESS} or if there has been any problem parsing the JS
-     * response.
+     * holds both signalsForBuyer and {@code reportingUri}. The method will throw an exception if
+     * the status code is not {@link #JS_SCRIPT_STATUS_SUCCESS} or if there has been any problem
+     * parsing the JS response.
      *
      * @throws IllegalStateException If the result is unsuccessful or doesn't match the expected
      *     structure.
@@ -267,7 +269,7 @@ public class ReportImpressionScriptEngine {
         Preconditions.checkState(
                 reportResult.results.length() == 1, "Result does not match expected structure!");
         try {
-            return Uri.parse(reportResult.results.getString(REPORTING_URL_RESPONSE_NAME));
+            return Uri.parse(reportResult.results.getString(REPORTING_URI_RESPONSE_NAME));
         } catch (Exception e) {
             throw new IllegalStateException("Result does not match expected structure!");
         }
@@ -306,23 +308,23 @@ public class ReportImpressionScriptEngine {
 
     static class SellerReportingResult {
         @NonNull private final AdSelectionSignals mSignalsForBuyer;
-        @NonNull private final Uri mReportingUrl;
+        @NonNull private final Uri mReportingUri;
 
         SellerReportingResult(
-                @NonNull AdSelectionSignals signalsForBuyer, @NonNull Uri reportingUrl) {
+                @NonNull AdSelectionSignals signalsForBuyer, @NonNull Uri reportingUri) {
             Objects.requireNonNull(signalsForBuyer);
-            Objects.requireNonNull(reportingUrl);
+            Objects.requireNonNull(reportingUri);
 
             this.mSignalsForBuyer = signalsForBuyer;
-            this.mReportingUrl = reportingUrl;
+            this.mReportingUri = reportingUri;
         }
 
         public AdSelectionSignals getSignalsForBuyer() {
             return mSignalsForBuyer;
         }
 
-        public Uri getReportingUrl() {
-            return mReportingUrl;
+        public Uri getReportingUri() {
+            return mReportingUri;
         }
     }
 }

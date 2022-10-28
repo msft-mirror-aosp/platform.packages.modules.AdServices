@@ -18,11 +18,29 @@
             "registrant": "android-app://com.example.abc"
           }
         ],
-        "triggers": [],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "android-app://example2.com",
+            "enrollmentId": "enrollment-id-3",
+            "status": 0,
+            "triggerTime": 8640000002,
+            "registrant": "android-app://not.delete.candidate",
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ]
+          }
+        ],
         "event_reports": [
           {
             "id": "id",
-            "sourceId": 1,
+            "sourceEventId": 1,
             "attributionDestination": "android-app://example2.com",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
@@ -30,14 +48,34 @@
             "status": 0,
             "reportTime": -1,
             "triggerPriority": 101,
-            "sourceType": "navigation"
+            "sourceType": "navigation",
+            "sourceId": "S1",
+            "triggerId": "T1"
           }
         ],
         "attributions": []
       },
       "output": {
         "sources": [],
-        "triggers": [],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "android-app://example2.com",
+            "enrollmentId": "enrollment-id-3",
+            "status": 0,
+            "triggerTime": 8640000002,
+            "registrant": "android-app://not.delete.candidate",
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ]
+          }
+        ],
         "event_reports": [],
         "attributions": []
       },
@@ -78,7 +116,7 @@
         "event_reports": [
           {
             "id": "id",
-            "sourceId": 1,
+            "sourceEventId": 1,
             "attributionDestination": "android-app://no-match.com",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
@@ -111,7 +149,7 @@
         "event_reports": [
           {
             "id": "id",
-            "sourceId": 1,
+            "sourceEventId": 1,
             "attributionDestination": "android-app://no-match.com",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
@@ -183,7 +221,7 @@
         "event_reports": [
           {
             "id": "id",
-            "sourceId": 1,
+            "sourceEventId": 1,
             "attributionDestination": "android-app://no-match.com",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
@@ -234,7 +272,7 @@
         "event_reports": [
           {
             "id": "id",
-            "sourceId": 1,
+            "sourceEventId": 1,
             "attributionDestination": "android-app://no-match.com",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
@@ -289,7 +327,7 @@
         "event_reports": [
           {
             "id": "R1",
-            "sourceId": 1,
+            "sourceEventId": 1,
             "attributionDestination": "android-app://remove.me",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
@@ -301,7 +339,7 @@
           },
           {
             "id": "R2",
-            "sourceId": 1,
+            "sourceEventId": 1,
             "attributionDestination": "android-app://remove.me",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
@@ -313,7 +351,7 @@
           },
           {
             "id": "R3",
-            "sourceId": 1,
+            "sourceEventId": 1,
             "attributionDestination": "android-app://dont.remove.me",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
@@ -364,7 +402,7 @@
         "event_reports": [
           {
             "id": "R3",
-            "sourceId": 1,
+            "sourceEventId": 1,
             "attributionDestination": "android-app://dont.remove.me",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
@@ -376,6 +414,58 @@
           }
         ],
         "attributions": []
+      },
+      "uri": "android-app://remove.me"
+    },
+    {
+      "name": "Remove AggregateReport based on attribution destination & publisher",
+      "input": {
+        "aggregate_reports": [
+          {
+            "id": "a1",
+            "publisher": "android-app://do.not.remove.me",
+            "attributionDestination": "android-app://remove.me",
+            "sourceRegistrationTime": 1,
+            "scheduledReportTime": 2,
+            "enrollmentId": "enrollment-id-3",
+            "status": 0,
+            "debugCleartextPayload": ""
+          },
+          {
+            "id": "a2",
+            "publisher": "android-app://remove.me",
+            "attributionDestination": "android-app://do.not.remove.me",
+            "sourceRegistrationTime": 1,
+            "scheduledReportTime": 2,
+            "enrollmentId": "enrollment-id-3",
+            "status": 0,
+            "debugCleartextPayload": ""
+          },
+          {
+            "id": "a3",
+            "publisher": "android-app://do.not.remove.me",
+            "attributionDestination": "android-app://do.not.remove.me",
+            "sourceRegistrationTime": 1,
+            "scheduledReportTime": 2,
+            "enrollmentId": "enrollment-id-3",
+            "status": 0,
+            "debugCleartextPayload": ""
+          }
+        ]
+      },
+      "output": {
+        "aggregate_reports": [
+          {
+            "id": "a3",
+            "publisher": "android-app://do.not.remove.me",
+            "attributionDestination": "android-app://do.not.remove.me",
+            "sourceRegistrationTime": 1,
+            "scheduledReportTime": 2,
+            "enrollmentId": "enrollment-id-3",
+            "status": 0,
+            "debugCleartextPayload": ""
+          }
+        ]
       },
       "uri": "android-app://remove.me"
     },
@@ -401,7 +491,7 @@
         "event_reports": [
           {
             "id": "id",
-            "sourceId": 1,
+            "sourceEventId": 1,
             "attributionDestination": "android-app://example2.com",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,
@@ -465,7 +555,7 @@
         "event_reports": [
           {
             "id": "id",
-            "sourceId": 1,
+            "sourceEventId": 1,
             "attributionDestination": "android-app://example2.com",
             "enrollmentId": "enrollment-id-3",
             "triggerData": 2,

@@ -20,12 +20,15 @@ import static com.android.adservices.service.measurement.SystemHealthParams.MAX_
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_EVENT_TRIGGER_DATA;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_FILTERS;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_VALUES_PER_ATTRIBUTION_FILTER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__TRIGGER;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
@@ -44,7 +47,11 @@ import androidx.test.filters.SmallTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.MeasurementRegistrationResponseStats;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -78,14 +85,14 @@ public final class TriggerFetcherTest {
     private static final EnrollmentData ENROLLMENT = new EnrollmentData.Builder()
             .setEnrollmentId("enrollment-id")
             .build();
-    private static final String TOP_ORIGIN = "https://baz.com";
-    private static final long TRIGGER_DATA = 7;
+    private static final String TOP_ORIGIN = "android-app://com.android.adservices.servicecoretest";
+    private static final UnsignedLong TRIGGER_DATA = new UnsignedLong(7L);
     private static final long PRIORITY = 1;
     private static final String LONG_FILTER_STRING = "12345678901234567890123456";
     private static final String LONG_AGGREGATE_KEY_ID = "12345678901234567890123456";
     private static final String LONG_AGGREGATE_KEY_PIECE = "0x123456789012345678901234567890123";
-    private static final long DEDUP_KEY = 100;
-    private static final Long DEBUG_KEY = 34787843L;
+    private static final UnsignedLong DEDUP_KEY = new UnsignedLong(100L);
+    private static final UnsignedLong DEBUG_KEY = new UnsignedLong(34787843L);
 
     private static final String DEFAULT_REDIRECT = "https://bar.com";
 
@@ -135,13 +142,13 @@ public final class TriggerFetcherTest {
     @Mock HttpsURLConnection mUrlConnection;
     @Mock HttpsURLConnection mUrlConnection1;
     @Mock HttpsURLConnection mUrlConnection2;
-    @Mock AdIdPermissionFetcher mAdIdPermissionFetcher;
     @Mock EnrollmentDao mEnrollmentDao;
+    @Mock Flags mFlags;
+    @Mock AdServicesLogger mLogger;
 
     @Before
     public void setup() {
-        mFetcher = spy(new TriggerFetcher(mEnrollmentDao, mAdIdPermissionFetcher));
-        when(mAdIdPermissionFetcher.isAdIdPermissionEnabled()).thenReturn(false);
+        mFetcher = spy(new TriggerFetcher(mEnrollmentDao, mFlags, mLogger));
         // For convenience, return the same enrollment-ID since we're using many arbitrary
         // registration URIs and not yet enforcing uniqueness of enrollment.
         when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(any())).thenReturn(ENROLLMENT);
@@ -149,7 +156,14 @@ public final class TriggerFetcherTest {
 
     @Test
     public void testBasicTriggerRequest() throws Exception {
-        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        MeasurementRegistrationResponseStats expectedStats =
+                new MeasurementRegistrationResponseStats.Builder(
+                                AD_SERVICES_MEASUREMENT_REGISTRATIONS,
+                                AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__TRIGGER,
+                                221)
+                        .setAdTechDomain(null)
+                        .build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
@@ -157,19 +171,20 @@ public final class TriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{" + "'event_trigger_data':" + EVENT_TRIGGERS_1 + "}")));
+        doReturn(5000L).when(mFlags).getMaxResponseBasedRegistrationPayloadSizeBytes();
         Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
         assertTrue(fetch.isPresent());
         List<TriggerRegistration> result = fetch.get();
         assertEquals(1, result.size());
-        assertEquals(TOP_ORIGIN, result.get(0).getTopOrigin().toString());
         assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
         assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.get(0).getEventTriggers());
         verify(mUrlConnection).setRequestMethod("POST");
+        verify(mLogger).logMeasurementRegistrationsResponseSize(eq(expectedStats));
     }
 
     @Test
     public void testTriggerRequest_eventTriggerData_tooManyEntries() throws Exception {
-        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder tooManyEntries = new StringBuilder("[");
         for (int i = 0; i < MAX_ATTRIBUTION_EVENT_TRIGGER_DATA + 1; i++) {
             tooManyEntries.append("{\"trigger_data\": \"2\",\"priority\": \"101\"}");
@@ -189,8 +204,431 @@ public final class TriggerFetcherTest {
     }
 
     @Test
+    public void testTriggerRequest_eventTriggerData_triggerData_negative() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String eventTriggerData = "[{\"trigger_data\":\"-2\",\"priority\":\"101\"}]";
+        String expectedResult = "[{\"priority\":\"101\"}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertTrue(fetch.isPresent());
+        List<TriggerRegistration> result = fetch.get();
+        assertEquals(1, result.size());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
+        assertEquals(expectedResult, result.get(0).getEventTriggers());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_eventTriggerData_triggerData_tooLarge() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String eventTriggerData = "[{\"trigger_data\":\"18446744073709551616\","
+                + "\"priority\":\"101\"}]";
+        String expectedResult = "[{\"priority\":\"101\"}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertTrue(fetch.isPresent());
+        List<TriggerRegistration> result = fetch.get();
+        assertEquals(1, result.size());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
+        assertEquals(expectedResult, result.get(0).getEventTriggers());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_eventTriggerData_triggerData_notAnInt() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String eventTriggerData = "[{\"trigger_data\":\"101z\",\"priority\":\"101\"}]";
+        String expectedResult = "[{\"priority\":\"101\"}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertTrue(fetch.isPresent());
+        List<TriggerRegistration> result = fetch.get();
+        assertEquals(1, result.size());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
+        assertEquals(expectedResult, result.get(0).getEventTriggers());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_eventTriggerData_triggerData_uses64thBit() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String eventTriggerData = "[{\"trigger_data\":\"18446744073709551615\","
+                + "\"priority\":\"101\"}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertTrue(fetch.isPresent());
+        List<TriggerRegistration> result = fetch.get();
+        assertEquals(1, result.size());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
+        assertEquals(eventTriggerData, result.get(0).getEventTriggers());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_eventTriggerData_priority_negative() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String eventTriggerData = "[{\"trigger_data\":\"2\",\"priority\":\"-101\"}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertTrue(fetch.isPresent());
+        List<TriggerRegistration> result = fetch.get();
+        assertEquals(1, result.size());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
+        assertEquals(eventTriggerData, result.get(0).getEventTriggers());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_eventTriggerData_priority_tooLarge() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String eventTriggerData = "[{\"trigger_data\":\"2\",\"priority\":"
+                + "\"18446744073709551615\"}]";
+        String expectedResult = "[{\"trigger_data\":\"2\"}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertTrue(fetch.isPresent());
+        List<TriggerRegistration> result = fetch.get();
+        assertEquals(1, result.size());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
+        assertEquals(expectedResult, result.get(0).getEventTriggers());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_eventTriggerData_priority_notAnInt() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String eventTriggerData = "[{\"trigger_data\":\"2\",\"priority\":\"a101\"}]";
+        String expectedResult = "[{\"trigger_data\":\"2\"}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertTrue(fetch.isPresent());
+        List<TriggerRegistration> result = fetch.get();
+        assertEquals(1, result.size());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
+        assertEquals(expectedResult, result.get(0).getEventTriggers());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_eventTriggerData_deduplicationKey_negative() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String eventTriggerData = "[{\"trigger_data\":\"2\",\"priority\":\"101\","
+                + "\"deduplication_key\":\"-34\"}]";
+        String expectedResult = "[{\"trigger_data\":\"2\",\"priority\":\"101\"}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertTrue(fetch.isPresent());
+        List<TriggerRegistration> result = fetch.get();
+        assertEquals(1, result.size());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
+        assertEquals(expectedResult, result.get(0).getEventTriggers());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_eventTriggerData_deduplicationKey_tooLarge() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String eventTriggerData = "[{\"trigger_data\":\"2\",\"priority\":\"101\","
+                + "\"deduplication_key\":\"18446744073709551616\"}]";
+        String expectedResult = "[{\"trigger_data\":\"2\",\"priority\":\"101\"}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertTrue(fetch.isPresent());
+        List<TriggerRegistration> result = fetch.get();
+        assertEquals(1, result.size());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
+        assertEquals(expectedResult, result.get(0).getEventTriggers());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_eventTriggerData_deduplicationKey_notAnInt() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String eventTriggerData = "[{\"trigger_data\":\"2\",\"priority\":\"101\","
+                + "\"deduplication_key\":\"145l\"}]";
+        String expectedResult = "[{\"trigger_data\":\"2\",\"priority\":\"101\"}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertTrue(fetch.isPresent());
+        List<TriggerRegistration> result = fetch.get();
+        assertEquals(1, result.size());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
+        assertEquals(expectedResult, result.get(0).getEventTriggers());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_eventTriggerData_deduplicationKey_uses64thBit()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String eventTriggerData = "[{\"trigger_data\":\"2\",\"priority\":\"101\","
+                + "\"deduplication_key\":\"18446744073709551615\"}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertTrue(fetch.isPresent());
+        List<TriggerRegistration> result = fetch.get();
+        assertEquals(1, result.size());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
+        assertEquals(eventTriggerData, result.get(0).getEventTriggers());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_eventTriggerData__filters_tooManyFilters() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        StringBuilder filters = new StringBuilder("{");
+        filters.append(IntStream.range(0, MAX_ATTRIBUTION_FILTERS + 1)
+                .mapToObj(i -> "\"filter-string-" + i + "\": [\"filter-value\"]")
+                .collect(Collectors.joining(",")));
+        filters.append("}");
+        String eventTriggerData = "[{\"trigger_data\":\"2\",\"priority\":\"101\","
+                + "\"filters\":" + filters + "}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{" + "'event_trigger_data':" + eventTriggerData + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_eventTriggerData__filters_keyTooLong() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String filters =
+                "{\"product\":[\"1234\",\"2345\"], \"" + LONG_FILTER_STRING + "\":[\"id\"]}";
+        String eventTriggerData = "[{\"trigger_data\":\"2\",\"priority\":\"101\","
+                + "\"filters\":" + filters + "}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{" + "'event_trigger_data':" + eventTriggerData + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_eventTriggerData__filters_tooManyValues() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        StringBuilder filters = new StringBuilder("{"
+                + "\"filter-string-1\": [\"filter-value-1\"],"
+                + "\"filter-string-2\": [");
+        filters.append(IntStream.range(0, MAX_VALUES_PER_ATTRIBUTION_FILTER + 1)
+                .mapToObj(i -> "\"filter-value-" + i + "\"")
+                .collect(Collectors.joining(",")));
+        filters.append("]}");
+        String eventTriggerData = "[{\"trigger_data\":\"2\",\"priority\":\"101\","
+                + "\"filters\":" + filters + "}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{" + "'event_trigger_data':" + eventTriggerData + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_eventTriggerData__filters_valueTooLong() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String filters =
+                "{\"product\":[\"1234\",\"" + LONG_FILTER_STRING + "\"], \"ctid\":[\"id\"]}";
+        String eventTriggerData = "[{\"trigger_data\":\"2\",\"priority\":\"101\","
+                + "\"filters\":" + filters + "}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{" + "'event_trigger_data':" + eventTriggerData + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_eventTriggerData__notFilters_tooManyFilters() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        StringBuilder notFilters = new StringBuilder("{");
+        notFilters.append(IntStream.range(0, MAX_ATTRIBUTION_FILTERS + 1)
+                .mapToObj(i -> "\"filter-string-" + i + "\": [\"filter-value\"]")
+                .collect(Collectors.joining(",")));
+        notFilters.append("}");
+        String eventTriggerData = "[{\"trigger_data\":\"2\",\"priority\":\"101\","
+                + "\"not_filters\":" + notFilters + "}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{" + "'event_trigger_data':" + eventTriggerData + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_eventTriggerData__notFilters_keyTooLong() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String notFilters =
+                "{\"product\":[\"1234\",\"2345\"], \"" + LONG_FILTER_STRING + "\":[\"id\"]}";
+        String eventTriggerData = "[{\"trigger_data\":\"2\",\"priority\":\"101\","
+                + "\"not_filters\":" + notFilters + "}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{" + "'event_trigger_data':" + eventTriggerData + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_eventTriggerData__notFilters_tooManyValues() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        StringBuilder notFilters = new StringBuilder("{"
+                + "\"filter-string-1\": [\"filter-value-1\"],"
+                + "\"filter-string-2\": [");
+        notFilters.append(IntStream.range(0, MAX_VALUES_PER_ATTRIBUTION_FILTER + 1)
+                .mapToObj(i -> "\"filter-value-" + i + "\"")
+                .collect(Collectors.joining(",")));
+        notFilters.append("]}");
+        String eventTriggerData = "[{\"trigger_data\":\"2\",\"priority\":\"101\","
+                + "\"not_filters\":" + notFilters + "}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{" + "'event_trigger_data':" + eventTriggerData + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_eventTriggerData__notFilters_valueTooLong() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String notFilters =
+                "{\"product\":[\"1234\",\"" + LONG_FILTER_STRING + "\"], \"ctid\":[\"id\"]}";
+        String eventTriggerData = "[{\"trigger_data\":\"2\",\"priority\":\"101\","
+                + "\"not_filters\":" + notFilters + "}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{" + "'event_trigger_data':" + eventTriggerData + "}")));
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
     public void testBasicTriggerRequest_failsWhenNotEnrolled() throws Exception {
-        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
         when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(any())).thenReturn(null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
@@ -206,7 +644,7 @@ public final class TriggerFetcherTest {
 
     @Test
     public void testBasicTriggerRequestWithDebugKey() throws Exception {
-        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
 
@@ -223,23 +661,116 @@ public final class TriggerFetcherTest {
                                 + "}"));
 
         when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
-        when(mAdIdPermissionFetcher.isAdIdPermissionEnabled()).thenReturn(true);
 
         Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
         assertTrue(fetch.isPresent());
         List<TriggerRegistration> result = fetch.get();
         assertEquals(1, result.size());
-        assertEquals(TOP_ORIGIN, result.get(0).getTopOrigin().toString());
         assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
         assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.get(0).getEventTriggers());
-        assertEquals(DEBUG_KEY, result.get(0).getDebugKey()); // todo
+        assertEquals(DEBUG_KEY, result.get(0).getDebugKey());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
 
+    @Test
+    public void testBasicTriggerRequest_debugKey_negative() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+
+        Map<String, List<String>> headersRequest = new HashMap<>();
+        headersRequest.put(
+                "Attribution-Reporting-Register-Trigger",
+                List.of("{\"event_trigger_data\":" + EVENT_TRIGGERS_1
+                        + ",\"debug_key\":\"-376\"}"));
+
+        when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
+
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertTrue(fetch.isPresent());
+        List<TriggerRegistration> result = fetch.get();
+        assertEquals(1, result.size());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
+        assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.get(0).getEventTriggers());
+        assertNull(result.get(0).getDebugKey());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testBasicTriggerRequest_debugKey_tooLarge() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+
+        Map<String, List<String>> headersRequest = new HashMap<>();
+        headersRequest.put(
+                "Attribution-Reporting-Register-Trigger",
+                List.of("{\"event_trigger_data\":" + EVENT_TRIGGERS_1
+                        + ",\"debug_key\":\"18446744073709551616\"}"));
+
+        when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
+
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertTrue(fetch.isPresent());
+        List<TriggerRegistration> result = fetch.get();
+        assertEquals(1, result.size());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
+        assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.get(0).getEventTriggers());
+        assertNull(result.get(0).getDebugKey());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testBasicTriggerRequest_debugKey_notAnInt() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+
+        Map<String, List<String>> headersRequest = new HashMap<>();
+        headersRequest.put(
+                "Attribution-Reporting-Register-Trigger",
+                List.of("{\"event_trigger_data\":" + EVENT_TRIGGERS_1
+                        + ",\"debug_key\":\"65g43\"}"));
+
+        when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
+
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertTrue(fetch.isPresent());
+        List<TriggerRegistration> result = fetch.get();
+        assertEquals(1, result.size());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
+        assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.get(0).getEventTriggers());
+        assertNull(result.get(0).getDebugKey());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testBasicTriggerRequest_debugKey_uses64thBit() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+
+        Map<String, List<String>> headersRequest = new HashMap<>();
+        headersRequest.put(
+                "Attribution-Reporting-Register-Trigger",
+                List.of("{\"event_trigger_data\":" + EVENT_TRIGGERS_1
+                        + ",\"debug_key\":\"18446744073709551615\"}"));
+
+        when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
+
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertTrue(fetch.isPresent());
+        List<TriggerRegistration> result = fetch.get();
+        assertEquals(1, result.size());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
+        assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.get(0).getEventTriggers());
+        assertEquals(new UnsignedLong(-1L), result.get(0).getDebugKey());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
     @Test
     public void testBasicTriggerRequestWithoutAdIdPermission() throws Exception {
-        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        RegistrationRequest request = buildRequestWithoutAdIdPermission(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
 
@@ -256,13 +787,11 @@ public final class TriggerFetcherTest {
                                 + "}"));
 
         when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
-        when(mAdIdPermissionFetcher.isAdIdPermissionEnabled()).thenReturn(false);
 
         Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
         assertTrue(fetch.isPresent());
         List<TriggerRegistration> result = fetch.get();
         assertEquals(1, result.size());
-        assertEquals(TOP_ORIGIN, result.get(0).getTopOrigin().toString());
         assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
         assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.get(0).getEventTriggers());
         assertNull(result.get(0).getDebugKey());
@@ -272,15 +801,14 @@ public final class TriggerFetcherTest {
 
     @Test
     public void testBadTriggerUrl() throws Exception {
-        RegistrationRequest request =
-                buildRequest("bad-schema://foo.com", TOP_ORIGIN);
+        RegistrationRequest request = buildRequest("bad-schema://foo.com");
         Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
         assertFalse(fetch.isPresent());
     }
 
     @Test
     public void testBadTriggerConnection() throws Exception {
-        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
         doThrow(new IOException("Bad internet things"))
                 .when(mFetcher).openUrl(new URL(TRIGGER_URI));
         Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
@@ -290,7 +818,7 @@ public final class TriggerFetcherTest {
 
     @Test
     public void testBadRequestReturnFailure() throws Exception {
-        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(400);
         when(mUrlConnection.getHeaderFields())
@@ -306,7 +834,7 @@ public final class TriggerFetcherTest {
 
     @Test
     public void testBasicTriggerRequestMinimumFields() throws Exception {
-        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
@@ -318,7 +846,6 @@ public final class TriggerFetcherTest {
         assertTrue(fetch.isPresent());
         List<TriggerRegistration> result = fetch.get();
         assertEquals(1, result.size());
-        assertEquals(TOP_ORIGIN, result.get(0).getTopOrigin().toString());
         assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
         assertEquals("[{}]", result.get(0).getEventTriggers());
         verify(mUrlConnection).setRequestMethod("POST");
@@ -326,7 +853,7 @@ public final class TriggerFetcherTest {
 
     @Test
     public void testNotOverHttps() throws Exception {
-        RegistrationRequest request = buildRequest("http://foo.com", TOP_ORIGIN);
+        RegistrationRequest request = buildRequest("http://foo.com");
         // Non-https should fail.
         Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
         assertFalse(fetch.isPresent());
@@ -334,7 +861,7 @@ public final class TriggerFetcherTest {
 
     @Test
     public void testFirst200Next500_ignoreFailureReturnSuccess() throws Exception {
-        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200).thenReturn(500);
 
@@ -350,7 +877,6 @@ public final class TriggerFetcherTest {
         assertTrue(fetch.isPresent());
         List<TriggerRegistration> result = fetch.get();
         assertEquals(1, result.size());
-        assertEquals(TOP_ORIGIN, result.get(0).getTopOrigin().toString());
         assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
         assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.get(0).getEventTriggers());
         verify(mUrlConnection, times(2)).setRequestMethod("POST");
@@ -358,7 +884,7 @@ public final class TriggerFetcherTest {
 
     @Test
     public void testMissingHeaderButWithRedirect() throws Exception {
-        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
@@ -375,7 +901,7 @@ public final class TriggerFetcherTest {
 
     @Test
     public void testBasicTriggerRequestWithAggregateTriggerData() throws Exception {
-        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
         String aggregatable_trigger_data =
                 "[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\"],"
                         + "\"filters\":"
@@ -397,7 +923,6 @@ public final class TriggerFetcherTest {
         assertTrue(fetch.isPresent());
         List<TriggerRegistration> result = fetch.get();
         assertEquals(1, result.size());
-        assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
         assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
         assertEquals(
                 new JSONArray(aggregatable_trigger_data).toString(),
@@ -407,7 +932,7 @@ public final class TriggerFetcherTest {
 
     @Test
     public void testTriggerRequestWithAggregateTriggerData_invalidJson() throws Exception {
-        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
         String aggregatable_trigger_data =
                 "[{\"key_piece\":\"0x400\",\"source_keys\":\"campaignCounts\"],"
                         + "\"filters\":"
@@ -439,7 +964,7 @@ public final class TriggerFetcherTest {
                     "{\"key_piece\": \"0x15%1$s\",\"source_keys\":[\"campaign-%1$s\"]}", i));
         }
         tooManyEntries.append("]");
-        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
@@ -460,7 +985,7 @@ public final class TriggerFetcherTest {
     @Test
     public void testTriggerRequestWithAggregateTriggerData_invalidKeyPiece_missingPrefix()
             throws Exception {
-        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
         String aggregatable_trigger_data =
                 "[{\"key_piece\":\"0400\",\"source_keys\":[\"campaignCounts\"],"
                         + "\"filters\":"
@@ -487,7 +1012,7 @@ public final class TriggerFetcherTest {
     @Test
     public void testTriggerRequestWithAggregateTriggerData_invalidKeyPiece_tooLong()
             throws Exception {
-        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
         String aggregatable_trigger_data =
                 "[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\"],"
                         + "\"filters\":"
@@ -515,7 +1040,7 @@ public final class TriggerFetcherTest {
     @Test
     public void testTriggerRequestWithAggregateTriggerData_sourceKeys_notAnArray()
             throws Exception {
-        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
         String aggregatable_trigger_data =
                 "[{\"key_piece\":\"0x400\",\"source_keys\":{\"campaignCounts\": true},"
                         + "\"filters\":"
@@ -542,7 +1067,7 @@ public final class TriggerFetcherTest {
     @Test
     public void testTriggerRequestWithAggregateTriggerData_sourceKeys_tooManyKeys()
             throws Exception {
-        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder tooManyKeys = new StringBuilder("[");
         tooManyKeys.append(IntStream.range(0, MAX_AGGREGATE_KEYS_PER_REGISTRATION + 1)
                 .mapToObj(i -> "aggregate-key-" + i)
@@ -574,7 +1099,7 @@ public final class TriggerFetcherTest {
     @Test
     public void testTriggerRequestWithAggregateTriggerData_sourceKeys_invalidKeyId()
             throws Exception {
-        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
         String aggregatable_trigger_data =
                 "[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\", \""
                         + LONG_AGGREGATE_KEY_ID + "\"],"
@@ -602,7 +1127,7 @@ public final class TriggerFetcherTest {
     @Test
     public void testTriggerRequestWithAggregateTriggerData_filters_tooManyFilters()
             throws Exception {
-        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder filters = new StringBuilder("{");
         filters.append(IntStream.range(0, MAX_ATTRIBUTION_FILTERS + 1)
                 .mapToObj(i -> "\"filter-string-" + i + "\": [\"filter-value\"]")
@@ -632,7 +1157,7 @@ public final class TriggerFetcherTest {
 
     @Test
     public void testTriggerRequestWithAggregateTriggerData_filters_keyTooLong() throws Exception {
-        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
         String filters =
                 "{\"product\":[\"1234\",\"2345\"], \"" + LONG_FILTER_STRING + "\":[\"id\"]}";
         String aggregatable_trigger_data =
@@ -660,7 +1185,7 @@ public final class TriggerFetcherTest {
     @Test
     public void testTriggerRequestWithAggregateTriggerData_filters_tooManyValues()
             throws Exception {
-        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder filters = new StringBuilder("{"
                 + "\"filter-string-1\": [\"filter-value-1\"],"
                 + "\"filter-string-2\": [");
@@ -693,7 +1218,7 @@ public final class TriggerFetcherTest {
     @Test
     public void testTriggerRequestWithAggregateTriggerData_filters_valueTooLong()
             throws Exception {
-        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
         String filters =
                 "{\"product\":[\"1234\",\"" + LONG_FILTER_STRING + "\"], \"ctid\":[\"id\"]}";
         String aggregatable_trigger_data =
@@ -721,7 +1246,7 @@ public final class TriggerFetcherTest {
     @Test
     public void testTriggerRequestWithAggregateTriggerData_notFilters_tooManyFilters()
             throws Exception {
-        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder filters = new StringBuilder("{");
         filters.append(IntStream.range(0, MAX_ATTRIBUTION_FILTERS + 1)
                 .mapToObj(i -> "\"filter-string-" + i + "\": [\"filter-value\"]")
@@ -752,7 +1277,7 @@ public final class TriggerFetcherTest {
     @Test
     public void testTriggerRequestWithAggregateTriggerData_notFilters_keyTooLong()
             throws Exception {
-        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
         String filters =
                 "{\"product\":[\"1234\",\"2345\"], \"" + LONG_FILTER_STRING + "\":[\"id\"]}";
         String aggregatable_trigger_data =
@@ -780,7 +1305,7 @@ public final class TriggerFetcherTest {
     @Test
     public void testTriggerRequestWithAggregateTriggerData_notFilters_tooManyValues()
             throws Exception {
-        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder filters = new StringBuilder("{"
                 + "\"filter-string-1\": [\"filter-value-1\"],"
                 + "\"filter-string-2\": [");
@@ -813,7 +1338,7 @@ public final class TriggerFetcherTest {
     @Test
     public void testTriggerRequestWithAggregateTriggerData_notFilters_valueTooLong()
             throws Exception {
-        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
         String filters =
                 "{\"product\":[\"1234\",\"" + LONG_FILTER_STRING + "\"], \"ctid\":[\"id\"]}";
         String aggregatable_trigger_data =
@@ -840,7 +1365,7 @@ public final class TriggerFetcherTest {
 
     @Test
     public void testBasicTriggerRequestWithAggregatableValues() throws Exception {
-        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
         String aggregatable_values = "{\"campaignCounts\":32768,\"geoValue\":1644}";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
@@ -857,7 +1382,6 @@ public final class TriggerFetcherTest {
         assertTrue(fetch.isPresent());
         List<TriggerRegistration> result = fetch.get();
         assertEquals(1, result.size());
-        assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
         assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
         assertEquals(
                 new JSONObject(aggregatable_values).toString(), result.get(0).getAggregateValues());
@@ -866,7 +1390,7 @@ public final class TriggerFetcherTest {
 
     @Test
     public void testTriggerRequestWithAggregatableValues_invalidJson() throws Exception {
-        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
         String aggregatable_values = "{\"campaignCounts\":32768\"geoValue\":1644}";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
@@ -892,7 +1416,7 @@ public final class TriggerFetcherTest {
                 .mapToObj(i -> String.format("\"key-%s\": 12345,", i))
                 .collect(Collectors.joining(",")));
         tooManyKeys.append("}");
-        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
@@ -908,7 +1432,7 @@ public final class TriggerFetcherTest {
 
     @Test
     public void testTriggerRequestWithAggregatableValues_invalidKeyId() throws Exception {
-        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
         String aggregatable_values = "{\"campaignCounts\":32768, \"" + LONG_AGGREGATE_KEY_ID
                 + "\":1644}";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
@@ -936,7 +1460,7 @@ public final class TriggerFetcherTest {
                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                         + "}";
-        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
@@ -949,7 +1473,6 @@ public final class TriggerFetcherTest {
         assertTrue(fetch.isPresent());
         List<TriggerRegistration> result = fetch.get();
         assertEquals(1, result.size());
-        assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
         assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
         assertEquals(new JSONObject(filters).toString(), result.get(0).getFilters());
         verify(mUrlConnection).setRequestMethod("POST");
@@ -960,14 +1483,12 @@ public final class TriggerFetcherTest {
         // Setup
         TriggerRegistration expectedResult1 =
                 new TriggerRegistration.Builder()
-                        .setTopOrigin(Uri.parse(TOP_ORIGIN))
                         .setEventTriggers(new JSONArray(EVENT_TRIGGERS_1).toString())
                         .setEnrollmentId(ENROLLMENT_ID)
                         .setDebugKey(DEBUG_KEY)
                         .build();
         TriggerRegistration expectedResult2 =
                 new TriggerRegistration.Builder()
-                        .setTopOrigin(Uri.parse(TOP_ORIGIN))
                         .setEventTriggers(new JSONArray(EVENT_TRIGGERS_2).toString())
                         .setEnrollmentId(ENROLLMENT_ID)
                         .build();
@@ -999,7 +1520,61 @@ public final class TriggerFetcherTest {
                                 List.of("{" + "'event_trigger_data': " + EVENT_TRIGGERS_2 + "}")));
 
         // Execution
-        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchWebTriggers(request);
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchWebTriggers(request, true);
+
+        // Assertion
+        assertTrue(fetch.isPresent());
+        List<TriggerRegistration> result = fetch.get();
+        assertEquals(2, result.size());
+        assertEquals(
+                new HashSet<>(Arrays.asList(expectedResult1, expectedResult2)),
+                new HashSet<>(result));
+        verify(mUrlConnection1).setRequestMethod("POST");
+        verify(mUrlConnection2).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchWebTriggerSuccessWithoutAdIdPermission() throws IOException, JSONException {
+        // Setup
+        TriggerRegistration expectedResult1 =
+                new TriggerRegistration.Builder()
+                        .setEventTriggers(new JSONArray(EVENT_TRIGGERS_1).toString())
+                        .setEnrollmentId(ENROLLMENT_ID)
+                        .build();
+        TriggerRegistration expectedResult2 =
+                new TriggerRegistration.Builder()
+                        .setEventTriggers(new JSONArray(EVENT_TRIGGERS_2).toString())
+                        .setEnrollmentId(ENROLLMENT_ID)
+                        .build();
+
+        WebTriggerRegistrationRequest request =
+                buildWebTriggerRegistrationRequest(
+                        Arrays.asList(TRIGGER_REGISTRATION_1, TRIGGER_REGISTRATION_2), TOP_ORIGIN);
+        doReturn(mUrlConnection1).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        doReturn(mUrlConnection2).when(mFetcher).openUrl(new URL(REGISTRATION_URI_2.toString()));
+        when(mUrlConnection1.getResponseCode()).thenReturn(200);
+        when(mUrlConnection2.getResponseCode()).thenReturn(200);
+
+        Map<String, List<String>> headersRequest = new HashMap<>();
+        headersRequest.put(
+                "Attribution-Reporting-Register-Trigger",
+                List.of(
+                        "{"
+                                + "'event_trigger_data': "
+                                + EVENT_TRIGGERS_1
+                                + ", 'debug_key': '"
+                                + DEBUG_KEY
+                                + "'"
+                                + "}"));
+        when(mUrlConnection1.getHeaderFields()).thenReturn(headersRequest);
+        when(mUrlConnection2.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{" + "'event_trigger_data': " + EVENT_TRIGGERS_2 + "}")));
+
+        // Execution
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchWebTriggers(request, false);
 
         // Assertion
         assertTrue(fetch.isPresent());
@@ -1049,7 +1624,6 @@ public final class TriggerFetcherTest {
                                                 + "}")));
         TriggerRegistration expectedResult =
                 new TriggerRegistration.Builder()
-                        .setTopOrigin(Uri.parse(TOP_ORIGIN))
                         .setEventTriggers(new JSONArray(EVENT_TRIGGERS_1).toString())
                         .setEnrollmentId(ENROLLMENT_ID)
                         .setFilters(new JSONObject(filters).toString())
@@ -1058,7 +1632,7 @@ public final class TriggerFetcherTest {
                         .build();
 
         // Execution
-        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchWebTriggers(request);
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchWebTriggers(request, true);
 
         // Assertion
         assertTrue(fetch.isPresent());
@@ -1086,13 +1660,12 @@ public final class TriggerFetcherTest {
                                 List.of(ALT_REGISTRATION)));
         TriggerRegistration expectedResult =
                 new TriggerRegistration.Builder()
-                        .setTopOrigin(Uri.parse(TOP_ORIGIN))
                         .setEventTriggers(new JSONArray(EVENT_TRIGGERS_1).toString())
                         .setEnrollmentId(ENROLLMENT_ID)
                         .build();
 
         // Execution
-        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchWebTriggers(request);
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchWebTriggers(request, true);
 
         // Assertion
         assertTrue(fetch.isPresent());
@@ -1103,12 +1676,50 @@ public final class TriggerFetcherTest {
         verify(mFetcher, times(1)).openUrl(any());
     }
 
-    private RegistrationRequest buildRequest(String triggerUri, String topOriginUri) {
+    @Test
+    public void basicTriggerRequest_headersMoreThanMaxResponseSize_emitsMetricsWithAdTechDomain()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        MeasurementRegistrationResponseStats expectedStats =
+                new MeasurementRegistrationResponseStats.Builder(
+                                AD_SERVICES_MEASUREMENT_REGISTRATIONS,
+                                AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__TRIGGER,
+                                221)
+                        .setAdTechDomain(TRIGGER_URI)
+                        .build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{" + "'event_trigger_data':" + EVENT_TRIGGERS_1 + "}")));
+        doReturn(5L).when(mFlags).getMaxResponseBasedRegistrationPayloadSizeBytes();
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertTrue(fetch.isPresent());
+        List<TriggerRegistration> result = fetch.get();
+        assertEquals(1, result.size());
+        assertEquals(ENROLLMENT_ID, result.get(0).getEnrollmentId());
+        assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.get(0).getEventTriggers());
+        verify(mUrlConnection).setRequestMethod("POST");
+        verify(mLogger).logMeasurementRegistrationsResponseSize(eq(expectedStats));
+    }
+
+    private RegistrationRequest buildRequest(String triggerUri) {
         return new RegistrationRequest.Builder()
                 .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
                 .setRegistrationUri(Uri.parse(triggerUri))
-                .setTopOriginUri(Uri.parse(topOriginUri))
                 .setPackageName(CONTEXT.getAttributionSource().getPackageName())
+                .setAdIdPermissionGranted(true)
+                .build();
+    }
+
+    private RegistrationRequest buildRequestWithoutAdIdPermission(String triggerUri) {
+        return new RegistrationRequest.Builder()
+                .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
+                .setRegistrationUri(Uri.parse(triggerUri))
+                .setPackageName(CONTEXT.getAttributionSource().getPackageName())
+                .setAdIdPermissionGranted(false)
                 .build();
     }
 

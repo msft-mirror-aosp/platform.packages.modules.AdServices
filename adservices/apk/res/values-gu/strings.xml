@@ -47,7 +47,8 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"સહભાગી બનવાની રીત"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"બીટા વર્ઝન ચાલુ કરવાથી, ઍપને જાહેરાતો બતાવવા માટે, આ નવી વધુ ખાનગી રીતોનું પરીક્ષણ કરવાની મંજૂરી મળે છે. તમે તમારા પ્રાઇવસી સેટિંગમાં જઈને કોઈપણ સમયે બીટા વર્ઝન બંધ કરી શકો છો."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"ના, આભાર"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"હા, હું જોડાઈશ"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"ચાલુ કરો"</string>
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"વધુ"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"સહભાગિતા બદલ આપનો આભાર"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"તમે Androidની જાહેરાતો સંબંધિત પ્રાઇવસીનું બીટા વર્ઝનનો ભાગ છો. તમારા ડિવાઇસ માટે પ્રાઇવસી સૅન્ડબૉક્સ ચાલુ કરવામાં આવ્યું છે.\n\nતમે તમારા પ્રાઇવસી સેટિંગમાં જઈને કોઈપણ સમયે વધુ જાણી શકો છો અથવા બીટા વર્ઝન બંધ કરી શકો છો."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"તમે ભાગ ન લેવાનું પસંદ કર્યું"</string>
@@ -79,8 +80,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"હમણાં બતાવવા માટે કોઈ રુચિ નથી"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"પ્રાઇવસી સૅન્ડબૉક્સ"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Androidનું જાહેરાતો સંબંધિત પ્રાઇવસીનું બીટા વર્ઝન નવી સુવિધાઓ પ્રદાન કરે છે, જેનો ઉપયોગ ઍપ તમને ગમી શકે તેવી જાહેરાતો બતાવવા માટે કરી શકે છે. આ ટેક્નોલોજી ડિવાઇસ ઓળખકર્તાઓનો ઉપયોગ કરતી નથી.\n\nAndroid તમને કેવા પ્રકારની જાહેરાતોમાં રુચિ હોઈ શકે છે, તેનું અનુમાન લગાવી શકે છે અને તમારા ડિવાઇસ પર હંગામી રીતે આ રુચિઓને સાચવી શકે છે. આ અન્ય ડેવલપરની વેબસાઇટ અને ઍપ પરની તમારી પ્રવૃત્તિને ટ્રૅક કર્યા વિના, તમને સંબંધિત જાહેરાતો બતાવવા માટે ઍપને મંજૂરી આપે છે."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"બ્લૉક કરેલી કોઈ રુચિ તમે ધરાવતા નથી"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"ઍપ તમારી રુચિઓનું અનુમાન લગાવી શકે છે અને Android પર તેને હંગામી રીતે સાચવી શકે છે. પછીથી, કોઈ અલગ ઍપ તમને આ રુચિઓના આધારે, કોઈ જાહેરાત બતાવી શકે છે.\n\nજો તમે કોઈ ઍપને બ્લૉક કરો, તો હવેથી તે રુચિઓનું અનુમાન લગાવશે નહીં. જ્યાં સુધી તમે તેને અનબ્લૉક કરશો નહીં, ત્યાં સુધી તેને ઍપની આ સૂચિમાં ફરીથી ઉમેરવામાં આવશે નહીં. આ ઍપ દ્વારા અગાઉ અનુમાનિત તમામ રુચિઓ ડિલીટ કરવામાં આવશે, પરંતુ તમે કેટલીક સંબંધિત જાહેરાતો જોઈ શકો છો."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"તમે બ્લૉક કરેલી ઍપ"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"ઍપ દ્વારા અનુમાનિત રુચિઓ રીસેટ કરો"</string>
@@ -88,7 +88,27 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"પ્રાઇવસી સૅન્ડબૉક્સ"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Androidનું જાહેરાતો સંબંધિત પ્રાઇવસીનું બીટા વર્ઝન નવી સુવિધાઓ પ્રદાન કરે છે, જેનો ઉપયોગ ઍપ તમને ગમી શકે તેવી જાહેરાતો બતાવવા માટે કરી શકે છે. આ ટેક્નોલોજી ડિવાઇસ ઓળખકર્તાઓનો ઉપયોગ કરતી નથી.\n\nઍપ તમને કેવા પ્રકારની જાહેરાતોમાં રુચિ હોઈ શકે છે, તેનું અનુમાન લગાવી શકે છે અને તમારા ડિવાઇસ પર હંગામી રીતે આ રુચિઓને સાચવી શકે છે. આ અન્ય ડેવલપરની વેબસાઇટ અને ઍપ પરની તમારી પ્રવૃત્તિને ટ્રૅક કર્યા વિના, તમને સંબંધિત જાહેરાતો બતાવવા માટે ઍપને મંજૂરી આપે છે."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"બ્લૉક કરેલી કોઈ ઍપ તમે ધરાવતા નથી"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"બ્લૉક કરેલી કોઈ રુચિ તમે ધરાવતા નથી"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"રદ કરો"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"પ્રાઇવસી સૅન્ડબૉક્સ બંધ કરીએ?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"જો તમે તમારો વિચાર બદલો અથવા તમે Androidના જાહેરાતો સંબંધિત પ્રાઇવસીના બીટા વર્ઝન વિશે વધુ જાણવા માગતા હો, તો તમારા પ્રાઇવસી સેટિંગમાં જાઓ"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"બંધ કરો"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"<xliff:g id="TOPIC">%1$s</xliff:g>ને બ્લૉક કરીએ?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"આ રુચિને બ્લૉક કરવામાં આવશે અને તમે જ્યાં સુધી તેને ફરી ઉમેરશો નહીં, ત્યાં સુધી તે ફરીથી તમારી સૂચીમાં ઉમેરવામાં આવશે નહીં. તમને હજી પણ અમુક સંબંધિત જાહેરાતો જોવા મળી શકે છે."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"બ્લૉક કરો"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> અનબ્લૉક કરેલી છે"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android આ રુચિને તમારી સૂચિમાં ફરી ઉમેરી દઈ શકે છે, પરંતુ તે તરત જ દેખાય નહીં એમ બને"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"ઓકે"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"તમારી તમામ રુચિઓ રીસેટ કરીએ?"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"રીસેટ કરો"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"<xliff:g id="APP">%1$s</xliff:g>ને બ્લૉક કરીએ?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"આ ઍપ પ્રાઇવસી સૅન્ડબૉક્સ માટે તમારી રુચિઓનું અનુમાન લગાવશે નહીં અને તમે જ્યાં સુધી તેને અનબ્લૉક કરશો નહીં, ત્યાં સુધી તેને ફરીથી તમારી સૂચીમાં ઉમેરવામાં આવશે નહીં.\n\nઆ ઍપ દ્વારા અગાઉ અનુમાન લગાવવામાં આવેલી હોય તેવી રુચિઓ ડિલીટ કરવામાં આવશે, છતાં પણ તમને એ રુચિઓ સંબંધિત અમુક જાહેરાતો દેખાઈ શકે છે."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> અનબ્લૉક કરેલી છે"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"આ ઍપ તમારા માટે ફરીથી રુચિઓનું અનુમાન લગાવી શકે છે, પરંતુ તે તરત જ તમારી સૂચિમાં દેખાય નહીં એમ બને. તમને તેના સંબંધિત જાહેરાતો દેખાવામાં થોડી વાર લાગી શકે છે."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"ઍપ દ્વારા જનરેટ થયેલી રુચિઓ રીસેટ કરીએ?"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"આર્ટ અને મનોરંજન"</string>
     <string name="topic10002" msgid="1226367977754287428">"અભિનય અને થિએટર"</string>
     <string name="topic10003" msgid="6949890838957814881">"ઍનિમે અને માંગા"</string>

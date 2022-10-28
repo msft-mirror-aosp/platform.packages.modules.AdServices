@@ -110,8 +110,11 @@ public class EventReportingJobHandler {
 
             if (returnCode >= HttpURLConnection.HTTP_OK
                     && returnCode <= 299) {
-                boolean success = mDatastoreManager.runInTransaction((dao) ->
-                        dao.markEventReportDelivered(eventReportId));
+                boolean success =
+                        mDatastoreManager.runInTransaction(
+                                (dao) ->
+                                        dao.markEventReportStatus(
+                                                eventReportId, EventReport.Status.DELIVERED));
 
                 return success
                         ? AdServicesStatusUtils.STATUS_SUCCESS
@@ -133,11 +136,13 @@ public class EventReportingJobHandler {
     JSONObject createReportJsonPayload(EventReport eventReport) throws JSONException {
         return new EventReportPayload.Builder()
                 .setReportId(eventReport.getId())
-                .setSourceEventId(String.valueOf(eventReport.getSourceId()))
+                .setSourceEventId(eventReport.getSourceEventId())
                 .setAttributionDestination(eventReport.getAttributionDestination().toString())
-                .setTriggerData(String.valueOf(eventReport.getTriggerData()))
+                .setTriggerData(eventReport.getTriggerData())
                 .setSourceType(eventReport.getSourceType().getValue())
                 .setRandomizedTriggerRate(eventReport.getRandomizedTriggerRate())
+                .setSourceDebugKey(eventReport.getSourceDebugKey())
+                .setTriggerDebugKey(eventReport.getTriggerDebugKey())
                 .build()
                 .toJson();
     }

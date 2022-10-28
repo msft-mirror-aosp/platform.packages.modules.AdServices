@@ -17,7 +17,13 @@
 package com.android.adservices.service.stats;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__FLEDGE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN;
+import static com.android.adservices.service.stats.AdServicesStatsLog.BACKGROUND_FETCH_PROCESS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PER_CA_PROCESS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PROCESS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SCORING_PROCESS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SELECTION_PROCESS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.UPDATE_CUSTOM_AUDIENCE_PROCESS_REPORTED;
 
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -68,17 +74,115 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
     }
 
     @Override
-    public void logFledgeApiCallStats(int apiName, int resultCode) {
-        // TODO(b/233628316): Implement latency measurement
-        logApiCallStats(
-                new ApiCallStats.Builder()
-                        .setCode(AD_SERVICES_API_CALLED)
-                        .setApiClass(AD_SERVICES_API_CALLED__API_CLASS__FLEDGE)
-                        .setApiName(apiName)
-                        .setResultCode(resultCode)
-                        // TODO(b/233629557): Implement app/SDK reporting
-                        .setSdkPackageName("")
-                        .setAppPackageName("")
-                        .build());
+    public void logFledgeApiCallStats(int apiName, int resultCode, int latencyMs) {
+        AdServicesStatsLog.write(
+                AD_SERVICES_API_CALLED,
+                AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN,
+                apiName,
+                "",
+                "",
+                latencyMs,
+                resultCode);
+    }
+
+    @Override
+    public void logMeasurementRegistrationsResponseSize(
+            MeasurementRegistrationResponseStats stats) {
+        AdServicesStatsLog.write(
+                stats.getCode(),
+                stats.getRegistrationType(),
+                stats.getResponseSize(),
+                stats.getAdTechDomain());
+    }
+
+    @Override
+    public void logRunAdSelectionProcessReportedStats(RunAdSelectionProcessReportedStats stats) {
+        AdServicesStatsLog.write(
+                RUN_AD_SELECTION_PROCESS_REPORTED,
+                stats.getIsRemarketingAdsWon(),
+                stats.getAdSelectionEntrySizeInBytes(),
+                stats.getPersistAdSelectionLatencyInMillis(),
+                stats.getPersistAdSelectionResultCode(),
+                stats.getRunAdSelectionLatencyInMillis(),
+                stats.getRunAdSelectionResultCode());
+    }
+
+    @Override
+    public void logRunAdBiddingProcessReportedStats(RunAdBiddingProcessReportedStats stats) {
+        AdServicesStatsLog.write(
+                RUN_AD_BIDDING_PROCESS_REPORTED,
+                stats.getGetBuyersCustomAudienceLatencyInMills(),
+                stats.getGetBuyersCustomAudienceResultCode(),
+                stats.getNumBuyersRequested(),
+                stats.getNumBuyersFetched(),
+                stats.getNumOfAdsEnteringBidding(),
+                stats.getNumOfCasEnteringBidding(),
+                stats.getNumOfCasPostBidding(),
+                stats.getRatioOfCasSelectingRmktAds(),
+                stats.getRunAdBiddingLatencyInMillis(),
+                stats.getRunAdBiddingResultCode(),
+                stats.getTotalAdBiddingStageLatencyInMillis());
+    }
+
+    @Override
+    public void logRunAdScoringProcessReportedStats(RunAdScoringProcessReportedStats stats) {
+        AdServicesStatsLog.write(
+                RUN_AD_SCORING_PROCESS_REPORTED,
+                stats.getGetAdSelectionLogicLatencyInMillis(),
+                stats.getGetAdSelectionLogicResultCode(),
+                stats.getGetAdSelectionLogicScriptType(),
+                stats.getFetchedAdSelectionLogicScriptSizeInBytes(),
+                stats.getGetTrustedScoringSignalsLatencyInMillis(),
+                stats.getGetTrustedScoringSignalsResultCode(),
+                stats.getFetchedTrustedScoringSignalsDataSizeInBytes(),
+                stats.getScoreAdsLatencyInMillis(),
+                stats.getGetAdScoresLatencyInMillis(),
+                stats.getGetAdScoresResultCode(),
+                stats.getNumOfCasEnteringScoring(),
+                stats.getNumOfRemarketingAdsEnteringScoring(),
+                stats.getNumOfContextualAdsEnteringScoring(),
+                stats.getRunAdScoringLatencyInMillis(),
+                stats.getRunAdScoringResultCode());
+    }
+
+    @Override
+    public void logRunAdBiddingPerCAProcessReportedStats(
+            RunAdBiddingPerCAProcessReportedStats stats) {
+        AdServicesStatsLog.write(
+                RUN_AD_BIDDING_PER_CA_PROCESS_REPORTED,
+                stats.getNumOfAdsForBidding(),
+                stats.getRunAdBiddingPerCaLatencyInMillis(),
+                stats.getRunAdBiddingPerCaResultCode(),
+                stats.getGetBuyerDecisionLogicLatencyInMillis(),
+                stats.getGetBuyerDecisionLogicResultCode(),
+                stats.getBuyerDecisionLogicScriptType(),
+                stats.getFetchedBuyerDecisionLogicScriptSizeInBytes(),
+                stats.getNumOfKeysOfTrustedBiddingSignals(),
+                stats.getFetchedTrustedBiddingSignalsDataSizeInBytes(),
+                stats.getGetTrustedBiddingSignalsLatencyInMillis(),
+                stats.getGetTrustedBiddingSignalsResultCode(),
+                stats.getGenerateBidsLatencyInMillis(),
+                stats.getRunBiddingLatencyInMillis(),
+                stats.getRunBiddingResultCode());
+    }
+
+    @Override
+    public void logBackgroundFetchProcessReportedStats(BackgroundFetchProcessReportedStats stats) {
+        AdServicesStatsLog.write(
+                BACKGROUND_FETCH_PROCESS_REPORTED,
+                stats.getLatencyInMillis(),
+                stats.getNumOfEligibleToUpdateCas(),
+                stats.getResultCode());
+    }
+
+    @Override
+    public void logUpdateCustomAudienceProcessReportedStats(
+            UpdateCustomAudienceProcessReportedStats stats) {
+        AdServicesStatsLog.write(
+                UPDATE_CUSTOM_AUDIENCE_PROCESS_REPORTED,
+                stats.getLatencyInMills(),
+                stats.getResultCode(),
+                stats.getDataSizeOfAdsInBytes(),
+                stats.getNumOfAds());
     }
 }

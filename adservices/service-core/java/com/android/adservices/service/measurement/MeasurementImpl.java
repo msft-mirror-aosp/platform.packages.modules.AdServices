@@ -40,6 +40,8 @@ import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.RemoteException;
 import android.view.InputEvent;
@@ -47,6 +49,7 @@ import android.view.InputEvent;
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
+import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
@@ -56,7 +59,6 @@ import com.android.adservices.service.measurement.registration.SourceFetcher;
 import com.android.adservices.service.measurement.registration.SourceRegistration;
 import com.android.adservices.service.measurement.registration.TriggerFetcher;
 import com.android.adservices.service.measurement.registration.TriggerRegistration;
-import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Web;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -88,6 +90,7 @@ public final class MeasurementImpl {
     private final TriggerFetcher mTriggerFetcher;
     private final ContentResolver mContentResolver;
     private final ClickVerifier mClickVerifier;
+    private final MeasurementDataDeleter mMeasurementDataDeleter;
     private final Flags mFlags;
 
     private MeasurementImpl(Context context) {
@@ -98,6 +101,7 @@ public final class MeasurementImpl {
         mTriggerFetcher = new TriggerFetcher(context);
         mClickVerifier = new ClickVerifier(context);
         mFlags = FlagsFactory.getFlags();
+        mMeasurementDataDeleter = new MeasurementDataDeleter(mDatastoreManager);
     }
 
     @VisibleForTesting
@@ -107,13 +111,15 @@ public final class MeasurementImpl {
             DatastoreManager datastoreManager,
             SourceFetcher sourceFetcher,
             TriggerFetcher triggerFetcher,
-            ClickVerifier clickVerifier) {
+            ClickVerifier clickVerifier,
+            MeasurementDataDeleter measurementDataDeleter) {
         mContext = context;
         mContentResolver = contentResolver;
         mDatastoreManager = datastoreManager;
         mSourceFetcher = sourceFetcher;
         mTriggerFetcher = triggerFetcher;
         mClickVerifier = clickVerifier;
+        mMeasurementDataDeleter = measurementDataDeleter;
         mFlags = FlagsFactory.getFlagsForTest();
     }
 
@@ -187,7 +193,8 @@ public final class MeasurementImpl {
         mReadWriteLock.readLock().lock();
         try {
             Optional<List<SourceRegistration>> fetch =
-                    mSourceFetcher.fetchWebSources(sourceRegistrationRequest);
+                    mSourceFetcher.fetchWebSources(
+                            sourceRegistrationRequest, request.isAdIdPermissionGranted());
             LogUtil.d("MeasurementImpl: registerWebSource: success=" + fetch.isPresent());
             if (fetch.isPresent()) {
                 insertSources(
@@ -223,7 +230,8 @@ public final class MeasurementImpl {
         mReadWriteLock.readLock().lock();
         try {
             Optional<List<TriggerRegistration>> fetch =
-                    mTriggerFetcher.fetchWebTriggers(triggerRegistrationRequest);
+                    mTriggerFetcher.fetchWebTriggers(
+                            triggerRegistrationRequest, request.isAdIdPermissionGranted());
             LogUtil.d("MeasurementImpl: registerWebTrigger: success=" + fetch.isPresent());
             if (fetch.isPresent()) {
                 insertTriggers(
@@ -249,17 +257,7 @@ public final class MeasurementImpl {
     int deleteRegistrations(@NonNull DeletionParam request) {
         mReadWriteLock.readLock().lock();
         try {
-            final boolean deleteResult =
-                    mDatastoreManager.runInTransaction(
-                            (dao) ->
-                                    dao.deleteMeasurementData(
-                                            getRegistrant(request.getPackageName()),
-                                            request.getStart(),
-                                            request.getEnd(),
-                                            request.getOriginUris(),
-                                            request.getDomainUris(),
-                                            request.getMatchBehavior(),
-                                            request.getDeletionMode()));
+            boolean deleteResult = mMeasurementDataDeleter.delete(request);
             return deleteResult ? STATUS_SUCCESS : STATUS_INTERNAL_ERROR;
         } catch (NullPointerException | IllegalArgumentException e) {
             LogUtil.e(e, "Delete registration received invalid parameters");
@@ -273,8 +271,7 @@ public final class MeasurementImpl {
      * Implement a getMeasurementApiStatus request, returning a result code.
      */
     @MeasurementManager.MeasurementApiState int getMeasurementApiStatus() {
-        AdServicesApiConsent consent =
-                ConsentManager.getInstance(mContext).getConsent(mContext.getPackageManager());
+        AdServicesApiConsent consent = ConsentManager.getInstance(mContext).getConsent();
         if (consent.isGiven()) {
             return MeasurementManager.MEASUREMENT_API_STATE_ENABLED;
         } else {
@@ -319,6 +316,28 @@ public final class MeasurementImpl {
         }
     }
 
+    /** Delete all data generated from apps that are not currently installed. */
+    public void deleteAllUninstalledMeasurementData() {
+        List<Uri> installedApplicationsList = getCurrentInstalledApplicationsList(mContext);
+        mReadWriteLock.writeLock().lock();
+        try {
+            mDatastoreManager.runInTransaction(
+                    (dao) -> dao.deleteAppRecordsNotPresent(installedApplicationsList));
+        } finally {
+            mReadWriteLock.writeLock().unlock();
+        }
+    }
+
+    private List<Uri> getCurrentInstalledApplicationsList(Context context) {
+        PackageManager packageManager = context.getPackageManager();
+        List<ApplicationInfo> applicationInfoList =
+                packageManager.getInstalledApplications(
+                        PackageManager.ApplicationInfoFlags.of(PackageManager.GET_META_DATA));
+        return applicationInfoList.stream()
+                .map(applicationInfo -> Uri.parse("android-app://" + applicationInfo.packageName))
+                .collect(Collectors.toList());
+    }
+
     private int fetchAndInsertTriggers(RegistrationRequest request, long requestTime) {
         Optional<List<TriggerRegistration>> fetch = mTriggerFetcher.fetchTrigger(request);
         LogUtil.d("MeasurementImpl: register: success=" + fetch.isPresent());
@@ -326,7 +345,7 @@ public final class MeasurementImpl {
             insertTriggers(
                     fetch.get(),
                     requestTime,
-                    request.getTopOriginUri(),
+                    getPublisher(request),
                     getRegistrant(request.getPackageName()),
                     EventSurfaceType.APP);
             return STATUS_SUCCESS;
@@ -342,7 +361,7 @@ public final class MeasurementImpl {
             insertSources(
                     fetch.get(),
                     requestTime,
-                    request.getTopOriginUri(),
+                    getPublisher(request),
                     EventSurfaceType.APP,
                     getRegistrant(request.getPackageName()),
                     getSourceType(request.getInputEvent(), request.getRequestTime()));
@@ -364,6 +383,14 @@ public final class MeasurementImpl {
             LogUtil.d("insertSources: getTopLevelPublisher failed", topOriginUri);
             return;
         }
+        Optional<Long> numOfSourcesPerPublisher =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) -> dao.getNumSourcesPerPublisher(publisher.get(), publisherType));
+        if (!numOfSourcesPerPublisher.isPresent()) {
+            LogUtil.d("insertSources: getNumSourcesPerPublisher failed", publisher.get());
+            return;
+        }
+        long noOfSources = numOfSourcesPerPublisher.get();
         // Only first destination to avoid AdTechs change this
         Uri appDestination = sourceRegistrations.get(0).getAppDestination();
         Uri webDestination = sourceRegistrations.get(0).getWebDestination();
@@ -392,6 +419,13 @@ public final class MeasurementImpl {
                         webDestination);
                 continue;
             }
+
+            if (noOfSources >= SystemHealthParams.MAX_SOURCES_PER_PUBLISHER) {
+                LogUtil.d(
+                        "insertSources: Max limit of %s sources for publisher - %s reached.",
+                        SystemHealthParams.MAX_SOURCES_PER_PUBLISHER, publisher);
+                break;
+            }
             Source source =
                     createSource(
                             sourceEventTime,
@@ -403,7 +437,9 @@ public final class MeasurementImpl {
                             sourceType,
                             appDestination,
                             webDestination);
-            insertSource(source);
+            if (insertSource(source)) {
+                noOfSources++;
+            }
         }
     }
 
@@ -444,9 +480,9 @@ public final class MeasurementImpl {
     }
 
     @VisibleForTesting
-    void insertSource(Source source) {
+    boolean insertSource(Source source) {
         List<EventReport> fakeEventReports = generateFakeEventReports(source);
-        mDatastoreManager.runInTransaction(
+        return mDatastoreManager.runInTransaction(
                 (dao) -> {
                     dao.insertSource(source);
                     for (EventReport report : fakeEventReports) {
@@ -482,7 +518,7 @@ public final class MeasurementImpl {
                 .map(
                         fakeReport ->
                                 new EventReport.Builder()
-                                        .setSourceId(source.getEventId())
+                                        .setSourceEventId(source.getEventId())
                                         .setReportTime(fakeReport.getReportingTime())
                                         .setTriggerData(fakeReport.getTriggerData())
                                         .setAttributionDestination(fakeReport.getDestination())
@@ -571,6 +607,10 @@ public final class MeasurementImpl {
         return Uri.parse(ANDROID_APP_SCHEME + "://" + packageName);
     }
 
+    private Uri getPublisher(RegistrationRequest request) {
+        return Uri.parse(ANDROID_APP_SCHEME + "://" + request.getPackageName());
+    }
+
     private Uri getAppUri(Uri packageUri) {
         return Uri.parse(ANDROID_APP_SCHEME + "://" + packageUri.getEncodedSchemeSpecificPart());
     }
@@ -651,10 +691,10 @@ public final class MeasurementImpl {
      * @return a fake {@link Attribution}
      */
     private Attribution createFakeAttributionRateLimit(Source source, Uri destination) {
-        Optional<Uri> publisherBaseUri = extractBaseUri(source.getPublisher());
-        Optional<Uri> destinationBaseUri = extractBaseUri(destination);
+        Optional<Uri> topLevelPublisher =
+                getTopLevelPublisher(source.getPublisher(), source.getPublisherType());
 
-        if (!publisherBaseUri.isPresent() || !destinationBaseUri.isPresent()) {
+        if (!topLevelPublisher.isPresent()) {
             throw new IllegalArgumentException(
                     String.format(
                             "insertAttributionRateLimit: getSourceAndDestinationTopPrivateDomains"
@@ -662,16 +702,17 @@ public final class MeasurementImpl {
                             source.getPublisher(), destination));
         }
 
-        String publisherTopPrivateDomain = publisherBaseUri.get().toString();
-        String triggerDestinationTopPrivateDomain = destinationBaseUri.get().toString();
         return new Attribution.Builder()
-                .setSourceSite(publisherTopPrivateDomain)
-                .setSourceOrigin(BaseUriExtractor.getBaseUri(source.getPublisher()).toString())
-                .setDestinationSite(triggerDestinationTopPrivateDomain)
-                .setDestinationOrigin(BaseUriExtractor.getBaseUri(destination).toString())
+                .setSourceSite(topLevelPublisher.get().toString())
+                .setSourceOrigin(source.getPublisher().toString())
+                .setDestinationSite(destination.toString())
+                .setDestinationOrigin(destination.toString())
                 .setEnrollmentId(source.getEnrollmentId())
                 .setTriggerTime(source.getEventTime())
                 .setRegistrant(source.getRegistrant().toString())
+                .setSourceId(source.getId())
+                // Intentionally kept it as null because it's a fake attribution
+                .setTriggerId(null)
                 .build();
     }
 
@@ -682,17 +723,6 @@ public final class MeasurementImpl {
 
     private static String getTargetPackageFromPlayStoreUri(Uri uri) {
         return uri.getQueryParameter("id");
-    }
-
-    private static Optional<Uri> extractBaseUri(Uri uri) {
-        return hasAndroidAppScheme(uri)
-                ? Optional.of(BaseUriExtractor.getBaseUri(uri))
-                : Web.topPrivateDomainAndScheme(uri);
-    }
-
-    private static boolean hasAndroidAppScheme(Uri uri) {
-        String scheme = uri.getScheme();
-        return scheme != null && scheme.equals(ANDROID_APP_SCHEME);
     }
 
     private interface AppVendorPackages {
@@ -751,7 +781,7 @@ public final class MeasurementImpl {
 
         if (destinationCount.isPresent()) {
             return destinationCount.get() < PrivacyParams
-                    .MAX_DISTINCT_DESTINATIONS_PER_PUBLISHER_X_ENROLLMENT_IN_ACTIVE_SOURCE;
+                    .getMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource();
         } else {
             LogUtil.e("isDestinationWithinPrivacyBounds: "
                     + "dao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource not "
@@ -809,7 +839,7 @@ public final class MeasurementImpl {
 
         if (adTechCount.isPresent()) {
             return adTechCount.get() < PrivacyParams
-                    .MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_SOURCE;
+                    .getMaxDistinctEnrollmentsPerPublisherXDestinationInSource();
         } else {
             LogUtil.e("isAdTechWithinPrivacyBounds: "
                     + "dao.countDistinctEnrollmentsPerPublisherXDestinationInSource not present"

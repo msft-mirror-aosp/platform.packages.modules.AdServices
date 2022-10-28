@@ -26,6 +26,7 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -219,13 +220,16 @@ public class DbState {
     private Source getSourceFrom(JSONObject sJSON) throws JSONException {
         return new Source.Builder()
                 .setId(sJSON.getString("id"))
-                .setEventId(sJSON.getLong("eventId"))
+                .setEventId(new UnsignedLong(sJSON.getString("eventId")))
                 .setSourceType(
                         Source.SourceType.valueOf(
                                 sJSON.getString("sourceType").toUpperCase(Locale.ENGLISH)))
                 .setPublisher(Uri.parse(sJSON.getString("publisher")))
                 .setPublisherType(sJSON.optInt("publisherType"))
-                .setAppDestination(Uri.parse(sJSON.getString("appDestination")))
+                .setAppDestination(parseIfNonNull(sJSON.optString("appDestination", null)))
+                .setWebDestination(parseIfNonNull(sJSON.optString("webDestination", null)))
+                .setAggregateSource(sJSON.optString("aggregationKeys", null))
+                .setAggregateContributions(sJSON.optInt("aggregateContributions"))
                 .setEnrollmentId(sJSON.getString("enrollmentId"))
                 .setEventTime(sJSON.getLong("eventTime"))
                 .setExpiryTime(sJSON.getLong("expiryTime"))
@@ -249,6 +253,8 @@ public class DbState {
                 .setDestinationType(tJSON.optInt("destinationType"))
                 .setEnrollmentId(tJSON.getString("enrollmentId"))
                 .setEventTriggers(tJSON.getString("eventTriggers"))
+                .setAggregateTriggerData(tJSON.optString("aggregatableTriggerData", null))
+                .setAggregateValues(tJSON.optString("aggregatableValues", null))
                 .setTriggerTime(tJSON.getLong("triggerTime"))
                 .setStatus(tJSON.getInt("status"))
                 .setRegistrant(Uri.parse(tJSON.getString("registrant")))
@@ -259,10 +265,10 @@ public class DbState {
     private EventReport getEventReportFrom(JSONObject rJSON) throws JSONException {
         return new EventReport.Builder()
                 .setId(rJSON.getString("id"))
-                .setSourceId(rJSON.getLong("sourceId"))
+                .setSourceEventId(new UnsignedLong(rJSON.getString("sourceEventId")))
                 .setAttributionDestination(Uri.parse(rJSON.getString("attributionDestination")))
                 .setEnrollmentId(rJSON.getString("enrollmentId"))
-                .setTriggerData(rJSON.getLong("triggerData"))
+                .setTriggerData(new UnsignedLong(rJSON.getString("triggerData")))
                 .setTriggerTime(rJSON.getLong("triggerTime"))
                 .setReportTime(rJSON.getLong("reportTime"))
                 .setTriggerPriority(rJSON.getLong("triggerPriority"))
@@ -271,6 +277,8 @@ public class DbState {
                 .setSourceType(
                         Source.SourceType.valueOf(
                                 rJSON.getString("sourceType").toUpperCase(Locale.ENGLISH)))
+                .setSourceId(rJSON.optString("sourceId", null))
+                .setTriggerId(rJSON.optString("triggerId", null))
                 .build();
     }
 
@@ -285,6 +293,8 @@ public class DbState {
                 .setEnrollmentId(attrJSON.getString("enrollmentId"))
                 .setTriggerTime(attrJSON.getLong("triggerTime"))
                 .setRegistrant(attrJSON.getString("registrant"))
+                .setSourceId(attrJSON.optString("sourceId", null))
+                .setTriggerId(attrJSON.optString("triggerId", null))
                 .build();
     }
 
@@ -331,6 +341,14 @@ public class DbState {
                         cursor.getString(
                                 cursor.getColumnIndex(
                                         MeasurementTables.AttributionContract.REGISTRANT)))
+                .setSourceId(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AttributionContract.SOURCE_ID)))
+                .setTriggerId(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AttributionContract.TRIGGER_ID)))
                 .build();
     }
 
@@ -345,6 +363,16 @@ public class DbState {
                 .setEnrollmentId(rJSON.getString("enrollmentId"))
                 .setDebugCleartextPayload(rJSON.getString("debugCleartextPayload"))
                 .setStatus(rJSON.getInt("status"))
+                .setApiVersion(rJSON.optString("apiVersion", null))
+                .setSourceId(rJSON.optString("sourceId", null))
+                .setTriggerId(rJSON.optString("triggerId", null))
                 .build();
+    }
+
+    private Uri parseIfNonNull(String s) {
+        if (s == null) {
+            return null;
+        }
+        return Uri.parse(s);
     }
 }

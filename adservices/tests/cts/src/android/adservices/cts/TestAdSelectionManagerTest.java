@@ -40,7 +40,6 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
-import com.android.compatibility.common.util.ShellUtils;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -59,17 +58,16 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
 
     private static final String DECISION_LOGIC_JS = "function test() { return \"hello world\"; }";
     private static final long AD_SELECTION_ID = 1;
-    private static final AdTechIdentifier SELLER =
-            AdTechIdentifier.fromString("developer.android.com");
+    private static final AdTechIdentifier SELLER = AdTechIdentifier.fromString("test.com");
     private static final Uri DECISION_LOGIC_URI =
-            Uri.parse("https://developer.android.com/test/decisions_logic_urls");
+            Uri.parse("https://test.com/test/decisions_logic_uris");
     private static final Uri TRUSTED_SCORING_SIGNALS_URI =
-            Uri.parse("https://developer.android.com/test/decisions_logic_urls");
+            Uri.parse("https://test.com/test/decisions_logic_uris");
     private static final AdSelectionSignals TRUSTED_SCORING_SIGNALS =
             AdSelectionSignals.fromString(
                     "{\n"
-                            + "\t\"render_url_1\": \"signals_for_1\",\n"
-                            + "\t\"render_url_2\": \"signals_for_2\"\n"
+                            + "\t\"render_uri_1\": \"signals_for_1\",\n"
+                            + "\t\"render_uri_2\": \"signals_for_2\"\n"
                             + "}");
     private static final AdSelectionConfig AD_SELECTION_CONFIG =
             AdSelectionConfigFixture.anAdSelectionConfigBuilder()
@@ -98,13 +96,6 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
         PhFlagsFixture.overrideEnforceIsolateMaxHeapSize(false);
         PhFlagsFixture.overrideIsolateMaxHeapSizeBytes(0);
-        // We need to turn the Consent Manager into debug mode
-        overrideConsentManagerDebugMode();
-    }
-
-    // Override the Consent Manager behaviour - Consent Given
-    private void overrideConsentManagerDebugMode() {
-        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
     }
 
     @Test

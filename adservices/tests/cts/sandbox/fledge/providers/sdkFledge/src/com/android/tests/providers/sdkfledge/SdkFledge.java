@@ -60,13 +60,12 @@ public class SdkFledge extends SandboxedSdkProvider {
     private static final String TAG = "SdkFledge";
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
-    private static final AdTechIdentifier SELLER = AdTechIdentifier.fromString("store.google.com");
+    private static final AdTechIdentifier SELLER = AdTechIdentifier.fromString("test.com");
 
-    private static final AdTechIdentifier BUYER_1 =
-            AdTechIdentifier.fromString("developer.android.com");
-    private static final AdTechIdentifier BUYER_2 = AdTechIdentifier.fromString("google.com");
+    private static final AdTechIdentifier BUYER_1 = AdTechIdentifier.fromString("test2.com");
+    private static final AdTechIdentifier BUYER_2 = AdTechIdentifier.fromString("test3.com");
 
-    private static final String AD_URL_PREFIX = "/adverts/123/";
+    private static final String AD_URI_PREFIX = "/adverts/123/";
 
     private static final String SELLER_DECISION_LOGIC_URI_PATH = "/ssp/decision/logic/";
     private static final String BUYER_BIDDING_LOGIC_URI_PATH = "/buyer/bidding/logic/";
@@ -78,8 +77,8 @@ public class SdkFledge extends SandboxedSdkProvider {
     private static final AdSelectionSignals TRUSTED_SCORING_SIGNALS =
             AdSelectionSignals.fromString(
                     "{\n"
-                            + "\t\"render_url_1\": \"signals_for_1\",\n"
-                            + "\t\"render_url_2\": \"signals_for_2\"\n"
+                            + "\t\"render_uri_1\": \"signals_for_1\",\n"
+                            + "\t\"render_uri_2\": \"signals_for_2\"\n"
                             + "}");
 
     private static final AdSelectionSignals TRUSTED_BIDDING_SIGNALS =
@@ -129,24 +128,37 @@ public class SdkFledge extends SandboxedSdkProvider {
                         + " custom_audience_signal) { \n"
                         + "  return {'status': 0, 'score': bid };\n"
                         + "}\n"
-                        + "function reportResult(ad_selection_config, render_url, bid,"
+                        + "function reportResult(ad_selection_config, render_uri, bid,"
                         + " contextual_signals) { \n"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
-                        + SELLER_REPORTING_PATH
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
+                        + getUri(SELLER.toString(), SELLER_REPORTING_PATH).toString()
                         + "' } };\n"
                         + "}";
 
-        String biddingLogicJs =
+        String biddingLogicJsBuyer1 =
                 "function generateBid(ad, auction_signals, per_buyer_signals,"
-                        + " trusted_bidding_signals, contextual_signals, user_signals,"
+                        + " trusted_bidding_signals, contextual_signals,"
                         + " custom_audience_signals) { \n"
                         + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
                         + "}\n"
                         + "function reportWin(ad_selection_signals, per_buyer_signals,"
                         + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
-                        + " return {'status': 0, 'results': {'reporting_url': '"
-                        + BUYER_REPORTING_PATH
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
+                        + getUri(BUYER_1.toString(), BUYER_REPORTING_PATH).toString()
+                        + "' } };\n"
+                        + "}";
+
+        String biddingLogicJsBuyer2 =
+                "function generateBid(ad, auction_signals, per_buyer_signals,"
+                        + " trusted_bidding_signals, contextual_signals,"
+                        + " custom_audience_signals) { \n"
+                        + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
+                        + "}\n"
+                        + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                        + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
+                        + getUri(BUYER_2.toString(), BUYER_REPORTING_PATH).toString()
                         + "' } };\n"
                         + "}";
 
@@ -160,7 +172,6 @@ public class SdkFledge extends SandboxedSdkProvider {
         try {
             mCustomAudienceClient.joinCustomAudience(customAudience1).get(10, TimeUnit.SECONDS);
             mCustomAudienceClient.joinCustomAudience(customAudience2).get(10, TimeUnit.SECONDS);
-
         } catch (Exception e) {
             String errorMessage =
                     String.format("Error setting up the test: message is %s", e.getMessage());
@@ -184,16 +195,26 @@ public class SdkFledge extends SandboxedSdkProvider {
         }
 
         try {
-            AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest =
+            AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest1 =
+                    new AddCustomAudienceOverrideRequest.Builder()
+                            .setBuyer(customAudience1.getBuyer())
+                            .setName(customAudience1.getName())
+                            .setBiddingLogicJs(biddingLogicJsBuyer1)
+                            .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                            .build();
+            AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest2 =
                     new AddCustomAudienceOverrideRequest.Builder()
                             .setBuyer(customAudience2.getBuyer())
                             .setName(customAudience2.getName())
-                            .setBiddingLogicJs(biddingLogicJs)
+                            .setBiddingLogicJs(biddingLogicJsBuyer2)
                             .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                             .build();
 
             mTestCustomAudienceClient
-                    .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest)
+                    .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest1)
+                    .get(10, TimeUnit.SECONDS);
+            mTestCustomAudienceClient
+                    .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest2)
                     .get(10, TimeUnit.SECONDS);
         } catch (Exception e) {
             String errorMessage =
@@ -220,8 +241,11 @@ public class SdkFledge extends SandboxedSdkProvider {
             adSelectionId = outcome.getAdSelectionId();
 
             if (!outcome.getRenderUri()
-                    .equals(getUri(BUYER_2.toString(), AD_URL_PREFIX + "/ad3"))) {
-                String errorMessage = String.format("Ad selection failed to select the correct ad");
+                    .equals(getUri(BUYER_2.toString(), AD_URI_PREFIX + "/ad3"))) {
+                String errorMessage =
+                        String.format(
+                                "Ad selection failed to select the correct ad, got %s instead",
+                                outcome.getRenderUri().toString());
                 Log.e(TAG, errorMessage);
                 throw new LoadSdkException(new Exception(errorMessage), new Bundle());
             }
@@ -291,12 +315,12 @@ public class SdkFledge extends SandboxedSdkProvider {
         // Generate ads for with bids provided
         List<AdData> ads = new ArrayList<>();
 
-        // Create ads with the buyer name and bid number as the ad URL
+        // Create ads with the buyer name and bid number as the ad URI
         // Add the bid value to the metadata
         for (int i = 0; i < bids.size(); i++) {
             ads.add(
                     new AdData.Builder()
-                            .setRenderUri(getUri(buyer.toString(), AD_URL_PREFIX + "/ad" + (i + 1)))
+                            .setRenderUri(getUri(buyer.toString(), AD_URI_PREFIX + "/ad" + (i + 1)))
                             .setMetadata("{\"result\":" + bids.get(i) + "}")
                             .build());
         }

@@ -44,6 +44,7 @@ android {
             java.srcDirs = [
                     'java',
                     '../service-core/java',
+                    '../service/java',
                     '../framework/java',
                     '../../../../../external/guava/guava/src',
                     '../../../../../frameworks/base/packages/SettingsLib/' +
@@ -54,6 +55,8 @@ android {
                     '../../../../../frameworks/base/packages/SettingsLib/' +
                             'MainSwitchPreference/src',
                     '../../../../../out/soong/.intermediates/packages/modules/AdServices/adservices/service-core/statslog-adservices-java-gen/gen',
+                    '../../../../../external/dexmaker/dexmaker-mockito-inline-extended/src/main/java',
+                    '../../../../../external/mockito/src/main/java',
             ]
             java.setIncludes(new HashSet([
                     'com/android/adservices/ui/**/*.java',
@@ -63,6 +66,8 @@ android {
                     'android/os/*.java',
                     'com/android/settingslib/collapsingtoolbar/**/*.java',
                     'com/android/adservices/service/stats/*.java',
+                    'com/android/dx/mockito/**/*.java',
+                    'org/mockito/**/*.java',
             ]))
             res.srcDirs = [
                     'res',
@@ -83,9 +88,11 @@ android {
             java.srcDirs = [
                 'tests/src',
                 'unittest/src',
+//                '../../../../../external/dexmaker-mockito-inline-extended/src/main/java',
             ]
             java.setIncludes(new HashSet([
                 'com/android/adservices/ui/**/*.java',
+//                'com/android/dx/mockito/**/*.java',
             ]))
         }
     }

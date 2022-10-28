@@ -49,7 +49,6 @@ import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.net.MalformedURLException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -95,7 +94,7 @@ public class AdSelectionScriptEngineTest {
         assertFalse(
                 callJsValidation(
                         "function helloAdvert(ad) { return {'status': 0, 'greeting': 'hello ' +"
-                                + " ad.render_url }; }",
+                                + " ad.render_uri }; }",
                         ImmutableList.of("helloAdvertWrongName")));
     }
 
@@ -104,7 +103,7 @@ public class AdSelectionScriptEngineTest {
         assertFalse(
                 callJsValidation(
                         "function helloAdvert(ad) { return {'status': 0, 'greeting': 'hello ' +"
-                                + " ad.render_url }; }",
+                                + " ad.render_uri }; }",
                         ImmutableList.of("helloAdvert", "helloAdvertWrongName")));
     }
 
@@ -114,7 +113,7 @@ public class AdSelectionScriptEngineTest {
         final AuctionScriptResult result =
                 callAuctionEngine(
                         "function helloAdvert(ad) { return {'status': 0, 'greeting': 'hello ' +"
-                                + " ad.render_url }; }",
+                                + " ad.render_uri }; }",
                         "helloAdvert(ad)",
                         advert,
                         ImmutableList.of());
@@ -132,7 +131,7 @@ public class AdSelectionScriptEngineTest {
                         () ->
                                 callAuctionEngine(
                                         "function helloAdvert(ad) { return {'status': 0,"
-                                                + " 'greeting': 'hello ' + ad.render_url }; }",
+                                                + " 'greeting': 'hello ' + ad.render_uri }; }",
                                         "helloAdvertWrongName",
                                         advert,
                                         ImmutableList.of()));
@@ -145,7 +144,7 @@ public class AdSelectionScriptEngineTest {
         AdData advert = new AdData(Uri.parse("http://www.domain.com/adverts/123"), "{}");
         final AuctionScriptResult result =
                 callAuctionEngine(
-                        "function helloAdvert(ad) { return 'hello ' + ad.render_url; }",
+                        "function helloAdvert(ad) { return 'hello ' + ad.render_uri; }",
                         "helloAdvert(ad)",
                         advert,
                         ImmutableList.of());
@@ -163,7 +162,7 @@ public class AdSelectionScriptEngineTest {
         final AuctionScriptResult result =
                 callAuctionEngine(
                         "function injectFailure(ad) { return {'status': ad.metadata.result,"
-                                + " 'value': ad.render_url }; }",
+                                + " 'value': ad.render_uri }; }",
                         "injectFailure(ad)",
                         ImmutableList.of(processedSuccessfully, failToProcess, willNotBeProcessed),
                         ImmutableList.of());
@@ -184,12 +183,11 @@ public class AdSelectionScriptEngineTest {
         final List<AdWithBid> result =
                 generateBids(
                         "function generateBid(ad, auction_signals, per_buyer_signals,"
-                                + " trusted_bidding_signals, contextual_signals, user_signals,"
+                                + " trusted_bidding_signals, contextual_signals,"
                                 + " custom_audience_signals) { \n"
                                 + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
                                 + "}",
                         ads,
-                        AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
@@ -208,12 +206,11 @@ public class AdSelectionScriptEngineTest {
         final List<AdWithBid> result =
                 generateBids(
                         "function generateBid(ad, auction_signals, per_buyer_signals,"
-                                + " trusted_bidding_signals, contextual_signals, user_signals,"
+                                + " trusted_bidding_signals, contextual_signals,"
                                 + " custom_audience_signals) { \n"
                                 + "  return {'status': 1, 'ad': ad, 'bid': ad.metadata.result };\n"
                                 + "}",
                         ads,
-                        AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
@@ -234,13 +231,12 @@ public class AdSelectionScriptEngineTest {
                         // The response for the second add doesn't include the bid so we cannot
                         // parse and AdWithBid
                         "function generateBid(ad, auction_signals, per_buyer_signals,"
-                                + " trusted_bidding_signals, contextual_signals, user_signals,"
+                                + " trusted_bidding_signals, contextual_signals,"
                                 + " custom_audience_signals) { \n"
                                 + " if (ad.metadata.result > 2) return {'status': 0, 'ad': ad };\n"
                                 + " else return {'status': 0, 'ad': ad, 'bid': 10 };\n"
                                 + "}",
                         ads,
-                        AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
@@ -303,14 +299,14 @@ public class AdSelectionScriptEngineTest {
         final AuctionScriptResult result =
                 callAuctionEngine(
                         "function helloAdvert(ad) { return {'status': 0, 'greeting': '%shello ' +"
-                                + " ad.render_url }; }",
+                                + " ad.render_uri }; }",
                         "helloAdvert(ad)", advert, ImmutableList.of());
         assertThat(result.status).isEqualTo(0);
         assertThat(((JSONObject) result.results.get(0)).getString("greeting"))
                 .isEqualTo("%shello http://www.domain.com/adverts/123");
     }
 
-    private AdSelectionConfig anAdSelectionConfig() throws MalformedURLException {
+    private AdSelectionConfig anAdSelectionConfig() {
         return new AdSelectionConfig.Builder()
                 .setSeller(AdTechIdentifier.fromString("www.mydomain.com"))
                 .setPerBuyerSignals(ImmutableMap.of())
@@ -340,7 +336,6 @@ public class AdSelectionScriptEngineTest {
             AdSelectionSignals perBuyerSignals,
             AdSelectionSignals trustedBiddingSignals,
             AdSelectionSignals contextualSignals,
-            AdSelectionSignals userSignals,
             CustomAudienceSignals customAudienceSignals)
             throws Exception {
         return waitForFuture(
@@ -353,7 +348,6 @@ public class AdSelectionScriptEngineTest {
                             perBuyerSignals,
                             trustedBiddingSignals,
                             contextualSignals,
-                            userSignals,
                             customAudienceSignals);
                 });
     }

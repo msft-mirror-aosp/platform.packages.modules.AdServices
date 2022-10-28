@@ -18,6 +18,8 @@ package com.android.adservices.service.measurement.reporting;
 
 import android.net.Uri;
 
+import com.android.internal.annotations.VisibleForTesting;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -26,8 +28,9 @@ import java.net.URL;
  */
 public class EventReportSender extends MeasurementReportSender {
 
-    private static final String EVENT_ATTRIBUTION_REPORT_URI_PATH =
-            ".well-known/attribution-reporting/report-attribution";
+    @VisibleForTesting
+    public static final String EVENT_ATTRIBUTION_REPORT_URI_PATH =
+            ".well-known/attribution-reporting/report-event-attribution";
 
     /**
      * Creates URL to send the POST request to.

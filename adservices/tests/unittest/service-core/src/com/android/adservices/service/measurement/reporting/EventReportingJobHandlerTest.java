@@ -17,6 +17,7 @@
 package com.android.adservices.service.measurement.reporting;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
@@ -36,6 +37,8 @@ import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.EventReport;
+import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -54,6 +57,9 @@ import java.util.List;
 /** Unit test for {@link EventReportingJobHandler} */
 @RunWith(MockitoJUnitRunner.class)
 public class EventReportingJobHandlerTest {
+    private static final UnsignedLong SOURCE_DEBUG_KEY = new UnsignedLong(237865L);
+    private static final UnsignedLong TRIGGER_DEBUG_KEY = new UnsignedLong(928762L);
+
     private static final EnrollmentData ENROLLMENT = new EnrollmentData.Builder()
             .setAttributionReportingUrl(List.of("https://ad-tech.com"))
             .build();
@@ -96,10 +102,17 @@ public class EventReportingJobHandlerTest {
         EventReport eventReport =
                 new EventReport.Builder()
                         .setId("eventReportId")
+                        .setSourceEventId(new UnsignedLong(1234L))
                         .setStatus(EventReport.Status.PENDING)
+                        .setSourceDebugKey(SOURCE_DEBUG_KEY)
+                        .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
                         .build();
         JSONObject eventReportPayload =
-                new EventReportPayload.Builder().setReportId(eventReport.getId()).build().toJson();
+                new EventReportPayload.Builder()
+                        .setReportId(eventReport.getId())
+                        .setSourceEventId(eventReport.getSourceEventId())
+                        .build()
+                        .toJson();
 
         when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
         doReturn(HttpURLConnection.HTTP_OK)
@@ -109,12 +122,129 @@ public class EventReportingJobHandlerTest {
                 .when(mSpyEventReportingJobHandler)
                 .createReportJsonPayload(Mockito.any());
 
-        doNothing().when(mMeasurementDao).markAggregateReportDelivered(eventReport.getId());
+        doNothing()
+                .when(mMeasurementDao)
+                .markAggregateReportStatus(eventReport.getId(), AggregateReport.Status.DELIVERED);
+
         Assert.assertEquals(
                 AdServicesStatusUtils.STATUS_SUCCESS,
                 mSpyEventReportingJobHandler.performReport(eventReport.getId()));
 
-        verify(mMeasurementDao, times(1)).markEventReportDelivered(any());
+        verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+    }
+
+    @Test
+    public void testSendReportForPendingReportSuccessSingleTriggerDebugKey()
+            throws DatastoreException, IOException, JSONException {
+        EventReport eventReport =
+                new EventReport.Builder()
+                        .setId("eventReportId")
+                        .setSourceEventId(new UnsignedLong(1234L))
+                        .setStatus(EventReport.Status.PENDING)
+                        .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                        .build();
+        JSONObject eventReportPayload =
+                new EventReportPayload.Builder()
+                        .setReportId(eventReport.getId())
+                        .setSourceEventId(eventReport.getSourceEventId())
+                        .build()
+                        .toJson();
+
+        when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyEventReportingJobHandler)
+                .makeHttpPostRequest(Mockito.any(), Mockito.any());
+        doReturn(eventReportPayload)
+                .when(mSpyEventReportingJobHandler)
+                .createReportJsonPayload(Mockito.any());
+
+        doNothing()
+                .when(mMeasurementDao)
+                .markAggregateReportStatus(eventReport.getId(), AggregateReport.Status.DELIVERED);
+
+        Assert.assertEquals(
+                AdServicesStatusUtils.STATUS_SUCCESS,
+                mSpyEventReportingJobHandler.performReport(eventReport.getId()));
+
+        verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+    }
+
+    @Test
+    public void testSendReportForPendingReportSuccessSingleSourceDebugKey()
+            throws DatastoreException, IOException, JSONException {
+        EventReport eventReport =
+                new EventReport.Builder()
+                        .setId("eventReportId")
+                        .setSourceEventId(new UnsignedLong(1234L))
+                        .setStatus(EventReport.Status.PENDING)
+                        .setSourceDebugKey(SOURCE_DEBUG_KEY)
+                        .build();
+        JSONObject eventReportPayload =
+                new EventReportPayload.Builder()
+                        .setReportId(eventReport.getId())
+                        .setSourceEventId(eventReport.getSourceEventId())
+                        .build()
+                        .toJson();
+
+        when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyEventReportingJobHandler)
+                .makeHttpPostRequest(Mockito.any(), Mockito.any());
+        doReturn(eventReportPayload)
+                .when(mSpyEventReportingJobHandler)
+                .createReportJsonPayload(Mockito.any());
+
+        doNothing()
+                .when(mMeasurementDao)
+                .markAggregateReportStatus(eventReport.getId(), AggregateReport.Status.DELIVERED);
+
+        Assert.assertEquals(
+                AdServicesStatusUtils.STATUS_SUCCESS,
+                mSpyEventReportingJobHandler.performReport(eventReport.getId()));
+
+        verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+    }
+
+    @Test
+    public void testSendReportForPendingReportSuccessWithNullDebugKeys()
+            throws DatastoreException, IOException, JSONException {
+        EventReport eventReport =
+                new EventReport.Builder()
+                        .setId("eventReportId")
+                        .setSourceEventId(new UnsignedLong(1234L))
+                        .setStatus(EventReport.Status.PENDING)
+                        .setSourceDebugKey(null)
+                        .setTriggerDebugKey(null)
+                        .build();
+        JSONObject eventReportPayload =
+                new EventReportPayload.Builder()
+                        .setReportId(eventReport.getId())
+                        .setSourceEventId(eventReport.getSourceEventId())
+                        .build()
+                        .toJson();
+
+        when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyEventReportingJobHandler)
+                .makeHttpPostRequest(Mockito.any(), Mockito.any());
+        doReturn(eventReportPayload)
+                .when(mSpyEventReportingJobHandler)
+                .createReportJsonPayload(Mockito.any());
+
+        doNothing()
+                .when(mMeasurementDao)
+                .markAggregateReportStatus(eventReport.getId(), AggregateReport.Status.DELIVERED);
+        Assert.assertEquals(
+                AdServicesStatusUtils.STATUS_SUCCESS,
+                mSpyEventReportingJobHandler.performReport(eventReport.getId()));
+
+        verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -125,10 +255,15 @@ public class EventReportingJobHandlerTest {
         EventReport eventReport =
                 new EventReport.Builder()
                         .setId("eventReportId")
+                        .setSourceEventId(new UnsignedLong(1234L))
                         .setStatus(EventReport.Status.PENDING)
                         .build();
         JSONObject eventReportPayload =
-                new EventReportPayload.Builder().setReportId(eventReport.getId()).build().toJson();
+                new EventReportPayload.Builder()
+                        .setReportId(eventReport.getId())
+                        .setSourceEventId(eventReport.getSourceEventId())
+                        .build()
+                        .toJson();
 
         when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
         doReturn(HttpURLConnection.HTTP_BAD_REQUEST)
@@ -142,7 +277,7 @@ public class EventReportingJobHandlerTest {
                 AdServicesStatusUtils.STATUS_IO_ERROR,
                 mSpyEventReportingJobHandler.performReport(eventReport.getId()));
 
-        verify(mMeasurementDao, never()).markEventReportDelivered(any());
+        verify(mMeasurementDao, never()).markEventReportStatus(any(), anyInt());
         verify(mTransaction, times(1)).begin();
         verify(mTransaction, times(1)).end();
     }
@@ -160,7 +295,7 @@ public class EventReportingJobHandlerTest {
                 AdServicesStatusUtils.STATUS_INVALID_ARGUMENT,
                 mSpyEventReportingJobHandler.performReport(eventReport.getId()));
 
-        verify(mMeasurementDao, never()).markEventReportDelivered(any());
+        verify(mMeasurementDao, never()).markEventReportStatus(any(), anyInt());
         verify(mTransaction, times(1)).begin();
         verify(mTransaction, times(1)).end();
     }
@@ -171,19 +306,29 @@ public class EventReportingJobHandlerTest {
         EventReport eventReport1 =
                 new EventReport.Builder()
                         .setId("eventReport1")
+                        .setSourceEventId(new UnsignedLong(1234L))
                         .setStatus(EventReport.Status.PENDING)
                         .setReportTime(1000L)
                         .build();
         JSONObject eventReportPayload1 =
-                new EventReportPayload.Builder().setReportId(eventReport1.getId()).build().toJson();
+                new EventReportPayload.Builder()
+                        .setReportId(eventReport1.getId())
+                        .setSourceEventId(eventReport1.getSourceEventId())
+                        .build()
+                        .toJson();
         EventReport eventReport2 =
                 new EventReport.Builder()
                         .setId("eventReport2")
+                        .setSourceEventId(new UnsignedLong(12345L))
                         .setStatus(EventReport.Status.PENDING)
                         .setReportTime(1100L)
                         .build();
         JSONObject eventReportPayload2 =
-                new EventReportPayload.Builder().setReportId(eventReport2.getId()).build().toJson();
+                new EventReportPayload.Builder()
+                        .setReportId(eventReport2.getId())
+                        .setSourceEventId(eventReport2.getSourceEventId())
+                        .build()
+                        .toJson();
 
         when(mMeasurementDao.getPendingEventReportIdsInWindow(1000, 1100))
                 .thenReturn(List.of(eventReport1.getId(), eventReport2.getId()));
@@ -202,7 +347,7 @@ public class EventReportingJobHandlerTest {
         Assert.assertTrue(
                 mSpyEventReportingJobHandler.performScheduledPendingReportsInWindow(1000, 1100));
 
-        verify(mMeasurementDao, times(2)).markEventReportDelivered(any());
+        verify(mMeasurementDao, times(2)).markEventReportStatus(any(), anyInt());
         verify(mTransaction, times(5)).begin();
         verify(mTransaction, times(5)).end();
     }
@@ -221,7 +366,7 @@ public class EventReportingJobHandlerTest {
                 AdServicesStatusUtils.STATUS_INTERNAL_ERROR,
                 mSpyEventReportingJobHandler.performReport(eventReport.getId()));
 
-        verify(mMeasurementDao, never()).markEventReportDelivered(any());
+        verify(mMeasurementDao, never()).markEventReportStatus(any(), anyInt());
         verify(mTransaction, times(1)).begin();
         verify(mTransaction, times(1)).end();
     }

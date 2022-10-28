@@ -49,12 +49,13 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 /**
- * Generates score for Remarketing Ads based on Seller provided scoring logic A new instance is
- * assumed to be created for every call
+ * Generates score for Remarketing Ads based on Seller provided scoring logic.
+ *
+ * <p>A new instance is assumed to be created for every call.
  */
 public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
 
-    @VisibleForTesting static final String QUERY_PARAM_RENDER_URLS = "renderurls";
+    @VisibleForTesting static final String QUERY_PARAM_RENDER_URIS = "renderuris";
 
     @VisibleForTesting
     static final String MISSING_TRUSTED_SCORING_SIGNALS = "Error fetching trusted scoring signals";
@@ -68,6 +69,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
     @NonNull private final AdSelectionScriptEngine mAdSelectionScriptEngine;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
+    @NonNull private final ScheduledThreadPoolExecutor mScheduledExecutor;
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull private final AdSelectionDevOverridesHelper mAdSelectionDevOverridesHelper;
     @NonNull private final Flags mFlags;
@@ -76,6 +78,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
             @NonNull AdSelectionScriptEngine adSelectionScriptEngine,
             @NonNull ListeningExecutorService lightweightExecutor,
             @NonNull ListeningExecutorService backgroundExecutor,
+            @NonNull ScheduledThreadPoolExecutor scheduledExecutor,
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull DevContext devContext,
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
@@ -83,6 +86,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
         Objects.requireNonNull(adSelectionScriptEngine);
         Objects.requireNonNull(lightweightExecutor);
         Objects.requireNonNull(backgroundExecutor);
+        Objects.requireNonNull(scheduledExecutor);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(adSelectionEntryDao);
@@ -92,6 +96,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
         mAdServicesHttpsClient = adServicesHttpsClient;
         mLightweightExecutorService = lightweightExecutor;
         mBackgroundExecutorService = backgroundExecutor;
+        mScheduledExecutor = scheduledExecutor;
         mAdSelectionDevOverridesHelper =
                 new AdSelectionDevOverridesHelper(devContext, adSelectionEntryDao);
         mFlags = flags;
@@ -132,9 +137,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                 .withTimeout(
                         mFlags.getAdSelectionScoringTimeoutMs(),
                         TimeUnit.MILLISECONDS,
-                        // TODO(b/237103033): Comply with thread usage policy for AdServices;
-                        //  use a global scheduled executor
-                        new ScheduledThreadPoolExecutor(1))
+                        mScheduledExecutor)
                 .catching(
                         TimeoutException.class,
                         this::handleTimeoutError,
@@ -221,17 +224,17 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
     private FluentFuture<AdSelectionSignals> getTrustedScoringSignals(
             @NonNull final AdSelectionConfig adSelectionConfig,
             @NonNull final List<AdBiddingOutcome> adBiddingOutcomes) {
-        final List<String> adRenderUrls =
+        final List<String> adRenderUris =
                 adBiddingOutcomes.stream()
                         .map(a -> a.getAdWithBid().getAdData().getRenderUri().toString())
                         .collect(Collectors.toList());
-        final String queryParams = String.join(",", adRenderUrls);
+        final String queryParams = String.join(",", adRenderUris);
         final Uri trustedScoringSignalUri = adSelectionConfig.getTrustedScoringSignalsUri();
 
         Uri trustedScoringSignalsUri =
                 Uri.parse(trustedScoringSignalUri.toString())
                         .buildUpon()
-                        .appendQueryParameter(QUERY_PARAM_RENDER_URLS, queryParams)
+                        .appendQueryParameter(QUERY_PARAM_RENDER_URIS, queryParams)
                         .build();
 
         FluentFuture<AdSelectionSignals> jsOverrideFuture =

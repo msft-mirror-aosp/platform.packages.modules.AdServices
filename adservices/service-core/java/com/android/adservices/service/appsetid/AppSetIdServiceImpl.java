@@ -15,6 +15,10 @@
  */
 package com.android.adservices.service.appsetid;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 
@@ -24,6 +28,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import android.adservices.appsetid.GetAppSetIdParam;
 import android.adservices.appsetid.IAppSetIdService;
 import android.adservices.appsetid.IGetAppSetIdCallback;
+import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
 import android.annotation.NonNull;
 import android.content.Context;
@@ -34,6 +39,12 @@ import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.AllowLists;
+import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
+import com.android.adservices.service.common.SdkRuntimeUtil;
+import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.ApiCallStats;
@@ -52,16 +63,25 @@ public class AppSetIdServiceImpl extends IAppSetIdService.Stub {
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
     private final AdServicesLogger mAdServicesLogger;
     private final Clock mClock;
+    private final Flags mFlags;
+    private final Throttler mThrottler;
+    private final AppImportanceFilter mAppImportanceFilter;
 
     public AppSetIdServiceImpl(
             Context context,
             AppSetIdWorker appsetidWorker,
             AdServicesLogger adServicesLogger,
-            Clock clock) {
+            Clock clock,
+            Flags flags,
+            Throttler throttler,
+            AppImportanceFilter appImportanceFilter) {
         mContext = context;
         mAppSetIdWorker = appsetidWorker;
         mAdServicesLogger = adServicesLogger;
         mClock = clock;
+        mFlags = flags;
+        mThrottler = throttler;
+        mAppImportanceFilter = appImportanceFilter;
     }
 
     @Override
@@ -70,6 +90,8 @@ public class AppSetIdServiceImpl extends IAppSetIdService.Stub {
             @NonNull CallerMetadata callerMetadata,
             @NonNull IGetAppSetIdCallback callback) {
 
+        if (isThrottled(appSetIdParam, callback)) return;
+
         final long startServiceTime = mClock.elapsedRealtime();
         final String packageName = appSetIdParam.getAppPackageName();
         final String sdkPackageName = appSetIdParam.getSdkPackageName();
@@ -77,30 +99,20 @@ public class AppSetIdServiceImpl extends IAppSetIdService.Stub {
         // We need to save the Calling Uid before offloading to the background executor. Otherwise
         // the Binder.getCallingUid will return the PPAPI process Uid. This also needs to be final
         // since it's used in the lambda.
-        final int callingUid = Binder.getCallingUid();
+        final int callingUid = Binder.getCallingUidOrThrow();
 
         sBackgroundExecutor.execute(
                 () -> {
                     int resultCode = STATUS_SUCCESS;
-
                     try {
-                        resultCode = enforceCallingPackageBelongsToUid(packageName, callingUid);
-                        if (resultCode != STATUS_SUCCESS) {
-                            callback.onError(resultCode);
+                        if (!canCallerInvokeAppSetIdService(appSetIdParam, callingUid, callback)) {
                             return;
                         }
+                        mAppSetIdWorker.getAppSetId(packageName, callingUid, callback);
 
-                        int appCallingUid = callingUid;
-
-                        if (Process.isSdkSandboxUid(callingUid)) {
-                            // The callingUid is the Sandbox UId, convert it to the app UId.
-                            appCallingUid = Process.getAppUidForSdkSandboxUid(callingUid);
-                        }
-
-                        mAppSetIdWorker.getAppSetId(packageName, appCallingUid, callback);
-
-                    } catch (RemoteException e) {
+                    } catch (Exception e) {
                         LogUtil.e(e, "Unable to send result to the callback");
+                        resultCode = STATUS_INTERNAL_ERROR;
                     } finally {
                         long binderCallStartTimeMillis = callerMetadata.getBinderElapsedTimestamp();
                         long serviceLatency = mClock.elapsedRealtime() - startServiceTime;
@@ -122,16 +134,103 @@ public class AppSetIdServiceImpl extends IAppSetIdService.Stub {
                 });
     }
 
+    // Throttle the AppSetId API.
+    // Return true if we should throttle (don't allow the API call).
+    private boolean isThrottled(GetAppSetIdParam appSetIdParam, IGetAppSetIdCallback callback) {
+        boolean throttled =
+                !mThrottler.tryAcquire(
+                        Throttler.ApiKey.APPSETID_API_APP_PACKAGE_NAME,
+                        appSetIdParam.getAppPackageName());
+
+        if (throttled) {
+            LogUtil.e("Rate Limit Reached for APPSETID_API");
+            try {
+                callback.onError(STATUS_RATE_LIMIT_REACHED);
+            } catch (RemoteException e) {
+                LogUtil.e(e, "Fail to call the callback on Rate Limit Reached.");
+            }
+            return true;
+        }
+        return false;
+    }
+
+    // Enforce whether caller is from foreground.
+    private void enforceForeground(int callingUid) {
+        // If caller calls AppSetId API from Sandbox, regard it as foreground.
+        // Also enable a flag to force switch on/off this enforcing.
+        if (Process.isSdkSandboxUid(callingUid)
+                || !mFlags.getEnforceForegroundStatusForAppSetId()) {
+            return;
+        }
+
+        // Call utility method in AppImportanceFilter to enforce foreground status
+        //  Throw WrongCallingApplicationStateException  if the assertion fails.
+        mAppImportanceFilter.assertCallerIsInForeground(
+                callingUid, AD_SERVICES_API_CALLED__API_NAME__GET_APPSETID, null);
+    }
+
+    /**
+     * Check whether caller can invoke the AppSetId API. The caller is not allowed to do it when one
+     * of the following occurs:
+     *
+     * <ul>
+     *   <li>Caller is not allowed - not present in the allowed list.
+     * </ul>
+     *
+     * @param appSetIdParam {@link GetAppSetIdParam} to get information about the request.
+     * @param callback {@link IGetAppSetIdCallback} to invoke when caller is not allowed.
+     * @return true if caller is allowed to invoke AppSetId API, false otherwise.
+     */
+    private boolean canCallerInvokeAppSetIdService(
+            GetAppSetIdParam appSetIdParam, int callingUid, IGetAppSetIdCallback callback) {
+        // Enforce caller calls AppSetId API from foreground.
+        try {
+            enforceForeground(callingUid);
+        } catch (WrongCallingApplicationStateException backgroundCaller) {
+            invokeCallbackWithStatus(
+                    callback, STATUS_BACKGROUND_CALLER, backgroundCaller.getMessage());
+            return false;
+        }
+
+        // This needs to access PhFlag which requires READ_DEVICE_CONFIG which
+        // is not granted for binder thread. So we have to check it with one
+        // of non-binder thread of the PPAPI.
+        boolean appCanUsePpapi =
+                AllowLists.isPackageAllowListed(
+                        mFlags.getPpapiAppAllowList(), appSetIdParam.getAppPackageName());
+        if (!appCanUsePpapi) {
+            invokeCallbackWithStatus(
+                    callback,
+                    STATUS_CALLER_NOT_ALLOWED,
+                    "Unauthorized caller. Caller is not allowed.");
+            return false;
+        }
+
+        // Check whether calling package belongs to the callingUid
+        int resultCode =
+                enforceCallingPackageBelongsToUid(appSetIdParam.getAppPackageName(), callingUid);
+        if (resultCode != STATUS_SUCCESS) {
+            invokeCallbackWithStatus(callback, resultCode, "Caller is not authorized.");
+            return false;
+        }
+        return true;
+    }
+
+    private void invokeCallbackWithStatus(
+            IGetAppSetIdCallback callback,
+            @AdServicesStatusUtils.StatusCode int statusCode,
+            String message) {
+        LogUtil.e(message);
+        try {
+            callback.onError(statusCode);
+        } catch (RemoteException e) {
+            LogUtil.e(e, String.format("Fail to call the callback. %s", message));
+        }
+    }
+
     // Enforce that the callingPackage has the callingUid.
     private int enforceCallingPackageBelongsToUid(String callingPackage, int callingUid) {
-        int appCallingUid;
-        // Check the Calling Package Name
-        if (Process.isSdkSandboxUid(callingUid)) {
-            // The callingUid is the Sandbox UId, convert it to the app UId.
-            appCallingUid = Process.getAppUidForSdkSandboxUid(callingUid);
-        } else {
-            appCallingUid = callingUid;
-        }
+        int appCallingUid = SdkRuntimeUtil.getCallingAppUid(callingUid);
         int packageUid;
         try {
             packageUid = mContext.getPackageManager().getPackageUid(callingPackage, /* flags */ 0);

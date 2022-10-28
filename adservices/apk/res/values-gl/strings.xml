@@ -47,7 +47,8 @@
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"Como participar?"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"Ao activar a versión beta, as aplicacións poden probar estas novas formas máis privadas de mostrarche anuncios. Podes desactivar a versión beta cando queiras na configuración de privacidade."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Non, grazas"</string>
-    <string name="notificationUI_right_control_button_text_eu" msgid="6323638565116618581">"Si, quero unirme"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="8484787286437052150">"Activar"</string>
+    <string name="notificationUI_more_button_text" msgid="8861584693765844519">"Máis"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Grazas por participar"</string>
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"Estás participando na versión beta de privacidade nos anuncios de Android. Privacy Sandbox está activado no teu dispositivo.\n\nPodes obter máis información ou desactivar a versión beta cando queiras desde a configuración de privacidade."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Decidiches non participar"</string>
@@ -79,8 +80,7 @@
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Neste momento non hai ningún interese para mostrar"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"A versión beta de privacidade nos anuncios de Android ofrece novas funcións que poden utilizar as aplicacións para mostrarche anuncios que poderían gustarche. Estas tecnoloxías non utilizan identificadores de dispositivos.\n\nAndroid pode determinar os tipos de anuncios que poderían interesarche e gardar eses intereses de maneira temporal no teu dispositivo. Deste xeito, as aplicacións poden mostrarche anuncios relevantes sen facer un seguimento da túa actividade nos sitios web e nas aplicacións doutros programadores."</string>
-    <!-- no translation found for settingsUI_apps_view_title (5751645180393634322) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Non tes ningún interese bloqueado"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"As aplicacións poden determinar cales son os teus intereses e gardalos de forma temporal en Android. Máis adiante, calquera delas pode mostrarche anuncios baseados neses intereses.\n\nSe bloqueas unha aplicación, deixará de suxerir cales son os teus intereses. Non se engadirá de novo a esta lista de aplicacións a menos que a desbloquees. Eliminaranse os intereses que xa determinase esa aplicación, aínda que é posible que sigas vendo algún anuncio relacionado."</string>
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Aplicacións que bloqueaches"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Restablecer intereses que determinan as aplicacións"</string>
@@ -88,7 +88,27 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"A versión beta de privacidade nos anuncios de Android ofrece novas funcións que poden utilizar as aplicacións para mostrarche anuncios que poderían gustarche. Estas tecnoloxías non utilizan identificadores de dispositivos.\n\nAs aplicacións poden determinar os tipos de anuncios que poderían interesarche e gardar eses intereses de maneira temporal no teu dispositivo. Deste xeito, as aplicacións poden mostrarche anuncios relevantes sen facer un seguimento da túa actividade nos sitios web e nas aplicacións doutros programadores."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Non tes ningunha aplicación bloqueada"</string>
-    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Non tes ningún interese bloqueado"</string>
+    <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Cancelar"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Queres desactivar Privacy Sandbox?"</string>
+    <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Se cambias de opinión ou queres obter máis información sobre a versión beta de privacidade nos anuncios de Android, vai á configuración de privacidade"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Desactivar"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Queres bloquear <xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Este interese bloquearase e non volverá a aparecer na túa lista, a non ser que o engadas de novo. É posible que sigas vendo anuncios relacionados."</string>
+    <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Bloquear"</string>
+    <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"Desbloqueouse <xliff:g id="TOPIC">%1$s</xliff:g>"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"É posible que Android engada este interese á túa lista outra vez, pero podería non aparecer de inmediato"</string>
+    <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"Aceptar"</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Queres restablecer todos os teus intereses?"</string>
+    <!-- no translation found for settingsUI_dialog_reset_topic_message (3993838583084657398) -->
+    <skip />
+    <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Restablecer"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Queres bloquear <xliff:g id="APP">%1$s</xliff:g>?"</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Esta aplicación non determinará intereses para Privacy Sandbox nin se volverá engadir á túa lista, a non ser que a desbloquees.\n\nOs intereses que xa determinase esta aplicación eliminaranse, pero poderías seguir vendo anuncios relacionados."</string>
+    <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Desbloqueouse <xliff:g id="APP">%1$s</xliff:g>"</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Esta aplicación pode volver determinar intereses por ti, pero poderían non aparecer na túa lista de inmediato. Poderías tardar algo en ver anuncios relacionados."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Queres restablecer os intereses xerados polas aplicacións?"</string>
+    <!-- no translation found for settingsUI_dialog_reset_app_message (1487583055097801881) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Arte e entretemento"</string>
     <string name="topic10002" msgid="1226367977754287428">"Representacións e teatro"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime e manga"</string>
@@ -142,7 +162,7 @@
     <string name="topic10051" msgid="6132468331924347995">"Reggae e música caribeña"</string>
     <string name="topic10052" msgid="8213269199807045473">"Galerías de imaxes en liña"</string>
     <string name="topic10053" msgid="1378192203082454197">"Vídeo en liña"</string>
-    <string name="topic10054" msgid="3727401645405134505">"Transmisión de vídeo en directo"</string>
+    <string name="topic10054" msgid="3727401645405134505">"Emisión de vídeo en directo"</string>
     <string name="topic10055" msgid="4943174831732192854">"Transmisión de programas e películas en directo"</string>
     <string name="topic10056" msgid="3066058636154255073">"Ópera"</string>
     <string name="topic10057" msgid="387445514677222034">"Referencia e guías televisivas"</string>

@@ -24,8 +24,9 @@ import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.annotation.SystemService;
 import android.annotation.TestApi;
+import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.Context;
-import android.content.pm.SharedLibraryInfo;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.OutcomeReceiver;
@@ -39,6 +40,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.Executor;
 
 /**
@@ -138,11 +141,23 @@ public final class SdkSandboxManager {
      */
     public static final int REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR = 700;
 
+    /**
+     * SDK is not loaded while requesting a {@link SurfacePackage}.
+     *
+     * <p>This indicates that the SDK for which the {@link SurfacePackage} is being requested is not
+     * loaded, either because the sandbox died or because it was not loaded in the first place.
+     */
+    public static final int REQUEST_SURFACE_PACKAGE_SDK_NOT_LOADED = 701;
+
     /** @hide */
-    @IntDef(value = {REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR, SDK_SANDBOX_PROCESS_NOT_AVAILABLE})
+    @IntDef(
+            prefix = "REQUEST_SURFACE_PACKAGE_",
+            value = {
+                REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR,
+                REQUEST_SURFACE_PACKAGE_SDK_NOT_LOADED
+            })
     @Retention(RetentionPolicy.SOURCE)
     public @interface RequestSurfacePackageErrorCode {}
-
 
     /**
      * SDK Sandbox is disabled.
@@ -212,10 +227,14 @@ public final class SdkSandboxManager {
     private final ArrayList<SdkSandboxProcessDeathCallbackProxy> mLifecycleCallbacks =
             new ArrayList<>();
 
+    private final SharedPreferencesSyncManager mSyncManager;
+
     /** @hide */
     public SdkSandboxManager(@NonNull Context context, @NonNull ISdkSandboxManager binder) {
-        mContext = context;
-        mService = binder;
+        mContext = Objects.requireNonNull(context, "context should not be null");
+        mService = Objects.requireNonNull(binder, "binder should not be null");
+        // TODO(b/239403323): There can be multiple package in the same app process
+        mSyncManager = SharedPreferencesSyncManager.getInstance(context, binder);
     }
 
     /**
@@ -254,12 +273,8 @@ public final class SdkSandboxManager {
     public void addSdkSandboxProcessDeathCallback(
             @NonNull @CallbackExecutor Executor callbackExecutor,
             @NonNull SdkSandboxProcessDeathCallback callback) {
-        if (callbackExecutor == null) {
-            throw new IllegalArgumentException("executor cannot be null");
-        }
-        if (callback == null) {
-            throw new IllegalArgumentException("callback cannot be null");
-        }
+        Objects.requireNonNull(callbackExecutor, "callbackExecutor should not be null");
+        Objects.requireNonNull(callback, "callback should not be null");
 
         synchronized (mLifecycleCallbacks) {
             final SdkSandboxProcessDeathCallbackProxy callbackProxy =
@@ -287,6 +302,7 @@ public final class SdkSandboxManager {
      */
     public void removeSdkSandboxProcessDeathCallback(
             @NonNull SdkSandboxProcessDeathCallback callback) {
+        Objects.requireNonNull(callback, "callback should not be null");
         synchronized (mLifecycleCallbacks) {
             for (int i = mLifecycleCallbacks.size() - 1; i >= 0; i--) {
                 final SdkSandboxProcessDeathCallbackProxy callbackProxy =
@@ -335,6 +351,10 @@ public final class SdkSandboxManager {
             @NonNull Bundle params,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<SandboxedSdk, LoadSdkException> receiver) {
+        Objects.requireNonNull(sdkName, "sdkName should not be null");
+        Objects.requireNonNull(params, "params should not be null");
+        Objects.requireNonNull(executor, "executor should not be null");
+        Objects.requireNonNull(receiver, "receiver should not be null");
         final LoadSdkReceiverProxy callbackProxy =
                 new LoadSdkReceiverProxy(executor, receiver, mService);
         try {
@@ -352,12 +372,11 @@ public final class SdkSandboxManager {
     /**
      * Fetches information about Sdks that are loaded in the sandbox.
      *
-     * @return List of {@link SharedLibraryInfo} containing all currently loaded sdks
-     * @hide
+     * @return List of {@link SandboxedSdk} containing all currently loaded sdks
      */
-    public @NonNull List<SharedLibraryInfo> getLoadedSdkLibrariesInfo() {
+    public @NonNull List<SandboxedSdk> getSandboxedSdks() {
         try {
-            return mService.getLoadedSdkLibrariesInfo(
+            return mService.getSandboxedSdks(
                     mContext.getPackageName(),
                     /*timeAppCalledSystemServer=*/ System.currentTimeMillis());
         } catch (RemoteException e) {
@@ -379,6 +398,7 @@ public final class SdkSandboxManager {
      * @throws IllegalArgumentException if the SDK is not loaded.
      */
     public void unloadSdk(@NonNull String sdkName) {
+        Objects.requireNonNull(sdkName, "sdkName should not be null");
         try {
             mService.unloadSdk(
                     mContext.getPackageName(),
@@ -426,6 +446,10 @@ public final class SdkSandboxManager {
             @NonNull Bundle params,
             @NonNull @CallbackExecutor Executor callbackExecutor,
             @NonNull OutcomeReceiver<Bundle, RequestSurfacePackageException> receiver) {
+        Objects.requireNonNull(sdkName, "sdkName should not be null");
+        Objects.requireNonNull(params, "params should not be null");
+        Objects.requireNonNull(callbackExecutor, "callbackExecutor should not be null");
+        Objects.requireNonNull(receiver, "receiver should not be null");
         try {
             int width = params.getInt(EXTRA_WIDTH_IN_PIXELS, -1); // -1 means invalid width
             if (width <= 0) {
@@ -515,6 +539,59 @@ public final class SdkSandboxManager {
         public void onSdkSandboxDied() {
             mExecutor.execute(() -> callback.onSdkSandboxDied());
         }
+    }
+
+    /**
+     * Adds keys to set of keys being synced from app's default {@link SharedPreferences} to
+     * SdkSandbox.
+     *
+     * <p>Synced data will be available for sdks to read using the {@link
+     * SdkSandboxController#getClientSharedPreferences()} API.
+     *
+     * <p>To stop syncing any key that has been added using this API, use {@link
+     * #removeSyncedSharedPreferencesKeys(Set)}.
+     *
+     * <p>The sync breaks if the app restarts and user must call this API again to rebuild the pool
+     * of keys for syncing.
+     *
+     * <p>Note: This class does not support use across multiple processes.
+     *
+     * @param keys set of keys that will be synced to Sandbox.
+     */
+    public void addSyncedSharedPreferencesKeys(@NonNull Set<String> keys) {
+        Objects.requireNonNull(keys, "keys cannot be null");
+        for (String key : keys) {
+            if (key == null) {
+                throw new IllegalArgumentException("keys cannot contain null");
+            }
+        }
+        mSyncManager.addSharedPreferencesSyncKeys(keys);
+    }
+
+    /**
+     * Removes keys from set of keys that have been added using {@link
+     * #addSyncedSharedPreferencesKeys(Set)}
+     *
+     * <p>Removed keys will be erased from SdkSandbox if they have been synced already.
+     *
+     * @param keys set of key names that should no longer be synced to Sandbox.
+     */
+    public void removeSyncedSharedPreferencesKeys(@NonNull Set<String> keys) {
+        for (String key : keys) {
+            if (key == null) {
+                throw new IllegalArgumentException("keys cannot contain null");
+            }
+        }
+        mSyncManager.removeSharedPreferencesSyncKeys(keys);
+    }
+
+    /**
+     * Returns the set keys that are being synced from app's default {@link SharedPreferences} to
+     * SdkSandbox.
+     */
+    @NonNull
+    public Set<String> getSyncedSharedPreferencesKeys() {
+        return mSyncManager.getSharedPreferencesSyncKeys();
     }
 
     /** @hide */

@@ -16,7 +16,7 @@
 
 package com.android.tests.sandbox.measurement;
 
-import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
@@ -53,11 +53,23 @@ public class SandboxedMeasurementManagerTest {
     public void setup() throws TimeoutException {
         // Start a foreground activity
         SimpleActivity.startAndWaitForSimpleActivity(sContext, Duration.ofMillis(1000));
+
+        enforceMeasurementEnrollmentCheck(true);
+
+        // Allow sandbox package name to be able to execute Measurement APIs
+        allowSandboxPackageNameAccessMeasurementApis();
+
+        overrideMeasurementKillSwitches(true);
     }
 
     @After
     public void shutDown() {
         SimpleActivity.stopSimpleActivity(sContext);
+
+        // Reset back the original values.
+        resetAllowSandboxPackageNameAccessMeasurementApis();
+
+        overrideMeasurementKillSwitches(false);
     }
 
     @Test
@@ -72,48 +84,68 @@ public class SandboxedMeasurementManagerTest {
         // In this test, we use the loadSdk's callback as a 2-way communications between the Test
         // app (this class) and the Sdk running within the Sandbox process.
 
-        // We need to turn the Consent Manager into debug mode to simulate grant Consent
-        overrideConsentManagerDebugMode();
-
-        // Allow sandbox package name to be able to execute Measurement APIs
-        allowSandboxPackageNameAccessMeasurementApis();
-
         final SdkSandboxManager sdkSandboxManager =
                 sContext.getSystemService(SdkSandboxManager.class);
 
-        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        // The enrolled URLs should time out when registering to them, because we don't control
+        // them; each timeout is 5 seconds, plus some wiggle room
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback(25);
 
         // Load SdkMeasurement
         sdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), CALLBACK_EXECUTOR, callback);
 
         // This verifies SdkMeasurement finished without errors.
         // callback.isLoadSdkSuccessful returns true if there were no errors.
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        assertWithMessage(
+                        callback.isLoadSdkSuccessful()
+                                ? "Callback was successful"
+                                : "Callback failed with message " + callback.getLoadSdkErrorMsg())
+                .that(callback.isLoadSdkSuccessful())
+                .isTrue();
+    }
 
-        // Reset back the original values.
-        resetAllowSandboxPackageNameAccessMeasurementApis();
-        resetOverrideConsentManagerDebugMode();
+    private void enforceMeasurementEnrollmentCheck(boolean shouldEnforce) {
+        ShellUtils.runShellCommand(
+                "device_config put adservices disable_measurement_enrollment_check %s",
+                !shouldEnforce);
     }
 
     private void allowSandboxPackageNameAccessMeasurementApis() {
-        final String sdkSbxName = "com.google.android.sdksandbox";
-        ShellUtils.runShellCommand(
-                "device_config put adservices ppapi_app_allow_list " + sdkSbxName);
+        final String sdkSbxName = "com.android.tests.sandbox.measurement";
         ShellUtils.runShellCommand(
                 "device_config put adservices web_context_client_allow_list " + sdkSbxName);
     }
 
-    private void overrideConsentManagerDebugMode() {
-        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
-    }
-
     private void resetAllowSandboxPackageNameAccessMeasurementApis() {
-        ShellUtils.runShellCommand("device_config put adservices ppapi_app_allow_list null");
         ShellUtils.runShellCommand(
                 "device_config put adservices web_context_client_allow_list null");
     }
 
-    private void resetOverrideConsentManagerDebugMode() {
-        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode null");
+    // Override measurement related kill switch to ignore the effect of actual PH values.
+    // If isOverride = true, override measurement related kill switch to OFF to allow adservices
+    // If isOverride = false, override measurement related kill switch to meaningless value so that
+    // PhFlags will use the default value.
+    private void overrideMeasurementKillSwitches(boolean isOverride) {
+        String overrideString = isOverride ? "false" : "null";
+        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_kill_switch " + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_register_source_kill_switch "
+                        + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_register_trigger_kill_switch "
+                        + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_register_web_source_kill_switch "
+                        + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_register_web_trigger_kill_switch "
+                        + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_delete_registrations_kill_switch "
+                        + overrideString);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.measurement_api_status_kill_switch " + overrideString);
     }
 }

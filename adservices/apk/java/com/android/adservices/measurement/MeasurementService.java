@@ -15,16 +15,22 @@
  */
 package com.android.adservices.measurement;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__MEASUREMENT;
+
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
+import com.android.adservices.service.measurement.DeleteUninstalledJobService;
 import com.android.adservices.service.measurement.MeasurementServiceImpl;
 import com.android.adservices.service.measurement.attribution.AttributionJobService;
 import com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService;
@@ -49,17 +55,26 @@ public class MeasurementService extends Service {
             LogUtil.e("Measurement API is disabled");
             return;
         }
+
         if (mMeasurementService == null) {
+            final AppImportanceFilter appImportanceFilter =
+                    AppImportanceFilter.create(
+                            this,
+                            AD_SERVICES_API_CALLED__API_CLASS__MEASUREMENT,
+                            () -> FlagsFactory.getFlags().getForegroundStatuslLevelForValidation());
+
             mMeasurementService =
                     new MeasurementServiceImpl(
                             this,
                             Clock.SYSTEM_CLOCK,
                             ConsentManager.getInstance(this),
                             EnrollmentDao.getInstance(this),
-                            flags);
+                            flags,
+                            appImportanceFilter);
         }
 
         if (hasUserConsent()) {
+            PackageChangedReceiver.enableReceiver(this);
             schedulePeriodicJobsIfNeeded();
         }
     }
@@ -75,7 +90,7 @@ public class MeasurementService extends Service {
     }
 
     private boolean hasUserConsent() {
-        return ConsentManager.getInstance(this).getConsent(this.getPackageManager()).isGiven();
+        return ConsentManager.getInstance(this).getConsent().isGiven();
     }
 
     private void schedulePeriodicJobsIfNeeded() {
@@ -85,5 +100,7 @@ public class MeasurementService extends Service {
         EventReportingJobService.scheduleIfNeeded(this, false);
         EventFallbackReportingJobService.scheduleIfNeeded(this, false);
         DeleteExpiredJobService.scheduleIfNeeded(this, false);
+        DeleteUninstalledJobService.scheduleIfNeeded(this, false);
+        MddJobService.scheduleIfNeeded(this, false);
     }
 }
