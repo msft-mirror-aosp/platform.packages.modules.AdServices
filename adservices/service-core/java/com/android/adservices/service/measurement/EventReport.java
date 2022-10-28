@@ -49,14 +49,12 @@ public class EventReport {
     private String mSourceId;
     private String mTriggerId;
 
-    @IntDef(value = {
-            Status.PENDING,
-            Status.DELIVERED,
-    })
+    @IntDef(value = {Status.PENDING, Status.DELIVERED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
     public @interface Status {
         int PENDING = 0;
         int DELIVERED = 1;
+        int MARKED_TO_DELETE = 2;
     }
 
     private EventReport() {
