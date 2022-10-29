@@ -138,8 +138,12 @@ public class AggregateReportingJobHandler {
 
             if (returnCode >= HttpURLConnection.HTTP_OK
                     && returnCode <= 299) {
-                boolean success = mDatastoreManager.runInTransaction((dao) ->
-                        dao.markAggregateReportDelivered(aggregateReportId));
+                boolean success =
+                        mDatastoreManager.runInTransaction(
+                                (dao) ->
+                                        dao.markAggregateReportStatus(
+                                                aggregateReportId,
+                                                AggregateReport.Status.DELIVERED));
 
                 return success
                         ? AdServicesStatusUtils.STATUS_SUCCESS

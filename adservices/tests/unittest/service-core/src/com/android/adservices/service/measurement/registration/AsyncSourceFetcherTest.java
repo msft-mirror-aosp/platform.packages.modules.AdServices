@@ -50,6 +50,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.AsyncRegistration;
 import com.android.adservices.service.measurement.Source;
@@ -58,14 +59,18 @@ import com.android.adservices.service.measurement.util.AsyncRedirect;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementRegistrationResponseStats;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.MockitoSession;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 import java.net.URL;
@@ -85,12 +90,14 @@ import javax.net.ssl.HttpsURLConnection;
 @RunWith(MockitoJUnitRunner.class)
 @SmallTest
 public final class AsyncSourceFetcherTest {
+    private static final String ANDROID_APP_SCHEME = "android-app";
+    private static final String ANDROID_APP_SCHEME_URI_PREFIX = ANDROID_APP_SCHEME + "://";
     private static final String DEFAULT_REGISTRATION = "https://foo.com";
     private static final String ENROLLMENT_ID = "enrollment-id";
     private static final EnrollmentData ENROLLMENT =
             new EnrollmentData.Builder().setEnrollmentId("enrollment-id").build();
     private static final String DEFAULT_TOP_ORIGIN =
-            "android-app://com.android.adservices.servicecoretest";
+            "https://com.android.adservices.servicecoretest";
     ;
     private static final String DEFAULT_DESTINATION = "android-app://com.myapps";
     private static final String DEFAULT_DESTINATION_WITHOUT_SCHEME = "com.myapps";
@@ -127,13 +134,29 @@ public final class AsyncSourceFetcherTest {
     @Mock EnrollmentDao mEnrollmentDao;
     @Mock Flags mFlags;
     @Mock AdServicesLogger mLogger;
+
+    private MockitoSession mStaticMockSession;
+
     @Before
     public void setup() {
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
+                        .strictness(Strictness.WARN)
+                        .startMocking();
+        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+
         mFetcher = spy(new AsyncSourceFetcher(mEnrollmentDao, mFlags, mLogger));
         // For convenience, return the same enrollment-ID since we're using many arbitrary
         // registration URIs and not yet enforcing uniqueness of enrollment.
         when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(any())).thenReturn(ENROLLMENT);
     }
+
+    @After
+    public void cleanup() throws InterruptedException {
+        mStaticMockSession.finishMocking();
+    }
+
     @Test
     public void testBasicSourceRequest() throws Exception {
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
@@ -2478,7 +2501,6 @@ public final class AsyncSourceFetcherTest {
                                         .setAdTechDomain(DEFAULT_REGISTRATION)
                                         .build()));
     }
-
     private RegistrationRequest buildRequest(String registrationUri) {
         return new RegistrationRequest.Builder()
                 .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
@@ -2532,9 +2554,9 @@ public final class AsyncSourceFetcherTest {
                 registrationRequest.getRegistrationUri(),
                 null,
                 null,
-                Uri.parse("android-app://" + sContext.getPackageName()),
+                Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + sContext.getPackageName()),
                 null,
-                null,
+                Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + sContext.getPackageName()),
                 registrationRequest.getRegistrationType() == RegistrationRequest.REGISTER_SOURCE
                         ? AsyncRegistration.RegistrationType.APP_SOURCE
                         : AsyncRegistration.RegistrationType.APP_TRIGGER,
@@ -2580,7 +2602,7 @@ public final class AsyncSourceFetcherTest {
                     webSourceParams.getRegistrationUri(),
                     webSourceRegistrationRequest.getWebDestination(),
                     webSourceRegistrationRequest.getAppDestination(),
-                    Uri.parse("android-app://" + sContext.getPackageName()),
+                    Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + sContext.getPackageName()),
                     null,
                     webSourceRegistrationRequest.getTopOriginUri(),
                     AsyncRegistration.RegistrationType.WEB_SOURCE,

@@ -1,6 +1,6 @@
 {
   "name": "With multiple origin and no domain - preserve",
-  "description": "(S3), (T3), (E3) AND (A1, A3, A4, A5) will be deleted due to mismatched origins. E2 not delete as it is out of range",
+  "description": "(S3), (T3), (E3) AND (A2, A3, A5) will be deleted due to mismatched origins. E2 not delete as it is out of range",
   "input": {
     "sources": [
       {
@@ -145,7 +145,9 @@
         "status": 0,
         "reportTime": -1,
         "triggerPriority": 101,
-        "sourceType": "navigation"
+        "sourceType": "navigation",
+        "sourceId": "S1",
+        "triggerId": "T1"
       },
       {
         "id": "E2",
@@ -157,7 +159,9 @@
         "status": 0,
         "reportTime": -1,
         "triggerPriority": 101,
-        "sourceType": "navigation"
+        "sourceType": "navigation",
+        "sourceId": "S1",
+        "triggerId": "T2"
       },
       {
         "id": "E3",
@@ -169,7 +173,9 @@
         "status": 0,
         "reportTime": -1,
         "triggerPriority": 101,
-        "sourceType": "navigation"
+        "sourceType": "navigation",
+        "sourceId": "S3",
+        "triggerId": "T3"
       },
       {
         "id": "E4",
@@ -181,7 +187,9 @@
         "status": 0,
         "reportTime": -1,
         "triggerPriority": 101,
-        "sourceType": "navigation"
+        "sourceType": "navigation",
+        "sourceId": "S2",
+        "triggerId": "T2"
       },
       {
         "id": "E5",
@@ -193,7 +201,9 @@
         "status": 0,
         "reportTime": -1,
         "triggerPriority": 101,
-        "sourceType": "navigation"
+        "sourceType": "navigation",
+        "sourceId": "S1",
+        "triggerId": "T4"
       },
       {
         "id": "E6",
@@ -205,7 +215,9 @@
         "status": 0,
         "reportTime": -1,
         "triggerPriority": 101,
-        "sourceType": "navigation"
+        "sourceType": "navigation",
+        "sourceId": "S4",
+        "triggerId": "T4"
       }
     ],
     "attributions": [
@@ -217,7 +229,9 @@
         "destinationOrigin": "https://site2.com",
         "enrollmentId": "enrollment-id",
         "triggerTime": 1648665733601,
-        "registrant": "android-app://com.registrant.deleteCandidate"
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "sourceId": "S1",
+        "triggerId": "T1"
       },
       {
         "id": "A2",
@@ -227,7 +241,9 @@
         "destinationOrigin": "https://deleteCandidate2.site.com",
         "enrollmentId": "enrollment-id",
         "triggerTime": 1648665733605,
-        "registrant": "android-app://com.registrant.deleteCandidate"
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "sourceId": "S1",
+        "triggerId": "T3"
       },
       {
         "id": "A3",
@@ -237,7 +253,9 @@
         "destinationOrigin": "https://site2.com",
         "enrollmentId": "enrollment-id",
         "triggerTime": 1648665733601,
-        "registrant": "android-app://com.registrant.deleteCandidate"
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "sourceId": "S3",
+        "triggerId": "T3"
       },
       {
         "id": "A4",
@@ -247,7 +265,9 @@
         "destinationOrigin": "https://site2.com",
         "enrollmentId": "enrollment-id",
         "triggerTime": 1648665733601,
-        "registrant": "android-app://com.registrant.deleteCandidate"
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "sourceId": "S2",
+        "triggerId": "T4"
       },
       {
         "id": "A5",
@@ -257,7 +277,9 @@
         "destinationOrigin": "https://site2.com",
         "enrollmentId": "enrollment-id",
         "triggerTime": 1648665733601,
-        "registrant": "android-app://com.registrant.deleteCandidate"
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "sourceId": "S3",
+        "triggerId": "T4"
       }
     ]
   },
@@ -373,7 +395,9 @@
         "status": 0,
         "reportTime": -1,
         "triggerPriority": 101,
-        "sourceType": "navigation"
+        "sourceType": "navigation",
+        "sourceId": "S1",
+        "triggerId": "T1"
       },
       {
         "id": "E2",
@@ -385,7 +409,9 @@
         "status": 0,
         "reportTime": -1,
         "triggerPriority": 101,
-        "sourceType": "navigation"
+        "sourceType": "navigation",
+        "sourceId": "S1",
+        "triggerId": "T2"
       },
       {
         "id": "E4",
@@ -397,7 +423,9 @@
         "status": 0,
         "reportTime": -1,
         "triggerPriority": 101,
-        "sourceType": "navigation"
+        "sourceType": "navigation",
+        "sourceId": "S2",
+        "triggerId": "T2"
       },
       {
         "id": "E5",
@@ -409,7 +437,9 @@
         "status": 0,
         "reportTime": -1,
         "triggerPriority": 101,
-        "sourceType": "navigation"
+        "sourceType": "navigation",
+        "sourceId": "S1",
+        "triggerId": "T4"
       },
       {
         "id": "E6",
@@ -421,24 +451,40 @@
         "status": 0,
         "reportTime": -1,
         "triggerPriority": 101,
-        "sourceType": "navigation"
+        "sourceType": "navigation",
+        "sourceId": "S4",
+        "triggerId": "T4"
       }
     ],
     "attributions": [
       {
-        "id": "A2",
+        "id": "A1",
         "sourceSite": "https://site.com",
         "sourceOrigin": "https://deleteCandidate1.site.com",
-        "destinationSite": "https://site.com",
-        "destinationOrigin": "https://deleteCandidate2.site.com",
+        "destinationSite": "https://site2.com",
+        "destinationOrigin": "https://site2.com",
         "enrollmentId": "enrollment-id",
-        "triggerTime": 1648665733605,
-        "registrant": "android-app://com.registrant.deleteCandidate"
+        "triggerTime": 1648665733601,
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "sourceId": "S1",
+        "triggerId": "T1"
+      },
+      {
+        "id": "A4",
+        "sourceSite": "https://site.com",
+        "sourceOrigin": "https://deleteCandidate2.site.com",
+        "destinationSite": "https://site2.com",
+        "destinationOrigin": "https://site2.com",
+        "enrollmentId": "enrollment-id",
+        "triggerTime": 1648665733601,
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "sourceId": "S2",
+        "triggerId": "T4"
       }
     ]
   },
   "param": {
-    "registrant": "android-app://com.registrant.deleteCandidate",
+    "registrant": "com.registrant.deleteCandidate",
     "start": 1648665733600,
     "end": 1648665733602,
     "origins": ["https://deleteCandidate1.site.com", "https://deleteCandidate2.site.com"],

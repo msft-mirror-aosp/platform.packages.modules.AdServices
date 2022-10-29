@@ -49,6 +49,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.AsyncRegistration;
 import com.android.adservices.service.measurement.Source;
@@ -58,15 +59,19 @@ import com.android.adservices.service.measurement.util.AsyncRedirect;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementRegistrationResponseStats;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.MockitoSession;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 import java.net.URL;
@@ -85,6 +90,8 @@ import javax.net.ssl.HttpsURLConnection;
 @RunWith(MockitoJUnitRunner.class)
 @SmallTest
 public final class AsyncTriggerFetcherTest {
+    private static final String ANDROID_APP_SCHEME = "android-app";
+    private static final String ANDROID_APP_SCHEME_URI_PREFIX = ANDROID_APP_SCHEME + "://";
     private static final String TRIGGER_URI = "https://foo.com";
     private static final String ENROLLMENT_ID = "enrollment-id";
     private static final EnrollmentData ENROLLMENT =
@@ -132,13 +139,28 @@ public final class AsyncTriggerFetcherTest {
     @Mock EnrollmentDao mEnrollmentDao;
     @Mock Flags mFlags;
     @Mock AdServicesLogger mLogger;
+
+    private MockitoSession mStaticMockSession;
+
     @Before
     public void setup() {
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
+                        .strictness(Strictness.WARN)
+                        .startMocking();
+        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
         mFetcher = spy(new AsyncTriggerFetcher(mEnrollmentDao, mFlags, mLogger));
         // For convenience, return the same enrollment-ID since we're using many arbitrary
         // registration URIs and not yet enforcing uniqueness of enrollment.
         when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(any())).thenReturn(ENROLLMENT);
     }
+
+    @After
+    public void cleanup() throws InterruptedException {
+        mStaticMockSession.finishMocking();
+    }
+
     @Test
     public void testBasicTriggerRequest() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
@@ -169,7 +191,7 @@ public final class AsyncTriggerFetcherTest {
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
         assertEquals(
-                AsyncTriggerFetcher.getAttributionDestination(asyncRegistration).toString(),
+                asyncRegistration.getTopOrigin().toString(),
                 result.getAttributionDestination().toString());
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
         assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
@@ -980,7 +1002,7 @@ public final class AsyncTriggerFetcherTest {
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
         assertEquals(
-                AsyncTriggerFetcher.getAttributionDestination(asyncRegistration).toString(),
+                asyncRegistration.getTopOrigin().toString(),
                 result.getAttributionDestination().toString());
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
         assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
@@ -1139,7 +1161,7 @@ public final class AsyncTriggerFetcherTest {
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
         assertEquals(
-                AsyncTriggerFetcher.getAttributionDestination(asyncRegistration).toString(),
+                asyncRegistration.getTopOrigin().toString(),
                 result.getAttributionDestination().toString());
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
         assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
@@ -1223,7 +1245,7 @@ public final class AsyncTriggerFetcherTest {
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
         assertEquals(
-                AsyncTriggerFetcher.getAttributionDestination(asyncRegistration).toString(),
+                asyncRegistration.getTopOrigin().toString(),
                 result.getAttributionDestination().toString());
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
         assertEquals("[{}]", result.getEventTriggers());
@@ -1267,7 +1289,7 @@ public final class AsyncTriggerFetcherTest {
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
         assertEquals(
-                AsyncTriggerFetcher.getAttributionDestination(asyncRegistration).toString(),
+                asyncRegistration.getTopOrigin().toString(),
                 result.getAttributionDestination().toString());
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
         assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
@@ -1328,7 +1350,7 @@ public final class AsyncTriggerFetcherTest {
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
         assertEquals(
-                AsyncTriggerFetcher.getAttributionDestination(asyncRegistration).toString(),
+                asyncRegistration.getTopOrigin().toString(),
                 result.getAttributionDestination().toString());
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
         assertEquals(
@@ -2357,9 +2379,9 @@ public final class AsyncTriggerFetcherTest {
                 registrationRequest.getRegistrationUri(),
                 null,
                 null,
-                Uri.parse("android-app://" + CONTEXT.getPackageName()),
+                Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + CONTEXT.getPackageName()),
                 null,
-                null,
+                Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + CONTEXT.getPackageName()),
                 registrationRequest.getRegistrationType() == RegistrationRequest.REGISTER_SOURCE
                         ? AsyncRegistration.RegistrationType.APP_SOURCE
                         : AsyncRegistration.RegistrationType.APP_TRIGGER,
@@ -2406,7 +2428,7 @@ public final class AsyncTriggerFetcherTest {
                     webTriggerParams.getRegistrationUri(),
                     null,
                     null,
-                    Uri.parse("android-app://" + CONTEXT.getPackageName()),
+                    Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + CONTEXT.getPackageName()),
                     null,
                     webTriggerRegistrationRequest.getDestination(),
                     AsyncRegistration.RegistrationType.WEB_TRIGGER,
@@ -2420,7 +2442,6 @@ public final class AsyncTriggerFetcherTest {
         }
         return null;
     }
-
     private static AsyncRegistration createAsyncRegistration(
             String iD,
             String enrollmentId,
@@ -2468,7 +2489,7 @@ public final class AsyncTriggerFetcherTest {
     private static void assertSourceRegistration(AsyncRegistration asyncRegistration,
             Trigger result) throws JSONException {
         assertEquals(
-                AsyncTriggerFetcher.getAttributionDestination(asyncRegistration).toString(),
+                asyncRegistration.getRegistrant().toString(),
                 result.getAttributionDestination().toString());
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
         assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());

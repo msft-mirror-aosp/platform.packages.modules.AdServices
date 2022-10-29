@@ -48,6 +48,7 @@ import androidx.test.core.content.pm.ApplicationInfoBuilder;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.data.DbHelper;
+import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.common.BooleanFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.consent.AppConsentDaoFixture;
@@ -61,6 +62,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
 import com.android.adservices.service.common.BackgroundJobsManager;
+import com.android.adservices.service.measurement.AsyncRegistrationQueueJobService;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.DeleteUninstalledJobService;
 import com.android.adservices.service.measurement.MeasurementImpl;
@@ -138,6 +140,7 @@ public class ConsentManagerTest {
                         .spyStatic(MaintenanceJobService.class)
                         .spyStatic(MddJobService.class)
                         .spyStatic(DeviceRegionProvider.class)
+                        .spyStatic(AsyncRegistrationQueueJobService.class)
                         .strictness(Strictness.WARN)
                         .initMocks(this)
                         .startMocking();
@@ -145,7 +148,7 @@ public class ConsentManagerTest {
         mDatastore =
                 new BooleanFileDatastore(mContextSpy, AppConsentDaoFixture.TEST_DATASTORE_NAME, 1);
         mAppConsentDao = spy(new AppConsentDao(mDatastore, mPackageManagerMock));
-        mDbHelper = DbHelper.getInstance(mContextSpy);
+        mDbHelper = DbTestUtil.getDbHelperForTest();
         mEnrollmentDao = spy(new EnrollmentDao(mContextSpy, mDbHelper));
 
         mConsentManager =
@@ -189,6 +192,8 @@ public class ConsentManagerTest {
                 .when(() -> DeleteUninstalledJobService.scheduleIfNeeded(any(), anyBoolean()));
         ExtendedMockito.doReturn(true)
                 .when(() -> MaintenanceJobService.scheduleIfNeeded(any(), anyBoolean()));
+        ExtendedMockito.doNothing()
+                .when(() -> AsyncRegistrationQueueJobService.scheduleIfNeeded(any(), anyBoolean()));
     }
 
     @After
@@ -249,6 +254,10 @@ public class ConsentManagerTest {
                 () -> DeleteExpiredJobService.scheduleIfNeeded(any(Context.class), eq(false)));
         ExtendedMockito.verify(
                 () -> DeleteUninstalledJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+        ExtendedMockito.verify(
+                () ->
+                        AsyncRegistrationQueueJobService.scheduleIfNeeded(
+                                any(Context.class), eq(false)));
     }
 
     @Test
@@ -297,6 +306,11 @@ public class ConsentManagerTest {
         ExtendedMockito.verify(
                 () -> DeleteUninstalledJobService.scheduleIfNeeded(any(Context.class), eq(false)),
                 ExtendedMockito.never());
+        ExtendedMockito.verify(
+                () ->
+                        AsyncRegistrationQueueJobService.scheduleIfNeeded(
+                                any(Context.class), eq(false)),
+                ExtendedMockito.never());
     }
 
     @Test
@@ -317,6 +331,7 @@ public class ConsentManagerTest {
                 .cancel(AdServicesConfig.MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID);
         verify(mJobSchedulerMock)
                 .cancel(AdServicesConfig.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID);
+        verify(mJobSchedulerMock).cancel(AdServicesConfig.ASYNC_REGISTRATION_QUEUE_JOB_ID);
         verify(mJobSchedulerMock).cancel(AdServicesConfig.FLEDGE_BACKGROUND_FETCH_JOB_ID);
         verify(mJobSchedulerMock).cancel(AdServicesConfig.CONSENT_NOTIFICATION_JOB_ID);
         verify(mJobSchedulerMock).cancel(AdServicesConfig.MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID);

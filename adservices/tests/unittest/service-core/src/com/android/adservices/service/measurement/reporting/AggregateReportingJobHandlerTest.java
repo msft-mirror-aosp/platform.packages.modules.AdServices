@@ -148,13 +148,16 @@ public class AggregateReportingJobHandlerTest {
                 .when(mSpyAggregateReportingJobHandler)
                 .createReportJsonPayload(Mockito.any(), Mockito.any(), Mockito.any());
 
-        doNothing().when(mMeasurementDao).markAggregateReportDelivered(aggregateReport.getId());
+        doNothing()
+                .when(mMeasurementDao)
+                .markAggregateReportStatus(
+                        aggregateReport.getId(), AggregateReport.Status.DELIVERED);
         Assert.assertEquals(
                 AdServicesStatusUtils.STATUS_SUCCESS,
                 mSpyAggregateReportingJobHandler.performReport(
                         aggregateReport.getId(), AggregateCryptoFixture.getKey()));
 
-        verify(mMeasurementDao, times(1)).markAggregateReportDelivered(any());
+        verify(mMeasurementDao, times(1)).markAggregateReportStatus(any(), anyInt());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -185,13 +188,16 @@ public class AggregateReportingJobHandlerTest {
                 .when(mSpyAggregateReportingJobHandler)
                 .createReportJsonPayload(Mockito.any(), Mockito.any(), Mockito.any());
 
-        doNothing().when(mMeasurementDao).markAggregateReportDelivered(aggregateReport.getId());
+        doNothing()
+                .when(mMeasurementDao)
+                .markAggregateReportStatus(
+                        aggregateReport.getId(), AggregateReport.Status.DELIVERED);
         Assert.assertEquals(
                 AdServicesStatusUtils.STATUS_SUCCESS,
                 mSpyAggregateReportingJobHandler.performReport(
                         aggregateReport.getId(), AggregateCryptoFixture.getKey()));
 
-        verify(mMeasurementDao, times(1)).markAggregateReportDelivered(any());
+        verify(mMeasurementDao, times(1)).markAggregateReportStatus(any(), anyInt());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -222,13 +228,16 @@ public class AggregateReportingJobHandlerTest {
                 .when(mSpyAggregateReportingJobHandler)
                 .createReportJsonPayload(Mockito.any(), Mockito.any(), Mockito.any());
 
-        doNothing().when(mMeasurementDao).markAggregateReportDelivered(aggregateReport.getId());
+        doNothing()
+                .when(mMeasurementDao)
+                .markAggregateReportStatus(
+                        aggregateReport.getId(), AggregateReport.Status.DELIVERED);
         Assert.assertEquals(
                 AdServicesStatusUtils.STATUS_SUCCESS,
                 mSpyAggregateReportingJobHandler.performReport(
                         aggregateReport.getId(), AggregateCryptoFixture.getKey()));
 
-        verify(mMeasurementDao, times(1)).markAggregateReportDelivered(any());
+        verify(mMeasurementDao, times(1)).markAggregateReportStatus(any(), anyInt());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -260,13 +269,16 @@ public class AggregateReportingJobHandlerTest {
                 .when(mSpyAggregateReportingJobHandler)
                 .createReportJsonPayload(Mockito.any(), Mockito.any(), Mockito.any());
 
-        doNothing().when(mMeasurementDao).markAggregateReportDelivered(aggregateReport.getId());
+        doNothing()
+                .when(mMeasurementDao)
+                .markAggregateReportStatus(
+                        aggregateReport.getId(), AggregateReport.Status.DELIVERED);
         Assert.assertEquals(
                 AdServicesStatusUtils.STATUS_SUCCESS,
                 mSpyAggregateReportingJobHandler.performReport(
                         aggregateReport.getId(), AggregateCryptoFixture.getKey()));
 
-        verify(mMeasurementDao, times(1)).markAggregateReportDelivered(any());
+        verify(mMeasurementDao, times(1)).markAggregateReportStatus(any(), anyInt());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -301,7 +313,7 @@ public class AggregateReportingJobHandlerTest {
                 mSpyAggregateReportingJobHandler.performReport(
                         aggregateReport.getId(), AggregateCryptoFixture.getKey()));
 
-        verify(mMeasurementDao, never()).markAggregateReportDelivered(any());
+        verify(mMeasurementDao, never()).markAggregateReportStatus(any(), anyInt());
         verify(mTransaction, times(1)).begin();
         verify(mTransaction, times(1)).end();
     }
@@ -323,7 +335,7 @@ public class AggregateReportingJobHandlerTest {
                 mSpyAggregateReportingJobHandler.performReport(
                         aggregateReport.getId(), AggregateCryptoFixture.getKey()));
 
-        verify(mMeasurementDao, never()).markAggregateReportDelivered(any());
+        verify(mMeasurementDao, never()).markAggregateReportStatus(any(), anyInt());
         verify(mTransaction, times(1)).begin();
         verify(mTransaction, times(1)).end();
     }
@@ -380,7 +392,7 @@ public class AggregateReportingJobHandlerTest {
                 mSpyAggregateReportingJobHandler.performScheduledPendingReportsInWindow(
                         1000, 1100));
 
-        verify(mMeasurementDao, times(2)).markAggregateReportDelivered(any());
+        verify(mMeasurementDao, times(2)).markAggregateReportStatus(any(), anyInt());
         verify(mTransaction, times(5)).begin();
         verify(mTransaction, times(5)).end();
     }
@@ -425,7 +437,7 @@ public class AggregateReportingJobHandlerTest {
                 mSpyAggregateReportingJobHandler.performScheduledPendingReportsInWindow(
                         1000, 1100));
 
-        verify(mMeasurementDao, never()).markAggregateReportDelivered(any());
+        verify(mMeasurementDao, never()).markAggregateReportStatus(any(), anyInt());
     }
 
     @Test
@@ -446,7 +458,7 @@ public class AggregateReportingJobHandlerTest {
                 mSpyAggregateReportingJobHandler.performReport(
                         aggregateReport.getId(), AggregateCryptoFixture.getKey()));
 
-        verify(mMeasurementDao, never()).markAggregateReportDelivered(any());
+        verify(mMeasurementDao, never()).markAggregateReportStatus(any(), anyInt());
         verify(mTransaction, times(1)).begin();
         verify(mTransaction, times(1)).end();
     }

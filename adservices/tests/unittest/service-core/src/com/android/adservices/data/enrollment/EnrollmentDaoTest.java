@@ -33,6 +33,7 @@ import android.net.Uri;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.DbHelper;
+import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.service.enrollment.EnrollmentData;
 
 import org.junit.After;
@@ -120,7 +121,7 @@ public class EnrollmentDaoTest {
 
     @Before
     public void setup() {
-        mDbHelper = DbHelper.getInstance(sContext);
+        mDbHelper = DbTestUtil.getDbHelperForTest();
         mEnrollmentDao = new EnrollmentDao(sContext, mDbHelper);
     }
 
