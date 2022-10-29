@@ -156,8 +156,7 @@ public final class MeasurementServiceImplTest {
         when(mMockMeasurementImpl.registerWebSource(
                         any(WebSourceRegistrationRequestInternal.class), anyLong()))
                 .thenReturn(STATUS_SUCCESS);
-        when(mConsentManager.getConsent(any(PackageManager.class)))
-                .thenReturn(AdServicesApiConsent.GIVEN);
+        when(mConsentManager.getConsent()).thenReturn(AdServicesApiConsent.GIVEN);
         when(mMockFlags.getWebContextClientAppAllowList()).thenReturn("*");
         when(mMockThrottler.tryAcquire(any(), any())).thenReturn(true).thenReturn(false);
         when(mMockFlags.getWebContextClientAppAllowList()).thenReturn(ALLOW_ALL_PACKAGES);
@@ -1206,12 +1205,10 @@ public final class MeasurementServiceImplTest {
         try {
             ExtendedMockito.doReturn(1).when(Binder::getCallingUidOrThrow);
 
-            ExtendedMockito.doReturn(AdServicesApiConsent.GIVEN)
-                    .when(mConsentManager)
-                    .getConsent(any());
+            ExtendedMockito.doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
             ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any()));
             MeasurementImpl measurementImpl =
-                    new MeasurementImpl(mMockContext, null, null, null, null, null);
+                    new MeasurementImpl(mMockContext, null, null, null, null);
             when(mMockFlags.getPpapiAppAllowList()).thenReturn("*");
             CountDownLatch countDownLatch = new CountDownLatch(1);
             final AtomicInteger resultWrapper = new AtomicInteger();
@@ -1259,9 +1256,7 @@ public final class MeasurementServiceImplTest {
         try {
             ExtendedMockito.doReturn(1).when(Binder::getCallingUidOrThrow);
 
-            ExtendedMockito.doReturn(AdServicesApiConsent.GIVEN)
-                    .when(mConsentManager)
-                    .getConsent(any());
+            ExtendedMockito.doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
 
             doNothing()
                     .when(mMockAppImportanceFilter)
@@ -1269,7 +1264,7 @@ public final class MeasurementServiceImplTest {
 
             ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any()));
             MeasurementImpl measurementImpl =
-                    new MeasurementImpl(mMockContext, null, null, null, null, null);
+                    new MeasurementImpl(mMockContext, null, null, null, null);
             when(mMockFlags.getPpapiAppAllowList()).thenReturn("*");
             CountDownLatch countDownLatch = new CountDownLatch(1);
             final AtomicInteger resultWrapper = new AtomicInteger();
@@ -1317,9 +1312,7 @@ public final class MeasurementServiceImplTest {
         try {
             ExtendedMockito.doReturn(1).when(Binder::getCallingUidOrThrow);
 
-            ExtendedMockito.doReturn(AdServicesApiConsent.GIVEN)
-                    .when(mConsentManager)
-                    .getConsent(any());
+            ExtendedMockito.doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
 
             doThrow(new AppImportanceFilter.WrongCallingApplicationStateException())
                     .when(mMockAppImportanceFilter)
@@ -2137,8 +2130,7 @@ public final class MeasurementServiceImplTest {
     public void testRegister_userRevokedConsent() {
         try {
             mockAccessControl(true, true, true);
-            when(mConsentManager.getConsent(any(PackageManager.class)))
-                    .thenReturn(AdServicesApiConsent.REVOKED);
+            when(mConsentManager.getConsent()).thenReturn(AdServicesApiConsent.REVOKED);
             mMeasurementServiceImpl.register(
                     getDefaultRegistrationSourceRequest(),
                     mCallerMetadata,
@@ -2163,9 +2155,7 @@ public final class MeasurementServiceImplTest {
     public void testRegisterWebSource_userRevokedConsent() {
         try {
             mockAccessControl(true, true, true);
-            doReturn(AdServicesApiConsent.REVOKED)
-                    .when(mConsentManager)
-                    .getConsent(mPackageManager);
+            doReturn(AdServicesApiConsent.REVOKED).when(mConsentManager).getConsent();
 
             mMeasurementServiceImpl.registerWebSource(
                     createWebSourceRegistrationRequest(),
@@ -2191,7 +2181,7 @@ public final class MeasurementServiceImplTest {
     public void testRegisterWebSource_packageNotAllowListed() throws InterruptedException {
         try {
             mockAccessControl(true, true, true);
-            doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent(mPackageManager);
+            doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
             doReturn(ALLOW_LIST_WITHOUT_TEST_PACKAGE)
                     .when(mMockFlags)
                     .getWebContextClientAppAllowList();
@@ -2226,9 +2216,7 @@ public final class MeasurementServiceImplTest {
     public void testRegisterWebTrigger_userRevokedConsent() {
         try {
             mockAccessControl(true, true, true);
-            doReturn(AdServicesApiConsent.REVOKED)
-                    .when(mConsentManager)
-                    .getConsent(mPackageManager);
+            doReturn(AdServicesApiConsent.REVOKED).when(mConsentManager).getConsent();
 
             mMeasurementServiceImpl.registerWebTrigger(
                     createWebTriggerRegistrationRequest(),
@@ -2256,7 +2244,7 @@ public final class MeasurementServiceImplTest {
         try {
             // Setup
             mockAccessControl(true, true, true);
-            doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent(mPackageManager);
+            doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
             doReturn(ALLOW_LIST_WITHOUT_TEST_PACKAGE)
                     .when(mMockFlags)
                     .getWebContextClientAppAllowList();

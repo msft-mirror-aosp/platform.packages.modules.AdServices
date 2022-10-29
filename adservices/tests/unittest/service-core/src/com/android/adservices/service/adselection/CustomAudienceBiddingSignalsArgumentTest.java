@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
-import static com.android.adservices.service.adselection.AdSelectionScriptEngine.CUSTOM_AUDIENCE_SIGNALS_ARG_NAME;
+import static com.android.adservices.service.adselection.AdSelectionScriptEngine.CUSTOM_AUDIENCE_BIDDING_SIGNALS_ARG_NAME;
 import static com.android.adservices.service.js.JSScriptArgument.jsonArg;
 import static com.android.adservices.service.js.JSScriptArgument.numericArg;
 import static com.android.adservices.service.js.JSScriptArgument.recordArg;
@@ -42,9 +42,11 @@ public class CustomAudienceBiddingSignalsArgumentTest {
     public void testConversionToScriptArgument() throws JSONException {
         JSScriptArgument caSignalJsArgument =
                 CustomAudienceBiddingSignalsArgument.asScriptArgument(
-                        CUSTOM_AUDIENCE_SIGNALS_ARG_NAME, mCustomAudienceSignals1);
+                        CUSTOM_AUDIENCE_BIDDING_SIGNALS_ARG_NAME, mCustomAudienceSignals1);
         matchCustomAudienceSignals(
-                CUSTOM_AUDIENCE_SIGNALS_ARG_NAME, caSignalJsArgument, mCustomAudienceSignals1);
+                CUSTOM_AUDIENCE_BIDDING_SIGNALS_ARG_NAME,
+                caSignalJsArgument,
+                mCustomAudienceSignals1);
     }
 
     private CustomAudienceSignals createCustomAudience(final String uniqueCASignalsPostfix) {

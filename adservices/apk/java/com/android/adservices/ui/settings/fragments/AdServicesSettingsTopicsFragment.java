@@ -51,6 +51,14 @@ public class AdServicesSettingsTopicsFragment extends Fragment {
         initActionListeners();
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        TopicsViewModel viewModel =
+                new ViewModelProvider(requireActivity()).get(TopicsViewModel.class);
+        viewModel.refresh();
+    }
+
     // initialize all action listeners except for actions in topics list
     private void initActionListeners() {
         TopicsActionDelegate actionDelegate =

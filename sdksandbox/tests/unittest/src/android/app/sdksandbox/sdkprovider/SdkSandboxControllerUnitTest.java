@@ -14,12 +14,16 @@
  * limitations under the License.
  */
 
-package android.app.sdksandbox;
+package android.app.sdksandbox.sdkprovider;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
+import android.app.sdksandbox.ISdkToServiceCallback;
+import android.app.sdksandbox.SandboxedSdk;
+import android.app.sdksandbox.SandboxedSdkContext;
+import android.app.sdksandbox.SdkSandboxLocalSingleton;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;

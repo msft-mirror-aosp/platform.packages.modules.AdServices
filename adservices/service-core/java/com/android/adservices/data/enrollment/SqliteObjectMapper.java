@@ -16,10 +16,15 @@
 
 package com.android.adservices.data.enrollment;
 
+import android.adservices.common.AdTechIdentifier;
 import android.database.Cursor;
+import android.net.Uri;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.service.enrollment.EnrollmentData;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Function;
 
 /** Helper class for SQLite operations. */
@@ -56,6 +61,36 @@ public class SqliteObjectMapper {
                 EnrollmentTables.EnrollmentDataContract.ENCRYPTION_KEY_URL,
                 builder::setEncryptionKeyUrl);
         return builder.build();
+    }
+
+    /**
+     * Transforms the FLEDGE RBR URLs found at the given {@code cursor} to a list of {@link
+     * AdTechIdentifier} objects.
+     */
+    public static List<AdTechIdentifier> getAdTechIdentifiersFromFledgeCursor(Cursor cursor) {
+        List<AdTechIdentifier> enrolledFledgeAdTechIdentifiers = new ArrayList<>();
+        List<String> fledgeRbrUrls = new ArrayList<>();
+
+        setTextColumn(
+                cursor,
+                EnrollmentTables.EnrollmentDataContract.REMARKETING_RESPONSE_BASED_REGISTRATION_URL,
+                input -> {
+                    fledgeRbrUrls.addAll(EnrollmentData.splitEnrollmentInputToList(input));
+                    return null;
+                });
+
+        for (String fledgeRbrUrl : fledgeRbrUrls) {
+            try {
+                if (fledgeRbrUrl != null && !fledgeRbrUrl.trim().isEmpty()) {
+                    enrolledFledgeAdTechIdentifiers.add(
+                            AdTechIdentifier.fromString(Uri.parse(fledgeRbrUrl).getHost()));
+                }
+            } catch (Exception exception) {
+                LogUtil.d(exception, "Failure parsing RBR URL \"%s\"; skipping", fledgeRbrUrl);
+            }
+        }
+
+        return enrolledFledgeAdTechIdentifiers;
     }
 
     private static <BuilderType> void setTextColumn(

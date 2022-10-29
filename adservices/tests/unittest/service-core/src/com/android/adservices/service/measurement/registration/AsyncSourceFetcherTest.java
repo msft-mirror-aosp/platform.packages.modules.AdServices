@@ -19,6 +19,7 @@ import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPOR
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_FILTERS;
+import static com.android.adservices.service.measurement.SystemHealthParams.MAX_REDIRECTS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_VALUES_PER_ATTRIBUTION_FILTER;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE;
@@ -49,25 +50,30 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.AsyncRegistration;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.util.AsyncFetchStatus;
+import com.android.adservices.service.measurement.util.AsyncRedirect;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementRegistrationResponseStats;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.MockitoSession;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -84,12 +90,14 @@ import javax.net.ssl.HttpsURLConnection;
 @RunWith(MockitoJUnitRunner.class)
 @SmallTest
 public final class AsyncSourceFetcherTest {
+    private static final String ANDROID_APP_SCHEME = "android-app";
+    private static final String ANDROID_APP_SCHEME_URI_PREFIX = ANDROID_APP_SCHEME + "://";
     private static final String DEFAULT_REGISTRATION = "https://foo.com";
     private static final String ENROLLMENT_ID = "enrollment-id";
     private static final EnrollmentData ENROLLMENT =
             new EnrollmentData.Builder().setEnrollmentId("enrollment-id").build();
     private static final String DEFAULT_TOP_ORIGIN =
-            "android-app://com.android.adservices.servicecoretest";
+            "https://com.android.adservices.servicecoretest";
     ;
     private static final String DEFAULT_DESTINATION = "android-app://com.myapps";
     private static final String DEFAULT_DESTINATION_WITHOUT_SCHEME = "com.myapps";
@@ -98,7 +106,8 @@ public final class AsyncSourceFetcherTest {
     private static final UnsignedLong DEFAULT_EVENT_ID = new UnsignedLong(987654321L);
     private static final UnsignedLong EVENT_ID_1 = new UnsignedLong(987654321L);
     private static final UnsignedLong DEBUG_KEY = new UnsignedLong(823523783L);
-    private static final String ALT_REGISTRATION = "https://bar.com";
+    private static final String LIST_TYPE_REDIRECT_URI = "https://bar.com";
+    private static final String LOCATION_TYPE_REDIRECT_URI = "https://example.com";
     private static final String ALT_DESTINATION = "android-app://com.yourapps";
     private static final long ALT_PRIORITY = 321;
     private static final long ALT_EVENT_ID = 123456789;
@@ -125,13 +134,29 @@ public final class AsyncSourceFetcherTest {
     @Mock EnrollmentDao mEnrollmentDao;
     @Mock Flags mFlags;
     @Mock AdServicesLogger mLogger;
+
+    private MockitoSession mStaticMockSession;
+
     @Before
     public void setup() {
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
+                        .strictness(Strictness.WARN)
+                        .startMocking();
+        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+
         mFetcher = spy(new AsyncSourceFetcher(mEnrollmentDao, mFlags, mLogger));
         // For convenience, return the same enrollment-ID since we're using many arbitrary
         // registration URIs and not yet enforcing uniqueness of enrollment.
         when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(any())).thenReturn(ENROLLMENT);
     }
+
+    @After
+    public void cleanup() throws InterruptedException {
+        mStaticMockSession.finishMocking();
+    }
+
     @Test
     public void testBasicSourceRequest() throws Exception {
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
@@ -161,12 +186,12 @@ public final class AsyncSourceFetcherTest {
                                                 + "\"\n"
                                                 + "}\n")));
 
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
@@ -218,12 +243,12 @@ public final class AsyncSourceFetcherTest {
                                                 + DEBUG_KEY
                                                 + "\"\n"
                                                 + "}\n")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(
                 AsyncFetchStatus.ResponseStatus.INVALID_ENROLLMENT, asyncFetchStatus.getStatus());
@@ -257,12 +282,12 @@ public final class AsyncSourceFetcherTest {
                                                 + DEBUG_KEY
                                                 + "\"\n"
                                                 + "}\n")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
@@ -300,12 +325,12 @@ public final class AsyncSourceFetcherTest {
                                             + "  \"install_attribution_window\": \"272800\",\n"
                                             + "  \"post_install_exclusivity_window\": \"987654\"\n"
                                             + "}\n")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
@@ -344,12 +369,12 @@ public final class AsyncSourceFetcherTest {
                                                 + "  \"install_attribution_window\": null,\n"
                                                 + "  \"post_install_exclusivity_window\": null\n"
                                                 + "}\n")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
@@ -394,12 +419,12 @@ public final class AsyncSourceFetcherTest {
                                                 + "  \"post_install_exclusivity_window\":"
                                                 + " \"9876543210\"\n"
                                                 + "}\n")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
@@ -419,12 +444,12 @@ public final class AsyncSourceFetcherTest {
     @Test
     public void testBadSourceUrl() {
         RegistrationRequest request = buildRequest(/* registrationUri = */ "bad-schema://foo.com");
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.PARSING_ERROR, asyncFetchStatus.getStatus());
         assertFalse(fetch.isPresent());
@@ -435,12 +460,12 @@ public final class AsyncSourceFetcherTest {
         doThrow(new IOException("Bad internet things"))
                 .when(mFetcher)
                 .openUrl(new URL(DEFAULT_REGISTRATION));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.NETWORK_ERROR, asyncFetchStatus.getStatus());
         assertFalse(fetch.isPresent());
@@ -459,12 +484,12 @@ public final class AsyncSourceFetcherTest {
                                                 + "\"source_event_id\": \""
                                                 + DEFAULT_EVENT_ID
                                                 + "\"")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.PARSING_ERROR, asyncFetchStatus.getStatus());
         assertFalse(fetch.isPresent());
@@ -476,12 +501,12 @@ public final class AsyncSourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields()).thenReturn(Collections.emptyMap());
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.PARSING_ERROR, asyncFetchStatus.getStatus());
         assertFalse(fetch.isPresent());
@@ -501,12 +526,12 @@ public final class AsyncSourceFetcherTest {
                                                 + "\"destination\": \""
                                                 + DEFAULT_DESTINATION
                                                 + "\"")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.PARSING_ERROR, asyncFetchStatus.getStatus());
         assertFalse(fetch.isPresent());
@@ -530,12 +555,12 @@ public final class AsyncSourceFetcherTest {
                                                 + DEFAULT_EVENT_ID
                                                 + "\"\n"
                                                 + "}\n")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
@@ -566,13 +591,13 @@ public final class AsyncSourceFetcherTest {
                                                 + DEFAULT_DESTINATION
                                                 + "\","
                                                 + "\"source_event_id\":\"-35\"}")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
 
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
 
         // Assertion
         assertFalse(fetch.isPresent());
@@ -594,13 +619,13 @@ public final class AsyncSourceFetcherTest {
                                                 + DEFAULT_DESTINATION
                                                 + "\",\"source_event_id\":\""
                                                 + "18446744073709551616\"}")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
 
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
 
         // Assertion
         assertFalse(fetch.isPresent());
@@ -622,13 +647,13 @@ public final class AsyncSourceFetcherTest {
                                                 + DEFAULT_DESTINATION
                                                 + "\","
                                                 + "\"source_event_id\":\"8l2\"}")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
 
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
 
         // Assertion
         assertFalse(fetch.isPresent());
@@ -650,13 +675,13 @@ public final class AsyncSourceFetcherTest {
                                                 + DEFAULT_DESTINATION
                                                 + "\",\"source_event_id\":\""
                                                 + "18446744073709551615\"}")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
 
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
 
         // Assertion
         assertTrue(fetch.isPresent());
@@ -690,13 +715,13 @@ public final class AsyncSourceFetcherTest {
                                                 + DEFAULT_EVENT_ID
                                                 + "\","
                                                 + "\"debug_key\":\"-18\"}")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
 
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
 
         // Assertion
         assertTrue(fetch.isPresent());
@@ -732,13 +757,13 @@ public final class AsyncSourceFetcherTest {
                                                 + "\","
                                                 + "\"debug_key\":\"18446744073709551616\"}")));
 
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
 
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
 
         // Assertion
         assertTrue(fetch.isPresent());
@@ -773,13 +798,13 @@ public final class AsyncSourceFetcherTest {
                                                 + DEFAULT_EVENT_ID
                                                 + "\","
                                                 + "\"debug_key\":\"987fs\"}")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
 
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
 
         // Assertion
         assertTrue(fetch.isPresent());
@@ -814,13 +839,13 @@ public final class AsyncSourceFetcherTest {
                                                 + DEFAULT_EVENT_ID
                                                 + "\","
                                                 + "\"debug_key\":\"18446744073709551615\"}")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
 
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
 
         // Assertion
         assertTrue(fetch.isPresent());
@@ -860,12 +885,12 @@ public final class AsyncSourceFetcherTest {
                                                 + "\"expiry\": null\n"
                                                 + "}\n")));
 
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
@@ -900,12 +925,12 @@ public final class AsyncSourceFetcherTest {
                                                 + "\",\n"
                                                 + "\"expiry\": 1"
                                                 + "}\n")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
@@ -940,12 +965,12 @@ public final class AsyncSourceFetcherTest {
                                                 + "\",\n"
                                                 + "\"expiry\": 2678400"
                                                 + "}\n")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
@@ -964,12 +989,12 @@ public final class AsyncSourceFetcherTest {
     @Test
     public void testNotOverHttps() throws Exception {
         RegistrationRequest request = buildRequest("http://foo.com");
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.PARSING_ERROR, asyncFetchStatus.getStatus());
         assertFalse(fetch.isPresent());
@@ -997,12 +1022,12 @@ public final class AsyncSourceFetcherTest {
                                 + ""
                                 + "}\n"));
         when(mUrlConnection.getHeaderFields()).thenReturn(headersSecondRequest);
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(
                 AsyncFetchStatus.ResponseStatus.SERVER_UNAVAILABLE, asyncFetchStatus.getStatus());
@@ -1035,12 +1060,12 @@ public final class AsyncSourceFetcherTest {
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(headersFirstRequest)
                 .thenReturn(headersSecondRequest);
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.PARSING_ERROR, asyncFetchStatus.getStatus());
         assertFalse(fetch.isPresent());
@@ -1069,7 +1094,7 @@ public final class AsyncSourceFetcherTest {
                                 + DEFAULT_EXPIRY
                                 + ""
                                 + "}\n"));
-        headersFirstRequest.put("Attribution-Reporting-Redirect", List.of(ALT_REGISTRATION));
+        headersFirstRequest.put("Attribution-Reporting-Redirect", List.of(LIST_TYPE_REDIRECT_URI));
         Map<String, List<String>> headersSecondRequest = new HashMap<>();
         headersSecondRequest.put(
                 "Attribution-Reporting-Register-Source",
@@ -1091,12 +1116,12 @@ public final class AsyncSourceFetcherTest {
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(headersFirstRequest)
                 .thenReturn(headersSecondRequest);
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
@@ -1108,9 +1133,174 @@ public final class AsyncSourceFetcherTest {
         assertEquals(
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(DEFAULT_EXPIRY),
                 result.getExpiryTime());
-        assertEquals(ALT_REGISTRATION, redirects.get(0).toString());
+        assertEquals(LIST_TYPE_REDIRECT_URI, asyncRedirect.getRedirects().get(0).toString());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
     }
+
+    // Tests for redirect types
+
+    @Test
+    public void testRedirectType_bothRedirectHeaderTypes_choosesListType() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        Map<String, List<String>> headers = getDefaultHeaders();
+
+        // Populate both 'list' and 'location' type headers
+        headers.put("Attribution-Reporting-Redirect", List.of(LIST_TYPE_REDIRECT_URI));
+        headers.put("Location", List.of(LOCATION_TYPE_REDIRECT_URI));
+
+        when(mUrlConnection.getHeaderFields()).thenReturn(headers);
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertDefaultSourceRegistration(result);
+
+        // Assert 'none' type redirects were chosen
+        assertEquals(AsyncRegistration.RedirectType.NONE, asyncRedirect.getRedirectType());
+        assertEquals(1, asyncRedirect.getRedirects().size());
+        assertEquals(LIST_TYPE_REDIRECT_URI, asyncRedirect.getRedirects().get(0).toString());
+
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testRedirectType_locationRedirectHeaderType_choosesLocationType() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
+        when(mUrlConnection.getResponseCode()).thenReturn(302);
+        Map<String, List<String>> headers = getDefaultHeaders();
+
+        // Populate only 'location' type header
+        headers.put("Location", List.of(LOCATION_TYPE_REDIRECT_URI));
+
+        when(mUrlConnection.getHeaderFields()).thenReturn(headers);
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertDefaultSourceRegistration(result);
+
+        // Assert 'location' type redirects were chosen
+        assertEquals(AsyncRegistration.RedirectType.DAISY_CHAIN, asyncRedirect.getRedirectType());
+        assertEquals(1, asyncRedirect.getRedirects().size());
+        assertEquals(LOCATION_TYPE_REDIRECT_URI, asyncRedirect.getRedirects().get(0).toString());
+
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testRedirectType_locationRedirectType_maxCount_noRedirectReturned()
+            throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
+        when(mUrlConnection.getResponseCode()).thenReturn(302);
+        Map<String, List<String>> headers = getDefaultHeaders();
+
+        // Populate only 'location' type header
+        headers.put("Location", List.of(LOCATION_TYPE_REDIRECT_URI));
+
+        when(mUrlConnection.getHeaderFields()).thenReturn(headers);
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch = mFetcher.fetchSource(
+                appSourceRegistrationRequest(
+                        request,
+                        AsyncRegistration.RedirectType.DAISY_CHAIN,
+                        MAX_REDIRECTS_PER_REGISTRATION),
+                asyncFetchStatus,
+                asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertDefaultSourceRegistration(result);
+
+        // Assert 'location' type redirect but no uri
+        assertEquals(AsyncRegistration.RedirectType.DAISY_CHAIN, asyncRedirect.getRedirectType());
+        assertEquals(0, asyncRedirect.getRedirects().size());
+
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testRedirectType_locationRedirectType_count1_redirectReturned() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
+        when(mUrlConnection.getResponseCode()).thenReturn(302);
+        Map<String, List<String>> headers = getDefaultHeaders();
+
+        // Populate only 'location' type header
+        headers.put("Location", List.of(LOCATION_TYPE_REDIRECT_URI));
+
+        when(mUrlConnection.getHeaderFields()).thenReturn(headers);
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch = mFetcher.fetchSource(appSourceRegistrationRequest(
+                request, AsyncRegistration.RedirectType.DAISY_CHAIN, 1),
+                asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertDefaultSourceRegistration(result);
+
+        // Assert 'location' type redirect and uri
+        assertEquals(AsyncRegistration.RedirectType.DAISY_CHAIN, asyncRedirect.getRedirectType());
+        assertEquals(1, asyncRedirect.getRedirects().size());
+        assertEquals(LOCATION_TYPE_REDIRECT_URI, asyncRedirect.getRedirects().get(0).toString());
+
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testRedirectType_locationRedirectType_ignoresListType() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
+        when(mUrlConnection.getResponseCode()).thenReturn(302);
+        Map<String, List<String>> headers = getDefaultHeaders();
+
+        // Populate both 'list' and 'location' type headers
+        headers.put("Attribution-Reporting-Redirect", List.of(LIST_TYPE_REDIRECT_URI));
+        headers.put("Location", List.of(LOCATION_TYPE_REDIRECT_URI));
+
+        when(mUrlConnection.getHeaderFields()).thenReturn(headers);
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch = mFetcher.fetchSource(appSourceRegistrationRequest(
+                request, AsyncRegistration.RedirectType.DAISY_CHAIN, 1),
+                asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertDefaultSourceRegistration(result);
+
+        // Assert 'location' type redirect and uri
+        assertEquals(AsyncRegistration.RedirectType.DAISY_CHAIN, asyncRedirect.getRedirectType());
+        assertEquals(1, asyncRedirect.getRedirects().size());
+        assertEquals(LOCATION_TYPE_REDIRECT_URI, asyncRedirect.getRedirects().get(0).toString());
+
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+    }
+
+    // End tests for redirect types
 
     @Test
     public void testBasicSourceRequestWithAggregateFilterData() throws Exception {
@@ -1131,12 +1321,12 @@ public final class AsyncSourceFetcherTest {
                                             + "  \"source_event_id\": \"987654321\",\n"
                                                 + filterData
                                                 + "}\n")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
@@ -1172,12 +1362,12 @@ public final class AsyncSourceFetcherTest {
                                             + "  \"source_event_id\": \"987654321\",\n"
                                                 + filterData
                                                 + "}\n")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -1208,12 +1398,12 @@ public final class AsyncSourceFetcherTest {
                                             + "  \"source_event_id\": \"987654321\",\n"
                                                 + filterData
                                                 + "}\n")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -1241,12 +1431,12 @@ public final class AsyncSourceFetcherTest {
                                             + "  \"source_event_id\": \"987654321\",\n"
                                                 + filterData
                                                 + "}\n")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -1281,12 +1471,12 @@ public final class AsyncSourceFetcherTest {
                                             + "  \"source_event_id\": \"987654321\",\n"
                                                 + filterData
                                                 + "}\n")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -1314,12 +1504,12 @@ public final class AsyncSourceFetcherTest {
                                             + "  \"source_event_id\": \"987654321\",\n"
                                                 + filterData
                                                 + "}\n")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -1331,7 +1521,8 @@ public final class AsyncSourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
-                .thenReturn(Map.of("Attribution-Reporting-Redirect", List.of(ALT_REGISTRATION)))
+                .thenReturn(Map.of(
+                        "Attribution-Reporting-Redirect", List.of(LIST_TYPE_REDIRECT_URI)))
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Source",
@@ -1350,12 +1541,12 @@ public final class AsyncSourceFetcherTest {
                                                 + DEFAULT_EVENT_ID
                                                 + "\"\n"
                                                 + "}\n")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.PARSING_ERROR, asyncFetchStatus.getStatus());
         assertFalse(fetch.isPresent());
@@ -1382,12 +1573,12 @@ public final class AsyncSourceFetcherTest {
                                             + " \"0x159\"},{\"id\" : \"geoValue\", \"key_piece\" :"
                                             + " \"0x5\"}]\n"
                                             + "}\n")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
@@ -1425,12 +1616,12 @@ public final class AsyncSourceFetcherTest {
                                             + "  \"source_event_id\":"
                                             + " \"987654321\",'aggregation_keys': "
                                                 + tooManyKeys)));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.PARSING_ERROR, asyncFetchStatus.getStatus());
         assertFalse(fetch.isPresent());
@@ -1459,12 +1650,12 @@ public final class AsyncSourceFetcherTest {
                                             + "  \"source_event_id\":"
                                             + " \"987654321\",'aggregation_keys': "
                                                 + tooManyKeys)));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection).setRequestMethod("POST");
@@ -1490,12 +1681,12 @@ public final class AsyncSourceFetcherTest {
                                             + " \"0x159\"},[\"id\", \"geoValue\", \"key_piece\" ,"
                                             + " \"0x5\"]\n"
                                             + "}\n")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -1522,12 +1713,12 @@ public final class AsyncSourceFetcherTest {
                                                 + "\", \"key_piece\" : \"0x159\"},{\"id\" :"
                                                 + " \"geoValue\", \"key_piece\" : \"0x5\"}]\n"
                                                 + "}\n")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -1555,12 +1746,12 @@ public final class AsyncSourceFetcherTest {
                                             + " \"0159\"},{\"id\" : \"geoValue\", \"key_piece\" :"
                                             + " \"0x5\"}]\n"
                                             + "}\n")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -1588,12 +1779,12 @@ public final class AsyncSourceFetcherTest {
                                                 + LONG_AGGREGATE_KEY_PIECE
                                                 + "\"}]\n"
                                                 + "}\n")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -1635,17 +1826,16 @@ public final class AsyncSourceFetcherTest {
                                                 + DEBUG_KEY
                                                 + "\"\n"
                                                 + "}\n")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch =
-                mFetcher.fetchSource(
-                        webSourceRegistrationRequest(request, true), asyncFetchStatus, redirects);
+        Optional<Source> fetch = mFetcher.fetchSource(
+                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
-        assertEquals(0, redirects.size());
+        assertEquals(0, asyncRedirect.getRedirects().size());
         assertEquals(expectedResult1.getEnrollmentId(), result.getEnrollmentId());
         assertEquals(expectedResult1.getAppDestination(), result.getAppDestination());
         assertEquals(expectedResult1.getSourceEventId(), result.getEventId());
@@ -1689,16 +1879,15 @@ public final class AsyncSourceFetcherTest {
                                                 + DEBUG_KEY
                                                 + "\"\n"
                                                 + "}\n")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch =
-                mFetcher.fetchSource(
-                        webSourceRegistrationRequest(request, false), asyncFetchStatus, redirects);
+        Optional<Source> fetch = mFetcher.fetchSource(
+                webSourceRegistrationRequest(request, false), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
-        assertEquals(0, redirects.size());
+        assertEquals(0, asyncRedirect.getRedirects().size());
         assertEquals(expectedResult1.getEnrollmentId(), result.getEnrollmentId());
         assertEquals(expectedResult1.getAppDestination(), result.getAppDestination());
         assertEquals(expectedResult1.getAggregateFilterData(), result.getAggregateFilterData());
@@ -1738,12 +1927,11 @@ public final class AsyncSourceFetcherTest {
                                                 + DEBUG_KEY
                                                 + "\"\n"
                                                 + "}\n")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch =
-                mFetcher.fetchSource(
-                        webSourceRegistrationRequest(request, true), asyncFetchStatus, redirects);
+        Optional<Source> fetch = mFetcher.fetchSource(
+                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.PARSING_ERROR, asyncFetchStatus.getStatus());
         assertFalse(fetch.isPresent());
@@ -1792,17 +1980,16 @@ public final class AsyncSourceFetcherTest {
                         .setAggregateSource(new JSONArray(aggregateSource).toString())
                         .setEnrollmentId(ENROLLMENT_ID)
                         .build();
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch =
-                mFetcher.fetchSource(
-                        webSourceRegistrationRequest(request, true), asyncFetchStatus, redirects);
+        Optional<Source> fetch = mFetcher.fetchSource(
+                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
-        assertEquals(0, redirects.size());
+        assertEquals(0, asyncRedirect.getRedirects().size());
         assertEquals(expectedSourceRegistration.getEnrollmentId(), result.getEnrollmentId());
         assertEquals(expectedSourceRegistration.getAppDestination(), result.getAppDestination());
         assertEquals(
@@ -1850,7 +2037,9 @@ public final class AsyncSourceFetcherTest {
                                                 + aggregateSource
                                                 + "}"),
                                 "Attribution-Reporting-Redirect",
-                                List.of(ALT_REGISTRATION)));
+                                List.of(LIST_TYPE_REDIRECT_URI),
+                                "Location",
+                                List.of(LOCATION_TYPE_REDIRECT_URI)));
         SourceRegistration expectedSourceRegistration =
                 new SourceRegistration.Builder()
                         .setAppDestination(Uri.parse(DEFAULT_DESTINATION))
@@ -1861,17 +2050,17 @@ public final class AsyncSourceFetcherTest {
                         .setAggregateSource(new JSONArray(aggregateSource).toString())
                         .setEnrollmentId(ENROLLMENT_ID)
                         .build();
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch =
-                mFetcher.fetchSource(
-                        webSourceRegistrationRequest(request, true), asyncFetchStatus, redirects);
+        Optional<Source> fetch = mFetcher.fetchSource(
+                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
-        assertEquals(0, redirects.size());
+        assertEquals(AsyncRegistration.RedirectType.NONE, asyncRedirect.getRedirectType());
+        assertEquals(0, asyncRedirect.getRedirects().size());
         assertEquals(expectedSourceRegistration.getEnrollmentId(), result.getEnrollmentId());
         assertEquals(expectedSourceRegistration.getAppDestination(), result.getAppDestination());
         assertEquals(
@@ -1917,12 +2106,11 @@ public final class AsyncSourceFetcherTest {
                                                 + "  \"filter_data\": "
                                                 + filterData
                                                 + "}")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch =
-                mFetcher.fetchSource(
-                        webSourceRegistrationRequest(request, true), asyncFetchStatus, redirects);
+        Optional<Source> fetch = mFetcher.fetchSource(
+                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.PARSING_ERROR, asyncFetchStatus.getStatus());
         assertFalse(fetch.isPresent());
@@ -1960,12 +2148,11 @@ public final class AsyncSourceFetcherTest {
                                                 + "  \"filter_data\": "
                                                 + filterData
                                                 + "}")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch =
-                mFetcher.fetchSource(
-                        webSourceRegistrationRequest(request, true), asyncFetchStatus, redirects);
+        Optional<Source> fetch = mFetcher.fetchSource(
+                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.PARSING_ERROR, asyncFetchStatus.getStatus());
         assertFalse(fetch.isPresent());
@@ -2010,18 +2197,17 @@ public final class AsyncSourceFetcherTest {
                         .setSourceEventId(new UnsignedLong(987654321L))
                         .setEnrollmentId(ENROLLMENT_ID)
                         .build();
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch =
-                mFetcher.fetchSource(
-                        webSourceRegistrationRequest(request, true), asyncFetchStatus, redirects);
+        Optional<Source> fetch = mFetcher.fetchSource(
+                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
 
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
-        assertEquals(0, redirects.size());
+        assertEquals(0, asyncRedirect.getRedirects().size());
         assertEquals(expectedSourceRegistration.getEnrollmentId(), result.getEnrollmentId());
         assertEquals(expectedSourceRegistration.getAppDestination(), result.getAppDestination());
         assertEquals(
@@ -2073,18 +2259,17 @@ public final class AsyncSourceFetcherTest {
                         .setSourceEventId(new UnsignedLong(987654321L))
                         .setEnrollmentId(ENROLLMENT_ID)
                         .build();
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch =
-                mFetcher.fetchSource(
-                        webSourceRegistrationRequest(request, true), asyncFetchStatus, redirects);
+        Optional<Source> fetch = mFetcher.fetchSource(
+                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
 
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
-        assertEquals(0, redirects.size());
+        assertEquals(0, asyncRedirect.getRedirects().size());
         assertEquals(expectedSourceRegistration.getEnrollmentId(), result.getEnrollmentId());
         assertEquals(expectedSourceRegistration.getAppDestination(), result.getAppDestination());
         assertEquals(
@@ -2134,17 +2319,16 @@ public final class AsyncSourceFetcherTest {
                         .setSourceEventId(new UnsignedLong(987654321L))
                         .setEnrollmentId(ENROLLMENT_ID)
                         .build();
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch =
-                mFetcher.fetchSource(
-                        webSourceRegistrationRequest(request, true), asyncFetchStatus, redirects);
+        Optional<Source> fetch = mFetcher.fetchSource(
+                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
-        assertEquals(0, redirects.size());
+        assertEquals(0, asyncRedirect.getRedirects().size());
         assertEquals(expectedSourceRegistration.getEnrollmentId(), result.getEnrollmentId());
         assertEquals(expectedSourceRegistration.getAppDestination(), result.getAppDestination());
         assertEquals(
@@ -2179,12 +2363,11 @@ public final class AsyncSourceFetcherTest {
                                                 + DEFAULT_EVENT_ID
                                                 + "\"\n"
                                                 + "}\n")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch =
-                mFetcher.fetchSource(
-                        webSourceRegistrationRequest(request, true), asyncFetchStatus, redirects);
+        Optional<Source> fetch = mFetcher.fetchSource(
+                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.PARSING_ERROR, asyncFetchStatus.getStatus());
         assertFalse(fetch.isPresent());
@@ -2223,17 +2406,16 @@ public final class AsyncSourceFetcherTest {
                                                 + EVENT_ID_1
                                                 + "\"\n"
                                                 + "}\n")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch =
-                mFetcher.fetchSource(
-                        webSourceRegistrationRequest(request, true), asyncFetchStatus, redirects);
+        Optional<Source> fetch = mFetcher.fetchSource(
+                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
-        assertEquals(0, redirects.size());
+        assertEquals(0, asyncRedirect.getRedirects().size());
         assertEquals(expectedResult.getEnrollmentId(), result.getEnrollmentId());
         assertEquals(expectedResult.getAppDestination(), result.getAppDestination());
         assertEquals(expectedResult.getAggregateFilterData(), result.getAggregateFilterData());
@@ -2270,12 +2452,11 @@ public final class AsyncSourceFetcherTest {
                                                 + EVENT_ID_1
                                                 + "\"\n"
                                                 + "}\n")));
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch =
-                mFetcher.fetchSource(
-                        webSourceRegistrationRequest(request, true), asyncFetchStatus, redirects);
+        Optional<Source> fetch = mFetcher.fetchSource(
+                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.PARSING_ERROR, asyncFetchStatus.getStatus());
         assertFalse(fetch.isPresent());
@@ -2302,12 +2483,12 @@ public final class AsyncSourceFetcherTest {
                                                 + "\"\n"
                                                 + "}\n")));
 
-        List<Uri> redirects = new ArrayList<>();
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, redirects);
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
 
         assertTrue(fetch.isPresent());
         verify(mLogger)
@@ -2320,7 +2501,6 @@ public final class AsyncSourceFetcherTest {
                                         .setAdTechDomain(DEFAULT_REGISTRATION)
                                         .build()));
     }
-
     private RegistrationRequest buildRequest(String registrationUri) {
         return new RegistrationRequest.Builder()
                 .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
@@ -2340,6 +2520,14 @@ public final class AsyncSourceFetcherTest {
 
     public static AsyncRegistration appSourceRegistrationRequest(
             RegistrationRequest registrationRequest) {
+        return appSourceRegistrationRequest(
+                registrationRequest, AsyncRegistration.RedirectType.ANY, 0);
+    }
+
+    public static AsyncRegistration appSourceRegistrationRequest(
+            RegistrationRequest registrationRequest,
+            @AsyncRegistration.RedirectType int redirectType,
+            int redirectCount) {
         // Necessary for testing
         String enrollmentId = "";
         if (EnrollmentDao.getInstance(sContext)
@@ -2348,7 +2536,7 @@ public final class AsyncSourceFetcherTest {
                                         .getRegistrationUri()
                                         .buildUpon()
                                         .clearQuery()
-                                        .toString())
+                                        .build())
                 != null) {
             enrollmentId =
                     EnrollmentDao.getInstance(sContext)
@@ -2357,7 +2545,7 @@ public final class AsyncSourceFetcherTest {
                                             .getRegistrationUri()
                                             .buildUpon()
                                             .clearQuery()
-                                            .toString())
+                                            .build())
                             .getEnrollmentId();
         }
         return createAsyncRegistration(
@@ -2366,9 +2554,9 @@ public final class AsyncSourceFetcherTest {
                 registrationRequest.getRegistrationUri(),
                 null,
                 null,
-                Uri.parse("android-app://" + sContext.getPackageName()),
+                Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + sContext.getPackageName()),
                 null,
-                null,
+                Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + sContext.getPackageName()),
                 registrationRequest.getRegistrationType() == RegistrationRequest.REGISTER_SOURCE
                         ? AsyncRegistration.RegistrationType.APP_SOURCE
                         : AsyncRegistration.RegistrationType.APP_TRIGGER,
@@ -2376,7 +2564,8 @@ public final class AsyncSourceFetcherTest {
                 System.currentTimeMillis(),
                 0,
                 System.currentTimeMillis(),
-                true,
+                redirectType,
+                redirectCount,
                 registrationRequest.isAdIdPermissionGranted());
     }
 
@@ -2395,7 +2584,7 @@ public final class AsyncSourceFetcherTest {
                                             .getRegistrationUri()
                                             .buildUpon()
                                             .clearQuery()
-                                            .toString())
+                                            .build())
                     != null) {
                 enrollmentId =
                         EnrollmentDao.getInstance(sContext)
@@ -2404,7 +2593,7 @@ public final class AsyncSourceFetcherTest {
                                                 .getRegistrationUri()
                                                 .buildUpon()
                                                 .clearQuery()
-                                                .toString())
+                                                .build())
                                 .getEnrollmentId();
             }
             return createAsyncRegistration(
@@ -2413,7 +2602,7 @@ public final class AsyncSourceFetcherTest {
                     webSourceParams.getRegistrationUri(),
                     webSourceRegistrationRequest.getWebDestination(),
                     webSourceRegistrationRequest.getAppDestination(),
-                    Uri.parse("android-app://" + sContext.getPackageName()),
+                    Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + sContext.getPackageName()),
                     null,
                     webSourceRegistrationRequest.getTopOriginUri(),
                     AsyncRegistration.RegistrationType.WEB_SOURCE,
@@ -2421,7 +2610,8 @@ public final class AsyncSourceFetcherTest {
                     System.currentTimeMillis(),
                     0,
                     System.currentTimeMillis(),
-                    false,
+                    AsyncRegistration.RedirectType.NONE,
+                    0,
                     adIdPermissionGranted);
         }
         return null;
@@ -2441,7 +2631,8 @@ public final class AsyncSourceFetcherTest {
             long mRequestTime,
             long mRetryCount,
             long mLastProcessingTime,
-            boolean redirect,
+            @AsyncRegistration.RedirectType int redirectType,
+            int redirectCount,
             boolean debugKeyAllowed) {
         return new AsyncRegistration.Builder()
                 .setId(iD)
@@ -2462,7 +2653,8 @@ public final class AsyncSourceFetcherTest {
                 .setRequestTime(mRequestTime)
                 .setRetryCount(mRetryCount)
                 .setLastProcessingTime(mLastProcessingTime)
-                .setRedirect(redirect)
+                .setRedirectType(redirectType)
+                .setRedirectCount(redirectCount)
                 .setDebugKeyAllowed(debugKeyAllowed)
                 .build();
     }
@@ -2483,5 +2675,37 @@ public final class AsyncSourceFetcherTest {
 
     static Source.SourceType getSourceType(InputEvent inputEvent) {
         return inputEvent == null ? Source.SourceType.EVENT : Source.SourceType.NAVIGATION;
+    }
+
+    static Map<String, List<String>> getDefaultHeaders() {
+        Map<String, List<String>> headers = new HashMap<>();
+        headers.put(
+                "Attribution-Reporting-Register-Source",
+                List.of(
+                        "{\n"
+                                + "\"destination\": \""
+                                + DEFAULT_DESTINATION
+                                + "\",\n"
+                                + "\"source_event_id\": \""
+                                + DEFAULT_EVENT_ID
+                                + "\",\n"
+                                + "\"priority\": \""
+                                + DEFAULT_PRIORITY
+                                + "\",\n"
+                                + "\"expiry\": "
+                                + DEFAULT_EXPIRY
+                                + ""
+                                + "}\n"));
+        return headers;
+    }
+
+    private static void assertDefaultSourceRegistration(Source result) {
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestination().toString());
+        assertEquals(DEFAULT_EVENT_ID, result.getEventId());
+        assertEquals(DEFAULT_PRIORITY, result.getPriority());
+        assertEquals(
+                result.getEventTime() + TimeUnit.SECONDS.toMillis(DEFAULT_EXPIRY),
+                result.getExpiryTime());
     }
 }

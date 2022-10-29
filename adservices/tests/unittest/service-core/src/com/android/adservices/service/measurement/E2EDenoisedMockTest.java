@@ -46,11 +46,18 @@ public class E2EDenoisedMockTest extends E2EMockTest {
         mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager);
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(
+                        sDatastoreManager,
+                        mClickVerifier,
+                        mFlags,
+                        mMeasurementDataDeleter,
+                        sEnrollmentDao);
+
+        mAsyncRegistrationQueueRunner =
+                TestObjectProvider.getAsyncRegistrationQueueRunner(
                         TestObjectProvider.Type.DENOISED,
                         sDatastoreManager,
-                        mSourceFetcher,
-                        mTriggerFetcher,
-                        mClickVerifier,
-                        mFlags);
+                        mAsyncSourceFetcher,
+                        mAsyncTriggerFetcher,
+                        sEnrollmentDao);
     }
 }

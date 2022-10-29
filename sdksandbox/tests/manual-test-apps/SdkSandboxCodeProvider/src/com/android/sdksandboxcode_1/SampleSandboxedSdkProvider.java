@@ -18,8 +18,8 @@ package com.android.sdksandboxcode_1;
 
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkProvider;
-import android.app.sdksandbox.SdkSandboxController;
 import android.app.sdksandbox.interfaces.ISdkApi;
+import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Canvas;

@@ -90,14 +90,12 @@ public class Source {
     private int mAggregateContributions;
     private AggregatableAttributionSource mAggregatableAttributionSource;
 
-    @IntDef(value = {
-            Status.ACTIVE,
-            Status.IGNORED,
-    })
+    @IntDef(value = {Status.ACTIVE, Status.IGNORED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
     public @interface Status {
         int ACTIVE = 0;
         int IGNORED = 1;
+        int MARKED_TO_DELETE = 2;
     }
 
     @IntDef(value = {
