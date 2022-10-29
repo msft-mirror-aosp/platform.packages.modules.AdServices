@@ -49,9 +49,10 @@ import android.view.MotionEvent;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
-import com.android.adservices.data.measurement.DatastoreManagerFactory;
+import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -102,9 +103,11 @@ public final class MeasurementImplTest {
     private static final WebTriggerParams INPUT_TRIGGER_REGISTRATION_2 =
             new WebTriggerParams.Builder(REGISTRATION_URI_2).setDebugKeyAllowed(false).build();
     private static final long REQUEST_TIME = 10000L;
+
     @Spy
     private DatastoreManager mDatastoreManager =
-            DatastoreManagerFactory.getDatastoreManager(DEFAULT_CONTEXT);
+            new SQLDatastoreManager(DbTestUtil.getDbHelperForTest());
+
     @Mock
     private ContentProviderClient mMockContentProviderClient;
     @Mock
@@ -182,7 +185,7 @@ public final class MeasurementImplTest {
         MeasurementImpl measurement =
                 new MeasurementImpl(
                         DEFAULT_CONTEXT,
-                        DatastoreManagerFactory.getDatastoreManager(DEFAULT_CONTEXT),
+                        new SQLDatastoreManager(DbTestUtil.getDbHelperForTest()),
                         mClickVerifier,
                         mMeasurementDataDeleter,
                         mEnrollmentDao);
