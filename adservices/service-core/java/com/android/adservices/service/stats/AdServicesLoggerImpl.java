@@ -109,4 +109,14 @@ public class AdServicesLoggerImpl implements AdServicesLogger {
     public void logGetTopicsReportedStats(GetTopicsReportedStats stats) {
         mStatsdAdServicesLogger.logGetTopicsReportedStats(stats);
     }
+
+    @Override
+    public void logEpochComputationGetTopTopicsStats(EpochComputationGetTopTopicsStats stats) {
+        mStatsdAdServicesLogger.logEpochComputationGetTopTopicsStats(stats);
+    }
+
+    @Override
+    public void logEpochComputationClassifierStats(EpochComputationClassifierStats stats) {
+        mStatsdAdServicesLogger.logEpochComputationClassifierStats(stats);
+    }
 }
