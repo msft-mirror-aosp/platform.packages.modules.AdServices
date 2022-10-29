@@ -19,17 +19,22 @@ package com.android.adservices.data;
 import static com.android.adservices.data.DbTestUtil.doesIndexExist;
 import static com.android.adservices.data.DbTestUtil.doesTableExistAndColumnCountMatch;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 import androidx.test.core.app.ApplicationProvider;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.junit.MockitoJUnitRunner;
 
+@RunWith(MockitoJUnitRunner.class)
 public class DbHelperTest {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
 
@@ -76,5 +81,15 @@ public class DbHelperTest {
 
         // Verify database does not exist anymore
         Assert.assertEquals(-1, dbHelper.getDbFileSize());
+    }
+
+    @Test
+    public void onOpen_appliesForeignKeyConstraint() {
+        // dbHelper.onOpen gets called implicitly
+        SQLiteDatabase db = DbTestUtil.getDbHelperForTest().safeGetReadableDatabase();
+        try (Cursor cursor = db.rawQuery("PRAGMA foreign_keys", null)) {
+            cursor.moveToNext();
+            assertEquals(1, cursor.getLong(0));
+        }
     }
 }

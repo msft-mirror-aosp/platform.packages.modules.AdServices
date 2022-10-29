@@ -24,6 +24,7 @@ import android.database.sqlite.SQLiteException;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.DbHelper;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
@@ -31,6 +32,7 @@ import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -39,6 +41,8 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -64,8 +68,17 @@ public abstract class AbstractDbIntegrationTest {
     public final DbState mInput;
     public final DbState mOutput;
 
+    private MockitoSession mStaticMockSession;
+
     @Before
     public void before() {
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
+                        .strictness(Strictness.WARN)
+                        .startMocking();
+        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+
         SQLiteDatabase db = DbHelper.getInstance(sContext).getWritableDatabase();
         emptyTables(db);
         seedTables(db, mInput);
@@ -75,6 +88,8 @@ public abstract class AbstractDbIntegrationTest {
     public void after() {
         SQLiteDatabase db = DbHelper.getInstance(sContext).getWritableDatabase();
         emptyTables(db);
+
+        mStaticMockSession.finishMocking();
     }
 
     public AbstractDbIntegrationTest(DbState input, DbState output) {
@@ -285,7 +300,7 @@ public abstract class AbstractDbIntegrationTest {
                 source.getPublisherType());
         values.put(
                 MeasurementTables.SourceContract.APP_DESTINATION,
-                source.getAppDestination().toString());
+                source.getAppDestination() == null ? null : source.getAppDestination().toString());
         values.put(
                 MeasurementTables.SourceContract.WEB_DESTINATION,
                 source.getWebDestination() == null ? null : source.getWebDestination().toString());
@@ -313,11 +328,8 @@ public abstract class AbstractDbIntegrationTest {
         }
     }
 
-    /**
-     * Inserts a Trigger record into the given database.
-     */
-    private static void insertToDb(Trigger trigger, SQLiteDatabase db)
-            throws SQLiteException {
+    /** Inserts a Trigger record into the given database. */
+    public static void insertToDb(Trigger trigger, SQLiteDatabase db) throws SQLiteException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.TriggerContract.ID, trigger.getId());
         values.put(MeasurementTables.TriggerContract.ATTRIBUTION_DESTINATION,
@@ -342,11 +354,8 @@ public abstract class AbstractDbIntegrationTest {
         }
     }
 
-    /**
-     * Inserts an EventReport record into the given database.
-     */
-    private static void insertToDb(EventReport report, SQLiteDatabase db)
-            throws SQLiteException {
+    /** Inserts an EventReport record into the given database. */
+    public static void insertToDb(EventReport report, SQLiteDatabase db) throws SQLiteException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.EventReportContract.ID, report.getId());
         values.put(
@@ -368,16 +377,16 @@ public abstract class AbstractDbIntegrationTest {
                 report.getSourceType().toString());
         values.put(MeasurementTables.EventReportContract.RANDOMIZED_TRIGGER_RATE,
                 report.getRandomizedTriggerRate());
+        values.put(MeasurementTables.EventReportContract.SOURCE_ID, report.getSourceId());
+        values.put(MeasurementTables.EventReportContract.TRIGGER_ID, report.getTriggerId());
         long row = db.insert(MeasurementTables.EventReportContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("EventReport insertion failed");
         }
     }
 
-    /**
-     * Inserts an Attribution record into the given database.
-     */
-    private static void insertToDb(Attribution attribution, SQLiteDatabase db)
+    /** Inserts an Attribution record into the given database. */
+    public static void insertToDb(Attribution attribution, SQLiteDatabase db)
             throws SQLiteException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.AttributionContract.ID, attribution.getId());
@@ -394,6 +403,8 @@ public abstract class AbstractDbIntegrationTest {
                 attribution.getTriggerTime());
         values.put(MeasurementTables.AttributionContract.REGISTRANT,
                 attribution.getRegistrant());
+        values.put(MeasurementTables.AttributionContract.SOURCE_ID, attribution.getSourceId());
+        values.put(MeasurementTables.AttributionContract.TRIGGER_ID, attribution.getTriggerId());
         long row = db.insert(MeasurementTables.AttributionContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("Attribution insertion failed");
@@ -401,7 +412,7 @@ public abstract class AbstractDbIntegrationTest {
     }
 
     /** Inserts an AggregateReport record into the given database. */
-    private static void insertToDb(AggregateReport aggregateReport, SQLiteDatabase db)
+    public static void insertToDb(AggregateReport aggregateReport, SQLiteDatabase db)
             throws SQLiteException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.AggregateReport.ID, aggregateReport.getId());
@@ -425,6 +436,8 @@ public abstract class AbstractDbIntegrationTest {
                 aggregateReport.getDebugCleartextPayload());
         values.put(MeasurementTables.AggregateReport.STATUS, aggregateReport.getStatus());
         values.put(MeasurementTables.AggregateReport.API_VERSION, aggregateReport.getApiVersion());
+        values.put(MeasurementTables.AggregateReport.SOURCE_ID, aggregateReport.getSourceId());
+        values.put(MeasurementTables.AggregateReport.TRIGGER_ID, aggregateReport.getTriggerId());
         long row = db.insert(MeasurementTables.AggregateReport.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("AggregateReport insertion failed");

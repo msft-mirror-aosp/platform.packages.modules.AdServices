@@ -39,8 +39,10 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.data.measurement.SqliteObjectMapper;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.registration.EnqueueAsyncRegistration;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -48,6 +50,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -85,6 +89,8 @@ public class EnqueueAsyncRegistrationTest {
     @Mock private EnrollmentDao mEnrollmentDao;
     @Mock private InputEvent mInputEvent;
 
+    private MockitoSession mStaticMockSession;
+
     private static final WebSourceRegistrationRequest
             VALID_WEB_SOURCE_REGISTRATION_NULL_INPUT_EVENT =
                     new WebSourceRegistrationRequest.Builder(
@@ -109,10 +115,17 @@ public class EnqueueAsyncRegistrationTest {
         for (String table : MeasurementTables.ALL_MSMT_TABLES) {
             db.delete(table, null, null);
         }
+        mStaticMockSession.finishMocking();
     }
 
     @Before
     public void before() throws RemoteException {
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
+                        .strictness(Strictness.WARN)
+                        .startMocking();
+        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
         MockitoAnnotations.initMocks(this);
         when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(any()))
                 .thenReturn(getEnrollment(DEFAULT_ENROLLMENT));

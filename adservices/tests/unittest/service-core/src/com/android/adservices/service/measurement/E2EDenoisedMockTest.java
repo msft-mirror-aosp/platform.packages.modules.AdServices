@@ -51,6 +51,6 @@ public class E2EDenoisedMockTest extends E2EMockTest {
                         mSourceFetcher,
                         mTriggerFetcher,
                         mClickVerifier,
-                        mFlags);
+                        mMeasurementDataDeleter);
     }
 }

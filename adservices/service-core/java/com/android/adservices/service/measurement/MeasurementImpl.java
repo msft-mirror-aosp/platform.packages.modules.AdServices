@@ -49,6 +49,7 @@ import android.view.InputEvent;
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
+import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
@@ -89,6 +90,7 @@ public final class MeasurementImpl {
     private final TriggerFetcher mTriggerFetcher;
     private final ContentResolver mContentResolver;
     private final ClickVerifier mClickVerifier;
+    private final MeasurementDataDeleter mMeasurementDataDeleter;
     private final Flags mFlags;
 
     private MeasurementImpl(Context context) {
@@ -99,6 +101,7 @@ public final class MeasurementImpl {
         mTriggerFetcher = new TriggerFetcher(context);
         mClickVerifier = new ClickVerifier(context);
         mFlags = FlagsFactory.getFlags();
+        mMeasurementDataDeleter = new MeasurementDataDeleter(mDatastoreManager);
     }
 
     @VisibleForTesting
@@ -108,13 +111,15 @@ public final class MeasurementImpl {
             DatastoreManager datastoreManager,
             SourceFetcher sourceFetcher,
             TriggerFetcher triggerFetcher,
-            ClickVerifier clickVerifier) {
+            ClickVerifier clickVerifier,
+            MeasurementDataDeleter measurementDataDeleter) {
         mContext = context;
         mContentResolver = contentResolver;
         mDatastoreManager = datastoreManager;
         mSourceFetcher = sourceFetcher;
         mTriggerFetcher = triggerFetcher;
         mClickVerifier = clickVerifier;
+        mMeasurementDataDeleter = measurementDataDeleter;
         mFlags = FlagsFactory.getFlagsForTest();
     }
 
@@ -252,17 +257,7 @@ public final class MeasurementImpl {
     int deleteRegistrations(@NonNull DeletionParam request) {
         mReadWriteLock.readLock().lock();
         try {
-            final boolean deleteResult =
-                    mDatastoreManager.runInTransaction(
-                            (dao) ->
-                                    dao.deleteMeasurementData(
-                                            getRegistrant(request.getPackageName()),
-                                            request.getStart(),
-                                            request.getEnd(),
-                                            request.getOriginUris(),
-                                            request.getDomainUris(),
-                                            request.getMatchBehavior(),
-                                            request.getDeletionMode()));
+            boolean deleteResult = mMeasurementDataDeleter.delete(request);
             return deleteResult ? STATUS_SUCCESS : STATUS_INTERNAL_ERROR;
         } catch (NullPointerException | IllegalArgumentException e) {
             LogUtil.e(e, "Delete registration received invalid parameters");

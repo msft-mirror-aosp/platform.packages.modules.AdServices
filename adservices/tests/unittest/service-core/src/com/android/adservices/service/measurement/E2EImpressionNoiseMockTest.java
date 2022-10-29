@@ -67,7 +67,7 @@ public class E2EImpressionNoiseMockTest extends E2EMockTest {
                         mSourceFetcher,
                         mTriggerFetcher,
                         mClickVerifier,
-                        mFlags);
+                        mMeasurementDataDeleter);
         getExpectedTriggerDataDistributions();
     }
 

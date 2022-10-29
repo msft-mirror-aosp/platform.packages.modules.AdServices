@@ -28,9 +28,11 @@ import android.net.Uri;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.HpkeJni;
+import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
-import com.android.adservices.data.measurement.DatastoreManagerFactory;
+import com.android.adservices.data.measurement.SQLDatastoreManager;
+import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
@@ -51,6 +53,7 @@ import com.android.adservices.service.measurement.registration.SourceFetcher;
 import com.android.adservices.service.measurement.registration.TriggerFetcher;
 import com.android.adservices.service.measurement.reporting.AggregateReportingJobHandlerWrapper;
 import com.android.adservices.service.measurement.reporting.EventReportingJobHandlerWrapper;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -91,10 +94,11 @@ import co.nstant.in.cbor.model.UnicodeString;
  */
 public abstract class E2EMockTest extends E2ETest {
 
-    static final EnrollmentDao sEnrollmentDao = EnrollmentDao.getInstance(
-            ApplicationProvider.getApplicationContext());
-    static final DatastoreManager sDatastoreManager = DatastoreManagerFactory.getDatastoreManager(
-            ApplicationProvider.getApplicationContext());
+    static EnrollmentDao sEnrollmentDao =
+            new EnrollmentDao(
+                    ApplicationProvider.getApplicationContext(), DbTestUtil.getDbHelperForTest());
+    static DatastoreManager sDatastoreManager =
+            new SQLDatastoreManager(DbTestUtil.getDbHelperForTest());
 
     // Class extensions may choose to disable or enable added noise.
     AttributionJobHandlerWrapper mAttributionHelper;
@@ -102,6 +106,7 @@ public abstract class E2EMockTest extends E2ETest {
     SourceFetcher mSourceFetcher;
     TriggerFetcher mTriggerFetcher;
     ClickVerifier mClickVerifier;
+    MeasurementDataDeleter mMeasurementDataDeleter;
     Flags mFlags;
 
     private final AtomicInteger mEnrollmentCount = new AtomicInteger();
@@ -114,12 +119,23 @@ public abstract class E2EMockTest extends E2ETest {
     E2EMockTest(Collection<Action> actions, ReportObjects expectedOutput,
             PrivacyParamsProvider privacyParamsProvider, String name) {
         super(actions, expectedOutput, name);
-        mSourceFetcher = Mockito.spy(new SourceFetcher(sContext));
-        mTriggerFetcher = Mockito.spy(new TriggerFetcher(sContext));
+        mSourceFetcher =
+                Mockito.spy(
+                        new SourceFetcher(
+                                sEnrollmentDao,
+                                FlagsFactory.getFlagsForTest(),
+                                AdServicesLoggerImpl.getInstance()));
+        mTriggerFetcher =
+                Mockito.spy(
+                        new TriggerFetcher(
+                                sEnrollmentDao,
+                                FlagsFactory.getFlagsForTest(),
+                                AdServicesLoggerImpl.getInstance()));
         mClickVerifier = Mockito.mock(ClickVerifier.class);
         mFlags = FlagsFactory.getFlagsForTest();
         when(mClickVerifier.isInputEventVerifiable(any(), anyLong())).thenReturn(true);
         mE2EMockStaticRule = new E2EMockStatic.E2EMockStaticRule(privacyParamsProvider);
+        mMeasurementDataDeleter = Mockito.spy(new MeasurementDataDeleter(sDatastoreManager));
     }
 
     @Override
