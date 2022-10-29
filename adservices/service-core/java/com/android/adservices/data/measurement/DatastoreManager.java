@@ -85,7 +85,7 @@ public abstract class DatastoreManager {
 
         Optional<T> result;
         try {
-            result = Optional.of(execute.apply(measurementDao));
+            result = Optional.ofNullable(execute.apply(measurementDao));
         } catch (DatastoreException ex) {
             result = Optional.empty();
             LogUtil.e(ex, "DatastoreException thrown during transaction");

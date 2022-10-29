@@ -118,8 +118,10 @@ public class AppUpdateManager {
      */
     public void deleteAppDataFromTableByApps(@NonNull List<String> apps) {
         for (Pair<String, String> tableColumnNamePair : TABLE_INFO_TO_ERASE_APP_DATA) {
-            mTopicsDao.deleteAppFromTable(
-                    tableColumnNamePair.first, tableColumnNamePair.second, apps);
+            mTopicsDao.deleteFromTableByColumn(
+                    /* tableName */ tableColumnNamePair.first,
+                    /* columnNameToDeleteFrom */ tableColumnNamePair.second,
+                    /* valuesToDelete */ apps);
         }
 
         LogUtil.v("Have deleted data for application " + apps);

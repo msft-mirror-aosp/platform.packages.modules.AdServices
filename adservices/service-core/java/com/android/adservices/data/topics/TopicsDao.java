@@ -84,7 +84,6 @@ public class TopicsDao {
      * @param epochId the epoch ID to persist
      * @param appClassificationTopicsMap Map of app -> classified topics
      */
-    @VisibleForTesting
     public void persistAppClassificationTopics(
             long epochId, @NonNull Map<String, List<Topic>> appClassificationTopicsMap) {
         Objects.requireNonNull(appClassificationTopicsMap);
@@ -128,7 +127,6 @@ public class TopicsDao {
      * @param epochId the epoch ID to retrieve
      * @return {@link Map} a map of app -> topics
      */
-    @VisibleForTesting
     @NonNull
     public Map<String, List<Topic>> retrieveAppClassificationTopics(long epochId) {
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
@@ -193,7 +191,6 @@ public class TopicsDao {
      * @param epochId ID of current epoch
      * @param topTopics the topics list to persist into DB
      */
-    @VisibleForTesting
     public void persistTopTopics(long epochId, @NonNull List<Topic> topTopics) {
         // topTopics the Top Topics: a list of 5 top topics and the 6th topic
         // which was selected randomly. We can refer this 6th topic as the random-topic.
@@ -235,7 +232,6 @@ public class TopicsDao {
      * @param epochId the epochId to retrieve the top topics.
      * @return {@link List} a {@link List} of {@link Topic}
      */
-    @VisibleForTesting
     @NonNull
     public List<Topic> retrieveTopTopics(long epochId) {
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
@@ -564,7 +560,6 @@ public class TopicsDao {
      * @param numberOfLookBackEpochs Look back numberOfLookBackEpochs.
      * @return {@link Map} a Map<Topic, Set<Caller>> where Caller = App or Sdk.
      */
-    @VisibleForTesting
     @NonNull
     public Map<Topic, Set<String>> retrieveCallerCanLearnTopicsMap(
             long epochId, int numberOfLookBackEpochs) {
@@ -748,7 +743,7 @@ public class TopicsDao {
                                 cursor.getColumnIndexOrThrow(
                                         TopicsTables.ReturnedTopicContract.TAXONOMY_VERSION));
                 long modelVersion =
-                        cursor.getInt(
+                        cursor.getLong(
                                 cursor.getColumnIndexOrThrow(
                                         TopicsTables.ReturnedTopicContract.MODEL_VERSION));
                 int topicId =
@@ -936,40 +931,44 @@ public class TopicsDao {
     }
 
     /**
-     * Erase all data in a table that associates with a certain application
+     * Delete by column for the given values.
      *
-     * @param tableName the table to remove data from
-     * @param appColumnName the column name in the table that represents the name of an application
-     * @param appNames a {@link List} of apps to wipe out data for
+     * @param tableName the table to remove entries from
+     * @param columnNameToDeleteFrom the column name in the table to delete from
+     * @param valuesToDelete a {@link List} of values to delete if the entry has such value in
+     *     {@code columnNameToDeleteFrom}
      */
-    public void deleteAppFromTable(
+    public void deleteFromTableByColumn(
             @NonNull String tableName,
-            @NonNull String appColumnName,
-            @NonNull List<String> appNames) {
+            @NonNull String columnNameToDeleteFrom,
+            @NonNull List<String> valuesToDelete) {
         Objects.requireNonNull(tableName);
-        Objects.requireNonNull(appColumnName);
-        Objects.requireNonNull(appNames);
+        Objects.requireNonNull(columnNameToDeleteFrom);
+        Objects.requireNonNull(valuesToDelete);
 
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
-        if (db == null || appNames.isEmpty()) {
+        // If valuesToDelete is empty, do nothing.
+        if (db == null || valuesToDelete.isEmpty()) {
             return;
         }
 
         // Construct the "IN" part of SQL Query
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("(?");
-        for (int i = 0; i < appNames.size() - 1; i++) {
-            stringBuilder.append(",?");
+        StringBuilder whereClauseBuilder = new StringBuilder();
+        whereClauseBuilder.append("(?");
+        for (int i = 0; i < valuesToDelete.size() - 1; i++) {
+            whereClauseBuilder.append(",?");
         }
-        stringBuilder.append(')');
+        whereClauseBuilder.append(')');
 
-        String whereClause = appColumnName + " IN " + stringBuilder;
-        String[] whereArgs = appNames.toArray(new String[0]);
+        String whereClause = columnNameToDeleteFrom + " IN " + whereClauseBuilder;
+        String[] whereArgs = valuesToDelete.toArray(new String[0]);
 
         try {
             db.delete(tableName, whereClause, whereArgs);
         } catch (SQLException e) {
-            LogUtil.e(e, String.format("Failed to delete %s in table %s.", appNames, tableName));
+            LogUtil.e(
+                    e,
+                    String.format("Failed to delete %s in table %s.", valuesToDelete, tableName));
         }
     }
 
@@ -1033,5 +1032,100 @@ public class TopicsDao {
         }
 
         return origin;
+    }
+
+    /**
+     * Persist topic to contributor mappings to the database. In an epoch, an app is a contributor
+     * to a topic if the app has called Topics API in this epoch and is classified to the topic.
+     *
+     * @param epochId the epochId
+     * @param topicToContributorsMap a {@link Map} of topic to a @{@link Set} of its contributor
+     *     apps.
+     */
+    public void persistTopicContributors(
+            long epochId, @NonNull Map<Integer, Set<String>> topicToContributorsMap) {
+        Objects.requireNonNull(topicToContributorsMap);
+
+        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
+        if (db == null) {
+            return;
+        }
+
+        for (Map.Entry<Integer, Set<String>> topicToContributors :
+                topicToContributorsMap.entrySet()) {
+            Integer topicId = topicToContributors.getKey();
+
+            for (String app : topicToContributors.getValue()) {
+                ContentValues values = new ContentValues();
+                values.put(TopicsTables.TopicContributorsContract.EPOCH_ID, epochId);
+                values.put(TopicsTables.TopicContributorsContract.TOPIC, topicId);
+                values.put(TopicsTables.TopicContributorsContract.APP, app);
+
+                try {
+                    db.insert(
+                            TopicsTables.TopicContributorsContract.TABLE,
+                            /* nullColumnHack */ null,
+                            values);
+                } catch (SQLException e) {
+                    LogUtil.e(e, "Failed to persist topic contributors.");
+                }
+            }
+        }
+    }
+
+    /**
+     * Retrieve topic to contributor mappings from database. In an epoch, an app is a contributor to
+     * a topic if the app has called Topics API in this epoch and is classified to the topic.
+     *
+     * @param epochId the epochId
+     * @return a {@link Map} of topic to its contributors
+     */
+    @NonNull
+    public Map<Integer, Set<String>> retrieveTopicToContributorsMap(long epochId) {
+        Map<Integer, Set<String>> topicToContributorsMap = new HashMap<>();
+        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
+        if (db == null) {
+            return topicToContributorsMap;
+        }
+
+        String[] projection = {
+            TopicsTables.TopicContributorsContract.EPOCH_ID,
+            TopicsTables.TopicContributorsContract.TOPIC,
+            TopicsTables.TopicContributorsContract.APP
+        };
+
+        String selection = TopicsTables.TopicContributorsContract.EPOCH_ID + " = ?";
+        String[] selectionArgs = {String.valueOf(epochId)};
+
+        try (Cursor cursor =
+                db.query(
+                        TopicsTables.TopicContributorsContract.TABLE, // The table to query
+                        projection, // The array of columns to return (pass null to get all)
+                        selection, // The columns for the WHERE clause
+                        selectionArgs, // The values for the WHERE clause
+                        null, // don't group the rows
+                        null, // don't filter by row groups
+                        null // The sort order
+                        )) {
+            if (cursor == null) {
+                return topicToContributorsMap;
+            }
+
+            while (cursor.moveToNext()) {
+                String app =
+                        cursor.getString(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.TopicContributorsContract.APP));
+                int topicId =
+                        cursor.getInt(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.TopicContributorsContract.TOPIC));
+
+                topicToContributorsMap.putIfAbsent(topicId, new HashSet<>());
+                topicToContributorsMap.get(topicId).add(app);
+            }
+        }
+
+        return topicToContributorsMap;
     }
 }

@@ -90,12 +90,14 @@ import javax.net.ssl.HttpsURLConnection;
 @RunWith(MockitoJUnitRunner.class)
 @SmallTest
 public final class AsyncSourceFetcherTest {
+    private static final String ANDROID_APP_SCHEME = "android-app";
+    private static final String ANDROID_APP_SCHEME_URI_PREFIX = ANDROID_APP_SCHEME + "://";
     private static final String DEFAULT_REGISTRATION = "https://foo.com";
     private static final String ENROLLMENT_ID = "enrollment-id";
     private static final EnrollmentData ENROLLMENT =
             new EnrollmentData.Builder().setEnrollmentId("enrollment-id").build();
     private static final String DEFAULT_TOP_ORIGIN =
-            "android-app://com.android.adservices.servicecoretest";
+            "https://com.android.adservices.servicecoretest";
     ;
     private static final String DEFAULT_DESTINATION = "android-app://com.myapps";
     private static final String DEFAULT_DESTINATION_WITHOUT_SCHEME = "com.myapps";
@@ -2499,7 +2501,6 @@ public final class AsyncSourceFetcherTest {
                                         .setAdTechDomain(DEFAULT_REGISTRATION)
                                         .build()));
     }
-
     private RegistrationRequest buildRequest(String registrationUri) {
         return new RegistrationRequest.Builder()
                 .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
@@ -2553,9 +2554,9 @@ public final class AsyncSourceFetcherTest {
                 registrationRequest.getRegistrationUri(),
                 null,
                 null,
-                Uri.parse("android-app://" + sContext.getPackageName()),
+                Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + sContext.getPackageName()),
                 null,
-                null,
+                Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + sContext.getPackageName()),
                 registrationRequest.getRegistrationType() == RegistrationRequest.REGISTER_SOURCE
                         ? AsyncRegistration.RegistrationType.APP_SOURCE
                         : AsyncRegistration.RegistrationType.APP_TRIGGER,
@@ -2601,7 +2602,7 @@ public final class AsyncSourceFetcherTest {
                     webSourceParams.getRegistrationUri(),
                     webSourceRegistrationRequest.getWebDestination(),
                     webSourceRegistrationRequest.getAppDestination(),
-                    Uri.parse("android-app://" + sContext.getPackageName()),
+                    Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + sContext.getPackageName()),
                     null,
                     webSourceRegistrationRequest.getTopOriginUri(),
                     AsyncRegistration.RegistrationType.WEB_SOURCE,

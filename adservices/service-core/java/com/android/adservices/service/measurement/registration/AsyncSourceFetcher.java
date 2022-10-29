@@ -305,9 +305,7 @@ public class AsyncSourceFetcher {
             AsyncRedirect asyncRedirect) {
         List<Source> out = new ArrayList<>();
         fetchSource(
-                asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_SOURCE
-                        ? asyncRegistration.getTopOrigin()
-                        : getPublisher(asyncRegistration),
+                asyncRegistration.getTopOrigin(),
                 asyncRegistration.getRegistrationUri(),
                 asyncRegistration.getOsDestination(),
                 asyncRegistration.getWebDestination(),
@@ -454,10 +452,6 @@ public class AsyncSourceFetcher {
             }
         }
         return true;
-    }
-
-    private Uri getPublisher(AsyncRegistration request) {
-        return Uri.parse(mDefaultAndroidAppUriPrefix + request.getRegistrant());
     }
 
     private interface SourceHeaderContract {
