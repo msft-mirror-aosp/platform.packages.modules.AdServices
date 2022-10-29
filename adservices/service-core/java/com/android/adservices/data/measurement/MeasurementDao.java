@@ -23,7 +23,6 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.util.Pair;
 
@@ -1238,45 +1237,54 @@ class MeasurementDao implements IMeasurementDao {
     public void doInstallAttribution(Uri uri, long eventTimestamp) throws DatastoreException {
         SQLiteDatabase db = mSQLTransaction.getDatabase();
 
-        SQLiteQueryBuilder sqb = new SQLiteQueryBuilder();
-        sqb.setTables(MeasurementTables.SourceContract.TABLE);
-        // Sub query for selecting relevant source ids.
-        // Selecting the highest priority, most recent source with eventTimestamp falling in the
-        // source's install attribution window.
-        String subQuery =
-                sqb.buildQuery(
-                        new String[] {MeasurementTables.SourceContract.ID},
-                        String.format(
-                                Locale.ENGLISH,
-                                MeasurementTables.SourceContract.APP_DESTINATION
-                                        + " = %1$s AND "
-                                        + MeasurementTables.SourceContract.EVENT_TIME
-                                        + " <= %2$d AND "
-                                        + MeasurementTables.SourceContract.EXPIRY_TIME
-                                        + " > %2$d AND "
-                                        + MeasurementTables.SourceContract.EVENT_TIME
+        String whereString =
+                String.format(
+                        Locale.ENGLISH,
+                        mergeConditions(
+                                " AND ",
+                                MeasurementTables.SourceContract.APP_DESTINATION + " = %1$s",
+                                MeasurementTables.SourceContract.EVENT_TIME + " <= %2$d",
+                                MeasurementTables.SourceContract.EXPIRY_TIME + " > %2$d",
+                                MeasurementTables.SourceContract.EVENT_TIME
                                         + " + "
                                         + MeasurementTables.SourceContract
                                                 .INSTALL_ATTRIBUTION_WINDOW
-                                        + " >= %2$d AND "
-                                        + MeasurementTables.SourceContract.STATUS
-                                        + " = %3$d",
-                                DatabaseUtils.sqlEscapeString(uri.toString()),
-                                eventTimestamp,
-                                Source.Status.ACTIVE),
-                        /* groupBy= */ null,
-                        /* having= */ null,
-                        /* sortOrder= */ MeasurementTables.SourceContract.PRIORITY
-                                + " DESC, "
-                                + MeasurementTables.SourceContract.EVENT_TIME
-                                + " DESC",
-                        /* limit = */ "1");
+                                        + " >= %2$d",
+                                MeasurementTables.SourceContract.STATUS + " = %3$d"),
+                        DatabaseUtils.sqlEscapeString(uri.toString()),
+                        eventTimestamp,
+                        Source.Status.ACTIVE);
+
+        // Will generate the records that we are interested in
+        String filterQuery =
+                String.format(
+                        Locale.ENGLISH,
+                        " ( SELECT * from %1$s WHERE %2$s )",
+                        MeasurementTables.SourceContract.TABLE,
+                        whereString);
+
+        // The inner query picks the top record based on priority and recency order after applying
+        // the filter. But first_value generates one value per partition but applies to all the rows
+        // that input has, so we have to nest it with distinct in order to get unique source_ids.
+        String sourceIdsProjection =
+                String.format(
+                        Locale.ENGLISH,
+                        "SELECT DISTINCT(first_source_id) from "
+                                + "(SELECT first_value(%1$s) "
+                                + "OVER (PARTITION BY %2$s ORDER BY %3$s DESC, %4$s DESC) "
+                                + "first_source_id FROM %5$s)",
+                        MeasurementTables.SourceContract.ID,
+                        MeasurementTables.SourceContract.ENROLLMENT_ID,
+                        MeasurementTables.SourceContract.PRIORITY,
+                        MeasurementTables.SourceContract.EVENT_TIME,
+                        filterQuery);
 
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.SourceContract.IS_INSTALL_ATTRIBUTED, true);
-        db.update(MeasurementTables.SourceContract.TABLE,
+        db.update(
+                MeasurementTables.SourceContract.TABLE,
                 values,
-                MeasurementTables.SourceContract.ID + " IN (" + subQuery + ")",
+                MeasurementTables.SourceContract.ID + " IN (" + sourceIdsProjection + ")",
                 null);
     }
 
